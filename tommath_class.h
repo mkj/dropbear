@@ -57,8 +57,10 @@
 #define BN_MP_INVMOD_SLOW_C
 #define BN_MP_IS_SQUARE_C
 #define BN_MP_JACOBI_C
+/* matt - dropbear doesn't need these
 #define BN_MP_KARATSUBA_MUL_C
 #define BN_MP_KARATSUBA_SQR_C
+*/
 #define BN_MP_LCM_C
 #define BN_MP_LSHD_C
 #define BN_MP_MOD_C
@@ -106,8 +108,10 @@
 #define BN_MP_SUBMOD_C
 #define BN_MP_TO_SIGNED_BIN_C
 #define BN_MP_TO_UNSIGNED_BIN_C
+/* matt - dropbear doesn't need these
 #define BN_MP_TOOM_MUL_C
 #define BN_MP_TOOM_SQR_C
+*/
 #define BN_MP_TORADIX_C
 #define BN_MP_TORADIX_N_C
 #define BN_MP_UNSIGNED_BIN_SIZE_C
