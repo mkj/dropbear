@@ -41,7 +41,7 @@
 /* Disable TCP Fowarding */
 /* NOTE: TCP forwarding is still work-in-progress, -L forwarding should work,
  * enable TCP forwarding at your own risk. */
-/* #define DISABLE_TCPFWD*/
+#define DISABLE_TCPFWD
 
 /* Disable Authentication Agent Forwarding */
 /*#define DISABLE_AGENTFWD*/
