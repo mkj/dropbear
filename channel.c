@@ -365,10 +365,12 @@ static void writechannel(struct Channel* channel) {
 		TRACE(("leave writechannel: len <= 0"));
 		return;
 	}
+
+	buf_incrpos(buf, len);
+	fprintf(stderr, "recvwindow %d\n", channel->recvwindow);
 	
-	if (len == maxlen) {
-		buf_setpos(buf, 0);
-		buf_setlen(buf, 0);
+	if (buf->len == buf->pos) {
+		/* ie the buffer is now empty */
 
 		if (channel->recveof) {
 			/* we're closing up */
@@ -377,14 +379,19 @@ static void writechannel(struct Channel* channel) {
 			TRACE(("leave writechannel: recveof set"));
 		}
 
-		/* extend the window if we're at the end*/
-		/* TODO - this is inefficient */
-		send_msg_channel_window_adjust(channel, buf->size
+		/* we need to extend the window */
+		if (channel->recvwindow < RECV_MINWINDOW) {
+
+			/* extend the window if we're at the end*/
+			send_msg_channel_window_adjust(channel, RECV_MAXWINDOW
 				- channel->recvwindow);
-		channel->recvwindow = buf->size;
-	} else {
-		buf_incrpos(buf, len);
+			channel->recvwindow = RECV_MAXWINDOW;
+
+			buf_setpos(buf, 0);
+			buf_setlen(buf, 0);
+		}
 	}
+
 	TRACE(("leave writechannel"));
 }
 
