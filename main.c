@@ -136,9 +136,10 @@ int main(int argc, char ** argv) {
 
 		/* pre-authentication clients */
 		for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
-			if (childpipes[i] >= 0) 
-			FD_SET(childpipes[i], &fds);
-			maxsock = MAX(maxsock, childpipes[i]);
+			if (childpipes[i] >= 0) {
+				FD_SET(childpipes[i], &fds);
+				maxsock = MAX(maxsock, childpipes[i]);
+			}
 		}
 
 		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
