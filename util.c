@@ -5,6 +5,7 @@
 #include <sys/types.h>
 #include <fcntl.h>
 #include <stdarg.h>
+#include <syslog.h>
 
 #include "options.h"
 #include "util.h"
@@ -12,53 +13,94 @@
 #include "session.h"
 #include "libtomcrypt/mycrypt.h"
 
-/* abort() on detected heap corruption */
-#define MALLOC_CHECK_ 2
+#define MAX_FMT 100
 
-void dropbear_msg(const char* format, ...) {
+int usingsyslog = 0;
 
-	va_list param;
+void startsyslog() {
 
-	va_start(param, format);
-	fprintf(stderr, "dropbear: ");
-	vfprintf(stderr, format, param);
-	fprintf(stderr, "\n");
-	va_end(param);
+	int fd;
 
+	openlog(PROGNAME, LOG_PID, LOG_DAEMON);
+
+	/* redirect stdin/stdout/stderr to /dev/null */
+	fd = open("/dev/null", O_RDWR);
+	if (fd != -1) {
+		dup2(fd, STDIN_FILENO);
+		dup2(fd, STDOUT_FILENO);
+		dup2(fd, STDERR_FILENO);
+		if (fd > 2) {
+			close(fd);
+		}
+	}
+
+	
+	usingsyslog = 1;
 }
+
+/* the "format" string must be <= 100 characters */
 void dropbear_close(const char* format, ...) {
 
+#define CLOSE_MESSAGE "connection closed: "
+#define CLOSE_MESSAGE_LEN 19
+
 	va_list param;
+	char fmtbuf[MAX_FMT+CLOSE_MESSAGE_LEN+1];
 
 #ifdef DOCLEANUP
 	session_cleanup();
 #endif
 
+	strcpy(fmtbuf, CLOSE_MESSAGE);
+	strncat(fmtbuf, format, MAX_FMT);
+
 	va_start(param, format);
-	fprintf(stderr, "dropbear close: ");
-	vfprintf(stderr, format, param);
-	fprintf(stderr, "\n");
+	dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
 	va_end(param);
+
 	exit(EXIT_SUCCESS);
 
 }
 
-/* failure exit */
+/* failure exit - format must be <= 100 chars */
 void dropbear_exit(const char* format, ...) {
 
+#define EXIT_MESSAGE "exited: "
+#define EXIT_MESSAGE_LEN 8
+
 	va_list param;
+	char fmtbuf[MAX_FMT+EXIT_MESSAGE_LEN+1];
 
 #ifdef DOCLEANUP
 	session_cleanup();
 #endif
 
+	strcpy(fmtbuf, EXIT_MESSAGE);
+	strncat(fmtbuf, format, MAX_FMT);
+
 	va_start(param, format);
-	fprintf(stderr, "dropbear exit: ");
-	vfprintf(stderr, format, param);
-	fprintf(stderr, "\n");
+	dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
 	va_end(param);
+
 	exit(EXIT_FAILURE);
 
+}
+
+/* priority is priority as with syslog() */
+void dropbear_log(int priority, const char* format, ...) {
+
+	va_list param;
+
+	va_start(param, format);
+	if (usingsyslog) {
+		vsyslog(priority, format, param);
+	} else {
+		fprintf(stderr, "dropbear ");
+		vfprintf(stderr, format, param);
+		fprintf(stderr, "\n");
+	}
+
+	va_end(param);
 }
 
 #ifdef DEBUG_TRACE
@@ -225,6 +267,19 @@ int buf_readfile(buffer* buf, char* filename) {
 
 	close(fd);
 	return 0;
+}
+
+/* loop until the socket is closed (in case of EINTR) or
+ * we get and error.
+ * Returns 0 on fd successfully closed or bad FD, -1 otherwise */
+int m_close(int fd) {
+
+	int val;
+	do {
+		val = close(fd);
+	} while (val < 0 && errno == EINTR);
+	return (val == -1 &&
+			errno == EBADF) ? 0 : val;
 }
 	
 void * m_malloc(size_t size) {

@@ -7,9 +7,10 @@
 #include "options.h"
 #include "buffer.h"
 
-void dropbear_msg(const char* format, ...);
+void startsyslog();
 void dropbear_exit(const char* format, ...);
 void dropbear_close(const char* format, ...);
+void dropbear_log(int priority, const char* format, ...);
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...);
 #endif
@@ -18,6 +19,7 @@ int readln(int fd, char* buf, int count);
 int writeln(int fd, char* str);
 int buf_readfile(buffer* buf, char* filename);
 
+int m_close(int fd);
 void * m_malloc(size_t size);
 void * m_realloc(void* ptr, size_t size);
 #define m_free(X) __m_free(X); (X) = NULL;
