@@ -506,18 +506,17 @@ int buf_getline(buffer * line, FILE * authfile) {
 
 out:
 
-	buf_setpos(line, 0);
 
 	/* if we didn't read anything before EOF or error, exit */
 	if (c == EOF && line->pos == 0) {
-		TRACE(("leave getauthline: failure"));
+		TRACE(("leave buf_getline: failure"));
 		return DROPBEAR_FAILURE;
 	} else {
-		TRACE(("leave getauthline: success"));
+		TRACE(("leave buf_getline: success"));
+		buf_setpos(line, 0);
 		return DROPBEAR_SUCCESS;
 	}
 
-	TRACE(("leave buf_getline"));
 }	
 #endif
 
