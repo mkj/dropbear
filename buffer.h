@@ -44,7 +44,6 @@ buffer * buf_new(unsigned int size);
 void buf_init(buffer* buf, unsigned int size);
 void buf_resize(buffer *buf, unsigned int newsize);
 void buf_free(buffer* buf);
-void buf_clear(buffer* buf);
 void buf_burn(buffer* buf);
 buffer* buf_newcopy(buffer* buf, int lenonly);
 void buf_setlen(buffer* buf, unsigned int len);

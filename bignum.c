@@ -67,7 +67,8 @@ void sha1_process_mp(hash_state *hs, mp_int *mp) {
 	int i;
 	buffer * buf;
 
-	buf = buf_new(1000);
+	buf = buf_new(512 + 20); /* max buffer is a 4096 bit key, 
+								plus header + some leeway*/
 	buf_putmpint(buf, mp);
 	i = buf->pos;
 	buf_setpos(buf, 0);

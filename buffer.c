@@ -40,15 +40,8 @@ buffer* buf_new(unsigned int size) {
 /* free the buffer's data and the buffer itself */
 void buf_free(buffer* buf) {
 
-	buf_clear(buf);
+	m_free(buf->data)
 	m_free(buf);
-}
-
-/* free a buffer's data */
-void buf_clear(buffer* buf) {
-
-	m_free(buf->data);
-
 }
 
 /* overwrite the contents of the buffer to clear it */
@@ -220,8 +213,7 @@ void buf_putint(buffer* buf, int unsigned val) {
 void buf_putstring(buffer* buf, const unsigned char* str, unsigned int len) {
 	
 	buf_putint(buf, len);
-	memcpy(buf_getwriteptr(buf, len), str, len);
-	buf_incrwritepos(buf, len);
+	buf_putbytes(buf, str, len);
 
 }
 
@@ -250,6 +242,8 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 	if (USED(mp) == 1 && DIGIT(mp, 0) == 0) {
 		len = 0;
 	} else {
+		/* SSH spec requires padding for mpints with the MSB set, this code
+		 * implements it */
 		len = mp_count_bits(mp);
 		/* if the top bit of MSB is set, we need to pad */
 		pad = (len%8 == 0) ? 1 : 0;
@@ -275,8 +269,8 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 	TRACE(("leave buf_putmpint"));
 }
 
-/* retrieve an mp_int from the buffer. This will only handle +ve or 0 values, 
- * will fail for -ve since they shouldn't be required here.
+/* Retrieve an mp_int from the buffer.
+ * Will fail for -ve since they shouldn't be required here.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_getmpint(buffer* buf, mp_int* mp) {
 
