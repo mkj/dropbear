@@ -191,6 +191,10 @@ int main(int argc, char ** argv) {
 			if ((childpid = fork()) == 0) {
 
 				/* child */
+#ifdef DEBUG_FORKGPROF
+				extern void _start(void), etext(void);
+				monstartup((u_long)&_start, (u_long)&etext);
+#endif /* DEBUG_FORKGPROF */
 				if (setpgid(0,0) < 0) {
 					dropbear_exit("Error creating child");
 				}

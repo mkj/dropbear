@@ -45,6 +45,11 @@
 /* Define this to print trace statements */
 /*#define DEBUG_TRACE*/
 
+/* Define this, compile with -pg and set GMON_OUT_PREFIX=gmon to get gmon
+ * output when Dropbear forks. This will allow it gprof to be used.
+ * It's useful to run dropbear -F, so you don't fork as much */
+/*#define DEBUG_FORKGPROF*/
+
 /* you don't need to touch this block */
 #ifdef DEBUG_TRACE
 #define TRACE(X) (dropbear_trace X)
