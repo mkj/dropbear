@@ -299,11 +299,11 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 static mp_int * rsa_pad_em(rsa_key * key,
 		const unsigned char * data, unsigned int len) {
 
-	/* ASN1 designator */
+	/* ASN1 designator (including the 0x00 preceding) */
 	const char rsa_asn1_magic[] = 
-		{0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 
+		{0x00, 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 
 		 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14};
-#define RSA_ASN1_MAGIC_LEN 15
+#define RSA_ASN1_MAGIC_LEN 16
 	buffer * rsa_EM;
 	hash_state hs;
 	unsigned int nsize;
@@ -315,22 +315,26 @@ static mp_int * rsa_pad_em(rsa_key * key,
 	nsize = mp_unsigned_bin_size(key->n);
 
 	rsa_EM = buf_new(nsize-1);
+	/* type byte */
 	buf_putbyte(rsa_EM, 0x01);
-	for (i = 0; i < (nsize-1)-SHA1_HASH_SIZE-2-RSA_ASN1_MAGIC_LEN; i++) {
+	/* Padding with 0xFF bytes */
+	while(rsa_EM->pos != rsa_EM->size - RSA_ASN1_MAGIC_LEN - SHA1_HASH_SIZE) {
 		buf_putbyte(rsa_EM, 0xff);
 	}
-	buf_putbyte(rsa_EM, 0x00);
+	/* Magic ASN1 stuff */
 	memcpy(buf_getwriteptr(rsa_EM, RSA_ASN1_MAGIC_LEN),
 			rsa_asn1_magic, RSA_ASN1_MAGIC_LEN);
 	buf_incrwritepos(rsa_EM, RSA_ASN1_MAGIC_LEN);
 
-	/* hash the data */
+	/* The hash of the data */
 	sha1_init(&hs);
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, buf_getwriteptr(rsa_EM, SHA1_HASH_SIZE));
 	buf_incrwritepos(rsa_EM, SHA1_HASH_SIZE);
+
 	assert(rsa_EM->pos == rsa_EM->size);
 
+	/* Create the mp_int from the encoded bytes */
 	buf_setpos(rsa_EM, 0);
 	rsa_em = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init(rsa_em);
