@@ -49,6 +49,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
 static void closechannel(struct Channel *channel);
+static void deletechannel(struct Channel *channel);
 static void send_exitsignalstatus(struct Channel *channel);
 
 /* initialise channels */
@@ -177,7 +178,13 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 		/* write to program/pipe stdin */
 		if (channel->infd != -1 && channel->recveof == 0 &&
 				FD_ISSET(channel->infd, writefd)) {
-			writechannel(channel);
+			if (channel->initconn) {
+				checkinitdone(channel);
+				continue; /* Important not to use the channel after
+							 checkinitdone(), as it may be NULL */
+			} else {
+				writechannel(channel);
+			}
 		}
 		
 		/* handle any listening sockets */
@@ -197,6 +204,17 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 	} /* foreach channel */
 
 }
+
+/* Check whether a deferred (EINPROGRESS) connect() was successful, and
+ * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
+ * it is important that the channel reference isn't used after a call to this
+ * function */
+static void checkinitdone(struct Channel *channel) {
+
+	int val;
+	XXXXXXXXXXXXXXX here
+}
+
 
 /* send the exit status or the signal causing termination for a session */
 static void send_exitsignalstatus(struct Channel *channel) {
@@ -433,11 +451,19 @@ static void closechannel(struct Channel * channel) {
 		closechansess(channel);
 	}
 
-	ses.channels[channel->index] = NULL;
-	m_free(channel);
+	deletechannel(channel);
 
 	TRACE(("leave closechannel"));
 }
+
+/* Just remove a channel entry, don't try to close descriptors etc */
+static void deletechannel(struct Channel *channel) {
+
+	ses.channels[channel->index] = NULL;
+	m_free(channel);
+	
+}
+
 
 /* Handle channel specific requests, passing off to corresponding handlers
  * such as chansession or x11fwd */
@@ -696,6 +722,11 @@ void recv_msg_channel_open() {
 	/* type specific initialisation */
 	if (typeval == CHANNEL_ID_SESSION) {
 		newchansess(channel);
+	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
+		if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
+			deletechannel(channel);
+			goto failure;
+		}
 	}
 
 	/* success */

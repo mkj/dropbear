@@ -1,31 +1,70 @@
 #include "tcpfwd.h"
 
-int newdirecttcp(struct Channel * chan) {
+#ifndef DISABLE_TCPFWD
 
-	unsigned char* desthost;
+/* Called upon creating a new direct tcp channel (ie we connect out to an
+ * address */
+int newtcpdirect(struct Channel * chan) {
+
+	unsigned char* desthost = NULL;
 	unsigned int destport;
-	unsigned char* orighost;
+	unsigned char* orighost = NULL;
 	unsigned int origport;
+	int sock;
+	int len;
+	int ret = DROPBEAR_FAILURE;
 
-	desthost = buf_getstring(ses.payload);
-	destport = buf_getport(ses.payload);
+	desthost = buf_getstring(ses.payload, len);
+	if (len > MAX_HOST_LEN) {
+		TRACE(("leave newtcpdirect: desthost too long"));
+		goto out;
+	}
+
+	destport = buf_getint(ses.payload);
+	
 	orighost = buf_getstring(ses.payload);
-	origport = buf_getstring(ses.payload);
+	if (len > MAX_HOST_LEN) {
+		TRACE(("leave newtcpdirect: orighost too long"));
+		goto out;
+	}
 
-	/* need to make sure that our origport matches the range of the
-	 * source origport */
+	origport = buf_getint(ses.payload);
 
+	/* best be sure */
+	if (origport > 65535 || destport > 65536) {
+		goto out;
+	}
+
+	sock = newtcp(desthost, destport);
+	if (sock < 0) {
+		goto out;
+	}
+
+	/* Note that infd is actually the "outgoing" direction on the
+	 * tcp connection, vice versa for outfd.
+	 * We don't set outfd, that will get set after the connection's
+	 * progress succeeds */
+	channel->infd = sock;
+	channel->initconn = 1;
+	
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	m_free(desthost);
+	m_free(orighost);
+	return ret;
 }
 
 /* Initiate a new TCP connection - this is non-blocking, so the socket
  * returned will need to be checked for success when it is first written.
  * Similarities with OpenSSH's connect_to() are not coincidental.
  * Returns -1 on failure */
-static int newtcp(const char * host, int port, int origport) {
+static int newtcp(const char * host, int port) {
 
 	int sock;
 	char portstring[6];
 	struct addrinfo *res = NULL, *ai;
+	int val;
 
 	struct addrinfo hints;
 
@@ -72,5 +111,16 @@ static int newtcp(const char * host, int port, int origport) {
 			TRACE(("TCP connect failed"));
 			continue;
 		}
+		break;
 	}
+
+	freeaddrinfo(res);
+	
+	if (ai == NULL) {
+		return -1;
+	}
+
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+	return sock;
 }
+#endif /* DISABLE_TCPFWD */
