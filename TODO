@@ -2,13 +2,14 @@ Current:
 
 Things which need doing:
 
+- re-enable sigpipe for children...
 - Make options.h generated from configure perhaps?
 
-- investigate self-pipe?
-- fix agent fwd problems
-- improve channel window adjustment algorithm (circular buffering)
+- improved queueing of unauthed connections
 
-- Don't use pregenerated AES tables
+- investigate self-pipe?
+- fix agent fwd problems (lock when agent request fails)
+- improve channel window adjustment algorithm (circular buffering)
 
 - check PRNG
 - check that there aren't timing issues with valid/invalid user authentication
