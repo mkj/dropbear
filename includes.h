@@ -51,9 +51,16 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <netdb.h>
-#include <utmp.h>
 
 #include <arpa/inet.h>
+
+#ifdef HAVE_UTMP_H
+#include <utmp.h>
+#endif
+
+#ifdef HAVE_UTMPX_H
+#include <utmpx.h>
+#endif
 
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>

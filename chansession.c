@@ -198,6 +198,7 @@ void newchansess(struct Channel *channel) {
 	chansess->master = -1;
 	chansess->slave = -1;
 	chansess->tty = NULL;
+	chansess->loginfo = NULL;
 
 	chansess->term = NULL;
 	chansess->termw = 0;
@@ -227,8 +228,11 @@ void closechansess(struct Channel *channel) {
 	m_free(chansess->cmd);
 	m_free(chansess->term);
 	if (chansess->tty) {
-		dropbear_dellogin(chansess);
 		pty_release(chansess->tty);
+	}
+	if (chansess->loginfo) {
+		login_logout(chansess->loginfo);
+		login_free_entry(chansess->loginfo);
 	}
 	m_free(chansess->tty);
 
@@ -631,6 +635,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		close(chansess->slave);
 
+
 		execchild(chansess);
 		/* not reached */
 
@@ -642,7 +647,10 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* add a child pid */
 		addchildpid(chansess, pid);
 
-		dropbear_addlogin(chansess);
+		/* record the login */
+		chansess->loginfo = login_alloc_entry(pid, ses.authstate.username,
+				ses.addrstring, chansess->tty);
+		login_login(chansess->loginfo);
 
 		close(chansess->slave);
 		channel->infd = chansess->master;

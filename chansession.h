@@ -27,6 +27,7 @@
 
 #include <sys/types.h>
 #include <unistd.h>
+#include "loginrec.h"
 
 struct ChanSess {
 
@@ -37,6 +38,7 @@ struct ChanSess {
 	int master; /* the master terminal fd*/
 	int slave;
 	unsigned char * tty;
+	struct logininfo * loginfo;
 
 	unsigned char * term;
 	unsigned int termw, termh, termc, termr; /* width, height, col, rows */
