@@ -103,7 +103,7 @@ static void sesssigchild_handler(int val) {
 	unsigned int i;
 	struct ChanSess * chansess;
 	struct sigaction sa_chld;
-	
+
 	TRACE(("enter sigchld handler"));
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 
