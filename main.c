@@ -36,7 +36,11 @@ static void sigintterm_handler(int fish);
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
+#ifdef DBMULTI_DROPBEAR
+int dropbear_main(int argc, char ** argv) {
+#else
 int main(int argc, char ** argv) {
+#endif
 	
 	fd_set fds;
 	struct timeval seltimeout;

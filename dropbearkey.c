@@ -80,7 +80,11 @@ static void printhelp(char * progname) {
 					progname);
 }
 
+#ifdef DBMULTI_KEY
+int dropbearkey_main(int argc, char ** argv) {
+#else
 int main(int argc, char ** argv) {
+#endif
 
 	int i;
 	char ** next = 0;

@@ -54,7 +54,11 @@ static void printhelp(char * progname) {
 					"standard input or standard output.\n", progname);
 }
 
+#ifdef DBMULTI_CONVERT
+int dropbearconvert_main(int argc, char ** argv) {
+#else 
 int main(int argc, char ** argv) {
+#endif
 
 	int intype, outtype;
 	const char* infile;
