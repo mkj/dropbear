@@ -34,6 +34,13 @@ export CC
 export CFLAGS
 
 all: dropbear dropbearkey
+	@echo
+	@echo Run \"make strip\" if you want stripped binaries,
+	@echo or \"make install\" to install to ${prefix}
+
+strip:
+	strip dropbear
+	strip dropbearkey
 
 install: all
 	install -o root -g root dropbear $(sbindir)
