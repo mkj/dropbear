@@ -103,10 +103,11 @@ static void agentaccept(struct Listener * listener) {
 
 	fd = accept(listener->sock, NULL, NULL);
 	if (fd < 0) {
+		TRACE(("accept failed"));
 		return;
 	}
 
-	if (send_msg_channel_open_agent(listener->sock) != DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_agent(fd) != DROPBEAR_SUCCESS) {
 		close(fd);
 	}
 

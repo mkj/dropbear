@@ -303,6 +303,11 @@
 #define DISABLE_REMOTETCPFWD
 #endif
 
+#if defined(ENABLE_REMOTETCPFWD) || defined(ENABLE_LOCALTCPFWD) || \
+	defined(ENABLE_AGENTFWD) || defined(ENABLE_X11FWD)
+#define USING_LISTENERS
+#endif
+
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
  * code, if we're just compiling as client or server */
 #if defined(DROPBEAR_SERVER) && defined(DROPBEAR_CLIENT)

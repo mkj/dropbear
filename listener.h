@@ -21,7 +21,7 @@ struct Listener {
 
 };
 
-void listener_initialise();
+void listeners_initialise();
 void handle_listeners(fd_set * readfds);
 void set_listener_fds(fd_set * readfds);
 

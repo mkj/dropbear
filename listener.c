@@ -3,7 +3,7 @@
 #include "session.h"
 #include "dbutil.h"
 
-void listener_initialise() {
+void listeners_initialise() {
 
 	/* just one slot to start with */
 	ses.listeners = (struct Listener**)m_malloc(sizeof(struct Listener*));
@@ -21,6 +21,7 @@ void set_listener_fds(fd_set * readfds) {
 	for (i = 0; i < ses.listensize; i++) {
 		listener = ses.listeners[i];
 		if (listener != NULL) {
+			TRACE(("set listener fd %d", listener->sock));
 			FD_SET(listener->sock, readfds);
 		}
 	}
@@ -36,6 +37,7 @@ void handle_listeners(fd_set * readfds) {
 	for (i = 0; i < ses.listensize; i++) {
 		listener = ses.listeners[i];
 		if (listener != NULL) {
+		TRACE(("handle listener num %d fd %d", i, listener->sock));
 			if (FD_ISSET(listener->sock, readfds)) {
 				listener->accepter(listener);
 			}
@@ -79,6 +81,8 @@ struct Listener* new_listener(int sock, int type, void* typedata,
 	}
 
 	ses.maxfd = MAX(ses.maxfd, sock);
+
+	TRACE(("new listener num %d fd %d", i, sock));
 
 	newlisten = (struct Listener*)m_malloc(sizeof(struct Listener));
 	newlisten->index = i;

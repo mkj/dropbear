@@ -106,6 +106,7 @@ static void x11accept(struct Listener* listener) {
 	struct sockaddr_in addr;
 	int len;
 	int ret;
+	struct ChanSess * chansess = (struct ChanSess *)(listener->typedata);
 
 	len = sizeof(addr);
 
@@ -115,8 +116,8 @@ static void x11accept(struct Listener* listener) {
 	}
 
 	/* if single-connection we close it up */
-	if (((struct ChanSess *)(listener->typedata))->x11singleconn) {
-		x11cleanup(listener);
+	if (chansess->x11singleconn) {
+		x11cleanup(chansess);
 	}
 
 	ret = send_msg_channel_open_x11(fd, &addr);
@@ -166,13 +167,11 @@ void x11setauth(struct ChanSess *chansess) {
 	}
 }
 
-void x11cleanup(struct Listener *listener) {
-
-	struct ChanSess *chansess = (struct ChanSess*)listener->typedata;
+void x11cleanup(struct ChanSess *chansess) {
 
 	m_free(chansess->x11authprot);
 	m_free(chansess->x11authcookie);
-	remove_listener(listener);
+	remove_listener(chansess->x11listener);
 	chansess->x11listener = NULL;
 }
 

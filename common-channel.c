@@ -607,7 +607,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 		/* on error/eof, send eof */
 		if (len == 0 || errno != EINTR) {
 			closeoutfd(channel, fd);
-			TRACE(("leave send_msg_channel_data: read err"));
+			TRACE(("leave send_msg_channel_data: read err %d", channel->index));
 		}
 		buf_free(buf);
 		return;
@@ -889,7 +889,7 @@ static void send_msg_channel_open_confirmation(struct Channel* channel,
 	TRACE(("leave send_msg_channel_open_confirmation"));
 }
 
-#ifdef USE_LISTENERS
+#ifdef USING_LISTENERS
 /* Create a new channel, and start the open request. This is intended
  * for X11, agent, tcp forwarding, and should be filled with channel-specific
  * options, with the calling function calling encrypt_packet() after
@@ -946,7 +946,10 @@ void recv_msg_channel_open_confirmation() {
 	channel->remotechan =  buf_getint(ses.payload);
 	channel->transwindow = buf_getint(ses.payload);
 	channel->transmaxpacket = buf_getint(ses.payload);
+	
+	TRACE(("new chan remote %d localho %d", channel->remotechan, chan));
 
+	
 	TRACE(("leave recv_msg_channel_open_confirmation"));
 }
 
@@ -1012,4 +1015,4 @@ static void closechanfd(struct Channel *channel, int fd, int how) {
 	}
 }
 
-#endif /* USE_LISTENERS */
+#endif /* USING_LISTENERS */

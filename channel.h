@@ -50,12 +50,6 @@
 #define RECV_MAXPACKET 1400 /* tweak */
 #define RECV_MINWINDOW 19000 /* when we get below this, we send a windowadjust */
 
-/* a simpler way to define that we need code for listeners */
-#if !defined(DISABLE_X11FWD) || !defined(DISABLE_AUTHFWD) || \
-	!defined(DISABLE_REMOTETCPFWD)
-#define USE_LISTENERS
-#endif
-
 struct ChanType;
 
 struct Channel {
@@ -113,7 +107,7 @@ void recv_msg_channel_window_adjust();
 void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
-#ifdef USE_LISTENERS
+#ifdef USING_LISTENERS
 int send_msg_channel_open_init(int fd, const struct ChanType *type);
 void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();

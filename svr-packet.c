@@ -178,7 +178,7 @@ static void svr_process_postauth_packet(unsigned int type) {
 			recv_msg_channel_close();
 			break;
 
-#ifdef USE_LISTENERS /* for x11, tcp fwd etc */
+#ifdef USING_LISTENERS /* for x11, tcp fwd etc */
 		case SSH_MSG_CHANNEL_OPEN_CONFIRMATION:
 			recv_msg_channel_open_confirmation();
 			break;
