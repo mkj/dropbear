@@ -684,6 +684,7 @@ static void execchild(struct ChanSess *chansess) {
 	char *argv[4];
 	char * usershell;
 	char * baseshell;
+	int i;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
