@@ -1,4 +1,22 @@
-0.44test1 - Sun Aug 16 2004 17:43:54 +0800
+0.44test2 - Tues Aug 17 2004 17:43:54 +0800
+
+- Fix up dropbearmulti targets in the Makefile - symlinks are now created
+
+- Compile fake-rfc2553 even with dropbearconvert/dropbearkey - this 
+  allows them to work on platforms without a native getaddrinfo()
+
+- Create ~/.ssh/known_hosts properly if it doesn't exist
+
+- Fix basename() function prototype
+
+- Backport some local changes (more #ifdefs for termcodes.c, a fix for missing
+  defines on AIX).
+
+- Let dbclient be run as "ssh"
+
+- Initialise mp_ints by default
+
+0.44test1 - Sun Aug 16 2005 17:43:54 +0800
 
 - TESTING RELEASE - this is the first public release of the client codebase,
   so there are sure to be bugs to be found. In addition, if you're just using

@@ -17,7 +17,7 @@ matt@ucc.asn.au
 In the absence of detailed documentation, some notes follow:
 ============================================================================
 
-Public key auth:
+Server public key auth:
 
 You can use ~/.ssh/authorized_keys in the same way as with OpenSSH, just put
 the key entries in that file. They should be of the form:
@@ -29,6 +29,21 @@ user.
 
 NOTE: Dropbear ignores authorized_keys options such as those described in the
 OpenSSH sshd manpage, and will not allow a login for these keys. 
+
+============================================================================
+
+Client public key auth:
+
+Dropbear can do public key auth as a client, but you will have to convert
+OpenSSH style keys to Dropbear format, or use dropbearkey to create them.
+
+If you have an OpenSSH-style private key ~/.ssh/id_rsa, you need to do:
+
+dropbearconvert openssh dropbear ~/.ssh/id_rsa  ~/.ssh/id_rsa.db
+dbclient -i ~/.ssh/id_rsa.db <hostname>
+
+Currently encrypted keys aren't supported, neither is agent forwarding. At some
+stage both hopefully will be.
 
 ============================================================================
 
