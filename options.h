@@ -126,7 +126,7 @@
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
-#define DEV_RANDOM "/dev/urandom"
+#define DEV_RANDOM "/dev/random"
 #define DEV_URANDOM "/dev/urandom"
 
 #define _PATH_TTY "/dev/tty"
