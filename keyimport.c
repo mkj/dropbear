@@ -715,10 +715,11 @@ static int openssh_write(const char *filename, sign_key *key,
 	unsigned char iv[8];
 	int ret = 0;
 	FILE *fp;
-	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
 	int keytype = -1;
 
 #ifdef DROPBEAR_RSA
+	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
+
 	if (key->rsakey != NULL) {
 		keytype = DROPBEAR_SIGNKEY_RSA;
 	}
