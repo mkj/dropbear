@@ -179,4 +179,7 @@
 
 #define _PATH_TTY "/dev/tty"
 
+/* -q for quiet */
+#define XAUTH_COMMAND "/usr/bin/X11/xauth -q"
+
 #endif /* _OPTIONS_H_ */
