@@ -1,4 +1,7 @@
-CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
+# for Dropbear, optimisation flags come from the toplevel Makefile
+
+#CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
+CFLAGS  +=  -I./ -Wall -W -Wshadow
 
 VERSION=0.17
 
@@ -49,7 +52,7 @@ install: libtommath.a docs
 
 test: libtommath.a demo/demo.o
 	$(CC) demo/demo.o libtommath.a -o test
-	cd mtest ; gcc $(CFLAGS) mtest.c -o mtest -s
+	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest -s
         
 timing: libtommath.a
 	$(CC) $(CFLAGS) -DTIMER demo/demo.c libtommath.a -o ltmtest -s
