@@ -163,17 +163,19 @@ void crypto_init() {
 	}
 }
 
-/* returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
+/* algolen specifies the length of algo, algos is our local list to match
+ * against.
+ * Returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
  * otherwise */
 int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 
-	int i = 0;
-	while (algos[i].name != NULL) {
+	int i;
+
+	for (i = 0; algos[i].name != NULL; i++) {
 		if (strlen(algos[i].name) == algolen
 				&& (strncmp(algos[i].name, algo, algolen) == 0)) {
 			return DROPBEAR_SUCCESS;
 		}
-		i++;
 	}
 
 	return DROPBEAR_FAILURE;

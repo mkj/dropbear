@@ -282,7 +282,7 @@ static void session_identification() {
 		dropbear_exit("Error writing ident string");
 	}
 
-	/* now read the client version string, there are allowed to be other lines
+	/* Now read the client version string, there are allowed to be other lines
 	 * before the "SSH-*" line. We allow a max of 9 lines before it, just for
 	 * sanity */
 	for (i = 0; i < 10; i++) {
@@ -290,10 +290,7 @@ static void session_identification() {
 		if (len < 0) {
 			break;
 		}
-		if (len >= 4 && linebuf[0] == 'S'
-					 && linebuf[1] == 'S'
-					 && linebuf[2] == 'H'
-					 && linebuf[3] == '-') {
+		if (len >= 4 && memcmp(linebuf, "SSH-", 4)) {
 			/* start of line matches */
 			done = 1;
 			break;

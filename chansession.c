@@ -167,13 +167,11 @@ void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	/* we check that we can match a signal name, otherwise
 	 * don't send anything */
-	i = 0;
-	while (signames[i].name != 0) {
+	for (i = 0; signames[i].name != NULL; i++) {
 		if (signames[i].signal == chansess->exitsignal) {
 			signame = signames[i].name;
 			break;
 		}
-		i++;
 	}
 
 	if (signame == NULL) {
@@ -645,7 +643,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	pid_t pid;
 	struct logininfo *li;
 #ifdef DO_MOTD
-	buffer * motdbuf;
+	buffer * motdbuf = NULL;
 	int len;
 	struct stat sb;
 	char hushpath[MAXPATHLEN];
@@ -703,6 +701,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 						buf_incrpos(motdbuf, len);
 					}
 				}
+				buf_free(motdbuf);
 			}
 		}
 #endif /* DO_MOTD */

@@ -336,13 +336,16 @@ char * stripcontrol(const char * text) {
 }
 			
 
-
-
-/* returns the current position on success, or -1 on failure */
+/* returns the length including null-terminating zero on success,
+ * or -1 on failure */
 int readln(int fd, char* buf, int count) {
 	
 	char in;
 	int pos = 0;
+
+	if (count < 1) {
+		return -1;
+	}
 	
 	/* leave space to null-terminate */
 	while (pos < count-1) {
@@ -361,6 +364,7 @@ int readln(int fd, char* buf, int count) {
 	return pos+1;
 }
 
+
 /* reads the contents of filename into the buffer buf, from the current
  * position, either to the end of the file, or the buffer being full.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
@@ -372,7 +376,7 @@ int buf_readfile(buffer* buf, const char* filename) {
 
 	fd = open(filename, O_RDONLY);
 
-	if (fd == -1) {
+	if (fd < 0) {
 		close(fd);
 		return DROPBEAR_FAILURE;
 	}
@@ -382,7 +386,7 @@ int buf_readfile(buffer* buf, const char* filename) {
 		len = read(fd, buf_getwriteptr(buf, maxlen),
 				maxlen);
 		buf_incrwritepos(buf, len);
-	} while (len != maxlen && len > 0);
+	} while (len < maxlen && len > 0);
 
 	close(fd);
 	return DROPBEAR_SUCCESS;

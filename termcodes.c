@@ -25,7 +25,7 @@
 #include "includes.h"
 #include "termcodes.h"
 
-const struct TermCode termcodes[] = {
+const struct TermCode termcodes[MAX_TERMCODE+1] = {
 
 		{0, 0}, /* TTY_OP_END */
 		{VINTR, TERMCODE_CONTROLCHAR}, /* control character codes */
@@ -172,6 +172,6 @@ const struct TermCode termcodes[] = {
 		{CS7, TERMCODE_CONTROL},
 		{CS8, TERMCODE_CONTROL},
 		{PARENB, TERMCODE_CONTROL},
-		{PARODD, TERMCODE_CONTROL},
+		{PARODD, TERMCODE_CONTROL}
 		/* 94 */
 };

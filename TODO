@@ -3,6 +3,8 @@ Current:
 Things which need doing:
 
 - make combined or shared libraries
+- log IP on all disconnects
+- log failed password attempts
 
 - kexfollows
 - check PRNG is good
