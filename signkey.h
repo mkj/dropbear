@@ -42,6 +42,8 @@ struct SIGN_key {
 typedef struct SIGN_key sign_key;
 
 sign_key * new_sign_key();
+const char* signkey_name_from_type(int type, int *namelen);
+int signkey_type_from_name(const char* name, int namelen);
 int buf_get_pub_key(buffer *buf, sign_key *key, int *type);
 int buf_get_priv_key(buffer* buf, sign_key *key, int *type);
 void buf_put_pub_key(buffer* buf, sign_key *key, int type);

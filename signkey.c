@@ -44,6 +44,46 @@ sign_key * new_sign_key() {
 
 }
 
+/* Returns "ssh-dss" or "ssh-rsa" corresponding to the type. Exits fatally
+ * if the type is invalid */
+const char* signkey_name_from_type(int type, int *namelen) {
+
+#ifdef DROPBEAR_RSA
+	if (type == DROPBEAR_SIGNKEY_RSA) {
+		*namelen = SSH_SIGNKEY_RSA_LEN;
+		return SSH_SIGNKEY_RSA;
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (type == DROPBEAR_SIGNKEY_DSS) {
+		*namelen = SSH_SIGNKEY_DSS_LEN;
+		return SSH_SIGNKEY_DSS;
+	}
+#endif
+	dropbear_exit("bad key type %d", type);
+	return NULL; /* notreached */
+}
+
+/* Returns DROPBEAR_SIGNKEY_RSA, DROPBEAR_SIGNKEY_DSS, 
+ * or DROPBEAR_SIGNKEY_NONE */
+int signkey_type_from_name(const char* name, int namelen) {
+
+#ifdef DROPBEAR_RSA
+	if (namelen == SSH_SIGNKEY_RSA_LEN
+			&& memcmp(name, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN) == 0) {
+		return DROPBEAR_SIGNKEY_RSA;
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (namelen == SSH_SIGNKEY_DSS_LEN
+			&& memcmp(name, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN) == 0) {
+		return DROPBEAR_SIGNKEY_DSS;
+	}
+#endif
+
+	return DROPBEAR_SIGNKEY_NONE;
+}
+
 /* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
  * type should be set by the caller to specify the type to read, and
  * on return is set to the type read (useful when type = _ANY) */
@@ -51,94 +91,100 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 
 	unsigned char* ident;
 	unsigned int len;
+	int keytype;
+	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter buf_get_pub_key"));
 
 	ident = buf_getstring(buf, &len);
+	keytype = signkey_type_from_name(ident, len);
+	m_free(ident);
 
+	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
+		return DROPBEAR_FAILURE;
+	}
+
+	*type = keytype;
+
+	/* Rewind the buffer back before "ssh-rsa" etc */
+	buf_incrpos(buf, -len - 4);
 
 #ifdef DROPBEAR_DSS
-	if (memcmp(ident, SSH_SIGNKEY_DSS, len) == 0
-			&& (*type == DROPBEAR_SIGNKEY_ANY 
-				|| *type == DROPBEAR_SIGNKEY_DSS)) {
-		m_free(ident);
-		buf_setpos(buf, buf->pos - len - 4);
+	if (keytype == DROPBEAR_SIGNKEY_DSS) {
 		dss_key_free(key->dsskey);
 		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
-		*type = DROPBEAR_SIGNKEY_DSS;
-		return buf_get_dss_pub_key(buf, key->dsskey);
+		ret = buf_get_dss_pub_key(buf, key->dsskey);
+		if (ret == DROPBEAR_FAILURE) {
+			m_free(key->dsskey);
+		}
 	}
 #endif
 #ifdef DROPBEAR_RSA
-	if (memcmp(ident, SSH_SIGNKEY_RSA, len) == 0
-			&& (*type == DROPBEAR_SIGNKEY_ANY 
-				|| *type == DROPBEAR_SIGNKEY_RSA)) {
-		m_free(ident);
-		buf_setpos(buf, buf->pos - len - 4);
+	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 		rsa_key_free(key->rsakey);
 		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
-		*type = DROPBEAR_SIGNKEY_RSA;
-		return buf_get_rsa_pub_key(buf, key->rsakey);
+		ret = buf_get_rsa_pub_key(buf, key->rsakey);
+		if (ret == DROPBEAR_FAILURE) {
+			m_free(key->rsakey);
+		}
 	}
 #endif
-	TRACE(("leave buf_get_pub_key: didn't match the type we want (%d versus '%s'len %d)", *type, ident, len));
 
-	m_free(ident);
+	TRACE(("leave buf_get_pub_key"));
 
-	return DROPBEAR_FAILURE;
+	return ret;
 	
 }
 
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-/* type is set to hold the type returned */
+/* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
+ * type should be set by the caller to specify the type to read, and
+ * on return is set to the type read (useful when type = _ANY) */
 int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 
 	unsigned char* ident;
 	unsigned int len;
-	int ret;
+	int keytype;
+	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter buf_get_priv_key"));
+
 	ident = buf_getstring(buf, &len);
+	keytype = signkey_type_from_name(ident, len);
+	m_free(ident);
+
+	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
+		return DROPBEAR_FAILURE;
+	}
+
+	*type = keytype;
+
+	/* Rewind the buffer back before "ssh-rsa" etc */
+	buf_incrpos(buf, -len - 4);
 
 #ifdef DROPBEAR_DSS
-	if (memcmp(ident, SSH_SIGNKEY_DSS, len) == 0
-			&& (*type == DROPBEAR_SIGNKEY_ANY 
-				|| *type == DROPBEAR_SIGNKEY_DSS)) {
-		m_free(ident);
-		buf_setpos(buf, buf->pos - len - 4);
+	if (keytype == DROPBEAR_SIGNKEY_DSS) {
 		dss_key_free(key->dsskey);
 		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
 		ret = buf_get_dss_priv_key(buf, key->dsskey);
-		*type = DROPBEAR_SIGNKEY_DSS;
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->dsskey);
 		}
-		TRACE(("leave buf_get_priv_key: done get dss"));
-		return ret;
 	}
 #endif
 #ifdef DROPBEAR_RSA
-	if (memcmp(ident, SSH_SIGNKEY_RSA, len) == 0
-			&& (*type == DROPBEAR_SIGNKEY_ANY 
-				|| *type == DROPBEAR_SIGNKEY_RSA)) {
-		m_free(ident);
-		buf_setpos(buf, buf->pos - len - 4);
+	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 		rsa_key_free(key->rsakey);
 		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
 		ret = buf_get_rsa_priv_key(buf, key->rsakey);
-		*type = DROPBEAR_SIGNKEY_RSA;
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->rsakey);
 		}
-		TRACE(("leave buf_get_priv_key: done get rsa"));
-		return ret;
 	}
 #endif
 
-	m_free(ident);
-	
 	TRACE(("leave buf_get_priv_key"));
-	return DROPBEAR_FAILURE;
+
+	return ret;
 	
 }
 

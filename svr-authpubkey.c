@@ -58,7 +58,6 @@ void svr_auth_pubkey() {
 	unsigned char* keyblob;
 	unsigned int keybloblen;
 	buffer * signbuf = NULL;
-	unsigned int sigoffset;
 	sign_key * key = NULL;
 	char* fp = NULL;
 	int type = -1;
@@ -99,14 +98,9 @@ void svr_auth_pubkey() {
 	 * session_id, concatenated with the payload packet up to the signature */
 	signbuf = buf_new(ses.payload->pos + 4 + SHA1_HASH_SIZE);
 	buf_putstring(signbuf, ses.session_id, SHA1_HASH_SIZE);
-	sigoffset = ses.payload->pos;
-	buf_setpos(ses.payload, 0);
-	memcpy(buf_getwriteptr(signbuf, sigoffset),
-			buf_getptr(ses.payload, sigoffset), sigoffset);
-	buf_incrwritepos(signbuf, sigoffset);
-	buf_setpos(ses.payload, sigoffset);
-
+	buf_putbytes(signbuf, ses.payload->data, ses.payload->pos);
 	buf_setpos(signbuf, 0);
+
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(key, type);
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
