@@ -1,0 +1,14 @@
+Source: dropbear
+Section: net
+Priority: standard
+Maintainer: Grahame Bowland <grahame@angrygoats.net>
+Build-Depends: debhelper (>> 4.0.0), zlib1g-dev
+Standards-Version: 3.5.8
+
+Package: dropbear
+Architecture: any
+Depends: ${shlibs:Depends} ${misc:Depends}
+Suggests: ssh
+Description: a minimal SSH2 server
+ A small secure shell version 2 server.
+

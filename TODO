@@ -1,0 +1,27 @@
+Current:
+
+Things which need doing:
+
+- Make options.h generated from configure perhaps?
+
+- investigate self-pipe?
+- fix agent fwd problems
+- improve channel window adjustment algorithm (circular buffering)
+
+- Don't use pregenerated AES tables
+
+- check PRNG
+- check that there aren't timing issues with valid/invalid user authentication
+  feedback.
+
+- IP6 (binding to :: takes over ipv4 as well, sigh. If anyone wants to suggest
+  a clean way (ie no V4MAPPED or setsockopt things) please let me know :)
+- Binding to different interfaces (see ipv6 probably)
+
+- PAM ??
+- inetd
+- possible RSA blinding? need to check whether this is vuln to timing attacks
+- CTR mode, SSH_MSG_IGNORE sending to improve CBC security
+- DH Group Exchange possibly
+
+- fix scp.c for IRIX

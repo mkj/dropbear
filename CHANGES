@@ -1,0 +1,252 @@
+0.41 - Mon Jan 19 2004 22:40:19 +0800
+
+- Fix in configure so that cross-compiling works, thanks to numerous people for
+  reporting and testing
+
+- Terminal mode parsing now handles empty terminal mode strings (sent by
+  Windows ssh.com clients), thanks to Ricardo Derbes for the report
+
+- Handling is improved for users with no shell specified in /etc/passwd,
+  thanks again to Ricardo Derbes
+
+- Fix for compiling with --disable-syslog, thanks to gordonfh
+
+- Various minor fixes allow scp to work with irix, thanks to Paul Marinceu for
+  fixing it up
+
+- Use <stropts.h> not <sys/stropts.h>, since the former seems more common
+
+0.40 - Tue Jan 13 2004 21:05:19 +0800
+
+- Remote TCP forwarding (-R) style implemented
+
+- Local and remote TCP forwarding can each be disabled at runtime (-k and -j
+  switches)
+
+- Fix for problems detecting openpty() with uClibc - many thanks to various
+  people for reporting and testing fixes, including (in random order) Cristian
+  Ionescu-Idbohrn, James Ewing, Steve Dover, Thomas Lundquist and Frederic
+  Lavernhe
+
+- Improved portability for IRIX, thanks to Paul Marinceu
+
+- AIX and HPUX portability fixes, thanks to Darren Tucker for patches
+
+- prngd should now work correctly, thanks to Darren Tucker for the patch
+
+- scp compilation on systems without strlcpy() is fixed, thanks to Peter
+  Jannesen and David Muse for reporting it (independently and simultaneously :)
+
+- Merged in new LibTomCrypt 0.92 and LibTomMath 0.28
+
+0.39 - Tue Dec 16 2003 15:19:19 +0800
+
+- Better checking of key lengths and parameters for DSS and RSA auth
+
+- Print fingerprint of keys used for pubkey auth
+
+- More consistent logging of usernames and IPs
+
+- Added option to disable password auth (or just for root) at runtime
+
+- Avoid including bignum functions which don't give much speed benefit but
+  take up binary size
+
+- Added a stripped down version of OpenSSH's scp binary
+
+- Added additional supporting functions for Irix, thanks to Paul Marinceu
+
+- Don't check for unused libraries in configure script
+
+- Removed trailing comma in algorithm lists (thanks to Mihnea Stoenescu)
+
+- Fixed up channel close handling, always send close packet in response
+  (also thanks to Mihnea Stoenescu)
+
+- Various makefile improvements for cross-compiling, thanks to Friedrich
+  Lobenstock and Mihnea Stoenescu
+
+- Use daemon() function if available (or our own copy) rather than separate
+  code (thanks to Frédéric Lavernhe for the report and debugging, and Bernard
+  Blackham for his suggestion on what to look at)
+
+- Fixed up support for first_kex_packet_follows, required to talk to ssh.com
+  clients. Thanks to Marian Stagarescu for the bug report.
+
+- Avoid using MAXPATHLEN, pointer from Ian Morris
+
+- Improved input sanity checking
+
+0.38 - Sat Oct 11 2003 16:28:13 +0800
+
+- Default hostkey path changed to /etc/dropbear/dropbear_{rsa,dss}_host_key
+  rather than /etc/dropbear_{rsa,dss}_host_key
+
+- Added SMALL and MULTI text files which have info on compiling for multiple
+  binaries or small binaries
+
+- Allow for commandline definition of some options.h settings
+  (without warnings)
+
+- Be more careful handling EINTR
+
+- More fixes for channel closing
+
+- Added multi-binary support
+
+- Improved logging of IPs, now get logged in all cases
+
+- Don't chew cpu when waiting for version identification string, also
+  make sure that we kick off people if they don't auth within 5 minutes.
+
+- Various small fixes, warnings etc
+
+- Display MOTD if requested - suggested by
+  Trent Lloyd <lathiat at sixlabs.org> and
+  Zach White <zwhite at darkstar.frop.org>
+
+- sftp support works (relies on OpenSSH sftp binary or similar)
+
+- Added --disable-shadow option (requested by the floppyfw guys)
+
+0.37 - Wed Sept 24 2003 19:42:12 +0800
+
+- Various portability fixes, fixes for Solaris 9, Tru64 5.1, Mac OS X 10.2,
+  AIX, BSDs
+
+- Updated LibTomMath to 0.27 and LibTomCrypt to 0.90
+
+- Renamed util.{c,h} to dbutil.{c,h} to avoid conflicts with system util.h
+
+- Added some small changes so it'll work with AIX (plus Linux Affinity).
+  Thanks to Shig for them.
+
+- Improved the closing messages, so a clean exit is "Exited normally"
+
+- Added some more robust integer/size checking in buffer.c as a backstop for
+  integer overflows
+
+- X11 forwarding fixed for OSX, path for xauth changed to /usr/X11R6/bin/xauth
+
+- Channel code handles closing more nicely, doesn't sit waiting for an extra
+  keystroke on BSD/OSX platforms, and data is flushed fully before closing
+  child processes (thanks to 
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com> for
+  pointing that out).
+
+- Changed "DISABLE_TCPFWD" to "ENABLE_TCPFWD" (and for x11/auth) so
+  "disable DISABLE_TCPWD" isn't so confusing.
+
+- Fix authorized_keys handling (don't crash on too-long keys, and
+  use fgetc not getc to avoid strange macro-related issues), thanks to
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com> 
+  and Steve Rodgers <hwstar at cox.net> for reporting and testing.
+
+- Fixes to the README with regard to uClibc systems, thanks to 
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com>,
+  as well as general improvements to documentation (split README/INSTALL)
+
+- Fixed up some compilation problems with dropbearconvert/dropbearkey if
+  DSS or RSA were disabled, reported by Patrik Karlsson <patrik at cqure.net>
+
+- Fix double-free bug for hostkeys, reported by
+  Vincent Sanders <vince at kyllikki.org>
+
+- Fix up missing \ns from dropbearconvert help message,
+  thanks to Mordy Ovits <movits at bloomberg.com> for the patch
+
+0.36 - Tue August 19 2003 12:16:23 +0800
+
+- Fix uninitialised temporary variable in DSS signing code
+  (thanks to Matthew Franz <mdfranz at io.com> for reporting, and the authors
+  of Valgrind for making it easy to track down)
+- Fix remote version-string parsing error
+  (thanks to Bernard Blackham <bernard at blackham.com.au> for noticing)
+- Improved host-algorithm-matching algorithm in algo.c
+- Decreased MAX_STRING_LEN to a more realistic value
+- Fix incorrect version (0.34) in this CHANGES file for the previous release.
+
+0.35 - Sun August 17 2003 05:37:47 +0800
+
+- Fix for remotely exploitable format string buffer overflow.
+  (thanks to Joel Eriksson <je at bitnux.com>)
+
+0.34 - Fri August 15 2003 15:10:00 +0800
+
+- Made syslog optional, both at compile time and as a compile option
+  (suggested by Laurent Bercot <ska at skarnet.org>)
+- Fixup for bad base64 parsing in authorized_keys
+  (noticed by Davyd Madeley <davyd at zdlcomputing.com>)
+- Added initial tcp forwarding code, only -L (local) at this stage
+- Improved "make install" with DESTDIR and changing ownership seperately,
+  don't check for setpgrp on Linux for crosscompiling.
+  (from Erik Andersen <andersen at codepoet.org>)
+- More commenting, fix minor compile warnings, make return values more
+  consistent etc
+- Various signedness fixes
+- Can listen on multiple ports
+- added option to disable openpty with configure script,
+  (from K.-P. Kirchdörfer <kapeka at epost.de>)
+- Various cleanups to bignum code
+  (thanks to Tom St Denis <tomstdenis at iahu.ca>)
+- Fix compile error when disabling RSA
+  (from Marc Kleine-Budde <kleine-budde at gmx.de>)
+- Other cleanups, splitting large functions for packet and kex handling etc
+
+0.33 - Sun June 22 2003 22:24:12 +0800
+
+- Fixed some invalid assertions in the channel code, fixing the server dying
+  when forwarding X11 connections.
+- Add dropbearconvert to convert to/from OpenSSH host keys and Dropbear keys
+- RSA keys now keep p and q parameters for compatibility -- old Dropbear keys
+  still work, but can't be converted to OpenSSH etc.
+- Debian packaging directory added, thanks to 
+  Grahame (grahame at angrygoats.net)
+- 'install' target added to the makefile
+- general tidying, improve consistency of functions etc
+- If RSA or DSS hostkeys don't exist, that algorithm won't be used.
+- Improved RSA and DSS key generation, more efficient and fixed some minor bugs
+  (thanks to Tom St Denis for the advice)
+- Merged new versions of LibTomCrypt (0.86) and LibTomMath (0.21)
+
+0.32 - Sat May 24 2003 12:44:11 +0800
+
+- Don't compile unused code from libtomcrypt (test vectors etc)
+- Updated to libtommath 0.17 and libtomcrypt 0.83. New libtommath results
+  in smaller binary size, due to not linking unrequired code
+- X11 forwarding added
+- Agent forwarding added (for OpenSSH.com ssh client/agent)
+- Fix incorrect buffer freeing when banners are used
+- Hostname resolution works
+- Various minor bugfixes/code size improvements etc
+
+0.31 - Fri May 9 2003 17:57:16 +0800
+
+- Improved syslog messages - IP logging etc
+- Strip control characters from log messages (specified username currently)
+- Login recording (utmp/wtmp) support, so last/w/who work - taken from OpenSSH
+- Shell is started as a proper login shell, so /etc/profile etc is sourced
+- Ptys work on Solaris (2.8 x86 tested) now
+- Fixed bug in specifying the rsa hostkey
+- Fixed bug in compression code, could trigger if compression resulted in
+  larger output than input (uncommon but possible).
+
+0.30 - Thu Apr 17 2003 18:46:15 +0800
+
+- SECURITY: buffer.c had bad checking for buffer increment length - fixed
+- channel code now closes properly on EOF - scp processes don't hang around
+- syslog support added - improved auth/login/failure messages
+- general code tidying, made return codes more consistent
+- Makefile fixed for dependencies and makes libtomcrypt as well
+- Implemented sending SSH_MSG_UNIMPLEMENTED :)
+
+0.29 - Wed Apr 9 2003
+
+- Fixed a stupid bug in 0.28 release, 'newstr = strdup(oldstr)',
+  not 'newstr=oldstr'
+
+0.28 - Sun Apr 6 2003
+
+- Initial public release
+
+Development was started in October 2002

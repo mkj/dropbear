@@ -1,0 +1,14 @@
+This is Dropbear, a smallish SSH 2 server.
+
+INSTALL has compilation instructions.
+
+MULTI has instructions on making a multi-purpose binary (ie a single binary
+which performs multiple tasks, to save disk space)
+
+SMALL has some tips on creating small binaries.
+
+See TODO for a few of the things I know need looking at, and please contact
+me if you have any questions/bugs found/features/ideas/comments etc :)
+
+Matt Johnston
+matt@ucc.asn.au

@@ -1,0 +1,89 @@
+/*
+ * Dropbear - a SSH2 server
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
+#ifndef _CHANSESSION_H_
+#define _CHANSESSION_H_
+
+#include "loginrec.h"
+#include "channel.h"
+
+struct ChanSess {
+
+	unsigned char * cmd; /* command to exec */
+	pid_t pid; /* child process pid */
+
+	/* pty details */
+	int master; /* the master terminal fd*/
+	int slave;
+	unsigned char * tty;
+	unsigned char * term;
+	unsigned int termw, termh, termc, termr; /* width, height, col, rows */
+
+	/* exit details */
+	int exited;
+	int exitstatus;
+	int exitsignal;
+	unsigned char exitcore;
+	
+#ifndef DISABLE_X11FWD
+	int x11fd; /* set to -1 to indicate forwarding not established */
+	int x11port;
+	char * x11authprot;
+	char * x11authcookie;
+	unsigned int x11screennum;
+	unsigned char x11singleconn;
+#endif
+
+#ifndef DISABLE_AGENTFWD
+	int agentfd;
+	char * agentfile;
+	char * agentdir;
+#endif
+};
+
+struct ChildPid {
+	pid_t pid;
+	struct ChanSess * chansess;
+};
+
+
+void newchansess(struct Channel * channel);
+void chansessionrequest(struct Channel * channel);
+void closechansess(struct Channel * channel);
+void svr_chansessinitialise();
+void send_msg_chansess_exitstatus(struct Channel * channel,
+		struct ChanSess * chansess);
+void send_msg_chansess_exitsignal(struct Channel * channel,
+		struct ChanSess * chansess);
+void addnewvar(const char* param, const char* var);
+
+
+struct SigMap {
+	int signal;
+	char* name;
+};
+
+extern const struct SigMap signames[];
+
+#endif /* _CHANSESSION_H_ */

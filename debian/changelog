@@ -1,0 +1,79 @@
+dropbear (0.41-1) unstable; urgency=low
+
+  * Updated to 0.41 release.
+  * Various minor fixes
+
+ -- Matt Johnston <matt@ucc.asn.au>  Mon, 19 Jan 2004 23:20:54 +0800
+
+dropbear (0.39-1) unstable; urgency=low
+
+  * updated to 0.39 release. Some new features, some bugfixes.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Tue, 16 Dec 2003 16:20:54 +0800
+
+dropbear (0.38-1) unstable; urgency=medium
+
+  * updated to 0.38 release - various important bugfixes
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sat, 11 Oct 2003 16:28:54 +0800
+
+dropbear (0.37-1) unstable; urgency=medium
+
+  * updated to 0.37 release - various important bugfixes
+
+ -- Matt Johnston <matt@ucc.asn.au>  Wed, 24 Sept 2003 19:43:54 +0800
+
+dropbear (0.36-1) unstable; urgency=high
+
+  * updated to 0.36 release - various important bugfixes
+
+ -- Matt Johnston <matt@ucc.asn.au>  Tues, 19 Aug 2003 12:20:54 +0800
+
+dropbear (0.35-1) unstable; urgency=high
+
+  * updated to 0.35 release - contains fix for remotely exploitable
+    vulnerability.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sun, 17 Aug 2003 05:37:47 +0800
+
+dropbear (0.34-1) unstable; urgency=medium
+
+  * updated to 0.34 release
+
+ -- Matt Johnston <matt@ucc.asn.au>  Fri, 15 Aug 2003 15:10:00 +0800
+
+dropbear (0.33-1) unstable; urgency=medium
+
+  * updated to 0.33 release
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sun, 22 Jun 2003 22:22:00 +0800
+
+dropbear (0.32cvs-1) unstable; urgency=medium
+
+  * now maintained in UCC CVS
+  * debian/copyright.in file added, generated from LICENSE
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 21 Jun 2003 17:57:02 +0800
+
+dropbear (0.32cvs-1) unstable; urgency=medium
+
+  * sync with CVS
+  * fixes X crash bug
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 20 Jun 2003 15:04:47 +0800
+
+dropbear (0.32-2) unstable; urgency=low
+
+  * fix creation of host keys to use correct names in /etc/dropbear
+  * init script "restart" function fixed
+  * purging this package now deletes the host keys and /etc/dropbear
+  * change priority in debian/control to 'standard'
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 17 Jun 2003 15:04:47 +0800
+
+dropbear (0.32-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 17 Jun 2003 15:04:47 +0800
+
