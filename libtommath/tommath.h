@@ -338,6 +338,9 @@ int mp_invmod(mp_int *a, mp_int *b, mp_int *c);
 /* c = (a, b) */
 int mp_gcd(mp_int *a, mp_int *b, mp_int *c);
 
+/* produces value such that U1*a + U2*b = U3 */
+int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3);
+
 /* c = [a, b] or (a*b)/(a, b) */
 int mp_lcm(mp_int *a, mp_int *b, mp_int *c);
 
@@ -466,7 +469,7 @@ int mp_to_signed_bin(mp_int *a, unsigned char *b);
 
 int mp_read_radix(mp_int *a, char *str, int radix);
 int mp_toradix(mp_int *a, char *str, int radix);
-int mp_radix_size(mp_int *a, int radix);
+int mp_radix_size(mp_int *a, int radix, int *size);
 
 int mp_fread(mp_int *a, int radix, FILE *stream);
 int mp_fwrite(mp_int *a, int radix, FILE *stream);

@@ -19,6 +19,7 @@ int
 mp_sqr (mp_int * a, mp_int * b)
 {
   int     res;
+
   /* use Toom-Cook? */
   if (a->used >= TOOM_SQR_CUTOFF) {
     res = mp_toom_sqr(a, b);

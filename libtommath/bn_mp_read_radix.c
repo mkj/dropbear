@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* read a string [ASCII] in a given radix */
-int
-mp_read_radix (mp_int * a, char *str, int radix)
+int mp_read_radix (mp_int * a, char *str, int radix)
 {
   int     y, res, neg;
   char    ch;

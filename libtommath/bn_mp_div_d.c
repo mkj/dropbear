@@ -28,8 +28,7 @@ static int s_is_power_of_two(mp_digit b, int *p)
 }
 
 /* single digit division (based on routine from MPI) */
-int
-mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
+int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
 {
   mp_int  q;
   mp_word w;

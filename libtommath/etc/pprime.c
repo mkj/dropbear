@@ -229,8 +229,8 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
   /* now loop making the single digit */
   while (mp_count_bits (&a) < k) {
-    printf ("prime has %4d bits left\r", k - mp_count_bits (&a));
-    fflush (stdout);
+    fprintf (stderr, "prime has %4d bits left\r", k - mp_count_bits (&a));
+    fflush (stderr);
   top:
     mp_set (&b, prime_digit ());
 
@@ -322,7 +322,6 @@ pprime (int k, int li, mp_int * p, mp_int * q)
     if (ii == li)
       goto top;
 
-/*
 {
    char buf[4096];
 
@@ -331,10 +330,9 @@ pprime (int k, int li, mp_int * p, mp_int * q)
    mp_toradix(&a, buf, 10);
    printf("A == \n%s\n\n", buf);
    mp_toradix(&b, buf, 10);
-   printf("B == \n%s\n", buf);
+   printf("B == \n%s\n\nG == %d\n", buf, bases[ii]);
    printf("----------------------------------------------------------------\n");
 }
-*/
 
     /* a = n */
     mp_copy (&n, &a);

@@ -1,12 +1,18 @@
 #Makefile for GCC
 #
 #Tom St Denis
-CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -funroll-loops
+CFLAGS  +=  -I./ -Wall -W -Wshadow 
+
+#for speed 
+CFLAGS += -O3 -funroll-loops
+
+#for size 
+#CFLAGS += -Os
 
 #x86 optimizations [should be valid for any GCC install though]
 CFLAGS  += -fomit-frame-pointer
 
-VERSION=0.28
+VERSION=0.29
 
 default: libtommath.a
 
@@ -44,7 +50,7 @@ bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
 bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
 bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
 bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
-bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_prime_random.o bn_prime_sizes_tab.o
+bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_prime_random.o bn_prime_sizes_tab.o bn_mp_exteuclid.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)

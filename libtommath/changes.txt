@@ -1,7 +1,18 @@
+Jan 25th, 2004
+v0.29  ++ Note: "Henrik" from the v0.28 changelog refers to Henrik Goldman ;-)
+       -- Added fix to mp_shrink to prevent a realloc when used == 0 [e.g. realloc zero bytes???]
+       -- Made the mp_prime_rabin_miller_trials() function internal table smaller and also 
+          set the minimum number of tests to two (sounds a bit safer).
+       -- Added a mp_exteuclid() which computes the extended euclidean algorithm.
+       -- Fixed a memory leak in s_mp_exptmod() [called when Barrett reduction is to be used] which would arise
+          if a multiplication or subsequent reduction failed [would not free the temp result].  
+       -- Made an API change to mp_radix_size().  It now returns an error code and stores the required size 
+          through an "int star" passed to it.  
+
 Dec 24th, 2003
-v0.28  -- Henrik suggested I add casts to the montomgery code [stores into mu...] so compilers wouldn't
+v0.28  -- Henrik Goldman suggested I add casts to the montomgery code [stores into mu...] so compilers wouldn't
           spew [erroneous] diagnostics... fixed.
-       -- Henrik also spotted two typos.  One in mp_radix_size() and another in mp_toradix().
+       -- Henrik Goldman also spotted two typos.  One in mp_radix_size() and another in mp_toradix().
        -- Added fix to mp_shrink() to avoid a memory leak.
        -- Added mp_prime_random() which requires a callback to make truly random primes of a given nature
           (idea from chat with Niels Ferguson at Crypto'03)

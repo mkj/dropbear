@@ -20,8 +20,7 @@
    #define TAB_SIZE 256
 #endif
 
-int
-s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
+int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 {
   mp_int  M[TAB_SIZE], res, mu;
   mp_digit buf;
@@ -185,10 +184,10 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 
       /* then multiply */
       if ((err = mp_mul (&res, &M[bitbuf], &res)) != MP_OKAY) {
-        goto __MU;
+        goto __RES;
       }
       if ((err = mp_reduce (&res, P, &mu)) != MP_OKAY) {
-        goto __MU;
+        goto __RES;
       }
 
       /* empty window and reset */

@@ -138,15 +138,16 @@ int main(void)
 
 /* test mp_div_3  */
 #if 0
+   mp_set(&d, 3);
    for (cnt = 0; cnt < 1000000; ) {
       mp_digit r1, r2;
 
       if (!(++cnt & 127)) printf("%9d\r", cnt);
       mp_rand(&a, abs(rand()) % 128 + 1);
-      mp_div_d(&a, 3, &b, &r1);
+      mp_div(&a, &d, &b, &e);
       mp_div_3(&a, &c, &r2);
 
-      if (mp_cmp(&b, &c) || r1 != r2) {
+      if (mp_cmp(&b, &c) || mp_cmp_d(&e, r2)) {
          printf("\n\nmp_div_3 => Failure\n");
       }
    }

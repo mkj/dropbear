@@ -41,7 +41,7 @@ mp_div_3 (mp_int * a, mp_int *c, mp_digit * d)
         t = (w * ((mp_word)b)) >> ((mp_word)DIGIT_BIT);
 
         /* now subtract 3 * [w/3] from w, to get the remainder */
-        w -= (t << ((mp_word)1)) + t;
+        w -= t+t+t;
 
         /* fixup the remainder as required since
          * the optimization is not exact.

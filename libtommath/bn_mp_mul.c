@@ -42,7 +42,6 @@ int mp_mul (mp_int * a, mp_int * b, mp_int * c)
     } else {
       res = s_mp_mul (a, b, c);
     }
-
   }
   c->sign = neg;
   return res;

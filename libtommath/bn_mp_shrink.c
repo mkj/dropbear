@@ -18,7 +18,7 @@
 int mp_shrink (mp_int * a)
 {
   mp_digit *tmp;
-  if (a->alloc != a->used) {
+  if (a->alloc != a->used && a->used > 0) {
     if ((tmp = OPT_CAST XREALLOC (a->dp, sizeof (mp_digit) * a->used)) == NULL) {
       return MP_MEM;
     }

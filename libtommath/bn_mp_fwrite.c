@@ -19,11 +19,10 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream)
    char *buf;
    int err, len, x;
    
-   len = mp_radix_size(a, radix);
-   if (len == 0) {
-      return MP_VAL;
+   if ((err = mp_radix_size(a, radix, &len)) != MP_OKAY) {
+      return err;
    }
-   
+
    buf = XMALLOC (len);
    if (buf == NULL) {
       return MP_MEM;
