@@ -483,7 +483,6 @@ static void read_kex() {
 		erralgo = "hostkey";
 		goto error;
 	}
-	allgood &= goodguess;
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
