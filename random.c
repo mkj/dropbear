@@ -67,8 +67,8 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	struct sockaddr_un egdsock;
 #endif
 
-#ifdef DROPBEAR_DEV_RANDOM
-	readfd = open(DEV_RANDOM, O_RDONLY);
+#ifdef DROPBEAR_DEV_URANDOM
+	readfd = open(DEV_URANDOM, O_RDONLY);
 	if (!readfd) {
 		dropbear_exit("couldn't open random device");
 	}

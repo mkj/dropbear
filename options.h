@@ -79,7 +79,7 @@
  * otherwise use EGD and run EGD or PRNGD, specifying
  * the socket. This is only used for the initial seed, further
  * entropy is gathered from timings etc */
-#define DROPBEAR_DEV_RANDOM /* use /dev/urandom */
+#define DROPBEAR_DEV_URANDOM /* use /dev/urandom */
 
 /*#undef DROPBEAR_EGD */ /* use egd or prngd socket */
 #define DROPBEAR_EGD_SOCKET "./rng"
@@ -157,7 +157,7 @@
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
-#define DEV_RANDOM "/dev/urandom"
+#define DEV_URANDOM "/dev/urandom"
 
 /* the number of NAME=VALUE pairs to malloc for environ, if we don't have
  * the clearenv() function */
