@@ -659,23 +659,19 @@ static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
 	int i, len;
-	int ret;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
 
 	/* clear the state of the prng */
-	initrandom();
+	seedrandom();
 
-	/* close file descriptors except stdin/stdout/stderr */
+	/* close file descriptors except stdin/stdout/stderr
+	 * Need to be sure FDs are closed here to avoid reading files as root */
 	for (i = 3; i < ses.maxfd; i++) {
-		/* close() can fail, we need to be sure fds are closed */
-		do {
-			ret = close(i);
-			if (ret < 0 && (errno != EINTR) && (errno != EBADF)) {
-				dropbear_exit("error closing file desc");
-			}
-		} while ((ret < 0) && (errno != EBADF));
+		if (m_close(i) == -1) {
+			dropbear_exit("Error closing file desc");
+		}
 	}
 
 
