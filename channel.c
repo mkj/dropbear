@@ -781,6 +781,10 @@ void recv_msg_channel_open() {
 		typeval = CHANNEL_ID_SESSION;
 #ifndef DISABLE_LOCALTCPFWD
 	} else if (strcmp(type, "direct-tcpip") == 0) {
+		if (ses.opts->nolocaltcp) {
+			errtype = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
+			goto failure;
+		}
 		typeval = CHANNEL_ID_TCPDIRECT;
 #endif
 	} else {
@@ -800,9 +804,7 @@ void recv_msg_channel_open() {
 		newchansess(channel);
 #ifndef DISABLE_LOCALTCPFWD
 	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
-		if (ses.opts->nolocaltcp) {
-			errtype = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
-		} else if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
+		if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
 			errtype = SSH_OPEN_CONNECT_FAILED;
 			deletechannel(channel);
 			goto failure;
