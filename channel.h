@@ -50,8 +50,8 @@
 
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
-#define RECV_MAXWINDOW 4000 /* tweak */
-#define RECV_WINDOWEXTEND 500 /* We send a "window extend" every
+#define RECV_MAXWINDOW 8000 /* tweak */
+#define RECV_WINDOWEXTEND 1000 /* We send a "window extend" every
 								RECV_WINDOWEXTEND bytes */
 #define RECV_MAXPACKET RECV_MAXWINDOW /* tweak */
 

@@ -1,3 +1,22 @@
+0.44test4 - Tue Sept 14 21:15:54 +0800
+
+- Fix inetd mode so it actually loads the hostkeys (oops)
+
+- Changed DROPBEAR_DEFPORT properly everywhere
+
+- Fix a small memory leak in the auth code
+
+- WCOREDUMP is only used on systems which support it (ie not cygwin or AIX)
+
+- Check (and fail for) cases when we can't negotiate algorithms with the
+  remote side successfully (rather than bombing out ungracefully)
+
+- Handle authorized_keys files without a terminating newline
+
+- Fiddle the channel receive window size for possibly better performance
+
+- Added in the PAM authentication code (finally! thanks to Martin Carlsson)
+
 0.44test3 - Fri Aug 27 22:20:54 +0800
 
 - Fixed a bunch of warnings.
