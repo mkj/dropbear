@@ -3,7 +3,7 @@ LTC=libtomcrypt/libtomcrypt.a
 OBJS=util.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
 		chansession.o queue.o sshpty.o termcodes.o authpubkey.o runopts.o \
-		loginrec.o atomicio.h
+		loginrec.o atomicio.o
 
 DROPBEAROBJS=main.o
 
