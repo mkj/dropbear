@@ -197,7 +197,7 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
 
 		default:
 			/* XXX ipv6 */
-			strcpy(retstring, "Bad protocol");
+			snprintf(retstring, 22, "Proto unknown %d", addr->sa_family);
 
 	}
 	return retstring;

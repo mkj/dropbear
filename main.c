@@ -33,6 +33,9 @@ static int listensockets(int *sock, runopts * opts, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
+static void main_inetd();
+static void main_noinetd();
+static void commonsetup();
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
@@ -44,6 +47,68 @@ int main(int argc, char ** argv)
 #endif
 {
 	
+	runopts * opts;
+
+	/* get commandline options */
+	opts = getrunopts(argc, argv);
+
+#ifdef INETD_MODE
+	/* service program mode */
+	if (opts->inetdmode) {
+		main_inetd(opts);
+		/* notreached */
+	}
+#endif
+
+#ifdef NON_INETD_MODE
+		main_noinetd();
+#endif
+
+	dropbear_exit("Compiled without normal mode, can't run without -i\n");
+	return 1;
+}
+
+#ifdef INETD_MODE
+static void main_inetd(runopts * opts) {
+
+	struct sockaddr remoteaddr;
+	int remoteaddrlen;
+	char * addrstring = NULL;
+
+	/* Set up handlers, syslog */
+	commonsetup();
+
+
+	remoteaddrlen = sizeof(remoteaddr);
+	if (getpeername(0, &remoteaddr, &remoteaddrlen) < 0) {
+		dropbear_exit("Unable to getpeername: %s", strerror(errno));
+	}
+
+	/* In case our inetd was lax in logging source addresses */
+	addrstring = getaddrstring(&remoteaddr);
+	dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
+	m_free(addrstring);
+
+	/* Don't check the return value - it may just fail since inetd has
+	 * already done setsid() after forking (xinetd on Darwin appears to do
+	 * this */
+	setsid();
+
+	syslog(0, "hello!");
+
+	/* Start service program 
+	 * -1 is a dummy childpipe, just something we can close() without 
+	 * mattering. */
+	child_session(0, opts, -1, &remoteaddr);
+
+	/* notreached */
+}
+#endif /* NON_INETD_MODE */
+
+
+#ifdef NON_INETD_MODE
+static void main_noinetd(runopts * opts) {
+
 	fd_set fds;
 	struct timeval seltimeout;
 	unsigned int i, j;
@@ -53,17 +118,12 @@ int main(int argc, char ** argv)
 	int remoteaddrlen;
 	int listensocks[MAX_LISTEN_ADDR];
 	unsigned int listensockcount = 0;
-	runopts * opts;
-	FILE * pidfile;
+	FILE * pidfile = NULL;
+	char * addrstring = NULL;
 
 	int childsock;
 	pid_t childpid;
 	int childpipe[2];
-
-	struct sigaction sa_chld;
-
-	/* get commandline options */
-	opts = getrunopts(argc, argv);
 
 	/* fork */
 	if (opts->forkbg) {
@@ -74,16 +134,12 @@ int main(int argc, char ** argv)
 		}
 #endif
 		if (daemon(0, closefds) < 0) {
-			dropbear_exit("Failed to create background process: %s",
-					strerror(errno));
+			dropbear_exit("Failed to daemonize: %s", strerror(errno));
 		}
 	}
 
-#ifndef DISABLE_SYSLOG
-	if (usingsyslog) {
-		startsyslog();
-	}
-#endif
+	/* Set up syslog and handlers */
+	commonsetup();
 
 	/* should be done after syslog is working */
 	if (opts->forkbg) {
@@ -97,25 +153,6 @@ int main(int argc, char ** argv)
 	if (pidfile) {
 		fprintf(pidfile, "%d\n", getpid());
 		fclose(pidfile);
-	}
-
-	/* set up cleanup handler */
-	if (signal(SIGINT, sigintterm_handler) == SIG_ERR || 
-#ifndef DEBUG_VALGRIND
-		signal(SIGTERM, sigintterm_handler) == SIG_ERR ||
-#endif
-		signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
-		dropbear_exit("signal() error");
-	}
-
-	/* catch and reap zombie children */
-	sa_chld.sa_handler = sigchld_handler;
-	sa_chld.sa_flags = SA_NOCLDSTOP;
-	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
-		dropbear_exit("signal() error");
-	}
-	if (signal(SIGSEGV, sigsegv_handler) == SIG_ERR) {
-		dropbear_exit("signal() error");
 	}
 
 	/* sockets to identify pre-authenticated clients */
@@ -182,7 +219,7 @@ int main(int argc, char ** argv)
 				continue;
 
 			/* child connection XXX - ip6 stuff here */
-			remoteaddrlen = sizeof(struct sockaddr_in);
+			remoteaddrlen = sizeof(remoteaddr);
 			childsock = accept(listensocks[i], &remoteaddr, &remoteaddrlen);
 
 			if (childsock < 0) {
@@ -214,7 +251,6 @@ int main(int argc, char ** argv)
 			if ((childpid = fork()) == 0) {
 
 				/* child */
-				char * addrstring = NULL;
 #ifdef DEBUG_FORKGPROF
 				extern void _start(void), etext(void);
 				monstartup((u_long)&_start, (u_long)&etext);
@@ -225,7 +261,7 @@ int main(int argc, char ** argv)
 				m_free(addrstring);
 
 				if (setsid() < 0) {
-					dropbear_exit("setsid: %s", strerror(errno));
+					dropbear_exit("setsid");
 				}
 
 				/* make sure we close sockets */
@@ -256,32 +292,36 @@ int main(int argc, char ** argv)
 	/* don't reach here */
 	return -1;
 }
+#endif /* NON_INETD_MODE */
+
+/* Things used by inetd and non-inetd modes */
+static void commonsetup() {
+
+	struct sigaction sa_chld;
+#ifndef DISABLE_SYSLOG
+	if (usingsyslog) {
+		startsyslog();
+	}
 #endif
 
-/* catch + reap zombie children */
-static void sigchld_handler(int fish) {
-	struct sigaction sa_chld;
+	/* set up cleanup handler */
+	if (signal(SIGINT, sigintterm_handler) == SIG_ERR || 
+#ifndef DEBUG_VALGRIND
+		signal(SIGTERM, sigintterm_handler) == SIG_ERR ||
+#endif
+		signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
 
-	while(waitpid(-1, NULL, WNOHANG) > 0); 
-
+	/* catch and reap zombie children */
 	sa_chld.sa_handler = sigchld_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
 		dropbear_exit("signal() error");
 	}
-}
-
-/* catch any segvs */
-static void sigsegv_handler(int fish) {
-	fprintf(stderr, "Aiee, segfault! You should probably report "
-			"this as a bug to the developer\n");
-	exit(EXIT_FAILURE);
-}
-
-/* catch ctrl-c or sigterm */
-static void sigintterm_handler(int fish) {
-
-	exitflag = 1;
+	if (signal(SIGSEGV, sigsegv_handler) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
 }
 
 /* Set up listening sockets for all the requested ports */
@@ -341,3 +381,32 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 
 	return opts->portcount;
 }
+
+#endif  /* NON_INETD_MODE */
+
+/* catch + reap zombie children */
+static void sigchld_handler(int fish) {
+	struct sigaction sa_chld;
+
+	while(waitpid(-1, NULL, WNOHANG) > 0); 
+
+	sa_chld.sa_handler = sigchld_handler;
+	sa_chld.sa_flags = SA_NOCLDSTOP;
+	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
+		dropbear_exit("signal() error");
+	}
+}
+
+/* catch any segvs */
+static void sigsegv_handler(int fish) {
+	fprintf(stderr, "Aiee, segfault! You should probably report "
+			"this as a bug to the developer\n");
+	exit(EXIT_FAILURE);
+}
+
+/* catch ctrl-c or sigterm */
+static void sigintterm_handler(int fish) {
+
+	exitflag = 1;
+}
+

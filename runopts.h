@@ -62,6 +62,8 @@ struct RunOpts {
 	sign_key *hostkey;
 	buffer * banner;
 
+	int inetdmode;
+
 };
 
 typedef struct RunOpts runopts;

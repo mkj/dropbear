@@ -70,6 +70,9 @@ static void printhelp(const char * progname) {
 #ifndef DISABLE_REMOTETCPFWD
 					"-k		Disable remote port forwarding\n"
 #endif
+#ifdef INETD_MODE
+					"-i		Start for inetd\n"
+#endif
 					"-p port	Listen on specified tcp port, up to %d can be specified\n"
 					"		(default %d if none specified)\n"
 /*					"-4/-6		Disable listening on ipv4/ipv6 respectively\n"*/
@@ -117,6 +120,7 @@ runopts * getrunopts(int argc, char ** argv) {
 #ifndef DISABLE_SYSLOG
 	usingsyslog = 1;
 #endif
+	opts->inetdmode = 0;
 
 	for (i = 1; i < (unsigned int)argc; i++) {
 		if (next) {
@@ -197,6 +201,11 @@ runopts * getrunopts(int argc, char ** argv) {
 					opts->ipv6 = 0;
 					break;
 					*/
+#ifdef INETD_MODE
+				case 'i':
+					opts->inetdmode = 1;
+					break;
+#endif
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);

@@ -42,6 +42,19 @@
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
 #endif
 
+/* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
+ * on chosen ports and keeps accepting connections. This is the default.
+ *
+ * Set INETD_MODE if you want to be able to run Dropbear with inetd (or
+ * similar), where it will use stdin/stdout for connections, and each process
+ * lasts for a single connection. Dropbear should be invoked with the -i flag
+ * for inetd, and can only accept IPv4 connections.
+ *
+ * Both of these flags can be defined at once, don't compile without at least
+ * one of them. */
+#define NON_INETD_MODE
+#define INETD_MODE
+
 /* Setting this disables the faster version of the modular exponentiation
  * bignum code. It saves ~5kB, but is perhaps 20% slower for public-key and key
  * exchange operations.  It is probably worth experimenting to decide if it's

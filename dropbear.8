@@ -3,7 +3,7 @@
 dropbear \- lightweight SSH2 server
 .SH SYNOPSIS
 .B dropbear
-[\-FEmwsgjk] [\-b
+[\-FEmwsgjki] [\-b
 .I banner\fR] [\-d
 .I dsskey\fR] [\-r
 .I rsakey\fR] [\-p
@@ -24,13 +24,17 @@ before user login (default: none).
 dsskeyfile.
 Use the contents of the file
 .I dsskey
-for the dss host key (default: /etc/dropbear/dropbear_dss_host_key). This file is generated with dropbearkey.
+for the dss host key (default: /etc/dropbear/dropbear_dss_host_key).
+This file is generated with
+.BR dropbearkey (8).
 .TP
 .B \-r \fIrsakey
 rsakeyfile.
 Use the contents of the file
 .I rsakey
-for the rsa host key (default: /etc/dropbear/dropbear_rsa_host_key). This file is generated with dropbearkey.
+for the rsa host key (default: /etc/dropbear/dropbear_rsa_host_key).
+This file is generated with
+.BR dropbearkey (8).
 .TP
 .B \-F
 Don't fork into background.
@@ -60,6 +64,13 @@ Disable remote port forwarding.
 Listen on specified tcp port
 .IR port ;
 up to 10 can be specified (default 22 if none specified).
+.TP
+.B \-i
+Service program mode.
+Use this option to run
+.B dropbear
+under TCP/IP servers like inetd, tcpsvd, or tcpserver.
+In program mode the \-F option is implied, and \-p options are ignored.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br
