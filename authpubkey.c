@@ -231,7 +231,8 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		/* check the key type - this also stops us from using keys
 		 * which have options with them */
-		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
+		thealgo = buf_getptr(line, algolen);
+		if (strncmp(thealgo, algo, algolen) != 0) {
 			TRACE(("unexpected algo, got %s we expected %s", thealgo, algo));
 			continue;
 		}
