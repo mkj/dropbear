@@ -29,12 +29,23 @@
 #include "signkey.h"
 #include "buffer.h"
 
-struct SvrRunOpts {
+typedef struct runopts {
+
+	int nolocaltcp;
+	int noremotetcp;
+
+} runopts;
+
+extern runopts opts;
+
+typedef struct svr_runopts {
 
 	char * rsakeyfile;
 	char * dsskeyfile;
 	char * bannerfile;
+
 	int forkbg;
+	int usingsyslog;
 
 	/* ports is an array of the portcount listening ports */
 	uint16_t *ports;
@@ -56,17 +67,23 @@ struct SvrRunOpts {
 	int noauthpass;
 	int norootpass;
 
-	int nolocaltcp;
-	int noremotetcp;
-	
 	sign_key *hostkey;
 	buffer * banner;
 
-};
+} svr_runopts;
 
-typedef struct SvrRunOpts runopts;
+extern svr_runopts svr_opts;
 
-runopts * getrunopts(int argc, char ** argv);
-void freerunopts(runopts* opts);
+void svr_getopts(int argc, char ** argv);
+
+/* Uncompleted XXX matt */
+typedef struct cli_runopts {
+
+	int todo;
+
+} cli_runopts;
+
+extern cli_runopts cli_opts;
+void cli_getopts(int argc, char ** argv);
 
 #endif /* _RUNOPTS_H_ */

@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "packet.h"
 #include "listener.h"
+#include "runopts.h"
 
 #ifndef DISABLE_REMOTETCPFWD
 
@@ -35,7 +36,7 @@ void recv_msg_global_request_remotetcp() {
 
 	TRACE(("enter recv_msg_global_request_remotetcp"));
 
-	if (ses.opts->noremotetcp) {
+	if (opts.noremotetcp) {
 		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"));
 		goto out;
 	}

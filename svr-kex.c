@@ -32,6 +32,7 @@
 #include "packet.h"
 #include "bignum.h"
 #include "random.h"
+#include "runopts.h"
 
 
 static void send_msg_kexdh_reply(mp_int *dh_e);
@@ -125,7 +126,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash */
 	/* K_S, the host key */
-	buf_put_pub_key(ses.kexhashbuf, ses.opts->hostkey, 
+	buf_put_pub_key(ses.kexhashbuf, svr_opts.hostkey, 
 			ses.newkeys->algo_hostkey);
 	/* e, exchange value sent by the client */
 	buf_putmpint(ses.kexhashbuf, dh_e);
@@ -153,7 +154,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	/* we can start creating the kexdh_reply packet */
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_REPLY);
-	buf_put_pub_key(ses.writepayload, ses.opts->hostkey,
+	buf_put_pub_key(ses.writepayload, svr_opts.hostkey,
 			ses.newkeys->algo_hostkey);
 
 	/* put f */
@@ -161,7 +162,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	mp_clear(&dh_f);
 
 	/* calc the signature */
-	buf_put_sign(ses.writepayload, ses.opts->hostkey, 
+	buf_put_sign(ses.writepayload, svr_opts.hostkey, 
 			ses.newkeys->algo_hostkey, ses.hash, SHA1_HASH_SIZE);
 
 	/* the SSH_MSG_KEXDH_REPLY is done */

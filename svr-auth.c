@@ -34,6 +34,7 @@
 #include "auth.h"
 #include "authpasswd.h"
 #include "authpubkey.h"
+#include "runopts.h"
 
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);
@@ -61,7 +62,7 @@ static void authclear() {
 	svr_ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
 #ifdef DROPBEAR_PASSWORD_AUTH
-	if (!ses.opts->noauthpass) {
+	if (svr_opts.noauthpass) {
 		svr_ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
 #endif
@@ -73,7 +74,7 @@ static void authclear() {
 static void send_msg_userauth_banner() {
 
 	TRACE(("enter send_msg_userauth_banner"));
-	if (ses.opts->banner == NULL) {
+	if (svr_opts.banner == NULL) {
 		TRACE(("leave send_msg_userauth_banner: banner is NULL"));
 		return;
 	}
@@ -81,13 +82,13 @@ static void send_msg_userauth_banner() {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
-	buf_putstring(ses.writepayload, buf_getptr(ses.opts->banner,
-				ses.opts->banner->len), ses.opts->banner->len);
+	buf_putstring(ses.writepayload, buf_getptr(svr_opts.banner,
+				svr_opts.banner->len), svr_opts.banner->len);
 	buf_putstring(ses.writepayload, "en", 2);
 
 	encrypt_packet();
-	buf_free(ses.opts->banner);
-	ses.opts->banner = NULL;
+	buf_free(svr_opts.banner);
+	svr_opts.banner = NULL;
 
 	TRACE(("leave send_msg_userauth_banner"));
 }
@@ -107,7 +108,7 @@ void recv_msg_userauth_request() {
 	}
 
 	/* send the banner if it exists, it will only exist once */
-	if (ses.opts->banner) {
+	if (svr_opts.banner) {
 		send_msg_userauth_banner();
 	}
 
@@ -145,8 +146,8 @@ void recv_msg_userauth_request() {
 	}
 
 #ifdef DROPBEAR_PASSWORD_AUTH
-	if (!ses.opts->noauthpass &&
-			!(ses.opts->norootpass && svr_ses.authstate.pw->pw_uid == 0) ) {
+	if (!svr_opts.noauthpass &&
+			!(svr_opts.norootpass && svr_ses.authstate.pw->pw_uid == 0) ) {
 		/* user wants to try password auth */
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
@@ -217,7 +218,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	svr_ses.authstate.printableuser = m_strdup(svr_ses.authstate.pw->pw_name);
 
 	/* check for non-root if desired */
-	if (ses.opts->norootlogin && svr_ses.authstate.pw->pw_uid == 0) {
+	if (svr_opts.norootlogin && svr_ses.authstate.pw->pw_uid == 0) {
 		TRACE(("leave checkusername: root login disabled"));
 		dropbear_log(LOG_WARNING, "root login rejected");
 		send_msg_userauth_failure(0, 1);

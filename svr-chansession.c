@@ -36,6 +36,7 @@
 #include "utmp.h"
 #include "x11fwd.h"
 #include "agentfwd.h"
+#include "runopts.h"
 
 /* Handles sessions (either shells or programs) requested by the client */
 
@@ -690,7 +691,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		m_free(chansess->tty);
 
 #ifdef DO_MOTD
-		if (ses.opts->domotd) {
+		if (svr_opts.domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
 
 			/* 11 == strlen("/hushlogin\0") */
@@ -776,8 +777,8 @@ static void execchild(struct ChanSess *chansess) {
 	unsigned int i;
 
 	/* wipe the hostkey */
-	sign_key_free(ses.opts->hostkey);
-	ses.opts->hostkey = NULL;
+	sign_key_free(svr_opts.hostkey);
+	svr_opts.hostkey = NULL;
 
 	/* overwrite the prng state */
 	seedrandom();

@@ -29,6 +29,8 @@
 #include "dbutil.h"
 #include "algo.h"
 
+svr_runopts svr_opts; /* GLOBAL */
+
 static sign_key * loadhostkeys(const char * dsskeyfile,
 		const char * rsakeyfile);
 static int readhostkey(const char * filename, sign_key * hostkey, int type);
@@ -84,38 +86,34 @@ static void printhelp(const char * progname) {
 					DROPBEAR_MAX_PORTS, DROPBEAR_PORT);
 }
 
-/* returns NULL on failure, or a pointer to a freshly allocated
- * runopts structure */
-runopts * svr_getopts(int argc, char ** argv) {
+void svr_getopts(int argc, char ** argv) {
 
 	unsigned int i;
 	char ** next = 0;
-	runopts * opts;
 	unsigned int portnum = 0;
 	char *portstring[DROPBEAR_MAX_PORTS];
 	unsigned int longport;
 
 	/* see printhelp() for options */
-	opts = (runopts*)m_malloc(sizeof(runopts));
-	opts->rsakeyfile = NULL;
-	opts->dsskeyfile = NULL;
-	opts->bannerfile = NULL;
-	opts->banner = NULL;
-	opts->forkbg = 1;
-	opts->norootlogin = 0;
-	opts->noauthpass = 0;
-	opts->norootpass = 0;
-	opts->nolocaltcp = 0;
-	opts->noremotetcp = 0;
+	svr_opts.rsakeyfile = NULL;
+	svr_opts.dsskeyfile = NULL;
+	svr_opts.bannerfile = NULL;
+	svr_opts.banner = NULL;
+	svr_opts.forkbg = 1;
+	svr_opts.norootlogin = 0;
+	svr_opts.noauthpass = 0;
+	svr_opts.norootpass = 0;
+	opts.nolocaltcp = 0;
+	opts.noremotetcp = 0;
 	/* not yet
-	opts->ipv4 = 1;
-	opts->ipv6 = 1;
+	svr_opts.ipv4 = 1;
+	svr_opts.ipv6 = 1;
 	*/
 #ifdef DO_MOTD
-	opts->domotd = 1;
+	svr_opts.domotd = 1;
 #endif
 #ifndef DISABLE_SYSLOG
-	usingsyslog = 1;
+	svr_opts.usingsyslog = 1;
 #endif
 
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -131,34 +129,34 @@ runopts * svr_getopts(int argc, char ** argv) {
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {
 				case 'b':
-					next = &opts->bannerfile;
+					next = &svr_opts.bannerfile;
 					break;
 #ifdef DROPBEAR_DSS
 				case 'd':
-					next = &opts->dsskeyfile;
+					next = &svr_opts.dsskeyfile;
 					break;
 #endif
 #ifdef DROPBEAR_RSA
 				case 'r':
-					next = &opts->rsakeyfile;
+					next = &svr_opts.rsakeyfile;
 					break;
 #endif
 				case 'F':
-					opts->forkbg = 0;
+					svr_opts.forkbg = 0;
 					break;
 #ifndef DISABLE_SYSLOG
 				case 'E':
-					usingsyslog = 0;
+					svr_opts.usingsyslog = 0;
 					break;
 #endif
 #ifndef DISABLE_LOCALTCPFWD
 				case 'j':
-					opts->nolocaltcp = 1;
+					opts.nolocaltcp = 1;
 					break;
 #endif
 #ifndef DISABLE_REMOTETCPFWD
 				case 'k':
-					opts->noremotetcp = 1;
+					opts.noremotetcp = 1;
 					break;
 #endif
 				case 'p':
@@ -171,18 +169,18 @@ runopts * svr_getopts(int argc, char ** argv) {
 #ifdef DO_MOTD
 				/* motd is displayed by default, -m turns it off */
 				case 'm':
-					opts->domotd = 0;
+					svr_opts.domotd = 0;
 					break;
 #endif
 				case 'w':
-					opts->norootlogin = 1;
+					svr_opts.norootlogin = 1;
 					break;
 #ifdef DROPBEAR_PASSWORD_AUTH
 				case 's':
-					opts->noauthpass = 1;
+					svr_opts.noauthpass = 1;
 					break;
 				case 'g':
-					opts->norootpass = 1;
+					svr_opts.norootpass = 1;
 					break;
 #endif
 				case 'h':
@@ -191,10 +189,10 @@ runopts * svr_getopts(int argc, char ** argv) {
 					break;
 					/*
 				case '4':
-					opts->ipv4 = 0;
+					svr_opts.ipv4 = 0;
 					break;
 				case '6':
-					opts->ipv6 = 0;
+					svr_opts.ipv6 = 0;
 					break;
 					*/
 				default:
@@ -206,19 +204,19 @@ runopts * svr_getopts(int argc, char ** argv) {
 		}
 	}
 
-	if (opts->dsskeyfile == NULL) {
-		opts->dsskeyfile = DSS_PRIV_FILENAME;
+	if (svr_opts.dsskeyfile == NULL) {
+		svr_opts.dsskeyfile = DSS_PRIV_FILENAME;
 	}
-	if (opts->rsakeyfile == NULL) {
-		opts->rsakeyfile = RSA_PRIV_FILENAME;
+	if (svr_opts.rsakeyfile == NULL) {
+		svr_opts.rsakeyfile = RSA_PRIV_FILENAME;
 	}
-	opts->hostkey = loadhostkeys(opts->dsskeyfile, opts->rsakeyfile);
+	svr_opts.hostkey = loadhostkeys(svr_opts.dsskeyfile, svr_opts.rsakeyfile);
 
-	if (opts->bannerfile) {
+	if (svr_opts.bannerfile) {
 		struct stat buf;
-		if (stat(opts->bannerfile, &buf) != 0) {
+		if (stat(svr_opts.bannerfile, &buf) != 0) {
 			dropbear_exit("Error opening banner file '%s'",
-					opts->bannerfile);
+					svr_opts.bannerfile);
 		}
 		
 		if (buf.st_size > MAX_BANNER_SIZE) {
@@ -226,16 +224,16 @@ runopts * svr_getopts(int argc, char ** argv) {
 					MAX_BANNER_SIZE);
 		}
 
-		opts->banner = buf_new(buf.st_size);
-		if (buf_readfile(opts->banner, opts->bannerfile)!=DROPBEAR_SUCCESS) {
+		svr_opts.banner = buf_new(buf.st_size);
+		if (buf_readfile(svr_opts.banner, svr_opts.bannerfile)!=DROPBEAR_SUCCESS) {
 			dropbear_exit("Error reading banner file '%s'",
-					opts->bannerfile);
+					svr_opts.bannerfile);
 		}
-		buf_setpos(opts->banner, 0);
+		buf_setpos(svr_opts.banner, 0);
 	}
 
 	/* not yet
-	if (!(opts->ipv4 || opts->ipv6)) {
+	if (!(svr_opts.ipv4 || svr_opts.ipv6)) {
 		fprintf(stderr, "You can't disable ipv4 and ipv6.\n");
 		exit(1);
 	}
@@ -244,17 +242,17 @@ runopts * svr_getopts(int argc, char ** argv) {
 	/* create the array of listening ports */
 	if (portnum == 0) {
 		/* non specified */
-		opts->portcount = 1;
-		opts->ports = m_malloc(sizeof(uint16_t));
-		opts->ports[0] = DROPBEAR_PORT;
+		svr_opts.portcount = 1;
+		svr_opts.ports = m_malloc(sizeof(uint16_t));
+		svr_opts.ports[0] = DROPBEAR_PORT;
 	} else {
-		opts->portcount = portnum;
-		opts->ports = (uint16_t*)m_malloc(sizeof(uint16_t)*portnum);
+		svr_opts.portcount = portnum;
+		svr_opts.ports = (uint16_t*)m_malloc(sizeof(uint16_t)*portnum);
 		for (i = 0; i < portnum; i++) {
 			if (portstring[i]) {
 				longport = atoi(portstring[i]);
 					if (longport <= 65535 && longport > 0) {
-						opts->ports[i] = (uint16_t)longport;
+						svr_opts.ports[i] = (uint16_t)longport;
 						continue;
 					}
 			}
@@ -263,23 +261,8 @@ runopts * svr_getopts(int argc, char ** argv) {
 		}
 	}
 
-	return opts;
 }
 
-void freerunopts(runopts* opts) {
-
-	if (!opts) {
-		return;
-	}
-
-	if (opts->hostkey) {
-		sign_key_free(opts->hostkey);
-		opts->hostkey = NULL;
-	}
-
-	m_free(opts->ports);
-	m_free(opts);
-}
 
 /* returns success or failure */
 static int readhostkey(const char * filename, sign_key * hostkey, int type) {

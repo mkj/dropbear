@@ -29,7 +29,7 @@
 #include "signkey.h"
 #include "runopts.h"
 
-static int listensockets(int *sock, runopts * opts, int *maxfd);
+static int listensockets(int *sock, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
@@ -53,7 +53,6 @@ int main(int argc, char ** argv)
 	int remoteaddrlen;
 	int listensocks[MAX_LISTEN_ADDR];
 	unsigned int listensockcount = 0;
-	runopts * opts;
 	FILE * pidfile;
 
 	int childsock;
@@ -66,13 +65,13 @@ int main(int argc, char ** argv)
 	_dropbear_log = svr_dropbear_log;
 
 	/* get commandline options */
-	opts = svr_getopts(argc, argv);
+	svr_getopts(argc, argv);
 
 	/* fork */
-	if (opts->forkbg) {
+	if (svr_opts.forkbg) {
 		int closefds = 0;
 #ifndef DEBUG_TRACE
-		if (!usingsyslog) {
+		if (!svr_opts.usingsyslog) {
 			closefds = 1;
 		}
 #endif
@@ -83,13 +82,13 @@ int main(int argc, char ** argv)
 	}
 
 #ifndef DISABLE_SYSLOG
-	if (usingsyslog) {
+	if (svr_opts.usingsyslog) {
 		startsyslog();
 	}
 #endif
 
 	/* should be done after syslog is working */
-	if (opts->forkbg) {
+	if (svr_opts.forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
 	} else {
 		dropbear_log(LOG_INFO, "Not forking");
@@ -128,7 +127,7 @@ int main(int argc, char ** argv)
 	
 	/* Set up the listening sockets */
 	/* XXX XXX ports */
-	listensockcount = listensockets(listensocks, opts, &maxsock);
+	listensockcount = listensockets(listensocks, &maxsock);
 
 	/* incoming connection select loop */
 	for(;;) {
@@ -242,7 +241,7 @@ int main(int argc, char ** argv)
 					dropbear_exit("Couldn't close socket");
 				}
 				/* start the session */
-				svr_session(childsock, opts, childpipe[1], &remoteaddr);
+				svr_session(childsock, childpipe[1], &remoteaddr);
 				/* don't return */
 				assert(0);
 			}
@@ -288,7 +287,7 @@ static void sigintterm_handler(int fish) {
 }
 
 /* Set up listening sockets for all the requested ports */
-static int listensockets(int *sock, runopts * opts, int *maxfd) {
+static int listensockets(int *sock, int *maxfd) {
 	
 	int listensock; /* listening fd */
 	struct sockaddr_in listen_addr;
@@ -296,7 +295,7 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 	unsigned int i;
 	int val;
 
-	for (i = 0; i < opts->portcount; i++) {
+	for (i = 0; i < svr_opts.portcount; i++) {
 
 		/* iterate through all the sockets to listen on */
 		listensock = socket(PF_INET, SOCK_STREAM, 0);
@@ -319,13 +318,13 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 
 		memset((void*)&listen_addr, 0x0, sizeof(listen_addr));
 		listen_addr.sin_family = AF_INET;
-		listen_addr.sin_port = htons(opts->ports[i]);
+		listen_addr.sin_port = htons(svr_opts.ports[i]);
 		listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 		memset(&(listen_addr.sin_zero), '\0', 8);
 
 		if (bind(listensock, (struct sockaddr *)&listen_addr,
 					sizeof(listen_addr)) < 0) {
-			dropbear_exit("Bind failed port %d", opts->ports[i]);
+			dropbear_exit("Bind failed port %d", svr_opts.ports[i]);
 		}
 
 		/* listen */
@@ -342,5 +341,5 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 		*maxfd = MAX(listensock, *maxfd);
 	}
 
-	return opts->portcount;
+	return svr_opts.portcount;
 }

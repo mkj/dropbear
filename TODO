@@ -24,4 +24,6 @@ Things which need doing:
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly
 
+- Use m_burn for clearing sensitive items in LTM/LTC
+
 - fix scp.c for IRIX

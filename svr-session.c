@@ -39,10 +39,11 @@
 #include "service.h"
 #include "auth.h"
 #include "tcpfwd-remote.h"
+#include "runopts.h"
 
 static void svr_remoteclosed();
 
-struct serversession svr_ses;
+struct serversession svr_ses; /* GLOBAL */
 
 static const packettype svr_packettypes[] = {
 	/* TYPE, AUTHREQUIRED, FUNCTION */
@@ -69,15 +70,14 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
-void svr_session(int sock, runopts *opts, int childpipe, 
-		struct sockaddr* remoteaddr) {
+void svr_session(int sock, int childpipe, struct sockaddr* remoteaddr) {
 
 	fd_set readfd, writefd;
 	struct timeval timeout;
 	int val;
 	
 	crypto_init();
-	common_session_init(sock, opts);
+	common_session_init(sock);
 
 	ses.remoteaddr = remoteaddr;
 	ses.remotehost = getaddrhostname(remoteaddr);
@@ -227,7 +227,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
 
 #ifndef DISABLE_SYSLOG
-	if (usingsyslog) {
+	if (svr_opts.usingsyslog) {
 		syslog(priority, "%s", printbuf);
 	}
 #endif
@@ -238,7 +238,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 	havetrace = 1;
 #endif
 
-	if (!usingsyslog || havetrace)
+	if (!svr_opts.usingsyslog || havetrace)
 	{
 		timesec = time(NULL);
 		if (strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 

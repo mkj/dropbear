@@ -32,7 +32,6 @@
 #ifndef DISABLE_SYSLOG
 void startsyslog();
 #endif
-extern int usingsyslog;
 
 extern void (*_dropbear_exit)(int exitcode, const char* format, va_list param);
 extern void (*_dropbear_log)(int priority, const char* format, va_list param);

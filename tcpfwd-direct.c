@@ -3,6 +3,7 @@
 #include "dbutil.h"
 #include "channel.h"
 #include "tcpfwd-direct.h"
+#include "runopts.h"
 
 #ifndef DISABLE_TCPFWD_DIRECT
 static int newtcpdirect(struct Channel * channel);
@@ -30,7 +31,7 @@ static int newtcpdirect(struct Channel * channel) {
 	int len;
 	int ret = DROPBEAR_FAILURE;
 
-	if (ses.opts->nolocaltcp) {
+	if (opts.nolocaltcp) {
 		TRACE(("leave newtcpdirect: local tcp forwarding disabled"));
 		goto out;
 	}

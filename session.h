@@ -32,14 +32,13 @@
 #include "auth.h"
 #include "channel.h"
 #include "queue.h"
-#include "runopts.h"
 #include "listener.h"
 #include "packet.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
-void common_session_init(int sock, runopts *opts);
+void common_session_init(int sock);
 void common_session_cleanup();
 void checktimeouts();
 void session_identification();
@@ -47,8 +46,7 @@ void session_identification();
 extern void(*session_remoteclosed)();
 
 /* Server */
-void svr_session(int sock, runopts *opts, int childpipe,
-		struct sockaddr *remoteaddr);
+void svr_session(int sock, int childpipe, struct sockaddr *remoteaddr);
 void svr_dropbear_exit(int exitcode, const char* format, va_list param);
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
@@ -81,8 +79,6 @@ struct sshsession {
 
 	/* Is it a client or server? */
 	unsigned char isserver;
-
-	runopts * opts; /* runtime options, incl hostkey, banner etc */
 
 	long connecttimeout; /* time to disconnect if we have a timeout (for
 							userauth etc), or 0 for no timeout */

@@ -35,14 +35,14 @@
 #include "channel.h"
 #include "atomicio.h"
 
-struct sshsession ses;
+struct sshsession ses; /* GLOBAL */
 
 /* need to know if the session struct has been initialised, this way isn't the
  * cleanest, but works OK */
-int sessinitdone = 0;
+int sessinitdone = 0; /* GLOBAL */
 
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
-int exitflag = 0;
+int exitflag = 0; /* GLOBAL */
 
 static int ident_readln(int fd, char* buf, int count);
 
@@ -51,7 +51,7 @@ void(*session_remoteclosed)() = NULL;
 
 
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock, runopts *opts) {
+void common_session_init(int sock) {
 
 	TRACE(("enter session_init"));
 
@@ -60,8 +60,6 @@ void common_session_init(int sock, runopts *opts) {
 
 	ses.sock = sock;
 	ses.maxfd = sock;
-
-	ses.opts = opts;
 
 	ses.connecttimeout = 0;
 	
@@ -128,7 +126,6 @@ void common_session_cleanup() {
 	}
 	
 	m_free(ses.session_id);
-	freerunopts(ses.opts);
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);
 
