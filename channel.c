@@ -371,8 +371,12 @@ void recv_msg_channel_eof() {
 	channel->recveof = 1;
 
 	/* we should close the channel */
-	/* XXX when TCP forwarding etc is done, use shutdown() not close() */
-	close(channel->infd);
+	if (channel->type == CHANNEL_ID_X11) {
+		shutdown(channel->infd, 0);
+	} else {
+		close(channel->infd);
+	}
+	channel->infd = -1;
 
 	if (channel->transeof && (channel->erreof || channel->errfd == -1)
 			&& !channel->sentclosed) {
@@ -391,6 +395,7 @@ void recv_msg_channel_close() {
 	TRACE(("enter recv_msg_channel_close"));
 
 	chan = buf_getint(ses.payload);
+	TRACE(("close channel = %d", chan));
 	channel = getchannel(chan);
 
 	if (channel == NULL) {
@@ -416,6 +421,11 @@ static void closechannel(struct Channel * channel) {
 	
 	buf_free(channel->writebuf);
 	TRACE(("frees done "));
+
+	/* close the FDs in case they haven't been done
+	 * yet (ie they were shutdown etc */
+	close(channel->infd);
+	close(channel->outfd);
 
 	if (channel->type == CHANNEL_ID_SESSION) {
 		closechansess(channel);
@@ -764,9 +774,8 @@ void recv_msg_channel_open_confirmation() {
 	}
 
 	channel->remotechan =  buf_getint(ses.payload);
-	TRACE(("remotechan = %d\n", channel->remotechan));
-	channel->recvwindow = buf_getint(ses.payload);
-	channel->recvmaxpacket = buf_getint(ses.payload);
+	channel->transwindow = buf_getint(ses.payload);
+	channel->transmaxpacket = buf_getint(ses.payload);
 
 	TRACE(("leave recv_msg_channel_open_confirmation"));
 }
