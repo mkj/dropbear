@@ -162,9 +162,7 @@ void checktimeouts() {
 }
 
 
-#ifdef DOCLEANUP
-/* clean up session vars etc - only usually called at exit(), but useful
- * for checking memory left lying about */
+/* clean up a session on exit */
 void session_cleanup() {
 	
 	TRACE(("enter session_cleanup"));
@@ -172,18 +170,10 @@ void session_cleanup() {
 
 	m_free(ses.session_id);
 	sign_key_free(ses.hostkey);
-	m_free(ses.remoteident);
-
-	buf_free(ses.readbuf);
-	buf_free(ses.decryptreadbuf);
-	buf_free(ses.payload);
-	buf_free(ses.writepayload);
 	m_free(ses.keys);
-
 
 	TRACE(("leave session_cleanup"));
 }
-#endif
 
 /* called only at the start of a session, set up initial state */
 static void session_init(int sock, runopts *opts, int childpipe,

@@ -37,11 +37,6 @@
  * something requiring LD_PRELOAD etc, but dangerous if used normally */
 /*#define DEBUG_KEEP_ENV*/
 
-/* Whether we should try to free() all allocated memory at exit.
- * not required, but useful if running memory checkers like valgrind,
- * to check for leaks */
-/*#define DOCLEANUP*/
-
 /* Define this to print trace statements */
 /*#define DEBUG_TRACE*/
 

@@ -124,10 +124,6 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 	char fmtbuf[MAX_FMT + EXIT_MESSAGE_LEN + MAX_INFOSTR + 1];
 	char infostr[MAX_INFOSTR + 1];
 
-#ifdef DOCLEANUP
-	session_cleanup();
-#endif
-
 	strcpy(fmtbuf, EXIT_MESSAGE);
 
 	/* include the username if possible */
@@ -145,6 +141,9 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 	strncat(fmtbuf, format, MAX_FMT);
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
+
+	/* must be after using username etc */
+	session_cleanup();
 
 	exit(exitcode);
 

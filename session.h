@@ -41,11 +41,9 @@
 
 extern int sessinitdone;
 
+void session_cleanup();
 void child_session(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remoteaddr);
-#ifdef DOCLEANUP
-void session_cleanup();
-#endif
 
 struct key_context {
 
