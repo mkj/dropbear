@@ -188,8 +188,10 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	/* we don't need to check pw and pw_dir for validity, since
 	 * its been done in checkpubkeyperms. */
 	len = strlen(ses.authstate.pw->pw_dir);
-	filename = m_malloc(len + 30);
-	strncpy(filename, ses.authstate.pw->pw_dir, len+1);
+	/* allocate max required pathname storage,
+	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
+	filename = m_malloc(len + 22);
+	strncpy(filename, ses.authstate.pw->pw_dir, len + 1);
 	strncat(filename, "/.ssh/authorized_keys", 21);
 
 	/* open the file */
@@ -333,7 +335,7 @@ static int checkpubkeyperms() {
 
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len + 30);
+	filename = m_malloc(len + 22);
 	strncpy(filename, ses.authstate.pw->pw_dir, len+1);
 
 	/* check ~ */
