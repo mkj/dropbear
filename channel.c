@@ -329,6 +329,12 @@ void recv_msg_channel_eof() {
 
 	channel->recveof = 1;
 
+	/* if we have nothing else to write out, then we respond with an eof for
+	 * the other way */
+	if (channel->writebuf->pos < channel->writebuf->len) {
+		send_msg_channel_eof(channel);
+	}
+
 	if (channel->transeof && (channel->erreof || channel->errfd == -1)
 			&& !channel->sentclosed) {
 		send_msg_channel_close(channel);
