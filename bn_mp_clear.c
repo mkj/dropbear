@@ -19,14 +19,17 @@
 void
 mp_clear (mp_int * a)
 {
-  int i;
+  volatile mp_digit *p;
+  int len;
 
   /* only do anything if a hasn't been freed previously */
   if (a->dp != NULL) {
     /* first zero the digits */
-    for (i = 0; i < a->used; i++) {
-        a->dp[i] = 0;
-    }
+	len = a->alloc;
+	p = a->dp;
+	while (len--) {
+		*p++ = 0;
+	}
 
     /* free ram */
     XFREE(a->dp);
