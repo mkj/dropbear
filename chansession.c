@@ -335,7 +335,7 @@ void chansessionrequest(struct Channel *channel) {
 out:
 
 	if (wantreply) {
-		if (ret == 0) {
+		if (ret == DROPBEAR_SUCCESS) {
 			send_msg_channel_success(channel);
 		} else {
 			send_msg_channel_failure(channel);
