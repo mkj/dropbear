@@ -74,7 +74,8 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
-void svr_session(int sock, int childpipe, char* remotehost) {
+void svr_session(int sock, int childpipe, 
+		char* remotehost, char *addrstring) {
 
 	struct timeval timeout;
 	
@@ -83,6 +84,7 @@ void svr_session(int sock, int childpipe, char* remotehost) {
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
+	svr_ses.addrstring = addrstring;
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();

@@ -94,7 +94,6 @@ static void main_inetd() {
 	/* In case our inetd was lax in logging source addresses */
 	addrstring = getaddrstring(&remoteaddr, 1);
 	dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
-	m_free(addrstring);
 
 	/* Don't check the return value - it may just fail since inetd has
 	 * already done setsid() after forking (xinetd on Darwin appears to do
@@ -104,7 +103,7 @@ static void main_inetd() {
 	/* Start service program 
 	 * -1 is a dummy childpipe, just something we can close() without 
 	 * mattering. */
-	svr_session(0, -1, getaddrhostname(&remoteaddr));
+	svr_session(0, -1, getaddrhostname(&remoteaddr), addrstring);
 
 	/* notreached */
 }
@@ -264,7 +263,6 @@ void main_noinetd() {
 
 				addrstring = getaddrstring(&remoteaddr, 1);
 				dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
-				m_free(addrstring);
 
 				if (setsid() < 0) {
 					dropbear_exit("setsid: %s", strerror(errno));
@@ -283,7 +281,8 @@ void main_noinetd() {
 
 				/* start the session */
 				svr_session(childsock, childpipe[1], 
-								getaddrhostname(&remoteaddr));
+								getaddrhostname(&remoteaddr),
+								addrstring);
 				/* don't return */
 				assert(0);
 			}

@@ -88,13 +88,15 @@ void svr_auth_password() {
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
-				"password auth succeeded for '%s'",
-				ses.authstate.printableuser);
+				"password auth succeeded for '%s' from %s",
+				ses.authstate.printableuser,
+				svr_ses.addrstring);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
-				"bad password attempt for '%s'",
-				ses.authstate.printableuser);
+				"bad password attempt for '%s' from %s",
+				ses.authstate.printableuser,
+				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
 

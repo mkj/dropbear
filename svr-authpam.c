@@ -194,8 +194,9 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad PAM password attempt for '%s'",
-				ses.authstate.printableuser);
+				"bad PAM password attempt for '%s' from %s",
+				ses.authstate.printableuser,
+				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
 	}
@@ -204,15 +205,17 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad PAM password attempt for '%s'",
-				ses.authstate.printableuser);
+				"bad PAM password attempt for '%s' from %s",
+				ses.authstate.printableuser,
+				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
 	}
 
 	/* successful authentication */
-	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s'",
-			ses.authstate.printableuser);
+	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s' from %s",
+			ses.authstate.printableuser,
+			svr_ses.addrstring);
 	send_msg_userauth_success();
 
 cleanup:

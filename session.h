@@ -48,7 +48,7 @@ void session_identification();
 
 
 /* Server */
-void svr_session(int sock, int childpipe, char *remotehost);
+void svr_session(int sock, int childpipe, char *remotehost, char *addrstring);
 void svr_dropbear_exit(int exitcode, const char* format, va_list param);
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
@@ -179,6 +179,9 @@ struct serversession {
 	/* Used to avoid a race in the exit returncode handling - see
 	 * svr-chansession.c for details */
 	struct exitinfo lastexit;
+
+	/* The numeric address they connected from, used for logging */
+	char * addrstring;
 
 };
 

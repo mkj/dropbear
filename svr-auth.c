@@ -205,7 +205,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 		strcmp(username, ses.authstate.username) != 0) {
 			/* the username needs resetting */
 			if (ses.authstate.username != NULL) {
-				dropbear_log(LOG_WARNING, "client trying multiple usernames");
+				dropbear_log(LOG_WARNING, "client trying multiple usernames from %s",
+							svr_ses.addrstring);
 				m_free(ses.authstate.username);
 			}
 			authclear();
@@ -218,7 +219,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	if (ses.authstate.pw == NULL) {
 		TRACE(("leave checkusername: user '%s' doesn't exist", username));
 		dropbear_log(LOG_WARNING,
-				"login attempt for nonexistent user");
+				"login attempt for nonexistent user from %s",
+				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -336,7 +338,8 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		} else {
 			userstr = ses.authstate.printableuser;
 		}
-		dropbear_exit("Max auth tries reached - user %s", userstr);
+		dropbear_exit("Max auth tries reached - user '%s' from %s",
+				userstr, svr_ses.addrstring);
 	}
 	
 	TRACE(("leave send_msg_userauth_failure"));
