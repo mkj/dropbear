@@ -47,6 +47,11 @@ static void printhelp(const char * progname) {
 					"-r rsakeyfile     Use rsakeyfile for the rsa host key\n"
 					"                  (default: %s)\n"
 					"-F                Don't fork into background\n"
+#ifdef DISABLE_SYSLOG
+					"(Syslog support not compiled in, using stderr)\n"
+#else
+					"-E                Log to stderr rather than syslog\n"
+#endif
 					"-p port           Listen on specified tcp port\n"
 					"                  (default %d)\n",
 					DROPBEAR_VERSION,
@@ -71,6 +76,9 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->bannerfile = NULL;
 	opts->banner = NULL;
 	opts->forkbg = 1;
+#ifndef DISABLE_SYSLOG
+	usingsyslog = 1;
+#endif
 
 	for (i = 1; i < argc; i++) {
 		if (next) {
@@ -96,6 +104,11 @@ runopts * getrunopts(int argc, char ** argv) {
 				case 'F':
 					opts->forkbg = 0;
 					break;
+#ifndef DISABLE_SYSLOG
+				case 'E':
+					usingsyslog = 0;
+					break;
+#endif
 				case 'p':
 					next = &portstring;
 					break;

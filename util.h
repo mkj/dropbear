@@ -29,7 +29,10 @@
 #include "includes.h"
 #include "buffer.h"
 
+#ifndef DISABLE_SYSLOG
 void startsyslog();
+#endif
+extern int usingsyslog;
 void dropbear_exit(const char* format, ...);
 void dropbear_close(const char* format, ...);
 void dropbear_log(int priority, const char* format, ...);

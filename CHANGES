@@ -1,3 +1,6 @@
+
+- Made syslog optional, both at compile time and as a compile option
+
 0.33 - Sun June 22 2003 22:24:12 +0800
 
 - Fixed some invalid assertions in the channel code, fixing the server dying

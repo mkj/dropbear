@@ -59,10 +59,16 @@ int main(int argc, char ** argv) {
 	/* get commandline options */
 	opts = getrunopts(argc, argv);
 
+#ifndef DISABLE_SYSLOG
+	if (usingsyslog) {
+		startsyslog();
+	}
+#endif
 
 	/* fork to background, returning (interactive) users to a term */
-	if (opts->forkbg) {
-
+	if (!opts->forkbg) {
+		dropbear_log(LOG_INFO, "Not forking");
+	} else {
 		switch (fork()) {
 			case -1:
 				dropbear_exit("Failed to create background process");
@@ -71,13 +77,11 @@ int main(int argc, char ** argv) {
 			default:
 				exit(0);
 		}
+
 		if (setpgid(0,0) < 0) {
 			dropbear_exit("Failed to set process group");
 		}
-		startsyslog();
-		fprintf(stderr,"Dropbear: Running in background.\n");
-	} else {
-		fprintf(stderr,"Dropbear: Not forking\n");
+		dropbear_log(LOG_INFO, "Running in background");
 	}
 	
 	/* setup the sockets - we're allowing for multiple listening sockets
@@ -85,7 +89,6 @@ int main(int argc, char ** argv) {
 	listensocket(&listensocks[0], opts->port);
 	listensockcount = 1;
 	maxsock = listensocks[listensockcount-1];
-
 
 	/* create a PID file so that we can be killed easily */
 	pidfile = fopen(DROPBEAR_PIDFILE, "w");
@@ -120,7 +123,7 @@ int main(int argc, char ** argv) {
 
 		FD_ZERO(&fds);
 		
-		seltimeout.tv_sec = 60; /* TODO find good value */
+		seltimeout.tv_sec = 60;
 		seltimeout.tv_usec = 0;
 		
 		/* listening sockets */
@@ -146,6 +149,7 @@ int main(int argc, char ** argv) {
 			/* timeout reached */
 			continue;
 		}
+
 		if (val < 0) {
 			if (errno == EINTR) {
 				continue;
@@ -153,7 +157,8 @@ int main(int argc, char ** argv) {
 			dropbear_exit("Listening socket error");
 		}
 
-		/* close fds which have been authed or closed */
+		/* close fds which have been authed or closed - auth.c handles
+		 * closing the auth sockets on success */
 		for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
 			if (childpipes[i] >= 0 && FD_ISSET(childpipes[i], &fds)) {
 				close(childpipes[i]);
@@ -168,8 +173,7 @@ int main(int argc, char ** argv) {
 
 			/* child connection */
 			remoteaddrlen = sizeof(struct sockaddr_in);
-			childsock = accept(listensocks[i], 
-					&remoteaddr, &remoteaddrlen);
+			childsock = accept(listensocks[i], &remoteaddr, &remoteaddrlen);
 
 			if (childsock < 0) {
 				/* accept failed */
@@ -182,6 +186,7 @@ int main(int argc, char ** argv) {
 					break;
 				}
 			}
+
 			if (j == MAX_UNAUTH_CLIENTS) {
 				/* no free connections */
 				/* TODO - possibly log, though this would be an easy way

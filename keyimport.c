@@ -216,7 +216,7 @@ static void base64_encode_fp(FILE * fp, unsigned char *data,
 	unsigned long outlen;
 	int rawcpl;
 	rawcpl = cpl * 3 / 4;
-	assert(cpl < sizeof(out));
+	assert((unsigned int)cpl < sizeof(out));
 
     while (datalen > 0) {
 		n = (datalen < rawcpl ? datalen : rawcpl);
@@ -366,7 +366,7 @@ struct openssh_key {
 	int encrypted;
 	char iv[32];
 	unsigned char *keyblob;
-	int keyblob_len, keyblob_size;
+	unsigned int keyblob_len, keyblob_size;
 };
 
 static struct openssh_key *load_openssh_key(const char *filename)
