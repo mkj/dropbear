@@ -13,6 +13,11 @@ int rsa_encrypt_key(const unsigned char *inkey, unsigned long inlen,
    _ARGCHK(outkey != NULL);
    _ARGCHK(outlen != NULL);
    _ARGCHK(key != NULL);
+   
+   /* only allow keys from 64 to 256 bits */
+   if (inlen < 8 || inlen > 32) {
+      return CRYPT_INVALID_ARG;
+   }
 
    /* are the parameters valid? */
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
@@ -147,6 +152,11 @@ int rsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(out != NULL);
    _ARGCHK(outlen != NULL);
    _ARGCHK(key != NULL);
+   
+   /* reject nonsense sizes */
+   if (inlen < 16) {
+      return CRYPT_INVALID_ARG;
+   }
 
    /* type of key? */
    if (key->type != PK_PRIVATE && key->type != PK_PRIVATE_OPTIMIZED) {

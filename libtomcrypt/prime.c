@@ -147,11 +147,11 @@ static int next_prime(mp_int *N, mp_digit step)
     int res;
     mp_int n1, a, y, r;
     mp_digit dist, residues[UPPER_LIMIT];
-    
+
     _ARGCHK(N != NULL);
 
     /* first find the residues */
-	for (x = 0; x < (long)UPPER_LIMIT; x++) {
+    for (x = 0; x < (long)UPPER_LIMIT; x++) {
         if (mp_mod_d(N, prime_tab[x], &residues[x]) != MP_OKAY) {
            return CRYPT_MEM;
         }

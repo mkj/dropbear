@@ -43,6 +43,12 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    if ((err = cipher_is_valid(ctr->cipher)) != CRYPT_OK) {
        return err;
    }
+   
+   /* is blocklen/padlen valid? */
+   if (ctr->blocklen < 0 || ctr->blocklen > (int)sizeof(ctr->ctr) ||
+       ctr->padlen   < 0 || ctr->padlen   > (int)sizeof(ctr->pad)) {
+      return CRYPT_INVALID_ARG;
+   }
 
    while (len-- > 0) {
       /* is the pad empty? */

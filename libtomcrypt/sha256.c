@@ -33,7 +33,7 @@ static const unsigned long K[64] = {
 
 /* Various logical functions */
 #define Ch(x,y,z)       ((x & y) | (~x & z))
-#define Maj(x,y,z)      ((x & y) ^ (x & z) ^ (y & z))
+#define Maj(x,y,z)      (((x | y) & z) | (x & y)) 
 #define S(x, n)	        ROR((x),(n))
 #define R(x, n)	        (((x)&0xFFFFFFFFUL)>>(n))
 #define Sigma0(x)       (S(x, 2) ^ S(x, 13) ^ S(x, 22))
@@ -85,6 +85,7 @@ static void sha256_compress(hash_state * md)
     for (i = 0; i < 8; i++) {
         md->sha256.state[i] = md->sha256.state[i] + S[i];
     }
+
 }
 
 #ifdef CLEAN_STACK

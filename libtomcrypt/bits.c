@@ -20,9 +20,15 @@ static unsigned long rng_nix(unsigned char *buf, unsigned long len,
     if (f == NULL) {
        return 0;
     }
+    
+    /* disable buffering */
+    if (setvbuf(f, NULL, _IONBF, 0) != 0) {
+       fclose(f);
+       return 0;
+    }   
  
     x = (unsigned long)fread(buf, 1, (size_t)len, f);
-    (void)fclose(f);
+    fclose(f);
     return x;
 #endif /* NO_FILE */
 }
@@ -172,7 +178,7 @@ int rng_make_prng(int bits, int wprng, prng_state *prng,
       return err;
    }
 
-   bits = ((bits/8)+((bits&7)==0x80?1:0)) * 2;
+   bits = ((bits/8)+((bits&7)!=0?1:0)) * 2;
    if (rng_get_bytes(buf, (unsigned long)bits, callback) != (unsigned long)bits) {
       return CRYPT_ERROR_READPRNG;
    }

@@ -1,4 +1,4 @@
-/* The precompute tables for AES */
+/* The precomputed tables for AES */
 
 static const unsigned long ft_tab[4][256] = {
 {0xa56363c6UL, 0x847c7cf8UL, 0x997777eeUL, 0x8d7b7bf6UL, 0x0df2f2ffUL, 

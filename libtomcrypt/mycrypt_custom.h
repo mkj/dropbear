@@ -27,9 +27,6 @@
 #define MD5
 #define HMAC
 #define BASE64
-#define DEVRANDOM
-#define TRY_URANDOM_FIRST
-#define SPRNG
 #define MPI
 #define YARROW
 

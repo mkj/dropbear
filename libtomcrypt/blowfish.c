@@ -387,7 +387,7 @@ void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
 void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
     _blowfish_ecb_encrypt(pt, ct, key);
-    burn_stack(sizeof(unsigned long) * 2);
+    burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
 }
 #endif
 
@@ -429,7 +429,7 @@ void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
 void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 {
     _blowfish_ecb_decrypt(ct, pt, key);
-    burn_stack(sizeof(unsigned long) * 2);
+    burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
 }
 #endif
 

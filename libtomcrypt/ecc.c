@@ -253,18 +253,18 @@ static int dbl_point(ecc_point *P, ecc_point *R, mp_int *modulus, mp_int *mu)
    if (mp_mul_2(&P->y, &tmp) != MP_OKAY)                   { goto error; } /* tmp = 2*y */
    if (mp_invmod(&tmp, modulus, &tmp) != MP_OKAY)          { goto error; } /* tmp = 1/tmp mod modulus */
    if (mp_sqr(&P->x, &s) != MP_OKAY)                       { goto error; } /* s = x^2  */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)            { goto error; }
+   if (mp_reduce(&s, modulus, mu) != MP_OKAY)              { goto error; }
    if (mp_mul_d(&s,(mp_digit)3, &s) != MP_OKAY)            { goto error; } /* s = 3*(x^2) */
    if (mp_sub_d(&s,(mp_digit)3, &s) != MP_OKAY)            { goto error; } /* s = 3*(x^2) - 3 */
-   if (mp_cmp_d(&s, 0) == MP_LT) {                         /* if s < 0 add modulus */
+   if (mp_cmp_d(&s, 0) == MP_LT) {                                         /* if s < 0 add modulus */
       if (mp_add(&s, modulus, &s) != MP_OKAY)              { goto error; }
    }
    if (mp_mul(&s, &tmp, &s) != MP_OKAY)                    { goto error; } /* s = tmp * s mod modulus */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)            { goto error; }
+   if (mp_reduce(&s, modulus, mu) != MP_OKAY)              { goto error; }
 
    /* Xr = s^2 - 2Xp */
    if (mp_sqr(&s,  &tmpx) != MP_OKAY)                      { goto error; } /* tmpx = s^2  */
-   if (mp_reduce(&tmpx, modulus, mu) != MP_OKAY)         { goto error; } /* tmpx = tmpx mod modulus */
+   if (mp_reduce(&tmpx, modulus, mu) != MP_OKAY)           { goto error; } /* tmpx = tmpx mod modulus */
    if (mp_sub(&tmpx, &P->x, &tmpx) != MP_OKAY)             { goto error; } /* tmpx = tmpx - x */
    if (mp_submod(&tmpx, &P->x, modulus, &tmpx) != MP_OKAY) { goto error; } /* tmpx = tmpx - x mod modulus */
 
@@ -321,11 +321,11 @@ static int add_point(ecc_point *P, ecc_point *Q, ecc_point *R, mp_int *modulus, 
       if (mp_add(&s, modulus, &s) != MP_OKAY)                 { goto error; }
    }
    if (mp_mul(&s, &tmp, &s) != MP_OKAY)                       { goto error; } /* s = s * tmp mod modulus */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)               { goto error; }
+   if (mp_reduce(&s, modulus, mu) != MP_OKAY)                 { goto error; }
 
    /* Xr = s^2 - Xp - Xq */
    if (mp_sqr(&s, &tmp) != MP_OKAY)                           { goto error; } /* tmp = s^2 mod modulus */
-   if (mp_reduce(&tmp, modulus, mu) != MP_OKAY)             { goto error; }
+   if (mp_reduce(&tmp, modulus, mu) != MP_OKAY)               { goto error; }
    if (mp_sub(&tmp, &P->x, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp - Px */
    if (mp_sub(&tmp, &Q->x, &tmpx) != MP_OKAY)                 { goto error; } /* tmpx = tmp - Qx */
 

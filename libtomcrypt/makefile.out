@@ -1,0 +1,24 @@
+#makefile generated with config.pl
+#
+#Tom St Denis (tomstdenis@yahoo.com, http://tom.iahu.ca) 
+
+CC = gcc 
+AR = ar 
+LD = ld 
+CFLAGS += -O3 -Wall -Wsign-compare -W -Wno-unused -Werror -I./  
+
+default: library
+
+OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o serpent.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o ampi.o mpi.o prime.o twofish.o packet.o hmac.o strings.o
+
+rsa.o: rsa_sys.c
+dh.o: dh_sys.c
+ecc.o: ecc_sys.c
+
+library: $(OBJECTS)
+	 $(AR) r libtomcrypt.a $(OBJECTS)
+	 ranlib libtomcrypt.a
+
+clean:
+	rm -f $(OBJECTS) libtomcrypt.a 
+

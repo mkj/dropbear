@@ -1,7 +1,7 @@
 /* ---- NUMBER THEORY ---- */
 #ifdef MPI
 
-#include "mpi.h"
+#include "tommath.h"
 
 extern int is_prime(mp_int *, int *);
 extern int rand_prime(mp_int *N, long len, prng_state *prng, int wprng);

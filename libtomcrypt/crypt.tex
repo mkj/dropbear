@@ -1,6 +1,10 @@
 \documentclass{book}
 \usepackage{makeidx}
 \usepackage{amssymb}
+\usepackage{color}
+\usepackage{alltt}
+\usepackage{graphicx}
+\usepackage{layout}
 \def\union{\cup}
 \def\intersect{\cap}
 \def\getsrandom{\stackrel{\rm R}{\gets}}
@@ -44,17 +48,17 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.80}
+\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.82}
 \author{Tom St Denis \\
 Algonquin College \\
 \\
-tomstdenis@yahoo.com \\
-http://libtomcrypt.iahu.ca \\ \\
+tomstdenis@iahu.ca \\
+http://libtomcrypt.org \\ \\
 Phone: 1-613-836-3160\\
 111 Banning Rd \\
 Kanata, Ontario \\
 K2L 1C3 \\
-Canada 
+Canada
 }
 \maketitle
 \newpage
@@ -66,10 +70,14 @@ pseudo-random number generators, public key cryptography (via RSA,DH or ECC/DH) 
 routines.  It is designed to compile out of the box with the GNU C Compiler (GCC) version 2.95.3 (and higher) 
 and with MSVC version 6 in win32.
 
+The library has been successfully tested on quite a few other platforms ranging from the ARM7TDMI in a 
+Gameboy Advanced to various PowerPC processors and even the MIPS processor in the PlayStation 2.  Suffice it
+to say the code is portable.
+
 The library is designed so new ciphers/hashes/PRNGs can be added at runtime and the existing API (and helper API functions) will 
 be able to use the new designs automatically.  There exist self-check functions for each cipher and hash to ensure that
 they compile and execute to the published design specifications.  The library also performs extensive parameter error checking
-and will give verbose error messages.
+and will give verbose error messages when possible.
 
 Essentially the library saves the time of having to implement the ciphers, hashes, prngs yourself.  Typically implementing
 useful cryptography is an error prone business which means anything that can save considerable time and effort is a good
@@ -89,11 +97,11 @@ number theory and cryptography.
 
 \subsection{What the library IS NOT for?}
 
-The library is not designed to be in anyway an implementation of the SSL, PKCS or OpenPGP standards.  The library is not 
-designed  to be compliant with any known form of API or programming hierarchy.  It is not a port of any other 
+The library is not designed to be in anyway an implementation of the SSL, PKCS, P1363 or OpenPGP standards.  The library 
+is not designed to be compliant with any known form of API or programming hierarchy.  It is not a port of any other 
 library and it is not platform specific (like the MS CSP).  So if you're looking to drop in some buzzword 
-compliant crypto this library is not for you.  The library has been written from scratch to provide basic 
-functions as well as non-standard higher level functions.  
+compliant crypto library this is not for you.  The library has been written from scratch to provide basic functions as 
+well as non-standard higher level functions.  
 
 This is not to say that the library is a ``homebrew'' project.  All of the symmetric ciphers and one-way hash functions
 conform to published test vectors.  The public key functions are derived from publicly available material and the majority
@@ -101,8 +109,11 @@ of the code has been reviewed by a growing community of developers.
 
 \subsubsection{Why not?}
 You may be asking why I didn't choose to go all out and support standards like P1363, PKCS and the whole lot.  The reason
-is quite simple too much money gets in the way.  I just recently tried to access the P1363 draft documents and was denied (it 
-requires a password).  If people are supposed to support these standards they had better make them more accessible.
+is quite simple too much money gets in the way.  When I tried to access the P1363 draft documents and was denied (it 
+requires a password) I realized that they're just a business anyways.  See what happens is a company will sit down and
+invent a ``standard''.  Then they try to sell it to as many people as they can.  All of a sudden this ``standard'' is 
+everywhere.  Then the standard is updated every so often to keep people dependent.  Then you become RSA.  If people are 
+supposed to support these standards they had better make them more accessible.
 
 \section{Why did I write it?}
 You may be wondering, ``Tom, why did you write a crypto library.  I already have one.''.  Well the reason falls into
@@ -122,6 +133,29 @@ know how to use Safer+ or RC6 or Serpent or ... as well.  With all of the core f
 that can be used to make a program automatically pick between ciphers, hashes and PRNGs at runtime.  That means your 
 application can support all ciphers/hashes/prngs without changing the source code.
 
+\subsection{Modular}
+The LibTomCrypt package has also been written to be very modular.  The block ciphers, one-way hashes and
+pseudo-random number generators (PRNG) are all used within the API through ``descriptor'' tables which 
+are essentially structures with pointers to functions.  While you can still call particular functions
+directly (\textit{e.g. sha256\_process()}) this descriptor interface allows the developer to customize their
+usage of the library.
+
+For example, consider a hardware platform with a specialized RNG device.  Obviously one would like to tap
+that for the PRNG needs within the library (\textit{e.g. making a RSA key}).  All the developer has todo
+is write a descriptor and the few support routines required for the device.  After that the rest of the 
+API can make use of it without change.  Similiarly imagine a few years down the road when AES2 (\textit{or whatever they call it}) is
+invented.  It can be added to the library and used within applications with zero modifications to the
+end applications provided they are written properly.
+
+This flexibility within the library means it can be used with any combination of primitive algorithms and 
+unlike libraries like OpenSSL is not tied to direct routines.  For instance, in OpenSSL there are CBC block
+mode routines for every single cipher.  That means every time you add or remove a cipher from the library
+you have to update the associated support code as well.  In LibTomCrypt the associated code (\textit{chaining modes in this case})
+are not directly tied to the ciphers.  That is a new cipher can be added to the library by simply providing 
+the key setup, ECB decrypt and encrypt and test vector routines.  After that all five chaining mode routines
+can make use of the cipher right away.
+
+
 \section{License}
 
 All of the source code except for the following files have been written by the author or donated to the project
@@ -129,21 +163,24 @@ under the TDCAL license:
 
 \begin{enumerate}
    \item aes.c
-   \item mpi.c
    \item rc2.c
    \item serpent.c
    \item safer.c
 \end{enumerate}
 
 ``aes.c'' and ``serpent.c'' were written by Brian Gladman (gladman@seven77.demon.co.uk).  They are copyrighted works
-but were both granted unrestricted usage in any project (commercial or otherwise).  ``mpi.c'' was written by Michael 
-Fromberger (sting@linguist.dartmouth.edu).  Similarly it is copyrighted work but is free for all purposes.  
+but were both granted unrestricted usage in any project (commercial or otherwise).  ``mpi.c'' was originally written 
+by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with my LibTomMath library.  
 ``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c'' 
 was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and is public domain.
 
 The rest of the code was written either by Tom St Denis or contributed to the project under the ``Tom Doesn't Care
 About Licenses'' (TDCAL) license.  Essentially this license grants the user unlimited distribution and usage (including
-commercial usage).  I assume no risk from usage of the code nor do I guarantee it works as desired or stated.  
+commercial usage).  This means that you can use the package, you can re-distribute the package and even branch it.  I 
+still retain ownership over the name of the package.  If you want to branch the project you can use the code as a base
+but you must change the name.  The package is also royalty free which means you can use it in commercial products 
+without compensation towards the author.  I assume no risk from usage of the code nor do I guarantee it works as 
+desired or stated.  
 
 \section{Patent Disclosure}
 
@@ -163,19 +200,16 @@ file ``libtomcrypt.a''.
 To install the library copy all of the ``.h'' files into your ``\#include'' path and the single libtomcrypt.a file into 
 your library path.
 
-With MSVC you can build the library with ``make -f makefile.vc''.  You must use GNU make to build it even with MSVC
-due to the limitations of the MS MAKE.
+With MSVC you can build the library with ``nmake -f makefile.msvc''.  This will produce a ``tomcrypt.lib'' file which
+is the core library.  Copy the header files into your MSVC include path and the library in the lib path (typically
+under where VC98 is installed).
 
 \section{Building against the library}
 
-To build an application against the library you obviously must first compile the library.  However, an important 
-step is that the build options you use to build the library must be present when you build your application.  For 
-instance if ``RC5'' is defined in the makefile when you built the library then you must ensure ``RC5'' is defined when
-you build your application.
-
-The simplest way to work with this library is to take the makefile provided and simply add on your project to it as a 
-target (dependent on the library).  That way you can be assured that the library and your application are in sync with
-the build options you provide.
+In the recent versions the build steps have changed.  The build options are now stored in ``mycrypt\_custom.h'' and
+no longer in the makefile.  If you change a build option in that file you must re-build the library from clean to
+ensure the build is intact.  The perl script ``config.pl'' will help setup the custom header and a custom makefile
+if you want one (the provided ``makefile'' will work with custom configs).
 
 \section{Thanks}
 I would like to give thanks to the following people (in no particular order) for helping me develop this project:
@@ -806,7 +840,7 @@ int main(void)
     /* add the message */
     md5_process(&md, in, strlen(in));
 
-    /* get the hash */
+    /* get the hash in out[0..15] */
     md5_done(&md, out);
 
     return 0;
@@ -898,11 +932,12 @@ int hash_filehandle(int hash, FILE *in,
                     unsigned char *dst, unsigned long *outlen);
 \end{verbatim}
 
-Both functions return {\bf CRYPT\_OK} on success, otherwise they return an error code.  The ``hash'' parameter is
+All three functions return {\bf CRYPT\_OK} on success, otherwise they return an error code.  The ``hash'' parameter is
 the location in the descriptor table of the hash.  The ``*outlen'' variable is used to keep track of the output size.  You
 must set it to the size of your output buffer before calling the functions.  When they complete succesfully they store
-the length of the message digest back in it.  The functions are otherwise straightforward.  The ``hash\_filehandle'' function
-assumes that ``in'' is an file handle opened in binary mode.  It will not reset the file position after hashing the content.
+the length of the message digest back in it.  The functions are otherwise straightforward.  The ``hash\_filehandle'' 
+function assumes that ``in'' is an file handle opened in binary mode.  It will not reset the file position after 
+hashing the content.
 
 To perform the above hash with md5 the following code could be used:
 \begin{small}
@@ -992,23 +1027,29 @@ are finished with the HMAC process you must call the following function to get t
 int  hmac_done(hmac_state *hmac, unsigned char *hash);
 \end{verbatim}
 ``hmac'' is the HMAC state you are working with.  ``hash'' is the array of octets where the HMAC code should be stored.  You
-must ensure that your destination array is the right size (or just make it of size MAXBLOCKSIZE to be sure).  There are 
-two  utility functions provided to make using HMACs easier todo.
+must ensure that your destination array is the right size (or just make it of size MAXBLOCKSIZE to be sure).  
+
+There are two  utility functions provided to make using HMACs easier todo.  They accept the key and information about the
+message (file pointer, address in memory) and produce the HMAC result in one shot.  These are useful if you want to avoid
+calling the three step process yourself.
+
 \begin{verbatim}
 int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
                 const unsigned char *data, unsigned long len, 
-                unsigned char *dst);
+                unsigned char *dst, unsigned long *dstlen);
 \end{verbatim}
-This will produce an HMAC code for the array of octets in ``data'' of length ``len''.  The index into the hash descriptor table must be provided in ``hash'' 
-It uses the key from ``key'' with a key length of ``keylen''.  The result is stored in the array of octets``dst''.  
-Similarly for files there is the following function:
+This will produce an HMAC code for the array of octets in ``data'' of length ``len''.  The index into the hash descriptor 
+table must be provided in ``hash'' it uses the key from ``key'' with a key length of ``keylen''.  
+The result is stored in the array of octets ``dst'' and the length in ``dstlen''.  Similarly for files there is the 
+following function:
 \begin{verbatim}
 int hmac_file(int hash, const char *fname, const unsigned char *key,
-              unsigned long keylen, unsigned char *dst);
+              unsigned long keylen, 
+              unsigned char *dst, unsigned long *dstlen);
 \end{verbatim}
 ``hash'' is the index into the hash descriptor table of the hash you want to use.  ``fname'' is the filename to process.  ``key''
-is the array of octets to use as the key.  ``keylen'' is the length of the key.  ``dst'' is the array of octets where the result
-should be stored.
+is the array of octets to use as the key.  ``keylen'' is the length of the key.  ``dst'' is the array of octets where the 
+result should be stored.
 
 To test if the HMAC code is working there is the following function:
 \begin{verbatim}
@@ -2046,12 +2087,12 @@ int base64_decode(const unsigned char *in, unsigned long len,
 \end{verbatim}
 
 \section{The Multiple Precision Integer Library (MPI)}
-The library comes with a copy of Michael Fromberger's\footnote{Michael J. Fromberger, sting@linguist.Thayer.dartmouth.edu} multiple
-precision integer library MPI.  MPI is a trivial to use ANSI C compatible large integer library.  It is free for all uses and
-is distributed freely.
+The library comes with a copy of LibTomMath  which is a multiple precision integer library written by the
+author of LibTomCrypt.  LibTomMath is a trivial to use ANSI C compatible large integer library which is free 
+for all uses and is distributed freely.
 
-At the heart of all MPI functions is the data type ``mp\_int'' (defined in mpi.h).  This data type is what will hold all large
-integers.  In order to use an mp\_int one must initialize it first, for example:
+At the heart of all the functions is the data type ``mp\_int'' (defined in tommath.h).  This data type is what 
+will hold all large integers.  In order to use an mp\_int one must initialize it first, for example:
 \begin{verbatim}
 #include <mycrypt.h> /* mycrypt.h includes mpi.h automatically */
 int main(void)
@@ -2065,31 +2106,28 @@ int main(void)
 }
 \end{verbatim}
 If you are unfamiliar with the syntax of C the \& symbol is used to pass the address of ``bignum'' to the function.  All
-MPI functions require the address of the parameters.  To free the memory of a mp\_int use (for example):
+LibTomMath functions require the address of the parameters.  To free the memory of a mp\_int use (for example):
 \begin{verbatim}
 mp_clear(&bignum);
 \end{verbatim}
 
-All MPI functions have the basic form of one of the following:
+The functions also have the basic form of one of the following:
 \begin{verbatim}
 mp_XXX(mp_int *a);
 mp_XXX(mp_int *a, mp_int *b, mp_int *c);
 mp_XXX(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
 \end{verbatim}
 
-Where they perform some operation and store the result in the mp\_int variable passed on the far right.  For example, to
-compute $c = a + b \mbox{ }(\mbox{mod }m)$ you would call:
+Where they perform some operation and store the result in the mp\_int variable passed on the far right.  
+For example, to compute $c = a + b \mbox{ }(\mbox{mod }m)$ you would call:
 \begin{verbatim}
 mp_addmod(&a, &b, &m, &c);
 \end{verbatim}
 
-The simplest way to get a complete listing of all MPI functions is to open ``mpi.h'' and look.  They're all fairly 
-well documented.
-
 \subsection{Binary Forms of ``mp\_int'' Variables}
 
-Often it is required to store a ``mp\_int'' in binary form for transport (e.g. exporting a key, packet encryption, etc.).
-MPI includes two functions to help when exporting numbers:
+Often it is required to store a ``mp\_int'' in binary form for transport (e.g. exporting a key, packet 
+encryption, etc.).  LibTomMath includes two functions to help when exporting numbers:
 \begin{verbatim}
 int mp_raw_size(mp_int *num);
 mp_toraw(&num, buf);
@@ -2135,9 +2173,8 @@ will not be able to sign or decrypt messages at all.  Suppose $p$ was prime and 
 the multi-prime RSA.  Suppose $q = rs$ for two primes $r$ and $s$ then $\phi(pq) = (p - 1)(r - 1)(s - 1)$ which clearly is 
 not equal to $(p - 1)(rs - 1)$.
 
-These are not technically part of the MPI
-library\footnote{As written by Michael Fromberger} but this is the best place to document them.  To test if a ``mp\_int'' is
-prime call:
+These are not technically part of the LibTomMath library but this is the best place to document them.  
+To test if a ``mp\_int'' is prime call:
 \begin{verbatim}
 int is_prime(mp_int *N, int *result);
 \end{verbatim}
@@ -2279,8 +2316,8 @@ or define ENDIAN\_64BITWORD when its 64-bits.  If you do not define any of them 
 which will work on all platforms.  Currently the system will automatically detect GCC or MSVC on a windows platform as well
 as GCC on a PS2 platform.
 
-\section{The makefile}
-There are also options you can specify from the makefiles themselves.  
+\section{The Configure Script}
+There are also options you can specify from the configure script or ``mycrypt\_config.h''.  
 
 \subsubsection{X memory routines}
 The makefiles must define three macros denoted as XMALLOC, XCALLOC and XFREE which resolve to the name of the respective

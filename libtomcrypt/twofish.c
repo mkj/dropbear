@@ -518,7 +518,7 @@ static void _twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, sym
 void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 #endif
 {
-    unsigned long a,b,c,d,ta,tb,tc,td,t1,t2;
+    unsigned long a,b,c,d,ta,tb,tc,td,t1,t2, *k;
     int r;
 
     _ARGCHK(pt != NULL);
@@ -531,16 +531,24 @@ void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
     b ^= key->twofish.K[1];
     c ^= key->twofish.K[2];
     d ^= key->twofish.K[3];
-
-    for (r = 0; r < 16; ++r) {
+    
+    k  = key->twofish.K + 8;
+    for (r = 0; r < 16; r += 2) {
         t1 = g_func(a, key);
         t2 = g_func(ROL(b, 8), key);
         t2 += (t1 += t2);
-        t1 += key->twofish.K[r+r+8];
-        t2 += key->twofish.K[r+r+9];
+        t1 += *k++;
+        t2 += *k++;
         c  ^= t1; c = ROR(c, 1);
         d  = ROL(d, 1) ^ t2;
-        ta = a; a = c; c = ta; tb = b; b = d; d = tb;
+
+        t1 = g_func(c, key);
+        t2 = g_func(ROL(d, 8), key);
+        t2 += (t1 += t2);
+        t1 += *k++;
+        t2 += *k++;
+        a  ^= t1; a = ROR(a, 1);
+        b  = ROL(b, 1) ^ t2;
     }
 
     /* output with "undo last swap" */
@@ -568,7 +576,7 @@ static void _twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, sym
 void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 #endif
 {
-    unsigned long a,b,c,d,ta,tb,tc,td,t1,t2;
+    unsigned long a,b,c,d,ta,tb,tc,td,t1,t2, *k;
     int r;
 
     _ARGCHK(pt != NULL);
@@ -585,22 +593,21 @@ void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
     c = ta ^ key->twofish.K[4];
     d = tb ^ key->twofish.K[5];
 
-    /* loop is kept partially unrolled because it is slower [at least on an Athlon]
-     * then the tight version.  */
+    k = key->twofish.K + 39;
     for (r = 14; r >= 0; r -= 2) {
         t1 = g_func(c, key);
         t2 = g_func(ROL(d, 8), key);
         t2 += (t1 += t2);
-        t1 += key->twofish.K[r+r+10];
-        t2 += key->twofish.K[r+r+11];
+        t2 += *k--;
+        t1 += *k--;
         a  = ROL(a, 1) ^ t1;
         b  = b ^ t2; b = ROR(b, 1);
 
         t1 = g_func(a, key);
         t2 = g_func(ROL(b, 8), key);
         t2 += (t1 += t2);
-        t1 += key->twofish.K[r+r+8];
-        t2 += key->twofish.K[r+r+9];
+        t2 += *k--;
+        t1 += *k--;
         c  = ROL(c, 1) ^ t1;
         d  = d ^ t2; d = ROR(d, 1);
     }

@@ -1,3 +1,14 @@
+Mar 15th, 2003
+v0.82  -- Manual updated
+       -- Added MSVC makefile [back, actually its written from scratch to work with NMAKE]
+       -- Change to HMAC helper functions API to avoid buffer overflow [source changes]
+       -- the rsa_encrypt_key was supposed to reject key sizes out of bounds ... 
+          same fix to the rsa_sign_hash 
+       -- Added code to ensure that that chaining mode code (cfb/ofb/ctr/cbc) have valid
+          structures when being called.  E.g. the indexes to the pad/ivs are not out of bounds
+       -- Cleaned up the DES code and simplified the core desfunc routine.
+       -- Simplified one of the boolean functions in MD4
+       
 Jan 16th, 2003
 v0.81  -- Merged in new makefile from Clay Culver and Mike Frysinger
        -- Sped up the ECC mulmod() routine by making the word size adapt to the input.  Saves a whopping 9 point

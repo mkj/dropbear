@@ -125,7 +125,8 @@ int hmac_done(hmac_state *hmac, unsigned char *hashOut)
 }
 
 int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
-                const unsigned char *data, unsigned long len, unsigned char *dst)
+                const unsigned char *data, unsigned long len, 
+                unsigned char *dst, unsigned long *dstlen)
 {
     hmac_state hmac;
     int err;
@@ -133,6 +134,14 @@ int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
     _ARGCHK(key != NULL);
     _ARGCHK(data != NULL);
     _ARGCHK(dst != NULL);
+    
+    if((err = hash_is_valid(hash)) != CRYPT_OK) {
+        return err;
+    }
+    if (hash_descriptor[hash].hashsize > *dstlen) {
+       return CRYPT_BUFFER_OVERFLOW;
+    }
+    *dstlen = hash_descriptor[hash].hashsize;
 
     if ((err = hmac_init(&hmac, hash, key, keylen)) != CRYPT_OK) {
         return err;
@@ -150,7 +159,8 @@ int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
 
 /* hmac_file added by Tom St Denis */
 int hmac_file(int hash, const char *fname, const unsigned char *key,
-                unsigned long keylen, unsigned char *dst)
+                unsigned long keylen, 
+                unsigned char *dst, unsigned long *dstlen)
 {
 #ifdef NO_FILE
     return CRYPT_ERROR;
@@ -164,6 +174,14 @@ int hmac_file(int hash, const char *fname, const unsigned char *key,
    _ARGCHK(fname != NULL);
    _ARGCHK(key != NULL);
    _ARGCHK(dst != NULL);
+   
+   if((err = hash_is_valid(hash)) != CRYPT_OK) {
+       return err;
+   }
+   if (hash_descriptor[hash].hashsize > *dstlen) {
+      return CRYPT_BUFFER_OVERFLOW;
+   }
+   *dstlen = hash_descriptor[hash].hashsize;
 
    if ((err = hmac_init(&hmac, hash, key, keylen)) != CRYPT_OK) {
        return err;
@@ -436,11 +454,13 @@ Key First"
              0x1f, 0xb1, 0xf5, 0x62, 0xdb, 0x3a, 0xa5, 0x3e} }
     };
 
+    unsigned long outlen;
     int err;
     int failed=0;
     for(i=0; i < (int)(sizeof(cases) / sizeof(cases[0])); i++) {
         int hash = find_hash(cases[i].algo);
-        if((err = hmac_memory(hash, cases[i].key, cases[i].keylen, cases[i].data, cases[i].datalen, digest)) != CRYPT_OK) {
+        outlen = sizeof(digest);
+        if((err = hmac_memory(hash, cases[i].key, cases[i].keylen, cases[i].data, cases[i].datalen, digest, &outlen)) != CRYPT_OK) {
 #if 0
             printf("HMAC-%s test #%d\n", cases[i].algo, cases[i].num);
 #endif

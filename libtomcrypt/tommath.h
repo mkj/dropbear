@@ -12,6 +12,8 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://libtommath.iahu.ca
  */
+#include "mycrypt.h"
+
 #ifndef BN_H_
 #define BN_H_
 
@@ -20,6 +22,11 @@
 #include <stdlib.h>
 #include <ctype.h>
 #include <limits.h>
+
+#undef MIN
+#define MIN(x,y) ((x)<(y)?(x):(y))
+#undef MAX
+#define MAX(x,y) ((x)>(y)?(x):(y))
 
 #ifdef __cplusplus
 extern "C" {
@@ -82,9 +89,9 @@ extern "C" {
 typedef int           mp_err;
 
 /* you'll have to tune these... */
-#define KARATSUBA_MUL_CUTOFF    80      /* Min. number of digits before Karatsuba multiplication is used. */
-#define KARATSUBA_SQR_CUTOFF    80      /* Min. number of digits before Karatsuba squaring is used. */
-#define MONTGOMERY_EXPT_CUTOFF  40      /* max. number of digits that montgomery reductions will help for */
+extern int KARATSUBA_MUL_CUTOFF,
+           KARATSUBA_SQR_CUTOFF,
+           MONTGOMERY_EXPT_CUTOFF;
 
 #define MP_PREC                 64      /* default digits of precision */
 
@@ -126,6 +133,9 @@ void mp_set(mp_int *a, mp_digit b);
 /* set a 32-bit const */
 int mp_set_int(mp_int *a, unsigned long b);
 
+/* grow an int to a given size */
+int mp_grow(mp_int *a, int size);
+
 /* init to a given number of digits */
 int mp_init_size(mp_int *a, int size);
 
@@ -134,6 +144,9 @@ int mp_copy(mp_int *a, mp_int *b);
 
 /* inits and copies, a = b */
 int mp_init_copy(mp_int *a, mp_int *b);
+
+/* trim unused digits */
+void mp_clamp(mp_int *a);
 
 /* ---> digit manipulation <--- */
 
@@ -144,7 +157,7 @@ void mp_rshd(mp_int *a, int b);
 int mp_lshd(mp_int *a, int b);
 
 /* c = a / 2^b */
-int  mp_div_2d(mp_int *a, int b, mp_int *c, mp_int *d);
+int mp_div_2d(mp_int *a, int b, mp_int *c, mp_int *d);
 
 /* b = a/2 */
 int mp_div_2(mp_int *a, mp_int *b);
@@ -160,6 +173,19 @@ int mp_mod_2d(mp_int *a, int b, mp_int *c);
 
 /* computes a = 2^b */
 int mp_2expt(mp_int *a, int b);
+
+/* makes a pseudo-random int of a given size */
+int mp_rand(mp_int *a, int digits);
+
+/* ---> binary operations <--- */
+/* c = a XOR b  */
+int mp_xor(mp_int *a, mp_int *b, mp_int *c);
+
+/* c = a OR b */
+int mp_or(mp_int *a, mp_int *b, mp_int *c);
+
+/* c = a AND b */
+int mp_and(mp_int *a, mp_int *b, mp_int *c);
 
 /* ---> Basic arithmetic <--- */
 
@@ -177,6 +203,7 @@ int mp_cmp_mag(mp_int *a, mp_int *b);
 
 /* c = a + b */
 int mp_add(mp_int *a, mp_int *b, mp_int *c);
+
 
 /* c = a - b */
 int mp_sub(mp_int *a, mp_int *b, mp_int *c);
@@ -254,7 +281,7 @@ int mp_jacobi(mp_int *a, mp_int *n, int *c);
 /* used to setup the Barrett reduction for a given modulus b */
 int mp_reduce_setup(mp_int *a, mp_int *b);
 
-/* Barrett Reduction, computes a (mod b) with a precomputed value c  
+/* Barrett Reduction, computes a (mod b) with a precomputed value c
  *
  * Assumes that 0 < a <= b^2, note if 0 > a > -(b^2) then you can merely
  * compute the reduction as -1 * mp_reduce(mp_abs(a)) [pseudo code].
@@ -264,14 +291,18 @@ int mp_reduce(mp_int *a, mp_int *b, mp_int *c);
 /* setups the montgomery reduction */
 int mp_montgomery_setup(mp_int *a, mp_digit *mp);
 
+/* computes a = B^n mod b without division or multiplication useful for 
+ * normalizing numbers in a Montgomery system.
+ */
+int mp_montgomery_calc_normalization(mp_int *a, mp_int *b);
+
 /* computes xR^-1 == x (mod N) via Montgomery Reduction */
 int mp_montgomery_reduce(mp_int *a, mp_int *m, mp_digit mp);
- 
+
 /* d = a^b (mod c) */
 int mp_exptmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
 
 /* ---> radix conversion <--- */
-
 int mp_count_bits(mp_int *a);
 
 int mp_unsigned_bin_size(mp_int *a);
@@ -298,10 +329,26 @@ int mp_radix_size(mp_int *a, int radix);
 #define mp_todecimal(M, S) mp_toradix((M), (S), 10)
 #define mp_tohex(M, S)     mp_toradix((M), (S), 16)
 
+/* lowlevel functions, do not call! */
+int s_mp_add(mp_int *a, mp_int *b, mp_int *c);
+int s_mp_sub(mp_int *a, mp_int *b, mp_int *c);
+#define s_mp_mul(a, b, c) s_mp_mul_digs(a, b, c, (a)->used + (b)->used + 1)
+int fast_s_mp_mul_digs(mp_int *a, mp_int *b, mp_int *c, int digs);
+int s_mp_mul_digs(mp_int *a, mp_int *b, mp_int *c, int digs);
+int fast_s_mp_mul_high_digs(mp_int *a, mp_int *b, mp_int *c, int digs);
+int s_mp_mul_high_digs(mp_int *a, mp_int *b, mp_int *c, int digs);
+int fast_s_mp_sqr(mp_int *a, mp_int *b);
+int s_mp_sqr(mp_int *a, mp_int *b);
+int mp_karatsuba_mul(mp_int *a, mp_int *b, mp_int *c);
+int mp_karatsuba_sqr(mp_int *a, mp_int *b);
+int fast_mp_invmod(mp_int *a, mp_int *b, mp_int *c);
+int fast_mp_montgomery_reduce(mp_int *a, mp_int *m, mp_digit mp);
+int mp_exptmod_fast(mp_int *G, mp_int *X, mp_int *P, mp_int *Y);
+void bn_reverse(unsigned char *s, int len);
+
 #ifdef __cplusplus
    }
 #endif
-
 
 #endif
 

@@ -1,0 +1,23 @@
+#MSVC Makefile [tested with MSVC 6.00 with SP5]
+#
+#Tom St Denis
+
+CFLAGS = /I. /Ogityb2 /Gs /DWIN32 /W3
+
+default: library
+
+#List of objects to compile.
+OBJECTS=keyring.obj gf.obj mem.obj sprng.obj ecc.obj base64.obj dh.obj rsa.obj \
+bits.obj yarrow.obj cfb.obj ofb.obj ecb.obj ctr.obj cbc.obj hash.obj tiger.obj sha1.obj \
+md5.obj md4.obj md2.obj sha256.obj sha512.obj xtea.obj aes.obj serpent.obj des.obj \
+safer_tab.obj safer.obj safer+.obj rc4.obj rc2.obj rc6.obj rc5.obj cast5.obj noekeon.obj \
+blowfish.obj crypt.obj ampi.obj mpi.obj prime.obj twofish.obj packet.obj hmac.obj strings.obj
+
+library: $(OBJECTS)
+	lib /out:tomcrypt.lib $(OBJECTS)
+	
+test.obj: demos/test.c
+	cl $(CFLAGS) /c demos/test.c
+
+test: library test.obj
+	cl test.obj tomcrypt.lib advapi32.lib	
