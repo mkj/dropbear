@@ -25,6 +25,9 @@ You need to generate server keys, this is one-off:
 ./dropbearkey -t rsa -f dropbear_rsa_host_key
 ./dropbearkey -t dss -f dropbear_dss_host_key
 
+or alternatively convert OpenSSH keys to Dropbear:
+./dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key dropbear_dss_host_key
+
 And you can now run the server.
 ./dropbear
 
