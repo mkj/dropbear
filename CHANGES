@@ -14,6 +14,8 @@
 - Various minor fixes allow scp to work with irix, thanks to Paul Marinceu for
   fixing it up
 
+- Use <stropts.h> not <sys/stropts.h>, since the former seems more common
+
 0.40 - Tue Jan 13 2004 21:05:19 +0800
 
 - Remote TCP forwarding (-R) style implemented
