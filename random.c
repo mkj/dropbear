@@ -68,7 +68,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 #ifdef DROPBEAR_PRNGD_SOCKET
 	memset((void*)&egdsock, 0x0, sizeof(egdsock));
 	egdsock.sun_family = AF_UNIX;
-	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
+	strlcpy(egdsock.sun_path, DROPBEAR_PRNGD_SOCKET,
 			sizeof(egdsock.sun_path));
 
 	readfd = socket(PF_UNIX, SOCK_STREAM, 0);
