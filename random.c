@@ -42,7 +42,6 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 #ifdef DROPBEAR_EGD
 	struct sockaddr_un egdsock;
 #endif
-	int ret;
 
 #ifdef DROPBEAR_DEV_RANDOM
 	readfd = open(DEV_RANDOM, O_RDONLY);
@@ -111,7 +110,6 @@ void seedrandom() {
 void genrandom(unsigned char* buf, unsigned int len) {
 
 	hash_state hs;
-	unsigned int i;
 	unsigned char hash[SHA1_HASH_SIZE];
 	unsigned int copylen;
 
