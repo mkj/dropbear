@@ -121,8 +121,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * configure with --enable-pam as well, since it's off by default. And you
  * should only enable either PASSWORD _or_ PAM auth, not both. */
 
-/*#define ENABLE_SVR_PASSWORD_AUTH*/
-#define ENABLE_SVR_PAM_AUTH
+#define ENABLE_SVR_PASSWORD_AUTH
+/*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
