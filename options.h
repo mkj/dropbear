@@ -35,16 +35,16 @@
 #define DSS_PRIV_FILENAME "/etc/dropbear_dss_host_key"
 #define RSA_PRIV_FILENAME "/etc/dropbear_rsa_host_key"
 
-/* Disable X11 Forwarding */
-/*#define DISABLE_X11FWD*/
+/* Enable X11 Forwarding */
+#define ENABLE_X11FWD
 
-/* Disable TCP Fowarding */
+/* Enable TCP Fowarding */
 /* NOTE: TCP forwarding is still work-in-progress, -L forwarding should work,
- * enable TCP forwarding at your own risk. */
-#define DISABLE_TCPFWD
+ * -R forwarding isn't implemented yet */
+#define ENABLE_TCPFWD
 
-/* Disable Authentication Agent Forwarding */
-/*#define DISABLE_AGENTFWD*/
+/* Enable Authentication Agent Forwarding */
+#define ENABLE_AGENTFWD
 
 /* Encryption - at least one required.
  * RFC Draft requires 3DES, and recommends Blowfish, AES128 & Twofish128 */
@@ -64,6 +64,7 @@
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
+ * Removing either of these won't save very much space.
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
@@ -114,7 +115,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.36"
+#define DROPBEAR_VERSION "0.36-cvs"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
@@ -200,6 +201,19 @@
 								 ipv4 and ipv6 don't count twice */
 
 #define _PATH_TTY "/dev/tty"
+
+/* some quick hacks to reduce the double-negatives above */
+#ifndef ENABLE_TCPFWD
+#define DISABLE_TCPFWD
+#endif
+
+#ifndef ENABLE_X11FWD
+#define DISABLE_X11FWD
+#endif
+
+#ifndef ENABLE_AGENTFWD
+#define DISABLE_AGENTFWD
+#endif
 
 #ifdef DISABLE_TCPFWD
 #define DISABLE_LOCALTCPFWD
