@@ -22,10 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Buffer handling routines, designed to avoid overflows/using invalid data */
+
 #include "includes.h"
 #include "util.h"
 #include "buffer.h"
 
+/* Create (malloc) a new buffer of size */
 buffer* buf_new(unsigned int size) {
 
 	buffer* ret;
@@ -90,6 +93,7 @@ buffer* buf_newcopy(buffer* buf) {
 	return ret;
 }
 
+/* Set the length of the buffer */
 void buf_setlen(buffer* buf, unsigned int len) {
 	if (len > buf->size) {
 		dropbear_exit("bad buf_setlen");
@@ -97,12 +101,14 @@ void buf_setlen(buffer* buf, unsigned int len) {
 	buf->len = len;
 }
 
+/* Increment the length of the buffer */
 void buf_incrlen(buffer* buf, unsigned int incr) {
 	if (buf->len + incr > buf->size) {
 		dropbear_exit("bad buf_incrlen");
 	}
 	buf->len += incr;
 }
+/* Set the position of the buffer */
 void buf_setpos(buffer* buf, unsigned int pos) {
 
 	if (pos > buf->len) {
@@ -132,6 +138,7 @@ void buf_incrpos(buffer* buf,  int incr) {
 	buf->pos += incr;
 }
 
+/* Get a byte from the buffer and increment the pos */
 unsigned char buf_getbyte(buffer* buf) {
 
 	if (buf->pos >= buf->len) {
@@ -192,6 +199,7 @@ unsigned char* buf_getstring(buffer* buf, unsigned int *retlen) {
 	return ret;
 }
 
+/* Get an uint32 from the buffer and increment the pos */
 unsigned int buf_getint(buffer* buf) {
 	unsigned int ret;
 

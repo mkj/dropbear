@@ -22,10 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Contains helper functions for mp_int handling */
+
 #include "includes.h"
 #include "util.h"
 
-/* wrapper for mp_init to handle errors */
+/* wrapper for mp_init, failing fatally on errors (memory allocation) */
 void m_mp_init(mp_int *mp) {
 
 	if (mp_init(mp) != MP_OKAY) {

@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Process a pubkey auth request */
+
 #include "includes.h"
 #include "session.h"
 #include "util.h"
@@ -48,7 +50,8 @@ static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 static int checkfileperm(char * filename);
 static int getauthline(buffer * line, FILE * authfile);
 
-/* process a pubkey auth request */
+/* process a pubkey auth request, sending success or failure message as
+ * appropriate */
 void pubkeyauth() {
 
 	unsigned char testkey; /* whether we're just checking if a key is usable */
@@ -133,7 +136,9 @@ out:
 	TRACE(("leave pubkeyauth"));
 }
 
-/* Reply that the key is valid for auth */
+/* Reply that the key is valid for auth, this is sent when the user sends
+ * a straight copy of their pubkey to test, to avoid having to perform
+ * expensive signing operations with a worthless key */
 static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
@@ -149,6 +154,8 @@ static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 
 }
 
+/* Checks whether a specified publickey (and associated algorithm) is an
+ * acceptable key for authentication */
 /* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
 static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
@@ -332,19 +339,19 @@ static int checkpubkeyperms() {
 	strncpy(filename, ses.authstate.pw->pw_dir, len+1);
 
 	/* check ~ */
-	if (!checkfileperm(filename)) {
+	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
 	/* check ~/.ssh */
 	strncat(filename, "/.ssh", 5); /* strlen("/.ssh") == 5 */
-	if (!checkfileperm(filename)) {
+	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
 	/* now check ~/.ssh/authorized_keys */
 	strncat(filename, "/authorized_keys", 16);
-	if (!checkfileperm(filename)) {
+	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
@@ -358,23 +365,25 @@ out:
 	return ret;
 }
 
-/* returns 1 on valid, 0 on invalid perms */
+/* Checks that a file is owned by the user or root, and isn't writable by
+ * group or other */
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int checkfileperm(char * filename) {
 	struct stat filestat;
 
 	if (stat(filename, &filestat) != 0) {
-		return 0;
+		return DROPBEAR_FAILURE;
 	}
 	/* check ownership - user or root only*/
 	if (filestat.st_uid != ses.authstate.pw->pw_uid
 			&& filestat.st_uid != 0) {
-		return 0;
+		return DROPBEAR_FAILURE;
 	}
 	/* check permissions - don't want group or others +w */
 	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
-		return 0;
+		return DROPBEAR_FAILURE;
 	}
-	return 1;
+	return DROPBEAR_SUCCESS;
 }
 
 

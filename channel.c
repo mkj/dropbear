@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Handle the multiplexed channels, such as sessions, x11, agent connections */
+
 #include "includes.h"
 #include "session.h"
 #include "packet.h"
@@ -60,6 +62,7 @@ void chaninitialise() {
 	chansessinitialise();
 }
 
+/* Clean up channels, freeing allocated memory */
 void chancleanup() {
 
 	unsigned int i;
@@ -140,6 +143,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	return newchan;
 }
 
+/* Get the channel structure corresponding to a channel number */
 static struct Channel* getchannel(unsigned int chan) {
 	if (chan >= ses.chansize || ses.channels[chan] == NULL) {
 		return NULL;
@@ -147,6 +151,7 @@ static struct Channel* getchannel(unsigned int chan) {
 	return ses.channels[chan];
 }
 
+/* Iterate through the channels, performing IO if available */
 void channelio(fd_set *readfd, fd_set *writefd) {
 
 	struct Channel *channel;
@@ -193,6 +198,7 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 
 }
 
+/* send the exit status or the signal causing termination for a session */
 static void send_exitsignalstatus(struct Channel *channel) {
 
 	struct ChanSess * chansess;
@@ -208,6 +214,7 @@ static void send_exitsignalstatus(struct Channel *channel) {
 }
 
 
+/* Send the close message and set the channel as closed */
 static void send_msg_channel_close(struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_close"));
@@ -243,7 +250,9 @@ static void send_msg_channel_eof(struct Channel *channel) {
 	TRACE(("leave send_msg_channel_eof"));
 }
 
-/* only called when we know we can write to a channel, writes as much as
+/* Called to write data out to the server side of a channel (eg a shell or a
+ * program.
+ * Only called when we know we can write to a channel, writes as much as
  * possible */
 static void writechannel(struct Channel* channel) {
 
@@ -291,6 +300,8 @@ static void writechannel(struct Channel* channel) {
 	TRACE(("leave writechannel"));
 }
 
+/* Set the file descriptors for the main select in session.c
+ * This avoid channels which don't have any window available, are closed, etc*/
 void setchannelfds(fd_set *readfd, fd_set *writefd) {
 	
 	unsigned int i;
@@ -342,6 +353,9 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 
 }
 
+/* handle the channel EOF event, by closing the channel filedescriptor. The
+ * channel isn't closed yet, it is left until the incoming (from the program
+ * etc) FD is also EOF */
 void recv_msg_channel_eof() {
 
 	unsigned int chan;
@@ -375,6 +389,7 @@ void recv_msg_channel_eof() {
 }
 
 
+/* Handle channel closure(), respond in kind and close the channels */
 void recv_msg_channel_close() {
 
 	unsigned int chan;
@@ -400,6 +415,8 @@ void recv_msg_channel_close() {
 	TRACE(("leave recv_msg_channel_close"));
 }
 
+/* Remove a channel entry, this is only executed after both sides have sent
+ * channel close */
 static void closechannel(struct Channel * channel) {
 
 	TRACE(("enter closechannel"));
@@ -422,6 +439,8 @@ static void closechannel(struct Channel * channel) {
 	TRACE(("leave closechannel"));
 }
 
+/* Handle channel specific requests, passing off to corresponding handlers
+ * such as chansession or x11fwd */
 void recv_msg_channel_request() {
 
 	unsigned int chan;
@@ -456,7 +475,9 @@ void recv_msg_channel_request() {
 
 }
 
-/* chan is the remote channel, isextended is 0 if it is normal data, 1
+/* Reads data from the server's program/shell/etc, and puts it in a
+ * channel_data packet to send.
+ * chan is the remote channel, isextended is 0 if it is normal data, 1
  * if it is extended data. if it is extended, then the type is in
  * exttype */
 static void send_msg_channel_data(struct Channel *channel, int isextended,
@@ -543,7 +564,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 }
 
 
-/* when we receive channel data */
+/* when we receive channel data, put it in a buffer for writing to the program/
+ * shell etc */
 void recv_msg_channel_data() {
 
 	unsigned int chan;
@@ -591,6 +613,9 @@ void recv_msg_channel_data() {
 	TRACE(("leave recv_msg_channel_data"));
 }
 
+/* Increment the outgoing data window for a channel - the remote end limits
+ * the amount of data which may be transmitted, this window is decremented
+ * as data is sent, and incremented upon receiving window-adjust messages */
 void recv_msg_channel_window_adjust() {
 
 	unsigned int chan;
@@ -613,6 +638,8 @@ void recv_msg_channel_window_adjust() {
 
 }
 
+/* Increment the incoming data window for a channel, and let the remote
+ * end know */
 static void send_msg_channel_window_adjust(struct Channel* channel, 
 		unsigned int incr) {
 
@@ -626,6 +653,7 @@ static void send_msg_channel_window_adjust(struct Channel* channel,
 	encrypt_packet();
 }
 	
+/* Handle a new channel request, performing any channel-type-specific setup */
 void recv_msg_channel_open() {
 
 	unsigned char* type;
@@ -684,6 +712,7 @@ cleanup:
 	TRACE(("leave recv_msg_channel_open"));
 }
 
+/* Send a failure message */
 void send_msg_channel_failure(struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_failure"));
@@ -696,6 +725,7 @@ void send_msg_channel_failure(struct Channel *channel) {
 	TRACE(("leave send_msg_channel_failure"));
 }
 
+/* Send a success message */
 void send_msg_channel_success(struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_success"));
@@ -708,6 +738,8 @@ void send_msg_channel_success(struct Channel *channel) {
 	TRACE(("leave send_msg_channel_success"));
 }
 
+/* Send a channel open failure message, with a corresponding reason
+ * code (usually resource shortage or unknown chan type) */
 static void send_msg_channel_open_failure(unsigned int remotechan, 
 		int reason, const unsigned char *text, const unsigned char *lang) {
 
@@ -724,6 +756,8 @@ static void send_msg_channel_open_failure(unsigned int remotechan,
 	TRACE(("leave send_msg_channel_open_failure"));
 }
 
+/* Confirm a channel open, and let the remote end know what number we've
+ * allocated and the receive parameters */
 static void send_msg_channel_open_confirmation(struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket) {
@@ -776,7 +810,8 @@ int send_msg_channel_open_init(int fd, const char * typestring) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* channel establishment is only required if we have listeners (for x11 etc)*/
+/* Confirmation that our channel open request (for forwardings) was 
+ * successful*/
 void recv_msg_channel_open_confirmation() {
 
 	unsigned int chan;
@@ -797,6 +832,7 @@ void recv_msg_channel_open_confirmation() {
 	TRACE(("leave recv_msg_channel_open_confirmation"));
 }
 
+/* Notification that our channel open request failed */
 void recv_msg_channel_open_failure() {
 
 	unsigned int chan;

@@ -22,6 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Validates a user password */
+
 #include "includes.h"
 #include "session.h"
 #include "buffer.h"
@@ -31,7 +33,8 @@
 
 #ifdef DROPBEAR_PASSWORD_AUTH
 
-/* process a password auth request */
+/* Process a password auth request, sending success or failure messages as
+ * appropriate */
 void passwordauth() {
 	
 #ifdef HAVE_SHADOW_H
