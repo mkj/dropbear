@@ -30,6 +30,7 @@
 #define CHANNEL_TYPE_SESSION "session"
 #define CHANNEL_TYPE_X11 "x11"
 
+/* channel.type values */
 #define CHANNEL_ID_NONE 0
 #define CHANNEL_ID_SESSION 1
 #define CHANNEL_ID_X11 2
@@ -39,18 +40,24 @@
 #define SSH_OPEN_UNKNOWN_CHANNEL_TYPE           3
 #define SSH_OPEN_RESOURCE_SHORTAGE              4
 
-#define MAX_CHANNELS 1000 /* arbitrary */
+#define MAX_CHANNELS 400 /* arbitrary, includes each tcp/x11 connection */
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
 #define RECV_MAXWINDOW 6000 /* tweak */
 #define RECV_MAXPACKET 1400 /* tweak */
 #define RECV_MINWINDOW 10000 /* when we get below this, we send a windowadjust*/
 
+/* a simpler way to define that we need code for listeners */
+#if !defined(DISABLE_X11FWD) || !defined(DISABLE_AUTHFWD) || \
+	!defined(DISABLE_TCPFWD)
+#define USE_LISTENERS
+#endif
+
 struct Channel {
 
 	unsigned int index; /* the local channel index */
 	unsigned int remotechan;
-	char type; /* session, x11, forwarded/direct-tcpip */
+	unsigned char type; /* CHANNEL_ID_SESSION, CHANNEL_ID_X11 etc */
 	unsigned int recvwindow, transwindow;
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
@@ -73,6 +80,11 @@ void chaninitialise();
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
+#ifdef USE_LISTENERS
+int addlistener(int sock, int*(int sock));
+#endif
+struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
+		unsigned int transwindow, unsigned int transmaxpacket, int outgoing);
 
 void recv_msg_channel_open();
 void recv_msg_channel_request();

@@ -37,8 +37,6 @@
 #include "chansession.h"
 #include "ssh.h"
 
-static struct Channel* newchannel(unsigned int remotechan, char type, 
-		unsigned int transwindow, unsigned int transmaxpacket);
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
 static void send_msg_channel_open_success(struct Channel* channel,
@@ -79,11 +77,13 @@ void chancleanup() {
 	m_free(ses.channels);
 	TRACE(("leave chancleanup"));
 }
-			
 
 /* create a new channel entry, send a reply confirm or failure */
-static struct Channel* newchannel(unsigned int remotechan, char type, 
-		unsigned int transwindow, unsigned int transmaxpacket) {
+/* This can be used to create new outgoing connections (where the remotechan,
+ * transwindow, transmaxpacket etc aren't known) by setting 'outgoing' to
+ * 1. This will ignore remotechan, transwindow and transmaxpacket */
+struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
+		unsigned int transwindow, unsigned int transmaxpacket, int outgoing) {
 
 	struct Channel ** chanlist;
 	struct Channel * newchan;
@@ -101,8 +101,6 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 	/* otherwise extend the list */
 	if (i == ses.chansize) {
 		if (ses.chansize > MAX_CHANNELS) {
-			send_msg_channel_open_failure(remotechan,
-					SSH_OPEN_RESOURCE_SHORTAGE, "", "");
 			TRACE(("leave newchannel: max chans reached"));
 			return NULL;
 		}
@@ -120,9 +118,17 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 	newchan->index = i;
 	newchan->sentclosed = 0;
 	newchan->recveof = newchan->transeof = newchan->erreof = 0;
-	newchan->remotechan = remotechan;
-	newchan->transwindow = transwindow;
-	newchan->transmaxpacket = transmaxpacket;
+
+	if (outgoing == 0) {
+		newchan->remotechan = remotechan;
+		newchan->transwindow = transwindow;
+		newchan->transmaxpacket = transmaxpacket;
+	} else {
+		/* undefined */
+		newchan->remotechan = newchan->transwindow = 
+			newchan->transmaxpacket = 0;
+	}
+	
 	newchan->typedata = NULL;
 	newchan->infd = -1;
 	newchan->outfd = -1;
@@ -134,8 +140,6 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 
 	ses.channels[i] = newchan;
 
-	send_msg_channel_open_success(newchan, RECV_MAXWINDOW,
-			RECV_MAXPACKET);
 	TRACE(("leave newchannel"));
 
 	return newchan;
@@ -566,7 +570,7 @@ void recv_msg_channel_window_adjust() {
 	channel = getchannel(chan);
 
 	if (channel == NULL) {
-		dropbear_exit("Invalid channel"); /* TODO - disconnect */
+		dropbear_exit("Unknown channel"); /* TODO - disconnect */
 	}
 	
 	incr = buf_getint(ses.payload);
@@ -595,12 +599,15 @@ void recv_msg_channel_open() {
 
 	unsigned char* type;
 	unsigned int typelen;
+	unsigned int typeval;
 	unsigned int remotechan, transwindow, transmaxpacket;
 	struct Channel* channel;
+	unsigned int errtype = SSH_OPEN_UNKNOWN_CHANNEL_TYPE;
 
 
 	TRACE(("enter recv_msg_channel_open"));
 
+	/* get the packet contents */
 	type = buf_getstring(ses.payload, &typelen);
 
 	remotechan = buf_getint(ses.payload);
@@ -609,22 +616,38 @@ void recv_msg_channel_open() {
 	transmaxpacket = buf_getint(ses.payload);
 	transmaxpacket = MIN(transmaxpacket, MAX_TRANS_PAYLOAD_LEN);
 
-
+	/* figure what type of packet it is */
 	if (typelen > MAX_NAME_LEN) {
-		/* send channel_open_failure below */
-	} else if (strcmp(type, "session") == 0) {
-			channel = newchannel(remotechan, CHANNEL_ID_SESSION, 
-					transwindow, transmaxpacket);
-			if (channel != NULL) {
-				newchansess(channel);
-			}
-			goto out;
+		goto failure;
+	}
+	if (strcmp(type, "session") == 0) {
+		typeval = CHANNEL_ID_SESSION;
+	} else {
+		goto failure;
 	}
 
-	send_msg_channel_open_failure(remotechan, 
-			SSH_OPEN_UNKNOWN_CHANNEL_TYPE,
-			"Unknown channel", "en");
-out:
+	/* create the channel */
+	channel = newchannel(remotechan, typeval, transwindow, transmaxpacket, 0);
+
+	if (channel == NULL) {
+		errtype = SSH_OPEN_RESOURCE_SHORTAGE;
+		goto failure;
+	}
+	
+	/* type specific initialisation */
+	if (typeval == CHANNEL_ID_SESSION) {
+		newchansess(channel);
+	}
+
+	/* success */
+	send_msg_channel_open_success(channel, channel->recvwindow,
+			channel->recvmaxpacket);
+	goto cleanup;
+
+failure:
+	send_msg_channel_open_failure(remotechan, errtype, "", "");
+
+cleanup:
 	m_free(type);
 
 	TRACE(("leave recv_msg_channel_open"));
@@ -686,3 +709,37 @@ static void send_msg_channel_open_success(struct Channel* channel,
 	encrypt_packet();
 	TRACE(("leave send_msg_channel_open_success"));
 }
+
+#ifdef USE_LISTENERS
+/* channel establishment is only required if we have listeners */
+void recv_msg_channel_open_success() {
+
+	unsigned int chan;
+	struct Channel * channel;
+	chan = buf_getbyte(ses.payload);
+
+	channel = getchannel(chan);
+	if (channel == NULL) {
+		dropbear_exit("Unknown channel");
+	}
+
+	channel->remotechan =  buf_getint(ses.payload);
+	channel->recvwindow = buf_getint(ses.payload);
+	channel->recvmaxpacket = buf_getint(ses.payload);
+
+}
+
+void recv_msg_channel_open_failure() {
+
+	unsigned int chan;
+	struct Channel * channel;
+	chan = buf_getbyte(ses.payload);
+
+	channel = getchannel(chan);
+	if (channel == NULL) {
+		dropbear_exit("Unknown channel");
+	}
+
+	closechannel(channel);
+}
+#endif /* USE_LISTENERS */
