@@ -65,7 +65,7 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 	}
 
 	if (mp_count_bits(key->n) < MIN_RSA_KEYLEN) {
-		TRACE(("leave buf_get_rsa_pub_key: key too short"));
+		dropbear_log(LOG_WARNING, "rsa key too short");
 		return DROPBEAR_FAILURE;
 	}
 
