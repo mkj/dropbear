@@ -1,45 +1,30 @@
 Basic Dropbear build instructions:
 
-- First, edit options.h to choose user-defined features to choose, such as
-  which ciphers/hashes you want, which forwarding you want, etc.
+- Edit options.h to set which features you want.
+- Edit debug.h if you want any debug options (not usually required).
 
-- Edit debug.h if you want any debug options
-
-- Now configure Dropbear's host-specific options
-  (if you are using a cvs copy, "autoconf; autoheader" first)
+(If using a non-tarball copy, "autoconf; autoheader")
 
 ./configure      (optionally with --disable-zlib or --disable-syslog,
                   or --help for other options)
 
-- Then compile and optionally install Dropbear:
+Now compile:
 
-(the Makefile requires GNU make, if you want to make it portable, send me
- some patches)
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
 
-make
-make install     (installs to /usr/local/sbin, /usr/local/bin by default)
+And install (/usr/local/bin is usual default):
 
-You need to generate server keys, this is one-off:
-./dropbearkey -t rsa -f dropbear_rsa_host_key
-./dropbearkey -t dss -f dropbear_dss_host_key
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install
 
-or alternatively convert OpenSSH keys to Dropbear:
-./dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key dropbear_dss_host_key
+(you can leave items out of the PROGRAMS list to avoid compiling them. If you
+recompile after changing the PROGRAMS list, you *MUST* "make clean" before
+recompiling - bad things will happen otherwise)
 
-And you can now run the server.
-./dropbear
+See MULTI for instructions on making all-in-one binaries.
 
-or './dropbear -h' to get options.
+If you want to compile statically, add "STATIC=1" to the make command-line.
 
-If the server is run as non-root, you most likely won't be able to allocate a
-pty, and you cannot login as any user other than that running the daemon
-(obviously). Shadow passwords will also be unusable as non-root.
-
-The Dropbear distribution includes a standalone version of OpenSSH's scp
-program. You can compile it with "make scp", you may want to change the path
-of the ssh binary, specified near the top of the scp.c file. By default
-the progress meter isn't compiled in to save space, you can enable it with
-"make scp-progress".
+Binaries can be strippd with "make strip"
 
 ============================================================================
 
@@ -50,18 +35,11 @@ versions is broken. Also note that you may get strange issues if your uClibc
 headers don't match the library you are running with, ie the headers might
 say that shadow password support exists, but the libraries don't have it.
 
-To compile for uClibc the following should work:
-
-rm config.cache
-CC=i386-uclib-gcc ./configure --disable-zlib
-make clean
-make
-make strip
-
-... and that should be it. You can use "make static" to make statically linked 
-binaries, and it is advisable to strip the binaries too. If you're looking
-to make a small binary, you should remove unneeded ciphers and MD5, by 
-editing options.h
+Compiling for uClibc should be the same as normal, just set CC to the magic
+uClibc toolchain compiler (ie export CC=i386-uclibc-gcc or whatever).
+You can use "make STATIC=1" to make statically linked binaries, and it is
+advisable to strip the binaries too. If you're looking to make a small binary,
+you should remove unneeded ciphers and MD5, by editing options.h
 
 It is possible to compile zlib in, by copying zlib.h and zconf.h into a
 subdirectory (ie zlibincludes), and 
@@ -94,19 +72,3 @@ things to note:
 	to create all the /dev/pty?? and /dev/tty?? devices, which can be
 	problematic for devfs. In general, openpty() is the best way to allocate
 	PTYs, so it's best to try and get it working.
-
-
-============================================================================
-
-Public key auth:
-
-You can use ~/.ssh/authorized_keys in the same way as with OpenSSH, just put
-the key entries in that file. They should be of the form:
-
-ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+ZAM9uGuewZBDoAqNKJxoIn0Hyd0Nk/yU99UVv6NWV/5YSHtnf35LKds56j7cuzoQpFIdjNwdxAN0PCET/MG8qyskG/2IE2DPNIaJ3Wy+Ws4IZEgdJgPlTYUBWWtCWOGc= someone@hostname
-
-You must make sure that ~/.ssh, and the key file, are only writable by the
-user.
-
-NOTE: Dropbear ignores authorized_keys options such as those described in the
-OpenSSH sshd manpage, and will not allow a login for these keys. 

@@ -1,4 +1,4 @@
-This is Dropbear, a smallish SSH 2 server.
+This is Dropbear, a smallish SSH 2 server and client.
 
 INSTALL has compilation instructions.
 
@@ -12,3 +12,41 @@ me if you have any questions/bugs found/features/ideas/comments etc :)
 
 Matt Johnston
 matt@ucc.asn.au
+
+============================================================================
+
+Public key auth:
+
+You can use ~/.ssh/authorized_keys in the same way as with OpenSSH, just put
+the key entries in that file. They should be of the form:
+
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+ZAM9uGuewZBDoAqNKJxoIn0Hyd0Nk/yU99UVv6NWV/5YSHtnf35LKds56j7cuzoQpFIdjNwdxAN0PCET/MG8qyskG/2IE2DPNIaJ3Wy+Ws4IZEgdJgPlTYUBWWtCWOGc= someone@hostname
+
+You must make sure that ~/.ssh, and the key file, are only writable by the
+user.
+
+NOTE: Dropbear ignores authorized_keys options such as those described in the
+OpenSSH sshd manpage, and will not allow a login for these keys. 
+
+To run the server, you need to generate server keys, this is one-off:
+./dropbearkey -t rsa -f dropbear_rsa_host_key
+./dropbearkey -t dss -f dropbear_dss_host_key
+
+or alternatively convert OpenSSH keys to Dropbear:
+./dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key dropbear_dss_host_key
+
+And you can now run the server.
+./dropbear
+
+or './dropbear -h' to get options.
+
+If the server is run as non-root, you most likely won't be able to allocate a
+pty, and you cannot login as any user other than that running the daemon
+(obviously). Shadow passwords will also be unusable as non-root.
+
+The Dropbear distribution includes a standalone version of OpenSSH's scp
+program. You can compile it with "make scp", you may want to change the path
+of the ssh binary, specified near the top of the scp.c file. By default
+the progress meter isn't compiled in to save space, you can enable it with
+"make scp-progress".
+
