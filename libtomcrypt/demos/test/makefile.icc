@@ -1,0 +1,14 @@
+# make test harness, it is good.
+CFLAGS += -O3 -xN -ip -I../../ -I./
+CC=icc
+
+default: test
+
+OBJECTS=test.o cipher_hash_test.o mac_test.o modes_test.o \
+pkcs_1_test.o store_test.o rsa_test.o ecc_test.o dsa_test.c dh_tests.o 
+
+test: $(OBJECTS)
+	$(CC) $(OBJECTS) -ltomcrypt -o test
+	
+clean:
+	rm -f test *.o *~	
