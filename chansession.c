@@ -301,7 +301,6 @@ void chansessionrequest(struct Channel *channel) {
 	chansess = (struct ChanSess*)channel->typedata;
 	assert(chansess != NULL);
 	TRACE(("type is %s\n", type));
-	dropbear_log(LOG_DEBUG, "type is '%s'", type);
 
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
