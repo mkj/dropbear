@@ -1,8 +1,9 @@
 This is dropbear, a smallish and friendly ssh2 daemon.
 
 It is currently usable though betaish, requiring work in certain areas before
-use in a production environment. If you need a small sshd to run on a cruddy
-4 meg laptop, then sure, use it now. But don't use it on a dept webserver yet :)
+use in a production environment. If you need a small sshd to run on a
+4 meg laptop, then sure, use it now. But don't use it on your payroll systems
+yet :)
 
 See TODO for a few of the things I know need looking at.
 
@@ -32,3 +33,36 @@ or './dropbear -h' to get options.
 
 Now ssh to port 2244, you need to run dropbear as root if you want to get a
 pseudo-tty
+
+=====
+
+Compiling with uclibc:
+
+Firstly, make sure you have at least uclibc 0.9.17, as getusershell() in prior
+versions is horribly broken.
+
+Dropbear should compile fine with uclibc, just do the following (works for
+bash style shells, others might differ):
+
+export CC=i386-uclibc-gcc
+rm config.cache
+./configure --disable-zlib
+cd libtomcrypt; make clean; make
+cd ..; make clean; make
+
+... and that should be it. You can use "make static" to make statically linked 
+binaries, and it is advisable to strip the binaries too. If you're looking
+to make a small binary, you should remove unneeded ciphers and md5, by 
+editing options.h
+
+=====
+
+Public key auth:
+
+You can use ~/.ssh/authorized_keys in the same way as with OpenSSH, just put
+the key entries in that file. They should be of the form:
+
+ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+ZAM9uGuewZBDoAqNKJxoIn0Hyd0Nk/yU99UVv6NWV/5YSHtnf35LKds56j7cuzoQpFIdjNwdxAN0PCET/MG8qyskG/2IE2DPNIaJ3Wy+Ws4IZEgdJgPlTYUBWWtCWOGc= someone@hostname
+
+You must make sure that ~/.ssh, and the key file, are only writable by the
+user.
