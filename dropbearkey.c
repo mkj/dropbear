@@ -45,7 +45,6 @@
  *
  */
 #include "includes.h"
-#include "runopts.h"
 #include "signkey.h"
 #include "buffer.h"
 #include "dbutil.h"
