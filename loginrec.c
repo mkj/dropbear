@@ -176,6 +176,7 @@ int utmp_write_entry(struct logininfo *li);
 int utmpx_write_entry(struct logininfo *li);
 int wtmp_write_entry(struct logininfo *li);
 int wtmpx_write_entry(struct logininfo *li);
+int lastlog_write_entry(struct logininfo *li);
 int syslogin_write_entry(struct logininfo *li);
 
 int wtmp_get_entry(struct logininfo *li);
