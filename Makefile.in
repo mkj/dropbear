@@ -10,7 +10,7 @@
 # This makefile is quite evil.
 
 ifndef PROGRAMS
-	PROGRAMS=dropbear dbclient dropbearkey dropbearmulti
+	PROGRAMS=dropbear dbclient dropbearkey dropbearkey
 endif
 
 LTC=libtomcrypt/libtomcrypt.a
