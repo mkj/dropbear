@@ -21,7 +21,6 @@ The following are set in options.h
 - You can disable x11, tcp and agent forwarding as desired. None of these are
   essential, although agent-forwarding is often useful even on firewall boxes.
 
-
 If you are compiling statically, you may want to disable zlib, as it will use
 a few tens of kB of binary-size (./configure --disable-zlib).
 
@@ -34,7 +33,9 @@ stripping unused code. The relevant vars to set before configure are:
 LDFLAGS=-Wl,--gc-sections
 CFLAGS="-ffunction-sections -fdata-sections"
 
-You can also experiment with optimisation flags such as -Os
+You can also experiment with optimisation flags such as -Os, note that in some
+cases these flags actually seem to increase size, so experiment before
+deciding.
 
 Of course using small C libraries such as uClibc and dietlibc can also help.
 

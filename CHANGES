@@ -1,3 +1,18 @@
+0.38 - Sat Oct 11 2003 16:28:13 +0800
+
+- Default hostkey path changed to /etc/dropbear/dropbear_{rsa,dss}_host_key
+  rather than /etc/dropbear_{rsa,dss}_host_key
+
+- Added SMALL and MULTI text files which have info on compiling for multiple
+  binaries or small binaries
+
+- Allow for commandline definition of some options.h settings
+  (without warnings)
+
+- Be more careful handling EINTR
+
+- More fixes for channel closing
+
 - Added multi-binary support
 
 - Improved logging of IPs, now get logged in all cases
@@ -5,7 +20,7 @@
 - Don't chew cpu when waiting for version identification string, also
   make sure that we kick off people if they don't auth within 5 minutes.
 
-- Various small fixes
+- Various small fixes, warnings etc
 
 - Display MOTD if requested - suggested by
   Trent Lloyd <lathiat at sixlabs.org> and

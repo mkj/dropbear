@@ -1,3 +1,9 @@
+dropbear (0.38-1) unstable; urgency=medium
+
+  * updated to 0.37 release - various important bugfixes
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sat, 11 Oct 2003 16:28:54 +0800
+
 dropbear (0.37-1) unstable; urgency=medium
 
   * updated to 0.37 release - various important bugfixes

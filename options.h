@@ -26,14 +26,21 @@
 #define _OPTIONS_H_
 
 /******************************************************************
- * Define compile-time options below.
+ * Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
+ * parts are to allow for commandline -DDROPBEAR_XXX options etc.
  ******************************************************************/
 
+#ifndef DROPBEAR_PORT
 #define DROPBEAR_PORT 22
+#endif
 
 /* Default hostkey paths - these can be specified on the command line */
-#define DSS_PRIV_FILENAME "/etc/dropbear_dss_host_key"
-#define RSA_PRIV_FILENAME "/etc/dropbear_rsa_host_key"
+#ifndef DSS_PRIV_FILENAME
+#define DSS_PRIV_FILENAME "/etc/dropbear/dropbear_dss_host_key"
+#endif
+#ifndef RSA_PRIV_FILENAME
+#define RSA_PRIV_FILENAME "/etc//dropbear/dropbear_rsa_host_key"
+#endif
 
 /* Enable X11 Forwarding */
 #define ENABLE_X11FWD
@@ -85,7 +92,9 @@
 #define DO_MOTD
 
 /* The MOTD file path */
+#ifndef MOTD_FILENAME
 #define MOTD_FILENAME "/etc/motd"
+#endif
 
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
@@ -102,26 +111,38 @@
 
 /*#undef DROPBEAR_PRNGD */ /* use prngd socket - you must manually set up prngd
 							  to produce output */
+#ifndef DROPBEAR_PRNGD_SOCKET
 #define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"
+#endif
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
+#ifndef MAX_UNAUTH_CLIENTS
 #define MAX_UNAUTH_CLIENTS 30
+#endif
 
 /* Maximum number of failed authentication tries */
+#ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
+#endif
 
 /* The file to store the daemon's process ID, for shutdown scripts etc */
+#ifndef DROPBEAR_PIDFILE
 #define DROPBEAR_PIDFILE "/var/run/dropbear.pid"
+#endif
 
 /* The command to invoke for xauth when using X11 forwarding.
  * "-q" for quiet */
+#ifndef XAUTH_COMMAND
 #define XAUTH_COMMAND "/usr/X11R6/bin/xauth -q"
+#endif
 
 /* if you want to enable running an sftp server (such as the one included with
  * OpenSSH), set the path below. If the path isn't defined, sftp will not
  * be enabled */
+#ifndef SFTPSERVER_PATH
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
+#endif
 
 /* Multi-purpose binary  configuration - if you want to make the combined
  * binary, first define DROPBEAR_MULTI, and then define which of the three
@@ -142,7 +163,9 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.38-pre1"
+#ifndef DROPBEAR_VERSION
+#define DROPBEAR_VERSION "0.38"
+#endif
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 

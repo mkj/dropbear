@@ -2,26 +2,25 @@ Current:
 
 Things which need doing:
 
-- make combined or shared libraries
-- log IP on all disconnects
-- log failed password attempts
+- fix -lnsl testing
 
-- kexfollows
-- check PRNG is good
+- kexfollows ?
+- check PRNG
 - improved checking in DSS/RSA routines for valid sized keys etc
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
-- improve channel window adjustment algorithm
+- improve channel window adjustment algorithm (circular buffering)
 
-- inetd
 - IP6 (binding to :: takes over ipv4 as well, sigh. If anyone wants to suggest
   a clean way (ie no V4MAPPED or setsockopt things) please let me know :)
 - Binding to different interfaces (see ipv6 probably)
 - TCP forwarding (-L is done)
 
-Features to add:
+- Option to totally disable wtmp/utmp etc
 
-- PAM
+
+- PAM ??
+- inetd
 - possible RSA blinding? need to check whether this is vuln to timing attacks
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly

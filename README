@@ -1,11 +1,5 @@
 This is Dropbear, a smallish SSH 2 server.
 
-It is fairly stable, though hasn't had extensive testing, so if you want to use
-it somewhere important, test it first. I'd appreciate if you let me know about
-any bugs you find.
-
-See TODO for a few of the things I know need looking at.
-
 INSTALL has compilation instructions.
 
 MULTI has instructions on making a multi-purpose binary (ie a single binary
@@ -13,4 +7,8 @@ which performs multiple tasks, to save disk space)
 
 SMALL has some tips on creating small binaries.
 
+See TODO for a few of the things I know need looking at, and please contact
+me if you have any questions/bugs found/features/ideas/comments etc :)
+
+Matt Johnston
 matt@ucc.asn.au
