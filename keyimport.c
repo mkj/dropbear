@@ -374,7 +374,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	struct openssh_key *ret;
 	FILE *fp;
 	char buffer[256];
-	char *errmsg, *p;
+	char *errmsg = NULL, *p = NULL;
 	int headers_done;
 	char base64_bit[4];
 	int base64_chars = 0;
@@ -514,6 +514,9 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		}
 		memset(&ret, 0, sizeof(ret));
 		m_free(ret);
+	}
+	if (errmsg) {
+		fprintf(stderr, "Error: %s\n", errmsg);
 	}
 	return NULL;
 }
@@ -712,7 +715,6 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	if (errmsg) {
 		fprintf(stderr, "Error: %s\n", errmsg);
 	}
-	printf("before retval\n");
 	return retval;
 }
 
