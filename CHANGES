@@ -1,3 +1,25 @@
+Current CVS
+
+- Changed license text for LibTom*
+
+- Added strip-static target
+
+- Fixed a bug in agent-forwarding cleanup handler - would segfault
+  (dereferencing a null pointer) if agent forwarding had failed.
+
+- Fix behaviour of authorized_keys parsing, so larger (>1024 bit) DSA keys will
+  work. Thanks to Dr. Markus Waldeck for the report. 
+
+- Fixed local port forwarding code so that the "-j" option will make forwarding
+  attempts fail more gracefully.
+
+- Allow repeated requests in a single session if previous ones fail - this fixes  PuTTY and some other SCP clients, which try SFTP, then fall-back to SCP if it
+  isn't available. Thanks to Stirling Westrup for the report.
+
+- Updated to LibTomCrypt 0.94 and LibTomMath 0.29. Also applied Tom's patch for
+  the AES code to use smaller non-precomputed tables if DROPBEAR_SMALL_CODE is
+  defined in options.h - this leads to a significant reduction in binary size.
+
 0.41 - Mon Jan 19 2004 22:40:19 +0800
 
 - Fix in configure so that cross-compiling works, thanks to numerous people for
