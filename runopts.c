@@ -79,8 +79,10 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->bannerfile = NULL;
 	opts->banner = NULL;
 	opts->forkbg = 1;
+	/* not yet
 	opts->ipv4 = 1;
 	opts->ipv6 = 1;
+	*/
 #ifndef DISABLE_SYSLOG
 	usingsyslog = 1;
 #endif
@@ -170,10 +172,12 @@ runopts * getrunopts(int argc, char ** argv) {
 		buf_setpos(opts->banner, 0);
 	}
 
+	/* not yet
 	if (!(opts->ipv4 || opts->ipv6)) {
 		fprintf(stderr, "You can't disable ipv4 and ipv6.\n");
 		exit(1);
 	}
+	*/
 
 	/* create the array of listening ports */
 	if (portnum == 0) {
