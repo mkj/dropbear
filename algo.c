@@ -182,7 +182,7 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 }
 
 
-/* match the first algorithm in the comma-seperated list in buf which is
+/* match the first algorithm in the comma-separated list in buf which is
  * also in localalgos[], or return NULL on failure.
  * (*goodguess) is set to 1 if the preferred client/server algos match,
  * 0 otherwise. This is used for checking if the kexalgo/hostkeyalgos are
@@ -196,8 +196,10 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[], int *goodguess)
 	unsigned int count, i, j;
 	algo_type * ret = NULL;
 
-	/* get the comma-seperated list from the buffer ie "algo1,algo2,algo3" */
+	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
+	/* Debug this */
+	TRACE(("buf_match_algo: %s", algolist));
 	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
 		goto out; /* just a sanity check, no other use */
 	}
@@ -251,7 +253,7 @@ out:
 	return ret;
 }
 
-/* Output a comma seperated list of algorithms to a buffer */
+/* Output a comma separated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
 	unsigned int pos = 0, i, len;
@@ -259,12 +261,16 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
+			/* Avoid generating a trailing comma */
+			if (pos)
+			    str[pos++] = ',';
 			len = strlen(localalgos[i].name);
 			memcpy(&str[pos], localalgos[i].name, len);
 			pos += len;
-			str[pos] = ',';
-			pos++;
 		}
 	}
-	buf_putstring(buf, str, pos-1);
+	str[pos]=0;
+	/* Debug this */
+	TRACE(("buf_put_algolist: %s", str));
+	buf_putstring(buf, str, pos);
 }
