@@ -22,9 +22,11 @@ case "$1" in
        purge|remove|upgrade|failed-upgrade|abort-install|abort-upgrade|disappear)
         if [ "$1" = "purge" ]
         then
-            rm -f /etc/dropbear/dropbear_rsa_host_key
-            rm -f /etc/dropbear/dropbear_dss_host_key
-            rmdir --ignore-fail-on-non-empty /etc/dropbear
+            if [ -e /etc/dropbear ]; then
+                rm -f /etc/dropbear/dropbear_rsa_host_key
+                rm -f /etc/dropbear/dropbear_dss_host_key
+                rmdir --ignore-fail-on-non-empty /etc/dropbear
+			fi
             update-rc.d dropbear remove >/dev/null
         fi
         ;;
