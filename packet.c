@@ -431,6 +431,14 @@ void process_packet() {
 			dropbear_close("Disconnect received");
 	}
 
+	/* Check if we should ignore this packet. Used currently only for
+	 * KEX code, with first_kex_packet_follows */
+	if (ses.ignorenext) {
+		TRACE(("Ignoring packet, type = %d", type));
+		ses.ignorenext = 0;
+		goto out;
+	}
+
 	/* check that we aren't expecting a particular packet */
 	if (ses.expecting && ses.expecting != type) {
 		/* TODO send disconnect? */

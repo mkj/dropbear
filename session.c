@@ -240,6 +240,7 @@ static void session_init(int sock, runopts *opts, int childpipe,
 
 	ses.expecting = SSH_MSG_KEXINIT;
 	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
+	ses.ignorenext = 0;
 
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));

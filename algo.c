@@ -183,8 +183,12 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 
 
 /* match the first algorithm in the comma-seperated list in buf which is
- * also in localalgos[], or return NULL on failure. */
-algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]) {
+ * also in localalgos[], or return NULL on failure.
+ * (*goodguess) is set to 1 if the preferred client/server algos match,
+ * 0 otherwise. This is used for checking if the kexalgo/hostkeyalgos are
+ * guessed correctly */
+algo_type * buf_match_algo(buffer* buf, algo_type localalgos[], int *goodguess)
+{
 
 	unsigned char * algolist = NULL;
 	unsigned char * remotealgos[MAX_PROPOSED_ALGO];
@@ -226,9 +230,15 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]) {
 
 		for (j = 0; localalgos[j].name != NULL; j++) {
 			if (localalgos[j].usable) {
-				if (len == strlen(localalgos[j].name) 
-						&& strncmp(localalgos[j].name, 
-							remotealgos[i], len) == 0) {
+				if (len == strlen(localalgos[j].name) &&
+						strncmp(localalgos[j].name, remotealgos[i], len) == 0) {
+					/* set if it was a good guess */
+					if (i == 0 && j == 0) {
+						*goodguess = 1;
+					} else {
+						*goodguess = 0;
+					}
+					/* set the algo to return */
 					ret = &localalgos[j];
 					goto out;
 				}

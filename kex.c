@@ -460,12 +460,17 @@ static void read_kex() {
 	unsigned char* str;
 	char * erralgo = NULL;
 
+	int goodguess = 0;
+	int allgood = 1; /* we AND this with each goodguess and see if its still
+						true after */
+
 	buf_incrpos(ses.payload, 16); /* start after the cookie */
 
 	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
 
 	/* kex_algorithms */
-	algo = buf_match_algo(ses.payload, sshkex);
+	algo = buf_match_algo(ses.payload, sshkex, &goodguess);
+	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "kex";
 		goto error;
@@ -473,15 +478,17 @@ static void read_kex() {
 	ses.newkeys->algo_kex = algo->val;
 
 	/* server_host_key_algorithms */
-	algo = buf_match_algo(ses.payload, sshhostkey);
+	algo = buf_match_algo(ses.payload, sshhostkey, &goodguess);
+	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";
 		goto error;
 	}
+	allgood &= goodguess;
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshciphers);
+	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
@@ -489,7 +496,7 @@ static void read_kex() {
 	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
 
 	/* encryption_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshciphers);
+	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
@@ -497,7 +504,7 @@ static void read_kex() {
 	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
 
 	/* mac_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshhashes);
+	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
@@ -505,7 +512,7 @@ static void read_kex() {
 	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
 
 	/* mac_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshhashes);
+	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
@@ -513,7 +520,7 @@ static void read_kex() {
 	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
 
 	/* compression_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshcompress);
+	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -521,7 +528,7 @@ static void read_kex() {
 	ses.newkeys->recv_algo_comp = algo->val;
 
 	/* compression_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshcompress);
+	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
@@ -539,17 +546,20 @@ static void read_kex() {
 	/* first_kex_packet_follows */
 	if (buf_getbyte(ses.payload)) {
 		ses.kexstate.firstfollows = 1;
-		/* XXX currently not handled */
+		/* if the guess wasn't good, we ignore the packet sent */
+		TRACE(("first_kex_packet_follows set"));
+		if (!allgood) {
+			TRACE(("set ignorenext"));
+			ses.ignorenext = 1;
+		}
 	}
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);
-
 	return;
 
 error:
 	dropbear_exit("no matching algo %s", erralgo);
-
 }
 
 /* Send our list of algorithms we can use */

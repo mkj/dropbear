@@ -88,6 +88,10 @@ struct sshsession {
 
 	unsigned char expecting; /* byte indicating what packet we expect next, 
 								or 0x00 for any */
+
+	unsigned char ignorenext; /* whether to ignore the next packet,
+								 used for kex_follows stuff */
+
 	
 	/* unencrypted write payload */
 	buffer *writepayload; /* this will actually refer to within clearwritebuf */
