@@ -353,6 +353,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 
 	/* calculate our random value dh_y */
 	do {
+		assert(dh_q_len <= sizeof(randbuf));
 		genrandom(randbuf, dh_q_len);
 		if (mp_read_unsigned_bin(&dh_y, randbuf, dh_q_len) != MP_OKAY) {
 			dropbear_exit("Diffie-Hellman error");

@@ -35,6 +35,7 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->rsakeyfile = NULL;
 	opts->dsskeyfile = NULL;
 	opts->bannerfile = NULL;
+	opts->banner = NULL;
 	opts->forkbg = 1;
 
 	for (i = 1; i < argc; i++) {
