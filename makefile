@@ -160,6 +160,7 @@ library: $(LIBNAME)
 
 $(LIBNAME): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
+	$(RANLIB) $@
 
 #This rule makes the hash program included with libtomcrypt
 hashsum: library $(HASHOBJECTS)
