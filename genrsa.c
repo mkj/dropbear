@@ -18,47 +18,11 @@
 
 #define KEYSIZE 1024/8
 
+#ifdef DROPBEAR_RSA
+
 static void getrsaprime(mp_int* prime, mp_int *primeminus, 
 		mp_int* rsa_e, unsigned int size, int wprng);
 
-int main(int argc, char ** argv) {
-
-	rsa_key *key;
-	buffer *buf;
-	int fd;
-	int ret;
-	
-	if (argc != 2) {
-		printf("usage: genrsa rsaprivkeyfile\n");
-		exit(0);
-	}
-	
-	printf("starting generation\n");
-	key = gen_rsa_priv_key(KEYSIZE);
-	printf("done generation\n");
-	printf("n size = %d bits %d bytes\n", mp_count_bits(key->n),
-			mp_unsigned_bin_size(key->n));
-
-	buf = buf_new(3000);
-	buf_put_rsa_priv_key(buf, key);
-	TRACE(("after buf_put_rsa_priv_key"));
-	/* write it */
-	fd = open(argv[1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-	buf_setpos(buf, 0);
-	ret = write(fd, buf_getptr(buf, buf->len), buf->len);
-	if (ret != buf->len) {
-		fprintf(stderr, "error writing to file, short write %d\n",
-				ret);
-	}
-
-	close(fd);
-
-	buf_free(buf);
-
-	rsa_key_free(key);
-	return 0;
-	
-}
 /* mostly taken from libtomcrypt's rsa key generation routine */
 rsa_key * gen_rsa_priv_key(unsigned int size) {
 
@@ -187,3 +151,5 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 	m_free(buf);
 	
 }
+
+#endif /* DROPBEAR_RSA */

@@ -21,46 +21,13 @@
 #define PSIZE 128 /* 1024 bit*/
 #define QSIZE 20 /* 160 bit */
 
+#ifdef DROPBEAR_DSS
+
 static void getq(dss_key *key);
 static void getp(dss_key *key, unsigned int size);
 static void getg(dss_key *key);
 static void getx(dss_key *key);
 static void gety(dss_key *key);
-
-int main(int argc, char ** argv) {
-
-	dss_key *key;
-	buffer *buf;
-	int fd;
-	int ret;
-	
-	if (argc != 2) {
-		printf("usage: gendss dssprivkeyfile\n");
-		exit(0);
-	}
-	
-	key = gen_dss_priv_key(PSIZE);
-	printf("done it all\n");
-
-	buf = buf_new(3000);
-	buf_put_dss_priv_key(buf, key);
-	/* write it */
-	fd = open(argv[1], O_WRONLY | O_CREAT, S_IRUSR | S_IWUSR);
-	buf_setpos(buf, 0);
-	ret = write(fd, buf_getptr(buf, buf->len), buf->len);
-	if (ret != buf->len) {
-		fprintf(stderr, "error writing to file, short write %d\n",
-				ret);
-	}
-
-	close(fd);
-
-	buf_free(buf);
-
-	dss_key_free(key);
-	return 0;
-	
-}
 
 dss_key * gen_dss_priv_key(unsigned int size) {
 
@@ -254,8 +221,10 @@ static void getx(dss_key *key) {
 
 static void gety(dss_key *key) {
 
- if (mp_exptmod(key->g, key->x, key->p, key->y) != MP_OKAY) {
-	 fprintf(stderr, "dss key generation failed\n");
-	 exit(1);
- }
+	if (mp_exptmod(key->g, key->x, key->p, key->y) != MP_OKAY) {
+		fprintf(stderr, "dss key generation failed\n");
+		exit(1);
+	}
 }
+
+#endif /* DROPBEAR_DSS */
