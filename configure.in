@@ -19,7 +19,7 @@ fi
 AC_SUBST(LD)	
 
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
-	AC_MSG_RESULT(No \$CFLAGS set... using "-Os -W -Wall for GCC")
+	AC_MSG_RESULT(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
 	CFLAGS="-Os -W -Wall"
 fi
 
