@@ -12,6 +12,9 @@ Basic Dropbear build instructions:
 
 - Then compile and optionally install Dropbear:
 
+(the Makefile requires GNU make, if you want to make it portable, send me
+ some patches)
+
 make
 make install     (installs to /usr/local/sbin, /usr/local/bin by default)
 
