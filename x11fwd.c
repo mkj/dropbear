@@ -32,7 +32,6 @@ int x11req(struct ChanSess * chansess) {
 	/* create listening socket */
 	chansess->x11fd = socket(PF_INET, SOCK_STREAM, 0);
 	if (chansess->x11fd < 0) {
-		dropbear_log(LOG_DEBUG, "x11req fail socket");
 		goto fail;
 	}
 
@@ -44,18 +43,15 @@ int x11req(struct ChanSess * chansess) {
 
 	/* listen */
 	if (listen(chansess->x11fd, 20) < 0) {
-		dropbear_log(LOG_DEBUG, "x11req fail listen");
 		goto fail;
 	}
 
 	/* set non-blocking */
 	if (fcntl(chansess->x11fd, F_SETFL, O_NONBLOCK) < 0) {
-		dropbear_log(LOG_DEBUG, "x11req fail nonblock");
 		goto fail;
 	}
 
 	/* channel.c's channel fd code will handle the socket now */
-	dropbear_log(LOG_DEBUG, "x11req success");
 
 	/* set the maxfd so that select() loop will notice it */
 	ses.maxfd = MAX(ses.maxfd, chansess->x11fd);
@@ -64,7 +60,6 @@ int x11req(struct ChanSess * chansess) {
 
 fail:
 	/* cleanup */
-	dropbear_log(LOG_DEBUG, "x11req fail");
 	x11cleanup(chansess);
 
 	return DROPBEAR_FAILURE;
@@ -82,17 +77,17 @@ int x11accept(struct ChanSess * chansess) {
 
 	fd = accept(chansess->x11fd, (struct sockaddr*)&addr, &len);
 	if (fd < 0) {
-		dropbear_log(LOG_DEBUG, "accept x11 failure %s", strerror(errno));
 		return DROPBEAR_FAILURE;
 	}
 
-	send_msg_channel_open_x11(fd, &addr);
+	if (send_msg_channel_open_x11(fd, &addr) == DROPBEAR_FAILURE) {
+		return DROPBEAR_FAILURE;
+	}
 
 	/* if single-connection we close it up */
 	if (chansess->x11singleconn) {
 		x11cleanup(chansess);
 	}
-	dropbear_log(LOG_DEBUG, "accept x11 success %s", strerror(errno));
 	return DROPBEAR_SUCCESS;
 }
 
@@ -100,16 +95,15 @@ int x11accept(struct ChanSess * chansess) {
  * and environment variables.  */
 void x11setauth(struct ChanSess *chansess) {
 
-	char display[20]; /* space for "127.0.0.1:12345.123" */
+	char display[20]; /* space for "localhost:12345.123" */
 	FILE * authprog;
 
 	if (chansess->x11fd == -1) {
-		dropbear_log(LOG_DEBUG, "x11setauth fd == -1");
 		return;
 	}
 
 	/* create the DISPLAY string */
-	if (snprintf(display, sizeof(display), "127.0.0.1:%d.%d",
+	if (snprintf(display, sizeof(display), "localhost:%d.%d",
 			chansess->x11port - X11BASEPORT, chansess->x11screennum) 
 			>= sizeof(display)) {
 		/* string was truncated */
@@ -117,16 +111,23 @@ void x11setauth(struct ChanSess *chansess) {
 	}
 
 	addnewvar("DISPLAY", display);
-	dropbear_log(LOG_DEBUG, "x11setauth DISPLAY = %s", display);
+
+	/* create the xauth string */
+	if (snprintf(display, sizeof(display), "unix:%d.%d",
+			chansess->x11port - X11BASEPORT, chansess->x11screennum) 
+			>= sizeof(display)) {
+		/* string was truncated */
+		return;
+	}
 
 	/* popen is a nice function - code is strongly based on OpenSSH's */
-	authprog = popen(XAUTH_PROGRAM, "w");
+	authprog = popen(XAUTH_COMMAND, "w");
 	if (authprog) {
 		fprintf(authprog, "add %s %s %s\n",
 				display, chansess->x11authprot, chansess->x11authcookie);
-		fclose(authprog);
+		pclose(authprog);
 	} else {
-		fprintf(stderr, "Failed to run %s\n", XAUTH_PROGRAM);
+		fprintf(stderr, "Failed to run %s\n", XAUTH_COMMAND);
 	}
 
 }
@@ -150,7 +151,6 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
 	chan = newchannel(-1, CHANNEL_ID_X11, -1, -1, 1);
 	if (!chan) {
-		dropbear_log(LOG_DEBUG, "failed new channel");
 		return DROPBEAR_FAILURE;
 	}
 
@@ -168,6 +168,11 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 	buf_putint(ses.writepayload, addr->sin_port);
 
 	encrypt_packet();
+
+	/* set fd non-blocking */
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+		return DROPBEAR_FAILURE;
+	}
 
 	chan->infd = chan->outfd = fd;
 
@@ -194,8 +199,6 @@ static int bindport(int fd) {
 			/* success */
 			return port;
 		}
-		dropbear_log(LOG_DEBUG, "bindport error port %d err %d %s", 
-				port, errno, strerror(errno));
 		if (errno != EADDRINUSE) {
 			/* error we can't handle */
 			break;
