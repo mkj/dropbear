@@ -22,6 +22,7 @@
 #include <limits.h>
 
 #define NO_LTM_TOOM 1
+#define NO_LTM_KARATSUBA 1
 
 #undef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))

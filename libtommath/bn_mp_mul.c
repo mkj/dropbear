@@ -28,10 +28,13 @@ mp_mul (mp_int * a, mp_int * b, mp_int * c)
     res = mp_toom_mul(a, b, c);
   } else 
 #endif
+#ifndef NO_LTM_KARATSUBA
   /* use Karatsuba? */
   if (MIN (a->used, b->used) >= KARATSUBA_MUL_CUTOFF) {
     res = mp_karatsuba_mul (a, b, c);
-  } else {
+  } else 
+#endif
+  {
     /* can we use the fast multiplier?
      *
      * The fast multiplier can be used if the output will 

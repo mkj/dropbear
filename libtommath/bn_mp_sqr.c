@@ -25,10 +25,13 @@ mp_sqr (mp_int * a, mp_int * b)
     res = mp_toom_sqr(a, b);
   } else
 #endif
+#ifndef NO_LTM_KARATSUBA
   /* Karatsuba? */
   if (a->used >= KARATSUBA_SQR_CUTOFF) {
     res = mp_karatsuba_sqr (a, b);
-  } else {
+  } else 
+#endif
+  {
     /* can we use the fast comba multiplier? */
     if ((a->used * 2 + 1) < MP_WARRAY && 
          a->used < 
