@@ -199,7 +199,6 @@ static void send_msg_channel_eof(struct Channel *channel) {
 	encrypt_packet();
 
 	/* we already know that trans/eof channels are closed */
-	/* XXX this seems valid though might _possibly_ be wrong */
 	send_msg_channel_close(channel);
 
 
@@ -242,6 +241,7 @@ static void writechannel(struct Channel* channel) {
 		return;
 	}
 	
+	/* TODO - this is inefficient */
 	if (len == maxlen) {
 		buf_setpos(buf, 0);
 		buf_setlen(buf, 0);
@@ -251,7 +251,6 @@ static void writechannel(struct Channel* channel) {
 	} else {
 		buf_incrpos(buf, len);
 	}
-	/* TODO - this is inefficient */
 	TRACE(("leave writechannel"));
 }
 

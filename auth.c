@@ -18,7 +18,6 @@ static void send_msg_userauth_banner();
 
 void authinitialise() {
 
-	/* TODO set tries left, etc */
 	ses.authstate.failcount = 0;
 	authclear();
 	
@@ -183,6 +182,9 @@ goodshell:
 
 }
 
+/* partial indicates whether to set the "partial success" flag,
+ * incrfail is whether to count this failure in the failure count (which
+ * is limited */
 void send_msg_userauth_failure(int partial, int incrfail) {
 
 	buffer *typebuf;

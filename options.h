@@ -47,12 +47,13 @@
 #define DROPBEAR_PUBKEY_AUTH
 
 /* Random device to use - you must specify one only.
- * DEV_RANDOM is recommended on hosts with a good /dev/random
- * and /dev/urandom, otherwise use EGD and run EGD or PRNGD, specifying
- * the socket */
+ * DEV_RANDOM is recommended on hosts with a good /dev/random,
+ * otherwise use EGD and run EGD or PRNGD, specifying
+ * the socket. This is only used for the initial seed, further
+ * entropy is gathered from timings etc */
 #define DROPBEAR_DEV_RANDOM /* use /dev/random and /dev/urandom */
 
-#undef DROPBEAR_EGD /* use egd or prngd socket */
+/*#undef DROPBEAR_EGD */ /* use egd or prngd socket */
 #define DROPBEAR_EGD_SOCKET "./rng"
 
 /* Specify the number of clients we will allow to be connected but
@@ -66,7 +67,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.2pre2"
+#define DROPBEAR_VERSION "0.2pre4"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 
 /* Time to wait before sending reply on fail */
@@ -80,27 +81,28 @@
 /* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
 #define AUTH_TIMEOUT 600 /* 10 minutes is recommended */
 
+/* various algorithm identifiers */
 #define DROPBEAR_KEX_DH_GROUP1 0
 
 #define DROPBEAR_SIGNKEY_ANY 0
 #define DROPBEAR_SIGNKEY_RSA 1
 #define DROPBEAR_SIGNKEY_DSS 2
 
+#define DROPBEAR_COMP_NONE 0
+#define DROPBEAR_COMP_ZLIB 1
+
 /* Required for pubkey auth */
 #ifdef DROPBEAR_PUBKEY_AUTH
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
-
-#define DROPBEAR_COMP_NONE 0
-#define DROPBEAR_COMP_ZLIB 1
 
 /* SHA1 is 20 bytes == 160 bits */
 #define SHA1_HASH_SIZE 20
 /* SHA512 is 64 bytes == 512 bits */
 #define SHA512_HASH_SIZE 64
 
-/* 3DES requires a 24 byte key */
-#define MAX_KEY_LEN 24
+
+#define MAX_KEY_LEN 24 /* 3DES requires a 24 byte key */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 
 						 and >= SHA1_HASH_SIZE */
 #define MAX_MAC_KEY 20
@@ -127,7 +129,13 @@
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
 #define DEV_RANDOM "/dev/random"
-#define DEV_URANDOM "/dev/urandom"
+
+/* the number of NAME=VALUE pairs to malloc for environ, if we don't have
+ * the clearenv() function */
+#define ENV_SIZE 100
+
+#define MAX_CMD_LEN 1024 /* max length of a command */
+#define MAX_TERM_LEN 200 /* max length of TERM name */
 
 #define _PATH_TTY "/dev/tty"
 

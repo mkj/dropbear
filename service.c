@@ -25,20 +25,18 @@ void recv_msg_service_request() {
 	if (len == SSH_SERVICE_USERAUTH_LEN && 
 			strncmp(SSH_SERVICE_USERAUTH, name, len) == 0) {
 
-		/* TODO check if we've already authed ?*/
-
 		send_msg_service_accept(name, len);
 		m_free(name);
 		TRACE(("leave recv_msg_service_request: done ssh-userauth"));
 		return;
 	}
 
-	/* ssh-connection
-	 * We aren't bothering to check for userauth here since this request
-	 * is basically just a formality, the actual userauth checking is in the
-	 * channel code */
+	/* ssh-connection */
 	if (len == SSH_SERVICE_CONNECTION_LEN &&
-			strncmp(SSH_SERVICE_CONNECTION, name, len) == 0) {
+			(strncmp(SSH_SERVICE_CONNECTION, name, len) == 0)) {
+		if (ses.authstate.authdone != 1) {
+			dropbear_exit("request for connection before auth");
+		}
 
 		send_msg_service_accept(name, len);
 		m_free(name);

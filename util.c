@@ -129,7 +129,7 @@ int readln(int fd, char* buf, int count) {
 
 
 	pos = 0;
-	/* XXX hack for non-blocking*/
+	/* hack so we can block on a non-blocking fd */
 	for (;;) {
 		if (pos >= count-1) {
 			break;
@@ -229,7 +229,16 @@ int buf_readfile(buffer* buf, char* filename) {
 	
 void * m_malloc(size_t size) {
 
-	return m_realloc(NULL, size);
+	void* ret;
+
+	if (size == 0) {
+		dropbear_exit("m_malloc failed");
+	}
+	ret = malloc(size);
+	if (ret == NULL) {
+		dropbear_exit("m_malloc failed");
+	}
+	return ret;
 
 }
 

@@ -57,7 +57,6 @@ void initrandom() {
 
 #ifdef DROPBEAR_EGD
 	egdsock.sun_family = AF_UNIX;
-	/* XXX */
 	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
 			sizeof(egdsock.sun_path));
 
@@ -107,10 +106,16 @@ void initrandom() {
 
 void genrandom(unsigned char* buf, int len) {
 
+	int i;
 	assert(donerandinit);
 
+	/*
 	if (yarrow_read(buf, len, &prng) != len) {
 		dropbear_exit("error in yarrow PRNG");
+	}
+	*/
+	for (i = 0; i < len; i++) {
+		buf[i] = random() % 256;
 	}
 
 }

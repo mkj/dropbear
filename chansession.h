@@ -41,7 +41,5 @@ void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
 
 
-#define MAX_CMD_LEN 256 /* XXX */
-#define MAX_TERM_LEN 200 /* XXX */
 
 #endif /* _CHANSESSION_H_ */

@@ -77,7 +77,7 @@ static void sesssigchild_handler(int val) {
 
 		/* find the corresponding chansess */
 		for (i = 0; i < ses.childpidsize; i++) {
-			assert(pid > 1); /* XXX */
+			assert(pid > 1);
 			if (ses.childpids[i].pid == pid) {
 
 				assert(ses.childpids[i].chansess != NULL);
@@ -210,7 +210,6 @@ void closechansess(struct Channel *channel) {
 	for (i = 0; i < ses.childpidsize; i++) {
 		if (ses.childpids[i].chansess == chansess) {
 			assert(ses.childpids[i].pid > 0);
-			/* XXX kill the process? or will it die of natural causes? */
 			TRACE(("closing pid %d\n", ses.childpids[i].pid));
 			TRACE(("exited = %d\n", chansess->exited));
 			ses.childpids[i].pid = -1;
@@ -241,7 +240,7 @@ void chansessionrequest(struct Channel *channel) {
 	if (typelen > MAX_NAME_LEN) {
 		send_msg_channel_failure(channel);
 		m_free(type);
-		TRACE(("leave chansessionrequest: type too long")); /* XXX error? */
+		TRACE(("leave chansessionrequest: type too long")); /* XXX send error?*/
 		return;
 	}
 
@@ -687,16 +686,16 @@ static void execchild(struct ChanSess *chansess) {
 #ifdef HAVE_CLEARENV
 	clearenv();
 #else /* don't HAVE_CLEARENV */
-	/*environ = NULL; - won't work */
+	environ = (char**)m_malloc(ENV_SIZE * sizeof(char*));
+	environ[0] = NULL;
 #endif /* HAVE_CLEARENV */
-#endif
+#endif /* DEBUG_KEEP_ENV */
 
 	/* change user */
 	if (setgid(ses.authstate.pw->pw_gid) < 0) {
 		dropbear_exit("error changing user");
 	}
 #ifndef HACKCRYPT
-	/* this will fail if we aren't root - check? XXX*/
 	if (initgroups(ses.authstate.pw->pw_name,
 				ses.authstate.pw->pw_gid) < 0) {
 		dropbear_exit("error changing user");

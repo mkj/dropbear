@@ -41,14 +41,18 @@ void write_packet() {
 	assert(len > 0);
 	written = write(ses.sock, buf_getptr(writebuf, len), len);
 
-	if (written <= 0) {
-		if (errno == EINTR) { /* TODO eof */
+	if (written < 0) {
+		if (errno == EINTR) {
 			TRACE(("leave writepacket: EINTR"));
 			return;
 		} else {
 			dropbear_exit("error writing");
 		}
 	} 
+
+	if (written == 0) {
+		dropbear_close("Connection closed by remote host");
+	}
 
 	if (written == len) {
 		dequeue(&ses.writequeue);
@@ -88,7 +92,7 @@ void read_packet() {
 	buf_incrpos(ses.readbuf, len);
 
 	if (len == 0) {
-		dropbear_close("Connection closed");
+		dropbear_close("Connection closed by remote host");
 	}
 
 	if (len < 0) {
@@ -133,7 +137,7 @@ static void read_packet_init() {
 	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
-		dropbear_close("Connection closed");
+		dropbear_close("Connection closed by remote host");
 	}
 	if (len < 0) {
 		dropbear_exit("error reading");
@@ -366,7 +370,6 @@ void process_packet() {
 		case SSH_MSG_IGNORE:
 		case SSH_MSG_DEBUG:
 			TRACE(("received SSH_MSG_IGNORE or SSH_MSG_DEBUG"));
-			/* eat the packet and return */
 			goto out;
 
 		case SSH_MSG_UNIMPLEMENTED:
@@ -376,7 +379,7 @@ void process_packet() {
 
 			
 		case SSH_MSG_DISCONNECT:
-			/* TODO here */
+			/* TODO cleanup? */
 			dropbear_close("Disconnect received");
 	}
 

@@ -525,7 +525,7 @@ static void read_kex() {
 	/* first_kex_packet_follows */
 	if (buf_getbyte(ses.payload)) {
 		ses.kexstate.firstfollows = 1;
-		dropbear_exit("UNIMPLEMENTED: kexfollows is unhandled"); /* TODO */
+		/* XXX currently not handled */
 	}
 
 	/* reserved for future extensions */
