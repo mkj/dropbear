@@ -143,12 +143,6 @@ void cli_getopts(int argc, char ** argv) {
 		if (argv[i][0] == '-') {
 			/* A flag *waves* */
 
-			if (strlen(argv[i]) > 2) {
-					fprintf(stderr, 
-						"WARNING: Ignoring unknown argument '%s'\n", argv[i]);
-					continue;
-			}
-
 			switch (argv[i][1]) {
 				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
@@ -205,6 +199,12 @@ void cli_getopts(int argc, char ** argv) {
 						"WARNING: Ignoring unknown argument '%s'\n", argv[i]);
 					break;
 			} /* Switch */
+			
+			/* Now we handle args where they might be "-luser" (no spaces)*/
+			if (next && strlen(argv[i]) > 2) {
+				*next = &argv[i][2];
+				next = NULL;
+			}
 
 			continue; /* next argument */
 
