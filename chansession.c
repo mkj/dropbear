@@ -455,6 +455,11 @@ static int sessionpty(struct ChanSess * chansess) {
 			dropbear_exit("bad term mode string");
 		}
 
+		if (len == 0) {
+			TRACE(("empty terminal modes string"));
+			return DROPBEAR_SUCCESS;
+		}
+
 		while (((opcode = buf_getbyte(ses.payload)) != 0x00) &&
 				opcode <= 159) {
 
