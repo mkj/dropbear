@@ -1,0 +1,32 @@
+
+
+default: ltc_dll
+
+
+# Compilation flags. Note the += does not write over the user's CFLAGS!
+CFLAGS += -I./ -Wall -Wsign-compare -W -Wno-unused -Wshadow -Werror -mno-cygwin -DWIN32
+
+# optimize for SPEED
+#CFLAGS += -O3 -funroll-loops
+
+#add -fomit-frame-pointer.  v3.2 is buggy for certain platforms!
+#CFLAGS += -fomit-frame-pointer
+
+# optimize for SIZE
+CFLAGS += -Os
+
+#Leave MPI built-in or force developer to link against libtommath?
+MPIOBJECT=mpi.o
+
+OBJECTS=keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o \
+bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o \
+md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o \
+safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o \
+prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o skipjack.o omac.o dsa.o $(MPIOBJECT)
+
+ltc_dll: $(OBJECTS) $(MPIOBJECT)
+	gcc -mno-cygwin -mdll -o libtomcrypt.dll -Wl,--out-implib=libtomcrypt.dll.a -Wl,--export-all-symbols *.o -ladvapi32
+	ranlib libtomcrypt.dll.a
+
+test: ltc_dll
+	gcc $(CFLAGS) demos/test.c libtomcrypt.dll.a -Wl,--enable-auto-import -o test -s
