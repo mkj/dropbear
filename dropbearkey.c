@@ -81,7 +81,7 @@ static void printhelp(char * progname) {
 }
 
 #if defined(DBMULTI_KEY) || !defined(DROPBEAR_MULTI)
-#ifdef DBMULTI_KEY
+#if defined(DBMULTI_KEY) && defined(DROPBEAR_MULTI)
 int dropbearkey_main(int argc, char ** argv) {
 #else
 int main(int argc, char ** argv) {

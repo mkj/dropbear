@@ -55,7 +55,7 @@ static void printhelp(char * progname) {
 }
 
 #if defined(DBMULTI_CONVERT) || !defined(DROPBEAR_MULTI)
-#ifdef DBMULTI_CONVERT
+#if defined(DBMULTI_CONVERT) && defined(DROPBEAR_MULTI)
 int dropbearconvert_main(int argc, char ** argv) {
 #else 
 int main(int argc, char ** argv) {
