@@ -87,6 +87,8 @@ void svr_auth_password() {
 
 	/* the first bytes of passwdcrypt are the salt */
 	testcrypt = crypt((char*)password, passwdcrypt);
+	m_burn(password, passwordlen);
+	m_free(password);
 
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
@@ -101,8 +103,6 @@ void svr_auth_password() {
 		send_msg_userauth_failure(0, 1);
 	}
 
-	m_burn(password, passwordlen);
-	m_free(password);
 }
 
 #endif /* DROPBEAR_PASSWORD_AUTH */
