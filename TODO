@@ -2,20 +2,17 @@ Current:
 
 Things which need doing:
 
-- disconnect messages etc
 - kexfollows
 - check PRNG is good
 - improved checking in DSS/RSA routines for valid sized keys etc
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
-- cleanup code
-- "bad authorized_keys" on non-existant ~/.ssh
+- improve channel window adjustment algorithm
 
 Features to add:
 
+- TCP forwarding
 - PAM
-- TCP fwd
-- X11 fwd
 - possible RSA blinding? need to check whether this is vuln to timing attacks
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly

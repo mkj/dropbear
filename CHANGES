@@ -1,7 +1,14 @@
-- Removed unneccesary code from libtomcrypt
+0.32 - Sat May 24 2003 12:44:11 +0800
+
+- Don't compile unused code from libtomcrypt (test vectors etc)
 - Updated to libtommath 0.17 and libtomcrypt 0.83. New libtommath results
   in smaller binary size, due to not linking unrequired code
-- 
+- X11 forwarding added
+- Agent forwarding added (for OpenSSH.com ssh client/agent)
+- Fix incorrect buffer freeing when banners are used
+- Hostname resolution works
+- Various minor bugfixes/code size improvements etc
+
 
 0.31 - Fri May 9 2003 17:57:16 +0800
 
