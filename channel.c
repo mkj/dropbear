@@ -257,7 +257,21 @@ static void checkclose(struct Channel *channel) {
 		}
 	}
 
-	if (channel->sentclosed && channel->recvclosed) {
+	/* When either party wishes to terminate the channel, it sends
+	 * SSH_MSG_CHANNEL_CLOSE.  Upon receiving this message, a party MUST
+	 * send back a SSH_MSG_CHANNEL_CLOSE unless it has already sent this
+	 * message for the channel.  The channel is considered closed for a
+	 * party when it has both sent and received SSH_MSG_CHANNEL_CLOSE, and
+	 * the party may then reuse the channel number.  A party MAY send
+	 * SSH_MSG_CHANNEL_CLOSE without having sent or received
+	 * SSH_MSG_CHANNEL_EOF. 
+	 * (from draft-ietf-secsh-connect)
+	 */
+	if (channel->recvclosed) {
+		if (! channel->sentclosed) {
+			TRACE(("Sending MSG_CHANNEL_CLOSE in response to same."));
+			send_msg_channel_close(channel);
+		}
 		removechannel(channel);
 	}
 }
