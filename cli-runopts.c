@@ -31,17 +31,24 @@
 
 cli_runopts cli_opts; /* GLOBAL */
 
-static void printhelp(const char * progname);
+static void printhelp();
+static void parsehostname(char* userhostarg);
+#ifdef DROPBEAR_PUBKEY_AUTH
+static void loadidentityfile(const char* filename);
+#endif
 
-static void printhelp(const char * progname) {
+static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
-					"Usage: %s [options] user@host[:port]\n"
+					"Usage: %s [options] user@host\n"
 					"Options are:\n"
-					"user		Remote username\n"
-					"host		Remote host\n"
-					"port		Remote port\n"
-					,DROPBEAR_VERSION, progname);
+					"-p <remoteport>\n"
+					"-t    Allocate a pty"
+					"-T    Don't allocate a pty"
+#ifdef DROPBEAR_PUBKEY_AUTH
+					"-i <identityfile>   (multiple allowed)"
+#endif
+					,DROPBEAR_VERSION, cli_opts.progname);
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -49,12 +56,11 @@ void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
 	char ** next = 0;
 	unsigned int cmdlen;
+#ifdef DROPBEAR_PUBKEY_AUTH
 	int nextiskey = 0; /* A flag if the next argument is a keyfile */
+#endif
 
-	uid_t uid;
-	struct passwd *pw = NULL; 
 
-	char* userhostarg = NULL;
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -62,7 +68,10 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.remoteport = NULL;
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
-	cli_opts.wantpty = 1;
+	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
+#ifdef DROPBEAR_PUBKEY_AUTH
+	cli_opts.pubkeys = NULL;
+#endif
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
 	/* not yet
@@ -70,17 +79,18 @@ void cli_getopts(int argc, char ** argv) {
 	opts.ipv6 = 1;
 	*/
 
-	if (argc != 2) {
-		printhelp(argv[0]);
-		exit(EXIT_FAILURE);
-	}
-
+	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
+#ifdef DROPBEAR_PUBKEY_AUTH
 		if (nextiskey) {
-			/* XXX do stuff */
-			break;
+			/* Load a hostkey since the previous argument was "-i" */
+			loadidentityfile(argv[i]);
+			nextiskey = 0;
+			continue;
 		}
+#endif
 		if (next) {
+			/* The previous flag set a value to assign */
 			*next = argv[i];
 			if (*next == NULL) {
 				dropbear_exit("Invalid null argument");
@@ -90,59 +100,43 @@ void cli_getopts(int argc, char ** argv) {
 		}
 
 		if (argv[i][0] == '-') {
-
 			/* A flag *waves* */
+
 			switch (argv[i][1]) {
-				case 'p':
+				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
 					break;
 #ifdef DROPBEAR_PUBKEY_AUTH
-				case 'i':
+				case 'i': /* an identityfile */
 					nextiskey = 1;
 					break;
 #endif
+				case 't': /* we want a pty */
+					cli_opts.wantpty = 1;
+					break;
+				case 'T': /* don't want a pty */
+					cli_opts.wantpty = 0;
+					break;
 				default:
-					fprintf(stderr, "Unknown argument %s\n", argv[i]);
-					printhelp(argv[0]);
+					fprintf(stderr, "Unknown argument '%s'\n", argv[i]);
+					printhelp();
 					exit(EXIT_FAILURE);
 					break;
 			} /* Switch */
 
+			continue; /* next argument */
+
 		} else {
+			TRACE(("non-flag arg"));
 
 			/* Either the hostname or commands */
-			/* Hostname is first up, must be set before we get the cmds */
 
 			if (cli_opts.remotehost == NULL) {
-				/* We'll be editing it, should probably make a copy */
-				userhostarg = m_strdup(argv[1]);
 
-				cli_opts.remotehost = strchr(userhostarg, '@');
-				if (cli_opts.remotehost == NULL) {
-					/* no username portion, the cli-auth.c code can figure the
-					 * local user's name */
-					cli_opts.remotehost = userhostarg;
-				} else {
-					cli_opts.remotehost[0] = '\0'; /* Split the user/host */
-					cli_opts.remotehost++;
-					cli_opts.username = userhostarg;
-				}
+				parsehostname(argv[i]);
 
-				if (cli_opts.username == NULL) {
-					uid = getuid();
-					
-					pw = getpwuid(uid);
-					if (pw == NULL || pw->pw_name == NULL) {
-						dropbear_exit("I don't know my own [user]name");
-					}
-
-					cli_opts.username = m_strdup(pw->pw_name);
-				}
-
-				if (cli_opts.remotehost[0] == '\0') {
-					dropbear_exit("Bad hostname");
-				}
 			} else {
+
 				/* this is part of the commands to send - after this we
 				 * don't parse any more options, and flags are sent as the
 				 * command */
@@ -165,5 +159,83 @@ void cli_getopts(int argc, char ** argv) {
 				break;
 			}
 		}
+	}
+
+	if (cli_opts.remotehost == NULL) {
+		dropbear_exit("Bad syntax");
+	}
+
+	if (cli_opts.remoteport == NULL) {
+		cli_opts.remoteport = "22";
+	}
+
+	/* If not explicitly specified with -t or -T, we don't want a pty if
+	 * there's a command, but we do otherwise */
+	if (cli_opts.wantpty == 9) {
+		if (cli_opts.cmd == NULL) {
+			cli_opts.wantpty = 1;
+		} else {
+			cli_opts.wantpty = 0;
+		}
+	}
+}
+
+#ifdef DROPBEAR_PUBKEY_AUTH
+static void loadidentityfile(const char* filename) {
+
+	struct PubkeyList * nextkey;
+	sign_key *key;
+	int keytype;
+
+	key = new_sign_key();
+	keytype = DROPBEAR_SIGNKEY_ANY;
+	if ( readhostkey(filename, key, &keytype) != DROPBEAR_SUCCESS ) {
+
+		fprintf(stderr, "Failed loading keyfile '%s'\n", filename);
+		sign_key_free(key);
+
+	} else {
+
+		nextkey = (struct PubkeyList*)m_malloc(sizeof(struct PubkeyList));
+		nextkey->key = key;
+		nextkey->next = cli_opts.pubkeys;
+		nextkey->type = keytype;
+		cli_opts.pubkeys = nextkey;
+	}
+}
+#endif
+
+
+/* Parses a [user@]hostname argument. userhostarg is the argv[i] corresponding
+ * - note that it will be modified */
+static void parsehostname(char* userhostarg) {
+
+	uid_t uid;
+	struct passwd *pw = NULL; 
+
+	cli_opts.remotehost = strchr(userhostarg, '@');
+	if (cli_opts.remotehost == NULL) {
+		/* no username portion, the cli-auth.c code can figure the
+		 * local user's name */
+		cli_opts.remotehost = userhostarg;
+	} else {
+		cli_opts.remotehost[0] = '\0'; /* Split the user/host */
+		cli_opts.remotehost++;
+		cli_opts.username = userhostarg;
+	}
+
+	if (cli_opts.username == NULL) {
+		uid = getuid();
+		
+		pw = getpwuid(uid);
+		if (pw == NULL || pw->pw_name == NULL) {
+			dropbear_exit("Unknown own user");
+		}
+
+		cli_opts.username = m_strdup(pw->pw_name);
+	}
+
+	if (cli_opts.remotehost[0] == '\0') {
+		dropbear_exit("Bad hostname");
 	}
 }

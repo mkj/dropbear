@@ -275,6 +275,11 @@
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
 
+/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
+#define MAX_PUBKEY_SIZE 1600
+/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
+#define MAX_PRIVKEY_SIZE 1600
+
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD
 #endif

@@ -16,7 +16,7 @@ void cli_pubkeyfail() {
 
 	TRACE(("enter cli_pubkeyfail"));
 	/* Find the key we failed with, and remove it */
-	for (keyitem = cli_ses.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
+	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
 		if (keyitem->next == cli_ses.lastpubkey) {
 			keyitem->next = cli_ses.lastpubkey->next;
 		}
@@ -40,6 +40,7 @@ void recv_msg_userauth_pk_ok() {
 
 	algotype = buf_getstring(ses.payload, &algolen);
 	keytype = signkey_type_from_name(algotype, algolen);
+	TRACE(("recv_msg_userauth_pk_ok: type %d", keytype));
 	m_free(algotype);
 
 	keybuf = buf_new(MAX_PUBKEY_SIZE);
@@ -48,25 +49,32 @@ void recv_msg_userauth_pk_ok() {
 
 	/* Iterate through our keys, find which one it was that matched, and
 	 * send a real request with that key */
-	for (keyitem = cli_ses.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
+	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
 
 		if (keyitem->type != keytype) {
 			/* Types differed */
+			TRACE(("types differed"));
 			continue;
 		}
 
 		/* Now we compare the contents of the key */
 		keybuf->pos = keybuf->len = 0;
 		buf_put_pub_key(keybuf, keyitem->key, keytype);
+		buf_setpos(keybuf, 0);
+		buf_incrpos(keybuf, 4); /* first int is the length of the remainder (ie
+								   remotelen) which has already been taken from
+								   the remote buffer */
 
-		if (keybuf->len != remotelen) {
+
+		if (keybuf->len-4 != remotelen) {
+			TRACE(("lengths differed: localh %d remote %d", keybuf->len, remotelen));
 			/* Lengths differed */
 			continue;
 		}
-
-		if (memcmp(keybuf->data, 
+		if (memcmp(buf_getptr(keybuf, remotelen),
 					buf_getptr(ses.payload, remotelen), remotelen) != 0) {
 			/* Data didn't match this key */
+			TRACE(("data differed"));
 			continue;
 		}
 
@@ -133,10 +141,10 @@ int cli_auth_pubkey() {
 
 	TRACE(("enter cli_auth_pubkey"));
 
-	if (cli_ses.pubkeys != NULL) {
+	if (cli_opts.pubkeys != NULL) {
 		/* Send a trial request */
-		send_msg_userauth_pubkey(cli_ses.pubkeys->key,
-				cli_ses.pubkeys->type, 0);
+		send_msg_userauth_pubkey(cli_opts.pubkeys->key,
+				cli_opts.pubkeys->type, 0);
 		TRACE(("leave cli_auth_pubkey-success"));
 		return 1;
 	} else {

@@ -28,6 +28,7 @@
 #include "includes.h"
 #include "signkey.h"
 #include "buffer.h"
+#include "auth.h"
 
 typedef struct runopts {
 
@@ -37,6 +38,8 @@ typedef struct runopts {
 } runopts;
 
 extern runopts opts;
+
+int readhostkey(const char * filename, sign_key * hostkey, int *type);
 
 typedef struct svr_runopts {
 
@@ -87,6 +90,9 @@ typedef struct cli_runopts {
 
 	char *cmd;
 	int wantpty;
+	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
+#ifdef DROPBEAR_PUBKEY_AUTH
+#endif
 	/* XXX TODO */
 
 } cli_runopts;

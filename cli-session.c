@@ -88,6 +88,10 @@ static void cli_session_init() {
 	cli_ses.tty_raw_mode = 0;
 	cli_ses.winchange = 0;
 
+	/* Auth */
+	cli_ses.lastpubkey = NULL;
+	cli_ses.lastauthtype = NULL;
+
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
 	ses.buf_match_algo = cli_buf_match_algo;
@@ -160,6 +164,7 @@ static void cli_sessionloop() {
 			TRACE(("leave cli_sessionloop: cli_auth_try"));
 			return;
 
+			/*
 		case USERAUTH_SUCCESS_RCVD:
 			send_msg_service_request(SSH_SERVICE_CONNECTION);
 			cli_ses.state = SERVICE_CONN_REQ_SENT;
@@ -171,14 +176,13 @@ static void cli_sessionloop() {
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
 			cli_ses.state = SESSION_RUNNING;
 			return;
+			*/
 
-			/*
 		case USERAUTH_SUCCESS_RCVD:
 			cli_send_chansess_request();
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
 			cli_ses.state = SESSION_RUNNING;
 			return;
-			*/
 
 		case SESSION_RUNNING:
 			if (ses.chancount < 1) {
@@ -236,7 +240,7 @@ static void cli_remoteclosed() {
 void cleantext(unsigned char* dirtytext) {
 
 	unsigned int i, j;
-	unsigned char c, lastchar;
+	unsigned char c;
 
 	j = 0;
 	for (i = 0; dirtytext[i] != '\0'; i++) {

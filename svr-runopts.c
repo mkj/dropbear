@@ -33,7 +33,6 @@ svr_runopts svr_opts; /* GLOBAL */
 
 static sign_key * loadhostkeys(const char * dsskeyfile,
 		const char * rsakeyfile);
-static int readhostkey(const char * filename, sign_key * hostkey, int type);
 static void printhelp(const char * progname);
 
 static void printhelp(const char * progname) {
@@ -263,57 +262,44 @@ void svr_getopts(int argc, char ** argv) {
 
 }
 
+static void disablekey(int type, const char* filename) {
 
-/* returns success or failure */
-static int readhostkey(const char * filename, sign_key * hostkey, int type) {
-
-	int ret = DROPBEAR_FAILURE;
 	int i;
-	buffer *buf;
 
-	buf = buf_new(2000);
-
-	if (buf_readfile(buf, filename) == DROPBEAR_FAILURE) {
-		goto out;
-	}
-	buf_setpos(buf, 0);
-	if (buf_get_priv_key(buf, hostkey, &type) == DROPBEAR_FAILURE) {
-		goto out;
-	}
-
-	ret = DROPBEAR_SUCCESS;
-out:
-	if (ret == DROPBEAR_FAILURE) {
-		for (i = 0; sshhostkey[i].name != NULL; i++) {
-			if (sshhostkey[i].val == type) {
-				sshhostkey[i].usable = 0;
-				break;
-			}
+	for (i = 0; sshhostkey[i].name != NULL; i++) {
+		if (sshhostkey[i].val == type) {
+			sshhostkey[i].usable = 0;
+			break;
 		}
-		fprintf(stderr, "Failed reading '%s', disabling %s\n", filename,
-				type == DROPBEAR_SIGNKEY_DSS ? "DSS" : "RSA");
 	}
-
-	buf_burn(buf);
-	buf_free(buf);
-	return ret;
+	fprintf(stderr, "Failed reading '%s', disabling %s\n", filename,
+			type == DROPBEAR_SIGNKEY_DSS ? "DSS" : "RSA");
 }
 
 static sign_key * loadhostkeys(const char * dsskeyfile, 
 		const char * rsakeyfile) {
 
 	sign_key * hostkey;
+	int ret;
+	int type;
 
 	TRACE(("enter loadhostkeys"));
 
 	hostkey = new_sign_key();
 
 #ifdef DROPBEAR_RSA
-	(void)readhostkey(rsakeyfile, hostkey, DROPBEAR_SIGNKEY_RSA);
+	type = DROPBEAR_SIGNKEY_RSA;
+	ret = readhostkey(rsakeyfile, hostkey, &type);
+	if (ret == DROPBEAR_FAILURE) {
+		disablekey(DROPBEAR_SIGNKEY_RSA, rsakeyfile);
+	}
 #endif
-
 #ifdef DROPBEAR_DSS
-	(void)readhostkey(dsskeyfile, hostkey, DROPBEAR_SIGNKEY_DSS);
+	type = DROPBEAR_SIGNKEY_RSA;
+	ret = readhostkey(dsskeyfile, hostkey, &type);
+	if (ret == DROPBEAR_FAILURE) {
+		disablekey(DROPBEAR_SIGNKEY_DSS, dsskeyfile);
+	}
 #endif
 
 	if ( 1

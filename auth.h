@@ -63,9 +63,6 @@ int cli_auth_pubkey();
 #define AUTH_METHOD_PASSWORD "password"
 #define AUTH_METHOD_PASSWORD_LEN 8
 
-/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
-#define MAX_PUBKEY_SIZE 1600
-
 /* This structure is shared between server and client - it contains
  * relatively little extraneous bits when used for the client rather than the
  * server */

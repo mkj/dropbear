@@ -214,7 +214,6 @@ struct clientsession {
 
 	int winchange; /* Set to 1 when a windowchange signal happens */
 
-	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
 	struct PubkeyList *lastpubkey;
