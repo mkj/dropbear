@@ -1,11 +1,9 @@
-dropbear (0.40-1) unstable; urgency=low
+dropbear (0.41-1) unstable; urgency=low
 
-  * Updated to 0.40 release.
-  * Remote tcp forwarding (-R in OpenSSH) works, tcp forwarding can be disabled
-    at run-time.
-  * Various portability and other minor fixes.
+  * Updated to 0.41 release.
+  * Various minor fixes
 
- -- Matt Johnston <matt@ucc.asn.au>  Tue, 13 Jan 2004 21:20:54 +0800
+ -- Matt Johnston <matt@ucc.asn.au>  Mon, 19 Jan 2004 23:20:54 +0800
 
 dropbear (0.39-1) unstable; urgency=low
 

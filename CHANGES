@@ -1,3 +1,19 @@
+0.41 - Mon Jan 19 2004 22:40:19 +0800
+
+- Fix in configure so that cross-compiling works, thanks to numerous people for
+  reporting and testing
+
+- Terminal mode parsing now handles empty terminal mode strings (sent by
+  Windows ssh.com clients), thanks to Ricardo Derbes for the report
+
+- Handling is improved for users with no shell specified in /etc/passwd,
+  thanks again to Ricardo Derbes
+
+- Fix for compiling with --disable-syslog, thanks to gordonfh
+
+- Various minor fixes allow scp to work with irix, thanks to Paul Marinceu for
+  fixing it up
+
 0.40 - Tue Jan 13 2004 21:05:19 +0800
 
 - Remote TCP forwarding (-R) style implemented
