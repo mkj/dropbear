@@ -51,10 +51,13 @@
 #define ENABLE_X11FWD
 
 /* Enable TCP Fowarding */
-/* OpenSSH's "-L" style forwarding (client port forwarded via server) */
-#define ENABLE_LOCALTCPFWD
-/* OpenSSH's "-R" style forwarding (server port forwarded via client) */
-#define ENABLE_REMOTETCPFWD
+/* "-L" style forwarding (client listening port forwarded via server) */
+#define ENABLE_CLI_LOCALTCPFWD
+/* "-R" style forwarding (server listening port forwarded via client) */
+#define ENABLE_CLI_REMOTETCPFWD
+
+#define ENABLE_SVR_LOCALTCPFWD
+#define ENABLE_SVR_REMOTETCPFWD
 
 /* Enable Authentication Agent Forwarding */
 #define ENABLE_AGENTFWD
@@ -297,6 +300,10 @@
 
 #ifndef ENABLE_REMOTETCPFWD
 #define DISABLE_REMOTETCPFWD
+#endif
+
+#if defined(ENABLE_CLI_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
+#define ENABLE_CLI_ANYTCPFWD 
 #endif
 
 #if defined(ENABLE_REMOTETCPFWD) || defined(ENABLE_LOCALTCPFWD) || \

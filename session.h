@@ -35,6 +35,7 @@
 #include "queue.h"
 #include "listener.h"
 #include "packet.h"
+#include "tcpfwd.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;

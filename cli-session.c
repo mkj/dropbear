@@ -4,8 +4,7 @@
 #include "kex.h"
 #include "ssh.h"
 #include "packet.h"
-#include "tcp-accept.h"
-#include "tcp-connect.h"
+#include "tcpfwd.h"
 #include "channel.h"
 #include "random.h"
 #include "service.h"
@@ -45,8 +44,9 @@ static const packettype cli_packettypes[] = {
 };
 
 static const struct ChanType *cli_chantypes[] = {
-	/* &chan_tcpdirect etc, though need to only allow if we've requested
-	 * that forwarding */
+#ifdef ENABLE_CLI_REMOTETCPFWD
+	&cli_chan_tcpremote,
+#endif
 	NULL /* Null termination */
 };
 
@@ -178,6 +178,10 @@ static void cli_sessionloop() {
 			*/
 
 		case USERAUTH_SUCCESS_RCVD:
+#ifdef ENABLE_CLI_LOCALTCPFWD
+			TRACE(("recvd USERAUTH_SUCCESS_RCVD"));
+			setup_localtcp();
+#endif
 			cli_send_chansess_request();
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
 			cli_ses.state = SESSION_RUNNING;
@@ -221,7 +225,6 @@ static void cli_finished() {
 			cli_opts.remotehost, cli_opts.remoteport);
 	exit(EXIT_SUCCESS);
 }
-
 
 
 /* called when the remote side closes the connection */

@@ -185,7 +185,7 @@ int dropbear_listen(const char* address, const char* port,
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			err = errno;
 			close(sock);
-			TRACE(("bind() failed"));
+			TRACE(("bind(%s) failed", port));
 			continue;
 		}
 
@@ -206,7 +206,7 @@ int dropbear_listen(const char* address, const char* port,
 			int len;
 			len = 20 + strlen(strerror(err));
 			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
+			snprintf(*errstring, len, "Error listening: %s", strerror(err));
 			TRACE(("leave dropbear_listen: failure, %s", strerror(err)));
 			return -1;
 		}

@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "algo.h"
+#include "tcpfwd.h"
 
 cli_runopts cli_opts; /* GLOBAL */
 
@@ -35,6 +36,9 @@ static void printhelp();
 static void parsehostname(char* userhostarg);
 #ifdef DROPBEAR_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
+#endif
+#ifdef ENABLE_CLI_ANYTCPFWD
+static void addforward(char* str, struct TCPFwdList** fwdlist);
 #endif
 
 static void printhelp() {
@@ -48,10 +52,10 @@ static void printhelp() {
 #ifdef DROPBEAR_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
-#ifndef DISABLE_REMOTETCPFWD
+#ifdef ENABLE_CLI_LOCALTCPFWD
 					"-L <listenport:remotehsot:reportport> Local port forwarding\n"
 #endif
-#ifndef DISABLE_TCPFWD_DIRECT
+#ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname);
@@ -65,14 +69,12 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef DROPBEAR_PUBKEY_AUTH
 	int nextiskey = 0; /* A flag if the next argument is a keyfile */
 #endif
-#ifdef DROPBEAR_CLI_LOCALTCP
+#ifdef ENABLE_CLI_LOCALTCPFWD
 	int nextislocal = 0;
 #endif
-#ifdef DROPBEAR_CLI_REMOTETCP
+#ifdef ENABLE_CLI_REMOTETCPFWD
 	int nextisremote = 0;
 #endif
-
-
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -84,11 +86,11 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef DROPBEAR_PUBKEY_AUTH
 	cli_opts.pubkeys = NULL;
 #endif
-#ifdef DROPBEAR_CLI_LOCALTCP
-	cli_opts.localports = NULL;
+#ifdef ENABLE_CLI_LOCALTCPFWD
+	cli_opts.localfwds = NULL;
 #endif
-#ifdef DROPBEAR_CLI_REMOTETCP
-	cli_opts.remoteports = NULL;
+#ifdef ENABLE_CLI_REMOTETCPFWD
+	cli_opts.remotefwds = NULL;
 #endif
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
@@ -104,6 +106,22 @@ void cli_getopts(int argc, char ** argv) {
 			/* Load a hostkey since the previous argument was "-i" */
 			loadidentityfile(argv[i]);
 			nextiskey = 0;
+			continue;
+		}
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+		if (nextisremote) {
+			TRACE(("nextisremote true"));
+			addforward(argv[i], &cli_opts.remotefwds);
+			nextisremote = 0;
+			continue;
+		}
+#endif
+#ifdef ENABLE_CLI_LOCALTCPFWD
+		if (nextislocal) {
+			TRACE(("nextislocal true"));
+			addforward(argv[i], &cli_opts.localfwds);
+			nextislocal = 0;
 			continue;
 		}
 #endif
@@ -135,6 +153,16 @@ void cli_getopts(int argc, char ** argv) {
 				case 'T': /* don't want a pty */
 					cli_opts.wantpty = 0;
 					break;
+#ifdef ENABLE_CLI_LOCALTCPFWD
+				case 'L':
+					nextislocal = 1;
+					break;
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+				case 'R':
+					nextisremote = 1;
+					break;
+#endif
 				default:
 					fprintf(stderr, "Unknown argument '%s'\n", argv[i]);
 					printhelp();
@@ -145,7 +173,7 @@ void cli_getopts(int argc, char ** argv) {
 			continue; /* next argument */
 
 		} else {
-			TRACE(("non-flag arg"));
+			TRACE(("non-flag arg: '%s'", argv[i]));
 
 			/* Either the hostname or commands */
 
@@ -226,10 +254,14 @@ static void loadidentityfile(const char* filename) {
 
 /* Parses a [user@]hostname argument. userhostarg is the argv[i] corresponding
  * - note that it will be modified */
-static void parsehostname(char* userhostarg) {
+static void parsehostname(char* orighostarg) {
 
 	uid_t uid;
 	struct passwd *pw = NULL; 
+	char *userhostarg = NULL;
+
+	/* We probably don't want to be editing argvs */
+	userhostarg = m_strdup(orighostarg);
 
 	cli_opts.remotehost = strchr(userhostarg, '@');
 	if (cli_opts.remotehost == NULL) {
@@ -257,3 +289,81 @@ static void parsehostname(char* userhostarg) {
 		dropbear_exit("Bad hostname");
 	}
 }
+
+#ifdef ENABLE_CLI_ANYTCPFWD
+/* Turn a "listenport:remoteaddr:remoteport" string into into a forwarding
+ * set, and add it to the forwarding list */
+static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
+
+	char * listenport = NULL;
+	char * connectport = NULL;
+	char * connectaddr = NULL;
+	struct TCPFwdList* newfwd = NULL;
+	char * str = NULL;
+
+	TRACE(("enter addforward"));
+
+	/* We probably don't want to be editing argvs */
+	str = m_strdup(origstr);
+
+	listenport = str;
+
+	connectaddr = strchr(str, ':');
+	if (connectaddr == NULL) {
+		TRACE(("connectaddr == NULL"));
+		goto fail;
+	}
+
+	connectaddr[0] = '\0';
+	connectaddr++;
+
+	connectport = strchr(connectaddr, ':');
+	if (connectport == NULL) {
+		TRACE(("connectport == NULL"));
+		goto fail;
+	}
+
+	connectport[0] = '\0';
+	connectport++;
+
+	newfwd = (struct TCPFwdList*)m_malloc(sizeof(struct TCPFwdList));
+
+	/* Now we check the ports - note that the port ints are unsigned,
+	 * the check later only checks for >= MAX_PORT */
+	newfwd->listenport = strtol(listenport, NULL, 10);
+	if (errno != 0) {
+		TRACE(("bad listenport strtol"));
+		goto fail;
+	}
+
+	newfwd->connectport = strtol(connectport, NULL, 10);
+	if (errno != 0) {
+		TRACE(("bad connectport strtol"));
+		goto fail;
+	}
+
+	newfwd->connectaddr = connectaddr;
+
+	if (newfwd->listenport > 65535) {
+		TRACE(("listenport > 65535"));
+		goto badport;
+	}
+		
+	if (newfwd->connectport > 65535) {
+		TRACE(("connectport > 65535"));
+		goto badport;
+	}
+
+	newfwd->next = *fwdlist;
+	*fwdlist = newfwd;
+
+	TRACE(("leave addforward: done"));
+	return;
+
+fail:
+	dropbear_exit("Bad TCP forward '%s'", origstr);
+
+badport:
+	dropbear_exit("Bad TCP port in '%s'", origstr);
+}
+#endif

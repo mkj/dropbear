@@ -29,6 +29,7 @@
 #include "signkey.h"
 #include "buffer.h"
 #include "auth.h"
+#include "tcpfwd.h"
 
 typedef struct runopts {
 
@@ -90,8 +91,14 @@ typedef struct cli_runopts {
 
 	char *cmd;
 	int wantpty;
-	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
 #ifdef DROPBEAR_PUBKEY_AUTH
+	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+	struct TCPFwdList * remotefwds;
+#endif
+#ifdef ENABLE_CLI_LOCALTCPFWD
+	struct TCPFwdList * localfwds;
 #endif
 	/* XXX TODO */
 

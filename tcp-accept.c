@@ -1,6 +1,6 @@
 #include "includes.h"
 #include "ssh.h"
-#include "tcp-accept.h"
+#include "tcpfwd.h"
 #include "dbutil.h"
 #include "session.h"
 #include "buffer.h"
@@ -67,7 +67,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	TRACE(("enter listen_tcpfwd"));
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
-	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->sendport);
+	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->listenport);
 
 	/* XXX Note: we're just listening on localhost, no matter what they tell
 	 * us. If someone wants to make it listen otherways, then change

@@ -46,8 +46,8 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
-		loginrec.h atomicio.h x11fwd.h agentfwd.h tcp-accept.h compat.h \
-		tcp-connect.h listener.h
+		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
+		listener.h
 
 dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) 
 dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
