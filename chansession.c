@@ -646,7 +646,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	buffer * motdbuf = NULL;
 	int len;
 	struct stat sb;
-	char hushpath[MAXPATHLEN];
+	char *hushpath = NULL;
 #endif
 
 	TRACE(("enter ptycommand"));
@@ -686,8 +686,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 #ifdef DO_MOTD
 		if (ses.opts->domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
-			strlcpy(hushpath, ses.authstate.pw->pw_dir, sizeof(hushpath));
-			strlcat(hushpath, "/.hushlogin", sizeof(hushpath));
+
+			hushpath = m_malloc(strlen(ses.authstate.pw->pw_dir)
+					+ 11 /* 11 == strlen("/hushlogin\0") */ );
+			strcpy(hushpath, ses.authstate.pw->pw_dir);
+			strcat(hushpath, "/hushlogin");
 
 			if (stat(hushpath, &sb) < 0) {
 				/* more than a screenful is stupid IMHO */
@@ -703,6 +706,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 				}
 				buf_free(motdbuf);
 			}
+			m_free(hushpath);
 		}
 #endif /* DO_MOTD */
 
