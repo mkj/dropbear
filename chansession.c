@@ -883,6 +883,11 @@ static void execchild(struct ChanSess *chansess) {
 	agentset(chansess);
 #endif
 
+	/* Re-enable SIGPIPE for the executed process */
+	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
 	baseshell = basename(usershell);
 
 	if (chansess->cmd != NULL) {
