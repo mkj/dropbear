@@ -9,7 +9,6 @@ Things which need doing:
 - disconnect messages etc
 - kexfollows
 - make sure are using random not urandom
-- check that channel EOF/CLOSE code seems OK
 
 Features to add:
 
