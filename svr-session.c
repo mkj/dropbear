@@ -168,7 +168,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 	/* if we are using DEBUG_TRACE, we want to print to stderr even if
 	 * syslog is used, so it is included in error reports */
 #ifdef DEBUG_TRACE
-	havetrace = 1;
+	havetrace = debug_trace;
 #endif
 
 	if (!svr_opts.usingsyslog || havetrace)
