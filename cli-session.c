@@ -112,6 +112,11 @@ static void cli_session_init() {
 	cli_ses.tty_raw_mode = 0;
 	cli_ses.winchange = 0;
 
+	/* We store stdin's flags, so we can set them back on exit (otherwise
+	 * busybox's ash isn't happy */
+	cli_ses.stdincopy = dup(STDIN_FILENO);
+	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
+
 	/* Auth */
 	cli_ses.lastpubkey = NULL;
 	cli_ses.lastauthtype = NULL;
@@ -240,6 +245,12 @@ void cli_session_cleanup() {
 	if (!sessinitdone) {
 		return;
 	}
+
+	/* Set stdin back to non-blocking - busybox ash dies nastily
+	 * if we don't revert the flags */
+	TRACE(("close stdincopy = %d", cli_ses.stdincopy));
+	//fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+
 	cli_tty_cleanup();
 
 }
