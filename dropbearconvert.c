@@ -49,7 +49,7 @@ static void printhelp(char * progname) {
 					"Example:\n"
 					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n"
 					"\n"
-					"The inputfile and output file can be '-' to specify\n"
+					"The inputfile and outputfile can be '-' to specify\n"
 					"standard input or standard output.\n", progname);
 }
 

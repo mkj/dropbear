@@ -56,8 +56,15 @@
 
 #define MAX_FMT 100
 
-void (*_dropbear_exit)(int exitcode, const char* format, va_list param) = NULL;
-void (*_dropbear_log)(int priority, const char* format, va_list param) = NULL;
+static void generic_dropbear_exit(int exitcode, const char* format, 
+		va_list param);
+static void generic_dropbear_log(int priority, const char* format, 
+		va_list param);
+
+void (*_dropbear_exit)(int exitcode, const char* format, va_list param) 
+						= generic_dropbear_exit;
+void (*_dropbear_log)(int priority, const char* format, va_list param)
+						= generic_dropbear_log;
 
 int usingsyslog = 0; /* set by runopts, but required externally to sessions */
 #ifndef DISABLE_SYSLOG
@@ -88,6 +95,28 @@ void dropbear_exit(const char* format, ...) {
 	va_end(param);
 }
 
+static void generic_dropbear_exit(int exitcode, const char* format, 
+		va_list param) {
+
+	char fmtbuf[300];
+
+	snprintf(fmtbuf, sizeof(fmtbuf), "Exited: %s", format);
+
+	_dropbear_log(LOG_INFO, fmtbuf, param);
+
+	exit(exitcode);
+}
+
+static void generic_dropbear_log(int priority, const char* format, 
+		va_list param) {
+
+	char printbuf[1024];
+
+	vsnprintf(printbuf, sizeof(printbuf), format, param);
+
+	fprintf(stderr, "%s\n", printbuf);
+
+}
 
 /* this is what can be called to write arbitrary log messages */
 void dropbear_log(int priority, const char* format, ...) {

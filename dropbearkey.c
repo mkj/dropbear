@@ -54,28 +54,28 @@
 
 static void printhelp(char * progname);
 
-#define BUF_SIZE 2000
-
 #define RSA_SIZE (1024/8) /* 1024 bit */
 #define DSS_SIZE (1024/8) /* 1024 bit */
 
 static void buf_writefile(buffer * buf, const char * filename);
+static void printpubkey(sign_key * key, int keytype);
+static void justprintpub(const char* filename);
 
 /* Print a help message */
 static void printhelp(char * progname) {
 
 	fprintf(stderr, "Usage: %s -t <type> -f <filename> [-s bits]\n"
 					"Options are:\n"
-					"-t type           Type of key to generate. One of:\n"
+					"-t type	Type of key to generate. One of:\n"
 #ifdef DROPBEAR_RSA
-					"                  rsa\n"
+					"		rsa\n"
 #endif
 #ifdef DROPBEAR_DSS
-					"                  dss\n"
+					"		dss\n"
 #endif
-					"-f filename       Use filename for the secret key\n"
-					"-s bits           Key size in bits, should be "
-					"multiple of 8 (optional)\n",
+					"-f filename	Use filename for the secret key\n"
+					"-s bits	Key size in bits, should be a multiple of 8 (optional)\n"
+					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n",
 					progname);
 }
 
@@ -88,23 +88,24 @@ int main(int argc, char ** argv) {
 
 	int i;
 	char ** next = 0;
-	sign_key *key;
-	buffer *buf;
+	sign_key *key = NULL;
+	buffer *buf = NULL;
 	char * filename = NULL;
 	int keytype = -1;
 	char * typetext = NULL;
 	char * sizetext = NULL;
 	unsigned int bits;
 	unsigned int keysize;
+	int printpub = 0;
 
 	/* get the commandline options */
 	for (i = 1; i < argc; i++) {
+		if (argv[i] == NULL) {
+			continue; /* Whack */
+		} 
 		if (next) {
 			*next = argv[i];
-			if (*next == NULL) {
-				fprintf(stderr, "Invalid null argument");
-			}
-			next = 0x00;
+			next = NULL;
 			continue;
 		}
 
@@ -119,6 +120,9 @@ int main(int argc, char ** argv) {
 				case 's':
 					next = &sizetext;
 					break;
+				case 'y':
+					printpub = 1;
+					break;
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_SUCCESS);
@@ -132,17 +136,20 @@ int main(int argc, char ** argv) {
 		}
 	}
 
+	if (!filename) {
+		fprintf(stderr, "Must specify a key filename\n");
+		printhelp(argv[0]);
+		exit(EXIT_FAILURE);
+	}
+
+	if (printpub) {
+		justprintpub(filename);
+		/* Not reached */
+	}
+
 	/* check/parse args */
 	if (!typetext) {
-		fprintf(stderr, "Must specify file type, one of:\n"
-#ifdef DROPBEAR_RSA
-				"rsa\n"
-#endif
-#ifdef DROPBEAR_DSS
-				"dss\n"
-#endif
-				"\n"
-			   );
+		fprintf(stderr, "Must specify key type\n");
 		printhelp(argv[0]);
 		exit(EXIT_FAILURE);
 	}
@@ -190,11 +197,6 @@ int main(int argc, char ** argv) {
 		}
 	}
 
-	if (!filename) {
-		fprintf(stderr, "Must specify a key filename\n");
-		printhelp(argv[0]);
-		exit(EXIT_FAILURE);
-	}
 
 	fprintf(stderr, "Will output %d bit %s secret key to '%s'\n", keysize*8,
 			typetext, filename);
@@ -222,7 +224,7 @@ int main(int argc, char ** argv) {
 			exit(EXIT_FAILURE);
 	}
 
-	buf = buf_new(BUF_SIZE); 
+	buf = buf_new(MAX_PRIVKEY_SIZE); 
 
 	buf_put_priv_key(buf, key, keytype);
 	buf_setpos(buf, 0);
@@ -230,13 +232,87 @@ int main(int argc, char ** argv) {
 
 	buf_burn(buf);
 	buf_free(buf);
-	sign_key_free(key);
 
-	fprintf(stderr, "Done.\n");
+	printpubkey(key, keytype);
+
+	sign_key_free(key);
 
 	return EXIT_SUCCESS;
 }
 #endif
+
+static void justprintpub(const char* filename) {
+
+	buffer *buf = NULL;
+	sign_key *key = NULL;
+	int keytype;
+	int ret;
+	int err = DROPBEAR_FAILURE;
+
+	buf = buf_new(MAX_PRIVKEY_SIZE);
+	ret = buf_readfile(buf, filename);
+
+	if (ret != DROPBEAR_SUCCESS) {
+		fprintf(stderr, "Failed reading '%s'\n", filename);
+		goto out;
+	}
+
+	key = new_sign_key();
+	keytype = DROPBEAR_SIGNKEY_ANY;
+
+	buf_setpos(buf, 0);
+	ret = buf_get_priv_key(buf, key, &keytype);
+	if (ret == DROPBEAR_FAILURE) {
+		fprintf(stderr, "Bad key in '%s'\n", filename);
+		goto out;
+	}
+
+	printpubkey(key, keytype);
+
+	err = DROPBEAR_SUCCESS;
+
+out:
+	buf_burn(buf);
+	buf_free(buf);
+	buf = NULL;
+	sign_key_free(key);
+	key = NULL;
+	exit(err);
+}
+
+static void printpubkey(sign_key * key, int keytype) {
+
+	buffer * buf = NULL;
+	unsigned char base64key[MAX_PUBKEY_SIZE*2];
+	unsigned long base64len;
+	int err;
+	const char * typestring = NULL;
+	char *fp = NULL;
+	int len;
+
+	buf = buf_new(MAX_PUBKEY_SIZE);
+	buf_put_pub_key(buf, key, keytype);
+	buf_setpos(buf, 4);
+
+	len = buf->len - buf->pos;
+
+	base64len = sizeof(base64key);
+	err = base64_encode(buf_getptr(buf, len), len, base64key, &base64len);
+
+	if (err != CRYPT_OK) {
+		fprintf(stderr, "base64 failed");
+	}
+
+	typestring = signkey_name_from_type(keytype, &err);
+
+	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
+
+	printf("Public key portion is:\n%s %s\nFingerprint: %s\n",
+			typestring, base64key, fp);
+
+	m_free(fp);
+	buf_free(buf);
+}
 
 /* Write a buffer to a file specified, failing if the file exists */
 static void buf_writefile(buffer * buf, const char * filename) {
