@@ -544,7 +544,7 @@ void * m_malloc(size_t size) {
 	if (size == 0) {
 		dropbear_exit("m_malloc failed");
 	}
-	ret = malloc(size);
+	ret = calloc(1, size);
 	if (ret == NULL) {
 		dropbear_exit("m_malloc failed");
 	}
