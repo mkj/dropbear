@@ -160,11 +160,16 @@ static int dropbear_write(const char*filename, sign_key * key) {
 	int len;
 	int ret;
 
+#ifdef DROPBEAR_RSA
 	if (key->rsakey != NULL) {
 		keytype = DROPBEAR_SIGNKEY_RSA;
-	} else {
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (key->dsskey != NULL) {
 		keytype = DROPBEAR_SIGNKEY_DSS;
 	}
+#endif
 
 	buf = buf_new(2000);
 	buf_put_priv_key(buf, key, keytype);
@@ -711,13 +716,20 @@ static int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
-	int keytype;
+	int keytype = -1;
 
+#ifdef DROPBEAR_RSA
 	if (key->rsakey != NULL) {
 		keytype = DROPBEAR_SIGNKEY_RSA;
-	} else {
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (key->dsskey != NULL) {
 		keytype = DROPBEAR_SIGNKEY_DSS;
 	}
+#endif
+
+	assert(keytype != -1);
 
 	/*
 	 * Fetch the key blobs.
@@ -734,6 +746,8 @@ static int openssh_write(const char *filename, sign_key *key,
 	 * key blob, and also decide on the header line.
 	 */
 	numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
+
+#ifdef DROPBEAR_RSA
 	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 
 		if (key->rsakey->p == NULL || key->rsakey->q == NULL) {
@@ -826,7 +840,11 @@ static int openssh_write(const char *filename, sign_key *key,
 		nnumbers = 9;
 		header = "-----BEGIN RSA PRIVATE KEY-----\n";
 		footer = "-----END RSA PRIVATE KEY-----\n";
-	} else if (keytype == DROPBEAR_SIGNKEY_DSS) {
+	}
+#endif /* DROPBEAR_RSA */
+
+#ifdef DROPBEAR_DSS
+	if (keytype == DROPBEAR_SIGNKEY_DSS) {
 
 		/* p */
 		numbers[1].bytes = buf_getint(keyblob);
@@ -856,9 +874,8 @@ static int openssh_write(const char *filename, sign_key *key,
 		nnumbers = 6;
 		header = "-----BEGIN DSA PRIVATE KEY-----\n";
 		footer = "-----END DSA PRIVATE KEY-----\n";
-	} else {
-		assert(0);					 /* zoinks! */
 	}
+#endif /* DROPBEAR_DSS */
 
 	/*
 	 * Now count up the total size of the ASN.1 encoded integers,

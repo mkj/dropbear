@@ -39,8 +39,8 @@ static void printhelp(char * progname);
 static void printhelp(char * progname) {
 
 	fprintf(stderr, "Usage: %s <inputtype> <outputtype> <inputfile> <outputfile>\n\n"
-					"Caution: This program is for convenience only, and is not secure if used on\n"
-					"untrusted input files -- don't run this as root on random luser's files :)\n"
+					"CAUTION: This program is for convenience only, and is not secure if used on\n"
+					"untrusted input files, ie it could allow arbitrary code execution.\n"
 					"All parameters must be specified in order.\n"
 					"\n"
 					"The input and output types are one of:\n"
@@ -50,8 +50,8 @@ static void printhelp(char * progname) {
 					"Example:\n"
 					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n"
 					"\n"
-					"The inputfile and output file can be '-' to specify"
-					"standard input or standard output.", progname);
+					"The inputfile and output file can be '-' to specify\n"
+					"standard input or standard output.\n", progname);
 }
 
 int main(int argc, char ** argv) {
@@ -113,7 +113,16 @@ static int do_convert(int intype, const char* infile, int outtype,
 		goto out;
 	}
 
-	keytype = key->rsakey != NULL ? "RSA" : "DSS";
+#ifdef DROPBEAR_RSA
+	if (key->rsakey != NULL) {
+		keytype = "RSA";
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (key->dsskey != NULL) {
+		keytype = "DSS";
+	}
+#endif
 
 	fprintf(stderr, "Key is a %s key\n", keytype);
 

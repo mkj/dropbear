@@ -42,10 +42,14 @@ static void printhelp(const char * progname) {
 					"-b bannerfile     Display the contents of bannerfile"
 					" before user login\n"
 					"                  (default: none)\n"
+#ifdef DROPBEAR_DSS
 					"-d dsskeyfile     Use dsskeyfile for the dss host key\n"
 					"                  (default: %s)\n"
+#endif
+#ifdef DROPBEAR_RSA
 					"-r rsakeyfile     Use rsakeyfile for the rsa host key\n"
 					"                  (default: %s)\n"
+#endif
 					"-F                Don't fork into background\n"
 #ifdef DISABLE_SYSLOG
 					"(Syslog support not compiled in, using stderr)\n"
@@ -56,8 +60,13 @@ static void printhelp(const char * progname) {
 					"                  (default %d if none specified)\n"
 /*					"-4/-6             Disable listening on ipv4/ipv6 respectively\n"*/
 
-					,DROPBEAR_VERSION,
-					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME,
+					,DROPBEAR_VERSION, progname,
+#ifdef DROPBEAR_DSS
+					DSS_PRIV_FILENAME,
+#endif
+#ifdef DROPBEAR_RSA
+					RSA_PRIV_FILENAME,
+#endif
 					DROPBEAR_MAX_PORTS, DROPBEAR_PORT);
 }
 
@@ -102,12 +111,16 @@ runopts * getrunopts(int argc, char ** argv) {
 				case 'b':
 					next = &opts->bannerfile;
 					break;
+#ifdef DROPBEAR_DSS
 				case 'd':
 					next = &opts->dsskeyfile;
 					break;
+#endif
+#ifdef DROPBEAR_RSA
 				case 'r':
 					next = &opts->rsakeyfile;
 					break;
+#endif
 				case 'F':
 					opts->forkbg = 0;
 					break;
