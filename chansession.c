@@ -33,6 +33,7 @@
 #include "termcodes.h"
 #include "ssh.h"
 #include "random.h"
+#include "utmp.h"
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd);
@@ -226,6 +227,7 @@ void closechansess(struct Channel *channel) {
 	m_free(chansess->cmd);
 	m_free(chansess->term);
 	if (chansess->tty) {
+		dropbear_dellogin(chansess);
 		pty_release(chansess->tty);
 	}
 	m_free(chansess->tty);
@@ -639,6 +641,8 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		/* add a child pid */
 		addchildpid(chansess, pid);
+
+		dropbear_addlogin(chansess);
 
 		close(chansess->slave);
 		channel->infd = chansess->master;
