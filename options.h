@@ -80,6 +80,13 @@
  * you are statically linking, you might want to undefine this */
 #define DO_HOST_LOOKUP
 
+/* Whether to print the message of the day (MOTD). This doesn't add much code
+ * size */
+#define DO_MOTD
+
+/* The MOTD file path */
+#define MOTD_FILENAME "/etc/motd"
+
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
 #define DROPBEAR_PASSWORD_AUTH
@@ -115,7 +122,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.37"
+#define DROPBEAR_VERSION "0.37-cvs"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 

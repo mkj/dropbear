@@ -56,6 +56,9 @@ static void printhelp(const char * progname) {
 #else
 					"-E                Log to stderr rather than syslog\n"
 #endif
+#ifdef DO_MOTD
+					"-m                Don't display the motd on login\n"
+#endif
 					"-p port           Listen on specified tcp port, up to %d can be specified\n"
 					"                  (default %d if none specified)\n"
 /*					"-4/-6             Disable listening on ipv4/ipv6 respectively\n"*/
@@ -92,6 +95,9 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->ipv4 = 1;
 	opts->ipv6 = 1;
 	*/
+#ifdef DO_MOTD
+	opts->domotd = 1;
+#endif
 #ifndef DISABLE_SYSLOG
 	usingsyslog = 1;
 #endif
@@ -136,6 +142,13 @@ runopts * getrunopts(int argc, char ** argv) {
 						portnum++;
 					}
 					break;
+#ifdef DO_MOTD
+				/* motd is displayed by default, -m turns it off */
+				case 'm':
+					opts->domotd = 0;
+					break;
+#endif
+
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);

@@ -633,6 +633,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
 	struct logininfo *li;
+#ifdef DO_MOTD
+	buffer * motdbuf;
+	int len;
+	struct stat sb;
+	char hushpath[MAXPATHLEN];
+#endif
 
 	TRACE(("enter ptycommand"));
 
@@ -667,6 +673,28 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		login_free_entry(li);
 
 		m_free(chansess->tty);
+
+#ifdef DO_MOTD
+		if (ses.opts->domotd) {
+			/* don't show the motd if ~/.hushlogin exists */
+			strlcpy(hushpath, ses.authstate.pw->pw_dir, sizeof(hushpath));
+			strlcat(hushpath, "/.hushlogin", sizeof(hushpath));
+
+			if (stat(hushpath, &sb) < 0) {
+				/* more than a screenful is stupid IMHO */
+				motdbuf = buf_new(80 * 25);
+				if (buf_readfile(motdbuf, MOTD_FILENAME) == DROPBEAR_SUCCESS) {
+					buf_setpos(motdbuf, 0);
+					while (motdbuf->pos != motdbuf->len) {
+						len = motdbuf->len - motdbuf->pos;
+						len = write(STDOUT_FILENO, 
+								buf_getptr(motdbuf, len), len);
+						buf_incrpos(motdbuf, len);
+					}
+				}
+			}
+		}
+#endif /* DO_MOTD */
 
 		execchild(chansess);
 		/* not reached */

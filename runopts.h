@@ -45,6 +45,11 @@ struct RunOpts {
 	int ipv4;
 	int ipv6;
 	*/
+
+#ifdef DO_MOTD
+	/* whether to print the MOTD */
+	int domotd;
+#endif
 	
 	sign_key *hostkey;
 	buffer * banner;
