@@ -152,6 +152,8 @@ void buf_incrpos(buffer* buf,  int incr) {
 /* Get a byte from the buffer and increment the pos */
 unsigned char buf_getbyte(buffer* buf) {
 
+	/* This check is really just "==", but the >= allows us to check for the
+	 * assert()able case of pos > len, which should _never_ happen */
 	if (buf->pos >= buf->len) {
 		dropbear_exit("bad buf_getbyte");
 	}
@@ -161,7 +163,8 @@ unsigned char buf_getbyte(buffer* buf) {
 /* put a byte, incrementing the length if required */
 void buf_putbyte(buffer* buf, unsigned char val) {
 
-	if (buf->pos >= buf->len) {
+	/* assert(buf->pos <= buf->len) */
+	if (buf->pos == buf->len) {
 		buf_incrlen(buf, 1);
 	}
 	buf->data[buf->pos] = val;
