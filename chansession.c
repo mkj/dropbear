@@ -300,10 +300,8 @@ void chansessionrequest(struct Channel *channel) {
 	wantreply = buf_getbyte(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
-		send_msg_channel_failure(channel);
-		m_free(type);
 		TRACE(("leave chansessionrequest: type too long")); /* XXX send error?*/
-		return;
+		goto out;
 	}
 
 	chansess = (struct ChanSess*)channel->typedata;
@@ -333,6 +331,8 @@ void chansessionrequest(struct Channel *channel) {
 	} else {
 		/* etc, todo "env", "subsystem" */
 	}
+
+out:
 
 	if (wantreply) {
 		if (ret == 0) {
