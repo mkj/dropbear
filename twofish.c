@@ -38,12 +38,14 @@ const struct _cipher_descriptor twofish_desc =
 #define RS_POLY           0x14D
 
 /* The 4x4 MDS Linear Transform */
+#if 0
 static const unsigned char MDS[4][4] = {
     { 0x01, 0xEF, 0x5B, 0x5B },
     { 0x5B, 0xEF, 0xEF, 0x01 },
     { 0xEF, 0x5B, 0x01, 0xEF },
     { 0xEF, 0x01, 0xEF, 0x5B }
 };
+#endif
 
 /* The 4x8 RS Linear Transform */
 static const unsigned char RS[4][8] = {

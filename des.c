@@ -16,6 +16,7 @@
 #define EN0 0 
 #define DE1 1
 
+#if 0
 const struct _cipher_descriptor des_desc =
 {
     "des",
@@ -27,6 +28,7 @@ const struct _cipher_descriptor des_desc =
     &des_test,
     &des_keysize
 };
+#endif
 
 const struct _cipher_descriptor des3_desc =
 {
@@ -1510,6 +1512,7 @@ static void desfunc(ulong32 *block, const ulong32 *keys)
 }
 #endif
 
+#if 0
 int des_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
     _ARGCHK(key != NULL);
@@ -1528,6 +1531,7 @@ int des_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 
     return CRYPT_OK;
 }
+#endif
 
 int des3_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
@@ -1553,6 +1557,7 @@ int des3_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_k
     return CRYPT_OK;
 }
 
+#if 0
 void des_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
     ulong32 work[2];
@@ -1578,6 +1583,7 @@ void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
     STORE32H(work[0],pt+0);
     STORE32H(work[1],pt+4);
 }
+#endif
 
 void des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
@@ -1610,6 +1616,7 @@ void des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key 
     STORE32H(work[1],pt+4);
 }
 
+#if 0
 int des_test(void)
 {
  #ifndef LTC_TEST
@@ -1752,6 +1759,7 @@ int des_test(void)
     return CRYPT_OK;
   #endif
 }
+#endif
 
 int des3_test(void)
 {
@@ -1789,6 +1797,7 @@ int des3_test(void)
  #endif
 }
 
+#if 0
 int des_keysize(int *desired_keysize)
 {
     _ARGCHK(desired_keysize != NULL);
@@ -1798,6 +1807,7 @@ int des_keysize(int *desired_keysize)
     *desired_keysize = 8;
     return CRYPT_OK;
 }
+#endif
 
 int des3_keysize(int *desired_keysize)
 {

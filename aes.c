@@ -38,6 +38,7 @@
 #define ECB_TEST rijndael_test
 #define ECB_KS   rijndael_keysize
 
+#if 0
 const struct _cipher_descriptor rijndael_desc =
 {
     "rijndael",
@@ -45,6 +46,7 @@ const struct _cipher_descriptor rijndael_desc =
     16, 32, 16, 10,
     SETUP, ECB_ENC, ECB_DEC, ECB_TEST, ECB_KS
 };
+#endif
 
 const struct _cipher_descriptor aes_desc =
 {
