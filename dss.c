@@ -261,6 +261,7 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
+#ifdef DSS_PROTOK	
 /* convert an unsigned mp into an array of bytes, malloced.
  * This array must be freed after use, len contains the length of the array,
  * if len != NULL */
@@ -279,6 +280,7 @@ static unsigned char* mptobytes(mp_int *mp, int *len) {
 	}
 	return ret;
 }
+#endif
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer

@@ -457,7 +457,6 @@ void recv_msg_kexinit() {
 	/* the rest of ses.kexhashbuf will be done after DH exchange */
 
 	ses.kexstate.recvkexinit = 1;
-//	ses.expecting = 0; // client matt
 
 	TRACE(("leave recv_msg_kexinit"))
 }
@@ -683,7 +682,7 @@ static void read_kex_algos() {
 	buf_eatstring(ses.payload);
 
 	/* first_kex_packet_follows */
-	if (buf_getbyte(ses.payload)) {
+	if (buf_getbool(ses.payload)) {
 		ses.kexstate.firstfollows = 1;
 		/* if the guess wasn't good, we ignore the packet sent */
 		if (!allgood) {

@@ -78,7 +78,7 @@ void recv_msg_global_request_remotetcp() {
 	}
 
 	reqname = buf_getstring(ses.payload, &namelen);
-	wantreply = buf_getbyte(ses.payload);
+	wantreply = buf_getbool(ses.payload);
 
 	if (namelen > MAXNAMLEN) {
 		TRACE(("name len is wrong: %d", namelen))

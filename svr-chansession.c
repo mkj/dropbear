@@ -305,7 +305,7 @@ static void chansessionrequest(struct Channel *channel) {
 	TRACE(("enter chansessionrequest"))
 
 	type = buf_getstring(ses.payload, &typelen);
-	wantreply = buf_getbyte(ses.payload);
+	wantreply = buf_getbool(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
 		TRACE(("leave chansessionrequest: type too long")) /* XXX send error?*/

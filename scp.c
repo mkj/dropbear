@@ -244,9 +244,6 @@ main(int argc, char **argv)
 	extern char *optarg;
 	extern int optind;
 
-	/* hack, seems to work */
-//	__progname = argv[0];
-
 	args.list = NULL;
 	addargs(&args, "ssh");		/* overwritten with ssh_program */
 	addargs(&args, "-x");

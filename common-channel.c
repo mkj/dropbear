@@ -162,8 +162,13 @@ struct Channel* newchannel(unsigned int remotechan,
 	return newchan;
 }
 
-/* Get the channel structure corresponding to a channel number */
-struct Channel* getchannel(unsigned int chan) {
+/* Returns the channel structure corresponding to the channel in the current
+ * data packet (ses.payload must be positioned appropriately) */
+struct Channel* getchannel() {
+
+	unsigned int chan;
+
+	chan = buf_getint(ses.payload);
 	if (chan >= ses.chansize || ses.channels[chan] == NULL) {
 		return NULL;
 	}
@@ -474,14 +479,11 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
  * etc) FD is also EOF */
 void recv_msg_channel_eof() {
 
-	unsigned int chan;
 	struct Channel * channel;
 
 	TRACE(("enter recv_msg_channel_eof"))
 
-	chan = buf_getint(ses.payload);
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("EOF for unknown channel");
 	}
@@ -500,15 +502,11 @@ void recv_msg_channel_eof() {
 /* Handle channel closure(), respond in kind and close the channels */
 void recv_msg_channel_close() {
 
-	unsigned int chan;
 	struct Channel * channel;
 
 	TRACE(("enter recv_msg_channel_close"))
 
-	chan = buf_getint(ses.payload);
-	TRACE(("close channel = %d", chan))
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		/* disconnect ? */
 		dropbear_exit("Close for unknown channel");
@@ -567,14 +565,11 @@ static void deletechannel(struct Channel *channel) {
  * such as chansession or x11fwd */
 void recv_msg_channel_request() {
 
-	unsigned int chan;
 	struct Channel *channel;
 
 	TRACE(("enter recv_msg_channel_request"))
 	
-	chan = buf_getint(ses.payload);
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		/* disconnect ? */
 		dropbear_exit("Unknown channel");
@@ -666,12 +661,9 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 /* We receive channel data */
 void recv_msg_channel_data() {
 
-	unsigned int chan;
 	struct Channel *channel;
 
-	chan = buf_getint(ses.payload);
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
@@ -738,13 +730,10 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
  * as data is sent, and incremented upon receiving window-adjust messages */
 void recv_msg_channel_window_adjust() {
 
-	unsigned int chan;
 	struct Channel * channel;
 	unsigned int incr;
 	
-	chan = buf_getint(ses.payload);
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
@@ -961,14 +950,12 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
  * successful*/
 void recv_msg_channel_open_confirmation() {
 
-	unsigned int chan;
 	struct Channel * channel;
 	int ret;
 
 	TRACE(("enter recv_msg_channel_open_confirmation"))
-	chan = buf_getint(ses.payload);
 
-	channel = getchannel(chan);
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
@@ -995,11 +982,9 @@ void recv_msg_channel_open_confirmation() {
 /* Notification that our channel open request failed */
 void recv_msg_channel_open_failure() {
 
-	unsigned int chan;
 	struct Channel * channel;
-	chan = buf_getbyte(ses.payload);
 
-	channel = getchannel(chan);
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
