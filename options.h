@@ -117,7 +117,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * simple "Login: " "Password: " (or something like that - if your module is
  * similar but not quite like that, edit the strings in svr-authpam.c).
  * Basically, it's useful for systems like OS X where standard password crypts
- * don't work, but there's and interface via a PAM module. You'll need to
+ * don't work, but there's an interface via a PAM module. You'll need to
  * configure with --enable-pam as well, since it's off by default. And you
  * should only enable either PASSWORD _or_ PAM auth, not both. */
 
@@ -185,7 +185,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.44test4"
+#define DROPBEAR_VERSION "0.44"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

@@ -69,6 +69,6 @@ pty, and you cannot login as any user other than that running the daemon
 
 The Dropbear distribution includes a standalone version of OpenSSH's scp
 program. You can compile it with "make scp", you may want to change the path
-of the ssh binary, specified near the top of the scp.c file. By default
+of the ssh binary, specified by _PATH_SSH_PROGRAM in options.h . By default
 the progress meter isn't compiled in to save space, you can enable it by 
 adding 'SCPPROGRESS=1' to the make commandline.

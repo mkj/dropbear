@@ -1,18 +1,38 @@
-0.44test5 - 
+0.44 - Mon Jan 3 2005
+
+- SECURITY: Fix for PAM auth so that usernames are logged and conversation
+  function responses are allocated correctly - all 0.44test4 users with PAM
+  compiled in (not default) are advised to upgrade.
+
+- Fix calls to getnameinfo() for compatibility with Solaris
+
+- Pristine compilation works (run 'configure' from a fresh dir and make it
+  there)
+
+- Fixes for compiling with most options disabled.
+
+- Upgraded to LibTomCrypt 0.99 and LibTomMath 0.32
+
+- Make sure that zeroing out of values in LTM and LTC won't get optimised away
+
+- Removed unused functions from loginrec.c
+
+- /dev/random is now the default entropy source rather than /dev/urandom
+
+- Logging of IPs in auth success/failure messages for improved greppability
 
 - Fix dbclient so that "scp -i keyfile" works. (It can handle "-ikeyfile
   properly)
 
-- Fix for PAM auth so that usernames are logged and conversation function
-  responses are allocated correctly.
-
 - Avoid a race in server shell-handling code which prevents the exit-code
-  from being returned to the client.
+  from being returned to the client in some circumstances.
 
 - Makefile modified so that install target works correctly (doesn't try
   to install "all" binary) - patch from Juergen Daubert
 
-0.44test4 - Tue Sept 14 21:15:54 +0800
+- Various minor fixes and compile warnings.
+
+0.44test4 - Tue Sept 14 2004 21:15:54 +0800
 
 - Fix inetd mode so it actually loads the hostkeys (oops)
 

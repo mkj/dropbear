@@ -1,4 +1,5 @@
 # This Makefile is for Dropbear SSH Server and Client
+# @configure_input@
 
 # invocation:
 # make PROGRAMS="dropbear dbclient scp" MULTI=1 STATIC=1 SCPPROGRESS=1

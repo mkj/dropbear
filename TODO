@@ -20,10 +20,11 @@ Things which might need doing:
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly, or just add group14 (whatever it's called today)
 
-- Use m_burn for clearing sensitive items in LTM/LTC
-
 - fix scp.c for IRIX
 
 - Be able to use OpenSSH keys for the client? or at least have some form of 
   encrypted keys.
+
 - Client agent forwarding
+
+- Handle restrictions in ~/.ssh/authorized_keys ?

@@ -603,6 +603,8 @@ void * m_realloc(void* ptr, size_t size) {
 
 /* Clear the data, based on the method in David Wheeler's
  * "Secure Programming for Linux and Unix HOWTO" */
+/* Beware of calling this from within dbutil.c - things might get
+ * optimised away */
 void m_burn(void *data, unsigned int len) {
 	volatile char *p = data;
 
