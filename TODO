@@ -17,3 +17,4 @@ Features to add:
 - possible RSA blinding? need to check whether this is vuln to timing attacks
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly
+- other bits
