@@ -223,7 +223,7 @@ static void gen_new_keys() {
 			find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
 			IV, key, keysize, 0, 
 			&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
-		dropbear_exit("Crypto error");
+		dropbear_exit("crypto error");
 	}
 
 	/* server->client IV */
@@ -236,7 +236,7 @@ static void gen_new_keys() {
 			find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name),
 			IV, key, keysize, 0, 
 			&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
-		dropbear_exit("Crypto error");
+		dropbear_exit("crypto error");
 	}
 	/* MAC key client->server */
 	keysize = ses.newkeys->recv_algo_mac->keysize;
@@ -298,7 +298,7 @@ static void gen_new_keys() {
 		ret = deflateEnd(ses.keys->trans_zstream);
 		/* Z_DATA_ERROR is ok, just means that stream isn't ended */
 		if (ret == Z_STREAM_ERROR) {
-			dropbear_exit("Crypto error");
+			dropbear_exit("crypto error");
 		}
 		m_free(ses.keys->trans_zstream);
 	}
@@ -494,7 +494,7 @@ static void read_kex() {
 	/* encryption_algorithms_client_to_server */
 	algo = buf_match_algo(ses.payload, sshciphers);
 	if (algo == NULL) {
-		erralgo = "encrypt client->server";
+		erralgo = "enc c->s";
 		goto error;
 	}
 	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
@@ -502,7 +502,7 @@ static void read_kex() {
 	/* encryption_algorithms_server_to_client */
 	algo = buf_match_algo(ses.payload, sshciphers);
 	if (algo == NULL) {
-		erralgo = "encrypt server->client";
+		erralgo = "enc s->c";
 		goto error;
 	}
 	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
@@ -510,7 +510,7 @@ static void read_kex() {
 	/* mac_algorithms_client_to_server */
 	algo = buf_match_algo(ses.payload, sshhashes);
 	if (algo == NULL) {
-		erralgo = "mac client->server";
+		erralgo = "mac c->s";
 		goto error;
 	}
 	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
@@ -518,7 +518,7 @@ static void read_kex() {
 	/* mac_algorithms_server_to_client */
 	algo = buf_match_algo(ses.payload, sshhashes);
 	if (algo == NULL) {
-		erralgo = "mac server->client";
+		erralgo = "mac s->c";
 		goto error;
 	}
 	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
@@ -526,7 +526,7 @@ static void read_kex() {
 	/* compression_algorithms_client_to_server */
 	algo = buf_match_algo(ses.payload, sshcompress);
 	if (algo == NULL) {
-		erralgo = "compress client->server";
+		erralgo = "comp c->s";
 		goto error;
 	}
 	ses.newkeys->recv_algo_comp = algo->val;
@@ -534,7 +534,7 @@ static void read_kex() {
 	/* compression_algorithms_server_to_client */
 	algo = buf_match_algo(ses.payload, sshcompress);
 	if (algo == NULL) {
-		erralgo = "compress server->client";
+		erralgo = "comp s->c";
 		goto error;
 	}
 	ses.newkeys->trans_algo_comp = algo->val;
@@ -554,7 +554,8 @@ static void read_kex() {
 	}
 
 	/* reserved for future extensions */
-	/*buf_getint(ses.payload);*/
+	/* buf_getint(ses.payload);*/
+
 	return;
 
 error:
