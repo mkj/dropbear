@@ -135,12 +135,14 @@ void dropbear_log(int priority, const char* format, ...) {
 /* priority is priority as with syslog() */
 static void _dropbear_log(int priority, const char* format, va_list param) {
 
+	char printbuf[1024];
+
+	vsnprintf(printbuf, sizeof(printbuf), format, param);
+
 	if (usingsyslog) {
-		vsyslog(priority, format, param);
+		syslog(priority, printbuf);
 	} else {
-		fprintf(stderr, "dropbear ");
-		vfprintf(stderr, format, param);
-		fprintf(stderr, "\n");
+		fprintf(stderr, "dropbear %s\n", printbuf);
 	}
 
 }
