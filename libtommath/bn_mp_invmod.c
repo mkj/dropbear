@@ -157,6 +157,13 @@ top:
     goto __ERR;
   }
 
+  /* matt - need to make 1 <= C */
+  while (mp_cmp_d(&C, 1) == MP_LT) {
+	  if (mp_add(&C, b, &C) != MP_OKAY) {
+		  goto __ERR;
+	  }
+  }
+
   /* a is now the inverse */
   mp_exch (&C, c);
   res = MP_OKAY;

@@ -19,12 +19,19 @@ int
 mp_sqr (mp_int * a, mp_int * b)
 {
   int     res;
-  if (a->used > KARATSUBA_SQR_CUTOFF) {
+#ifndef NO_LTM_TOOM
+  if (a->used >= TOOM_SQR_CUTOFF) {
+    res = mp_toom_sqr(a, b);
+  } else
+#endif
+  if (a->used >= KARATSUBA_SQR_CUTOFF) {
     res = mp_karatsuba_sqr (a, b);
   } else {
 
     /* can we use the fast multiplier? */
-    if ((a->used * 2 + 1) < 512 && a->used < (1 << (sizeof(mp_word) * CHAR_BIT - 2*DIGIT_BIT - 1))) {
+    if ((a->used * 2 + 1) < MP_WARRAY && 
+         a->used < 
+         (1 << (sizeof(mp_word) * CHAR_BIT - 2*DIGIT_BIT - 1))) {
       res = fast_s_mp_sqr (a, b);
     } else {
       res = s_mp_sqr (a, b);
