@@ -13,27 +13,6 @@ void cli_authinitialise() {
 }
 
 
-void cli_get_user() {
-
-	uid_t uid;
-	struct passwd *pw; 
-
-	TRACE(("enter cli_get_user"));
-	if (cli_opts.username != NULL) {
-		ses.authstate.username = cli_opts.username;
-	} else {
-		uid = getuid();
-		
-		pw = getpwuid(uid);
-		if (pw == NULL || pw->pw_name == NULL) {
-			dropbear_exit("Couldn't find username for current user");
-		}
-
-		ses.authstate.username = m_strdup(pw->pw_name);
-	}
-	TRACE(("leave cli_get_user: %s", ses.authstate.username));
-}
-
 /* Send a "none" auth request to get available methods */
 void cli_auth_getmethods() {
 
@@ -42,8 +21,8 @@ void cli_auth_getmethods() {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
-	buf_putstring(ses.writepayload, ses.authstate.username,
-			strlen(ses.authstate.username));
+	buf_putstring(ses.writepayload, cli_opts.username, 
+			strlen(cli_opts.username));
 	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION, 
 			SSH_SERVICE_CONNECTION_LEN);
 	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */

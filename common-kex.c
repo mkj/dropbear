@@ -55,7 +55,7 @@ const unsigned char dh_p_val[] = {
 const int DH_G_VAL = 2;
 
 static void kexinitialise();
-static void gen_new_keys();
+void gen_new_keys();
 #ifndef DISABLE_ZLIB
 static void gen_new_zstreams();
 #endif
@@ -253,7 +253,7 @@ static void hashkeys(unsigned char *out, int outlen,
  * taken into use after both sides have sent a newkeys message */
 
 /* Originally from kex.c, generalized for cli/svr mode --mihnea */
-static void gen_new_keys() {
+void gen_new_keys() {
 
 	unsigned char C2S_IV[MAX_IV_LEN];
 	unsigned char C2S_key[MAX_KEY_LEN];
@@ -276,9 +276,6 @@ static void gen_new_keys() {
 	sha1_process(&hs, ses.hash, SHA1_HASH_SIZE);
 	m_burn(ses.hash, SHA1_HASH_SIZE);
 
-	hashkeys(C2S_IV, SHA1_HASH_SIZE, &hs, 'A');
-	hashkeys(S2C_IV, SHA1_HASH_SIZE, &hs, 'B');
-
 	if (IS_DROPBEAR_CLIENT) {
 	    trans_IV	= C2S_IV;
 	    recv_IV		= S2C_IV;
@@ -299,6 +296,8 @@ static void gen_new_keys() {
 		macrecvletter = 'E';
 	}
 
+	hashkeys(C2S_IV, SHA1_HASH_SIZE, &hs, 'A');
+	hashkeys(S2C_IV, SHA1_HASH_SIZE, &hs, 'B');
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
@@ -580,6 +579,8 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
 	sha1_done(&hs, ses.hash);
+
+	buf_burn(ses.kexhashbuf);
 	buf_free(ses.kexhashbuf);
 	ses.kexhashbuf = NULL;
 	

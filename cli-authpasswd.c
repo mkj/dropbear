@@ -3,6 +3,7 @@
 #include "dbutil.h"
 #include "session.h"
 #include "ssh.h"
+#include "runopts.h"
 
 int cli_auth_password() {
 
@@ -14,8 +15,8 @@ int cli_auth_password() {
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
-	buf_putstring(ses.writepayload, ses.authstate.username,
-			strlen(ses.authstate.username));
+	buf_putstring(ses.writepayload, cli_opts.username,
+			strlen(cli_opts.username));
 
 	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION, 
 			SSH_SERVICE_CONNECTION_LEN);

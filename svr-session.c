@@ -96,6 +96,8 @@ void svr_session(int sock, int childpipe, char* remotehost) {
 	ses.packettypes = svr_packettypes;
 	ses.buf_match_algo = svr_buf_match_algo;
 
+	ses.isserver = 1;
+
 	/* We're ready to go now */
 	sessinitdone = 1;
 

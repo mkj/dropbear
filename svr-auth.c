@@ -58,7 +58,7 @@ static void authclear() {
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
 #ifdef DROPBEAR_PASSWORD_AUTH
-	if (svr_opts.noauthpass) {
+	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
 #endif
@@ -100,6 +100,7 @@ void recv_msg_userauth_request() {
 
 	/* ignore packets if auth is already done */
 	if (ses.authstate.authdone == 1) {
+		TRACE(("leave recv_msg_userauth_request: authdone already"));
 		return;
 	}
 
@@ -129,6 +130,7 @@ void recv_msg_userauth_request() {
 	if (methodlen == AUTH_METHOD_NONE_LEN &&
 			strncmp(methodname, AUTH_METHOD_NONE,
 				AUTH_METHOD_NONE_LEN) == 0) {
+		TRACE(("recv_msg_userauth_request: 'none' request"));
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -304,6 +306,9 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 
 	buf_putbyte(ses.writepayload, partial ? 1 : 0);
 	encrypt_packet();
+
+	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
+				buf_getptr(typebuf, typebuf->len)));
 
 	if (incrfail) {
 		usleep(300000); /* XXX improve this */

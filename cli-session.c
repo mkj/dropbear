@@ -83,6 +83,8 @@ static void cli_session_init() {
 
 	/* packet handlers */
 	ses.packettypes = cli_packettypes;
+
+	ses.isserver = 0;
 }
 
 /* This function drives the progress of the session - it initiates KEX,
@@ -136,7 +138,6 @@ static void cli_sessionloop() {
 
 		/* userauth code */
 		case SERVICE_AUTH_ACCEPT_RCVD:
-			cli_get_user();
 			cli_auth_getmethods();
 			cli_ses.state = USERAUTH_METHODS_SENT;
 			TRACE(("leave cli_sessionloop: sent userauth methods req"));
