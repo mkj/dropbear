@@ -22,32 +22,21 @@ HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 
 UCLIBC_CC=/home/matt/uclibc/bin/i386-uclibc-gcc
 
-all: dropbear
+all: dropbear dropbearkey
 
 $(OBJS): $(HEADERS) Makefile
 
 dropbear: $(DROPBEAROBJS) $(HEADERS) Makefile 
 	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS)
 
+dropbearkey: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
+	$(CC) $(CFLAGS) -o dropbearkey dropbearkey.o gendss.o genrsa.o \
+		$(OBJS) $(LIBS)
+
 uclibc-dropbear: Makefile
 	make clean
 	CC=$(UCLIBC_CC) make $(DROPBEAROBJS)
 	$(UCLIBC_CC) $(CFLAGS) -o uclibc-dropbear $(DROPBEAROBJS) -static $(LIBS)
-
-testsign:
-	make clean
-	CFLAGS="$(CFLAGS) -DDEBUG_DSS_SIGN" make $(TESTSIGNOBJS)
-	$(CC) -o testsign $(TESTSIGNOBJS) $(LIBS)
-
-testsignver: $(OBJS) testsignver.c
-	$(CC) -o testsignver $(OBJS) testsignver.c $(LIBS) $(CFLAGS)
-
-genkey: $(OBJS) $(HEADERS) Makefile gendss.o genrsa.o
-	@echo
-	@echo "==== Ignore errors in compiling if you've disabled RSA or DSS ===="
-	@echo
-	-$(CC) $(CFLAGS) -o gendss gendss.o $(OBJS) $(LIBS)
-	-$(CC) $(CFLAGS) -o genrsa genrsa.o $(OBJS) $(LIBS)
 
 ucsizes: uclibc-dropbear
 	objdump -t uclibc-dropbear|grep ".text"|cut -d "." -f 2|sort -n
@@ -55,15 +44,8 @@ ucsizes: uclibc-dropbear
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -n
 
-queuetest: queuetest.o $(OBJS) $(HEADERS) Makefile
-	$(CC) -o queuetest $(OBJS) queuetest.o $(LIBS)
-	
-testnum: testnum.o $(OBJS) $(HEADERS) Makefile
-	$(CC) -o testnum  testnum.o kex.o crypto.o packet.o util.o session.o buffer.o $(LIBS)
-
 clean:
-	-rm -f dropbear uclibc-dropbear *.o *.da *.bb *.bbg *.prof genrsa gendss \
-	testsign test2 testnum testqueue
+	-rm -f dropbear uclibc-dropbear dropbearkey *.o *.da *.bb *.bbg *.prof 
 
 tidy:
 	-rm -f *~ *.gcov
