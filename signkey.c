@@ -53,7 +53,6 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	unsigned int len;
 
 	TRACE(("enter buf_get_pub_key"));
-	printhex(buf_getptr(buf, 0x99), 0x99);
 
 	ident = buf_getstring(buf, &len);
 

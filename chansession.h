@@ -39,7 +39,6 @@ struct ChanSess {
 	int slave;
 	unsigned char * tty;
 	unsigned char * term;
-	unsigned int termw, termh, termc, termr; /* width, height, col, rows */
 
 	/* exit details */
 	int exited;
@@ -75,6 +74,9 @@ void send_msg_chansess_exitstatus(struct Channel * channel,
 void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
 void addnewvar(const char* param, const char* var);
+
+void cli_send_chansess_request();
+void cli_tty_cleanup();
 
 void svr_chansessinitialise();
 extern const struct ChanType svrchansess;

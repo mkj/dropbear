@@ -6,6 +6,7 @@
 #include "channel.h"
 #include "ssh.h"
 #include "runopts.h"
+#include "termcodes.h"
 
 static void cli_closechansess(struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
@@ -16,7 +17,7 @@ static void send_chansess_pty_req(struct Channel *channel);
 static void send_chansess_shell_req(struct Channel *channel);
 
 static void cli_tty_setup();
-static void cli_tty_cleanup();
+void cli_tty_cleanup();
 
 static const struct ChanType clichansess = {
 	0, /* sepfds */
@@ -49,7 +50,6 @@ static void start_channel_request(struct Channel *channel,
 	buf_putstring(ses.writepayload, type, strlen(type));
 
 }
-
 
 /* Taken from OpenSSH's sshtty.c:
  * RCSID("OpenBSD: sshtty.c,v 1.5 2003/09/19 17:43:35 markus Exp "); */
@@ -91,12 +91,13 @@ static void cli_tty_setup() {
 	TRACE(("leave cli_tty_setup"));
 }
 
-static void cli_tty_cleanup() {
+void cli_tty_cleanup() {
 
 	TRACE(("enter cli_tty_cleanup"));
 
 	if (cli_ses.tty_raw_mode == 0) {
 		TRACE(("leave cli_tty_cleanup: not in raw mode"));
+		return;
 	}
 
 	if (tcsetattr(STDIN_FILENO, TCSADRAIN, &cli_ses.saved_tio) == -1) {
@@ -108,30 +109,123 @@ static void cli_tty_cleanup() {
 	TRACE(("leave cli_tty_cleanup"));
 }
 
-static void send_chansess_pty_req(struct Channel *channel) {
+static void put_termcodes() {
 
-	unsigned char* termmodes = "\0";
-	unsigned char* term = NULL;
-	int termc = 80, termr = 25, termw = 0, termh = 0; /* XXX TODO matt */
+	TRACE(("enter put_termcodes"));
 
-	TRACE(("enter send_chansess_pty_req"));
-	start_channel_request(channel, "pty-req");
+	struct termios tio;
+	unsigned int sshcode;
+	const struct TermCode *termcode;
+	unsigned int value;
+	unsigned int mapcode;
 
-	term = getenv("TERM");
-	if (term == NULL) {
-		term = "vt100";
+	unsigned int bufpos1, bufpos2;
+
+	if (tcgetattr(STDIN_FILENO, &tio) == -1) {
+		dropbear_log(LOG_WARNING, "Failed reading termmodes");
+		buf_putint(ses.writepayload, 1); /* Just the terminator */
+		buf_putbyte(ses.writepayload, 0); /* TTY_OP_END */
+		return;
 	}
 
-	/* XXX TODO */
-	buf_putbyte(ses.writepayload, 0); /* Don't want replies */
-	buf_putstring(ses.writepayload, term, strlen(term));
-	buf_putint(ses.writepayload, termc); /* Cols */
-	buf_putint(ses.writepayload, termr); /* Rows */
-	buf_putint(ses.writepayload, termw); /* Width */
-	buf_putint(ses.writepayload, termh); /* Height */
+	bufpos1 = ses.writepayload->pos;
+	buf_putint(ses.writepayload, 0); /* A placeholder for the final length */
 
-	buf_putstring(ses.writepayload, termmodes, 1); /* XXX TODO */
-	//m_free(termmodes);
+	/* As with Dropbear server, we ignore baud rates for now */
+	for (sshcode = 1; sshcode < MAX_TERMCODE; sshcode++) {
+
+		termcode = &termcodes[sshcode];
+		mapcode = termcode->mapcode;
+
+		switch (termcode->type) {
+
+			case TERMCODE_NONE:
+				continue;
+
+			case TERMCODE_CONTROLCHAR:
+				value = tio.c_cc[mapcode];
+				break;
+
+			case TERMCODE_INPUT:
+				value = tio.c_iflag & mapcode;
+				break;
+
+			case TERMCODE_OUTPUT:
+				value = tio.c_oflag & mapcode;
+				break;
+
+			case TERMCODE_LOCAL:
+				value = tio.c_lflag & mapcode;
+				break;
+
+			case TERMCODE_CONTROL:
+				value = tio.c_cflag & mapcode;
+				break;
+
+			default:
+				continue;
+
+		}
+
+		/* If we reach here, we have something to say */
+		buf_putbyte(ses.writepayload, sshcode);
+		buf_putint(ses.writepayload, value);
+	}
+
+	buf_putbyte(ses.writepayload, 0); /* THE END, aka TTY_OP_END */
+
+	/* Put the string length at the start of the buffer */
+	bufpos2 = ses.writepayload->pos;
+
+	buf_setpos(ses.writepayload, bufpos1); /* Jump back */
+	buf_putint(ses.writepayload, bufpos2 - bufpos1); /* len(termcodes) */
+	buf_setpos(ses.writepayload, bufpos2); /* Back where we were */
+
+	TRACE(("leave put_termcodes"));
+}
+
+static void put_winsize() {
+
+	struct winsize ws;
+
+	if (ioctl(STDIN_FILENO, TIOCGWINSZ, &ws) < 0) {
+		/* Some sane defaults */
+		ws.ws_row = 25;
+		ws.ws_col = 80;
+		ws.ws_xpixel = 0;
+		ws.ws_ypixel = 0;
+	}
+
+	buf_putint(ses.writepayload, ws.ws_col); /* Cols */
+	buf_putint(ses.writepayload, ws.ws_row); /* Rows */
+	buf_putint(ses.writepayload, ws.ws_xpixel); /* Width */
+	buf_putint(ses.writepayload, ws.ws_ypixel); /* Height */
+
+}
+
+static void send_chansess_pty_req(struct Channel *channel) {
+
+	unsigned char* term = NULL;
+
+	TRACE(("enter send_chansess_pty_req"));
+
+	start_channel_request(channel, "pty-req");
+
+	/* Don't want replies */
+	buf_putbyte(ses.writepayload, 0);
+
+	/* Get the terminal */
+	term = getenv("TERM");
+	if (term == NULL) {
+		term = "vt100"; /* Seems a safe default */
+	}
+	buf_putstring(ses.writepayload, term, strlen(term));
+
+	/* Window size */
+	put_winsize();
+
+	/* Terminal mode encoding */
+	put_termcodes();
 
 	encrypt_packet();
 	TRACE(("leave send_chansess_pty_req"));
@@ -171,7 +265,6 @@ static int cli_initchansess(struct Channel *channel) {
 		send_chansess_pty_req(channel);
 	}
 
-	cli_opts.cmd = "df";
 	send_chansess_shell_req(channel);
 
 	if (cli_opts.wantpty) {

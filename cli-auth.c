@@ -7,6 +7,8 @@
 #include "packet.h"
 #include "runopts.h"
 
+#undef DROPBEAR_PUBKEY_AUTH
+
 void cli_authinitialise() {
 
 	memset(&ses.authstate, 0, sizeof(ses.authstate));

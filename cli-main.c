@@ -61,9 +61,12 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 				cli_opts.remoteport, format);
 	}
 
+	/* Do the cleanup first, since then the terminal will be reset */
+	cli_session_cleanup();
+	common_session_cleanup();
+
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-	common_session_cleanup();
 	exit(exitcode);
 }
 
@@ -73,6 +76,6 @@ static void cli_dropbear_log(int priority, const char* format, va_list param) {
 
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
 
-	fprintf(stderr, "Dropbear: %s\n", printbuf);
+	fprintf(stderr, "%s: %s\n", cli_opts.progname, printbuf);
 
 }

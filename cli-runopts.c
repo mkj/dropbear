@@ -55,11 +55,12 @@ void cli_getopts(int argc, char ** argv) {
 	char* userhostarg = NULL;
 
 	/* see printhelp() for options */
+	cli_opts.progname = argv[0];
 	cli_opts.remotehost = NULL;
 	cli_opts.remoteport = NULL;
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
-	cli_opts.wantpty = 0;
+	cli_opts.wantpty = 1;
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
 	/* not yet

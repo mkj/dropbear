@@ -79,6 +79,7 @@ void svr_getopts(int argc, char ** argv);
 /* Uncompleted XXX matt */
 typedef struct cli_runopts {
 
+	char *progname;
 	char *remotehost;
 	char *remoteport;
 

@@ -56,6 +56,7 @@ static void chansessionrequest(struct Channel *channel);
 
 static void send_exitsignalstatus(struct Channel *channel);
 static int sesscheckclose(struct Channel *channel);
+static void get_termmodes(struct ChanSess *chansess);
 
 
 /* required to clear environment */
@@ -192,10 +193,6 @@ static int newchansess(struct Channel *channel) {
 	chansess->slave = -1;
 	chansess->tty = NULL;
 	chansess->term = NULL;
-	chansess->termw = 0;
-	chansess->termh = 0;
-	chansess->termc = 0;
-	chansess->termr = 0;
 
 	chansess->exited = 0;
 
@@ -376,20 +373,109 @@ static int sessionsignal(struct ChanSess *chansess) {
  * client. Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionwinchange(struct ChanSess *chansess) {
 
+	int termc, termr, termw, termh;
+
 	if (chansess->master < 0) {
 		/* haven't got a pty yet */
 		return DROPBEAR_FAILURE;
 	}
 			
-	chansess->termc = buf_getint(ses.payload);
-	chansess->termr = buf_getint(ses.payload);
-	chansess->termw = buf_getint(ses.payload);
-	chansess->termh = buf_getint(ses.payload);
+	termc = buf_getint(ses.payload);
+	termr = buf_getint(ses.payload);
+	termw = buf_getint(ses.payload);
+	termh = buf_getint(ses.payload);
 	
-	pty_change_window_size(chansess->master, chansess->termr, chansess->termc,
-		chansess->termw, chansess->termh);
+	pty_change_window_size(chansess->master, termr, termc, termw, termh);
 
 	return DROPBEAR_FAILURE;
+}
+
+static void get_termmodes(struct ChanSess *chansess) {
+
+	struct termios termio;
+	unsigned char opcode;
+	unsigned int value;
+	const struct TermCode * termcode;
+	unsigned int len;
+
+	TRACE(("enter get_termmodes"));
+
+	/* Term modes */
+	/* We'll ignore errors and continue if we can't set modes.
+	 * We're ignoring baud rates since they seem evil */
+	if (tcgetattr(chansess->master, &termio) == -1) {
+		return;
+	}
+
+	len = buf_getint(ses.payload);
+	if (len != ses.payload->len - ses.payload->pos) {
+		dropbear_exit("bad term mode string");
+	}
+
+	if (len == 0) {
+		TRACE(("leave get_termmodes: empty terminal modes string"));
+	}
+
+	while (((opcode = buf_getbyte(ses.payload)) != 0x00) && opcode <= 159) {
+
+		/* must be before checking type, so that value is consumed even if
+		 * we don't use it */
+		value = buf_getint(ses.payload);
+
+		/* handle types of code */
+		if (opcode > MAX_TERMCODE) {
+			continue;
+		}
+		termcode = &termcodes[(unsigned int)opcode];
+		
+
+		switch (termcode->type) {
+
+			case TERMCODE_NONE:
+				break;
+
+			case TERMCODE_CONTROLCHAR:
+				termio.c_cc[termcode->mapcode] = value;
+				break;
+
+			case TERMCODE_INPUT:
+				if (value) {
+					termio.c_iflag |= termcode->mapcode;
+				} else {
+					termio.c_iflag &= ~(termcode->mapcode);
+				}
+				break;
+
+			case TERMCODE_OUTPUT:
+				if (value) {
+					termio.c_oflag |= termcode->mapcode;
+				} else {
+					termio.c_oflag &= ~(termcode->mapcode);
+				}
+				break;
+
+			case TERMCODE_LOCAL:
+				if (value) {
+					termio.c_lflag |= termcode->mapcode;
+				} else {
+					termio.c_lflag &= ~(termcode->mapcode);
+				}
+				break;
+
+			case TERMCODE_CONTROL:
+				if (value) {
+					termio.c_cflag |= termcode->mapcode;
+				} else {
+					termio.c_cflag &= ~(termcode->mapcode);
+				}
+				break;
+				
+		}
+	}
+	if (tcsetattr(chansess->master, TCSANOW, &termio) < 0) {
+		dropbear_log(LOG_INFO, "error setting terminal attributes");
+	}
+	TRACE(("leave get_termmodes"));
 }
 
 /* Set up a session pty which will be used to execute the shell or program.
@@ -399,7 +485,6 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
 	unsigned char namebuf[65];
-	struct termios termio;
 
 	TRACE(("enter sessionpty"));
 	chansess->term = buf_getstring(ses.payload, &termlen);
@@ -408,10 +493,6 @@ static int sessionpty(struct ChanSess * chansess) {
 		TRACE(("leave sessionpty: term len too long"));
 		return DROPBEAR_FAILURE;
 	}
-	chansess->termc = buf_getint(ses.payload);
-	chansess->termr = buf_getint(ses.payload);
-	chansess->termw = buf_getint(ses.payload);
-	chansess->termh = buf_getint(ses.payload);
 
 	/* allocate the pty */
 	assert(chansess->master == -1); /* haven't already got one */
@@ -426,89 +507,12 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 
 	pty_setowner(ses.authstate.pw, chansess->tty);
-	pty_change_window_size(chansess->master, chansess->termr, chansess->termc,
-			chansess->termw, chansess->termh);
 
-	/* Term modes */
-	/* We'll ignore errors and continue if we can't set modes.
-	 * We're ignoring baud rates since they seem evil */
-	if (tcgetattr(chansess->master, &termio) == 0) {
-		unsigned char opcode;
-		unsigned int value;
-		const struct TermCode * termcode;
-		unsigned int len;
+	/* Set up the rows/col counts */
+	sessionwinchange(chansess);
 
-		len = buf_getint(ses.payload);
-		if (len != ses.payload->len - ses.payload->pos) {
-			dropbear_exit("bad term mode string");
-		}
-
-		if (len == 0) {
-			TRACE(("empty terminal modes string"));
-			return DROPBEAR_SUCCESS;
-		}
-
-		while (((opcode = buf_getbyte(ses.payload)) != 0x00) &&
-				opcode <= 159) {
-
-			/* must be before checking type, so that value is consumed even if
-			 * we don't use it */
-			value = buf_getint(ses.payload);
-
-			/* handle types of code */
-			if (opcode > MAX_TERMCODE) {
-				continue;
-			}
-			termcode = &termcodes[(unsigned int)opcode];
-			
-
-			switch (termcode->type) {
-
-				case TERMCODE_NONE:
-					break;
-
-				case TERMCODE_CONTROLCHAR:
-					termio.c_cc[termcode->mapcode] = value;
-					break;
-
-				case TERMCODE_INPUT:
-					if (value) {
-						termio.c_iflag |= termcode->mapcode;
-					} else {
-						termio.c_iflag &= ~(termcode->mapcode);
-					}
-					break;
-
-				case TERMCODE_OUTPUT:
-					if (value) {
-						termio.c_oflag |= termcode->mapcode;
-					} else {
-						termio.c_oflag &= ~(termcode->mapcode);
-					}
-					break;
-
-				case TERMCODE_LOCAL:
-					if (value) {
-						termio.c_lflag |= termcode->mapcode;
-					} else {
-						termio.c_lflag &= ~(termcode->mapcode);
-					}
-					break;
-
-				case TERMCODE_CONTROL:
-					if (value) {
-						termio.c_cflag |= termcode->mapcode;
-					} else {
-						termio.c_cflag &= ~(termcode->mapcode);
-					}
-					break;
-					
-			}
-		}
-		if (tcsetattr(chansess->master, TCSANOW, &termio) < 0) {
-			dropbear_log(LOG_INFO, "error setting terminal attributes");
-		}
-	}
+	/* Read the terminal modes */
+	get_termmodes(chansess);
 
 	TRACE(("leave sessionpty"));
 	return DROPBEAR_SUCCESS;

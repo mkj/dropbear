@@ -111,7 +111,7 @@
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
 #define DROPBEAR_PASSWORD_AUTH
-//#define DROPBEAR_PUBKEY_AUTH
+#define DROPBEAR_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
  * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use

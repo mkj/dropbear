@@ -9,10 +9,13 @@
 #include "channel.h"
 #include "random.h"
 #include "service.h"
+#include "runopts.h"
+#include "chansession.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();
 static void cli_session_init();
+static void cli_finished();
 
 struct clientsession cli_ses; /* GLOBAL */
 
@@ -163,6 +166,12 @@ static void cli_sessionloop() {
 			cli_ses.state = SESSION_RUNNING;
 			return;
 
+		case SESSION_RUNNING:
+			if (ses.chancount < 1) {
+				cli_finished();
+			}
+			return;
+
 		/* XXX more here needed */
 
 
@@ -173,6 +182,26 @@ static void cli_sessionloop() {
 	TRACE(("leave cli_sessionloop: fell out"));
 
 }
+
+void cli_session_cleanup() {
+
+	if (!sessinitdone) {
+		return;
+	}
+	cli_tty_cleanup();
+
+}
+
+static void cli_finished() {
+
+	cli_session_cleanup();
+	common_session_cleanup();
+	fprintf(stderr, "Connection to %s@%s:%s closed.\n", cli_opts.username,
+			cli_opts.remotehost, cli_opts.remoteport);
+	exit(EXIT_SUCCESS);
+}
+
+
 
 /* called when the remote side closes the connection */
 static void cli_remoteclosed() {
