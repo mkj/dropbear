@@ -2,7 +2,7 @@ Source: dropbear
 Section: net
 Priority: standard
 Maintainer: Grahame Bowland <grahame@angrygoats.net>
-Build-Depends: debhelper (>> 4.0.0)
+Build-Depends: debhelper (>> 4.0.0), zlib1g-dev
 Standards-Version: 3.5.8
 
 Package: dropbear
