@@ -68,17 +68,24 @@ extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
-	return chansess->exited;
+	return chansess->exit.exitpid >= 0;
 }
 
-/* handler for childs exiting, store the state for return to the client */
+/* Handler for childs exiting, store the state for return to the client */
+
+/* There's a particular race we have to watch out for: if the forked child
+ * executes, exits, and this signal-handler is called, all before the parent
+ * gets to run, then the childpids[] array won't have the pid in it. Hence we
+ * use the svr_ses.lastexit struct to hold the exit, which is then compared by
+ * the parent when it runs. This work correctly at least in the case of a
+ * single shell spawned (ie the usual case) */
 static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	int status;
 	pid_t pid;
 	unsigned int i;
-	struct ChanSess * chansess;
 	struct sigaction sa_chld;
+	struct exitinfo *exit = NULL;
 
 	TRACE(("enter sigchld handler"));
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
@@ -86,25 +93,36 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
 
-				chansess = svr_ses.childpids[i].chansess;
-				chansess->exited = 1;
-				if (WIFEXITED(status)) {
-					chansess->exitstatus = WEXITSTATUS(status);
-				}
-				if (WIFSIGNALED(status)) {
-					chansess->exitsignal = WTERMSIG(status);
-#if !defined(AIX) && defined(WCOREDUMP)
-					chansess->exitcore = WCOREDUMP(status);
-#else
-					chansess->exitcore = 0;
-#endif
-				} else {
-					/* we use this to determine how pid exited */
-					chansess->exitsignal = -1;
-				}
+				exit = &svr_ses.childpids[i].chansess->exit;
+				break;
 			}
 		}
+
+		/* If the pid wasn't matched, then we might have hit the race mentioned
+		 * above. So we just store the info for the parent to deal with */
+		if (i == svr_ses.childpidsize) {
+			exit = &svr_ses.lastexit;
+		}
+
+		exit->exitpid = pid;
+		if (WIFEXITED(status)) {
+			exit->exitstatus = WEXITSTATUS(status);
+		}
+		if (WIFSIGNALED(status)) {
+			exit->exitsignal = WTERMSIG(status);
+#if !defined(AIX) && defined(WCOREDUMP)
+			exit->exitcore = WCOREDUMP(status);
+#else
+			exit->exitcore = 0;
+#endif
+		} else {
+			/* we use this to determine how pid exited */
+			exit->exitsignal = -1;
+		}
+		exit = NULL;
 	}
+
+	
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	sigaction(SIGCHLD, &sa_chld, NULL);
@@ -117,8 +135,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 
-	if (chansess->exited) {
-		if (chansess->exitsignal > 0) {
+	if (chansess->exit.exitpid >= 0) {
+		if (chansess->exit.exitsignal > 0) {
 			send_msg_chansess_exitsignal(channel, chansess);
 		} else {
 			send_msg_chansess_exitstatus(channel, chansess);
@@ -130,8 +148,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess) {
 
-	assert(chansess->exited);
-	assert(chansess->exitsignal == -1);
+	assert(chansess->exit.exitpid != -1);
+	assert(chansess->exit.exitsignal == -1);
 
 	CHECKCLEARTOWRITE();
 
@@ -139,7 +157,7 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 	buf_putint(ses.writepayload, channel->remotechan);
 	buf_putstring(ses.writepayload, "exit-status", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
-	buf_putint(ses.writepayload, chansess->exitstatus);
+	buf_putint(ses.writepayload, chansess->exit.exitstatus);
 
 	encrypt_packet();
 
@@ -152,15 +170,15 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 	int i;
 	char* signame = NULL;
 
-	assert(chansess->exited);
-	assert(chansess->exitsignal > 0);
+	assert(chansess->exit.exitpid != -1);
+	assert(chansess->exit.exitsignal > 0);
 
 	CHECKCLEARTOWRITE();
 
 	/* we check that we can match a signal name, otherwise
 	 * don't send anything */
 	for (i = 0; signames[i].name != NULL; i++) {
-		if (signames[i].signal == chansess->exitsignal) {
+		if (signames[i].signal == chansess->exit.exitsignal) {
 			signame = signames[i].name;
 			break;
 		}
@@ -175,7 +193,7 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 	buf_putstring(ses.writepayload, "exit-signal", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
 	buf_putstring(ses.writepayload, signame, strlen(signame));
-	buf_putbyte(ses.writepayload, chansess->exitcore);
+	buf_putbyte(ses.writepayload, chansess->exit.exitcore);
 	buf_putstring(ses.writepayload, "", 0); /* error msg */
 	buf_putstring(ses.writepayload, "", 0); /* lang */
 
@@ -199,7 +217,7 @@ static int newchansess(struct Channel *channel) {
 	chansess->tty = NULL;
 	chansess->term = NULL;
 
-	chansess->exited = 0;
+	chansess->exit.exitpid = -1;
 
 	channel->typedata = chansess;
 
@@ -263,7 +281,7 @@ static void closechansess(struct Channel *channel) {
 		if (svr_ses.childpids[i].chansess == chansess) {
 			assert(svr_ses.childpids[i].pid > 0);
 			TRACE(("closing pid %d", svr_ses.childpids[i].pid));
-			TRACE(("exited = %d", chansess->exited));
+			TRACE(("exitpid = %d", chansess->exit.exitpid));
 			svr_ses.childpids[i].pid = -1;
 			svr_ses.childpids[i].chansess = NULL;
 		}
@@ -592,6 +610,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	int outfds[2];
 	int errfds[2];
 	pid_t pid;
+	unsigned int i;
 
 	TRACE(("enter noptycommand"));
 
@@ -635,11 +654,20 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		TRACE(("continue noptycommand: parent"));
 		chansess->pid = pid;
 
-		/* add a child pid - Beware: there's a race between this, and the
-		 * exec() called from the child. If the child finishes before we've
-		 * done this (ie if it was a shell builtin and fast), we won't return a
-		 * proper return code. For now, we ignore this case. */
 		addchildpid(chansess, pid);
+
+		if (svr_ses.lastexit.exitpid != -1) {
+			/* The child probably exited and the signal handler triggered
+			 * possibly before we got around to adding the childpid. So we fill
+			 * out it's data manually */
+			for (i = 0; i < svr_ses.childpidsize; i++) {
+				if (svr_ses.childpids[i].pid == pid) {
+					svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
+					svr_ses.lastexit.exitpid = -1;
+				}
+			}
+		}
+
 
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);

@@ -29,6 +29,14 @@
 #include "channel.h"
 #include "listener.h"
 
+struct exitinfo {
+
+	int exitpid; /* -1 if not exited */
+	int exitstatus;
+	int exitsignal;
+	int exitcore;
+};
+
 struct ChanSess {
 
 	unsigned char * cmd; /* command to exec */
@@ -41,10 +49,7 @@ struct ChanSess {
 	unsigned char * term;
 
 	/* exit details */
-	int exited;
-	int exitstatus;
-	int exitsignal;
-	unsigned char exitcore;
+	struct exitinfo exit;
 	
 #ifndef DISABLE_X11FWD
 	struct Listener * x11listener;
