@@ -75,14 +75,13 @@
  */
 
 #include "includes.h"
-RCSID("$OpenBSD: scp.c,v 1.102 2003/03/05 22:33:43 markus Exp $");
+/* RCSID("$OpenBSD: scp.c,v 1.102 2003/03/05 22:33:43 markus Exp $"); */
 
-#include "xmalloc.h"
 #include "atomicio.h"
-#include "pathnames.h"
+/*#include "pathnames.h"
 #include "log.h"
 #include "misc.h"
-#include "progressmeter.h"
+#include "progressmeter.h"*/
 
 #ifdef HAVE___PROGNAME
 extern char *__progname;
@@ -137,10 +136,11 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	pipe(reserved);
 
 	/* Create a socket pair for communicating with ssh. */
-	if (pipe(pin) < 0)
-		fatal("pipe: %s", strerror(errno));
-	if (pipe(pout) < 0)
-		fatal("pipe: %s", strerror(errno));
+	if (pipe(pin) < 0 || pipe(pout) < 0) {
+		run_err("pipe: %s\n", stderr(errno));
+		fprintf(stderr, "Fatal error: pipe: %s\n", strerror(errno));
+		exit(1);
+	}
 
 	/* Free the reserved descriptors. */
 	close(reserved[0]);
@@ -167,7 +167,8 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 		perror(ssh_program);
 		exit(1);
 	} else if (do_cmd_pid == -1) {
-		fatal("fork: %s", strerror(errno));
+		fprintf(stderr, "Fatal error: fork: %s\n", strerror(errno));
+		exit(1);
 	}
 	/* Parent.  Close the other side, and return the local side. */
 	close(pin[0]);
@@ -291,8 +292,10 @@ main(argc, argv)
 	argc -= optind;
 	argv += optind;
 
-	if ((pwd = getpwuid(userid = getuid())) == NULL)
-		fatal("unknown user %d", (int) userid);
+	if ((pwd = getpwuid(userid = getuid())) == NULL) {
+		fprintf(stderr, "Unknown user %d", (int)userid);
+		exit(1);
+	}
 
 	if (!isatty(STDERR_FILENO))
 		showprogress = 0;
@@ -388,7 +391,7 @@ toremote(targ, argc, argv)
 			    strlen(src) + (tuser ? strlen(tuser) : 0) +
 			    strlen(thost) + strlen(targ) +
 			    strlen(ssh_options) + CMDNEEDS + 20;
-			bp = xmalloc(len);
+			bp = m_malloc(len);
 			if (host) {
 				*host++ = 0;
 				host = cleanhostname(host);
@@ -396,11 +399,11 @@ toremote(targ, argc, argv)
 				if (*suser == '\0')
 					suser = pwd->pw_name;
 				else if (!okname(suser)) {
-					xfree(bp);
+					m_free(bp);
 					continue;
 				}
 				if (tuser && !okname(tuser)) {
-					xfree(bp);
+					m_free(bp);
 					continue;
 				}
 				snprintf(bp, len,
@@ -423,11 +426,11 @@ toremote(targ, argc, argv)
 			if (verbose_mode)
 				fprintf(stderr, "Executing: %s\n", bp);
 			(void) system(bp);
-			(void) xfree(bp);
+			(void) m_free(bp);
 		} else {	/* local to remote */
 			if (remin == -1) {
 				len = strlen(targ) + CMDNEEDS + 20;
-				bp = xmalloc(len);
+				bp = m_malloc(len);
 				(void) snprintf(bp, len, "%s -t %s", cmd, targ);
 				host = cleanhostname(thost);
 				if (do_cmd(host, tuser, bp, &remin,
@@ -435,7 +438,7 @@ toremote(targ, argc, argv)
 					exit(1);
 				if (response() < 0)
 					exit(1);
-				(void) xfree(bp);
+				(void) m_free(bp);
 			}
 			source(1, argv + i);
 		}
@@ -454,7 +457,7 @@ tolocal(argc, argv)
 		if (!(src = colon(argv[i]))) {	/* Local to local. */
 			len = strlen(_PATH_CP) + strlen(argv[i]) +
 			    strlen(argv[argc - 1]) + 20;
-			bp = xmalloc(len);
+			bp = m_malloc(len);
 			(void) snprintf(bp, len, "exec %s%s%s %s %s", _PATH_CP,
 			    iamrecursive ? " -r" : "", pflag ? " -p" : "",
 			    argv[i], argv[argc - 1]);
@@ -462,7 +465,7 @@ tolocal(argc, argv)
 				fprintf(stderr, "Executing: %s\n", bp);
 			if (system(bp))
 				++errs;
-			(void) xfree(bp);
+			(void) m_free(bp);
 			continue;
 		}
 		*src++ = 0;
@@ -479,14 +482,14 @@ tolocal(argc, argv)
 		}
 		host = cleanhostname(host);
 		len = strlen(src) + CMDNEEDS + 20;
-		bp = xmalloc(len);
+		bp = m_malloc(len);
 		(void) snprintf(bp, len, "%s -f %s", cmd, src);
 		if (do_cmd(host, suser, bp, &remin, &remout, argc) < 0) {
-			(void) xfree(bp);
+			(void) m_free(bp);
 			++errs;
 			continue;
 		}
-		xfree(bp);
+		m_free(bp);
 		sink(1, argv + argc - 1);
 		(void) close(remin);
 		remin = remout = -1;
@@ -839,8 +842,8 @@ sink(argc, argv)
 			need = strlen(targ) + strlen(cp) + 250;
 			if (need > cursize) {
 				if (namebuf)
-					xfree(namebuf);
-				namebuf = xmalloc(need);
+					m_free(namebuf);
+				namebuf = m_malloc(need);
 				cursize = need;
 			}
 			(void) snprintf(namebuf, need, "%s%s%s", targ,
@@ -877,7 +880,7 @@ sink(argc, argv)
 			if (mod_flag)
 				(void) chmod(vect[0], mode);
 			if (vect[0])
-				xfree(vect[0]);
+				m_free(vect[0]);
 			continue;
 		}
 		omode = mode;
@@ -1128,9 +1131,9 @@ allocbuf(bp, fd, blksize)
 	if (bp->cnt >= size)
 		return (bp);
 	if (bp->buf == NULL)
-		bp->buf = xmalloc(size);
+		bp->buf = m_malloc(size);
 	else
-		bp->buf = xrealloc(bp->buf, size);
+		bp->buf = m_realloc(bp->buf, size);
 	memset(bp->buf, 0, size);
 	bp->cnt = size;
 	return (bp);
