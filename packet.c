@@ -403,8 +403,9 @@ void process_packet() {
 
 	/* check that we aren't expecting a particular packet */
 	if (ses.expecting && ses.expecting != type) {
-		/* TODO be more verbose, send disconnect? */
-		dropbear_exit("unexpected packet type %d", type);
+		/* TODO send disconnect? */
+		dropbear_exit("unexpected packet type %d, expected %d", type,
+				ses.expecting);
 	}
 
 	/* handle the packet depending on type */
@@ -503,16 +504,12 @@ static void process_postauth_packet(unsigned int type) {
  * there is only a single decryption buffer */
 static void recv_unimplemented() {
 
-	unsigned int seq;
-
-	/* the decryption routine increments the sequence number, we must
-	 * decrement */
-	seq = ses.recvseq - 1;
-
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_UNIMPLEMENTED);
-	buf_putint(ses.writepayload, seq);
+	/* the decryption routine increments the sequence number, we must
+	 * decrement */
+	buf_putint(ses.writepayload, ses.recvseq - 1);
 
 	encrypt_packet();
 }
@@ -704,5 +701,3 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 	TRACE(("leave buf_compress"));
 }
 #endif
-
-
