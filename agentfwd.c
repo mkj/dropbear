@@ -60,7 +60,7 @@ int agentreq(struct ChanSess * chansess) {
 
 	/* create the unix socket dir and file */
 	if (bindagent(chansess) == DROPBEAR_FAILURE) {
-		return DROPBEAR_FAILURE;
+		goto fail;
 	}
 
 	/* listen */
@@ -137,28 +137,32 @@ void agentcleanup(struct ChanSess * chansess) {
 
 	close(chansess->agentfd);
 
-	/* Remove the dir as the user. That way they can't cause problems except
-	 * for themselves */
-	uid = getuid();
-	gid = getgid();
-	if ((setegid(ses.authstate.pw->pw_gid)) < 0 ||
-		(seteuid(ses.authstate.pw->pw_uid)) < 0) {
-		dropbear_exit("failed to set euid");
-	}
+	if ( chansess->agentdir != NULL && chansess->agentfile == NULL ) {
+		/* We have something to clean up, otherwise ignore it */
 
-	/* 2 for "/" and "\0" */
-	len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
+		/* Remove the dir as the user. That way they can't cause problems
+		 * except for themselves */
+		uid = getuid();
+		gid = getgid();
+		if ((setegid(ses.authstate.pw->pw_gid)) < 0 ||
+			(seteuid(ses.authstate.pw->pw_uid)) < 0) {
+			dropbear_exit("failed to set euid");
+		}
 
-	path = m_malloc(len);
-	snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
-	unlink(path);
-	m_free(path);
+		/* 2 for "/" and "\0" */
+		len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
 
-	rmdir(chansess->agentdir);
+		path = m_malloc(len);
+		snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
+		unlink(path);
+		m_free(path);
 
-	if ((seteuid(uid)) < 0 ||
-		(setegid(gid)) < 0) {
-		dropbear_exit("failed to revert euid");
+		rmdir(chansess->agentdir);
+
+		if ((seteuid(uid)) < 0 ||
+			(setegid(gid)) < 0) {
+			dropbear_exit("failed to revert euid");
+		}
 	}
 
 	m_free(chansess->agentfile);
