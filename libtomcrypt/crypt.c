@@ -4,20 +4,26 @@
 /* decreased to 4 from 32 for Dropbear, this saves ~3kB of binary size */
 #define TAB_SIZE    4
 
-struct _cipher_descriptor cipher_descriptor[TAB_SIZE] = {0};
-/* structure is
+struct _cipher_descriptor cipher_descriptor[TAB_SIZE] = {
 { NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-*/
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+};
 
-struct _hash_descriptor hash_descriptor[TAB_SIZE] = {0};
-/* structure is
+struct _hash_descriptor hash_descriptor[TAB_SIZE] = {
 { NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
-*/
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+};
 
-struct _prng_descriptor prng_descriptor[TAB_SIZE] = {0};
-/* structure is
+struct _prng_descriptor prng_descriptor[TAB_SIZE] = {
 { NULL, NULL, NULL, NULL, NULL },
-*/
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+};
 
 /* ch1-01-1 */
 #if (ARGTYPE == 0)
