@@ -84,14 +84,15 @@ pamConvFunc(int num_msg,
 					break;
 			}
 
-			/* This looks leaky, but the PAM module-writer docs
-			 * assure us that the caller will free it... */
+			/* You have to read the PAM module-writers' docs (do we look like
+			 * module writers? no.) to find out that the module will
+			 * free the pam_response and its resp element - ie we _must_ malloc
+			 * it here */
 			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
 			memset(resp, 0, sizeof(struct pam_response));
 
-			/* Safe to just use the direct pointer (no strdup) since
-			 * it shouldn't be getting munged at all */
-			resp->resp = userDatap->passwd;
+			resp->resp = m_strdup(userDatap->passwd);
+			m_burn(userDatap->passwd, strlen(userDatap->passwd));
 			(*respp) = resp;
 			break;
 
@@ -106,14 +107,16 @@ pamConvFunc(int num_msg,
 				break;
 			}
 
-			/* This looks leaky, but the PAM module-writer docs
-			 * assure us that the caller will free it... */
+			/* You have to read the PAM module-writers' docs (do we look like
+			 * module writers? no.) to find out that the module will
+			 * free the pam_response and its resp element - ie we _must_ malloc
+			 * it here */
 			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
 			memset(resp, 0, sizeof(struct pam_response));
 
 			/* Safe to just use the direct pointer (no strdup) since
 			 * it shouldn't be getting munged at all */
-			resp->resp = userDatap->user;
+			resp->resp = m_strdup(userDatap->user);
 			TRACE(("userDatap->user='%s'", userDatap->user));
 			(*respp) = resp;
 			break;
@@ -139,7 +142,7 @@ pamConvFunc(int num_msg,
  * interactive responses, over the network. */
 void svr_auth_pam() {
 
-	struct UserDataS userData;
+	struct UserDataS userData = {NULL, NULL};
 	struct pam_conv pamConv = {
 		pamConvFunc,
 		&userData /* submitted to pamvConvFunc as appdata_ptr */ 
@@ -163,7 +166,9 @@ void svr_auth_pam() {
 
 	password = buf_getstring(ses.payload, &passwordlen);
 
-	/* used to pass data to the PAM conversation function */
+	/* used to pass data to the PAM conversation function - don't bother with
+	 * strdup() etc since these are touched only by our own conversation
+	 * function (above) which takes care of it */
 	userData.user = ses.authstate.printableuser;
 	userData.passwd = password;
 
@@ -189,7 +194,7 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad pam password attempt for '%s'",
+				"bad PAM password attempt for '%s'",
 				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
@@ -199,14 +204,14 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad pam password attempt for '%s'",
+				"bad PAM password attempt for '%s'",
 				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
 	}
 
 	/* successful authentication */
-	dropbear_log(LOG_NOTICE, "pam password auth succeeded for '%s'",
+	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s'",
 			ses.authstate.printableuser);
 	send_msg_userauth_success();
 
@@ -216,6 +221,7 @@ cleanup:
 		m_free(password);
 	}
 	if (pamHandlep != NULL) {
+		TRACE(("pam_end"));
 		(void) pam_end(pamHandlep, 0 /* pam_status */);
 	}
 }
