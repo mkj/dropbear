@@ -1,3 +1,16 @@
+- Improved the closing messages, so a clean exit is "Exited normally"
+
+- Added some more robust integer/size checking in buffer.c as a backstop for
+  integer overflows
+
+- X11 forwarding fixed for OSX, path for xauth changed to /usr/X11R6/bin/xauth
+
+- Channel code handles closing more nicely, doesn't sit waiting for an extra
+  keystroke on BSD/OSX platforms, and data is flushed fully before closing
+  child processes (thanks to 
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com> for
+  pointing that out).
+
 - Changed "DISABLE_TCPFWD" to "ENABLE_TCPFWD" (and for x11/auth) so
   "disable DISABLE_TCPWD" isn't so confusing.
 

@@ -2,9 +2,7 @@ Current:
 
 Things which need doing:
 
-- fix the README
 - make combined or shared libraries
-- fix up channel close handling
 
 - kexfollows
 - check PRNG is good
