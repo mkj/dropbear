@@ -169,7 +169,7 @@ void session_cleanup() {
 	chancleanup();
 
 	m_free(ses.session_id);
-	sign_key_free(ses.hostkey);
+	sign_key_free(ses.opts->hostkey);
 	m_free(ses.keys);
 
 	TRACE(("leave session_cleanup"));
