@@ -2,6 +2,8 @@
  * Based on PuTTY's import.c for importing/exporting OpenSSH and SSH.com
  * keyfiles.
  *
+ * The horribleness of the code is probably mine (matt).
+ *
  * Modifications copyright 2003 Matt Johnston
  *
  * PuTTY is copyright 1997-2003 Simon Tatham.
@@ -121,14 +123,11 @@ static sign_key *dropbear_read(const char* filename) {
 		goto error;
 	}
 
-	fprintf(stderr, "here blah \n");
 	do {
 		maxlen = buf->size - buf->pos;
 		len = fread(buf_getwriteptr(buf, maxlen), 1, maxlen, fp);
-		printf("len = %d\n", len);
 		buf_incrwritepos(buf, len);
 	} while (len != maxlen && len > 0);
-	fprintf(stderr, "there blah len %d\n", buf->len);
 
 	fclose(fp);
 
@@ -208,29 +207,26 @@ out:
 						 (c) == '+' || (c) == '/' || (c) == '=' \
 						 )
 
+/* cpl has to be less than 100 */
 static void base64_encode_fp(FILE * fp, unsigned char *data,
 		int datalen, int cpl)
 {
-    int linelen = 0;
-    char out[4];
-    int n, i;
-	unsigned long empty;
+    char out[100];
+    int n;
+	unsigned long outlen;
+	int rawcpl;
+	rawcpl = cpl * 3 / 4;
+	assert(cpl < sizeof(out));
 
     while (datalen > 0) {
-	n = (datalen < 3 ? datalen : 3);
-	base64_encode(data, n, out, &empty);
-	data += n;
-	datalen -= n;
-	for (i = 0; i < 4; i++) {
-	    if (linelen >= cpl) {
-		linelen = 0;
+		n = (datalen < rawcpl ? datalen : rawcpl);
+		outlen = sizeof(out);
+		base64_encode(data, n, out, &outlen);
+		data += n;
+		datalen -= n;
+		fwrite(out, 1, outlen, fp);
 		fputc('\n', fp);
-	    }
-	    fputc(out[i], fp);
-	    linelen++;
-	}
     }
-    fputc('\n', fp);
 }
 /*
  * Read an ASN.1/BER identifier and length pair.
@@ -546,7 +542,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	sign_key *retval = NULL;
 	char *errmsg;
 	char *modptr = NULL;
-	int modlen;
+	int modlen = -9999;
 
 	sign_key *retkey;
 	buffer * blobbuf = NULL;
@@ -668,10 +664,9 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 				modptr = (char *)p;
 				modlen = len;
 			} else if (i >= 2 && i <= 5) {
-		fprintf(stderr, "len ber is %d\n", len);
 				buf_putstring(blobbuf, p, len);
 				if (i == 2) {
-					buf_putstring(blobbuf, modptr, len);
+					buf_putstring(blobbuf, modptr, modlen);
 				}
 			}
 		} else if (key->type == OSSH_DSA) {
@@ -692,7 +687,6 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	 * functions; this is a bit faffy but it does mean we get all
 	 * the sanity checks for free.
 	 */
-	fprintf(stderr, "here blah 123 %d\n", blobbuf->len);
 	retkey = new_sign_key();
 	buf_setpos(blobbuf, 0);
 	if (buf_get_priv_key(blobbuf, retkey, DROPBEAR_SIGNKEY_ANY)
@@ -702,7 +696,6 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 		retkey = NULL;
 		goto error;
 	}
-	fprintf(stderr, "here blah 321\n");
 
 	errmsg = NULL;					 /* no error */
 	retval = retkey;
@@ -729,7 +722,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	buffer * keyblob = NULL;
 	buffer * extrablob = NULL; /* used for calculated values to write */
 	unsigned char *outblob = NULL;
-	int outlen;
+	int outlen = -9999;
 	struct mpint_pos numbers[9];
 	int nnumbers, pos, len, seqlen, i;
 	char *header, *footer;
@@ -820,8 +813,8 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 
 		/* iqmp = (q^-1) mod p */
-		if (mp_invmod(key->rsakey->q, key->rsakey->p, &tmpval) != MP_OKAY) {
-			fprintf(stderr, "Bignum error for iqmpr\n");
+		if (mp_invmod(key->rsakey->q, key->rsakey->p, &iqmp) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for iqmp\n");
 			goto error;
 		}
 
@@ -830,6 +823,10 @@ static int openssh_write(const char *filename, sign_key *key,
 		buf_putmpint(extrablob, &dmq1);
 		buf_putmpint(extrablob, &iqmp);
 		buf_setpos(extrablob, 0);
+		mp_clear(&dmp1);
+		mp_clear(&dmq1);
+		mp_clear(&iqmp);
+		mp_clear(&tmpval);
 		
 		/* dmp1 */
 		numbers[6].bytes = buf_getint(extrablob);
@@ -851,30 +848,30 @@ static int openssh_write(const char *filename, sign_key *key,
 		footer = "-----END RSA PRIVATE KEY-----\n";
 	} else if (keytype == DROPBEAR_SIGNKEY_DSS) {
 
-		/* x */
-		numbers[5].bytes = buf_getint(extrablob);
-		numbers[5].start = buf_getptr(extrablob, numbers[5].bytes);
-		buf_incrpos(extrablob, numbers[5].bytes);
-
 		/* p */
-		numbers[1].bytes = buf_getint(extrablob);
-		numbers[1].start = buf_getptr(extrablob, numbers[1].bytes);
-		buf_incrpos(extrablob, numbers[1].bytes);
+		numbers[1].bytes = buf_getint(keyblob);
+		numbers[1].start = buf_getptr(keyblob, numbers[1].bytes);
+		buf_incrpos(keyblob, numbers[1].bytes);
 
 		/* q */
-		numbers[1].bytes = buf_getint(extrablob);
-		numbers[2].start = buf_getptr(extrablob, numbers[2].bytes);
-		buf_incrpos(extrablob, numbers[2].bytes);
+		numbers[2].bytes = buf_getint(keyblob);
+		numbers[2].start = buf_getptr(keyblob, numbers[2].bytes);
+		buf_incrpos(keyblob, numbers[2].bytes);
 
 		/* g */
-		numbers[3].bytes = buf_getint(extrablob);
-		numbers[3].start = buf_getptr(extrablob, numbers[3].bytes);
-		buf_incrpos(extrablob, numbers[3].bytes);
+		numbers[3].bytes = buf_getint(keyblob);
+		numbers[3].start = buf_getptr(keyblob, numbers[3].bytes);
+		buf_incrpos(keyblob, numbers[3].bytes);
 
 		/* y */
-		numbers[4].bytes = buf_getint(extrablob);
-		numbers[4].start = buf_getptr(extrablob, numbers[4].bytes);
-		buf_incrpos(extrablob, numbers[4].bytes);
+		numbers[4].bytes = buf_getint(keyblob);
+		numbers[4].start = buf_getptr(keyblob, numbers[4].bytes);
+		buf_incrpos(keyblob, numbers[4].bytes);
+
+		/* x */
+		numbers[5].bytes = buf_getint(keyblob);
+		numbers[5].start = buf_getptr(keyblob, numbers[5].bytes);
+		buf_incrpos(keyblob, numbers[5].bytes);
 
 		nnumbers = 6;
 		header = "-----BEGIN DSA PRIVATE KEY-----\n";
@@ -990,9 +987,10 @@ static int openssh_write(const char *filename, sign_key *key,
 	} else {
 		fp = fopen(filename, "wb");	  /* ensure Unix line endings */
 	}
-	if (!fp)
+	if (!fp) {
 		fprintf(stderr, "Failed opening output file\n");
 		goto error;
+	}
 	fputs(header, fp);
 	if (passphrase) {
 		fprintf(fp, "Proc-Type: 4,ENCRYPTED\nDEK-Info: DES-EDE3-CBC,");

@@ -167,7 +167,7 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 		buf_putmpint(buf, key->p);
 	}
 	if (key->q) {
-		buf_putmpint(buf, key->p);
+		buf_putmpint(buf, key->q);
 	}
 
 

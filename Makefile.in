@@ -35,7 +35,7 @@ LDFLAGS=@LDFLAGS@
 export CC
 export CFLAGS
 
-all: dropbear dropbearkey
+all: dropbear dropbearkey dropbearconvert
 	@echo
 	@echo Run \"make strip\" if you want stripped binaries,
 	@echo or \"make install\" to install to ${prefix}
@@ -48,7 +48,7 @@ install: all
 	install -o root -g root dropbear $(sbindir)
 	install -o root -g root dropbearkey $(bindir)
 
-static: dropbear-static dropbearkey-static
+static: dropbear-static dropbearkey-static dropbearconvert-static
 
 $(ALLOBJS): $(HEADERS) Makefile
 
@@ -68,6 +68,11 @@ dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC) $(LTM)
 
 dropbearconvert: $(OBJS) $(HEADERS) Makefile $(CONVERTOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o dropbearconvert $(CONVERTOBJS) $(OBJS) $(LIBS)
+
+dropbearconvert-static: $(OBJS) $(HEADERS) Makefile $(CONVERTOBJS) $(LTC) $(LTM)
+	$(LD) $(LDFLAGS) -o staticdropbearconvert $(CONVERTOBJS) $(OBJS) $(LIBS) \
+		-static
+
 
 $(LTC): $(HEADERS)
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)

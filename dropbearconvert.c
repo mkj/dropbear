@@ -39,7 +39,9 @@ static void printhelp(char * progname);
 static void printhelp(char * progname) {
 
 	fprintf(stderr, "Usage: %s <inputtype> <outputtype> <inputfile> <outputfile>\n\n"
-					"All parameters must be specified.\n"
+					"Caution: This program is for convenience only, and is not secure if used on\n"
+					"untrusted input files -- don't run this as root on random luser's files :)\n"
+					"All parameters must be specified in order.\n"
 					"\n"
 					"Input types:\n"
 					"-d   Dropbear keyfile as input\n"

@@ -133,7 +133,7 @@ runopts * getrunopts(int argc, char ** argv) {
 		}
 
 		opts->banner = buf_new(buf.st_size);
-		if (buf_readfile(opts->banner, opts->bannerfile) != 0) {
+		if (buf_readfile(opts->banner, opts->bannerfile)!=DROPBEAR_SUCCESS) {
 			dropbear_exit("Error reading banner file '%s'",
 					opts->bannerfile);
 		}

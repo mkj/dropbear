@@ -37,11 +37,11 @@
  *
  * DSS:
  * string	"ssh-dss"
- * mp_int	x
  * mp_int	p
  * mp_int	q
  * mp_int	g
  * mp_int	y
+ * mp_int	x
  *
  */
 #include "options.h"
