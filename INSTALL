@@ -78,7 +78,11 @@ globally in ~/.ssh/config, not just in the host entry in that file.
 You may want to manually disable lastlog recording when using uClibc, configure
 with --disable-lastlog.
 
-One common problem is pty allocation. There are a number of types of pty allocation which can be used -- if they work properly, the end result is the same for each type. Running configure should detect the best type to use automatically, however for some embedded systems, this may be incorrect. Some things to note:
+One common problem is pty allocation. There are a number of types of pty
+allocation which can be used -- if they work properly, the end result is the
+same for each type. Running configure should detect the best type to use
+automatically, however for some systems, this may be incorrect. Some
+things to note:
 
     If your system expects /dev/pts to be mounted (this is a uClibc option),
 	make sure that it is.
