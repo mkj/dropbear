@@ -1,10 +1,40 @@
-- Use daemon() function if available (or our own copy) rather than seperate
-  code
+0.39 - Tue Dec 16 2003 15:19:19 +0800
+
+- Better checking of key lengths and parameters for DSS and RSA auth
+
+- Print fingerprint of keys used for pubkey auth
+
+- More consistent logging of usernames and IPs
+
+- Added option to disable password auth (or just for root) at runtime
+
+- Avoid including bignum functions which don't give much speed benefit but
+  take up binary size
+
+- Added a stripped down version of OpenSSH's scp binary
+
+- Added additional supporting functions for Irix, thanks to Paul Marinceu
+
+- Don't check for unused libraries in configure script
+
+- Removed trailing comma in algorithm lists (thanks to Mihnea Stoenescu)
+
+- Fixed up channel close handling, always send close packet in response
+  (also thanks to Mihnea Stoenescu)
+
+- Various makefile improvements for cross-compiling, thanks to Friedrich
+  Lobenstock and Mihnea Stoenescu
+
+- Use daemon() function if available (or our own copy) rather than separate
+  code (thanks to Frédéric Lavernhe for the report and debugging, and Bernard
+  Blackham for his suggestion on what to look at)
 
 - Fixed up support for first_kex_packet_follows, required to talk to ssh.com
-  clients. Thanks to Marian Stagarescu for the pointer.
+  clients. Thanks to Marian Stagarescu for the bug report.
 
-- Added more input sanity checking
+- Avoid using MAXPATHLEN, pointer from Ian Morris
+
+- Improved input sanity checking
 
 0.38 - Sat Oct 11 2003 16:28:13 +0800
 

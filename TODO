@@ -2,26 +2,22 @@ Current:
 
 Things which need doing:
 
-- fix -lnsl testing
-- re-enable sigpipe for children...
+- Make options.h generated from configure perhaps?
+
 - investigate self-pipe?
 - fix agent fwd problems
-- "no root password" and "no password" runtime options?
+- improve channel window adjustment algorithm (circular buffering)
 
-- kexfollows ?
+- Don't use pregenerated AES tables
+
 - check PRNG
-- improved checking in DSS/RSA routines for valid sized keys etc
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
-- improve channel window adjustment algorithm (circular buffering)
 
 - IP6 (binding to :: takes over ipv4 as well, sigh. If anyone wants to suggest
   a clean way (ie no V4MAPPED or setsockopt things) please let me know :)
 - Binding to different interfaces (see ipv6 probably)
 - TCP forwarding (-L is done)
-
-- Option to totally disable wtmp/utmp etc
-
 
 - PAM ??
 - inetd
