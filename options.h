@@ -69,6 +69,11 @@
  * If in doubt, leave it defined */
 #define DSS_PROTOK
 
+/* Whether to do reverse DNS lookups. This is advisable, though will add
+ * code size with gethostbyname() etc, so for very small environments where
+ * you are statically linking, you might want to undefine this */
+#define DO_HOST_LOOKUP
+
 /* Authentication type to use, at least one required.
    SSH2 RFC Draft requires pubkey auth, recommends password */
 #define DROPBEAR_PASSWORD_AUTH
@@ -90,6 +95,9 @@
 
 /* The draft RFC recommends 20 tries, 5 seems more sensible */
 #define MAX_AUTH_TRIES 5
+
+/* The file to store the daemon's process ID in, for shutdown scripts etc */
+#define DROPBEAR_PIDFILE "/var/run/dropbear.pid"
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.

@@ -60,6 +60,7 @@ int main(int argc, char ** argv) {
 	int listensocks[MAX_LISTEN_ADDR];
 	unsigned int listensockcount = 0;
 	runopts * opts;
+	FILE * pidfile;
 
 	int childsock;
 	pid_t childpid;
@@ -96,6 +97,14 @@ int main(int argc, char ** argv) {
 	listensocket(&listensocks[0], opts->port);
 	listensockcount = 1;
 	maxsock = listensocks[listensockcount-1];
+
+	/* create a PID file so that we can be killed easily */
+	pidfile = fopen(DROPBEAR_PIDFILE, "w");
+	if (pidfile) {
+		fprintf(pidfile, "%d\n", getpid());
+		fclose(pidfile);
+	}
+
 
 	/* catch and reap zombie children */
 	
