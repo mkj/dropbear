@@ -244,6 +244,8 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		buf_setpos(line, pos);
 		buf_setlen(line, line->pos + len);
 
+		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len));
+
 		/* now we have the actual data */
 		decodekeylen = (line->len - line->pos) * 2;
 		decodekey = buf_new(decodekeylen);
@@ -254,6 +256,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 			TRACE(("checkpubkey: base64 decode failed"));
 			continue;
 		}
+		TRACE(("checkpubkey: base64_decode success"));
 		buf_incrlen(decodekey, decodekeylen);
 		
 		/* compare the keys */
@@ -302,6 +305,8 @@ static int getauthline(buffer * line, FILE * authfile) {
 	int c;
 	int count = 0;
 
+	TRACE(("enter getauthline"));
+
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
 
@@ -316,8 +321,10 @@ static int getauthline(buffer * line, FILE * authfile) {
 
 	buf_setpos(line, 0);
 	if (count == 0 && c == EOF) {
+		TRACE(("leave getauthline: FAILURE"));
 		return DROPBEAR_FAILURE;
 	} else {
+		TRACE(("leave getauthline: SUCCESS"));
 		return DROPBEAR_SUCCESS;
 	}
 }	
