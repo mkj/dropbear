@@ -63,6 +63,10 @@ static void cli_closechansess(struct Channel *channel) {
 
 	cli_tty_cleanup(); /* Restore tty modes etc */
 
+	/* Set stdin back to non-blocking - busybox ash dies nastily
+	 * if we don't revert the flags */
+	fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+
 }
 
 static void start_channel_request(struct Channel *channel, 
@@ -312,6 +316,11 @@ static void send_chansess_shell_req(struct Channel *channel) {
 }
 
 static int cli_initchansess(struct Channel *channel) {
+
+	/* We store stdin's flags, so we can set them back on exit (otherwise
+	 * busybox's ash isn't happy */
+	cli_ses.stdincopy = dup(STDIN_FILENO);
+	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
 
 	channel->infd = STDOUT_FILENO;
 	//channel->outfd = STDIN_FILENO;
