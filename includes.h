@@ -113,6 +113,8 @@
 #include "libtomcrypt/mycrypt_custom.h"
 #include "libtommath/tommath.h"
 
+#include "compat.h"
+
 #ifndef HAVE_UINT16_T
 #ifndef HAVE_U_INT16_T
 typedef unsigned short u_int16_t;
