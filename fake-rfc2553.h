@@ -1,4 +1,6 @@
-/* $Id: fake-rfc2553.h,v 1.9 2004/03/10 10:06:33 dtucker Exp $ */
+/* Taken from OpenSSH 3.8.1p1 */
+
+/* $.Id: fake-rfc2553.h,v 1.9 2004/03/10 10:06:33 dtucker Exp $ */
 
 /*
  * Copyright (C) 2000-2003 Damien Miller.  All rights reserved.
@@ -41,7 +43,6 @@
 #define _FAKE_RFC2553_H
 
 #include "includes.h"
-#include "sys/types.h"
 
 /*
  * First, socket and INET6 related definitions 

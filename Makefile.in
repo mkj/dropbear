@@ -34,7 +34,7 @@ CLIOBJS=cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o \
 CLISVROBJS=common-session.o packet.o common-algo.o common-kex.o \
 			common-channel.o common-chansession.o termcodes.o loginrec.o \
 			tcp-accept.o listener.o process-packet.o \
-			common-runopts.o
+			common-runopts.o fake-rfc2553.o
 
 KEYOBJS=dropbearkey.o gendss.o genrsa.o
 
@@ -47,7 +47,7 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		debug.h channel.h chansession.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
-		listener.h
+		listener.h fake-rfc2553.h
 
 dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) 
 dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)

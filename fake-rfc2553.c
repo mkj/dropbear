@@ -1,4 +1,7 @@
 /*
+ *
+ * Taken from OpenSSH 3.8.1p1
+ * 
  * Copyright (C) 2000-2003 Damien Miller.  All rights reserved.
  * Copyright (C) 1999 WIDE Project.  All rights reserved.
  * 
@@ -37,7 +40,7 @@
 
 #include "includes.h"
 
-RCSID("$Id: fake-rfc2553.c,v 1.5 2003/09/22 02:08:23 dtucker Exp $");
+/* RCSID("$.Id: fake-rfc2553.c,v 1.5 2003/09/22 02:08:23 dtucker Exp $");*/
 
 #ifndef HAVE_GETNAMEINFO
 int getnameinfo(const struct sockaddr *sa, size_t salen, char *host, 

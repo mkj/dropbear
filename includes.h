@@ -119,6 +119,7 @@
 #include "libtommath/tommath.h"
 
 #include "compat.h"
+#include "fake-rfc2553.h"
 
 #ifndef HAVE_UINT16_T
 #ifndef HAVE_U_INT16_T

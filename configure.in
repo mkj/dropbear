@@ -1,7 +1,9 @@
 #                                               -*- Autoconf -*-
 # Process this file with autoconf and autoheader to produce a configure script.
 
-# This Autoconf file was cobbled from various locations.
+# This Autoconf file was cobbled from various locations. In particular, a bunch
+# of the platform checks have been taken straight from OpenSSH's configure.ac
+# Huge thanks to them for dealing with the horrible platform-specifics :)
 
 AC_PREREQ(2.50)
 AC_INIT(buffer.c)
@@ -50,10 +52,17 @@ case "$host" in
 
 *-*-aix*)
 	AC_DEFINE(AIX,,Using AIX)
+	# OpenSSH thinks it's broken. If it isn't, let me know.
+	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
 	;;
 	
 *-*-hpux*)
 	LIBS="$LIBS -lsec"
+	# It's probably broken.
+	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
+	;;
+*-dec-osf*)
+	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
 	;;
 esac
 
@@ -205,6 +214,84 @@ AC_CHECK_TYPE([socklen_t], ,[
 	[#include <sys/types.h>
 	#include <sys/socket.h>])
 
+# for the fake-rfc2553 stuff - straight from OpenSSH
+
+AC_CACHE_CHECK([for struct sockaddr_storage], ac_cv_have_struct_sockaddr_storage, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <sys/socket.h>
+		],
+		[ struct sockaddr_storage s; ],
+		[ ac_cv_have_struct_sockaddr_storage="yes" ],
+		[ ac_cv_have_struct_sockaddr_storage="no" ]
+	)
+])
+if test "x$ac_cv_have_struct_sockaddr_storage" = "xyes" ; then
+	AC_DEFINE(HAVE_STRUCT_SOCKADDR_STORAGE)
+fi
+
+AC_CACHE_CHECK([for struct sockaddr_in6], ac_cv_have_struct_sockaddr_in6, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <netinet/in.h>
+		],
+		[ struct sockaddr_in6 s; s.sin6_family = 0; ],
+		[ ac_cv_have_struct_sockaddr_in6="yes" ],
+		[ ac_cv_have_struct_sockaddr_in6="no" ]
+	)
+])
+if test "x$ac_cv_have_struct_sockaddr_in6" = "xyes" ; then
+	AC_DEFINE(HAVE_STRUCT_SOCKADDR_IN6,,Have struct sockaddr_in6)
+fi
+
+AC_CACHE_CHECK([for struct in6_addr], ac_cv_have_struct_in6_addr, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <netinet/in.h>
+		],
+		[ struct in6_addr s; s.s6_addr[0] = 0; ],
+		[ ac_cv_have_struct_in6_addr="yes" ],
+		[ ac_cv_have_struct_in6_addr="no" ]
+	)
+])
+if test "x$ac_cv_have_struct_in6_addr" = "xyes" ; then
+	AC_DEFINE(HAVE_STRUCT_IN6_ADDR,,Have struct in6_addr)
+fi
+
+AC_CACHE_CHECK([for struct addrinfo], ac_cv_have_struct_addrinfo, [
+	AC_TRY_COMPILE(
+		[
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+		],
+		[ struct addrinfo s; s.ai_flags = AI_PASSIVE; ],
+		[ ac_cv_have_struct_addrinfo="yes" ],
+		[ ac_cv_have_struct_addrinfo="no" ]
+	)
+])
+if test "x$ac_cv_have_struct_addrinfo" = "xyes" ; then
+	AC_DEFINE(HAVE_STRUCT_ADDRINFO,,Have struct addrinfo)
+fi
+
+
+# IRIX has a const char return value for gai_strerror()
+AC_CHECK_FUNCS(gai_strerror,[
+	AC_DEFINE(HAVE_GAI_STRERROR)
+	AC_TRY_COMPILE([
+#include <sys/types.h>
+#include <sys/socket.h>
+#include <netdb.h>
+
+const char *gai_strerror(int);],[
+char *str;
+
+str = gai_strerror(0);],[
+		AC_DEFINE(HAVE_CONST_GAI_STRERROR_PROTO, 1,
+		[Define if gai_strerror() returns const char *])])])
 
 # for loginrec.c
 
@@ -462,7 +549,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty ])
+AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 
@@ -483,6 +570,7 @@ if test -z "$no_ptc_check" ; then
 	fi
 fi
 
+AC_EXEEXT
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
 AC_MSG_RESULT()
