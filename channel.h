@@ -96,7 +96,8 @@ void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
 #ifdef USE_LISTENERS
-int send_msg_channel_open_init(int fd, const char * typestring);
+int send_msg_channel_open_init(int fd, unsigned char type,
+		const char * typestring);
 void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();
 #endif
