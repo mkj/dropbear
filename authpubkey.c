@@ -112,11 +112,11 @@ void pubkeyauth() {
 	/* ... and finally verify the signature */
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
 				signbuf->len) == DROPBEAR_SUCCESS) {
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+		dropbear_log(LOG_AUTHPRIV | LOG_NOTICE,
 				"pubkey auth succeeded for '%s'", ses.authstate.username);
 		send_msg_userauth_success();
 	} else {
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
 				"pubkey auth failure for '%s'", ses.authstate.username);
 		send_msg_userauth_failure(0, 1);
 	}
@@ -170,7 +170,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 	/* check that we can use the algo */
 	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
 				"pubkey auth attempt with unknown algo '%s' for '%s'",
 				algo, ses.authstate.username);
 		goto out;
@@ -179,7 +179,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	/* check file permissions */
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
 		TRACE(("perms failed"));
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+		dropbear_log(LOG_AUTHPRIV | LOG_NOTICE,
 				"bad authorized_keys permissions for '%s'",
 				ses.authstate.username);
 		goto out;

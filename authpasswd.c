@@ -98,12 +98,12 @@ void passwordauth() {
 
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO, 
+		dropbear_log(LOG_AUTHPRIV | LOG_NOTICE, 
 				"password auth succeeded for '%s'",
 				ses.authstate.username);
 		send_msg_userauth_success();
 	} else {
-		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
 				"bad password attempt for '%s'",
 				ses.authstate.username);
 		send_msg_userauth_failure(0, 1);
