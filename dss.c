@@ -50,7 +50,7 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	key->q = m_malloc(sizeof(mp_int));
 	key->g = m_malloc(sizeof(mp_int));
 	key->y = m_malloc(sizeof(mp_int));
-	m_mp_init_multi(key->p, key->q, key->g, key->y);
+	m_mp_init_multi(key->p, key->q, key->g, key->y, NULL);
 	key->x = NULL;
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_DSS_LEN); /* int + "ssh-dss" */
@@ -173,7 +173,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
 
-	m_mp_init_multi(&val1, &val2, &val3, &val4);
+	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
 
 	/* create the signature - s' and r' are the received signatures in buf */
 	/* w = (s')-1 mod q */
@@ -233,7 +233,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	}
 
 out:
-	mp_clear_multi(&val1, &val2, &val3, &val4);
+	mp_clear_multi(&val1, &val2, &val3, &val4, NULL);
 	m_free(string);
 
 	return ret;
@@ -281,7 +281,8 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
 
-	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s, &dss_m);
+	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s,
+			&dss_m, NULL);
 #ifdef DSS_PROTOK	
 	/* hash the privkey */
 	privkeytmp = mptobytes(key->x, &i);
@@ -374,7 +375,8 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	mp_clear(&dss_s);
 	buf_incrwritepos(buf, writelen);
 
-	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s, &dss_m);
+	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s,
+			&dss_m, NULL);
 	
 	/* create the signature to return */
 

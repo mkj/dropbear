@@ -53,7 +53,7 @@ dss_key * gen_dss_priv_key(unsigned int size) {
 	key->g = (mp_int*)m_malloc(sizeof(mp_int));
 	key->y = (mp_int*)m_malloc(sizeof(mp_int));
 	key->x = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init_multi(key->p, key->q, key->g, key->y, key->x);
+	m_mp_init_multi(key->p, key->q, key->g, key->y, key->x, NULL);
 	
 	seedrandom();
 	
@@ -94,7 +94,7 @@ static void getp(dss_key *key, unsigned int size) {
 	int result;
 	unsigned char *buf;
 
-	m_mp_init_multi(&tempX, &tempC, &tempP, &temp2q);
+	m_mp_init_multi(&tempX, &tempC, &tempP, &temp2q, NULL);
 
 
 	/* 2*q */
@@ -142,7 +142,7 @@ static void getp(dss_key *key, unsigned int size) {
 		}
 	} while (!result);
 
-	mp_clear_multi(&tempX, &tempC, &tempP, &temp2q);
+	mp_clear_multi(&tempX, &tempC, &tempP, &temp2q, NULL);
 	m_free(buf);
 }
 
@@ -151,7 +151,7 @@ static void getg(dss_key * key) {
 	char printbuf[1000];
 	mp_int div, h, val, remaind;
 
-	m_mp_init_multi(&div, &h, &val);
+	m_mp_init_multi(&div, &h, &val, NULL);
 
 	/* get div=(p-1)/q */
 	if (mp_sub_d(key->p, 1, &val) != MP_OKAY) {
@@ -181,7 +181,7 @@ static void getg(dss_key * key) {
 
 	mp_toradix(key->g, printbuf, 10);
 
-	mp_clear_multi(&div, &h, &val);
+	mp_clear_multi(&div, &h, &val, NULL);
 }
 
 static void getx(dss_key *key) {

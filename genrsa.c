@@ -65,7 +65,7 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 		exit(1);
 	}
 
-	mp_clear_multi(&pminus, &qminus, &lcm);
+	mp_clear_multi(&pminus, &qminus, &lcm, NULL);
 
 	return key;
 }	
