@@ -33,6 +33,7 @@
 #include "random.h"
 #include "kex.h"
 #include "channel.h"
+#include "atomicio.h"
 
 /* need to know if the session struct has been initialised, this way isn't the
  * cleanest, but works OK */
@@ -255,12 +256,13 @@ static void session_init(int sock, runopts *opts, int childpipe,
 static void session_identification() {
 
 	char linebuf[256];
-	int len;
+	int len = 0;
 	int i;
 	char done = 0;
 
 	/* write our version string, this blocks */
-	if (writeln(ses.sock, LOCAL_IDENT "\r\n") == DROPBEAR_FAILURE) {
+	if (atomicio(write, ses.sock, LOCAL_IDENT "\r\n",
+				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
 		dropbear_exit("Error writing ident string");
 	}
 
@@ -276,9 +278,7 @@ static void session_identification() {
 					 && linebuf[1] == 'S'
 					 && linebuf[2] == 'H'
 					 && linebuf[3] == '-') {
-			ses.remoteident = m_malloc(len+1);
-			memcpy(ses.remoteident, linebuf, len);
-			ses.remoteident[len] = '\0'; /* null terminated */
+			/* start of line matches */
 			done = 1;
 			break;
 		}
@@ -286,6 +286,10 @@ static void session_identification() {
 
 	if (!done) {
 		dropbear_exit("Failed to get remote ident");
+	} else {
+		/* linebuf is already null terminated */
+		ses.remoteident = m_malloc(len);
+		memcpy(ses.remoteident, linebuf, len);
 	}
 
 	TRACE(("remoteident: %s", ses.remoteident));

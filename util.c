@@ -52,14 +52,16 @@
 #include "util.h"
 #include "buffer.h"
 #include "session.h"
+#include "atomicio.h"
 
 #define MAX_FMT 100
 
 static void _dropbear_log(int priority, const char* format, va_list param);
 static void _dropbear_exit(int exitcode, const char* format, va_list param);
 
-int usingsyslog = 0;
 
+#ifndef DISABLE_SYSLOG
+int usingsyslog = 0; /* set by runopts, but required externally to sessions */
 void startsyslog() {
 
 	int fd;
@@ -79,8 +81,8 @@ void startsyslog() {
 	}
 #endif
 	
-	usingsyslog = 1;
 }
+#endif /* DISABLE_SYSLOG */
 
 /* the "format" string must be <= 100 characters */
 void dropbear_close(const char* format, ...) {
@@ -144,13 +146,23 @@ void dropbear_log(int priority, const char* format, ...) {
 static void _dropbear_log(int priority, const char* format, va_list param) {
 
 	char printbuf[1024];
+	char datestr[20];
+	time_t timesec;
 
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
 
+#ifndef DISABLE_SYSLOG
 	if (usingsyslog) {
 		syslog(priority, printbuf);
-	} else {
-		fprintf(stderr, "dropbear %s\n", printbuf);
+	} else 
+#endif
+	{
+		timesec = time(NULL);
+		if (strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
+					localtime(&timesec)) == 0) {
+			datestr[0] = '?'; datestr[1] = '\0';
+		}
+		fprintf(stderr, "%s %s\n", datestr, printbuf);
 	}
 }
 
@@ -322,85 +334,24 @@ char * stripcontrol(const char * text) {
 int readln(int fd, char* buf, int count) {
 	
 	char in;
-	int pos;
-	int num;
-	fd_set fds;
-	struct timeval timeout;
+	int pos = 0;
 	
-	FD_ZERO(&fds);
-
-
-	pos = 0;
-	/* hack so we can block on a non-blocking fd */
-	for (;;) {
-		if (pos >= count-1) {
+	/* leave space to null-terminate */
+	while (pos < count-1) {
+		if (atomicio(read, fd, &in, 1) < 0) {
 			break;
 		}
-		FD_SET(fd, &fds);
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-		if (select(fd+1, &fds, NULL, NULL, &timeout) < 0) {
-			if (errno == EINTR) {
-				continue;
-			}
-			return -1;
+
+		if (in == '\n' || in == '\r') {
+			break;
 		}
-		if (FD_ISSET(fd, &fds)) {
-			num = read(fd, &in, 1);
-			if (num <= 0 || '\n' == in) {
-				break;
-			}
-			if (in != '\r') {
-				buf[pos] = in;
-				pos++;
-			}
-		}
+
+		buf[pos] = in;
+		pos++;
 	}
 	buf[pos] = '\0';
-	
 	return pos;
-	
 }
-
-/* Atomically write a string to a non-blocking socket.
- * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int writeln(int fd, const char* str) {
-
-	int len, writelen, pos = 0;
-	fd_set fds;
-	struct timeval timeout;
-
-	len = strlen(str);
-	
-	FD_ZERO(&fds);
-
-	for (;;) {
-		FD_SET(fd, &fds);
-		timeout.tv_sec = 1;
-		timeout.tv_usec = 0;
-		if (select(fd+1, NULL, &fds, NULL, &timeout) < 0) {
-			if (errno == EINTR) {
-				continue;
-			}
-			return DROPBEAR_FAILURE;
-		}
-		if (FD_ISSET(fd, &fds)) {
-			writelen = write(fd, &str[pos], len - pos);
-			if (writelen < 0) {
-				if (errno == EINTR) {
-					continue;
-				}
-				return DROPBEAR_FAILURE;
-			}
-			pos += writelen;
-		}
-		if (pos >= len) {
-			break;
-		}
-	}
-	return DROPBEAR_SUCCESS;
-}
-
 
 /* reads the contents of filename into the buffer buf, from the current
  * position, either to the end of the file, or the buffer being full.
