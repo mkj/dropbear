@@ -320,6 +320,52 @@ int buf_readfile(buffer* buf, const char* filename) {
 	return DROPBEAR_SUCCESS;
 }
 
+/* get a line from the file into buffer in the style expected for an
+ * authkeys file.
+ * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
+/* Only used for ~/.ssh/known_hosts and ~/.ssh/authorized_keys */
+#if defined(DROPBEAR_CLIENT) || defined(DROPBEAR_PUBKEY_AUTH)
+int buf_getline(buffer * line, FILE * authfile) {
+
+	int c = EOF;
+
+	TRACE(("enter buf_getline"));
+
+	buf_setpos(line, 0);
+	buf_setlen(line, 0);
+
+	while (line->pos < line->size) {
+
+		c = fgetc(authfile); /*getc() is weird with some uClibc systems*/
+		if (c == EOF || c == '\n' || c == '\r') {
+			goto out;
+		}
+
+		buf_putbyte(line, (unsigned char)c);
+	}
+
+	TRACE(("leave getauthline: line too long"));
+	/* We return success, but the line length will be zeroed - ie we just
+	 * ignore that line */
+	buf_setlen(line, 0);
+
+out:
+
+	buf_setpos(line, 0);
+
+	/* if we didn't read anything before EOF or error, exit */
+	if (c == EOF && line->pos == 0) {
+		TRACE(("leave getauthline: failure"));
+		return DROPBEAR_FAILURE;
+	} else {
+		TRACE(("leave getauthline: success"));
+		return DROPBEAR_SUCCESS;
+	}
+
+	TRACE(("leave buf_getline"));
+}	
+#endif
+
 /* loop until the socket is closed (in case of EINTR) or
  * we get and error.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */

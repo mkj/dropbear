@@ -54,7 +54,10 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		unsigned int len);
-char * sign_key_fingerprint(sign_key *key, int type);
+char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen);
 #endif
+int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
+					const unsigned char* algoname, unsigned int algolen, 
+					buffer * line);
 
 #endif /* _SIGNKEY_H_ */

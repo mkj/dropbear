@@ -38,7 +38,7 @@
 #ifdef DROPBEAR_PUBKEY_AUTH
 
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
-#define MAX_AUTHKEYS_LINE 1000 /* max length of a line in authkeys */
+#define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
 static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
@@ -46,7 +46,6 @@ static int checkpubkeyperms();
 static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
 static int checkfileperm(char * filename);
-static int getauthline(buffer * line, FILE * authfile);
 
 /* process a pubkey auth request, sending success or failure message as
  * appropriate */
@@ -102,7 +101,7 @@ void svr_auth_pubkey() {
 	buf_setpos(signbuf, 0);
 
 	/* ... and finally verify the signature */
-	fp = sign_key_fingerprint(key, type);
+	fp = sign_key_fingerprint(keyblob, keybloblen);
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
 				signbuf->len) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
@@ -160,10 +159,6 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	char * filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
-	buffer * decodekey = NULL;
-	unsigned long decodekeylen;
-	unsigned char* filealgo = NULL;
-	unsigned int filealgolen;
 	unsigned int len, pos;
 	
 	TRACE(("enter checkpubkey"));
@@ -202,14 +197,8 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 	/* iterate through the lines */
 	do {
-		/* free reused vars */
-		if (decodekey) {
-			buf_free(decodekey);
-			decodekey = NULL;
-		}
-		m_free(filealgo);
 
-		if (getauthline(line, authfile) == DROPBEAR_FAILURE) {
+		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
 			TRACE(("checkpubkey: authorized_keys EOF reached"));
 			break;
@@ -243,38 +232,12 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len));
 
-		/* now we have the actual data */
-		decodekeylen = (line->len - line->pos) * 2;
-		decodekey = buf_new(decodekeylen);
-		if (base64_decode(buf_getptr(line, line->len - line->pos),
-					line->len - line->pos,
-					buf_getwriteptr(decodekey, decodekey->size),
-					&decodekeylen) != CRYPT_OK) {
-			TRACE(("checkpubkey: base64 decode failed"));
-			continue;
-		}
-		TRACE(("checkpubkey: base64_decode success"));
-		buf_incrlen(decodekey, decodekeylen);
-		
-		/* compare the keys */
-		if (decodekeylen != keybloblen || memcmp(
-					buf_getptr(decodekey, decodekey->len),
-					keyblob, decodekey->len) != 0) {
-			TRACE(("checkpubkey: compare failed"));
-			continue;
+		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line);
+		if (ret == DROPBEAR_SUCCESS) {
+			break;
 		}
 
-		/* and also check that the algo specified and the algo in the key
-		 * itself match */
-		filealgo = buf_getstring(decodekey, &filealgolen);
-		if (filealgolen != algolen || memcmp(filealgo, algo, algolen) != 0) {
-			TRACE(("checkpubkey: algo match failed")); 
-			continue;
-		}
-
-		/* now we know this key is good */
-		ret = DROPBEAR_SUCCESS;
-		break;
+		/* We continue to the next line otherwise */
 		
 	} while (1);
 
@@ -285,53 +248,11 @@ out:
 	if (line) {
 		buf_free(line);
 	}
-	if (decodekey) {
-		buf_free(decodekey);
-	}
 	m_free(filename);
-	m_free(filealgo);
 	TRACE(("leave checkpubkey: ret=%d", ret));
 	return ret;
 }
 
-/* get a line from the file into buffer in the style expected for an
- * authkeys file.
- * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
-static int getauthline(buffer * line, FILE * authfile) {
-
-	int c = EOF;
-
-	TRACE(("enter getauthline"));
-
-	buf_setpos(line, 0);
-	buf_setlen(line, 0);
-
-	while (line->pos < line->size) {
-		c = fgetc(authfile); /*getc() is weird with some uClibc systems*/
-		if (c == EOF || c == '\n' || c == '\r') {
-			goto out;
-		}
-		buf_putbyte(line, (unsigned char)c);
-	}
-
-	TRACE(("leave getauthline: line too long"));
-	return DROPBEAR_FAILURE;
-
-out:
-
-	buf_setpos(line, 0);
-
-	/* if we didn't read anything before EOF or error, exit */
-	if (c == EOF && line->pos == 0) {
-		TRACE(("leave getauthline: failure"));
-		return DROPBEAR_FAILURE;
-	} else {
-		TRACE(("leave getauthline: success"));
-		return DROPBEAR_SUCCESS;
-	}
-
-	TRACE(("leave getauthline"));
-}	
 
 /* Returns DROPBEAR_SUCCESS if file permissions for pubkeys are ok,
  * DROPBEAR_FAILURE otherwise.
