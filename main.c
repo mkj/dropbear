@@ -259,7 +259,7 @@ static void sigsegv_handler(int fish) {
 	exit(EXIT_FAILURE);
 }
 
-/* catch ctrl-c or kill */
+/* catch ctrl-c or sigterm */
 static void sigintterm_handler(int fish) {
 
 	exitflag = 1;
