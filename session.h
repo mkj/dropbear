@@ -212,6 +212,8 @@ struct clientsession {
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
 	struct termios saved_tio;
 
+	int winchange; /* Set to 1 when a windowchange signal happens */
+
 };
 
 /* Global structs storing the state */

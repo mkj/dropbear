@@ -80,6 +80,7 @@ static void cli_session_init() {
 	cli_ses.kex_state = KEX_NOTHING;
 
 	cli_ses.tty_raw_mode = 0;
+	cli_ses.winchange = 0;
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
@@ -169,6 +170,10 @@ static void cli_sessionloop() {
 		case SESSION_RUNNING:
 			if (ses.chancount < 1) {
 				cli_finished();
+			}
+
+			if (cli_ses.winchange) {
+				cli_chansess_winchange();
 			}
 			return;
 

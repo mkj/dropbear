@@ -77,6 +77,7 @@ void addnewvar(const char* param, const char* var);
 
 void cli_send_chansess_request();
 void cli_tty_cleanup();
+void cli_chansess_winchange();
 
 void svr_chansessinitialise();
 extern const struct ChanType svrchansess;

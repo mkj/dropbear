@@ -203,6 +203,32 @@ static void put_winsize() {
 
 }
 
+static void sigwinch_handler(int dummy) {
+
+	cli_ses.winchange = 1;
+
+}
+
+void cli_chansess_winchange() {
+
+	unsigned int i;
+	struct Channel *channel = NULL;
+
+	for (i = 0; i < ses.chansize; i++) {
+		channel = ses.channels[i];
+		if (channel != NULL && channel->type == &clichansess) {
+			CHECKCLEARTOWRITE();
+			buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
+			buf_putint(ses.writepayload, channel->remotechan);
+			buf_putstring(ses.writepayload, "window-change", 13);
+			buf_putbyte(ses.writepayload, 0); /* FALSE says the spec */
+			put_winsize();
+			encrypt_packet();
+		}
+	}
+	cli_ses.winchange = 0;
+}
+
 static void send_chansess_pty_req(struct Channel *channel) {
 
 	unsigned char* term = NULL;
@@ -228,6 +254,11 @@ static void send_chansess_pty_req(struct Channel *channel) {
 	put_termcodes();
 
 	encrypt_packet();
+
+	/* Set up a window-change handler */
+	if (signal(SIGWINCH, sigwinch_handler) == SIG_ERR) {
+		dropbear_exit("signal error");
+	}
 	TRACE(("leave send_chansess_pty_req"));
 }
 
@@ -274,7 +305,6 @@ static int cli_initchansess(struct Channel *channel) {
 	return 0; /* Success */
 
 }
-
 
 void cli_send_chansess_request() {
 

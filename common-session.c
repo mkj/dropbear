@@ -144,6 +144,11 @@ void session_loop(void(*loophandler)()) {
 		
 		if (val < 0) {
 			if (errno == EINTR) {
+				/* This must happen even if we've been interrupted, so that
+				 * changed signal-handler vars can take effect etc */
+				if (loophandler) {
+					loophandler();
+				}
 				continue;
 			} else {
 				dropbear_exit("Error in select");
