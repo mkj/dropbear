@@ -1,0 +1,2459 @@
+\documentclass[b5paper]{book}
+\usepackage{makeidx}
+\usepackage{amssymb}
+\usepackage{color}
+\usepackage{alltt}
+\usepackage{graphicx}
+\usepackage{layout}
+\def\union{\cup}
+\def\intersect{\cap}
+\def\getsrandom{\stackrel{\rm R}{\gets}}
+\def\cross{\times}
+\def\cat{\hspace{0.5em} \| \hspace{0.5em}}
+\def\catn{$\|$}
+\def\divides{\hspace{0.3em} | \hspace{0.3em}}
+\def\nequiv{\not\equiv}
+\def\approx{\raisebox{0.2ex}{\mbox{\small $\sim$}}}
+\def\lcm{{\rm lcm}}
+\def\gcd{{\rm gcd}}
+\def\log{{\rm log}}
+\def\ord{{\rm ord}}
+\def\abs{{\mathit abs}}
+\def\rep{{\mathit rep}}
+\def\mod{{\mathit\ mod\ }}
+\renewcommand{\pmod}[1]{\ ({\rm mod\ }{#1})}
+\newcommand{\floor}[1]{\left\lfloor{#1}\right\rfloor}
+\newcommand{\ceil}[1]{\left\lceil{#1}\right\rceil}
+\def\Or{{\rm\ or\ }}
+\def\And{{\rm\ and\ }}
+\def\iff{\hspace{1em}\Longleftrightarrow\hspace{1em}}
+\def\implies{\Rightarrow}
+\def\undefined{{\rm ``undefined"}}
+\def\Proof{\vspace{1ex}\noindent {\bf Proof:}\hspace{1em}}
+\let\oldphi\phi
+\def\phi{\varphi}
+\def\Pr{{\rm Pr}}
+\newcommand{\str}[1]{{\mathbf{#1}}}
+\def\F{{\mathbb F}}
+\def\N{{\mathbb N}}
+\def\Z{{\mathbb Z}}
+\def\R{{\mathbb R}}
+\def\C{{\mathbb C}}
+\def\Q{{\mathbb Q}}
+\definecolor{DGray}{gray}{0.5}
+\newcommand{\url}[1]{\mbox{$<${#1}$>$}}
+\newcommand{\emailaddr}[1]{\mbox{$<${#1}$>$}}
+\def\twiddle{\raisebox{0.3ex}{\mbox{\tiny $\sim$}}}
+\def\gap{\vspace{0.5ex}}
+\makeindex
+\begin{document}
+\frontmatter
+\pagestyle{empty}
+\title{Multiple-Precision Integer Arithmetic, \\ A Case Study Involving the LibTomMath Project \\ - DRAFT - }
+\author{\mbox{
+%\begin{small}
+\begin{tabular}{c}
+Tom St Denis \\
+Algonquin College \\
+\\
+Mads Rasmussen \\
+Open Communications Security \\
+\\
+Gregory Rose \\
+Qualcomm \\
+\end{tabular}
+%\end{small}
+}
+}
+\maketitle
+This text in its entirety is copyrighted \copyright{}2003 by Tom St Denis.  It may not be redistributed 
+electronically or otherwise without the sole permission of the author.  The text is freely re distributable as long as
+it is packaged along with the LibTomMath project in a non-commercial project.  Contact the
+author for other redistribution rights.
+
+This text corresponds to the v0.17 release of the LibTomMath project.
+
+\begin{alltt}
+Tom St Denis
+111 Banning Rd
+Ottawa, Ontario
+K2L 1C3
+Canada
+
+Phone: 1-613-836-3160
+Email: tomstdenis@iahu.ca
+\end{alltt}
+
+This text is formatted to the international B5 paper size of 176mm wide by 250mm tall using the \LaTeX{} 
+{\em book} macro package and the Perl {\em booker} package.
+
+\tableofcontents
+\listoffigures
+\chapter*{Preface}
+Blah.
+
+\mainmatter
+\pagestyle{headings}
+\chapter{Introduction}
+\section{Multiple Precision Arithmetic}
+\subsection{The Need for Multiple Precision Arithmetic}
+The most prevalent use for multiple precision arithmetic (\textit{often referred to as bignum math}) is within public
+key cryptography.   Algorithms such as RSA, Diffie-Hellman and Elliptic Curve Cryptography require large integers in order to 
+resist known cryptanalytic attacks.  Typical modern programming languages such as C and Java only provide small 
+single-precision data types which are incapable of precisely representing integers which are often hundreds of bits long.
+
+For example, consider multiplying $1,234,567$ by $9,876,543$ in C with an ``unsigned long'' data type.  With an 
+x86 machine the result is $4,136,875,833$ while the true result is $12,193,254,061,881$.  The original inputs 
+were approximately $21$ and $24$ bits respectively.  If the C language cannot multiply two relatively small values 
+together precisely how does anyone expect it to multiply two values which are considerably larger?
+
+Most advancements in fast multiple precision arithmetic stems from the desire for faster cryptographic primitives.  However, cryptography
+is not the only field of study that can benefit fast large integer routines.  Another auxiliary use for multiple precision integers is 
+high precision floating point data types.  The basic IEEE standard floating point type is made up of an integer mantissa $q$ and an exponent $e$.  
+Numbers are given in the form $n = q \cdot b^e$ where $b = 2$ is convention.  Since IEEE is meant to be implemented in 
+hardware the precision of the mantissa is often fairly small (\textit{roughly 23 bits}).  Since the mantissa is merely an 
+integer a large multiple precision integer could be used.  In effect very high precision floating point arithmetic 
+could be performed.  This would be useful where scientific applications must minimize the total output error over long simulations.  
+
+\subsection{Multiple Precision Arithmetic}
+\index{multiple precision}
+Multiple precision arithmetic attempts to the solve the shortcomings of single precision data types such as those from
+the C and Java programming languages.  In essence multiple precision arithmetic is a set of operations that can be 
+performed on members of an algebraic group whose precision is not fixed.  The algorithms when implemented to be multiple
+precision can allow a developer to work with any practical precision required.
+
+Typically the arithmetic is performed over the ring of integers denoted by a $\Z$ and referred to casually as ``bignum'' 
+routines.  However, it is possible to have rings of polynomials as well typically denoted by $\Z/p\Z \left [ X \right ]$ 
+which could have variable precision (\textit{or degree}).  This text will discuss implementation of the former, however,
+implementing polynomial basis routines should be relatively easy after reading this text.
+
+\subsection{Benefits of Multiple Precision Arithmetic}
+\index{precision} \index{accuracy}
+Precision is defined loosely as the proximity to the real value a given representation is.  Accuracy is defined as the 
+reproducibility of the result.  For example, the calculation $1/3 = 0.25$ is imprecise but can be accurate provided 
+it is reproducible.
+
+The benefit of multiple precision representations over single precision representations is that 
+often no precision is lost while representing the result of an operation which requires excess precision.  For example, 
+the multiplication of two $n$-bit integers requires at least $2n$ bits to represent the result.  A multiple precision 
+system would augment the precision of the destination to accomodate the result while a single precision system would
+truncate excess bits to maintain a fixed level of precision.
+
+Multiple precision representations allow for the precision to be very high (\textit{if not exacting}) but at a cost of
+modest computer resources.  The only reasonable case where a multiple precision system will lose precision is when
+emulating a floating point data type.  However, with multiple precision integer arithmetic no precision is lost.
+
+\subsection{Basis of Operations}
+At the heart of all multiple precision integer operations are the ``long-hand'' algorithms we all learnt as children 
+in grade school.  For example, to multiply $1,234$ by $981$ the student is not taught to memorize the times table for 
+$1,234$ instead they are taught how to long-multiply.  That is to multiply each column using simple single digit 
+multiplications and add the resulting products by column.  The representation that most are familiar with is known as 
+decimal or formally as radix-10. A radix-$n$ representation simply means there are $n$ possible values per digit.  
+For example, binary would be a radix-2 representation.
+
+In essence computer based multiple precision arithmetic is very much the same.  The most notable difference is the usage
+of a binary friendly radix.  That is to use a radix of the form $2^k$ where $k$ is typically the size of a machine 
+register.  Also occasionally more optimal algorithms are used to perform certain operations such as multiplication and 
+squaring instead of traditional long-hand algorithms.
+
+\section{Purpose of This Text}
+The purpose of this text is to instruct the reader regarding how to implement multiple precision algorithms.  That is 
+to not only explain the core theoretical algorithms but also the various ``house keeping'' tasks that are neglected by
+authors of other texts on the subject.  Texts such as Knuths' ``The Art of Computer Programming, vol 2.'' and the 
+Handbook of Applied Cryptography (\textit{HAC}) give considerably detailed explanations of the theoretical aspects of 
+the algorithms and very little regarding the practical aspects.  
+
+That is how an algorithm is explained and how it is actually implemented are two very different 
+realities.  For example, algorithm 14.7 on page 594 of HAC lists a relatively simple algorithm for performing multiple 
+precision integer addition.  However, what the description lacks is any discussion concerning the fact that the two 
+integer inputs may be of differing magnitudes.  Similarly the division routine (\textit{Algorithm 14.20, pp. 598}) 
+does not discuss how to handle sign or handle the dividends decreasing magnitude in the main loop (\textit{Step \#3}).
+
+As well as the numerous practical oversights both of the texts do not discuss several key optimal algorithms required 
+such as ``Comba'' and Karatsuba multipliers and fast modular inversion.  These optimal algorithms are considerably
+vital to achieve any form of useful performance in non-trivial applications.  
+
+To solve this problem the focus of this text is on the practical aspects of implementing the algorithms that 
+constitute a multiple precision integer package with light cursory discussions on the theoretical aspects.  As a case 
+study the ``LibTomMath''\footnote{Available freely at http://math.libtomcrypt.org} package is used to demonstrate 
+algorithms with implementations that have been field tested and work very well.
+
+\section{Discussion and Notation}
+\subsection{Notation}
+A multiple precision integer of $n$-digits shall be denoted as $x = (x_n ... x_1 x_0)_{ \beta }$ to be the 
+multiple precision notation for the integer $x \equiv \sum_{i=0}^{n} x_i\beta^i$.  The elements of the array $x$ are
+said to be the radix $\beta$ digits of the integer.  For example, $x = (15,0,7)_{\beta}$ would represent the 
+integer $15\cdot\beta^2 + 0\cdot\beta^1 + 7\cdot\beta^0$.  
+
+A ``mp\_int'' shall refer to a composite structure which contains the digits of the integer as well as auxilary data
+required to manipulate the data.  These additional members are discussed in ~BASICOP~.  For the purposes of this text
+a ``multiple precision integer'' and a ``mp\_int'' are synonymous.
+
+\index{single-precision} \index{double-precision} \index{mp\_digit} \index{mp\_word}
+For the purposes of this text a single-precision variable must be able to represent integers in the range $0 \le x < 2 \beta$ while
+a double-precision variable must be able to represent integers in the range $0 \le x < 2 \beta^2$.  Within the source code that will be
+presented the data type \textbf{mp\_digit} will represent a single-precision type while \textbf{mp\_word} will represent a 
+double-precision type.  In several algorithms (\textit{notably the Comba routines}) temporary results 
+will be stored in a double-precision arrays.  For the purposes of this text $x_j$ will refer to the 
+$j$'th digit of a single-precision array and $\hat x_j$ will refer to the $j$'th digit of a double-precision
+array.
+
+\subsection{Work Effort}
+\index{big-O}
+To measure the efficiency of various algorithms a modified big-O notation is used.  In this system all 
+single precision operations are considered to have the same cost\footnote{Except where explicitly noted.}.  
+That is a single precision addition, multiplication and division are assumed to take the same time to 
+complete.  While this is generally not true in practice it will simplify the discussions considerably.
+
+Some algorithms have slight advantages over others which is why some constants will not be removed in 
+the notation.  For example, a normal multiplication requires $O(n^2)$ work while a squaring requires 
+$O({{n^2 + n}\over 2})$ work.  In standard big-O notation these would be said to be equivalent.  However, in the 
+context of the this text the magnitude of the inputs will not approach an infinite size.  This means the conventional limit 
+notation wisdom does not apply to the cancellation of constants.
+
+Throughout the discussions various ``work levels'' will be discussed.  These levels are the $O(1)$,
+$O(n)$, $O(n^2)$, ..., $O(n^k)$ work efforts.  For example, operations at the $O(n^k)$ ``level'' are said to be
+executed more frequently than operations at the $O(n^m)$ ``level'' when $k > m$.  Obviously most optimizations will pay
+off the most at the higher levels since they represent the bulk of the effort required.  
+
+\section{Exercises}
+Within the more advanced chapters a section will be set aside to give the reader some challenging exercises.  These exercises are not 
+designed to be prize winning problems yet instead to be thought provoking.  Wherever possible the problems are foreward minded stating 
+problems that will be answered in subsequent chapters.  The reader is encouraged to finish the exercises as they appear to get a 
+better understanding of the subject material.  
+
+Similar to the exercises of \cite{TAOCPV2} as explained on pp.\textit{ix} these exercises are given a scoring system.  However, unlike 
+\cite{TAOCPV2} the problems do not get nearly as hard as often.  The scoring of these exercises ranges from one (\textit{the easiest}) to
+five (\textit{the hardest}).  The following table sumarizes the scoring.
+
+\vspace{5mm}
+\begin{tabular}{cl}
+$\left [ 1 \right ]$ & An easy problem that should only take the reader a manner of \\
+                     & minutes to solve.  Usually does not involve much computer time. \\
+                     & \\
+$\left [ 2 \right ]$ & An easy problem that involves a marginal amount of computer \\
+                     & time usage.  Usually requires a program to be written to \\
+                     & solve the problem. \\
+                     & \\
+$\left [ 3 \right ]$ & A moderately hard problem that requires a non-trivial amount \\
+                     & of work.  Usually involves trivial research and development of \\
+                     & new theory from the perspective of a student. \\
+                     & \\
+$\left [ 4 \right ]$ & A moderately hard problem that involves a non-trivial amount \\
+                     & of work and research.  The solution to which will demonstrate \\
+                     & a higher mastery of the subject matter. \\
+                     & \\
+$\left [ 5 \right ]$ & A hard problem that involves concepts that are non-trivial.  \\
+                     & Solutions to these problems will demonstrate a complete mastery \\
+                     & of the given subject. \\
+                     & \\
+\end{tabular}
+
+Essentially problems at the first level are meant to be simple questions that the reader can answer quickly without programming a solution or
+devising new theory.  These problems are quick tests to see if the material is understood.  Problems at the second level are also
+designed to be easy but will require a program or algorithm to be implemented to arrive at the answer.  
+
+Problems at the third level are meant to be a bit more difficult.  Often the answer is fairly obvious but arriving at an exacting solution
+requires some thought and skill.  These problems will almost always involve devising a new algorithm or implementing a variation of
+another algorithm.
+
+Problems at the fourth level are meant to be even more difficult as well as involve some research.  The reader will most likely not know
+the answer right away nor will this text provide the exact details of the answer (\textit{or at least not until a subsequent chapter}).  Problems
+at the fifth level are meant to be the hardest problems relative to all the other problems in the chapter.  People who can correctly 
+answer fifth level problems have a mastery of the subject matter at hand.
+
+Often problems will be tied together.  The purpose of this is to start a chain of thought that will be discussed in future chapters.  The reader
+is encouraged to answer the follow-up problems and try to draw the relevence of problems.
+
+\chapter{Introduction to LibTomMath}
+
+\section{What is the LibTomMath?}
+LibTomMath is a free and open source multiple precision number theoretic library written in portable ISO C
+source code.  By portable it is meant that the library does not contain any code that is platform dependent or otherwise
+problematic to use on any given platform.  The library has been successfully tested under numerous operating systems 
+including Solaris, MacOS, Windows, Linux, PalmOS and on standalone hardware such as the Gameboy Advance.  The 
+library is designed to contain enough functionality to be able to develop number theoretic applications such as public 
+key cryptosystems.
+
+\section{Goals of the LibTomMath}
+
+Even though the library is written entirely in portable ISO C considerable care has been taken to 
+optimize the algorithm implementations within the library.  Specifically the code has been written to work well with
+the GNU C Compiler (\textit{GCC}) on both x86 and ARMv4 processors.  Wherever possible optimal 
+algorithms (\textit{such as Karatsuba multiplication, sliding window exponentiation and Montgomery reduction.}) have 
+been provided to make the library as efficient as possible.  Even with the optimal and sometimes specialized 
+algorithms that have been included the API has been kept as simple as possible.  Often generic place holder routines 
+will make use of specialized algorithms automatically without the developers attention.  One such example
+is the generic multiplication algorithm \textbf{mp\_mul()} which will automatically use Karatsuba multiplication if the 
+inputs are of a specific size.
+
+Making LibTomMath as efficient as possible is not the only goal of the LibTomMath project.  Ideally the library should 
+be source compatible with another popular library which makes it more attractive for developers to use.  In this case the
+MPI library was used as a API template for all the basic functions.
+
+The project is also meant to act as a learning tool for students.  The logic being that no easy to follow ``bignum'' 
+library exists which can be used to teach computer science students how to perform fast and reliable multiple precision 
+arithmetic.  To this end the source code has been given quite a few comments and algorithm discussion points.  Often 
+where applicable routines have more comments than lines of code.
+
+\section{Choice of LibTomMath}
+LibTomMath was chosen as the case study of this text not only because the author of both projects is one and the same but
+for more worthy reasons.  Other libraries such as GMP, MPI, LIP and OpenSSL have multiple precision 
+integer arithmetic routines but would not be ideal for this text for numerous reasons as will be explained in the 
+following sub-sections.
+
+\subsection{Code Base}
+The LibTomMath code base is all portable ISO C source code.  This means that there are no platform dependent conditional
+segments of code littered throughout the source.  This clean and uncluttered approach to the library means that a
+developer can more readily ascertain the true intent of a given section of source code without trying to keep track of
+what conditional code will be used.
+
+The code base of LibTomMath is also exceptionally well organized.  Each function is in its own separate source code file 
+which allows the reader to find a given function very fast.  When compiled with GCC for the x86 processor the entire 
+library is a mere 87,760 bytes (\textit{$116,182$ bytes for ARMv4 processors}).  This includes every single function 
+LibTomMath provides from basic arithmetic to various number theoretic functions such as modular exponentiation, various 
+reduction algorithms and Jacobi symbol computation.  
+
+By comparison MPI which has fewer number theoretic functions than LibTomMath compiled with the same conditions is 
+45,429 bytes (\textit{$54,536$ for ARMv4}).  GMP which has rather large collection of functions with the default 
+configuration on an x86 Athlon is 2,950,688 bytes.  Note that while LibTomMath has fewer functions than GMP it has been
+been used as the sole basis for several public key cryptosystems without having to seek additional outside functions
+to supplement the library.
+
+\subsection{API Simplicity}
+LibTomMath is designed after the MPI library and shares the API design.  Quite often programs that use MPI will build 
+with LibTomMath without change. The function names are relatively straight forward as to what they perform.  Almost all of the 
+functions except for a few minor exceptions which as will be discussed are for good reasons share the same parameter passing 
+convention.  The learning curve is fairly shallow with the API provided which is an extremely valuable benefit for the 
+student and developer alike.  
+
+The LIP library is an example of a library with an API that is awkward to work with.  LIP uses function names that are often ``compressed'' to 
+illegible short hand.  LibTomMath does not share this fault.
+
+\subsection{Optimizations}
+While LibTomMath is certainly not the fastest library (\textit{GMP often beats LibTomMath by a factor of two}) it does
+feature a set of optimal algorithms for tasks ranging from modular reduction to squaring.  GMP and LIP also feature
+such optimizations while MPI only uses baseline algorithms with no optimizations.
+
+LibTomMath is almost always a magnitude faster than the MPI library at computationally expensive tasks such as modular
+exponentiation.  In the grand scheme of ``bignum'' libraries LibTomMath is faster than the average library and usually  
+slower than the best libraries such as GMP and OpenSSL by a small factor.
+
+\subsection{Portability and Stability}
+LibTomMath will build ``out of the box'' on any platform equipped with a modern version of the GNU C Compiler 
+(\textit{GCC}).  This means that without changes the library will build without configuration or setting up any 
+variables.  LIP and MPI will build ``out of the box'' as well but have numerous known bugs.  Most notably the author of 
+MPI is not working on his library anymore.  
+
+GMP requires a configuration script to run and will not build out of the box.   GMP and LibTomMath are still in active
+development and are very stable across a variety of platforms.
+
+\subsection{Choice}
+LibTomMath is a relatively compact, well documented, highly optimized and portable library which seems only natural for
+the case study of this text.  Various source files from the LibTomMath project will be included within the text.  However, the 
+reader is encouraged to download their own copy of the library to actually be able to work with the library.  
+
+\chapter{Getting Started}
+MARK,BASICOP
+\section{Library Basics}
+To get the ``ball rolling'' so to speak a primitive data type and a series of primitive algorithms must be established.  First a data
+type that will hold the information required to maintain a multiple precision integer must be designed.  With this basic data type of a series
+of low level algorithms for initializing, clearing, growing and clamping integers can be developed to form the basis of the entire
+package of algorithms.
+
+\section{The mp\_int structure}
+First the data type for storing multiple precision integers must be designed.  This data type must be able to hold information to 
+maintain an array of digits, how many are actually used in the representation and the sign.  The ISO C standard does not provide for 
+any such data type but it does provide for making composite data types known as structures.  The following is the structure definition 
+used within LibTomMath.
+
+\index{mp\_int}
+\begin{verbatim}
+typedef struct  {
+    int used, alloc, sign;
+    mp_digit *dp;
+} mp_int;
+\end{verbatim}
+
+The \textbf{used} parameter denotes how many digits of the array \textbf{dp} are actually being used.  The array 
+\textbf{dp} holds the digits that represent the integer desired.  The \textbf{alloc} parameter denotes how 
+many digits are available in the array to use by functions before it has to increase in size.  When the \textbf{used} count 
+of a result would exceed the \textbf{alloc} count all LibTomMath routines will automatically increase the size of the 
+array to accommodate the precision of the result.  The \textbf{sign} parameter denotes the sign as either zero/positive 
+(\textbf{MP\_ZPOS}) or negative (\textbf{MP\_NEG}).  
+
+\section{Argument Passing}
+A convention of arugment passing must be adopted early on in the development of any library.  Making the function prototypes
+consistent will help eliminate many headaches in the future as the library grows to significant complexity.  In LibTomMath the multiple precision 
+integer functions accept parameters from left to right as pointers to mp\_int structures.  That means that the source operands are 
+placed on the left and the destination on the right.   Consider the following examples.
+
+\begin{verbatim}
+   mp_mul(&a, &b, &c);   /* c = a * b */
+   mp_add(&a, &b, &a);   /* a = a + b */
+   mp_sqr(&a, &b);       /* b = a * a */
+\end{verbatim}
+
+The left to right order is a fairly natural way to implement the functions since it lets the developer read aloud the
+functions and make sense of them.  For example, the first function would read ``multiply a and b and store in c''.
+
+Certain libraries (\textit{LIP by Lenstra for instance}) accept parameters the other way around.  That is the destination
+on the left and arguments on the right.  In truth it is entirely a matter of preference.  
+
+Another very useful design consideration is whether to allow argument sources to also be a destination.  For example, the
+second example (\textit{mp\_add}) adds $a$ to $b$ and stores in $a$.  This is an important feature to implement since it
+allows the higher up functions to cut down on the number of variables.  However, to implement this feature specific
+care has to be given to ensure the destination is not written before the source is fully read.
+
+\section{Return Values}
+A well implemented library, no matter what its purpose, should trap as many runtime errors as possible and return them to the 
+caller.  By catching runtime errors a library can be guaranteed to prevent undefined behaviour within reason.  In a multiple precision 
+library the only errors that are bound to occur are related to inappropriate inputs (\textit{division by zero for instance}) or 
+memory allocation errors.
+
+In LibTomMath any function that can cause a runtime error will return an error as an \textbf{int} data type with one of the 
+following values.
+
+\index{MP\_OKAY} \index{MP\_VAL} \index{MP\_MEM}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline \textbf{Value} & \textbf{Meaning} \\
+\hline \textbf{MP\_OKAY} & The function was successful \\
+\hline \textbf{MP\_VAL}  & One of the input value(s) was invalid \\
+\hline \textbf{MP\_MEM}  & The function ran out of heap memory \\
+\hline
+\end{tabular}
+\end{center}
+
+When an error is detected within a function it should free any memory they allocated and return as soon as possible.  The goal
+is to leave the system in the same state the system was when the function was called.  Error checking with this style of API is fairly simple.
+
+\begin{verbatim}
+   int err;
+   if ((err = mp_add(&a, &b, &c)) != MP_OKAY) {
+      printf("Error: %d\n", err);
+      exit(EXIT_FAILURE);
+   }
+\end{verbatim}
+
+The GMP library uses C style \textit{signals} to flag errors which is of questionable use.  Not all errors are fatal 
+and it is not ideal to force developers to have signal handlers for such cases.
+
+\section{Initialization and Clearing}
+The logical starting point when actually writing multiple precision integer functions is the initialization and 
+clearing of the integers.  These two functions will be used by far the most throughout the algorithms whenever 
+temporary integers are required.
+
+Given the basic mp\_int structure an initialization routine must first allocate memory to hold the digits of
+the integer.  Often it is optimal to allocate a sufficiently large pre-set number of digits even considering
+the initial integer will represent zero.  If only a single digit were allocated quite a few re-allocations
+would occur for the majority of inputs.  There exists a tradeoff between how many default digits to allocate
+and how many re-allocations are tolerable.  
+
+If the memory for the digits has been successfully allocated then the rest of the members of the structure must
+be initialized.  Since the initial state is to represent a zero integer the digits allocated must all be zeroed.  The
+\textbf{used} count set to zero and \textbf{sign} set to \textbf{MP\_ZPOS}.
+
+\subsection{Initializing an mp\_int}
+To initialize an mp\_int the mp\_init algorithm shall be used.  The purpose of this algorithm is to allocate 
+the memory required and initialize the integer to a default representation of zero.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_init}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  Allocate memory for the digits and set to a zero state. \\
+\hline \\
+1.  Allocate memory for \textbf{MP\_PREC} digits. \\
+2.  If the allocation failed then return(\textit{MP\_MEM}) \\
+3.  for $n$ from $0$ to $MP\_PREC - 1$ do  \\
+\hspace{3mm}3.1  $a_n \leftarrow 0$\\
+4.  $a.sign \leftarrow MP\_ZPOS$\\
+5.  $a.used \leftarrow 0$\\
+6.  $a.alloc \leftarrow MP\_PREC$\\
+7.  Return(\textit{MP\_OKAY})\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_init}
+\end{figure}
+
+\textbf{Algorithm mp\_init.}
+The \textbf{MP\_PREC} variable is a simple constant used to dictate minimal precision of allocated integers.  It is ideally at least equal to $32$ but 
+can be any reasonable power of two.  Step one and two allocate the memory and account for it.  If the allocation fails the algorithm returns
+immediately to signal the failure.  Step three will ensure that all the digits are in the default state of zero.  Finally steps 
+four through six set the default settings of the \textbf{sign}, \textbf{used} and \textbf{alloc} members of the mp\_int structure.
+
+EXAM,bn_mp_init.c
+
+The \textbf{OPT\_CAST} type cast on line @22,OPT_CAST@ is designed to allow C++ compilers to build the code out of
+the box.  Microsoft C V5.00 is known to cause problems without the cast.  Also note that if the memory
+allocation fails the other members of the mp\_int will be in an undefined state.  The code from 
+line @29,a->used@ to line @31,a->sign@ sets the default state for a mp\_int which is zero, positive and no used digits.
+
+\subsection{Clearing an mp\_int}
+When an mp\_int is no longer required the memory allocated for it can be cleared from the heap with 
+the mp\_clear algorithm.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_clear}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  The memory for $a$ is cleared. \\
+\hline \\
+1.  If $a$ has been previously freed then return(\textit{MP\_OKAY}). \\
+2.  Free the digits of $a$ and mark $a$ as freed. \\
+3.  $a.used \leftarrow 0$ \\
+4.  $a.alloc \leftarrow 0$ \\
+5.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_clear}
+\end{figure}
+
+\textbf{Algorithm mp\_clear.}
+In steps one and two the memory for the digits are only free'd if they had not been previously released before.  
+This is more of concern for the implementation since it is used to prevent ``double-free'' errors.  It also helps catch
+code errors where mp\_ints are used after being cleared.  Simiarly steps three and four set the 
+\textbf{used} and \textbf{alloc} to known values which would be easy to spot during debugging.  For example, if an mp\_int is expected
+to be non-zero and its \textbf{used} member observed to be zero (\textit{due to being cleared}) then an obvious bug in the code has been
+spotted.
+
+EXAM,bn_mp_clear.c
+
+The \textbf{if} statement on line @21,a->dp != NULL@ prevents the heap from being corrupted if a user double-frees an 
+mp\_int.  For example, a trivial case of this bug would be as follows.
+
+\begin{verbatim}
+mp_int a;
+mp_init(&a);
+mp_clear(&a);
+mp_clear(&a);
+\end{verbatim}
+
+Without that check the code would try to free the memory allocated for the digits twice which will cause most standard C
+libraries to cause a fault.  Also by setting the pointer to \textbf{NULL} it helps debug code that may inadvertently 
+free the mp\_int before it is truly not needed.  The allocated digits are set to zero before being freed on line @24,memset@.  
+This is ideal for cryptographic situations where the mp\_int is a secret parameter.
+
+The following snippet is an example of using both the init and clear functions.  
+
+\begin{small}
+\begin{verbatim}
+#include <tommath.h>
+#include <stdio.h>
+#include <stdlib.h>
+int main(void)
+{
+   mp_int num;
+   int err;
+   
+   /* init the bignum */
+   if ((err = mp_init(&num)) != MP_OKAY) {
+      printf("Error: %d\n", err);
+      return EXIT_FAILURE;
+   }
+   
+   /* do work with it ... */
+   
+   /* clear up */
+   mp_clear(&num);
+   
+   return EXIT_SUCCESS;
+}
+\end{verbatim}
+\end{small}
+
+\section{Other Initialization Routines}
+
+It is often helpful to have specialized initialization algorithms to simplify the design of other algorithms.  For example, an 
+initialization followed by a copy is a common operation when temporary copies of integers are required.  It is quite
+beneficial to have a series of simple helper functions available.
+
+\subsection{Initializing Variable Sized mp\_int Structures}
+Occasionally the number of digits required will be known in advance of an initialization.  In these
+cases the mp\_init\_size algorithm can be of use.  The purpose of this algorithm is similar to mp\_init except that 
+it will allocate \textit{at least} a specified number of digits.  This is ideal to prevent re-allocations when the 
+input size is known.
+
+\newpage\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_init\_size}. \\
+\textbf{Input}.   An mp\_int $a$ and the requested number of digits $b$\\
+\textbf{Output}.  $a$ is initialized to hold at least $b$ digits. \\
+\hline \\
+1.  $u \leftarrow b\mbox{ (mod }MP\_PREC\mbox{)}$ \\
+2.  $v \leftarrow b + 2 \cdot MP\_PREC - u$ \\
+3.  Allocate $v$ digits. \\
+4.  If the allocation failed then return(\textit{MP\_MEM}). \\
+5.  for $n$ from $0$ to $v - 1$ do \\
+\hspace{3mm}5.1  $a_n \leftarrow 0$ \\
+6.  $a.sign \leftarrow MP\_ZPOS$\\
+7.  $a.used \leftarrow 0$\\
+8.  $a.alloc \leftarrow v$\\
+9.  Return(\textit{MP\_OKAY})\\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_init\_size}
+\end{figure}
+
+\textbf{Algorithm mp\_init\_size.}
+The value of $v$ is calculated to be at least the requested amount of digits $b$ plus additional padding.  The padding is calculated
+to be at least \textbf{MP\_PREC} digits plus enough digits to make the digit count a multiple of \textbf{MP\_PREC}.  This padding is used to 
+prevent trivial allocations from becomming a bottleneck in the rest of the algorithms that depend on this.
+
+EXAM,bn_mp_init_size.c
+
+Line @23,MP_PREC@ will ensure that the number of digits actually allocated is padded up to the next multiple of 
+\textbf{MP\_PREC} plus an additional \textbf{MP\_PREC}.  This ensures that the number of allocated digit is 
+always greater than the amount requested.  As a result it prevents many trivial memory allocations.  The value of 
+\textbf{MP\_PREC} is defined in ``tommath.h'' and must be a power of two.
+
+\subsection{Creating a Clone}
+Another common sequence of operations is to make a local temporary copy of an argument.  To initialize then copy a mp\_int will be known as 
+creating a clone.  This is useful within functions that need to modify an integer argument but do not wish to actually modify the original copy.  
+The mp\_init\_copy algorithm will perform this very task.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_init\_copy}. \\
+\textbf{Input}.   An mp\_int $a$ and $b$\\
+\textbf{Output}.  $a$ is initialized to be a copy of $b$. \\
+\hline \\
+1.  Init $a$.  (\textit{hint: use mp\_init}) \\
+2.  If the init of $a$ was unsuccessful return(\textit{MP\_MEM}) \\
+3.  Copy $b$ to $a$.  (\textit{hint: use mp\_copy}) \\
+4.  Return the status of the copy operation. \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_init\_copy}
+\end{figure}
+
+\textbf{Algorithm mp\_init\_copy.}
+This algorithm will initialize a mp\_int variable and copy another previously initialized mp\_int variable into it.  The algorithm will
+detect when the initialization fails and returns the error to the calling algorithm.  As such this algorithm will perform two operations
+in one step.  
+
+EXAM,bn_mp_init_copy.c
+
+This will initialize \textbf{a} and make it a verbatim copy of the contents of \textbf{b}.  Note that 
+\textbf{a} will have its own memory allocated which means that \textbf{b} may be cleared after the call
+and \textbf{a} will be left intact.  
+
+\subsection{Multiple Integer Initializations}
+Occasionally a function will require a series of mp\_int data types to be made available.  The mp\_init\_multi algorithm
+is provided to simplify such cases.  The purpose of this algorithm is to initialize a variable length array of mp\_int 
+structures at once.  As a result algorithms that require multiple integers only has to use 
+one algorithm to initialize all the mp\_int variables.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_init\_multi}. \\
+\textbf{Input}.   Variable length array of mp\_int variables of length $k$. \\
+\textbf{Output}.  The array is initialized such that each each mp\_int is ready to use. \\
+\hline \\
+1.  for $n$ from 0 to $k - 1$ do \\
+\hspace{+3mm}1.1.  Initialize the $n$'th mp\_int (\textit{hint: use mp\_init}) \\
+\hspace{+3mm}1.2.  If initialization failed then do \\
+\hspace{+6mm}1.2.1.  for $j$ from $0$ to $n$ do \\
+\hspace{+9mm}1.2.1.1.  Free the $j$'th mp\_int (\textit{hint: use mp\_clear}) \\
+\hspace{+6mm}1.2.2.   Return(\textit{MP\_MEM}) \\
+2.  Return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_init\_multi}
+\end{figure}
+
+\textbf{Algorithm mp\_init\_multi.}
+The algorithm will initialize the array of mp\_int variables one at a time.  As soon as an runtime error is detected (\textit{step 1.2}) all of
+the previously initialized variables are cleared.  The goal is an ``all or nothing'' initialization which allows for quick recovery from runtime 
+errors.
+
+\subsection{Multiple Integer Clearing}
+Similarly to clear a variable length list of mp\_int structures the mp\_clear\_multi algorithm will be used.
+
+EXAM,bn_mp_multi.c
+
+Consider the following snippet which demonstrates how to use both routines.
+\begin{small}
+\begin{verbatim}
+#include <tommath.h>
+#include <stdio.h>
+#include <stdlib.h>
+int main(void)
+{
+   mp_int num1, num2, num3;
+   int err;
+   
+   if ((err = mp_init_multi(&num1, &num2, &num3, NULL)) !- MP_OKAY) {
+      printf("Error: %d\n", err);
+      return EXIT_FAILURE;
+   }
+   
+   /* at this point num1/num2/num3 are ready */
+   
+   /* free them */
+   mp_clear_multi(&num1, &num2, &num3, NULL);
+   
+   return EXIT_SUCCESS;
+}
+\end{verbatim}
+\end{small}
+
+\section{Maintenance}
+A small useful collection of mp\_int maintenance functions will also prove useful.  
+
+\subsection{Augmenting Integer Precision}
+When storing a value in an mp\_int sufficient digits must be available to accomodate the entire value without
+loss of precision.  Quite often the size of the array given by the \textbf{alloc} member is large enough to simply
+increase the \textbf{used} digit count.  However, when the size of the array is too small it must be re-sized 
+appropriately to accomodate the result.  The mp\_grow algorithm will provide this functionality.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_grow}. \\
+\textbf{Input}.   An mp\_int $a$ and an integer $b$. \\
+\textbf{Output}.  $a$ is expanded to accomodate $b$ digits. \\
+\hline \\
+1.  if $a.alloc \ge b$ then return(\textit{MP\_OKAY}) \\
+2.  $u \leftarrow b\mbox{ (mod }MP\_PREC\mbox{)}$ \\
+3.  $v \leftarrow b + 2 \cdot MP\_PREC - u$ \\
+4.  Re-Allocate the array of digits $a$ to size $v$ \\
+5.  If the allocation failed then return(\textit{MP\_MEM}). \\
+6.  for n from a.alloc to $v - 1$ do  \\
+\hspace{+3mm}6.1  $a_n \leftarrow 0$ \\
+7.  $a.alloc \leftarrow v$ \\
+8.  Return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_grow}
+\end{figure}
+
+\textbf{Algorithm mp\_grow.}
+Step one will prevent a re-allocation from being performed if it was not required.  This is useful to prevent mp\_ints
+from growing excessively in code that erroneously calls mp\_grow.  Similar to mp\_init\_size the requested digit count
+is padded to provide more digits than requested.  
+
+In step four it is assumed that the reallocation leaves the lower $a.alloc$ digits intact.  Much akin to how the 
+\textit{realloc} function from the standard C library works.  Since the newly allocated digits are assumed to contain
+undefined values they are also initially zeroed.
+
+EXAM,bn_mp_grow.c
+
+The first step is to see if we actually need to perform a re-allocation at all.  This is tested for on line 
+@24,a->alloc < size@.  Similar to mp\_init\_size the same code on line @26,MP_PREC - 1@ was used to resize the 
+digits requested.  A simple for loop from line @34,a->alloc@ to line @38,}@ will zero all digits that were above the 
+old \textbf{alloc} limit to make sure the integer is in a known state.
+
+\subsection{Clamping Excess Digits}
+When a function anticipates a result will be $n$ digits it is simpler to assume this is true within the body of 
+the function.  For example, a multiplication of a $i$ digit number by a $j$ digit produces a result of at most 
+$i + j + 1$ digits.  It is entirely possible that the result is $i + j$ though, with no final carry into the last 
+position.  However, suppose the destination had to be first expanded (\textit{via mp\_grow}) to accomodate $i + j$
+digits than further expanded to accomodate the final carry.  That would be a considerable waste of time since heap
+operations are relatively slow.
+
+The ideal solution is to always assume the result is $i + j + 1$ and fix up the \textbf{used} count after the function
+terminates.  This way a single heap operation (\textit{at most}) is required.  However, if the result was not checked
+there would be an excess high order zero digit.  
+
+For example, suppose the product of two integers was $x_n = (0x_{n-1}x_{n-2}...x_0)_{\beta}$.  The leading zero digit 
+will not contribute to the precision of the result.  In fact, through subsequent operations more leading zero digits would
+accumulate to the point the size of the integer would be prohibitive.  As a result even though the precision is very 
+low the representation is excessively large.  
+
+The mp\_clamp algorithm is designed to solve this very problem.  It will trim leading zeros by decrementing the 
+\textbf{used} count until a non-zero leading digit is found.  Also in this system, zero is considered to be a positive 
+number which means that if the \textbf{used} count is decremented to zero the sign must be set to \textbf{MP\_ZPOS}.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_clamp}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  Any excess leading zero digits of $a$ are removed \\
+\hline \\
+1.  while $a.used > 0$ and $a_{a.used - 1} = 0$ do \\
+\hspace{+3mm}1.1  $a.used \leftarrow a.used - 1$ \\
+2.  if $a.used = 0$ then do \\
+\hspace{+3mm}2.1  $a.sign \leftarrow MP\_ZPOS$ \\
+\hline \\
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_clamp}
+\end{figure}
+
+\textbf{Algorithm mp\_clamp.}
+As can be expected this algorithm is very simple.  The loop on step one is indended to be iterate only once or twice at
+the most.  For example, for cases where there is not a carry to fill the last position.  Step two fixes the sign for 
+when all of the digits are zero to ensure that the mp\_int is valid at all times.
+
+EXAM,bn_mp_clamp.c
+
+Note on line @27,while@ how to test for the \textbf{used} count is made on the left of the \&\& operator.  In the C programming
+language the terms to \&\& are evaluated left to right with a boolean short-circuit if any condition fails.  This is 
+important since if the \textbf{used} is zero the test on the right would fetch below the array.  That is obviously 
+undesirable.  The parenthesis on line @28,a->used@ is used to make sure the \textbf{used} count is decremented and not
+the pointer ``a''.  
+
+\section*{Exercises}
+\begin{tabular}{cl}
+$\left [ 1 \right ]$ & Discuss the relevance of the \textbf{used} member of the mp\_int structure. \\
+                     & \\
+$\left [ 1 \right ]$ & Discuss the consequences of not using padding when performing allocations.  \\
+                     & \\
+$\left [ 2 \right ]$ & Estimate an ideal value for \textbf{MP\_PREC} when performing 1024-bit RSA \\
+                     & encryption when $\beta = 2^{28}$.  \\
+                     & \\
+$\left [ 1 \right ]$ & Discuss the relevance of the algorithm mp\_clamp.  What does it prevent? \\
+                     & \\
+$\left [ 1 \right ]$ & Give an example of when the algorithm  mp\_init\_copy might be useful. \\
+                     & \\
+\end{tabular}
+
+
+\chapter{Basic Operations}
+\section{Copying an Integer}
+After the various house-keeping routines are in place, simpl algorithms can be designed to take advantage of them.  Being able
+to make a verbatim copy of an integer is a very useful function to have.  To copy an integer the mp\_copy algorithm will be used.
+
+\newpage\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_copy}. \\
+\textbf{Input}.  An mp\_int $a$ and $b$. \\
+\textbf{Output}.  Store a copy of $a$ in $b$. \\
+\hline \\
+1.  Check if $a$ and $b$ point to the same location in memory. \\
+2.  If true then return(\textit{MP\_OKAY}). \\
+3.  If $b.alloc < a.used$ then grow $b$ to $a.used$ digits.  (\textit{hint: use mp\_grow}) \\
+4.  If failed to grow then return(\textit{MP\_MEM}). \\
+5.  for $n$ from 0 to $a.used - 1$ do \\
+\hspace{3mm}5.1  $b_{n} \leftarrow a_{n}$ \\
+6.  if $a.used < b.used - 1$ then \\ 
+\hspace{3mm}6.1.  for $n$ from $a.used$ to $b.used - 1$ do \\
+\hspace{6mm}6.1.1  $b_{n} \leftarrow 0$ \\
+7.  $b.used \leftarrow a.used$ \\
+8.  $b.sign \leftarrow a.sign$ \\
+9.  return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_copy}
+\end{figure}
+
+\textbf{Algorithm mp\_copy.}
+Step 1 and 2 make sure that the two mp\_ints are unique.  This allows the user to call the copy function with
+potentially the same input and not waste time.  Step 3 and 4 ensure that the destination is large enough to
+hold a copy of the input $a$.  Note that the \textbf{used} member of $b$ may be smaller than the \textbf{used}
+member of $a$ but a memory re-allocation is only required if the \textbf{alloc} member of $b$ is smaller.  This
+prevents trivial memory reallocations.
+
+Step 5 copies the digits from $a$ to $b$ while step 6 ensures that if initially $\vert b \vert > \vert a \vert$,
+the leading digits of $b$ will be zeroed.  Finally steps 7 and 8 copies the \textbf{used} and \textbf{sign} members over 
+which completes the copy operation.
+
+EXAM,bn_mp_copy.c
+
+Source lines @23,if dst ==@-@31,}@ do the initial house keeping.  That is to see if the input is unique and if so to 
+make sure there is enough room.  If not enough space is available it returns the error and leaves the destination variable
+intact.
+
+The inner loop of the copy operation is contained between lines @34,{@ and @50,}@.  Many LibTomMath routines are designed with this source code style
+in mind, making aliases to shorten lengthy pointers (\textit{see line @38,->@ and @39,->@}) for rapid to use.  Also the
+use of nested braces creates a simple way to denote various portions of code that reside on various work levels.  Here, the copy loop is at the 
+$O(n)$ level.  
+
+\section{Zeroing an Integer}
+Reseting an mp\_int to the default state is a common step in many algorithms.  The mp\_zero algorithm will be the algorithm used to
+perform this task.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_zero}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  Zero the contents of $a$ \\
+\hline \\
+1.  $a.used \leftarrow 0$ \\
+2.  $a.sign \leftarrow$ MP\_ZPOS \\
+3.  for $n$ from 0 to $a.alloc - 1$ do \\
+\hspace{3mm}3.1  $a_n \leftarrow 0$ \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_zero}
+\end{figure}
+
+\textbf{Algorithm mp\_zero.}
+This algorithm simply resets a mp\_int to the default state.  
+
+EXAM,bn_mp_zero.c
+
+After the function is completed, all of the digits are zeroed, the \textbf{used} count is zeroed and the 
+\textbf{sign} variable is set to \textbf{MP\_ZPOS}.
+
+\section{Sign Manipulation}
+\subsection{Absolute Value}
+With the mp\_int representation of an integer, calculating the absolute value is trivial.  The mp\_abs algorithm will compute
+the absolute value of an mp\_int.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_abs}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  Computes $b = \vert a \vert$ \\
+\hline \\
+1.  Copy $a$ to $b$.  (\textit{hint: use mp\_copy}) \\
+2.  If the copy failed return(\textit{MP\_MEM}). \\
+3.  $b.sign \leftarrow MP\_ZPOS$ \\
+4.  Return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_abs}
+\end{figure}
+
+\textbf{Algorithm mp\_abs.}
+This algorithm computes the absolute of an mp\_int input.  As can be expected the algorithm is very trivial.
+
+EXAM,bn_mp_abs.c
+
+\subsection{Integer Negation}
+With the mp\_int representation of an integer, calculating the negation is also trivial.  The mp\_neg algorithm will compute
+the negative of an mp\_int input.
+
+\newpage\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_neg}. \\
+\textbf{Input}.   An mp\_int $a$ \\
+\textbf{Output}.  Computes $b = -a$ \\
+\hline \\
+1.  Copy $a$ to $b$.  (\textit{hint: use mp\_copy}) \\
+2.  If the copy failed return(\textit{MP\_MEM}). \\
+3.  If $a.sign = MP\_ZPOS$ then do \\
+\hspace{3mm}3.1  $b.sign = MP\_NEG$. \\
+4.  else do \\
+\hspace{3mm}4.1  $b.sign = MP\_ZPOS$. \\
+5.  Return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_neg}
+\end{figure}
+
+\textbf{Algorithm mp\_neg.}
+This algorithm computes the negation of an input.  
+
+EXAM,bn_mp_neg.c
+
+\section{Small Constants}
+\subsection{Setting Small Constants}
+Often a mp\_int must be set to a relatively small value such as $1$ or $2$.  For these cases the mp\_set algorithm is useful.
+
+\newpage\begin{figure}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_set}. \\
+\textbf{Input}.   An mp\_int $a$ and a digit $b$ \\
+\textbf{Output}.  Make $a$ equivalent to $b$ \\
+\hline \\
+1.  Zero $a$ (\textit{hint: use mp\_zero}). \\
+2.  $a_0 \leftarrow b \mbox{ (mod }\beta\mbox{)}$ \\
+3.  $a.used \leftarrow  \left \lbrace \begin{array}{ll}
+                              1 &  \mbox{if }a_0 > 0 \\
+                              0 &  \mbox{if }a_0 = 0 
+                              \end{array} \right .$ \\
+\hline                              
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_set}
+\end{figure}
+
+\textbf{Algorithm mp\_set.}
+This algorithm sets a mp\_int to a small single digit value.  Step number 1 ensures that the integer is reset to the default state.  The
+single digit is set (\textit{modulo $\beta$}) and the \textbf{used} count is adjusted accordingly.
+
+EXAM,bn_mp_set.c
+
+Line @21,mp_zero@ calls mp\_zero() to clear the mp\_int and reset the sign.  Line @22,MP_MASK@ actually copies digit 
+into the least significant location.  Note the usage of a new constant \textbf{MP\_MASK}.  This constant is used to quickly
+reduce an integer modulo $\beta$.  Since $\beta = 2^k$ it suffices to perform a binary AND with $MP\_MASK = 2^k - 1$ to perform
+the reduction.  Finally line @23,a->used@ will set the \textbf{used} member with respect to the digit actually set. This function 
+will always make the integer positive.
+
+One important limitation of this function is that it will only set one digit.  The size of a digit is not fixed, meaning source that uses 
+this function should take that into account.  The define \textbf{DIGIT\_BIT} in ``tommath.h'' 
+defines how many bits per digit are available.  Generally at least seven bits are guaranteed to be available per 
+digit.  This means that trivially small constants can be set using this function.
+
+\subsection{Setting Large Constants}
+To overcome the limitations of the mp\_set algorithm the mp\_set\_int algorithm is provided.  It accepts a ``long''
+data type as input and will always treat it as a 32-bit integer.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_set\_int}. \\
+\textbf{Input}.   An mp\_int $a$ and a ``long'' integer $b$ \\
+\textbf{Output}.  Make $a$ equivalent to $b$ \\
+\hline \\
+1.  Zero $a$ (\textit{hint: use mp\_zero}) \\
+2.  for $n$ from 0 to 7 do \\
+\hspace{3mm}2.1  $a \leftarrow a \cdot 16$ (\textit{hint: use mp\_mul2d}) \\
+\hspace{3mm}2.2  $u \leftarrow \lfloor b / 2^{4(7 - n)} \rfloor \mbox{ (mod }16\mbox{)}$\\
+\hspace{3mm}2.3  $a_0 \leftarrow a_0 + u$ \\
+\hspace{3mm}2.4  $a.used \leftarrow a.used + \lfloor 32 / lg(\beta) \rfloor + 1$ \\
+3.  Clamp excess used digits (\textit{hint: use mp\_clamp}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_set\_int}
+\end{figure}
+
+\textbf{Algorithm mp\_set\_int.}
+The algorithm performs eight iterations of a simple loop where in each iteration four bits from the source are added to the 
+mp\_int.  Step 2.1 will multiply the current result by sixteen making room for four more bits.  In step 2.2 the
+next four bits from the source are extracted.  The four bits are added to the mp\_int and the \textbf{used} digit count is 
+incremented.  The \textbf{used} digit counter is incremented since if any of the leading digits were zero the mp\_int would have
+zero digits used and the newly added four bits would be ignored.
+
+Excess zero digits are trimmed in steps 2.1 and 3 by using higher level algorithms mp\_mul2d and mp\_clamp.
+
+EXAM,bn_mp_set_int.c
+
+This function sets four bits of the number at a time to handle all practical \textbf{DIGIT\_BIT} sizes.  The weird
+addition on line @38,a->used@ ensures that the newly added in bits are added to the number of digits.  While it may not 
+seem obvious as to why the digit counter does not grow exceedingly large it is because of the shift on line @27,mp_mul_2d@ 
+as well as the  call to mp\_clamp() on line @40,mp_clamp@.  Both functions will clamp excess leading digits which keeps 
+the number of used digits low.
+
+\section{Comparisons}
+\subsection{Unsigned Comparisions}
+Comparing a multiple precision integer is performed with the exact same algorithm used to compare two decimal numbers.  For example,
+to compare $1,234$ to $1,264$ the digits are extracted by their positions.  That is we compare $1 \cdot 10^3 + 2 \cdot 10^2 + 3 \cdot 10^1 + 4 \cdot 10^0$
+to $1 \cdot 10^3 + 2 \cdot 10^2 + 6 \cdot 10^1 + 4 \cdot 10^0$ by comparing single digits at a time starting with the highest magnitude 
+positions.  If any leading digit of one integer is greater than a digit in the same position of another integer then obviously it must be greater.  
+
+The first comparision routine that will be developed is the unsigned magnitude compare which will perform a comparison based on the digits of two
+mp\_int variables alone.  It will ignore the sign of the two inputs.  Such a function is useful when an absolute comparison is required or if the 
+signs are known to agree in advance.
+
+To facilitate working with the results of the comparison functions three constants are required.  
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{|r|l|}
+\hline \textbf{Constant} & \textbf{Meaning} \\
+\hline \textbf{MP\_GT} & Greater Than \\
+\hline \textbf{MP\_EQ} & Equal To \\
+\hline \textbf{MP\_LT} & Less Than \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Comparison Return Codes}
+\end{figure}
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_cmp\_mag}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$.  \\
+\textbf{Output}.  Unsigned comparison results ($a$ to the left of $b$). \\
+\hline \\
+1.  If $a.used > b.used$ then return(\textit{MP\_GT}) \\
+2.  If $a.used < b.used$ then return(\textit{MP\_LT}) \\
+3.  for n from $a.used - 1$ to 0 do \\
+\hspace{+3mm}3.1  if $a_n > b_n$ then return(\textit{MP\_GT}) \\
+\hspace{+3mm}3.2  if $a_n < b_n$ then return(\textit{MP\_LT}) \\
+4.  Return(\textit{MP\_EQ}) \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_cmp\_mag}
+\end{figure}
+
+\textbf{Algorithm mp\_cmp\_mag.}
+By saying ``$a$ to the left of $b$'' it is meant that the comparison is with respect to $a$, that is if $a$ is greater than $b$ it will return
+\textbf{MP\_GT} and similar with respect to when $a = b$ and $a < b$.  The first two steps compare the number of digits used in both $a$ and $b$.  
+Obviously if the digit counts differ there would be an imaginary zero digit in the smaller number where the leading digit of the larger number is.  
+If both have the same number of digits than the actual digits themselves must be compared starting at the leading digit.  
+
+By step three both inputs must have the same number of digits so its safe to start from either $a.used - 1$ or $b.used - 1$ and count down to
+the zero'th digit.  If after all of the digits have been compared and no difference found the algorithm simply returns \textbf{MP\_EQ}.
+
+EXAM,bn_mp_cmp_mag.c
+
+The two if statements on lines @24,if@ and @28,if@ compare the number of digits in the two inputs.  These two are performed before all of the digits
+are compared since it is a very cheap test to perform and can potentially save considerable time.  The implementation given is also not valid 
+without those two statements.  $b.alloc$ may be smaller than $a.used$, meaning that undefined values will be read from $b$ passed the end of the 
+array of digits.
+
+\subsection{Signed Comparisons}
+Comparing with sign considerations is also fairly critical in several routines (\textit{division for example}).  Based on an unsigned magnitude 
+comparison a trivial signed comparison algorithm can be written.
+
+\newpage\begin{figure}[here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_cmp}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$ \\
+\textbf{Output}.  Signed Comparison Results ($a$ to the left of $b$) \\
+\hline \\
+1.  if $a.sign = MP\_NEG$ and $b.sign = MP\_ZPOS$ then return(\textit{MP\_LT}) \\
+2.  if $a.sign = MP\_ZPOS$ and $b.sign = MP\_NEG$ then return(\textit{MP\_GT}) \\
+3.  if $a.sign = MP\_NEG$ then \\
+\hspace{+3mm}3.1  Return the unsigned comparison of $b$ and $a$ (\textit{hint: use mp\_cmp\_mag}) \\
+4   Otherwise \\
+\hspace{+3mm}4.1  Return the unsigned comparison of $a$ and $b$ \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_cmp}
+\end{figure}
+
+\textbf{Algorithm mp\_cmp.}
+The first two steps compare the signs of the two inputs.  If the signs do not agree then it can return right away with the appropriate 
+comparison code.  When the signs are equal the digits of the inputs must be compared to determine the correct result.  In step 
+three the unsigned comparision flips the order of the arguments since they are both negative.  For instance, if $-a > -b$ then 
+$\vert a \vert < \vert b \vert$.  Step number four will compare the two when they are both positive.
+
+EXAM,bn_mp_cmp.c
+
+The two if statements on lines @22,if@ and @26,if@ perform the initial sign comparison.  If the signs are not the equal then which ever
+has the positive sign is larger.   At line @30,if@, the inputs are compared based on magnitudes.  If the signs were both negative then 
+the unsigned comparison is performed in the opposite direction (\textit{line @31,mp_cmp_mag@}).  Otherwise, the signs are assumed to 
+be both positive and a forward direction unsigned comparison is performed.
+
+\section*{Exercises}
+\begin{tabular}{cl}
+$\left [ 2 \right ]$ & Modify algorithm mp\_set\_int to accept as input a variable length array of bits. \\
+                     & \\
+$\left [ 3 \right ]$ & Give the probability that algorithm mp\_cmp\_mag will have to compare $k$ digits  \\
+                     & of two random digits (of equal magnitude) before a difference is found. \\
+                     & \\
+$\left [ 1 \right ]$ & Suggest a simple method to speed up the implementation of mp\_cmp\_mag based  \\
+                     & on the observations made in the previous problem. \\
+                     &
+\end{tabular}
+
+\chapter{Basic Arithmetic}
+\section{Building Blocks}
+At this point algorithms for initialization, de-initialization, zeroing, copying, comparing and setting small constants have been 
+established.  The next logical set of algorithms to develop are the addition, subtraction and digit movement algorithms.  These 
+algorithms make use of the lower level algorithms and are the cruicial building block for the multipliers.  It is very important that these 
+algorithms are highly optimized.  On their own they are simple $O(n)$ algorithms but they can be called from higher level algorithms 
+which easily places them at $O(n^2)$ or even $O(n^3)$ work levels.  
+
+MARK,SHIFTS
+All nine algorithms within this chapter make use of the logical bit shift operations denoted by $<<$ and $>>$ for left and right 
+logical shifts respectively.  A logical shift is analogous to sliding the decimal point of radix-10 representations.  For example, the real 
+number $0.9345$ is equivalent to $93.45\%$ which is found by sliding the the decimal two places to the right (\textit{multiplying by $10^2$}).  
+Mathematically a logical shift is equivalent to a division or multiplication by a power of two.  
+For example, $a << k = a \cdot 2^k$ while $a >> k = \lfloor a/2^k \rfloor$.
+
+One significant difference between a logical shift and the way decimals are shifted is that digits below the zero'th position are removed
+from the number.  For example, consider $1101_2 >> 1$ using decimal notation this would produce $110.1_2$.  However, with a logical shift the 
+result is $110_2$.  
+
+\section{Addition and Subtraction}
+In normal fixed precision arithmetic negative numbers are easily represented by subtraction from the modulus.  For example, with 32-bit integers
+$a - b\mbox{ (mod }2^{32}\mbox{)}$ is the same as $a + (2^{32} - b) \mbox{ (mod }2^{32}\mbox{)}$  since $2^{32} \equiv 0 \mbox{ (mod }2^{32}\mbox{)}$.  
+As a result subtraction can be performed with a trivial series of logical operations and an addition.
+
+However, in multiple precision arithmetic negative numbers are not represented in the same way.  Instead a sign flag is used to keep track of the
+sign of the integer.  As a result signed addition and subtraction are actually implemented as conditional usage of lower level addition or 
+subtraction algorithms with the sign fixed up appropriately.
+
+The lower level algorithms will add or subtract integers without regard to the sign flag.  That is they will add or subtract the magnitude of
+the integers respectively.
+
+\subsection{Low Level Addition}
+An unsigned addition of multiple precision integers is performed with the same long-hand algorithm used to add decimal numbers.  That is to add the 
+trailing digits first and propagate the resulting carry upwards.  Since this is a lower level algorithm the name will have a ``s\_'' prefix.  
+Historically that convention stems from the MPI library where ``s\_'' stood for static functions that were hidden from the developer entirely.
+
+\newpage
+\begin{figure}[!here]
+\begin{center}
+\begin{small}
+\begin{tabular}{l}
+\hline Algorithm \textbf{s\_mp\_add}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$ \\
+\textbf{Output}.  The unsigned addition $c = \vert a \vert + \vert b \vert$. \\
+\hline \\
+1.  if $a.used > b.used$ then \\
+\hspace{+3mm}1.1  $min \leftarrow b.used$ \\
+\hspace{+3mm}1.2  $max \leftarrow a.used$ \\
+\hspace{+3mm}1.3  $x   \leftarrow a$ \\
+2.  else  \\
+\hspace{+3mm}2.1  $min \leftarrow a.used$ \\
+\hspace{+3mm}2.2  $max \leftarrow b.used$ \\
+\hspace{+3mm}2.3  $x   \leftarrow b$ \\
+3.  If $c.alloc < max + 1$ then grow $c$ to hold at least $max + 1$ digits (\textit{hint: use mp\_grow}) \\
+4.  If failed to grow $c$ return(\textit{MP\_MEM}) \\
+5.  $oldused \leftarrow c.used$ \\
+6.  $c.used \leftarrow max + 1$ \\
+7.  $u \leftarrow 0$ \\
+8.  for $n$ from $0$ to $min - 1$ do \\
+\hspace{+3mm}8.1  $c_n \leftarrow a_n + b_n + u$ \\
+\hspace{+3mm}8.2  $u \leftarrow c_n >> lg(\beta)$ \\
+\hspace{+3mm}8.3  $c_n \leftarrow c_n \mbox{ (mod }\beta\mbox{)}$ \\
+9.  if $min \ne max$ then do \\
+\hspace{+3mm}9.1  for $n$ from $min$ to $max - 1$ do \\
+\hspace{+6mm}9.1.1  $c_n \leftarrow x_n + u$ \\
+\hspace{+6mm}9.1.2  $u \leftarrow c_n >> lg(\beta)$ \\
+\hspace{+6mm}9.1.3  $c_n \leftarrow c_n \mbox{ (mod }\beta\mbox{)}$ \\
+10.  $c_{max} \leftarrow u$ \\
+11.  if $olduse > max$ then \\
+\hspace{+3mm}11.1  for $n$ from $max + 1$ to $olduse - 1$ do \\
+\hspace{+6mm}11.1.1  $c_n \leftarrow 0$ \\
+12.  Clamp excess digits in $c$.  (\textit{hint: use mp\_clamp}) \\
+13.  Return(\textit{MP\_OKAY}) \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+\caption{Algorithm s\_mp\_add}
+\end{figure}
+
+\textbf{Algorithm s\_mp\_add.}
+This algorithm is loosely based on algorithm 14.7 of \cite[pp. 594]{HAC} but has been extended to allow the inputs to have different magnitudes.  
+Coincidentally the description of algorithm A in \cite[pp. 266]{TAOCPV2} shares the same flaw as that from \cite{HAC}.  Even the MIX pseudo 
+machine code presented  \cite[pp. 266-267]{TAOCPV2} is incapable of handling inputs which are of different magnitudes.
+
+Steps 1 and 2 will sort the two inputs based on their \textbf{used} digit count.  This allows the inputs to have varying magnitudes which not 
+only makes it more efficient than the trivial algorithm presented in the other references but more flexible.  The variable $min$ is given the lowest 
+digit count while $max$ is given the highest digit count.  If both inputs have the same \textbf{used} digit count both $min$ and $max$ are 
+set to the same.  The variable $x$ is an \textit{alias} for the largest input and not meant to be a copy of it.  After the inputs are sorted steps 
+3 and 4 will ensure that the destination $c$ can accommodate the result.  The old \textbf{used} count from $c$ is copied to $oldused$ and the 
+new count is set to $max + 1$.  
+
+At step 7 the carry variable $u$ is set to zero and the first leg of the addition loop can begin.  The first step of the loop (\textit{8.1}) adds
+digits from the two inputs together along with the carry variable $u$.  The following step extracts the carry bit by shifting the result of the
+preceding step right $lg(\beta)$ positions.  The shift to extract the carry is similar to how carry extraction works with decimal addition.
+
+Consider adding $77$ to $65$, the first addition of the first column is $7 + 5$ which produces the result $12$.  The trailing digit of the result
+is $2 \equiv 12 \mbox{ (mod }10\mbox{)}$ and the carry is found by dividing (\textit{and ignoring the remainder}) $12$ by the radix or in this case $10$.  The
+division and multiplication of $10$ is simply a logical shift right or left respectively of the digits.  In otherwords the carry can be extracted
+by shifting one digit to the right.
+
+Note that $lg()$ is simply the base two logarithm such that $lg(2^k) = k$.  This implies that $lg(\beta)$ is the number of bits in a radix-$\beta$ 
+digit.  Therefore, a logical shift right of the single digit by $lg(\beta)$ will extract the carry.  The final step of the  loop reduces the digit 
+modulo the radix $\beta$ to ensure it is in range.
+
+After step 8 the smallest input (\textit{or both if they are the same magnitude}) has been exhausted.  Step 9 decides whether
+the inputs were of equal magnitude.  If not than another loop similar to that in step 8 must be executed.  The loop at step
+number 9.1 differs from the previous loop since it only adds the mp\_int $x$ along with the carry.  
+
+Step 10 finishes the addition phase by copying the final carry to the highest location in the result $c_{max}$.  Step 11 ensures that 
+leading digits that were originally present in $c$ are cleared.  Finally excess leading digits are clamped and the algorithm returns success.
+
+EXAM,bn_s_mp_add.c
+
+Lines @27,if@ to @35,}@ perform the initial sorting of the inputs and determine the $min$ and $max$ variables.  Note that $x$ is pointer to a 
+mp\_int assigned to the largest input, in effect it is a local alias.  Lines @37,init@ to @42,}@ ensure that the destination is grown to 
+accomodate the result of the addition. 
+
+Similar to the implementation of mp\_copy this function uses the braced code and local aliases coding style.  The three aliases on 
+lines @56,tmpa@, @59,tmpb@ and @62,tmpc@ are the for the two inputs and destination respectively.  These aliases are used to ensure the
+compiler does not have to dereference $a$, $b$ or $c$ (respectively) to access the digits of the respective mp\_int.
+
+The initial carry $u$ is cleared on line @65,u = 0@, note that $u$ is of type mp\_digit which ensures type compatibility within the 
+implementation.  The initial addition loop begins on line @66,for@ and ends on line @75,}@.  Similarly the conditional addition loop
+begins on line @81,for@ and ends on line @90,}@.  The addition is finished with the final carry being stored in $tmpc$ on line @94,tmpc++@.  
+Note the ``++'' operator on the same line.  After line @94,tmpc++@ $tmpc$ will point to the $c.used$'th digit of the mp\_int $c$.  This is useful
+for the next loop on lines @97,for@ to @99,}@ which set any old upper digits to zero.
+
+\subsection{Low Level Subtraction}
+The low level unsigned subtraction algorithm is very similar to the low level unsigned addition algorithm.  The principle difference is that the
+unsigned subtraction algorithm requires the result to be positive.  That is when computing $a - b$ the condition $\vert a \vert \ge \vert b\vert$ must 
+be met for this algorithm to function properly.  Keep in mind this low level algorithm is not meant to be used in higher level algorithms directly.  
+This algorithm as will be shown can be used to create functional signed addition and subtraction algorithms.
+
+MARK,GAMMA
+
+For this algorithm a new variable is required to make the description simpler.  Recall from section 1.3.1 that a mp\_digit must be able to represent
+the range $0 \le x < 2\beta$.  It is allowable that a mp\_digit represent a larger range of values.  For this algorithm we will assume that
+the variable $\gamma$ represents the number of bits available in a mp\_digit (\textit{this implies $2^{\gamma} > \beta$}).
+
+\newpage\begin{figure}[!here]
+\begin{center}
+\begin{small}
+\begin{tabular}{l}
+\hline Algorithm \textbf{s\_mp\_sub}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$ ($\vert a \vert \ge \vert b \vert$) \\
+\textbf{Output}.  The unsigned subtraction $c = \vert a \vert - \vert b \vert$. \\
+\hline \\
+1.  $min \leftarrow b.used$ \\
+2.  $max \leftarrow a.used$ \\
+3.  If $c.alloc < max$ then grow $c$ to hold at least $max$ digits.  (\textit{hint: use mp\_grow}) \\
+4.  If the reallocation failed return(\textit{MP\_MEM}). \\
+5.  $oldused \leftarrow c.used$ \\ 
+6.  $c.used \leftarrow max$ \\
+7.  $u \leftarrow 0$ \\
+8.  for $n$ from $0$ to $min - 1$ do \\
+\hspace{3mm}8.1  $c_n \leftarrow a_n - b_n - u$ \\
+\hspace{3mm}8.2  $u   \leftarrow c_n >> (\gamma - 1)$ \\
+\hspace{3mm}8.3  $c_n \leftarrow c_n \mbox{ (mod }\beta\mbox{)}$ \\
+9.  if $min < max$ then do \\
+\hspace{3mm}9.1  for $n$ from $min$ to $max - 1$ do \\
+\hspace{6mm}9.1.1  $c_n \leftarrow a_n - u$ \\
+\hspace{6mm}9.1.2  $u   \leftarrow c_n >> (\gamma - 1)$ \\
+\hspace{6mm}9.1.3  $c_n \leftarrow c_n \mbox{ (mod }\beta\mbox{)}$ \\
+10. if $oldused > max$ then do \\
+\hspace{3mm}10.1  for $n$ from $max$ to $oldused - 1$ do \\
+\hspace{6mm}10.1.1  $c_n \leftarrow 0$ \\
+11. Clamp excess digits of $c$.  (\textit{hint: use mp\_clamp}). \\
+12. Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+\caption{Algorithm s\_mp\_sub}
+\end{figure}
+
+\textbf{Algorithm s\_mp\_sub.}
+This algorithm performs the unsigned subtraction of two mp\_int variables under the restriction that the result must be positive.  That is when
+passing variables $a$ and $b$ the condition that $\vert a \vert \ge \vert b \vert$ must be met for the algorithm to function correctly.  This
+algorithm is loosely based on algorithm 14.9 \cite[pp. 595]{HAC} and is similar to algorithm S in \cite[pp. 267]{TAOCPV2} as well.  As was the case
+of the algorithm s\_mp\_add both other references lack discussion concerning various practical details such as when the inputs differ in magnitude.
+
+The initial sorting of the inputs is trivial in this algorithm since $a$ is guaranteed to have at least the same magnitude of $b$.  Steps 1 and 2 
+set the $min$ and $max$ variables.  Unlike the addition routine there is guaranteed to be no carry which means that the final result can be at 
+most $max$ digits in length as oppose to $max + 1$.  Similar to the addition algorithm the \textbf{used} count of $c$ is copied locally and 
+set to the maximal count for the operation.
+
+The subtraction loop that begins on step 8 is essentially the same as the addition loop of algorithm s\_mp\_add except single precision 
+subtraction is used instead.  Note the use of the $\gamma$ variable to extract the carry within the subtraction loops.  Under the assumption
+that two's complement single precision arithmetic is used this will successfully extract the carry.  
+
+For example, consider subtracting $0101_2$ from
+$0100_2$ where $\gamma = 4$.  The least significant bit will force a carry upwards to the third bit which will be set to zero after the borrow.  After
+the very first bit has been subtracted $4 - 1 \equiv 0011_2$ will remain,  When the third bit of $0101_2$ is subtracted from the result it will cause
+another carry.  In this case though the carry will be forced to propagate all the way to the most significant bit.  
+
+Recall that $\beta < 2^{\gamma}$.  This means that if a carry does occur it will propagate all the way to the most significant bit.  Therefore a single
+logical shift right by $\gamma - 1$ positions is sufficient to extract the carry.  This method of carry extraction may seem awkward but the reason for 
+it becomes apparent when the implementation is discussed.  
+
+If $b$ has a smaller magnitude than $a$ then step 9 will force the carry and copy operation to propagate through the larger input $a$ into $c$.  Step
+10 will ensure that any leading digits of $c$ above the $max$'th position are zeroed.
+
+EXAM,bn_s_mp_sub.c
+
+Line @24,min@ and @25,max@ perform the initial hardcoded sorting.  In reality they are only aliases and are only used to make the source easier to 
+read.  Again the pointer alias optimization is used within this algorithm.  Lines @42,tmpa@, @43,tmpb@ and @44,tmpc@ initialize the aliases for 
+$a$, $b$ and $c$ respectively.
+
+The first subtraction loop occurs on lines @47,u = 0@ through @61,}@.  The theory behind the subtraction loop is exactly the same as that for
+the addition loop.  As remarked earlier there is an implementation reason for using the ``awkward'' method of extracting the carry 
+(\textit{see line @57, >>@}).  The traditional method for extracting the carry would be to shift by $lg(\beta)$ positions and logically AND 
+the least significant bit.  The AND operation is required because all of the bits above the $\lg(\beta)$'th bit will be set to one after a carry
+occurs from subtraction.  This carry extraction requires two relatively cheap operations to extract the carry.  The other method is to simply 
+shift the most significant bit to the least significant bit thus extracting the carry with a single cheap operation.  This optimization only works on
+twos compliment machines which is a safe assumption to make.
+
+If $a$ has a higher magnitude than $b$ an additional loop (\textit{see lines @64,for@ through @73,}@}) is required to propagate the carry through
+$a$ and copy the result to $c$.  
+
+\subsection{High Level Addition}
+Now that both lower level addition and subtraction algorithms have been established an effective high level signed addition algorithm can be
+established.  This high level addition algorithm will be what other algorithms and developers will use to perform addition of mp\_int data 
+types.  
+
+Recall from section 5.2 that an mp\_int represents an integer with an unsigned mantissa (\textit{the array of digits}) and a \textbf{sign} 
+flag.  A high level addition is actually performed as a series of eight seperate cases which can be optimized down to three unique cases.
+
+\newpage\begin{figure}[!here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_add}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$  \\
+\textbf{Output}.  The signed addition $c = a + b$. \\
+\hline \\
+1.  if $a.sign = b.sign$ then do \\
+\hspace{3mm}1.1  $c.sign \leftarrow a.sign$  \\
+\hspace{3mm}1.2  $c \leftarrow \vert a \vert + \vert b \vert$ (\textit{hint: use s\_mp\_add})\\
+2.  else do \\
+\hspace{3mm}2.1  if $\vert a \vert < \vert b \vert$ then do (\textit{hint: use mp\_cmp\_mag})  \\
+\hspace{6mm}2.1.1  $c.sign \leftarrow b.sign$ \\
+\hspace{6mm}2.1.2  $c \leftarrow \vert b \vert - \vert a \vert$ (\textit{hint: use s\_mp\_sub}) \\
+\hspace{3mm}2.2  else do \\
+\hspace{6mm}2.2.1  $c.sign \leftarrow a.sign$ \\
+\hspace{6mm}2.2.2  $c \leftarrow \vert a \vert - \vert b \vert$ \\
+3.  If any of the lower level operations failed return(\textit{MP\_MEM}) \\
+4.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_add}
+\end{figure}
+
+\textbf{Algorithm mp\_add.}
+This algorithm performs the signed addition of two mp\_int variables.  There is no reference algorithm to draw upon from either \cite{TAOCPV2} or 
+\cite{HAC} since they both only provide unsigned operations.  The algorithm is fairly straightforward but restricted since subtraction can only 
+produce positive results.  Consider the following chart of possible inputs.
+
+\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline \textbf{Sign of $a$} & \textbf{Sign of $b$} & \textbf{$\vert a \vert > \vert b \vert $} & \textbf{Unsigned Operation} & \textbf{Result Sign Flag} \\
+\hline $+$ & $+$ & Yes & $c = a + b$ & $a.sign$ \\
+\hline $+$ & $+$ & No  & $c = a + b$ & $a.sign$ \\
+\hline $-$ & $-$ & Yes & $c = a + b$ & $a.sign$ \\
+\hline $-$ & $-$ & No  & $c = a + b$ & $a.sign$ \\
+\hline &&&&\\
+
+\hline $+$ & $-$ & No  & $c = b - a$ & $b.sign$ \\
+\hline $-$ & $+$ & No  & $c = b - a$ & $b.sign$ \\
+
+\hline &&&&\\
+
+\hline $+$ & $-$ & Yes & $c = a - b$ & $a.sign$ \\
+\hline $-$ & $+$ & Yes & $c = a - b$ & $a.sign$ \\
+
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Addition Guide Chart}
+\end{figure}
+
+The chart lists all of the eight possible input combinations and is sorted to show that only three specific cases need to be handled.  The 
+return code of the unsigned operations at step 1.2, 2.1.2 and 2.2.2 are forwarded to step 3 to check for errors.  This simpliies the description
+of the algorithm considerably and best follows how the implementation actually was achieved.
+
+Also note how the \textbf{sign} is set before the unsigned addition or subtraction is performed.  Recall from the descriptions of algorithms
+s\_mp\_add and s\_mp\_sub that the mp\_clamp function is used at the end to trim excess digits.  The mp\_clamp algorithm will set the \textbf{sign}
+to \textbf{MP\_ZPOS} when the \textbf{used} digit count reaches zero.  
+
+For example, consider performing $-a + a$ with algorithm mp\_add.  By the description of the algorithm the sign is set to \textbf{MP\_NEG} which would
+produce a result of $-0$.  However, since the sign is set first then the unsigned addition is performed the subsequent usage of algorithm mp\_clamp 
+within algorithm s\_mp\_add will force $-0$ to become $0$.  
+
+EXAM,bn_mp_add.c
+
+The source code follows the algorithm fairly closely.  The most notable new source code addition is the usage of the $res$ integer variable which
+is used to pass result of the unsigned operations forward.  Unlike in the algorithm, the variable $res$ is merely returned as is without
+explicitly checking it and returning the constant \textbf{MP\_OKAY}.  The observation is this algorithm will succeed or fail only if the lower
+level functions do so.  Returning their return code is sufficient.
+
+\subsection{High Level Subtraction}
+The high level signed subtraction algorithm is essentially the same as the high level signed addition algorithm.  
+
+\begin{figure}[!here]
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_sub}. \\
+\textbf{Input}.   Two mp\_ints $a$ and $b$  \\
+\textbf{Output}.  The signed subtraction $c = a - b$. \\
+\hline \\
+1.  if $a.sign \ne b.sign$ then do \\
+\hspace{3mm}1.1  $c.sign \leftarrow a.sign$ \\
+\hspace{3mm}1.2  $c \leftarrow \vert a \vert + \vert b \vert$ (\textit{hint: use s\_mp\_add}) \\
+2.  else do \\
+\hspace{3mm}2.1  if $\vert a \vert \ge \vert b \vert$ then do (\textit{hint: use mp\_cmp\_mag}) \\
+\hspace{6mm}2.1.1  $c.sign \leftarrow a.sign$ \\
+\hspace{6mm}2.1.2  $c \leftarrow \vert a \vert  - \vert b \vert$ (\textit{hint: use s\_mp\_sub}) \\
+\hspace{3mm}2.2  else do \\
+\hspace{6mm}2.2.1  $c.sign \leftarrow  \left \lbrace \begin{array}{ll}
+                              MP\_ZPOS &  \mbox{if }a.sign = MP\_NEG \\
+                              MP\_NEG  &  \mbox{otherwise} \\
+                              \end{array} \right .$ \\
+\hspace{6mm}2.2.2  $c \leftarrow \vert b \vert  - \vert a \vert$ \\
+3.  If any of the lower level operations failed return(\textit{MP\_MEM}). \\
+4.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\caption{Algorithm mp\_sub}
+\end{figure}
+
+\textbf{Algorithm mp\_sub.}
+This algorithm performs the signed subtraction of two inputs.  Similar to algorithm mp\_add there is no reference in either \cite{TAOCPV2} or 
+\cite{HAC}.  Also this algorithm is restricted by algorithm s\_mp\_sub.  The following chart lists the eight possible inputs and
+the operations required.
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|}
+\hline \textbf{Sign of $a$} & \textbf{Sign of $b$} & \textbf{$\vert a \vert \ge \vert b \vert $} & \textbf{Unsigned Operation} & \textbf{Result Sign Flag} \\
+\hline $+$ & $-$ & Yes & $c = a + b$ & $a.sign$ \\
+\hline $+$ & $-$ & No  & $c = a + b$ & $a.sign$ \\
+\hline $-$ & $+$ & Yes & $c = a + b$ & $a.sign$ \\
+\hline $-$ & $+$ & No  & $c = a + b$ & $a.sign$ \\
+\hline &&&& \\
+\hline $+$ & $+$ & Yes & $c = a - b$ & $a.sign$ \\
+\hline $-$ & $-$ & Yes & $c = a - b$ & $a.sign$ \\
+\hline &&&& \\
+\hline $+$ & $+$ & No  & $c = b - a$ & $\mbox{opposite of }a.sign$ \\
+\hline $-$ & $-$ & No  & $c = b - a$ & $\mbox{opposite of }a.sign$ \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Subtraction Guide Chart}
+\end{figure}
+
+Similar to the case of algorithm mp\_add the \textbf{sign} is set first before the unsigned addition or subtraction.  That is to prevent the 
+algorithm from producing $-a - -a = -0$ as a result.  
+
+EXAM,bn_mp_sub.c
+
+Much like the implementation of algorithm mp\_add the variable $res$ is used to catch the return code of the unsigned addition or subtraction operations
+and forward it to the end of the function.  On line @38, != MP_LT@ the ``not equal to'' \textbf{MP\_LT} expression is used to emulate a 
+``greater than or equal to'' comparison.  
+
+\section{Bit and Digit Shifting}
+MARK,POLY
+It is quite common to think of a multiple precision integer as a polynomial in $x$, that is $y = f(\beta)$ where $f(x) = \sum_{i=0}^{n-1} a_i x^i$.  
+This notation arises within discussion of Montgomery and Diminished Radix Reduction as well as Karatsuba multiplication and squaring.  
+
+In order to facilitate operations on polynomials in $x$ as above a series of simple ``digit'' algorithms have to be established.  That is to shift
+the digits left or right as well to shift individual bits of the digits left and right.  It is important to note that not all ``shift'' operations
+are on radix-$\beta$ digits.  
+
+\subsection{Multiplication by Two}
+
+In a binary system where the radix is a power of two multiplication by two not only arises often in other algorithms it is a fairly efficient 
+operation to perform.  A single precision logical shift left is sufficient to multiply a single digit by two.  
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_mul\_2}. \\
+\textbf{Input}.   One mp\_int $a$ \\
+\textbf{Output}.  $b = 2a$. \\
+\hline \\
+1.  If $b.alloc < a.used + 1$ then grow $b$ to hold $a.used + 1$ digits.  (\textit{hint: use mp\_grow}) \\
+2.  If the reallocation failed return(\textit{MP\_MEM}). \\
+3.  $oldused \leftarrow b.used$ \\
+4.  $b.used \leftarrow a.used$ \\
+5.  $r \leftarrow 0$ \\
+6.  for $n$ from 0 to $a.used - 1$ do \\
+\hspace{3mm}6.1  $rr \leftarrow a_n >> (lg(\beta) - 1)$ \\
+\hspace{3mm}6.2  $b_n \leftarrow (a_n << 1) + r \mbox{ (mod }\beta\mbox{)}$ \\
+\hspace{3mm}6.3  $r \leftarrow rr$ \\
+7.  If $r \ne 0$ then do \\
+\hspace{3mm}7.1  $b_{a.used} = 1$ \\
+\hspace{3mm}7.2  $b.used \leftarrow b.used + 1$ \\
+8.  If $b.used < oldused - 1$ then do \\
+\hspace{3mm}8.1  for $n$ from $b.used$ to $oldused - 1$ do \\
+\hspace{6mm}8.1.1  $b_n \leftarrow 0$ \\
+9.  $b.sign \leftarrow a.sign$ \\
+10.  Return(\textit{MP\_OKAY}).\\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_mul\_2}
+\end{figure}
+
+\textbf{Algorithm mp\_mul\_2.}
+This algorithm will quickly multiply a mp\_int by two provided $\beta$ is a power of two.  Neither \cite{TAOCPV2} nor \cite{HAC} describe such 
+an algorithm despite the fact it arises often in other algorithms.  The algorithm is setup much like the lower level algorithm s\_mp\_add since 
+it is for all intents and purposes equivalent to the operation $b = \vert a \vert + \vert a \vert$.  
+
+Step 1 and 2 grow the input as required to accomodate the maximum number of \textbf{used} digits in the result.  The initial \textbf{used} count
+is set to $a.used$ at step 4.  Only if there is a final carry will the \textbf{used} count require adjustment.
+
+Step 6 is an optimization implementation of the addition loop for this specific case.  That is since the two values being added together 
+are the same there is no need to perform two reads from the digits of $a$.  Step 6.1 performs a single precision shift on the current digit $a_n$ to
+obtain what will be the carry for the next iteration.  Step 6.2 calculates the $n$'th digit of the result as single precision shift of $a_n$ plus
+the previous carry.  Recall from ~SHIFTS~ that $a_n << 1$ is equivalent to $a_n \cdot 2$.  An iteration of the addition loop is finished with 
+forwarding the carry to the next iteration.
+
+Step 7 takes care of any final carry by setting the $a.used$'th digit of the result to one and augmenting the \textbf{used} count.  Step 8 clears
+any original leading digits of $b$.
+
+EXAM,bn_mp_mul_2.c
+
+This implementation is essentially an optimized implementation of s\_mp\_add for the case of doubling an input.  The only noteworthy difference
+is the use of the logical shift operator on line @52,<<@ to perform a single precision doubling.  
+
+\subsection{Division by Two}
+A division by two can just as easily be accomplished with a logical shift right as multiplication by two can be with a logical shift left.
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_div\_2}. \\
+\textbf{Input}.   One mp\_int $a$ \\
+\textbf{Output}.  $b = a/2$. \\
+\hline \\
+1.  If $b.alloc < a.used$ then grow $b$ to hold $a.used$ digits.  (\textit{hint: use mp\_grow}) \\
+2.  If the reallocation failed return(\textit{MP\_MEM}). \\
+3.  $oldused \leftarrow b.used$ \\
+4.  $b.used \leftarrow a.used$ \\
+5.  $r \leftarrow 0$ \\
+6.  for $n$ from $b.used - 1$ to $0$ do \\
+\hspace{3mm}6.1  $rr \leftarrow a_n \mbox{ (mod }2\mbox{)}$\\
+\hspace{3mm}6.2  $b_n \leftarrow (a_n >> 1) + (r << (lg(\beta) - 1)) \mbox{ (mod }\beta\mbox{)}$ \\
+\hspace{3mm}6.3  $r \leftarrow rr$ \\
+7.  If $b.used < oldused - 1$ then do \\
+\hspace{3mm}7.1  for $n$ from $b.used$ to $oldused - 1$ do \\
+\hspace{6mm}7.1.1  $b_n \leftarrow 0$ \\
+8.  $b.sign \leftarrow a.sign$ \\
+9.  Return(\textit{MP\_OKAY}).\\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_div\_2}
+\end{figure}
+
+\textbf{Algorithm mp\_div\_2.}
+This algorithm will divide an mp\_int by two using logical shifts to the right.  Like mp\_mul\_2 it uses a modified low level addition
+core as the basis of the algorithm.  Unlike mp\_mul\_2 the shift operations work from the leading digit to the trailing digit.  The algorithm
+could be written to work from the trailing digit to the leading digit however, it would have to stop one short of $a.used - 1$ digits to prevent
+reading passed the end of the array of digits.
+
+Essentially the loop at step 6 is similar to that of mp\_mul\_2 except the logical shifts go in the opposite direction and the carry is at the 
+least significant bit not the most significant bit.  
+
+EXAM,bn_mp_div_2.c
+
+\section{Polynomial Basis Operations}
+Recall from ~POLY~ that any integer can be represented as a polynomial in $x$ as $y = f(\beta)$.  Such a representation is also known as
+the polynomial basis \cite[pp. 48]{ROSE}. Given such a notation a multiplication or division by $x$ amounts to shifting whole digits a single 
+place.  The need for such operations arises in several other higher level algorithms such as Barrett and Montgomery reduction, integer
+division and Karatsuba multiplication.  
+
+Converting from an array of digits to polynomial basis is very simple.  Consider the integer $y \equiv (a_2, a_1, a_0)_{\beta}$ and recall that
+$y = \sum_{i=0}^{2} a_i \beta^i$.  Simply replace $\beta$ with $x$ and the expression is in polynomial basis.  For example, $f(x) = 8x + 9$ is the
+polynomial basis representation for $89$ using radix ten.  That is, $f(10) = 8(10) + 9 = 89$.  
+
+\subsection{Multiplication by $x$}
+
+Given a polynomial in $x$ such as $f(x) = a_n x^n + a_{n-1} x^{n-1} + ... + a_0$ multiplying by $x$ amounts to shifting the coefficients up one 
+degree.  In this case $f(x) \cdot x = a_n x^{n+1} + a_{n-1} x^n + ... + a_0 x$.  From a scalar basis point of view multiplying by $x$ is equivalent to
+multiplying by the integer $\beta$.  
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_lshd}. \\
+\textbf{Input}.   One mp\_int $a$ and an integer $b$ \\
+\textbf{Output}.  $a \leftarrow a \cdot \beta^b$ (Multiply by $x^b$). \\
+\hline \\
+1.  If $b \le 0$ then return(\textit{MP\_OKAY}). \\
+2.  If $a.alloc < a.used + b$ then grow $a$ to at least $a.used + b$ digits.  (\textit{hint: use mp\_grow}). \\
+3.  If the reallocation failed return(\textit{MP\_MEM}). \\
+4.  $a.used \leftarrow a.used + b$ \\
+5.  $i \leftarrow a.used - 1$ \\
+6.  $j \leftarrow a.used - 1 - b$ \\
+7.  for $n$ from $a.used - 1$ to $b$ do \\
+\hspace{3mm}7.1  $a_{i} \leftarrow a_{j}$ \\
+\hspace{3mm}7.2  $i \leftarrow i - 1$ \\
+\hspace{3mm}7.3  $j \leftarrow j - 1$ \\
+8.  for $n$ from 0 to $b - 1$ do \\
+\hspace{3mm}8.1  $a_n \leftarrow 0$ \\
+9.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_lshd}
+\end{figure}
+
+\textbf{Algorithm mp\_lshd.}
+This algorithm multiplies an mp\_int by the $b$'th power of $x$.  This is equivalent to multiplying by $\beta^b$.  The algorithm differs 
+from the other algorithms presented so far as it performs the operation in place instead storing the result in a seperate location.  The algorithm
+will return success immediately if $b \le 0$ since the rest of algorithm is only valid when $b > 0$.  
+
+First the destination $a$ is grown as required to accomodate the result.  The counters $i$ and $j$ are used to form a \textit{sliding window} over
+the digits of $a$ of length $b$.  The head of the sliding window is at $i$ (\textit{the leading digit}) and the tail at $j$ (\textit{the trailing digit}).  
+The loop on step 7 copies the digit from the tail to the head.  In each iteration the window is moved down one digit.   The last loop on 
+step 8 sets the lower $b$ digits to zero.
+
+\newpage
+FIGU,sliding_window,Sliding Window Movement
+
+EXAM,bn_mp_lshd.c
+
+The if statement on line @24,if@ ensures that the $b$ variable is greater than zero.  The \textbf{used} count is incremented by $b$ before
+the copy loop begins.  This elminates the need for an additional variable in the for loop.  The variable $tmpa$ on line @42,tmpa@ is an alias
+for the leading digit while $tmpaa$ on line @45,tmpaa@ is an alias for the trailing edge.  The aliases form a window of exactly $b$ digits
+over the input.  
+
+\subsection{Division by $x$}
+
+Division by powers of $x$ is easily achieved by shifting the digits right and removing any that will end up to the right of the zero'th digit.  
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_rshd}. \\
+\textbf{Input}.   One mp\_int $a$ and an integer $b$ \\
+\textbf{Output}.  $a \leftarrow a / \beta^b$ (Divide by $x^b$). \\
+\hline \\
+1.  If $b \le 0$ then return. \\
+2.  If $a.used \le b$ then do \\
+\hspace{3mm}2.1  Zero $a$.  (\textit{hint: use mp\_zero}). \\
+\hspace{3mm}2.2  Return. \\
+3.  $i \leftarrow 0$ \\
+4.  $j \leftarrow b$ \\
+5.  for $n$ from 0 to $a.used - b - 1$ do \\
+\hspace{3mm}5.1  $a_i \leftarrow a_j$ \\
+\hspace{3mm}5.2  $i \leftarrow i + 1$ \\
+\hspace{3mm}5.3  $j \leftarrow j + 1$ \\
+6.  for $n$ from $a.used - b$ to $a.used - 1$ do \\
+\hspace{3mm}6.1  $a_n \leftarrow 0$ \\
+7.  Clamp excess digits.  (\textit{hint: use mp\_clamp}). \\
+8.  Return. \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_rshd}
+\end{figure}
+
+\textbf{Algorithm mp\_rshd.}
+This algorithm divides the input in place by the $b$'th power of $x$.  It is analogous to dividing by a $\beta^b$ but much quicker since
+it does not require single precision division.  This algorithm does not actually return an error code as it cannot fail.  
+
+If the input $b$ is less than one the algorithm quickly returns without performing any work.  If the \textbf{used} count is less than or equal
+to the shift count $b$ then it will simply zero the input and return.
+
+After the trivial cases of inputs have been handled the sliding window is setup.  Much like the case of algorithm mp\_lshd a sliding window that
+is $b$ digits wide is used to copy the digits.  Unlike mp\_lshd the window slides in the opposite direction from the trailing to the leading digit.  
+Also the digits are copied from the leading to the trailing edge.
+
+Once the window copy is complete the upper digits must be zeroed.  Finally algorithm mp\_clamp is used to trim excess digits.
+
+EXAM,bn_mp_rshd.c
+
+The only noteworthy element of this routine is the lack of a return type.  This function cannot fail and as such it is more optimal to not
+return anything.
+
+\section{Powers of Two}
+
+Now that algorithms for moving single bits as well as whole digits exist algorithms for moving the ``in between'' distances are required.  For 
+example, to quickly multiply by $2^k$ for any $k$ without using a full multiplier algorithm would prove useful.  Instead of performing single
+shifts $k$ times to achieve a multiplication by $2^{\pm k}$ a mixture of whole digit shifting and partial digit shifting is employed.  
+
+\subsection{Multiplication by Power of Two}
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_mul\_2d}. \\
+\textbf{Input}.   One mp\_int $a$ and an integer $b$ \\
+\textbf{Output}.  $c \leftarrow a \cdot 2^b$. \\
+\hline \\
+1.  $c \leftarrow a$.  (\textit{hint: use mp\_copy}) \\
+2.  If $c.alloc < c.used + \lfloor b / lg(\beta) \rfloor + 2$ then grow $c$ accordingly. \\
+3.  If the reallocation failed return(\textit{MP\_MEM}). \\
+4.  If $b \ge lg(\beta)$ then \\
+\hspace{3mm}4.1  $c \leftarrow c \cdot \beta^{\lfloor b / lg(\beta) \rfloor}$ (\textit{hint: use mp\_lshd}). \\
+\hspace{3mm}4.2  If step 4.1 failed return(\textit{MP\_MEM}). \\
+5.  $d \leftarrow b \mbox{ (mod }lg(\beta)\mbox{)}$ \\
+6.  If $d \ne 0$ then do \\
+\hspace{3mm}6.1  $mask \leftarrow 2^d$ \\
+\hspace{3mm}6.2  $r \leftarrow 0$ \\
+\hspace{3mm}6.3  for $n$ from $0$ to $c.used - 1$ do \\
+\hspace{6mm}6.3.1  $rr \leftarrow c_n >> (lg(\beta) - d) \mbox{ (mod }mask\mbox{)}$ \\
+\hspace{6mm}6.3.2  $c_n \leftarrow (c_n << d) + r \mbox{ (mod }\beta\mbox{)}$ \\
+\hspace{6mm}6.3.3  $r \leftarrow rr$ \\
+\hspace{3mm}6.4  If $r > 0$ then do \\
+\hspace{6mm}6.4.1  $c_{c.used} \leftarrow r$ \\
+\hspace{6mm}6.4.2  $c.used \leftarrow c.used + 1$ \\
+7.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_mul\_2d}
+\end{figure}
+
+\textbf{Algorithm mp\_mul\_2d.}
+This algorithm multiplies $a$ by $2^b$ and stores the result in $c$.  The algorithm uses algorithm mp\_lshd and a derivative of algorithm mp\_mul\_2 to
+quickly compute the product.
+
+First the algorithm will multiply $a$ by $x^{\lfloor b / lg(\beta) \rfloor}$ which will ensure that the remainder multiplicand is less than 
+$\beta$.  For example, if $b = 37$ and $\beta = 2^{28}$ then this step will multiply by $x$ leaving a multiplication by $2^{37 - 28} = 2^{9}$ 
+left.
+
+The logarithm of the residue is calculated on step 5.  If it is non-zero a modified shift loop is used to calculate the remaining product.  
+Essentially the loop is a generic version of algorith mp\_mul2 designed to handle any shift count in the range $1 \le x < lg(\beta)$.  The $mask$
+variable is used to extract the upper $d$ bits to form the carry for the next iteration.  
+
+This algorithm is loosely measured as a $O(2n)$ algorithm which means that if the input is $n$-digits that it takes $2n$ ``time'' to 
+complete.  It is possible to optimize this algorithm down to a $O(n)$ algorithm at a cost of making the algorithm slightly harder to follow.
+
+EXAM,bn_mp_mul_2d.c
+
+Notes to be revised when code is updated. -- Tom
+
+\subsection{Division by Power of Two}
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_div\_2d}. \\
+\textbf{Input}.   One mp\_int $a$ and an integer $b$ \\
+\textbf{Output}.  $c \leftarrow \lfloor a / 2^b \rfloor, d \leftarrow a \mbox{ (mod }2^b\mbox{)}$. \\
+\hline \\
+1.  If $b \le 0$ then do \\
+\hspace{3mm}1.1  $c \leftarrow a$ (\textit{hint: use mp\_copy}) \\
+\hspace{3mm}1.2  $d \leftarrow 0$ (\textit{hint: use mp\_zero}) \\
+\hspace{3mm}1.3  Return(\textit{MP\_OKAY}). \\
+2.  $c \leftarrow a$ \\
+3.  $d \leftarrow a \mbox{ (mod }2^b\mbox{)}$ (\textit{hint: use mp\_mod\_2d}) \\
+4.  If $b \ge lg(\beta)$ then do \\
+\hspace{3mm}4.1  $c \leftarrow \lfloor c/\beta^{\lfloor b/lg(\beta) \rfloor} \rfloor$ (\textit{hint: use mp\_rshd}). \\
+5.  $k \leftarrow b \mbox{ (mod }lg(\beta)\mbox{)}$ \\
+6.  If $k \ne 0$ then do \\
+\hspace{3mm}6.1  $mask \leftarrow 2^k$ \\
+\hspace{3mm}6.2  $r \leftarrow 0$ \\
+\hspace{3mm}6.3  for $n$ from $c.used - 1$ to $0$ do \\
+\hspace{6mm}6.3.1  $rr \leftarrow c_n \mbox{ (mod }mask\mbox{)}$ \\
+\hspace{6mm}6.3.2  $c_n \leftarrow (c_n >> k) + (r << (lg(\beta) - k))$ \\
+\hspace{6mm}6.3.3  $r \leftarrow rr$ \\
+7.  Clamp excess digits of $c$.  (\textit{hint: use mp\_clamp}) \\
+8.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_div\_2d}
+\end{figure}
+
+\textbf{Algorithm mp\_div\_2d.}
+This algorithm will divide an input $a$ by $2^b$ and produce the quotient and remainder.  The algorithm is designed much like algorithm 
+mp\_mul\_2d by first using whole digit shifts then single precision shifts.  This algorithm will also produce the remainder of the division
+by using algorithm mp\_mod\_2d.
+
+EXAM,bn_mp_div_2d.c
+
+The implementation of algorithm mp\_div\_2d is slightly different than the algorithm specifies.  The remainder $d$ may be optionally 
+ignored by passing \textbf{NULL} as the pointer to the mp\_int variable.    The temporary mp\_int variable $t$ is used to hold the 
+result of the remainder operation until the end.  This allows $d = a$ to be true without overwriting the input before they are no longer required.  
+
+The remainder of the source code is essentially the same as the source code for mp\_mul\_2d.  (-- Fix this paragraph up later, Tom).
+
+\subsection{Remainder of Division by Power of Two}
+
+The last algorithm in the series of polynomial basis power of two algorithms is calculating the remainder of division by $2^b$.  This
+algorithm benefits from the fact that in twos complement arithmetic $a \mbox{ (mod }2^b\mbox{)}$ is the same as $a$ AND $2^b - 1$.  
+
+\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_mod\_2d}. \\
+\textbf{Input}.   One mp\_int $a$ and an integer $b$ \\
+\textbf{Output}.  $c \leftarrow a \mbox{ (mod }2^b\mbox{)}$. \\
+\hline \\
+1.  If $b \le 0$ then do \\
+\hspace{3mm}1.1  $c \leftarrow 0$ (\textit{hint: use mp\_zero}) \\
+\hspace{3mm}1.2  Return(\textit{MP\_OKAY}). \\
+2.  If $b > a.used \cdot lg(\beta)$ then do \\
+\hspace{3mm}2.1  $c \leftarrow a$ (\textit{hint: use mp\_copy}) \\
+\hspace{3mm}2.2  Return the result of step 2.1. \\
+3.  $c \leftarrow a$ \\
+4.  If step 3 failed return(\textit{MP\_MEM}). \\
+5.  for $n$ from $\lceil b / lg(\beta) \rceil$ to $c.used$ do \\
+\hspace{3mm}5.1  $c_n \leftarrow 0$ \\
+6.  $k \leftarrow b \mbox{ (mod }lg(\beta)\mbox{)}$ \\
+7.  $c_{\lfloor b / lg(\beta) \rfloor} \leftarrow c_{\lfloor b / lg(\beta) \rfloor} \mbox{ (mod }2^{k}\mbox{)}$. \\
+8.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_mod\_2d}
+\end{figure}
+
+\textbf{Algorithm mp\_mod\_2d.}
+This algorithm will quickly calculate the value of $a \mbox{ (mod }2^b\mbox{)}$.  First if $b$ is less than or equal to zero the 
+result is set to zero.  If $b$ is greater than the number of bits in $a$ then it simply copies $a$ to $c$ and returns.  Otherwise, $a$ 
+is copied to $b$, leading digits are removed and the remaining leading digit is trimed to the exact bit count.
+
+EXAM,bn_mp_mod_2d.c
+
+-- Add comments later, Tom.
+
+\section*{Exercises}
+\begin{tabular}{cl}
+$\left [ 3 \right ] $ & Devise an algorithm that performs $a \cdot 2^b$ for generic values of $b$ \\
+                      & in $O(n)$ time. \\
+                      &\\
+$\left [ 3 \right ] $ & Devise an efficient algorithm to multiply by small low hamming  \\
+                      & weight values such as $3$, $5$ and $9$.  Extend it to handle all values \\
+                      & upto $64$ with a hamming weight less than three. \\
+                      &\\
+$\left [ 2 \right ] $ & Modify the preceding algorithm to handle values of the form \\
+                      & $2^k - 1$ as well. \\
+                      &\\
+$\left [ 3 \right ] $ & Using only algorithms mp\_mul\_2, mp\_div\_2 and mp\_add create an \\
+                      & algorithm to multiply two integers in roughly $O(2n^2)$ time for \\
+                      & any $n$-bit input.  Note that the time of addition is ignored in the \\
+                      & calculation.  \\
+                      & \\
+$\left [ 5 \right ] $ & Improve the previous algorithm to have a working time of at most \\
+                      & $O \left (2^{(k-1)}n + \left ({2n^2 \over k} \right ) \right )$ for an appropriate choice of $k$.  Again ignore \\
+                      & the cost of addition. \\
+                      & \\
+$\left [ 1 \right ] $ & There exists an improvement on the previous algorithm to \\
+                      & slightly reduce the number of additions required.  Modify the \\
+                      & previous algorithm to include this improvement. \\
+                      & \\
+$\left [ 2 \right ] $ & Devise a chart to find optimal values of $k$ for the previous problem \\
+                      & for $n = 64 \ldots 1024$ in steps of $64$. \\
+                      & \\
+$\left [ 2 \right ] $ & Using only algorithms mp\_abs and mp\_sub devise another method for \\
+                      & calculating the result of a signed comparison. \\
+                      &
+\end{tabular}
+
+\chapter{Multiplication and Squaring}
+\section{The Multipliers}
+For most number theoretic systems including public key cryptographic algorithms the set of algorithms collectively known as the
+``multipliers'' form the most important subset of algorithms of any multiple precision integer package.  The set of multipliers 
+include multiplication, squaring and modular reduction algorithms.  
+
+The importance of these algorithms is driven by the fact that most popular public key algorithms are based on modular 
+exponentiation.  That is performing $d \equiv a^b \mbox{ (mod }c\mbox{)}$ for some arbitrary choice of $a$, $b$, $c$ and $d$.  Roughly
+speaking the a modular exponentiation will spend about 40\% of the time in modular reductions, 35\% of the time in squaring and 25\% of
+the time in multiplications.  Only a small trivial amount of time is spent on lower level algorithms such as mp\_clamp, mp\_init, etc...
+
+This chapter will discuss only two of the multipliers algorithms, multiplication and squaring.  As will be discussed shortly very efficient
+multiplier algorithms are not always straightforward and deserve a lot of attention.
+
+\section{Multiplication}
+\subsection{The Baseline Multiplication}
+\index{baseline multiplication}
+Computing the product of two integers in software can be achieved using a trivial adaptation of the standard $O(n^2)$ long-hand multiplication
+algorithm school children are taught.  The ``baseline multiplication'' algorithm is designed to act as the ``catch-all'' algorithm only called
+when the faster algorithms cannot be used.  This algorithm does not use any particularly interesting optimizations.
+
+The first algorithm to review is the unsigned multiplication algorithm from which a signed multiplication algorithm can be established.  One important 
+facet of this algorithm to note is that it has been modified to only produce a certain amount of output digits as resolution.  Recall that for
+a $n$ and $m$ digit input the product will be at most $n + m + 1$ digits.  Therefore, this algorithm can be reduced to a full multiplier by
+telling it to produce $n + m + 1$ digits.  
+
+Recall from ~GAMMA~ the definition of $\gamma$ as the number of bits in the type \textbf{mp\_digit}.  We shall now extend this variable set to 
+include $\alpha$ which shall represent the number of bits in the type \textbf{mp\_word}.  This implies that $2^{\alpha} > 2 \cdot \beta^2$.  The 
+constant $\delta = 2^{\alpha - 2lg(\beta)}$ will represent the maximal weight of any column in a product (\textit{see ~COMBA~ for more information}).
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{s\_mp\_mul\_digs}. \\
+\textbf{Input}.   mp\_int $a$, mp\_int $b$ and an integer $digs$ \\
+\textbf{Output}.  $c \leftarrow \vert a \vert \cdot \vert b \vert \mbox{ (mod }\beta^{digs}\mbox{)}$. \\
+\hline \\
+1.  If min$(a.used, b.used) < \delta$ then do \\
+\hspace{3mm}1.1  Calculate $c = \vert a \vert \cdot \vert b \vert$ by the Comba method.  \\
+\hspace{3mm}1.2  Return the result of step 1.1 \\
+\\
+Allocate and initialize a temporary mp\_int. \\
+2.  Init $t$ to be of size $digs$ \\
+3.  If step 2 failed return(\textit{MP\_MEM}). \\
+4.  $t.used \leftarrow digs$ \\
+\\
+Compute the product. \\
+5.  for $ix$ from $0$ to $a.used - 1$ do \\
+\hspace{3mm}5.1  $u \leftarrow 0$ \\
+\hspace{3mm}5.2  $pb \leftarrow \mbox{min}(b.used, digs - ix)$ \\
+\hspace{3mm}5.3  If $pb < 1$ then goto step 6. \\
+\hspace{3mm}5.4  for $iy$ from $0$ to $pb - 1$ do \\
+\hspace{6mm}5.4.1  $\hat r \leftarrow t_{iy + ix} + a_{ix} \cdot b_{iy} + u$ \\
+\hspace{6mm}5.4.2  $t_{iy + ix} \leftarrow \hat r \mbox{ (mod }\beta\mbox{)}$ \\
+\hspace{6mm}5.4.3  $u \leftarrow \lfloor \hat r / \beta \rfloor$ \\
+\hspace{3mm}5.5  if $ix + iy < digs$ then do \\
+\hspace{6mm}5.5.1  $t_{ix + pb} \leftarrow u$ \\
+6.  Clamp excess digits of $t$. \\
+7.  Swap $c$ with $t$ \\
+8.  Clear $t$ \\
+9.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm s\_mp\_mul\_digs}
+\end{figure}
+
+\textbf{Algorithm s\_mp\_mul\_digs.}
+This algorithm computes the unsigned product of two inputs $a$ and $c$ limited to an output precision of $digs$ digits.  While it may seem
+a bit awkward to modify the function from its simple $O(n^2)$ description the usefulness of partial multipliers will arise in a future 
+algorithm.  The algorithm is loosely based on algorithm 14.12 from \cite[pp. 595]{HAC} and is similar to Algorithm M \cite[pp. 268]{TAOCPV2}.  The
+algorithm differs from those cited references because it can produce a variable output precision regardless of the precision of the inputs.
+
+The first thing this algorithm checks for is whether a Comba multiplier can be used instead.   That is if the minimal digit count of either
+input is less than $\delta$ the Comba method is used.    After the Comba method is ruled out the baseline algorithm begins.  A 
+temporary mp\_int variable $t$ is used to hold the intermediate result of the product.  This allows the algorithm to be used to 
+compute products when either $a = c$ or $b = c$ without overwriting the inputs.  
+
+All of step 5 is the infamous $O(n^2)$ multiplication loop slightly modified to only produce upto $digs$ digits of output.  The $pb$ variable
+is given the count of digits to read from $b$ inside the nested loop.  If $pb < 0$ then no more output digits can be produced and the algorithm
+will exit the loop.  The best way to think of the loops are as a series of $pb \times 1$ multiplication.    That is, in each pass of the 
+innermost loop $a_{ix}$ is multiplied against $b$ and the result is added (\textit{with an appropriate shift}) to $t$.  
+
+For example, consider multiplying $576$ by $241$.  That is equivalent to computing $10^0(1)(576) + 10^1(4)(576) + 10^2(2)(576)$ which is best
+visualized as the following table.
+
+\begin{figure}[here]
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|c|}
+\hline   &&          & 5 & 7 & 6 & \\
+\hline   $\times$&&  & 2 & 4 & 1 & \\
+\hline &&&&&&\\
+  &&          & 5 & 7 & 6 & $10^0(1)(576)$ \\
+  &2 &   3    & 0 & 4 & 0 & $10^1(4)(576)$ \\
+  1 & 1 & 5 & 2 & 0 & 0 &  $10^2(2)(576)$ \\
+\hline  
+\end{tabular}
+\end{center}
+\caption{Long-Hand Multiplication Diagram}
+\end{figure}
+
+Each row of the product is added to the result after being shifted to the left (\textit{multiplied by a power of the radix}) by the appropriate 
+count.  That is in pass $ix$ of the inner loop the product is added starting at the $ix$'th digit of the reult.
+
+Step 5.4.1 introduces the hat symbol (\textit{e.g. $\hat x$}) which represents a double precision variable.  The multiplication on that step
+is assumed to be a double wide output single precision multiplication.  That is, two single precision variables are multiplied to produce a
+double precision result.  The step is somewhat optimized from a long-hand multiplication algorithm because the carry from the addition in step
+5.4.1 is forwarded through the nested loop.  If the carry was ignored it would overflow the single precision digit $t_{ix+iy}$ and the result
+would be lost.  
+
+At step 5.5 the nested loop is finished and any carry that was left over should be forwarded.  That is provided $ix + iy < digs$ otherwise the
+carry is ignored since it will not be part of the result anyways.  
+
+EXAM,bn_s_mp_mul_digs.c
+
+Lines @31,if@ to @35,}@ determine if the Comba method can be used first.  The conditions for using the Comba routine are that min$(a.used, b.used) < \delta$ and
+the number of digits of output is less than \textbf{MP\_WARRAY}.  This new constant is used to control the stack usage in the Comba routines.  By
+default it is set to $\delta$ but can be reduced when memory is at a premium.
+
+Of particular importance is the calculation of the $ix+iy$'th column on lines @64,mp_word@, @65,mp_word@ and @66,mp_word@.  Note how all of the
+variables are cast to the type \textbf{mp\_word}.  That is to ensure that double precision operations are used instead of single precision.  The
+multiplication on line @65,) * (@ is a bit of a GCC optimization.  On the outset it looks like the compiler will have to use a double precision
+multiplication to produce the result required.  Such an operation would be horribly slow on most processors and drag this to a crawl.  However,
+GCC is smart enough to realize that double wide output single precision multipliers can be used.  For example, the instruction ``MUL'' on the
+x86 processor can multiply two 32-bit values and produce a 64-bit result.  
+
+\subsection{Faster Multiplication by the ``Comba'' Method}
+MARK,COMBA
+
+One of the huge drawbacks of the ``baseline'' algorithms is that at the $O(n^2)$ level the carry must be computed and propagated upwards.  This
+makes the nested loop very sequential and hard to unroll and implement in parallel.  The ``Comba'' method is named after little known 
+(\textit{in cryptographic venues}) Paul G. Comba where in \cite{COMBA} a method of implementing fast multipliers that do not require nested 
+carry fixup operations was presented.
+
+At the heart of algorithm is once again the long-hand algorithm for multiplication.  Except in this case a slight twist is placed on how
+the columns of the result are produced.  In the standard long-hand algorithm rows of products are produced then added together to form the 
+final result.  In the baseline algorithm the columns are added together to get the result instantaneously.  
+
+In the Comba algorithm however, the columns of the result are produced entirely independently of each other.  That is at the $O(n^2)$ level a 
+simple multiplication and addition step is performed.  Or more succintly that 
+
+\begin{equation}
+x_n = \sum_{i+j = n} a_ib_j
+\end{equation}
+
+Where $x_n$ is the $n'th$ column of the output vector.  To see how this works consider once again multiplying $576$ by $241$.  
+
+\begin{figure}[here]
+\begin{small}
+\begin{center}
+\begin{tabular}{|c|c|c|c|c|c|}
+  \hline &          & 5 & 7 & 6 & First Input\\
+  \hline $\times$ & & 2 & 4 & 1 & Second Input\\
+\hline            &                        & $1 \cdot 5 = 5$   & $1 \cdot 7 = 7$   & $1 \cdot 6 = 6$ & First pass \\
+                  &  $4 \cdot 5 = 20$      & $4 \cdot 7+5=33$  & $4 \cdot 6+7=31$  & 6               & Second pass \\
+   $2 \cdot 5 = 10$ &  $2 \cdot 7 + 20 = 34$ & $2 \cdot 6+33=45$ & 31                & 6             & Third pass \\
+\hline 10 & 34 & 45 & 31 & 6 & Final Result \\   
+\hline   
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Comba Multiplication Diagram}
+\end{figure}
+
+At this point the vector $x = \left < 10, 34, 45, 31, 6 \right >$ is the result of the first step of the Comba multipler.  
+Now the columns must be fixed by propagating the carry upwards.  The following trivial algorithm will accomplish this.
+
+\begin{enumerate}
+    \item for $n$ from 0 to $k - 1$ do
+    \item \hspace{3mm} $x_{n+1} \leftarrow x_{n+1} + \lfloor x_{n}/\beta \rfloor$ 
+    \item \hspace{3mm} $x_{n} \leftarrow x_{n} \mbox{ (mod }\beta\mbox{)}$
+\end{enumerate}
+
+With that algorithm and $k = 5$ and $\beta = 10$ the following vector is produced $y = \left < 1, 3, 8, 8, 1, 6 \right >$.  In this case 
+$241 \cdot 576$ is in fact $138816$ and the procedure succeeded.  If the algorithm is correct and as will be demonstrated shortly more
+efficient than the baseline algorithm why not simply always use this algorithm?
+
+\subsubsection{Column Weight.}
+At the nested $O(n^2)$ level the Comba method adds the product of two single precision variables to a each column of the output 
+independently.  A serious obstacle is if the carry is lost due to lack of precision before the algorithm has a chance to fix
+the carries.  For example, in the multiplication of two three-digit numbers the third column of output will be the sum of
+three single precision multiplications.  If the precision of the accumulator for the output digits is less then $3 \cdot (\beta - 1)^2$ then
+an overflow can occur and the carry information will be lost.  For any $m$ and $n$ digit input the maximal weight of any column is 
+min$(m, n)$ which is fairly obvious.
+
+The maximal number of terms in any column of a product is known as the ``column weight'' and strictly governs when the algorithm can be used.  Recall
+from earlier that a double precision type has $\alpha$ bits of resolution and a single precision digit has $lg(\beta)$ bits of precision.  Given these
+two quantities we may not violate the following
+
+\begin{equation}
+k \cdot \left (\beta - 1 \right )^2 < 2^{\alpha}
+\end{equation}
+
+Which reduces to 
+
+\begin{equation}
+k \cdot \left ( \beta^2 - 2\beta + 1 \right ) < 2^{\alpha}
+\end{equation}
+
+Let $\rho = lg(\beta)$ represent the number of bits in a single precision digit.  By further re-arrangement of the equation the final solution is
+found.
+
+\begin{equation}
+k \cdot \left (2^{2\rho} - 2^{\rho + 1} + 1 \right ) < 2^{\alpha}
+\end{equation}
+
+The defaults for LibTomMath are $\beta = 2^{28}, \alpha = 2^{64}$ which simplies to $72057593501057025 \cdot k < 2^{64}$ which when divided out
+result in $k < 257$.  This implies that the smallest input may not have more than $256$ digits if the Comba method is to be used in
+this configuration.  This is quite satisfactory for most applications since $256$ digits would be allow for numbers in the range of $2^{7168}$ 
+which is much larger than the typical $2^{100}$ to $2^{4000}$ range most public key cryptographic algorithms use.  
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{fast\_s\_mp\_mul\_digs}. \\
+\textbf{Input}.   mp\_int $a$, mp\_int $b$ and an integer $digs$ \\
+\textbf{Output}.  $c \leftarrow \vert a \vert \cdot \vert b \vert \mbox{ (mod }\beta^{digs}\mbox{)}$. \\
+\hline \\
+Place an array of \textbf{MP\_WARRAY} double precision digits named $\hat W$ on the stack. \\
+1.  If $c.alloc < digs$ then grow $c$ to $digs$ digits. (\textit{hint: use mp\_grow}) \\
+2.  If step 1 failed return(\textit{MP\_MEM}).\\
+\\
+Zero the temporary array $\hat W$. \\
+3.  for $n$ from $0$ to $digs - 1$ do \\
+\hspace{3mm}3.1  $\hat W_n \leftarrow 0$ \\
+\\
+Compute the columns. \\
+4.  for $ix$ from $0$ to $a.used - 1$ do \\
+\hspace{3mm}4.1  $pb \leftarrow \mbox{min}(b.used, digs - ix)$ \\
+\hspace{3mm}4.2  If $pb < 1$ then goto step 5. \\
+\hspace{3mm}4.3  for $iy$ from $0$ to $pb - 1$ do \\
+\hspace{6mm}4.3.1  $\hat W_{ix+iy} \leftarrow \hat W_{ix+iy} + a_{ix}b_{iy}$ \\
+\\
+Propagate the carries upwards. \\
+5.  $oldused \leftarrow c.used$ \\
+6.  $c.used \leftarrow digs$ \\
+7.  If $digs > 1$ then do \\
+\hspace{3mm}7.1.  for $ix$ from $1$ to $digs - 1$ do \\
+\hspace{6mm}7.1.1  $\hat W_{ix} \leftarrow \hat W_{ix} + \lfloor \hat W_{ix-1} / \beta \rfloor$ \\
+\hspace{6mm}7.1.2  $c_{ix - 1} \leftarrow \hat W_{ix - 1} \mbox{ (mod }\beta\mbox{)}$ \\
+8.  else do \\
+\hspace{3mm}8.1  $ix \leftarrow 0$ \\
+9.  $c_{ix} \leftarrow \hat W_{ix} \mbox{ (mod }\beta\mbox{)}$ \\
+\\
+Zero excess digits. \\
+10.  If $digs < oldused$ then do \\
+\hspace{3mm}10.1  for $n$ from $digs$ to $oldused - 1$ do \\
+\hspace{6mm}10.1.1  $c_n \leftarrow 0$ \\
+11.  Clamp excessive digits of $c$.  (\textit{hint: use mp\_clamp}) \\
+12.  Return(\textit{MP\_OKAY}). \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm fast\_s\_mp\_mul\_digs}
+\end{figure}
+
+\textbf{Algorithm fast\_s\_mp\_mul\_digs.}
+This algorithm performs the unsigned multiplication of $a$ and $b$ using the Comba method limited to $digs$ digits of precision.  The algorithm
+essentially peforms the same calculation as algorithm s\_mp\_mul\_digs but much faster.
+
+The array $\hat W$ is meant to be on the stack when the algorithm is used.  The size of the array does not change which is ideal.  Note also that 
+unlike algorithm s\_mp\_mul\_digs no temporary mp\_int is required since the result is calculated in place in $\hat W$.  
+
+The $O(n^2)$ loop on step four is where the Comba method starts to show through.  First there is no carry variable in the loop.  Second the
+double precision multiply and add step does not have a carry fixup of any sort.  In fact the nested loop is very simple and can be implemented
+in parallel.  
+
+What makes the Comba method so attractive is that the carry propagation only takes place outside the $O(n^2)$ nested loop.  For example, if the 
+cost in terms of time of a multiply and add is $p$ and the cost of a carry propagation is $q$ then a baseline multiplication would require 
+$O \left ((p + q)n^2 \right )$ time to multiply two $n$-digit numbers.  The Comba method only requires $pn^2 + qn$ time, however, in practice 
+the speed increase is actually much more.  With $O(n)$ space the algorithm can be reduced to $O(pn + qn)$ time by implementing the $n$ multiply
+and add operations in the nested loop in parallel.  
+
+The carry propagation loop on step 7 is fairly straightforward.  It could have been written phased the other direction, that is, to assign
+to $c_{ix}$ instead of $c_{ix-1}$ in each iteration.  However, it would still require pre-caution to make sure that $\hat W_{ix+1}$ is not beyond
+the \textbf{MP\_WARRAY} words set aside.  
+
+EXAM,bn_fast_s_mp_mul_digs.c
+
+The memset on line @47,memset@ clears the initial $\hat W$ array to zero in a single step. Like the slower baseline multiplication
+implementation a series of aliases (\textit{lines @67, tmpx@, @70, tmpy@ and @75,_W@}) are used to simplify the inner $O(n^2)$ loop.  
+In this case a new alias $\_\hat W$ has been added which refers to the double precision columns offset by $ix$ in each pass.  
+
+The inner loop on line @84,mp_word@ is where the algorithm will spend the majority of the time.  Which is why it has been stripped to the 
+bones of any extra baggage\footnote{Hence the pointer aliases.}.  On x86 processors the multiply and add amounts to at the very least five
+instructions (\textit{two loads, two additions, one multiply}) while on the ARMv4 processors it amounts to only three (\textit{one load, one store,
+one multiply-add}).   On both the x86 and ARMv4 processors GCC v3.2 does a very good job at unrolling the loop and scheduling it so there 
+are very few dependency stalls.
+
+In theory the difference between the baseline and comba algorithms is a mere $O(qn)$ time difference.  However, in the $O(n^2)$ nested loop of the
+baseline method there are dependency stalls as the algorithm must wait for the multiplier to finish before propagating the carry to the next 
+digit.  As a result fewer of the often multiple execution units\footnote{The AMD Athlon has three execution units and the Intel P4 has four.} can
+be simultaneously used.  
+
+\subsection{Multiplication at New Bounds by Karatsuba Method}
+So far two methods of multiplication have been presented.  Both of the algorithms require asymptotically $O(n^2)$ time to multiply two $n$-digit 
+numbers together.  While the Comba method is much faster than the baseline algorithm it still requires far too much time to multiply 
+large inputs together.  In fact it was not until \cite{KARA} in 1962 that a faster algorithm had been proposed at all.
+
+The idea behind Karatsubas method is that an input can be represented in polynomial basis as two halves then multiplied.  For example, if 
+$f(x) = ax + b$ and $g(x) = cx + b$ then the product of the two polynomials $h(x) = f(x)g(x)$ will allow $h(\beta) = (f(\beta))(g(\beta))$.  
+
+So how does this help?  First expand the product $h(x)$.
+
+\begin{center}
+\begin{tabular}{rcl}
+$h(x)$ & $=$ & $f(x)g(x)$ \\
+       & $=$ & $(ax + b)(cx + d)$ \\
+       & $=$ & $acx^2 + adx + bcx + bd$ \\
+\end{tabular}
+\end{center}
+
+The next equation is a bit of genius on the part of Karatsuba.  He proved that the previous equation is equivalent to 
+
+\begin{equation}
+h(x) = acx^2 + ((a - c)(b - d) + bd + ac)x + bd
+\end{equation}
+
+Essentially the proof lies in some fairly light algebraic number theory (\textit{see \cite{KARAP} for details}) that is not important for
+the discussion.  At first glance it appears that the Karatsuba method is actually harder than the straight $O(n^2)$ approach.  
+However, further investigation will prove otherwise.  
+
+The first important observation is that both $f(x)$ and $g(x)$ are the polynomial basis representation of two-digit numbers.  This means that 
+$\left < a, b, c, d \right >$ are single digit values.  Using either the baseline or straight polynomial multiplication the old method requires
+$O \left (4(n/2)^2 \right ) = O(n^2)$ single precision multiplications.  Looking closer at Karatsubas equation there are only three unique multiplications 
+required which are $ac$, $bd$ and $(a - c)(b - d)$.  As a result only $O \left (3 \cdot (n/2)^2 \right ) = O \left ( {3 \over 4}n^2 \right )$ 
+multiplications are required.  
+
+So far the algorithm has been discussed from the point of view of ``two-digit'' numbers.  However, there is no reason why two digits implies a range of 
+$\beta^2$.  It could just as easily represent a range of $\left (\beta^k \right)^2$ as well.  For example, the polynomial 
+$f(x) = a_3x^3 + a_2x^2 + a_1x + a_0$ could also be written as $f'(x) = a'_1x + a'_0$ where $f(\beta) = f'(\beta^2)$.  Fortunately representing an
+integer which is already in an array of radix-$\beta$ digits in polynomial basis in terms of a power of $\beta$ is very simple.  
+
+\subsubsection{Recursion}
+The Karatsuba multiplication algorithm can be applied to practically any size of input.  Therefore, it is possible that the Karatsuba method itself
+be used for the three multiplications required.  For example, when multiplying two four-digit numbers there will be three multiplications of two-digit
+numbers.  In this case the smaller multiplication requires $p(n) = {3 \over 4}n^2$ time to complete while the larger multiplication requires
+$q(n) = 3 \cdot p(n/2)$ multiplications.  
+
+By expanding $q(n)$ the following equation is achieved. 
+
+\begin{center}
+\begin{tabular}{rcl}
+$q(n)$ & $=$ & $3 \cdot p(n/2)$ \\
+       & $=$ & $3 \cdot (3 \cdot ((n/2)/2)^2)$ \\
+       & $=$ & $9 \cdot (n/4)^2$ \\
+       & $=$ & ${9 \over 16}n^2$ \\
+\end{tabular}
+\end{center}
+
+The generic expression for the multiplicand is simply $\left ( {3 \over 4} \right )^k$ for $k \ge 1$ recurisions.  The maximal number of recursions
+is approximately $lg(n)$.  Putting this all in terms of a base $n$ logarithm the asymptotic running time can be deduced.
+
+\begin{center}
+\begin{tabular}{rcl}
+$lg_n \left ( \left ( {3 \over 4} \right )^{lg_2 n} \cdot n^2 \right )$ & $=$ & $lg_2 n \cdot lg_n \left ( { 3 \over 4 } \right ) + 2$ \\
+                                                                        & $=$ & $\left ( {log N \over log 2} \right ) \cdot \left ( {log \left ( {3 \over 4} \right ) \over log N } \right ) + 2$ \\
+                                                                        & $=$ & ${ log 3 - log 2^2 + 2 \cdot log 2} \over log 2$ \\
+                                                                        & $=$ & $log 3 \over log 2$ \\
+\end{tabular}
+\end{center}
+
+Which leads to a running time of $O \left ( n^{lg(3)} \right )$ which is approximately $O(n^{1.584})$.  This can lead to 
+impressive savings with fairly moderate sized numbers.  For example, when multiplying two 128-digit numbers the Karatsuba 
+method saves $14,197$ (\textit{or $86\%$ of the total}) single precision multiplications.  
+
+The immediate question becomes why not simply use Karatsuba multiplication all the time and forget about the baseline and Comba algorithms? 
+
+\subsubsection{Overhead}
+While the Karatsuba method saves on the number of single precision multiplications required this savings is not entirely free.  The product
+of three half size products must be stored somewhere as well as four additions and two subtractions performed.  These operations incur sufficient
+overhead that often for fairly trivial sized inputs the Karatsuba method is slower.
+
+\index{cutoff point}
+The \textit{cutoff point} for Karatsuba multiplication is the point at which the Karatsuba multiplication and baseline (\textit{or Comba}) meet.  
+For the purposes of this discussion call this value $x$.  For any input with $n$ digits such that $n < x$ Karatsuba multiplication will be slower 
+and for $n > x$ it will be faster.  Often the break between the two algorithms is not so clean cut in reality.  The cleaner the cut the more 
+efficient multiplication will be which is why tuning the multiplication is a very important process.  For example, a properly tuned Karatsuba 
+multiplication algorithm can multiply two $4,096$ bit numbers up to five times faster on an Athlon processor compared to the standard baseline
+algorithm.  
+
+The exact placement of the value of $x$ depends on several key factors.   The cost of allocating storage for the temporary variables, the cost of 
+performing the additions and most importantly the cost of performing a single precision multiplication.  With a processor where single precision 
+multiplication is fast\footnote{The AMD Athlon for instance has a six cycle multiplier compared to the Intel P4 which has a 15 cycle multiplier.} the 
+cutoff point will move upwards.  Similarly with a slower processor the cutoff point will move downwards.  
+
+\newpage\begin{figure}[!here]
+\begin{small}
+\begin{center}
+\begin{tabular}{l}
+\hline Algorithm \textbf{mp\_karatsuba\_mul}. \\
+\textbf{Input}.   mp\_int $a$ and mp\_int $b$ \\
+\textbf{Output}.  $c \leftarrow \vert a \vert \cdot \vert b \vert$ \\
+\hline \\
+1.  $B \leftarrow \mbox{min}(a.used, b.used)/2$ \\
+2.  Init the following mp\_int variables: $x0$, $x1$, $y0$, $y1$, $t1$, $x0y0$, $x1y1$.\\
+3.  If step 2 failed then return(\textit{MP\_MEM}). \\
+\\
+Split the input.  e.g. $a = x1 \cdot \beta^B + x0$ \\
+4.  $x0 \leftarrow a \mbox{ (mod }\beta^B\mbox{)}$ (\textit{hint: use mp\_mod\_2d}) \\
+5.  $y0 \leftarrow b \mbox{ (mod }\beta^B\mbox{)}$ \\
+6.  $x1 \leftarrow \lfloor a / \beta^B \rfloor$ (\textit{hint: use mp\_rshd}) \\
+7.  $y1 \leftarrow \lfloor b / \beta^B \rfloor$ \\
+\\
+Calculate the three products. \\
+8.  $x0y0 \leftarrow x0 \cdot y0$ (\textit{hint: use mp\_mul}) \\
+9.  $x1y1 \leftarrow x1 \cdot y1$ \\
+10.  $t1 \leftarrow x1 - x0$ (\textit{hint: use mp\_sub}) \\
+11.  $x0 \leftarrow y1 - y0$ \\
+12.  $t1 \leftarrow t1 \cdot x0$ \\
+\\
+Calculate the middle term. \\
+13.  $x0 \leftarrow x0y0 + x1y1$ \\
+14.  $t1 \leftarrow x0 - t1$ \\
+\\
+Calculate the final product. \\
+15.  $t1 \leftarrow t1 \cdot \beta^B$ (\textit{hint: use mp\_lshd}) \\
+16.  $x1y1 \leftarrow x1y1 \cdot \beta^{2B}$ \\
+17.  $t1 \leftarrow x0y0 + t1$ \\
+18.  $c \leftarrow t1 + x1y1$ \\
+19.  Clear all of the temporary variables. \\
+20.  Return(\textit{MP\_OKAY}).\\
+\hline 
+\end{tabular}
+\end{center}
+\end{small}
+\caption{Algorithm mp\_karatsuba\_mul}
+\end{figure}
+
+\textbf{Algorithm mp\_karatsuba\_mul.}
+
+
+\section{Squaring}
+\subsection{The Baseline Squaring Algorithm}
+\subsection{Faster Squaring by the ``Comba'' Method}
+\subsection{Karatsuba Squaring}
+\section{Tuning Algorithms}
+\subsection{How to Tune Karatsuba Algorithms}
+
+\chapter{Modular Reductions}
+\section{Basics of Modular Reduction}
+\section{The Barrett Reduction}
+\section{The Montgomery Reduction}
+\subsection{Faster ``Comba'' Montgomery Reduction}
+\subsection{Example Montgomery Algorithms}
+\section{The Diminished Radix Algorithm}
+\section{Algorithm Comparison}
+
+\chapter{Exponentiation}
+\section{Single Digit Exponentiation}
+\section{Modular Exponentiation}
+\subsection{General Case}
+\subsection{Odd or Diminished Radix Moduli}
+\section{Quick Power of Two}
+
+\chapter{Higher Level Algorithms}
+\section{Integer Division with Remainder}
+\section{Single Digit Helpers}
+\subsection{Single Digit Addition}
+\subsection{Single Digit Subtraction}
+\subsection{Single Digit Multiplication}
+\subsection{Single Digit Division}
+\subsection{Single Digit Modulo}
+\subsection{Single Digit Root Extraction}
+\section{Random Number Generation}
+\section{Formatted Output}
+\subsection{Getting The Output Size}
+\subsection{Generating Radix-n Output}
+\subsection{Reading Radix-n Input}
+\section{Unformatted Output}
+\subsection{Getting The Output Size}
+\subsection{Generating Output}
+\subsection{Reading Input}
+
+\chapter{Number Theoretic Algorithms}
+\section{Greatest Common Divisor}
+\section{Least Common Multiple}
+\section{Jacobi Symbol Computation}
+\section{Modular Inverse}
+\subsection{General Case}
+\subsection{Odd Moduli}
+\section{Primality Tests}
+\subsection{Trial Division}
+\subsection{The Fermat Test}
+\subsection{The Miller-Rabin Test}
+\subsection{Primality Test in a Bottle}
+\subsection{The Next Prime}
+\section{Root Extraction}
+
+\backmatter
+\appendix
+\begin{thebibliography}{ABCDEF}
+\bibitem[1]{TAOCPV2}
+Donald Knuth, \textit{The Art of Computer Programming}, Third Edition, Volume Two, Seminumerical Algorithms, Addison-Wesley, 1998
+
+\bibitem[2]{HAC}
+A. Menezes, P. van Oorschot, S. Vanstone, \textit{Handbook of Applied Cryptography}, CRC Press, 1996
+
+\bibitem[3]{ROSE}
+Michael Rosing, \textit{Implementing Elliptic Curve Cryptography}, Manning Publications, 1999
+
+\bibitem[4]{COMBA}
+Paul G. Comba, \textit{Exponentiation Cryptosystems on the IBM PC}. IBM Systems Journal 29(4): 526-538 (1990)
+
+\bibitem[5]{KARA}
+A. Karatsuba, Doklay Akad. Nauk SSSR 145 (1962), pp.293-294
+
+\bibitem[6]{KARAP}
+Andre Weimerskirch and Christof Paar, \textit{Generalizations of the Karatsuba Algorithm for Polynomial Multiplication}, Submitted to Design, Codes and Cryptography, March 2002
+
+\end{thebibliography}
+
+\input{tommath.ind}
+
+\chapter{Appendix}
+\subsection*{Appendix A -- Source Listing of tommath.h}
+
+The following is the source listing of the header file ``tommath.h'' for the LibTomMath project.  It contains many of 
+the definitions used throughout the code such as \textbf{mp\_int}, \textbf{MP\_PREC} and so on.  The header is 
+presented here for completeness.
+
+LIST,tommath.h
+
+\end{document}
