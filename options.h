@@ -96,9 +96,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * if the random number source isn't good. In general this isn't required */
 /* #define DSS_PROTOK */
 
-/* Whether to do reverse DNS lookups. This is advisable, though will add
- * code size with gethostbyname() etc, so for very small environments where
- * you are statically linking, you might want to undefine this */
+/* Whether to do reverse DNS lookups. */
 #define DO_HOST_LOOKUP
 
 /* Whether to print the message of the day (MOTD). This doesn't add much code

@@ -397,6 +397,11 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	char sbuf[NI_MAXSERV];
 	int ret;
 	unsigned int len;
+#ifdef DO_HOST_LOOKUP
+	const int flags = NI_NUMERICSERV;
+#else
+	const int flags = NI_NUMERICHOST | NI_NUMERICSERV;
+#endif
 
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
@@ -410,8 +415,9 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	}
 #endif
 
+
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf),
-			sbuf, sizeof(sbuf), NI_NUMERICSERV);
+			sbuf, sizeof(sbuf), flags);
 
 	if (ret != 0) {
 		/* On some systems (Darwin does it) we get EINTR from getnameinfo
