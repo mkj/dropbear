@@ -114,9 +114,13 @@ void buf_put_rsa_pub_key(buffer* buf, rsa_key *key) {
 /* Same as buf_put_rsa_pub_key, but with the private "x" key appended */
 void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 
+	TRACE(("enter buf_put_rsa_priv_key"));
+
 	assert(key != NULL);
 	buf_put_rsa_pub_key(buf, key);
 	buf_putmpint(buf, key->d);
+
+	TRACE(("leave buf_put_rsa_priv_key"));
 
 }
 
