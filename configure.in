@@ -26,6 +26,8 @@ case "$host" in
 	no_ptmx_check=1
 	;;
 *-*-solaris*)
+	CFLAGS="$CFLAGS -I/usr/local/include"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
 	conf_lastlog_location="/var/adm/lastlog"
 	AC_MSG_CHECKING(for obsolete utmp and wtmp in solaris2.x)
 	sol2ver=`echo "$host"| sed -e 's/.*[[0-9]]\.//'`
@@ -85,7 +87,7 @@ AC_ARG_ENABLE(zlib,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h sys/stropts.h utmp.h utmpx.h lastlog.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h sys/stropts.h utmp.h utmpx.h lastlog.h paths.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -99,12 +101,19 @@ AC_CHECK_TYPES([uint16_t, u_int16_t])
 
 # for loginrec.c
 
-AC_CHECK_MEMBERS([struct utmp.ut_host, struct utmp.ut_pid, struct utmp.ut_type, struct utmp.ut_tv, struct utmp.ut_id, struct utmp.ut_addr, struct utmp.ut_addr_v6, struct utmp.ut_exit, struct utmp.ut_time],,,[#if HAVE_UTMP_H
+AC_CHECK_MEMBERS([struct utmp.ut_host, struct utmp.ut_pid, struct utmp.ut_type, struct utmp.ut_tv, struct utmp.ut_id, struct utmp.ut_addr, struct utmp.ut_addr_v6, struct utmp.ut_exit, struct utmp.ut_time],,,[
+#include <sys/types.h>
+#if HAVE_UTMP_H
 #include <utmp.h>
-#endif])
-AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv],,,[#if HAVE_UTMPX_H
+#endif
+])
+
+AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv],,,[
+#include <sys/types.h>
+#if HAVE_UTMPX_H
 #include <utmpx.h>
-#endif])
+#endif
+])
 
 AC_CHECK_FUNCS(endutent getutent getutid getutline pututline setutent)
 AC_CHECK_FUNCS(utmpname)
