@@ -149,7 +149,7 @@ static void getp(dss_key *key, unsigned int size) {
 static void getg(dss_key * key) {
 
 	char printbuf[1000];
-	mp_int div, h, val, remaind;
+	mp_int div, h, val;
 
 	m_mp_init_multi(&div, &h, &val, NULL);
 

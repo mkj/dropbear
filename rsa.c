@@ -308,7 +308,6 @@ static mp_int * rsa_pad_em(rsa_key * key,
 	hash_state hs;
 	unsigned int nsize;
 	mp_int * rsa_em;
-	unsigned int i;
 	
 	assert(key != NULL);
 	assert(data != NULL);
