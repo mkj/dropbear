@@ -336,35 +336,6 @@ char * stripcontrol(const char * text) {
 }
 			
 
-/* returns the length including null-terminating zero on success,
- * or -1 on failure */
-int readln(int fd, char* buf, int count) {
-	
-	char in;
-	int pos = 0;
-
-	if (count < 1) {
-		return -1;
-	}
-	
-	/* leave space to null-terminate */
-	while (pos < count-1) {
-		if (atomicio(read, fd, &in, 1) < 0) {
-			break;
-		}
-
-		if (in == '\n' || in == '\r') {
-			break;
-		}
-
-		buf[pos] = in;
-		pos++;
-	}
-	buf[pos] = '\0';
-	return pos+1;
-}
-
-
 /* reads the contents of filename into the buffer buf, from the current
  * position, either to the end of the file, or the buffer being full.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */

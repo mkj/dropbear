@@ -44,8 +44,9 @@ int exitflag = 0;
 
 static void session_init(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remoteaddr);
-static void session_identification();
 static void checktimeouts();
+static void session_identification();
+static int ident_readln(int fd, char* buf, int count);
 
 struct sshsession ses;
 
@@ -90,7 +91,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 		}
 
 		/* set up for channels which require reading/writing */
-		if (ses.dataallowed == 1) {
+		if (ses.dataallowed) {
 			setchannelfds(&readfd, &writefd);
 		}
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
@@ -135,7 +136,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
-		if (ses.dataallowed == 1) {
+		if (ses.dataallowed) {
 			channelio(&readfd, &writefd);
 		}
 
@@ -159,6 +160,11 @@ static void checktimeouts() {
 		if (secs - ses.connecttime >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before userauth");
 		}
+	}
+
+	/* we can't rekey if we haven't done remote ident exchange yet */
+	if (ses.remoteident == NULL) {
+		return;
 	}
 
 	if (!ses.kexstate.sentkexinit
@@ -263,6 +269,7 @@ static void session_init(int sock, runopts *opts, int childpipe,
 	ses.kexhashbuf = NULL;
 	ses.transkexinit = NULL;
 	ses.dh_K = NULL;
+	ses.remoteident = NULL;
 
 	sessinitdone = 1;
 
@@ -271,6 +278,7 @@ static void session_init(int sock, runopts *opts, int childpipe,
 
 static void session_identification() {
 
+	/* max length of 255 chars */
 	char linebuf[256];
 	int len = 0;
 	int i;
@@ -286,11 +294,11 @@ static void session_identification() {
 	 * before the "SSH-*" line. We allow a max of 9 lines before it, just for
 	 * sanity */
 	for (i = 0; i < 10; i++) {
-		len = readln(ses.sock, linebuf, 256);
+		len = ident_readln(ses.sock, linebuf, 256);
 		if (len < 0) {
 			break;
 		}
-		if (len >= 4 && memcmp(linebuf, "SSH-", 4)) {
+		if (len >= 4 && memcmp(linebuf, "SSH-", 4) == 0) {
 			/* start of line matches */
 			done = 1;
 			break;
@@ -307,4 +315,59 @@ static void session_identification() {
 
 	TRACE(("remoteident: %s", ses.remoteident));
 
+}
+
+/* returns the length including null-terminating zero on success,
+ * or -1 on failure */
+static int ident_readln(int fd, char* buf, int count) {
+	
+	char in;
+	int pos = 0;
+	int num = 0;
+	fd_set fds;
+	struct timeval timeout;
+
+	if (count < 1) {
+		return -1;
+	}
+
+	FD_ZERO(&fds);
+
+	/* select since it's a non-blocking fd */
+	
+	/* leave space to null-terminate */
+	while (pos < count-1) {
+
+		FD_SET(fd, &fds);
+
+		timeout.tv_sec = 1;
+		timeout.tv_usec = 0;
+		if (select(fd+1, &fds, NULL, NULL, &timeout) < 0) {
+			if (errno == EINTR) {
+				continue;
+			}
+			return -1;
+		}
+
+		checktimeouts();
+		
+		if (FD_ISSET(fd, &fds)) {
+			num = read(fd, &in, 1);
+			/* a "\n" is a newline, "\r" we want to read in and keep going
+			 * so that it won't be read as part of the next line */
+			if (num <= 0 || in == '\n') {
+				if (errno == EINTR) {
+					continue;
+				}
+				break;
+			}
+			if (in != '\r') {
+				buf[pos] = in;
+				pos++;
+			}
+		}
+	}
+
+	buf[pos] = '\0';
+	return pos+1;
 }

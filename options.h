@@ -140,7 +140,7 @@
 #define KEX_REKEY_TIMEOUT 3600
 #define KEX_REKEY_DATA (1<<30) /* 2^30 == 1GB, this value must be < INT_MAX */
 /* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
-#define AUTH_TIMEOUT 600 /* 10 minutes is recommended */
+#define AUTH_TIMEOUT 300 /* we choose 5 minutes */
 
 /* success/failure defines */
 #define DROPBEAR_SUCCESS 0
@@ -196,7 +196,8 @@
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
-#define MAX_STRING_LEN 1400 /* ~ MAX_PROPOSED_ALGO * MAX_NAME_LEN */
+#define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
+							   is the max length for a password etc */
 
 #define DEV_URANDOM "/dev/urandom"
 
