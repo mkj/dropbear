@@ -3,14 +3,14 @@ Current:
 Things which need doing:
 
 - disconnect messages etc
-- more syslog stuff, making consistent
 - kexfollows
 - check PRNG is good
+- improved checking in DSS/RSA routines for valid sized keys etc
 
 Features to add:
 
-- possible RSA blinding? need to check whether mine is vuln to timing attacks
 - PAM
 - utmp etc handling
 - TCP fwd
 - X11 fwd
+- possible RSA blinding? need to check whether this is vuln to timing attacks
