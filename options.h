@@ -27,9 +27,9 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
-#include "includes.h"
 #include "config.h"
 #include "debug.h"
+#include "includes.h"
 
 /******************************************************************
  * Define compile-time options below.
@@ -37,24 +37,34 @@
 
 #define DROPBEAR_PORT 22
 
-/* Hostkey paths */
+/* Default hostkey paths - these can be specified on the command line */
 #define DSS_PRIV_FILENAME "dropbear_dss_host_key"
 #define RSA_PRIV_FILENAME "dropbear_rsa_host_key"
 
+/* Disable X11 Forwarding */
+/*#define DISABLE_X11FWD*/
+
+/* Disable TCP Fowarding */
+/*#define DISABLE_TCPFWD*/
+
+/* Disable Authentication Agent Forwarding */
+/*#define DISABLE_AGENTFWD*/
+
 /* Encryption - at least one required.
- * SSH2 RFC Draft requires 3DES and recommends blowfish, aes128 & twofish128 */
+ * RFC Draft requires 3DES, and recommends Blowfish, AES128 & Twofish128 */
 #define DROPBEAR_AES128_CBC
 #define DROPBEAR_BLOWFISH_CBC
 #define DROPBEAR_TWOFISH128_CBC
 #define DROPBEAR_3DES_CBC
 
 /* Integrity - at least one required.
- * SSH2 RFC Draft requires sha1-hmac, recommends md5-hmac */
-/* Note: there's no point disabling sha1 to save space, since it's used in the
- * pubkey stuff anyway. Disabling it here will just stop it from being
- * used as the integrity portion of the ssh protocol */
+ * RFC Draft requires sha1-hmac, and recommends md5-hmac.
+ * Note: there's no point disabling sha1 to save space, since it's used in the
+ * for the random number generator and public-key cryptography anyway.
+ * Disabling it here will just stop it from being used as the integrity portion
+ * of the ssh protocol */
 #define DROPBEAR_SHA1_HMAC
-#define DROPBEAR_MD5_HMAC
+/*#define DROPBEAR_MD5_HMAC*/
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
@@ -63,9 +73,9 @@
 #define DROPBEAR_DSS
 
 /* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
- * rather than just from the random byte source.
- * Undefining this will save you ~4k in binary size with static uclibc, but
- * your DSS hostkey could be exposed if the random number source isn't good. */
+ * rather than just from the random byte source. Undefining this will save you
+ * ~4k in binary size with static uclibc, but your DSS hostkey could be exposed
+ * if the random number source isn't good. In general this isn't required */
 /* #define DSS_PROTOK */
 
 /* Whether to do reverse DNS lookups. This is advisable, though will add
@@ -73,36 +83,42 @@
  * you are statically linking, you might want to undefine this */
 #define DO_HOST_LOOKUP
 
-/* Authentication type to use, at least one required.
-   SSH2 RFC Draft requires pubkey auth, recommends password */
+/* Authentication types to enable, at least one required.
+   RFC Draft requires pubkey auth, and recommends password */
 #define DROPBEAR_PASSWORD_AUTH
 #define DROPBEAR_PUBKEY_AUTH
 
-/* Random device to use - you must specify one only.
- * DEV_RANDOM is recommended on hosts with a good /dev/urandom,
- * otherwise use EGD and run EGD or PRNGD, specifying
- * the socket. This is only used for the initial seed, further
- * entropy is gathered from timings etc */
+/* Random device to use - you must specify _one only_.
+ * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
+ * PRNGD and run prngd, specifying the socket. This device must be able to
+ * produce a large amount of random data, so using /dev/random or Entropy
+ * Gathering Daemon (egd) may result in halting, as it waits for more random
+ * data */
 #define DROPBEAR_DEV_URANDOM /* use /dev/urandom */
 
-/*#undef DROPBEAR_EGD */ /* use egd or prngd socket */
-#define DROPBEAR_EGD_SOCKET "./rng"
+/*#undef DROPBEAR_PRNGD */ /* use prngd socket - you must manually set up prngd
+							  to produce output */
+#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
 #define MAX_UNAUTH_CLIENTS 30
 
-/* The draft RFC recommends 20 tries, 5 seems more sensible */
-#define MAX_AUTH_TRIES 5
+/* Maximum number of failed authentication tries */
+#define MAX_AUTH_TRIES 10
 
-/* The file to store the daemon's process ID in, for shutdown scripts etc */
+/* The file to store the daemon's process ID, for shutdown scripts etc */
 #define DROPBEAR_PIDFILE "/var/run/dropbear.pid"
+
+/* The command to invoke for xauth when using X11 forwarding.
+ * "-q" for quiet */
+#define XAUTH_COMMAND "/usr/bin/X11/xauth -q"
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.31"
+#define DROPBEAR_VERSION "0.32-preX"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
@@ -178,8 +194,5 @@
 #define MAX_TERM_LEN 200 /* max length of TERM name */
 
 #define _PATH_TTY "/dev/tty"
-
-/* -q for quiet */
-#define XAUTH_COMMAND "/usr/bin/X11/xauth -q"
 
 #endif /* _OPTIONS_H_ */
