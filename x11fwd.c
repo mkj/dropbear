@@ -34,7 +34,8 @@
 #include "packet.h"
 #include "buffer.h"
 
-#define X11BASEPORT 6010
+#define X11BASEPORT 6000
+#define X11BINDBASE 6010
 
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
@@ -126,10 +127,9 @@ void x11setauth(struct ChanSess *chansess) {
 
 	/* create the DISPLAY string */
 	val = snprintf(display, sizeof(display), "localhost:%d.%d",
-			chansess->x11port - 6000, chansess->x11screennum);
+			chansess->x11port - X11BASEPORT, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
-		fprintf(stderr, "trunk disp string");
 		return;
 	}
 
@@ -137,10 +137,9 @@ void x11setauth(struct ChanSess *chansess) {
 
 	/* create the xauth string */
 	val = snprintf(display, sizeof(display), "unix:%d.%d",
-			chansess->x11port - 6000, chansess->x11screennum);
+			chansess->x11port - X11BASEPORT, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
-		fprintf(stderr, "trunk xauth string");
 		return;
 	}
 
@@ -153,7 +152,6 @@ void x11setauth(struct ChanSess *chansess) {
 	} else {
 		fprintf(stderr, "Failed to run %s\n", XAUTH_COMMAND);
 	}
-
 }
 
 void x11cleanup(struct ChanSess * chansess) {
@@ -186,7 +184,7 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 }
 
 /* returns the port bound to, or -1 on failure.
- * Will attempt to bind to a port X11BASEPORT (6010 usually) or upwards */
+ * Will attempt to bind to a port X11BINDBASE (6010 usually) or upwards */
 static int bindport(int fd) {
 
 	struct sockaddr_in addr;
@@ -197,7 +195,7 @@ static int bindport(int fd) {
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
 	/* if we can't find one in 2000 ports free, something's wrong */
-	for (port = X11BASEPORT; port < X11BASEPORT + 2000; port++) {
+	for (port = X11BINDBASE; port < X11BINDBASE + 2000; port++) {
 		addr.sin_port = htons(port);
 		if (bind(fd, (struct sockaddr*)&addr, 
 					sizeof(struct sockaddr_in)) == 0) {

@@ -109,7 +109,7 @@
 
 /* The command to invoke for xauth when using X11 forwarding.
  * "-q" for quiet */
-#define XAUTH_COMMAND "/usr/bin/X11/xauth -q"
+#define XAUTH_COMMAND "/usr/X11R6/bin/xauth -q"
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
