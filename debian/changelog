@@ -1,0 +1,22 @@
+dropbear (0.32cvs-1) unstable; urgency=medium
+
+  * sync with CVS
+  * fixes X crash bug
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 20 Jun 2003 15:04:47 +0800
+
+dropbear (0.32-2) unstable; urgency=low
+
+  * fix creation of host keys to use correct names in /etc/dropbear
+  * init script "restart" function fixed
+  * purging this package now deletes the host keys and /etc/dropbear
+  * change priority in debian/control to 'standard'
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 17 Jun 2003 15:04:47 +0800
+
+dropbear (0.32-1) unstable; urgency=low
+
+  * Initial Release.
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 17 Jun 2003 15:04:47 +0800
+
