@@ -38,7 +38,7 @@ unsigned char hashpool[SHA1_HASH_SIZE];
 
 static void readrand(unsigned char* buf, unsigned int buflen);
 
-/* The basic setup is we read some data from DEV_URANDOM or PRNGD and hash it
+/* The basic setup is we read some data from /dev/(u)random or prngd and hash it
  * into hashpool. To read data, we hash together current hashpool contents,
  * and a counter. We feed more data in by hashing the current pool and new
  * data into the pool.
@@ -53,19 +53,19 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	int readfd;
 	unsigned int readpos;
 	int readlen;
-#ifdef DROPBEAR_EGD
+#ifdef DROPBEAR_PRNGD_SOCKET
 	struct sockaddr_un egdsock;
 	char egdcmd[2];
 #endif
 
-#ifdef DROPBEAR_DEV_URANDOM
-	readfd = open(DEV_URANDOM, O_RDONLY);
+#ifdef DROPBEAR_RANDOM_DEV
+	readfd = open(DROPBEAR_RANDOM_DEV, O_RDONLY);
 	if (readfd < 0) {
 		dropbear_exit("couldn't open random device");
 	}
 #endif
 
-#ifdef DROPBEAR_EGD
+#ifdef DROPBEAR_PRNGD_SOCKET
 	memset((void*)&egdsock, 0x0, sizeof(egdsock));
 	egdsock.sun_family = AF_UNIX;
 	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
@@ -105,7 +105,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	close (readfd);
 }
 
-/* initialise the prng from /dev/urandom or prngd */
+/* initialise the prng from /dev/(u)random or prngd */
 void seedrandom() {
 		
 	unsigned char readbuf[INIT_SEED_SIZE];
@@ -158,22 +158,4 @@ void genrandom(unsigned char* buf, unsigned int len) {
 		buf += copylen;
 	}
 	m_burn(hash, sizeof(hash));
-}
-
-/* Adds entropy to the PRNG state. As long as the hash is strong, then we
- * don't need to worry about entropy being added "diluting" the current
- * state - it should only make it stronger. */
-void addrandom(unsigned char* buf, unsigned int len) {
-
-	hash_state hs;
-	if (!donerandinit) {
-		dropbear_exit("seedrandom not done");
-	}
-
-	sha1_init(&hs);
-	sha1_process(&hs, (void*)buf, len);
-	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
-	sha1_done(&hs, hashpool);
-	counter = 0;
-
 }

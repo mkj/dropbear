@@ -128,19 +128,21 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
 
-/* Random device to use - you must specify _one only_.
- * DEV_URANDOM is recommended on hosts with a good /dev/urandom, otherwise use
- * PRNGD and run prngd, specifying the socket. This device must be able to
- * produce a large amount of random data, so using /dev/random or Entropy
- * Gathering Daemon (egd) may result in halting, as it waits for more random
- * data */
-#define DROPBEAR_DEV_URANDOM /* use /dev/urandom */
+/* Random device to use - define either DROPBEAR_RANDOM_DEV or
+ * DROPBEAR_PRNGD_SOCKET.
+ * DROPBEAR_RANDOM_DEV is recommended on hosts with a good /dev/(u)random,
+ * otherwise use run prngd (or egd if you want), specifying the socket. 
+ * The device will be queried for a few dozen bytes of seed a couple of times
+ * per session (or more for very long-lived sessions). */
 
-/*#undef DROPBEAR_PRNGD */ /* use prngd socket - you must manually set up prngd
-							  to produce output */
-#ifndef DROPBEAR_PRNGD_SOCKET
-#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"
-#endif
+/* If you are lacking entropy on the system then using /dev/urandom
+ * will prevent Dropbear from blocking on the device. This could
+ * however significantly reduce the security of your ssh connections
+ * if the PRNG state becomes simpler. */
+#define DROPBEAR_RANDOM_DEV "/dev/random"
+
+/* prngd must be manually set up to produce output */
+/*#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"*/
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
@@ -212,8 +214,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 #define MAX_BANNER_LINES 20 /* How many lines the client will display */
-
-#define DEV_URANDOM "/dev/urandom"
 
 /* the number of NAME=VALUE pairs to malloc for environ, if we don't have
  * the clearenv() function */
@@ -334,6 +334,14 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #if defined(ENABLE_SVR_PASSWORD_AUTH) && defined(ENABLE_SVR_PAM_AUTH)
 #error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
+#endif
+
+#if defined(DROPBEAR_RANDOM_DEV) && defined(DROPBEAR_PRNGD_SOCKET)
+#error "You can't turn on DROPBEAR_PRNGD_SOCKET and DROPBEAR_RANDOM_DEV at once"
+#endif
+
+#if !defined(DROPBEAR_RANDOM_DEV) && !defined(DROPBEAR_PRNGD_SOCKET)
+#error "You must choose one of DROPBEAR_PRNGD_SOCKET or DROPBEAR_RANDOM_DEV in options.h"
 #endif
 
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
