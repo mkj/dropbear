@@ -28,7 +28,6 @@
 
 #include "includes.h"
 
-#define MAX_STRING_LEN MAX_PACKET_LEN
 struct buf {
 
 	unsigned char * data;

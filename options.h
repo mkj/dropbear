@@ -183,6 +183,8 @@
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
+#define MAX_STRING_LEN 1400 /* ~ MAX_PROPOSED_ALGO * MAX_NAME_LEN */
+
 #define DEV_URANDOM "/dev/urandom"
 
 /* the number of NAME=VALUE pairs to malloc for environ, if we don't have
