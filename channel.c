@@ -711,7 +711,7 @@ static void send_msg_channel_open_success(struct Channel* channel,
 }
 
 #ifdef USE_LISTENERS
-/* channel establishment is only required if we have listeners */
+/* channel establishment is only required if we have listeners (for x11 etc)*/
 void recv_msg_channel_open_success() {
 
 	unsigned int chan;

@@ -7,6 +7,7 @@
 #include "channel.h"
 
 int x11req(struct Chansess * chansess);
+int x11accepter(int sock);
 
 #endif /* DROPBEAR_X11FWD */
 #endif /* _X11FWD_H_ */

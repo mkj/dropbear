@@ -38,7 +38,6 @@ struct ChanSess {
 	int master; /* the master terminal fd*/
 	int slave;
 	unsigned char * tty;
-
 	unsigned char * term;
 	unsigned int termw, termh, termc, termr; /* width, height, col, rows */
 
@@ -48,6 +47,15 @@ struct ChanSess {
 	int exitsignal;
 	unsigned char exitcore;
 	
+#ifndef DISABLE_X11FWD
+	/* x11 forwarding details */
+	int x11fd; /* set to -1 to indicate forwarding not established */
+	int x11port;
+	char * x11authprot;
+	char * x11authcookie;
+	unsigned int x11screennum;
+	unsigned int x11singleconn;
+#endif /* X11 fowarding */
 };
 
 struct ChildPid {
@@ -64,6 +72,7 @@ void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess);
 void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
+void addnewvar(const char* param, const char* var);
 
 
 

@@ -80,9 +80,6 @@ void chaninitialise();
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
-#ifdef USE_LISTENERS
-int addlistener(int sock, int*(int sock));
-#endif
 struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
 		unsigned int transwindow, unsigned int transmaxpacket, int outgoing);
 
@@ -95,5 +92,9 @@ void recv_msg_channel_window_adjust();
 void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
+#ifdef HAVE_LISTENERS
+void recv_msg_channel_success();
+void recv_msg_channel_failure();
+#endif
 
 #endif /* _CHANNEL_H_ */

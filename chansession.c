@@ -43,7 +43,6 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int sessionwinchange(struct ChanSess *chansess);
 static void execchild(struct ChanSess *chansess);
-static void addnewvar(const char* param, const char* var);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
 
@@ -198,7 +197,6 @@ void newchansess(struct Channel *channel) {
 	chansess->master = -1;
 	chansess->slave = -1;
 	chansess->tty = NULL;
-
 	chansess->term = NULL;
 	chansess->termw = 0;
 	chansess->termh = 0;
@@ -208,6 +206,12 @@ void newchansess(struct Channel *channel) {
 	chansess->exited = 0;
 
 	channel->typedata = chansess;
+
+#ifndef DISABLE_X11FWD
+	chansess->x11fd = -1;
+	chansess->x11authprot = NULL;
+	chansess->x11authcookie = NULL;
+#endif
 
 }
 
@@ -239,6 +243,11 @@ void closechansess(struct Channel *channel) {
 		pty_release(chansess->tty);
 		m_free(chansess->tty);
 	}
+
+#ifndef DISABLE_X11FWD
+	m_free(chansess->x11authprot);
+	m_free(chansess->x11authcookie);
+#endif
 
 	/* clear child pid entries */
 	for (i = 0; i < ses.childpidsize; i++) {
@@ -745,6 +754,11 @@ static void execchild(struct ChanSess *chansess) {
 		dropbear_exit("error changing directory");
 	}
 
+#ifndef DISABLE_X11FWD
+	/* set up X11 forwarding if enabled */
+	x11setauth(chansess);
+#endif
+
 	/* an empty shell should be interpreted as "/bin/sh" */
 	if (ses.authstate.pw->pw_shell[0] == '\0') {
 		usershell = "/bin/sh";
@@ -778,7 +792,8 @@ static void execchild(struct ChanSess *chansess) {
 	dropbear_exit("child failed");
 }
 	
-static void addnewvar(const char* param, const char* var) {
+/* add a new environment variable, allocating space for the entry */
+void addnewvar(const char* param, const char* var) {
 
 	char* newvar;
 	int plen, vlen;
