@@ -359,11 +359,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	
 	assert(ses.kexstate.recvkexinit);
 
-	m_mp_init(&dh_g);
-	m_mp_init(&dh_p);
-	m_mp_init(&dh_q);
-	m_mp_init(&dh_y);
-	m_mp_init(&dh_f);
+	m_mp_init_multi(&dh_g, &dh_p, &dh_q, &dh_y, &dh_f);
 
 	/* read the prime and generator*/
 	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
@@ -408,9 +404,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	}
 
 	/* clear no longer needed vars */
-	mp_clear(&dh_y);
-	mp_clear(&dh_p);
-	mp_clear(&dh_q);
+	mp_clear_multi(&dh_y, &dh_p, &dh_q);
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash */
 	/* K_S, the host key */
