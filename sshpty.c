@@ -30,8 +30,8 @@
 #ifdef HAVE_PTY_H
 # include <pty.h>
 #endif
-#if defined(USE_DEV_PTMX) && defined(HAVE_SYS_STROPTS_H)
-# include <sys/stropts.h>
+#if defined(USE_DEV_PTMX) && defined(HAVE_STROPTS_H)
+# include <stropts.h>
 #endif
 
 #ifndef O_NOCTTY
