@@ -19,7 +19,7 @@
 #include "signkey.h"
 #include "runopts.h"
 
-static void listensocket(int *sock);
+static void listensocket(int *sock, uint16_t port);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 
@@ -65,7 +65,7 @@ int main(int argc, char ** argv) {
 	
 	/* setup the sockets */
 	/* TODO make this configurable */
-	listensocket(&listensocks[0]);
+	listensocket(&listensocks[0], opts->port);
 	listensockcount = 1;
 	maxsock = listensocks[listensockcount-1];
 
@@ -208,7 +208,7 @@ static void sigsegv_handler(int fish) {
 	exit(EXIT_FAILURE);
 }
 
-static void listensocket(int *sock) {
+static void listensocket(int *sock, uint16_t port) {
 	
 	int listensock; /* listening fd */
 	struct sockaddr_in listen_addr;
@@ -235,7 +235,7 @@ static void listensocket(int *sock) {
 
 	/* bind to any currently TODO config*/
 	listen_addr.sin_family = AF_INET;
-	listen_addr.sin_port = htons(DROPBEAR_PORT);
+	listen_addr.sin_port = htons(port);
 	listen_addr.sin_addr.s_addr = INADDR_ANY;
 	memset(&(listen_addr.sin_zero), '\0', 8); /* XXX neccesary? */
 

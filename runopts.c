@@ -18,8 +18,11 @@ static void printhelp(char * progname) {
 					"                  (default: %s)\n"
 					"-r rsakeyfile     Use rsakeyfile for the rsa host key\n"
 					"                  (default: %s)\n"
-					"-F                Don't fork into background\n",
-					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME);
+					"-F                Don't fork into background\n"
+					"-p port           Listen on specified tcp port\n"
+					"                  (default %d)\n",
+					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME,
+					DROPBEAR_PORT);
 }
 
 /* returns NULL on failure, or a pointer to a freshly allocated
@@ -29,6 +32,8 @@ runopts * getrunopts(int argc, char ** argv) {
 	int i;
 	char ** next = 0;
 	runopts * opts;
+	char * portstring = NULL;
+	unsigned int longport;
 
 	/* see printhelp() for options */
 	opts = (runopts*)m_malloc(sizeof(runopts));
@@ -61,6 +66,9 @@ runopts * getrunopts(int argc, char ** argv) {
 					break;
 				case 'F':
 					opts->forkbg = 0;
+					break;
+				case 'p':
+					next = &portstring;
 					break;
 				case 'h':
 					printhelp(argv[0]);
@@ -102,6 +110,17 @@ runopts * getrunopts(int argc, char ** argv) {
 		}
 		buf_setpos(opts->banner, 0);
 	}
+
+	if (portstring) {
+		longport = atoi(portstring);
+		if (longport > 65534 || longport < 1) {
+			dropbear_exit("Bad port %s", portstring);
+		}
+		opts->port = (uint16_t)longport;
+	} else {
+		opts->port = DROPBEAR_PORT;
+	}
+
 
 	return opts;
 }

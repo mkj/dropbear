@@ -11,6 +11,8 @@ struct RunOpts {
 	char * dsskeyfile;
 	char * bannerfile;
 	int forkbg;
+
+	uint16_t port;
 	
 	sign_key *hostkey;
 	buffer * banner;
