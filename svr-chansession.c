@@ -78,7 +78,6 @@ static void sesssigchild_handler(int dummy) {
 
 	TRACE(("enter sigchld handler"));
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -630,7 +629,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		TRACE(("continue noptycommand: parent"));
 		chansess->pid = pid;
 
-		/* add a child pid */
+		/* add a child pid - Beware: there's a race between this, and the
+		 * exec() called from the child. If the child finishes before we've
+		 * done this (ie if it was a shell builtin and fast), we won't return a
+		 * proper return code. For now, we ignore this case. */
 		addchildpid(chansess, pid);
 
 		close(infds[FDIN]);
