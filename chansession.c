@@ -834,11 +834,18 @@ static void execchild(struct ChanSess *chansess) {
 		}
 	}
 
+	/* an empty shell should be interpreted as "/bin/sh" */
+	if (ses.authstate.pw->pw_shell[0] == '\0') {
+		usershell = "/bin/sh";
+	} else {
+		usershell = ses.authstate.pw->pw_shell;
+	}
+
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw->pw_name);
 	addnewvar("LOGNAME", ses.authstate.pw->pw_name);
 	addnewvar("HOME", ses.authstate.pw->pw_dir);
-	addnewvar("SHELL", ses.authstate.pw->pw_shell);
+	addnewvar("SHELL", usershell);
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
@@ -856,13 +863,6 @@ static void execchild(struct ChanSess *chansess) {
 	/* set up agent env variable */
 	agentset(chansess);
 #endif
-
-	/* an empty shell should be interpreted as "/bin/sh" */
-	if (ses.authstate.pw->pw_shell[0] == '\0') {
-		usershell = "/bin/sh";
-	} else {
-		usershell = ses.authstate.pw->pw_shell;
-	}
 
 	baseshell = basename(usershell);
 
@@ -884,7 +884,7 @@ static void execchild(struct ChanSess *chansess) {
 		argv[1] = NULL;
 	}
 
-	execv(ses.authstate.pw->pw_shell, argv);
+	execv(usershell, argv);
 
 	/* only reached on error */
 	dropbear_exit("child failed");
