@@ -28,6 +28,8 @@ void send_msg_userauth_success();
 
 struct AuthState {
 
+	char *username; /* This is the username the client presents to check. It
+					   is updated each run through, used for auth checking */
 	struct passwd * pw;
 	unsigned char authtypes; /* Flags indicating which auth types are still 
 								valid */

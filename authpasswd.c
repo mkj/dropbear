@@ -68,6 +68,10 @@ void passwordauth() {
 	if (strcmp(cryptpw, usercrypt) == 0) {
 		/* successful authentication */
 		send_msg_userauth_success();
+		assert(ses.authstate.username);
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO, 
+				"password auth succeeded for '%s'",
+				ses.authstate.username);
 	} else {
 		send_msg_userauth_failure(0, 1);
 	}

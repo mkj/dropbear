@@ -25,6 +25,7 @@
 #include <string.h>
 #include <termios.h>
 #include <unistd.h>
+#include <syslog.h>
 
 #ifdef HAVE_LIBUTIL_H
 #include <libutil.h>

@@ -15,6 +15,9 @@
 
 #define MAX_FMT 100
 
+static void _dropbear_log(int priority, const char* format, va_list param);
+static void _dropbear_exit(int exitcode, const char* format, va_list param);
+
 int usingsyslog = 0;
 
 void startsyslog() {
@@ -23,6 +26,7 @@ void startsyslog() {
 
 	openlog(PROGNAME, LOG_PID, LOG_DAEMON);
 
+#ifndef DEBUG_TRACE
 	/* redirect stdin/stdout/stderr to /dev/null */
 	fd = open("/dev/null", O_RDWR);
 	if (fd != -1) {
@@ -33,7 +37,7 @@ void startsyslog() {
 			close(fd);
 		}
 	}
-
+#endif
 	
 	usingsyslog = 1;
 }
@@ -41,34 +45,29 @@ void startsyslog() {
 /* the "format" string must be <= 100 characters */
 void dropbear_close(const char* format, ...) {
 
-#define CLOSE_MESSAGE "connection closed: "
-#define CLOSE_MESSAGE_LEN 19
-
 	va_list param;
-	char fmtbuf[MAX_FMT+CLOSE_MESSAGE_LEN+1];
-
-#ifdef DOCLEANUP
-	session_cleanup();
-#endif
-
-	strcpy(fmtbuf, CLOSE_MESSAGE);
-	strncat(fmtbuf, format, MAX_FMT);
 
 	va_start(param, format);
-	dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
+	_dropbear_exit(EXIT_SUCCESS, format, param);
 	va_end(param);
-
-	exit(EXIT_SUCCESS);
 
 }
 
-/* failure exit - format must be <= 100 chars */
 void dropbear_exit(const char* format, ...) {
+
+	va_list param;
+
+	va_start(param, format);
+	_dropbear_exit(EXIT_FAILURE, format, param);
+	va_end(param);
+}
+
+/* failure exit - format must be <= 100 chars */
+static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 
 #define EXIT_MESSAGE "exited: "
 #define EXIT_MESSAGE_LEN 8
 
-	va_list param;
 	char fmtbuf[MAX_FMT+EXIT_MESSAGE_LEN+1];
 
 #ifdef DOCLEANUP
@@ -78,20 +77,25 @@ void dropbear_exit(const char* format, ...) {
 	strcpy(fmtbuf, EXIT_MESSAGE);
 	strncat(fmtbuf, format, MAX_FMT);
 
-	va_start(param, format);
-	dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
-	va_end(param);
+	_dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
 
-	exit(EXIT_FAILURE);
+	exit(exitcode);
 
 }
 
-/* priority is priority as with syslog() */
+/* this is what can be called to write arbitrary log messages */
 void dropbear_log(int priority, const char* format, ...) {
 
 	va_list param;
 
 	va_start(param, format);
+	_dropbear_log(priority, format, param);
+	va_end(param);
+}
+
+/* priority is priority as with syslog() */
+static void _dropbear_log(int priority, const char* format, va_list param) {
+
 	if (usingsyslog) {
 		vsyslog(priority, format, param);
 	} else {
@@ -100,7 +104,6 @@ void dropbear_log(int priority, const char* format, ...) {
 		fprintf(stderr, "\n");
 	}
 
-	va_end(param);
 }
 
 #ifdef DEBUG_TRACE

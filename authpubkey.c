@@ -88,6 +88,9 @@ void pubkeyauth() {
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
 				signbuf->len) == 1) {
 		send_msg_userauth_success();
+		assert(ses.authstate.username);
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+				"pubkey auth succeeded for '%s'", ses.authstate.username);
 	} else {
 		send_msg_userauth_failure(0, 1);
 	}

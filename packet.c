@@ -51,7 +51,7 @@ void write_packet() {
 	} 
 
 	if (written == 0) {
-		dropbear_close("Connection closed by remote host");
+		dropbear_close("remote host closed connection");
 	}
 
 	if (written == len) {
@@ -92,7 +92,7 @@ void read_packet() {
 	buf_incrpos(ses.readbuf, len);
 
 	if (len == 0) {
-		dropbear_close("Connection closed by remote host");
+		dropbear_close("remote host closed connection");
 	}
 
 	if (len < 0) {
@@ -137,7 +137,7 @@ static void read_packet_init() {
 	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
-		dropbear_close("Connection closed by remote host");
+		dropbear_close("remote host closed connection");
 	}
 	if (len < 0) {
 		dropbear_exit("error reading");
@@ -375,8 +375,7 @@ void process_packet() {
 		case SSH_MSG_UNIMPLEMENTED:
 			/* debugging XXX */
 			TRACE(("SSH_MSG_UNIMPLEMENTED"));
-			exit(1);
-
+			dropbear_exit("received SSH_MSG_UNIMPLEMENTED");
 			
 		case SSH_MSG_DISCONNECT:
 			/* TODO cleanup? */

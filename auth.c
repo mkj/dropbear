@@ -27,6 +27,7 @@ static void authclear() {
 	
 	ses.authstate.authdone = 0;
 	ses.authstate.pw = NULL;
+	ses.authstate.username = NULL;
 	ses.authstate.authtypes = 0;
 #ifdef DROPBEAR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
@@ -131,11 +132,18 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* new user or username has changed */
-	if (ses.authstate.pw == NULL ||
-		strcmp(username, ses.authstate.pw->pw_name) != 0) {
+	if (ses.authstate.username == NULL ||
+		strcmp(username, ses.authstate.username) != 0) {
 			/* the username needs resetting */
+			if (ses.authstate.username != NULL) {
+				dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
+						"client trying multiple usernames: %s and %s",
+						ses.authstate.username, username);
+				m_free(ses.authstate.username);
+			}
 			authclear();
 			ses.authstate.pw = getpwnam((char*)username);
+			ses.authstate.username = username;
 	}
 
 	/* check that user exists */
@@ -218,14 +226,22 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	encrypt_packet();
 
 	if (incrfail) {
+		usleep(100000); /* XXX improve this */
 		ses.authstate.failcount++;
-		sleep(FAIL_SLEEP_TIME);
 	}
 
 	if (ses.authstate.failcount >= MAX_AUTH_TRIES) {
+		char * userstr;
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"));
-		exit(0);
+
+		if (ses.authstate.username == NULL) {
+			userstr = "is unknown!!!!";
+		} else {
+			userstr = ses.authstate.username;
+		}
+		userstr=  "blargh";
+		dropbear_exit("Max auth tries reached - user %s", userstr);
 	}
 	
 	TRACE(("leave send_msg_userauth_failure"));
