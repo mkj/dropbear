@@ -43,15 +43,8 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 		exit(1);
 	}
 
-	initrandom();
+	seedrandom();
 
-	/* XXX this relies on initrandom for entropy etc */
-	wprng = register_prng(&yarrow_desc);
-	if (wprng == -1) {
-		fprintf(stderr, "rsa generation failed\n");
-		exit(1);
-	}
-	
 	m_mp_init(&pminus);
 	m_mp_init(&p);
 	m_mp_init(&qminus);

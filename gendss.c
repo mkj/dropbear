@@ -43,7 +43,7 @@ dss_key * gen_dss_priv_key(unsigned int size) {
 	key->x = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init(key->x);
 	
-	initrandom();
+	seedrandom();
 	
 	getq(key);
 	getp(key, size);
