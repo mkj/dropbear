@@ -1,10 +1,10 @@
 # for Dropbear, optimisation flags come from the toplevel Makefile
 
 #CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
-CFLAGS  +=  -I./ -Wall -W -Wshadow
+CFLAGS  +=  -I./ 
 
 #x86 optimizations [should be valid for any GCC install though]
-CFLAGS  += -fomit-frame-pointer 
+#CFLAGS  += -fomit-frame-pointer 
 
 VERSION=0.27
 

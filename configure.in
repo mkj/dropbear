@@ -7,7 +7,8 @@ AC_PREREQ(2.50)
 AC_INIT(algo.c)
 
 if test -z "$CFLAGS" ; then
-	CFLAGS=-Os
+	AC_MSG_RESULT(No \$CFLAGS set... using "-Os -W -Wall")
+	CFLAGS="-Os -W -Wall"
 fi
 
 # Checks for programs.
@@ -465,7 +466,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename])
+AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty ])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 

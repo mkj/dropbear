@@ -23,7 +23,7 @@ ARFLAGS=r
 
 #ch1-01-3
 # Compilation flags. Note the += does not write over the user's CFLAGS!
-CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wno-unused -Wshadow 
+CFLAGS += -c -I./ 
 
 # for Dropbear, optimisation flags come from the toplevel Makefile
 
