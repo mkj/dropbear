@@ -117,42 +117,60 @@ void recv_msg_userauth_request() {
 		dropbear_exit("unknown service in auth");
 	}
 
+	/* user wants to know what methods are supported */
 	if (methodlen == AUTH_METHOD_NONE_LEN &&
 			strncmp(methodname, AUTH_METHOD_NONE,
 				AUTH_METHOD_NONE_LEN) == 0) {
 		send_msg_userauth_failure(0, 0);
-	} else if (checkusername(username, userlen) == CHECK_USER_RETURN) {
+		goto out;
+	}
+	
+	/* check username is good before continuing */
+	if (checkusername(username, userlen) == DROPBEAR_FAILURE) {
 		/* username is invalid/no shell/etc - send failure */
 		TRACE(("sending checkusername failure"));
 		send_msg_userauth_failure(0, 1);
+		goto out;
+	}
+
 #ifdef DROPBEAR_PASSWORD_AUTH
-	} else if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
+	/* user wants to try password auth */
+	if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 			strncmp(methodname, AUTH_METHOD_PASSWORD,
 				AUTH_METHOD_PASSWORD_LEN) == 0) {
 		passwordauth(username, userlen);
-#endif /* DROPBEAR_PASSWORD_AUTH */
+		goto out;
+	}
+#endif
+
 #ifdef DROPBEAR_PUBKEY_AUTH
-	} else if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
+	/* user wants to try pubkey auth */
+	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
 		pubkeyauth(username, userlen);
-#endif /* DROPBEAR_PUBKEY_AUTH */
-	} else {
-		send_msg_userauth_failure(0, 1);
+		goto out;
 	}
+#endif
+
+	/* nothing matched, we just fail */
+	send_msg_userauth_failure(0, 1);
+
+out:
 
 	m_free(username);
 	m_free(servicename);
 	m_free(methodname);
 }
 
+/* returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
 static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* shell;
 	
 	TRACE(("enter checkusername"));
 	if (userlen > MAX_USERNAME_LEN) {
-		return CHECK_USER_RETURN;
+		return DROPBEAR_FAILURE;
 	}
 
 	/* new user or username has changed */
@@ -173,15 +191,19 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* check that user exists */
 	if (ses.authstate.pw == NULL) {
 		TRACE(("leave checkusername: user doesn't exist"));
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
+				"login attempt for nonexistant user %s", username);
 		send_msg_userauth_failure(0, 1);
-		return CHECK_USER_RETURN;
+		return DROPBEAR_FAILURE;
 	}
 
 	/* check for an empty password */
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
+				"disallowing login for %s - empty password", username);
 		send_msg_userauth_failure(0, 1);
-		return CHECK_USER_RETURN;
+		return DROPBEAR_FAILURE;
 	}
 
 	TRACE(("shell is %s", ses.authstate.pw->pw_shell));
@@ -201,8 +223,10 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* no matching shell */
 	endusershell();
 	TRACE(("no matching shell"));
+	dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
+			"disallowing login for %s - no invalid shell", username);
 	send_msg_userauth_failure(0, 1);
-	return CHECK_USER_RETURN;
+	return DROPBEAR_FAILURE;
 	
 goodshell:
 	endusershell();
@@ -210,7 +234,7 @@ goodshell:
 
 	TRACE(("uid = %d\n", ses.authstate.pw->pw_uid));
 	TRACE(("leave checkusername"));
-	return CHECK_USER_CONTINUE;
+	return DROPBEAR_SUCCESS;
 
 }
 
@@ -264,7 +288,6 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		} else {
 			userstr = ses.authstate.username;
 		}
-		userstr=  "blargh";
 		dropbear_exit("Max auth tries reached - user %s", userstr);
 	}
 	

@@ -110,6 +110,10 @@
 /* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
 #define AUTH_TIMEOUT 600 /* 10 minutes is recommended */
 
+/* success/failure defines */
+#define DROPBEAR_SUCCESS 0
+#define DROPBEAR_FAILURE -1
+
 /* various algorithm identifiers */
 #define DROPBEAR_KEX_DH_GROUP1 0
 

@@ -47,9 +47,6 @@ void send_msg_userauth_success();
 #define AUTH_METHOD_PASSWORD "password"
 #define AUTH_METHOD_PASSWORD_LEN 8
 
-#define CHECK_USER_RETURN 0
-#define CHECK_USER_CONTINUE 1
-
 struct AuthState {
 
 	char *username; /* This is the username the client presents to check. It
