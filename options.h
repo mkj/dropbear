@@ -111,13 +111,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* Authentication Types - at least one required.
    RFC Draft requires pubkey auth, and recommends password */
 
-/* PAM auth is quite simple, and only works for PAM modules which just do a
- * simple "Login: " "Password: " (or something like that - if your module is
- * similar but not quite like that, edit the strings in svr-authpam.c).
- * Basically, it's useful for systems like OS X where standard password crypts
- * don't work, but there's an interface via a PAM module. You'll need to
- * configure with --enable-pam as well, since it's off by default. And you
- * should only enable either PASSWORD _or_ PAM auth, not both. */
+/* Note: PAM auth is quite simple, and only works for PAM modules which just do
+ * a simple "Login: " "Password: " (you can edit the strings in svr-authpam.c).
+ * It's useful for systems like OS X where standard password crypts don't work,
+ * but there's an interface via a PAM module - don't bother using it otherwise.
+ * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
 /*#define ENABLE_SVR_PAM_AUTH*/
@@ -143,7 +141,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* If you are lacking entropy on the system then using /dev/urandom
  * will prevent Dropbear from blocking on the device. This could
  * however significantly reduce the security of your ssh connections
- * if the PRNG state becomes simpler. */
+ * if the PRNG state becomes guessable - make sure you know what you are
+ * doing if you change this. */
 #define DROPBEAR_RANDOM_DEV "/dev/random"
 
 /* prngd must be manually set up to produce output */
@@ -190,7 +189,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.44"
+#define DROPBEAR_VERSION "0.45"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

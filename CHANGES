@@ -1,3 +1,16 @@
+0.45 - Mon March 7 2005
+
+- Makefile no longer appends 'static' to statically linked binaries
+
+- Add optional SSH_ASKPASS support to the client
+
+- Respect HOST_LOOKUP option
+
+- Fix accidentally removed "return;" statement which was removed in 0.44
+  (causing clients which sent an empty terminal-modes string to fail to
+  connect - including pssh, ssh.com, danger hiptop). (patches
+  independently from Paul Fox, David Horwitt and Sven-Ola Tuecke)
+
 - Read "y/n" response for fingerprints from /dev/tty directly so that dbclient
   will work with scp.
 
