@@ -36,7 +36,7 @@ static void printhelp(const char * progname);
 
 static void printhelp(const char * progname) {
 
-	fprintf(stderr, "Dropbear v%s\n"
+	fprintf(stderr, "Dropbear sshd v%s\n"
 					"Usage: %s [options]\n"
 					"Options are:\n"
 					"-b bannerfile     Display the contents of bannerfile"
