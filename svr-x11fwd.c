@@ -75,9 +75,7 @@ int x11req(struct ChanSess * chansess) {
 	}
 
 	/* set non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		goto fail;
-	}
+	setnonblocking(fd);
 
 	/* listener code will handle the socket now.
 	 * No cleanup handler needed, since listener_remove only happens

@@ -595,3 +595,13 @@ void m_burn(void *data, unsigned int len) {
 	}
 }
 
+
+void setnonblocking(int fd) {
+
+	TRACE(("setnonblocking: %d", fd));
+
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+		dropbear_exit("Couldn't set nonblocking");
+	}
+	TRACE(("leave setnonblocking"));
+}

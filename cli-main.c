@@ -52,6 +52,10 @@ int main(int argc, char ** argv) {
 	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,
 				cli_opts.remotehost, cli_opts.remoteport));
 
+	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
 	sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
 			0, &error);
 

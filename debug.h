@@ -33,12 +33,13 @@
  * etc. Don't use this normally, it might cause problems */
 /* #define DEBUG_VALGRIND */
 
-/* Define this to compile in trace debugging printf()s. You'll need to 
- * run programs with "-v" to turn this on.
+/* Define this to compile in trace debugging printf()s. 
+ * You'll need to run programs with "-v" to turn this on.
+ *
  * Caution: Don't use this in an unfriendly environment (ie unfirewalled),
  * since the printing may not sanitise strings etc. This will add a reasonable
  * amount to your executable size. */
- #define DEBUG_TRACE 
+/* #define DEBUG_TRACE */
 
 /* All functions writing to the cleartext payload buffer call
  * CHECKCLEARTOWRITE() before writing. This is only really useful if you're
@@ -49,6 +50,7 @@
 /* Define this, compile with -pg and set GMON_OUT_PREFIX=gmon to get gmon
  * output when Dropbear forks. This will allow it gprof to be used.
  * It's useful to run dropbear -F, so you don't fork as much */
+/* (This is Linux specific) */
 /*#define DEBUG_FORKGPROF*/
 
 /* A couple of flags, not usually useful, and mightn't do anything */

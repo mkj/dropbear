@@ -192,7 +192,8 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 		}
 
 		/* read from program/pipe stderr */
-		if (channel->errfd >= 0 && FD_ISSET(channel->errfd, readfd)) {
+		if (channel->extrabuf == NULL &&
+				channel->errfd >= 0 && FD_ISSET(channel->errfd, readfd)) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 
@@ -245,6 +246,14 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 /* do all the EOF/close type stuff checking for a channel */
 static void checkclose(struct Channel *channel) {
 
+	TRACE(("checkclose: infd %d, outfd %d, errfd %d, sentclosed %d, recvclosed %d", 
+				channel->infd, channel->outfd,
+				channel->errfd, channel->sentclosed, channel->recvclosed));
+	TRACE(("writebuf %d extrabuf %s extrabuf %d",
+				cbuf_getused(channel->writebuf),
+				channel->writebuf,
+				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)));
+
 	if (!channel->sentclosed) {
 
 		/* check for exited - currently only used for server sessions,
@@ -257,13 +266,13 @@ static void checkclose(struct Channel *channel) {
 
 		if (!channel->senteof
 			&& channel->outfd == FD_CLOSED 
-			&& channel->errfd == FD_CLOSED) {
+			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 			send_msg_channel_eof(channel);
 		}
 
 		if (channel->infd == FD_CLOSED
-				&& channel->outfd == FD_CLOSED
-				&& channel->errfd == FD_CLOSED) {
+			&& channel->outfd == FD_CLOSED
+			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 			send_msg_channel_close(channel);
 		}
 	}
@@ -383,9 +392,8 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 	if (fd == channel->infd && len == maxlen && channel->recveof) { 
 		/* Check if we're closing up */
 		closeinfd(channel);
-		return;
 		TRACE(("leave writechannel: recveof set"));
-
+		return;
 	}
 
 	/* Window adjust handling */
@@ -433,7 +441,9 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 
 		/* For checking FD status (ie closure etc) - we don't actually
 		 * read data from infd */
-		TRACE(("infd = %d, outfd %d, bufused %d", channel->infd, channel->outfd,
+		TRACE(("infd = %d, outfd %d, errfd %d, bufused %d", 
+					channel->infd, channel->outfd,
+					channel->errfd,
 					cbuf_getused(channel->writebuf) ));
 		if (channel->infd >= 0 && channel->infd != channel->outfd) {
 			FD_SET(channel->infd, readfd);
@@ -534,9 +544,8 @@ static void removechannel(struct Channel * channel) {
 	 * yet (ie they were shutdown etc */
 	close(channel->infd);
 	close(channel->outfd);
-	if (channel->errfd >= 0) {
-		close(channel->errfd);
-	}
+	close(channel->errfd);
+
 	channel->typedata = NULL;
 
 	deletechannel(channel);
@@ -619,16 +628,19 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	}
 
 	/* read the data */
+	TRACE(("maxlen %d", maxlen));
 	buf = buf_new(maxlen);
+	TRACE(("buf pos %d data %x", buf->pos, buf->data));
 	len = read(fd, buf_getwriteptr(buf, maxlen), maxlen);
 	if (len <= 0) {
 		/* on error/eof, send eof */
 		if (len == 0 || errno != EINTR) {
 			closeoutfd(channel, fd);
-			TRACE(("leave send_msg_channel_data: read err %d", channel->index));
 		}
 		buf_free(buf);
 		buf = NULL;
+		TRACE(("leave send_msg_channel_data: read err or EOF for fd %d", 
+					channel->index));
 		return;
 	}
 	buf_incrlen(buf, len);
@@ -714,7 +726,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		len -= buflen;
 	}
 
-	assert(channel->recvwindow > datalen);
+	assert(channel->recvwindow >= datalen);
 	channel->recvwindow -= datalen;
 	assert(channel->recvwindow <= RECV_MAXWINDOW);
 
@@ -927,10 +939,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	}
 
 	/* set fd non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		TRACE(("leave send_msg_channel_open_init() - FAILED in fcntl()"));
-		return DROPBEAR_FAILURE;
-	}
+	setnonblocking(fd);
 
 	chan->infd = chan->outfd = fd;
 	ses.maxfd = MAX(ses.maxfd, fd);
@@ -1034,14 +1043,18 @@ static void closechanfd(struct Channel *channel, int fd, int how) {
 		closein = closeout = 1;
 	}
 
-	if (closeout && fd == channel->errfd) {
-		channel->errfd = FD_CLOSED;
-	}
 	if (closeout && fd == channel->outfd) {
 		channel->outfd = FD_CLOSED;
 	}
+	if (closeout && (channel->extrabuf == NULL) && (fd == channel->errfd)) {
+		channel->errfd = FD_CLOSED;
+	}
+
 	if (closein && fd == channel->infd) {
 		channel->infd = FD_CLOSED;
+	}
+	if (closein && (channel->extrabuf != NULL) && (fd == channel->errfd)) {
+		channel->errfd = FD_CLOSED;
 	}
 }
 

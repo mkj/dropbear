@@ -341,8 +341,14 @@ static int cli_initchansess(struct Channel *channel) {
 
 
 	channel->infd = STDOUT_FILENO;
+	setnonblocking(STDOUT_FILENO);
+
 	channel->outfd = STDIN_FILENO;
+	setnonblocking(STDIN_FILENO);
+
 	channel->errfd = STDERR_FILENO;
+	setnonblocking(STDERR_FILENO);
+
 	channel->extrabuf = cbuf_new(RECV_MAXWINDOW);
 
 	if (cli_opts.wantpty) {

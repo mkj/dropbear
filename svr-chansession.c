@@ -651,11 +651,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		ses.maxfd = MAX(ses.maxfd, channel->outfd);
 		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-		if ((fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) ||
-			(fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) ||
-			(fcntl(channel->errfd, F_SETFL, O_NONBLOCK) < 0)) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
+		setnonblocking(channel->outfd);
+		setnonblocking(channel->infd);
+		setnonblocking(channel->errfd);
+
 	}
 #undef FDIN
 #undef FDOUT
@@ -761,9 +760,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
 
-		if (fcntl(chansess->master, F_SETFL, O_NONBLOCK) < 0) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
+		setnonblocking(chansess->master);
 
 	}
 

@@ -73,9 +73,7 @@ int agentreq(struct ChanSess * chansess) {
 	}
 
 	/* set non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		goto fail;
-	}
+	setnonblocking(fd);
 
 	/* pass if off to listener */
 	chansess->agentlistener = new_listener( &fd, 1, 0, chansess, 
