@@ -448,16 +448,26 @@ static int sessionpty(struct ChanSess * chansess) {
 		unsigned char opcode;
 		unsigned int value;
 		const struct TermCode * termcode;
+		unsigned int len;
+
+		len = buf_getint(ses.payload);
+		if (len != ses.payload->len - ses.payload->pos) {
+			dropbear_exit("bad term mode string");
+		}
 
 		while (((opcode = buf_getbyte(ses.payload)) != 0x00) &&
 				opcode <= 159) {
+
+			/* must be before checking type, so that value is consumed even if
+			 * we don't use it */
+			value = buf_getint(ses.payload);
+
 			/* handle types of code */
 			if (opcode > MAX_TERMCODE) {
 				continue;
 			}
 			termcode = &termcodes[(unsigned int)opcode];
 			
-			value = buf_getint(ses.payload);
 
 			switch (termcode->type) {
 
