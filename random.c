@@ -64,6 +64,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 #endif
 
 #ifdef DROPBEAR_EGD
+	memset((void*)&egdsock, 0x0, sizeof(egdsock));
 	egdsock.sun_family = AF_UNIX;
 	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
 			sizeof(egdsock.sun_path));

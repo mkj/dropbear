@@ -189,6 +189,7 @@ static int bindagent(struct ChanSess * chansess) {
 		dropbear_exit("failed to set euid");
 	}
 
+	memset((void*)&addr, 0x0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
 
 	mode = S_IRWXU;

@@ -296,6 +296,7 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 		setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY,
 				(void*)&val, sizeof(val));
 
+		memset((void*)&listen_addr, 0x0, sizeof(listen_addr));
 		listen_addr.sin_family = AF_INET;
 		listen_addr.sin_port = htons(opts->ports[i]);
 		listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);

@@ -25,7 +25,6 @@
 #include "includes.h"
 
 #ifndef DISABLE_X11FWD
-
 #include "x11fwd.h"
 #include "session.h"
 #include "ssh.h"
@@ -130,6 +129,7 @@ void x11setauth(struct ChanSess *chansess) {
 			chansess->x11port - 6000, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
+		fprintf(stderr, "trunk disp string");
 		return;
 	}
 
@@ -140,6 +140,7 @@ void x11setauth(struct ChanSess *chansess) {
 			chansess->x11port - 6000, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
+		fprintf(stderr, "trunk xauth string");
 		return;
 	}
 
@@ -191,6 +192,7 @@ static int bindport(int fd) {
 	struct sockaddr_in addr;
 	uint16_t port;
 
+	memset((void*)&addr, 0x0, sizeof(addr));
 	addr.sin_family = AF_INET;
 	addr.sin_addr.s_addr = htonl(INADDR_LOOPBACK);
 
@@ -207,6 +209,7 @@ static int bindport(int fd) {
 			continue;
 		}
 		/* otherwise it was an error we don't know about */
+		dropbear_log(LOG_DEBUG, "failed to bind x11 socket");
 		break;
 	}
 	return -1;
