@@ -127,8 +127,8 @@ installdropbear: dropbear
 install%: $*
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	$(INSTALL) -m 755 $(SPREFIX)$*$(EXEEXT) $(DESTDIR)$(bindir)
-	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
-	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
+	-chown root $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT)
 	ifeq ($(MULTI), 1)
 		@echo 
 		@echo "You must manually create links for $*"
