@@ -613,6 +613,7 @@ static void read_kex_algos() {
 		erralgo = "kex";
 		goto error;
 	}
+	TRACE(("kex algo %s", algo->name));
 	ses.newkeys->algo_kex = algo->val;
 
 	/* server_host_key_algorithms */
@@ -622,6 +623,7 @@ static void read_kex_algos() {
 		erralgo = "hostkey";
 		goto error;
 	}
+	TRACE(("hostkey algo %s", algo->name));
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
@@ -631,6 +633,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
+	TRACE(("enc algo recv %s", algo->name));
 
 	/* encryption_algorithms_server_to_client */
 	algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
@@ -639,6 +642,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
+	TRACE(("enc algo trans %s", algo->name));
 
 	/* mac_algorithms_client_to_server */
 	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -647,6 +651,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
+	TRACE(("mac algo recv %s", algo->name));
 
 	/* mac_algorithms_server_to_client */
 	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -655,6 +660,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
+	TRACE(("mac algo trans %s", algo->name));
 
 	/* compression_algorithms_client_to_server */
 	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -663,6 +669,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->recv_algo_comp = algo->val;
+	TRACE(("comp algo recv %s", algo->name));
 
 	/* compression_algorithms_server_to_client */
 	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -671,6 +678,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	ses.newkeys->trans_algo_comp = algo->val;
+	TRACE(("comp algo trans %s", algo->name));
 
 	/* languages_client_to_server */
 	buf_eatstring(ses.payload);

@@ -45,6 +45,7 @@
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 
+	TRACE(("enter buf_get_dss_pub_key"));
 	assert(key != NULL);
 	key->p = m_malloc(sizeof(mp_int));
 	key->q = m_malloc(sizeof(mp_int));
@@ -58,14 +59,17 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	 || buf_getmpint(buf, key->q) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->g) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->y) == DROPBEAR_FAILURE) {
+		TRACE(("leave buf_get_dss_pub_key: failed reading mpints"));
 		return DROPBEAR_FAILURE;
 	}
 
 	if (mp_count_bits(key->p) < MIN_DSS_KEYLEN) {
 		dropbear_log(LOG_WARNING, "DSS key too short");
+		TRACE(("leave buf_get_dss_pub_key: short key"));
 		return DROPBEAR_FAILURE;
 	}
 
+	TRACE(("leave buf_get_dss_pub_key: success"));
 	return DROPBEAR_SUCCESS;
 }
 

@@ -119,6 +119,8 @@ struct sshsession {
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
 								 used for kex_follows stuff */
+
+	unsigned char lastpacket; /* What the last received packet type was */
 	
 
 

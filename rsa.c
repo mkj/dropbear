@@ -205,6 +205,8 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	mp_int *rsa_em = NULL;
 	int ret = DROPBEAR_FAILURE;
 
+	TRACE(("enter buf_rsa_verify"));
+
 	assert(key != NULL);
 
 	m_mp_init_multi(&rsa_mdash, &rsa_s, NULL);
@@ -217,6 +219,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	if (mp_read_unsigned_bin(&rsa_s, buf_getptr(buf, buf->len - buf->pos),
 				buf->len - buf->pos) != MP_OKAY) {
+		TRACE(("failed reading rsa_s"));
 		goto out;
 	}
 
@@ -230,17 +233,20 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	rsa_em = rsa_pad_em(key, data, len);
 
 	if (mp_exptmod(&rsa_s, key->e, key->n, &rsa_mdash) != MP_OKAY) {
+		TRACE(("failed exptmod rsa_s"));
 		goto out;
 	}
 
 	if (mp_cmp(rsa_em, &rsa_mdash) == MP_EQ) {
 		/* signature is valid */
+		TRACE(("success!"));
 		ret = DROPBEAR_SUCCESS;
 	}
 
 out:
 	mp_clear_multi(rsa_em, &rsa_mdash, &rsa_s, NULL);
 	m_free(rsa_em);
+	TRACE(("leave buf_rsa_verify: ret %d", ret));
 	return ret;
 
 }

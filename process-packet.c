@@ -50,6 +50,8 @@ void process_packet() {
 	type = buf_getbyte(ses.payload);
 	TRACE(("process_packet: packet type = %d", type));
 
+	ses.lastpacket = type;
+
 	/* These packets we can receive at any time */
 	switch(type) {
 

@@ -21,6 +21,7 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_KEXINIT, recv_msg_kexinit},
 	{SSH_MSG_KEXDH_REPLY, recv_msg_kexdh_reply}, // client
 	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
+	{SSH_MSG_SERVICE_ACCEPT, recv_msg_service_accept}, // client
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
 	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
@@ -30,8 +31,8 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_CLOSE, recv_msg_channel_close},
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
-	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure},
-	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success},
+	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, // client
+	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, // client
 	{0, 0} /* End */
 };
 
@@ -90,11 +91,11 @@ static void cli_sessionloop() {
 
 	TRACE(("enter cli_sessionloop"));
 
-	if (cli_ses.kex_state == KEX_NOTHING && ses.kexstate.recvkexinit) {
-		cli_ses.state = KEXINIT_RCVD;
+	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
+		cli_ses.kex_state = KEXINIT_RCVD;
 	}
 
-	if (cli_ses.state == KEXINIT_RCVD) {
+	if (cli_ses.kex_state == KEXINIT_RCVD) {
 
 		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
 		 * negotiation would have failed. */
@@ -120,6 +121,7 @@ static void cli_sessionloop() {
 	 * in normal operation */
 	if (ses.kexstate.donefirstkex == 0) {
 		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"));
+		return;
 	}
 
 	switch (cli_ses.state) {
@@ -129,6 +131,7 @@ static void cli_sessionloop() {
 			 * userauth */
 			send_msg_service_request(SSH_SERVICE_USERAUTH);
 			cli_ses.state = SERVICE_AUTH_REQ_SENT;
+			TRACE(("leave cli_sessionloop: sent userauth service req"));
 			return;
 
 		/* userauth code */
@@ -136,10 +139,12 @@ static void cli_sessionloop() {
 			cli_get_user();
 			cli_auth_getmethods();
 			cli_ses.state = USERAUTH_METHODS_SENT;
+			TRACE(("leave cli_sessionloop: sent userauth methods req"));
 			return;
 			
 		case USERAUTH_FAIL_RCVD:
 			cli_auth_try();
+			TRACE(("leave cli_sessionloop: cli_auth_try"));
 			return;
 
 		/* XXX more here needed */
@@ -149,6 +154,7 @@ static void cli_sessionloop() {
 		break;
 	}
 
+	TRACE(("leave cli_sessionloop: fell out"));
 
 }
 

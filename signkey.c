@@ -52,7 +52,11 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	unsigned char* ident;
 	unsigned int len;
 
+	TRACE(("enter buf_get_pub_key"));
+	printhex(buf_getptr(buf, 0x99), 0x99);
+
 	ident = buf_getstring(buf, &len);
+
 
 #ifdef DROPBEAR_DSS
 	if (memcmp(ident, SSH_SIGNKEY_DSS, len) == 0
@@ -78,6 +82,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 		return buf_get_rsa_pub_key(buf, key->rsakey);
 	}
 #endif
+	TRACE(("leave buf_get_pub_key: didn't match the type we want (%d versus '%s'len %d)", *type, ident, len));
 
 	m_free(ident);
 
@@ -351,6 +356,8 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 	unsigned int bloblen;
 	unsigned char * ident = NULL;
 	unsigned int identlen = 0;
+
+	TRACE(("enter buf_verify"));
 
 	bloblen = buf_getint(buf);
 	ident = buf_getstring(buf, &identlen);

@@ -31,7 +31,7 @@ void cli_get_user() {
 
 		ses.authstate.username = m_strdup(pw->pw_name);
 	}
-	TRACE(("leave cli_get_user: %s", cli_ses.username));
+	TRACE(("leave cli_get_user: %s", ses.authstate.username));
 }
 
 /* Send a "none" auth request to get available methods */
@@ -90,7 +90,7 @@ void recv_msg_userauth_failure() {
 	tok = methods; /* tok stores the next method we'll compare */
 	for (i = 0; i <= methlen; i++) {
 		if (methods[i] == '\0') {
-			TRACE(("auth method '%s'\n", tok));
+			TRACE(("auth method '%s'", tok));
 #ifdef DROPBEAR_PUBKEY_AUTH
 			if (strncmp(AUTH_METHOD_PUBKEY, tok,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
@@ -103,9 +103,9 @@ void recv_msg_userauth_failure() {
 				ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 			}
 #endif
-			tok = &methods[i]; /* Must make sure we don't use it after
-								  the last loop, since it'll point
-								  to something undefined */
+			tok = &methods[i+1]; /* Must make sure we don't use it after the
+									last loop, since it'll point to something
+									undefined */
 		}
 	}
 

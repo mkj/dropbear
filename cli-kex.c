@@ -43,7 +43,7 @@ void send_msg_kexdh_init() {
 	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
 	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
 
-	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x);
+	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
 	gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
 
 	CHECKCLEARTOWRITE();
@@ -58,17 +58,23 @@ void recv_msg_kexdh_reply() {
 
 	mp_int dh_f;
 	sign_key *hostkey = NULL;
-	int type;
+	int type, keylen;
 
+	TRACE(("enter recv_msg_kexdh_reply"));
 	type = ses.newkeys->algo_hostkey;
+	TRACE(("type is %d", type));
 
 	hostkey = new_sign_key();
+	keylen = buf_getint(ses.payload);
+
 	if (buf_get_pub_key(ses.payload, hostkey, &type) != DROPBEAR_SUCCESS) {
+		TRACE(("failed getting pubkey"));
 		dropbear_exit("Bad KEX packet");
 	}
 
 	m_mp_init(&dh_f);
 	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
+		TRACE(("failed getting mpint"));
 		dropbear_exit("Bad KEX packet");
 	}
 

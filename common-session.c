@@ -75,6 +75,7 @@ void common_session_init(int sock, char* remotehost) {
 	ses.requirenext = SSH_MSG_KEXINIT;
 	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
 	ses.ignorenext = 0;
+	ses.lastpacket = 0;
 
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));
