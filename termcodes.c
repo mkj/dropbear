@@ -96,8 +96,8 @@ const struct TermCode termcodes[MAX_TERMCODE+1] = {
 		{IXON, TERMCODE_INPUT},
 		{IXANY, TERMCODE_INPUT},
 		{IXOFF, TERMCODE_INPUT},
-#ifdef IMAXBELL
-		{IMAXBELL, TERMCODE_INPUT},
+#ifdef IMAXBEL
+		{IMAXBEL, TERMCODE_INPUT},
 #else
 		{0, 0},
 #endif
