@@ -1,3 +1,11 @@
+- Use daemon() function if available (or our own copy) rather than seperate
+  code
+
+- Fixed up support for first_kex_packet_follows, required to talk to ssh.com
+  clients. Thanks to Marian Stagarescu for the pointer.
+
+- Added more input sanity checking
+
 0.38 - Sat Oct 11 2003 16:28:13 +0800
 
 - Default hostkey path changed to /etc/dropbear/dropbear_{rsa,dss}_host_key
