@@ -120,6 +120,8 @@ static void sesssigchild_handler(int val) {
 					chansess->exitsignal = WTERMSIG(status);
 #ifndef AIX
 					chansess->exitcore = WCOREDUMP(status);
+#else
+					chansess->exitcore = 0;
 #endif
 				} else {
 					/* we use this to determine how pid exited */
