@@ -72,7 +72,7 @@ int main(int argc, char ** argv) {
 			"'dropbear' - the Dropbear server\n"
 #endif
 #ifdef DBMULTI_dbclient
-			"'dbclient' - the Dropbear client\n"
+			"'dbclient' or 'ssh' - the Dropbear client\n"
 #endif
 #ifdef DBMULTI_dropbearkey
 			"'dropbearkey' - the key generator\n"
