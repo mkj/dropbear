@@ -207,15 +207,10 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
  * the result WON'T be null-terminated.
  * On failure the string in addr will be copied to dest.
  * The return value is the length of the string copied to dest */
-int getaddrhostname(char * dest, unsigned int len, char * addr) {
+char* getaddrhostname(char * addr) {
 
 	struct hostent *host = NULL;
-	int retlen;
 	char * retstring;
-
-	if (len < 1) {
-		return 0;
-	}
 
 #ifdef DO_HOST_LOOKUP
 	host = gethostbyname(addr);
@@ -229,12 +224,7 @@ int getaddrhostname(char * dest, unsigned int len, char * addr) {
 		retstring = host->h_name;
 	}
 
-	retlen = strlen(retstring) + 1;
-	retlen = MIN(len, retlen);
-
-	/* we don't need null-termination if it fills the buffer */
-	strncpy(dest, retstring, retlen);
-	return retlen;
+	return strdup(retstring);
 }
 
 #ifndef HAVE_STRLCPY
