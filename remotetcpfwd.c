@@ -23,7 +23,7 @@ void recv_msg_global_request_remotetcp() {
 
 	unsigned char* reqname = NULL;
 	unsigned int namelen;
-	unsigned int wantreply;
+	unsigned int wantreply = 0;
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter recv_msg_global_request_remotetcp"));
@@ -118,7 +118,7 @@ static void newremote(struct TCPListener *listener) {
 		return;
 	}
 
-	if (getnameinfo(&addr, addr.sa_len, ipstring, sizeof(ipstring), portstring,
+	if (getnameinfo(&addr, len, ipstring, sizeof(ipstring), portstring,
 				sizeof(portstring), NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
 		return;
 	}
