@@ -622,8 +622,6 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		pty_make_controlling_tty(&chansess->slave, chansess->tty);
 		
-		m_free(chansess->tty);
-
 		if (dup2(chansess->slave, STDIN_FILENO) < 0) {
 			TRACE(("leave sessioncommand: error redirecting stdin"));
 			return 1;
@@ -647,6 +645,8 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 				ses.addrstring, chansess->tty);
 		login_login(li);
 		login_free_entry(li);
+
+		m_free(chansess->tty);
 
 		execchild(chansess);
 		/* not reached */
