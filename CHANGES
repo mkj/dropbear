@@ -1,3 +1,21 @@
+0.43 - Fri Jul 16 2004 17:44:54 +0800
+
+- SECURITY: Don't try to free() uninitialised variables in DSS verification
+  code. Thanks to Arne Bernin for pointing out this bug. This is possibly
+  exploitable, all users with DSS and pubkey-auth compiled in are advised to
+  upgrade.
+
+- Clean up agent forwarding socket files correctly, patch from Gerrit Pape.
+
+- Don't go into an infinite loop when portforwarding to servers which don't
+  send any initial data/banner. Patch from Nikola Vladov
+
+- Fix for network vs. host byte order in logging remote TCP ports, also
+  from Gerrit Pape.
+
+- Initialise many pointers to NULL, for general safety. Also checked cleanup
+  code for mp_ints (related to security issues above).
+
 0.42 - Wed Jun 16 2004 12:44:54 +0800
 
 - Updated to Gerrit Pape's official Debian subdirectory
