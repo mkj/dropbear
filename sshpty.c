@@ -1,7 +1,7 @@
 /*
  * Dropbear - a SSH2 server
  *
- * Copied from OpenSSH-3.5p1 source
+ * Copied from OpenSSH-3.5p1 source, modified by Matt Johnston 2003
  * 
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
@@ -30,7 +30,7 @@
 #ifdef HAVE_PTY_H
 # include <pty.h>
 #endif
-#if defined(HAVE_DEV_PTMX) && defined(HAVE_SYS_STROPTS_H)
+#if defined(USE_DEV_PTMX) && defined(HAVE_SYS_STROPTS_H)
 # include <sys/stropts.h>
 #endif
 
@@ -48,21 +48,20 @@
 int
 pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 {
-#if defined(HAVE_OPENPTY) || defined(BSD4_4)
-	/* openpty(3) exists in OSF/1 and some other os'es */
+#if defined(HAVE_OPENPTY)
+	/* exists in recent (4.4) BSDs and OSF/1 */
 	char *name;
 	int i;
 
-	TRACE(("#if defined(HAVE_OPENPTY) || defined(BSD4_4)"));
 	i = openpty(ptyfd, ttyfd, NULL, NULL, NULL);
 	if (i < 0) {
-		TRACE(("pty_allocate: error with openpty"));
-		/*error("openpty: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING | LOG_DAEMON, 
+				"pty_allocate: openpty: %.100s", strerror(errno));
 		return 0;
 	}
 	name = ttyname(*ttyfd);
 	if (!name) {
-		dropbear_exit("openpty returns device for which ttyname fails.");
+		dropbear_exit("ttyname fails for openpty device");
 	}
 
 	strlcpy(namebuf, name, namebuflen);	/* possible truncation */
@@ -74,53 +73,54 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	 * pty's automagically when needed
 	 */
 	char *slave;
-	TRACE(("#ifdef HAVE__GETPTY"));
 
 	slave = _getpty(ptyfd, O_RDWR, 0622, 0);
 	if (slave == NULL) {
-		TRACE(("pty_allocate error with GETPTY"));
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"pty_allocate: _getpty: %.100s", strerror(errno));
 		return 0;
 	}
 	strlcpy(namebuf, slave, namebuflen);
 	/* Open the slave side. */
 	*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		TRACE(("pty_allocate error: ttyftd open error"));
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"pty_allocate error: ttyftd open error");
 		close(*ptyfd);
 		return 0;
 	}
 	return 1;
 #else /* HAVE__GETPTY */
-#if defined(HAVE_DEV_PTMX)
+#if defined(USE_DEV_PTMX)
 	/*
 	 * This code is used e.g. on Solaris 2.x.  (Note that Solaris 2.3
 	 * also has bsd-style ptys, but they simply do not work.)
+	 *
+	 * Linux systems may have the /dev/ptmx device, but this code won't work.
 	 */
 	int ptm;
 	char *pts;
 
-	TRACE(("#if defined(HAVE_DEV_PTMX)"));
-
 	ptm = open("/dev/ptmx", O_RDWR | O_NOCTTY);
 	if (ptm < 0) {
-		TRACE(("/dev/ptmx: error"));
-		/*error("/dev/ptmx: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"pty_allocate: /dev/ptmx: %.100s", strerror(errno));
 		return 0;
 	}
 	if (grantpt(ptm) < 0) {
-		TRACE(("grantpt: error"));
-		/*error("grantpt: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"grantpt: %.100s", strerror(errno));
 		return 0;
 	}
 	if (unlockpt(ptm) < 0) {
-		TRACE(("unlockpt: error"));
-		/*error("unlockpt: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"unlockpt: %.100s", strerror(errno));
 		return 0;
 	}
 	pts = ptsname(ptm);
 	if (pts == NULL) {
-		TRACE(("Slave pty side name cout not be obtained."));
-		/* error("Slave pty side name could not be obtained."); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"Slave pty side name could not be obtained.");
 	}
 	strlcpy(namebuf, pts, namebuflen);
 	*ptyfd = ptm;
@@ -128,8 +128,8 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	/* Open the slave side. */
 	*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		TRACE(("error opening pts"));
-/*		error("%.100s: %.100s", namebuf, strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"error opening pts %.100s: %.100s", namebuf, strerror(errno));
 		close(*ptyfd);
 		return 0;
 	}
@@ -139,82 +139,48 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	 * HP-UX pts(7) doesn't have ttcompat module.
 	 */
 	if (ioctl(*ttyfd, I_PUSH, "ptem") < 0) {
-		TRACE(("ioctl error 'ptem'"));
-/*		error("ioctl I_PUSH ptem: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"ioctl I_PUSH ptem: %.100s", strerror(errno));
 	}
 	if (ioctl(*ttyfd, I_PUSH, "ldterm") < 0) {
-		TRACE(("ioctl error 'ldterm'"));
-/*		error("ioctl I_PUSH ldterm: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+			"ioctl I_PUSH ldterm: %.100s", strerror(errno));
 	}
 #ifndef __hpux
 	if (ioctl(*ttyfd, I_PUSH, "ttcompat") < 0) {
-		TRACE(("ioctl error 'ttcompat'"));
-/*		error("ioctl I_PUSH ttcompat: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_WARNING|LOG_DAEMON,
+			"ioctl I_PUSH ttcompat: %.100s", strerror(errno));
 	}
 #endif
 #endif
 	return 1;
-#else /* HAVE_DEV_PTMX */
+#else /* USE_DEV_PTMX */
 #ifdef HAVE_DEV_PTS_AND_PTC
 	/* AIX-style pty code. */
 	const char *name;
 
-	TRACE(("#ifdef HAVE_DEV_PTS_AND_PTC"));
-
 	*ptyfd = open("/dev/ptc", O_RDWR | O_NOCTTY);
 	if (*ptyfd < 0) {
-		TRACE(("Could not open /dev/ptc"));
-/*		error("Could not open /dev/ptc: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"Could not open /dev/ptc: %.100s", strerror(errno));
 		return 0;
 	}
 	name = ttyname(*ptyfd);
 	if (!name) {
-		dropbear_exit("Open of /dev/ptc returns device for which ttyname fails.");
+		dropbear_exit("ttyname fails for /dev/ptc device");
 	}
 	strlcpy(namebuf, name, namebuflen);
 	*ttyfd = open(name, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		TRACE(("Could not open pty slave side"));
-/*		error("Could not open pty slave side %.100s: %.100s",
-		    name, strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"Could not open pty slave side %.100s: %.100s",
+		    name, strerror(errno));
 		close(*ptyfd);
 		return 0;
 	}
 	return 1;
 #else /* HAVE_DEV_PTS_AND_PTC */
-#ifdef _UNICOS
-	char buf[64];
-	int i;
-	int highpty;
 
-#ifdef _SC_CRAY_NPTY
-	highpty = sysconf(_SC_CRAY_NPTY);
-	if (highpty == -1) {
-		highpty = 128;
-	}
-#else
-	highpty = 128;
-#endif
-
-	for (i = 0; i < highpty; i++) {
-		snprintf(buf, sizeof(buf), "/dev/pty/%03d", i);
-		*ptyfd = open(buf, O_RDWR|O_NOCTTY);
-		if (*ptyfd < 0) {
-			continue;
-		}
-		snprintf(namebuf, namebuflen, "/dev/ttyp%03d", i);
-		/* Open the slave side. */
-		*ttyfd = open(namebuf, O_RDWR|O_NOCTTY);
-		if (*ttyfd < 0) {
-			TRACE(("error opening slave side"));
-/*			error("%.100s: %.100s", namebuf, strerror(errno)); matt */
-			close(*ptyfd);
-			return 0;
-		}
-		return 1;
-	}
-	return 0;
-#else
 	/* BSD-style pty code. */
 	char buf[64];
 	int i;
@@ -223,8 +189,6 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	int num_minors = strlen(ptyminors);
 	int num_ptys = strlen(ptymajors) * num_minors;
 	struct termios tio;
-
-	TRACE(("#else /* BSD-style pty code. */"));
 
 	for (i = 0; i < num_ptys; i++) {
 		snprintf(buf, sizeof buf, "/dev/pty%c%c", ptymajors[i / num_minors],
@@ -246,16 +210,15 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 		/* Open the slave side. */
 		*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 		if (*ttyfd < 0) {
-			TRACE(("error opening slave side"));
-/* 			error("%.100s: %.100s", namebuf, strerror(errno)); matt */
+			dropbear_log(LOG_ERR|LOG_DAEMON,
+				"pty_allocate: %.100s: %.100s", namebuf, strerror(errno));
 			close(*ptyfd);
 			return 0;
 		}
 		/* set tty modes to a sane state for broken clients */
 		if (tcgetattr(*ptyfd, &tio) < 0) {
-			TRACE(("Getting tty modes for pty failed: %.100s", strerror
-(errno))); 
-/*			log("Getting tty modes for pty failed: %.100s", strerror(errno)); matt */
+			dropbear_log(LOG_WARNING|LOG_DAEMON,
+				"ptyallocate: tty modes failed: %.100s", strerror(errno));
 		} else {
 			tio.c_lflag |= (ECHO | ISIG | ICANON);
 			tio.c_oflag |= (OPOST | ONLCR);
@@ -263,17 +226,17 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 			/* Set the new modes for the terminal. */
 			if (tcsetattr(*ptyfd, TCSANOW, &tio) < 0) {
-				TRACE(("Setting tty modes for pty failed"));
-/*				log("Setting tty modes for pty failed: %.100s", strerror(errno)); matt */
+				dropbear_log(LOG_WARNING|LOG_DAEMON,
+					"Setting tty modes for pty failed: %.100s",
+					strerror(errno));
 			}
 		}
 
 		return 1;
 	}
 	return 0;
-#endif /* CRAY */
 #endif /* HAVE_DEV_PTS_AND_PTC */
-#endif /* HAVE_DEV_PTMX */
+#endif /* USE_DEV_PTMX */
 #endif /* HAVE__GETPTY */
 #endif /* HAVE_OPENPTY */
 }
@@ -284,12 +247,12 @@ void
 pty_release(const char *ttyname)
 {
 	if (chown(ttyname, (uid_t) 0, (gid_t) 0) < 0) {
-		TRACE(("error release chowning tty"));
-/*		error("chown %.100s 0 0 failed: %.100s", ttyname, strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+				"chown %.100s 0 0 failed: %.100s", ttyname, strerror(errno));
 	}
 	if (chmod(ttyname, (mode_t) 0666) < 0) {
-		TRACE(("error release chmodding tty"));
-/*		error("chmod %.100s 0666 failed: %.100s", ttyname, strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"chmod %.100s 0666 failed: %.100s", ttyname, strerror(errno));
 	}
 }
 
@@ -303,81 +266,44 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	void *old;
 #endif /* USE_VHANGUP */
 
-#ifdef _UNICOS
-	TRACE(("unicos"));
-	if (setsid() < 0) {
-		TRACE(("setsid error"));
-/*		error("setsid: %.100s", strerror(errno)); matt */
-	}
-
-	fd = open(ttyname, O_RDWR|O_NOCTTY);
-	if (fd != -1) {
-		mysignal(SIGHUP, SIG_IGN);
-		ioctl(fd, TCVHUP, (char *)NULL);
-		mysignal(SIGHUP, SIG_DFL);
-		setpgid(0, 0);
-		close(fd);
-	} else {
-		TRACE(("Failed to disconnect from controlling tty."));
-/* 		error("Failed to disconnect from controlling tty."); matt */
-	}
-
-	TRACE(("pty_make_controlling_tty: Setting controlling tty using TCSETCTTY."));
-	ioctl(*ttyfd, TCSETCTTY, NULL);
-	fd = open("/dev/tty", O_RDWR);
-	if (fd < 0) {
-		TRACE(("failed to open /dev/tty"));
-/*		error("%.100s: %.100s", ttyname, strerror(errno)); matt */
-	}
-	close(*ttyfd);
-	*ttyfd = fd;
-#else /* _UNICOS */
-
-	/* solaris has a problem with TIOCNOTTY for a bg process, so
-	 * we disable the signal which would STOP the process */
+	/* Solaris has a problem with TIOCNOTTY for a bg process, so
+	 * we disable the signal which would STOP the process - matt */
 	signal(SIGTTOU, SIG_IGN);
 
 	/* First disconnect from the old controlling tty. */
 #ifdef TIOCNOTTY
-	TRACE(("TIOCNOTTY"));
 	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
-		TRACE(("before ioctl TIOCNOTTY"));
 		(void) ioctl(fd, TIOCNOTTY, NULL);
 		close(fd);
 	}
 #endif /* TIOCNOTTY */
 	if (setsid() < 0) {
-		TRACE(("setsid failed"));
-/* 		error("setsid: %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"setsid: %.100s", strerror(errno));
 	}
 
 	/*
 	 * Verify that we are successfully disconnected from the controlling
 	 * tty.
 	 */
-	TRACE(("verify disconnect"));
 	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
-		TRACE(("pty_make_controlling_tty: Failed to disconnect from"
-				" controlling tty.\n"));
-		TRACE(("file is %s\n", _PATH_TTY));
-		perror("ptymakething");
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+				"Failed to disconnect from controlling tty.\n");
 		close(fd);
 	}
 	/* Make it our controlling tty. */
 #ifdef TIOCSCTTY
-	TRACE(("pty_make_controlling_tty: Setting controlling tty using "
-			"TIOCSCTTY.\n"));
 	if (ioctl(*ttyfd, TIOCSCTTY, NULL) < 0) {
-		TRACE(("ioctl(TIOCSCTTY) failed"));
-		/*error("ioctl(TIOCSCTTY): %.100s", strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"ioctl(TIOCSCTTY): %.100s", strerror(errno));
 	}
 #endif /* TIOCSCTTY */
 #ifdef HAVE_NEWS4
 	if (setpgrp(0,0) < 0) {
-		TRACE(("SETPGRP failed"));
-/*		error("SETPGRP %s",strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			error("SETPGRP %s",strerror(errno)));
 	}
 #endif /* HAVE_NEWS4 */
 #ifdef USE_VHANGUP
@@ -387,8 +313,8 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 #endif /* USE_VHANGUP */
 	fd = open(ttyname, O_RDWR);
 	if (fd < 0) {
-		TRACE(("open ttyname failed"));
-/*		error("%.100s: %.100s", ttyname, strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"%.100s: %.100s", ttyname, strerror(errno));
 	} else {
 #ifdef USE_VHANGUP
 		close(*ttyfd);
@@ -398,16 +324,14 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 #endif /* USE_VHANGUP */
 	}
 	/* Verify that we now have a controlling tty. */
-	TRACE(("verify have controlling"));
 	fd = open(_PATH_TTY, O_WRONLY);
 	if (fd < 0) {
-		TRACE(("pty_make_controlling_tty: failed to open /dev/tty"));
-/*		error("open /dev/tty failed - could not set controlling tty: %.100s",
-		    strerror(errno)); matt */
+		dropbear_log(LOG_ERR|LOG_DAEMON,
+			"open /dev/tty failed - could not set controlling tty: %.100s",
+		    strerror(errno));
 	} else {
 		close(fd);
 	}
-#endif /* _UNICOS */
 }
 
 /* Changes the window size associated with the pty. */
@@ -449,24 +373,22 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 	 * tty is owned by root.
 	 */
 	if (stat(ttyname, &st)) {
-		dropbear_exit("pty_setowner: stat failed");
-/*		fatal("stat(%.101s) failed: %.100s", ttyname,
-		    strerror(errno)); matt */
+		dropbear_exit("pty_setowner: stat(%.101s) failed: %.100s",
+				ttyname, strerror(errno));
 	}
 
 	if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
 		if (chown(ttyname, pw->pw_uid, gid) < 0) {
 			if (errno == EROFS &&
 			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
-				TRACE(("pty_setowner: chown error"));
-/*				error("chown(%.100s, %u, %u) failed: %.100s",
-				    ttyname, (u_int)pw->pw_uid, (u_int)gid,
-				    strerror(errno));*/
+				dropbear_log(LOG_ERR|LOG_DAEMON,
+					"chown(%.100s, %u, %u) failed: %.100s",
+						ttyname, (u_int)pw->pw_uid, (u_int)gid,
+						strerror(errno));
 			} else {
-				dropbear_exit("pty_setowner: chown fatal");
-/*				fatal("chown(%.100s, %u, %u) failed: %.100s",
+				dropbear_exit("chown(%.100s, %u, %u) failed: %.100s",
 				    ttyname, (u_int)pw->pw_uid, (u_int)gid,
-				    strerror(errno)); matt */
+				    strerror(errno));
 			}
 		}
 	}
@@ -475,13 +397,12 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 		if (chmod(ttyname, mode) < 0) {
 			if (errno == EROFS &&
 			    (st.st_mode & (S_IRGRP | S_IROTH)) == 0) {
-				TRACE(("chmod ttyname failed"));
-/*				error("chmod(%.100s, 0%o) failed: %.100s",
-				    ttyname, mode, strerror(errno)); matt*/
+				dropbear_log(LOG_ERR|LOG_DAEMON,
+					"chmod(%.100s, 0%o) failed: %.100s",
+					ttyname, mode, strerror(errno));
 			} else {
-				dropbear_exit("pty_setowner: chmod fatal");
-/*				fatal("chmod(%.100s, 0%o) failed: %.100s",
-				    ttyname, mode, strerror(errno)); matt */
+				dropbear_exit("chmod(%.100s, 0%o) failed: %.100s",
+				    ttyname, mode, strerror(errno));
 			}
 		}
 	}
