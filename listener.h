@@ -11,7 +11,7 @@ struct Listener {
 
 	int index; /* index in the array of listeners */
 
-	void (*accepter)(struct Listener*, int sock);
+	void (*acceptor)(struct Listener*, int sock);
 	void (*cleanup)(struct Listener*);
 
 	int type; /* CHANNEL_ID_X11, CHANNEL_ID_AGENT, 
@@ -28,7 +28,7 @@ void set_listener_fds(fd_set * readfds);
 
 struct Listener* new_listener(int socks[], unsigned int nsocks, 
 		int type, void* typedata, 
-		void (*accepter)(struct Listener*, int sock), 
+		void (*acceptor)(struct Listener* listener, int sock), 
 		void (*cleanup)(struct Listener*));
 
 struct Listener * get_listener(int type, void* typedata,

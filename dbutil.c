@@ -114,10 +114,8 @@ void dropbear_trace(const char* format, ...) {
 #endif /* DEBUG_TRACE */
 
 /* Listen on address:port. Unless address is NULL, in which case listen on
- * everything (ie 0.0.0.0, or ::1 - note that this is IPv? agnostic. Linux is
- * broken with respect to listening to v6 or v4, so the addresses you get when
- * people connect will be wrong. It doesn't break things, just looks quite
- * ugly. Returns the number of sockets bound on success, or -1 on failure. On
+ * everything. If called with address == "", we'll listen on localhost/loopback.
+ * Returns the number of sockets bound on success, or -1 on failure. On
  * failure, if errstring wasn't NULL, it'll be a newly malloced error
  * string.*/
 int dropbear_listen(const char* address, const char* port,
@@ -135,7 +133,14 @@ int dropbear_listen(const char* address, const char* port,
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_flags = AI_PASSIVE;
+
+	if (address && address[0] == '\0') {
+		TRACE(("dropbear_listen: local loopback"));
+		address = NULL;
+	} else {
+		TRACE(("dropbear_listen: not local loopback"));
+		hints.ai_flags = AI_PASSIVE;
+	}
 	err = getaddrinfo(address, port, &hints, &res0);
 
 	if (err) {

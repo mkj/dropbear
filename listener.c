@@ -42,7 +42,7 @@ void handle_listeners(fd_set * readfds) {
 			for (j = 0; j < listener->nsocks; j++) {
 				sock = listener->socks[j];
 				if (FD_ISSET(sock, readfds)) {
-					listener->accepter(listener, sock);
+					listener->acceptor(listener, sock);
 				}
 			}
 		}
@@ -50,11 +50,11 @@ void handle_listeners(fd_set * readfds) {
 }
 
 
-/* accepter(int fd, void* typedata) is a function to accept connections, 
+/* acceptor(int fd, void* typedata) is a function to accept connections, 
  * cleanup(void* typedata) happens when cleaning up */
 struct Listener* new_listener(int socks[], unsigned int nsocks,
 		int type, void* typedata, 
-		void (*accepter)(struct Listener*, int sock), 
+		void (*acceptor)(struct Listener* listener, int sock), 
 		void (*cleanup)(struct Listener*)) {
 
 	unsigned int i, j;
@@ -99,7 +99,7 @@ struct Listener* new_listener(int socks[], unsigned int nsocks,
 	newlisten->typedata = typedata;
 	newlisten->nsocks = nsocks;
 	memcpy(newlisten->socks, socks, nsocks * sizeof(int));
-	newlisten->accepter = accepter;
+	newlisten->acceptor = acceptor;
 	newlisten->cleanup = cleanup;
 
 	ses.listeners[i] = newlisten;

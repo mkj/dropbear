@@ -3,12 +3,18 @@
 
 struct TCPListener {
 
-	/* Local ones */
-	unsigned char *localaddr; /* Can be NULL */
-	unsigned int localport;
-	/* Remote ones: */
-	unsigned char *remoteaddr;
-	unsigned int remoteport;
+	/* sendaddr/sendport are what we send in the channel init request. For a 
+	 * forwarded-tcpip request, it's the addr/port we were binding to.
+	 * For a direct-tcpip request, it's the addr/port we want the other
+	 * end to connect to */
+	
+	unsigned char *sendaddr;
+	unsigned int sendport;
+
+	/* This is for direct-tcpip (ie the client listening), and specifies the
+	 * port to listen on. Is unspecified for the server */
+	unsigned int listenport;
+
 	const struct ChanType *chantype;
 
 };

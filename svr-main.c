@@ -188,7 +188,8 @@ int main(int argc, char ** argv)
 
 			/* child connection XXX - ip6 stuff here */
 			remoteaddrlen = sizeof(remoteaddr);
-			childsock = accept(listensocks[i], &remoteaddr, &remoteaddrlen);
+			childsock = accept(listensocks[i], 
+					(struct sockaddr*)&remoteaddr, &remoteaddrlen);
 
 			if (childsock < 0) {
 				/* accept failed */
@@ -295,7 +296,7 @@ static void sigintterm_handler(int fish) {
 static int listensockets(int *sock, int sockcount, int *maxfd) {
 	
 	unsigned int i;
-	char portstring[6];
+	char portstring[NI_MAXSERV];
 	char* errstring = NULL;
 	unsigned int sockpos = 0;
 	int nsock;

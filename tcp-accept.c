@@ -10,7 +10,16 @@
 
 #ifndef DISABLE_TCP_ACCEPT
 
-static void accept_tcp(struct Listener *listener, int sock) {
+
+static void cleanup_tcp(struct Listener *listener) {
+
+	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
+
+	m_free(tcpinfo->sendaddr);
+	m_free(tcpinfo);
+}
+
+static void tcp_acceptor(struct Listener *listener, int sock) {
 
 	int fd;
 	struct sockaddr_storage addr;
@@ -33,10 +42,12 @@ static void accept_tcp(struct Listener *listener, int sock) {
 
 	if (send_msg_channel_open_init(fd, tcpinfo->chantype) == DROPBEAR_SUCCESS) {
 
-		buf_putstring(ses.writepayload, tcpinfo->addr, strlen(tcpinfo->addr));
-		buf_putint(ses.writepayload, tcpinfo->port);
+		buf_putstring(ses.writepayload, tcpinfo->sendaddr, 
+				strlen(tcpinfo->sendaddr));
+		buf_putint(ses.writepayload, tcpinfo->sendport);
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
 		buf_putint(ses.writepayload, atol(portstring));
+
 		encrypt_packet();
 
 	} else {
@@ -45,35 +56,33 @@ static void accept_tcp(struct Listener *listener, int sock) {
 	}
 }
 
-static void cleanup_tcp(struct Listener *listener) {
-
-	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
-
-	m_free(tcpinfo->addr);
-	m_free(tcpinfo);
-}
-
-
 int listen_tcpfwd(struct TCPListener* tcpinfo) {
 
-	char portstring[6]; /* "65535\0" */
+	char portstring[NI_MAXSERV];
 	int socks[DROPBEAR_MAX_SOCKS];
 	struct Listener *listener = NULL;
 	int nsocks;
+	char* errstring = NULL;
 
 	TRACE(("enter listen_tcpfwd"));
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
-	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->port);
-	nsocks = dropbear_listen(tcpinfo->addr, portstring, socks, 
-			DROPBEAR_MAX_SOCKS, NULL, &ses.maxfd);
+	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->sendport);
+
+	/* XXX Note: we're just listening on localhost, no matter what they tell
+	 * us. If someone wants to make it listen otherways, then change
+	 * the "" argument. but that requires UI changes too */
+	nsocks = dropbear_listen("", portstring, socks, 
+			DROPBEAR_MAX_SOCKS, &errstring, &ses.maxfd);
 	if (nsocks < 0) {
+		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);
+		m_free(errstring);
 		TRACE(("leave listen_tcpfwd: dropbear_listen failed"));
 		return DROPBEAR_FAILURE;
 	}
 
 	listener = new_listener(socks, nsocks, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
-			accept_tcp, cleanup_tcp);
+			tcp_acceptor, cleanup_tcp);
 
 	if (listener == NULL) {
 		m_free(tcpinfo);

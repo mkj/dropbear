@@ -15,7 +15,7 @@ int newtcpdirect(struct Channel * channel) {
 	unsigned int destport;
 	unsigned char* orighost = NULL;
 	unsigned int origport;
-	char portstring[6];
+	char portstring[NI_MAXSERV];
 	int sock;
 	int len;
 	int ret = DROPBEAR_FAILURE;

@@ -12,22 +12,26 @@ static const struct ChanType cli_chan_tcplocal = {
 	NULL
 };
 
+void setup_localtcp() {
 
+	qv
 
+}
 
-static int cli_localtcp(char* port) {
+static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
+		unsigned int remoteport) {
 
 	struct TCPListener* tcpinfo = NULL;
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener*));
-	tcpinfo->addr = NULL;
-	tcpinfo->port = port;
+	tcpinfo->sendaddr = remoteaddr;
+	tcpinfo->sendport = remoteport;
+	tcpinfo->listenport = listenport;
 	tcpinfo->chantype = &cli_chan_tcplocal;
 
 	ret = listen_tcpfwd(tcpinfo);
 
 	if (ret == DROPBEAR_FAILURE) {
-		DROPBEAR_LOG(LOG_WARNING, "Failed to listen on port %s", port);
 		m_free(tcpinfo);
 	}
 	return ret;

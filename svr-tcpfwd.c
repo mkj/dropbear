@@ -104,9 +104,9 @@ static int matchtcp(void* typedata1, void* typedata2) {
 	const struct TCPListener *info1 = (struct TCPListener*)typedata1;
 	const struct TCPListener *info2 = (struct TCPListener*)typedata2;
 
-	return (info1->port == info2->port)
+	return (info1->sendport == info2->sendport)
 			&& (info1->chantype == info2->chantype)
-			&& (strcmp(info1->addr, info2->addr) == 0);
+			&& (strcmp(info1->sendaddr, info2->sendaddr) == 0);
 }
 
 static int svr_cancelremotetcp() {
@@ -128,8 +128,8 @@ static int svr_cancelremotetcp() {
 
 	port = buf_getint(ses.payload);
 
-	tcpinfo.addr = bindaddr;
-	tcpinfo.port = port;
+	tcpinfo.sendaddr = bindaddr;
+	tcpinfo.sendport = port;
 	listener = get_listener(CHANNEL_ID_TCPFORWARDED, &tcpinfo, matchtcp);
 	if (listener) {
 		remove_listener( listener );
@@ -152,6 +152,7 @@ static int svr_remotetcpreq() {
 
 	TRACE(("enter remotetcpreq"));
 
+	/* NOTE: at this stage, we ignore bindaddr. see below and listen_tcpfwd */
 	bindaddr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen));
@@ -176,18 +177,20 @@ static int svr_remotetcpreq() {
 	}
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
-	tcpinfo->addr = bindaddr;
-	tcpinfo->port = port;
-	tcpinfo->localport = -1;
+	tcpinfo->sendaddr = bindaddr;
+	TRACE(("sendport = %d", port));
+	tcpinfo->sendport = port;
 	tcpinfo->chantype = &svr_chan_tcpremote;
 
+	/* Note: bindaddr is actually ignored by listen_tcpfwd, since
+	 * we only want to bind to localhost */
 	ret = listen_tcpfwd(tcpinfo);
 
 out:
 	if (ret == DROPBEAR_FAILURE) {
 		/* we only free it if a listener wasn't created, since the listener
 		 * has to remember it if it's to be cancelled */
-		m_free(tcpinfo->addr);
+		m_free(tcpinfo->sendaddr);
 		m_free(tcpinfo);
 	}
 	TRACE(("leave remotetcpreq"));
