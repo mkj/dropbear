@@ -8,7 +8,7 @@ static int bindport(int fd);
 
 /* called as a request for a session channel, sets up listening X11 */
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int x11req(struct Chansess * chansess) {
+int x11req(struct ChanSess * chansess) {
 
 	/* we already have an x11 connection */
 	if (chansess->x11fd != -1) {
@@ -48,22 +48,19 @@ int x11req(struct Chansess * chansess) {
 
 fail:
 	/* cleanup */
-	m_free(chansess->authprot);
-	m_free(chansess->authcookie);
-	close(chansess->x11fd);
-	chansess->x11fd = -1;
+	x11cleanup(chansess);
 
 	return DROPBEAR_FAILURE;
 }
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-int x11accepter(int sock) {
+int x11accept(struct ChanSess * chansess) {
 
 	int fd;
 	struct sockaddr_in addr;
 
-	fd = accept(sock, &addr, sizeof(addr));
+	fd = accept(chansess->x11fd, &addr, sizeof(addr));
 	if (fd < 0) {
 		return DROPBEAR_FAILURE;
 	}
@@ -71,6 +68,9 @@ int x11accepter(int sock) {
 	send_msg_channel_open_x11(fd, addr);
 
 	/* if single-connection we close it up */
+	if (chansess->x11singleconn) {
+		x11cleanup(chansess);
+	}
 }
 
 /* This is called after switching to the user, and sets up the xauth
@@ -102,6 +102,17 @@ void x11setauth(struct ChanSess *chansess) {
 
 }
 
+void x11cleanup(struct ChanSess * chansess) {
+
+	if (chansess->x11fd == -1) {
+		return;
+	}
+
+	m_free(chansess->authprot);
+	m_free(chansess->authcookie);
+	close(chansess->x11fd);
+	chansess->x11fd = -1;
+}
 
 static int send_msg_channel_open_x11(struct sockaddr_in* addr) {
 

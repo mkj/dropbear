@@ -36,10 +36,11 @@
 #include "channel.h"
 #include "chansession.h"
 #include "ssh.h"
+#include "x11fwd.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
-static void send_msg_channel_open_success(struct Channel* channel,
+static void send_msg_channel_open_confirmation(struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket);
 static void writechannel(struct Channel *channel);
@@ -179,7 +180,19 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				FD_ISSET(channel->infd, writefd)) {
 			writechannel(channel);
 		}
-	}
+		
+		/* handle any listening sockets - should get optimised away if
+		 * we don't have x11 or agent fwd */
+		if (channel->type == CHANNEL_ID_SESSION) {
+			struct ChanSess * chansess = (struct ChanSess*)channel->typedata;
+#ifndef DISABLE_X11FWD
+			if (chansess->x11fd != -1 && FD_ISSET(chansess->x11fd, readfd)) {
+				x11accept(chansess);
+			}
+#endif
+		}
+	} /* foreach channel */
+
 }
 
 static void send_exitsignalstatus(struct Channel *channel) {
@@ -231,8 +244,8 @@ static void send_msg_channel_eof(struct Channel *channel) {
 
 
 	TRACE(("leave send_msg_channel_eof"));
-
 }
+
 /* only called when we know we can write to a channel, writes as much as
  * possible */
 static void writechannel(struct Channel* channel) {
@@ -314,7 +327,19 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 			/* there's space to write more to the program */
 			FD_SET(channel->infd, writefd);
 		}
-	}
+
+		/* handle any listening sockets - should get optimised away if
+		 * we don't have x11 or agent fwd */
+		if (channel->type == CHANNEL_ID_SESSION) {
+			struct ChanSess * chansess = (struct ChanSess*)channel->typedata;
+#ifndef DISABLE_X11FWD
+			if (chansess->x11fd != -1) {
+				FD_SET(chansess->x11fd, readfd);
+			}
+#endif
+		}
+	} /* foreach channel */
+
 }
 
 void recv_msg_channel_eof() {
@@ -640,7 +665,7 @@ void recv_msg_channel_open() {
 	}
 
 	/* success */
-	send_msg_channel_open_success(channel, channel->recvwindow,
+	send_msg_channel_open_confirmation(channel, channel->recvwindow,
 			channel->recvmaxpacket);
 	goto cleanup;
 
@@ -693,11 +718,11 @@ static void send_msg_channel_open_failure(unsigned int remotechan,
 	TRACE(("leave send_msg_channel_open_failure"));
 }
 
-static void send_msg_channel_open_success(struct Channel* channel,
+static void send_msg_channel_open_confirmation(struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket) {
 
-	TRACE(("enter send_msg_channel_open_success"));
+	TRACE(("enter send_msg_channel_open_confirmation"));
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN_CONFIRMATION);
@@ -707,12 +732,13 @@ static void send_msg_channel_open_success(struct Channel* channel,
 	buf_putint(ses.writepayload, recvmaxpacket);
 
 	encrypt_packet();
-	TRACE(("leave send_msg_channel_open_success"));
+	TRACE(("leave send_msg_channel_open_confirmation"));
 }
 
 #ifdef USE_LISTENERS
+
 /* channel establishment is only required if we have listeners (for x11 etc)*/
-void recv_msg_channel_open_success() {
+void recv_msg_channel_open_confirmation() {
 
 	unsigned int chan;
 	struct Channel * channel;

@@ -1,3 +1,8 @@
+- Removed unneccesary code from libtomcrypt
+- Updated to libtommath 0.17 and libtomcrypt 0.83. New libtommath results
+  in smaller binary size, due to not linking unrequired code
+- 
+
 0.31 - Fri May 9 2003 17:57:16 +0800
 
 - Improved syslog messages - IP logging etc

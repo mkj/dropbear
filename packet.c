@@ -490,6 +490,16 @@ static void process_postauth_packet(unsigned int type) {
 		case SSH_MSG_CHANNEL_CLOSE:
 			recv_msg_channel_close();
 			break;
+
+#ifdef USE_LISTENERS /* for x11, tcp fwd etc */
+		case SSH_MSG_CHANNEL_OPEN_CONFIRMATION:
+			recv_msg_channel_open_confirmation();
+			break;
+			
+		case SSH_MSG_CHANNEL_OPEN_FAILURE:
+			recv_msg_channel_open_failure();
+			break;
+#endif
 			
 		default:
 			TRACE(("unknown packet()"));

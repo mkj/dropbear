@@ -34,6 +34,7 @@
 #include "ssh.h"
 #include "random.h"
 #include "utmp.h"
+#include "x11fwd.h"
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd);
@@ -245,8 +246,7 @@ void closechansess(struct Channel *channel) {
 	}
 
 #ifndef DISABLE_X11FWD
-	m_free(chansess->x11authprot);
-	m_free(chansess->x11authcookie);
+	x11cleanup(chansess);
 #endif
 
 	/* clear child pid entries */

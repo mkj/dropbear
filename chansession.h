@@ -28,6 +28,7 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include "loginrec.h"
+#include "channel.h"
 
 struct ChanSess {
 
@@ -48,8 +49,8 @@ struct ChanSess {
 	unsigned char exitcore;
 	
 #ifndef DISABLE_X11FWD
-	/* x11 forwarding details */
 	int x11fd; /* set to -1 to indicate forwarding not established */
+	/* x11 forwarding details */
 	int x11port;
 	char * x11authprot;
 	char * x11authcookie;

@@ -26,6 +26,8 @@
 #define _CHANNEL_H_
 
 #include <sys/types.h>
+#include "options.h"
+#include "buffer.h"
 
 #define CHANNEL_TYPE_SESSION "session"
 #define CHANNEL_TYPE_X11 "x11"
@@ -92,9 +94,9 @@ void recv_msg_channel_window_adjust();
 void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
-#ifdef HAVE_LISTENERS
-void recv_msg_channel_success();
-void recv_msg_channel_failure();
+#ifdef USE_LISTENERS
+void recv_msg_channel_open_confirmation();
+void recv_msg_channel_open_failure();
 #endif
 
 #endif /* _CHANNEL_H_ */

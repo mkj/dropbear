@@ -30,7 +30,7 @@
 
 /* Debugging */
 
-#define DISABLE_X11FWD
+/*#define DISABLE_X11FWD*/
 
 /*#define DEBUG_KEXHASH*/
 /*#define DEBUG_RSA*/
