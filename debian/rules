@@ -1,134 +1,96 @@
 #!/usr/bin/make -f
-# Sample debian/rules that uses debhelper.
-# GNU copyright 1997 to 1999 by Joey Hess.
-#
-# Modified to make a template file for a multi-binary package with separated
-# build-arch and build-indep targets  by Bill Allombert 2001
 
-# Uncomment this to turn on verbose mode.
-#export DH_VERBOSE=1
+#export DH_OPTIONS
+DEB_HOST_GNU_TYPE ?=$(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
+DEB_BUILD_GNU_TYPE ?=$(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
 
-# This has to be exported to make some magic below work.
-export DH_OPTIONS
+STRIP =strip
+ifneq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
+  STRIP =: nostrip
+endif
 
-# These are used for cross-compiling and for saving the configure script
-# from having to guess our platform (since we know it already)
-DEB_HOST_GNU_TYPE   ?= $(shell dpkg-architecture -qDEB_HOST_GNU_TYPE)
-DEB_BUILD_GNU_TYPE  ?= $(shell dpkg-architecture -qDEB_BUILD_GNU_TYPE)
-
-
-CFLAGS = -Wall -g
-
+CFLAGS =-Wall -g
 ifneq (,$(findstring noopt,$(DEB_BUILD_OPTIONS)))
-	CFLAGS += -O0
+  CFLAGS +=-O0
 else
-	CFLAGS += -O2
-endif
-ifeq (,$(findstring nostrip,$(DEB_BUILD_OPTIONS)))
-	INSTALL_PROGRAM += -s
+  CFLAGS +=-O2
 endif
 
-config.status: configure
-	dh_testdir
-	# Add here commands to configure the package.
-	CFLAGS='-DSFTPSERVER_PATH="\"/usr/lib/sftp-server\""' ./configure --host=$(DEB_HOST_GNU_TYPE) --build=$(DEB_BUILD_GNU_TYPE) --prefix=/usr --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
-
-
-#Architecture 
-build: build-arch #build-indep
-
-build-arch: build-arch-stamp
-build-arch-stamp:  config.status
-	
-	# Add here commands to compile the arch part of the package.
-	$(MAKE) CC=gcc LD=gcc
-
-build-indep: build-indep-stamp
-build-indep-stamp:  config.status
-	
-	# Add here commands to compile the indep part of the package.
-	#$(MAKE) doc
-
-clean:
-	dh_testdir
-	dh_testroot
-	rm -f build-arch-stamp build-indep-stamp config-stamp
-
-	# Add here commands to clean up after the build process.
-	-$(MAKE) clean
-ifneq "$(wildcard /usr/share/misc/config.sub)" ""
-	cp -f /usr/share/misc/config.sub config.sub
-endif
-ifneq "$(wildcard /usr/share/misc/config.guess)" ""
-	cp -f /usr/share/misc/config.guess config.guess
+CC =gcc
+ifneq (,$(findstring diet,$(DEB_BUILD_OPTIONS)))
+  CC =diet -v -Os gcc
 endif
 
-	
-	dh_clean
+DIR=`pwd`/debian/dropbear
 
-install: install-indep install-arch
-install-indep:
-	dh_testdir
-	dh_testroot
-	dh_clean -k -i
-	dh_installdirs -i
-	
-	# Add here commands to install the indep part of the package into
-	# debian/<package>-doc.
-	#INSTALLDOC#
-	
-	dh_install -i
+patch: deb-checkdir patch-stamp
+patch-stamp:
+#	no patches for now
+#	for i in debian/diff/*.diff; do patch -p0 <$$i || exit 1; done
+	touch patch-stamp
 
-install-arch:
-	dh_testdir
-	dh_testroot
-	dh_clean -k -a
-	dh_installdirs -a
-	dh_installdirs /etc/dropbear
+config.status: patch-stamp configure
+	CFLAGS="$(CFLAGS)"' -DSFTPSERVER_PATH="\"/usr/lib/sftp-server\""' \
+	  ./configure --host="$(DEB_HOST_GNU_TYPE)" \
+	    --build="$(DEB_BUILD_GNU_TYPE)" --prefix=/usr \
+	    --mandir=\$${prefix}/share/man --infodir=\$${prefix}/share/info
 
-	# Add here commands to install the arch part of the package into 
-	# debian/tmp.
-	$(MAKE) install prefix=$(CURDIR)/debian/dropbear/usr
+build: deb-checkdir build-stamp
+build-stamp: config.status
+	$(MAKE) CC="$(CC)" LD="$(CC)"
+	touch build-stamp
 
-	dh_install -a
-# Must not depend on anything. This is to be called by
-# binary-arch/binary-multi
-# in another 'make' thread.
-binary-common:
-	cat $(CURDIR)/debian/copyright.in $(CURDIR)/LICENSE > $(CURDIR)/debian/copyright
-	dh_testdir
-	dh_testroot
-	dh_installchangelogs CHANGES
-	dh_installdocs
-	dh_installexamples
-#	dh_installmenu
-#	dh_installdebconf	
-#	dh_installlogrotate	
-#	dh_installemacsen
-#	dh_installpam
-#	dh_installmime
-	dh_installinit
-#	dh_installcron
-#	dh_installinfo
-	dh_installman
-	dh_link
-	dh_strip
-	dh_compress 
-	dh_fixperms
-#	dh_perl
-#	dh_python
-	dh_makeshlibs
-	dh_installdeb
-	dh_gencontrol
-	dh_md5sums
-	dh_builddeb
-# Build architecture independant packages using the common target.
-binary-indep: build-indep install-indep
-	$(MAKE) -f debian/rules DH_OPTIONS=-i binary-common
+clean: deb-checkdir deb-checkuid
+	-$(MAKE) distclean
+#	test ! -e patch-stamp || \
+#	  for i in debian/diff/*.diff; do patch -p0 -R <$$i; done
+	rm -f patch-stamp build-stamp config.log config.status
+	rm -rf "$(DIR)"
+	rm -f debian/files debian/substvars debian/copyright changelog
 
-# Build architecture dependant packages using the common target.
-binary-arch: build-arch install-arch
-	$(MAKE) -f debian/rules DH_OPTIONS=-a binary-common
+install: deb-checkdir deb-checkuid build-stamp
+	rm -rf "$(DIR)"
+	install -d -m0755 "$(DIR)"/etc/dropbear
+	# programs
+	install -d -m0755 "$(DIR)"/usr/sbin
+	install -m0755 dropbear "$(DIR)"/usr/sbin/dropbear
+	install -d -m0755 "$(DIR)"/usr/bin
+	install -m0755 dropbearkey "$(DIR)"/usr/bin/dropbearkey
+	install -d -m0755 "$(DIR)"/usr/lib/dropbear
+	install -m0755 dropbearconvert \
+	  "$(DIR)"/usr/lib/dropbear/dropbearconvert
+	$(STRIP) -R .comment -R .note "$(DIR)"/usr/sbin/* \
+	  "$(DIR)"/usr/bin/* "$(DIR)"/usr/lib/dropbear/*
+	# init and run scripts
+	install -d -m0755 "$(DIR)"/etc/init.d
+	install -m0755 debian/dropbear.init "$(DIR)"/etc/init.d/dropbear
+	install -m0755 debian/service/run "$(DIR)"/etc/dropbear/run
+	install -d -m0755 "$(DIR)"/etc/dropbear/log
+	install -m0755 debian/service/log "$(DIR)"/etc/dropbear/log/run
+	ln -s /var/log/dropbear "$(DIR)"/etc/dropbear/log/main
+	ln -s /var/run/dropbear "$(DIR)"/etc/dropbear/supervise
+	ln -s /var/run/dropbear.log "$(DIR)"/etc/dropbear/log/supervise
+	# man pages
+	install -d -m0755 "$(DIR)"/usr/share/man/man8
+	for i in dropbear.8 dropbearkey.8; do \
+	  install -m644 $$i "$(DIR)"/usr/share/man/man8/ || exit 1; \
+	done
+	gzip -9 "$(DIR)"/usr/share/man/man8/*.8
+	# copyright, changelog
+	cat debian/copyright.in LICENSE >debian/copyright
+	ln -s CHANGES changelog
 
-binary: binary-arch #binary-indep
-.PHONY: build clean binary-indep binary-arch binary install install-indep install-arch 
+binary-indep:
+
+binary-arch: install dropbear.deb
+	test "$(CC)" != 'gcc' || \
+	  dpkg-shlibdeps "$(DIR)"/usr/sbin/* "$(DIR)"/usr/bin/* \
+	    "$(DIR)"/usr/lib/dropbear/*
+	dpkg-gencontrol -isp -pdropbear -P"$(DIR)"
+	dpkg -b "$(DIR)" ..
+
+binary: binary-arch binary-indep
+
+.PHONY: patch build clean install binary-indep binary-arch binary
+
+include debian/implicit

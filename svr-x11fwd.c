@@ -131,7 +131,7 @@ static void x11accept(struct Listener* listener, int sock) {
 void x11setauth(struct ChanSess *chansess) {
 
 	char display[20]; /* space for "localhost:12345.123" */
-	FILE * authprog;
+	FILE * authprog = NULL;
 	int val;
 
 	if (chansess->x11listener == NULL) {
@@ -187,7 +187,7 @@ static const struct ChanType chan_x11 = {
 
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
-	char* ipstring;
+	char* ipstring = NULL;
 
 	if (send_msg_channel_open_init(fd, &chan_x11) == DROPBEAR_SUCCESS) {
 		ipstring = inet_ntoa(addr->sin_addr);

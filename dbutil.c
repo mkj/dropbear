@@ -121,7 +121,7 @@ void dropbear_trace(const char* format, ...) {
 int dropbear_listen(const char* address, const char* port,
 		int *socks, unsigned int sockcount, char **errstring, int *maxfd) {
 
-	struct addrinfo hints, *res, *res0;
+	struct addrinfo hints, *res = NULL, *res0 = NULL;
 	int err;
 	unsigned int nsock;
 	struct linger linger;
@@ -273,7 +273,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		}
 
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-			if (errno == EINPROGRESS) {
+			if (errno == EINPROGRESS && nonblocking) {
 				TRACE(("Connect in progress"));
 				break;
 			} else {
@@ -287,7 +287,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		break; /* Success */
 	}
 
-	if (sock < 0) {
+	if (sock < 0 && !(errno == EINPROGRESS && nonblocking)) {
 		/* Failed */
 		if (errstring != NULL && *errstring == NULL) {
 			int len;

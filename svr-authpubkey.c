@@ -53,7 +53,7 @@ void svr_auth_pubkey() {
 	unsigned char testkey; /* whether we're just checking if a key is usable */
 	unsigned char* algo = NULL; /* pubkey algo */
 	unsigned int algolen;
-	unsigned char* keyblob;
+	unsigned char* keyblob = NULL;
 	unsigned int keybloblen;
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;

@@ -47,6 +47,11 @@
  * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
 
+/* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
+several kB in binary size, however will make the symmetrical ciphers (AES, DES
+etc) slower (perhaps by 50%). Recommended for most small systems. */
+#define DROPBEAR_SMALL_CODE
+
 /* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
 
@@ -175,7 +180,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.41-and-client"
+#define DROPBEAR_VERSION "0.45-beta1"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

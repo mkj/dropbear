@@ -208,7 +208,7 @@ static int newtcpdirect(struct Channel * channel) {
 	char portstring[NI_MAXSERV];
 	int sock;
 	int len;
-	int ret = DROPBEAR_FAILURE;
+	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	if (opts.nolocaltcp) {
 		TRACE(("leave newtcpdirect: local tcp forwarding disabled"));
@@ -240,6 +240,7 @@ static int newtcpdirect(struct Channel * channel) {
 	snprintf(portstring, sizeof(portstring), "%d", destport);
 	sock = connect_remote(desthost, portstring, 1, NULL);
 	if (sock < 0) {
+		err = SSH_OPEN_CONNECT_FAILED;
 		TRACE(("leave newtcpdirect: sock failed"));
 		goto out;
 	}
@@ -253,13 +254,13 @@ static int newtcpdirect(struct Channel * channel) {
 	channel->infd = sock;
 	channel->initconn = 1;
 	
-	ret = DROPBEAR_SUCCESS;
+	err = SSH_OPEN_IN_PROGRESS;
 
 out:
 	m_free(desthost);
 	m_free(orighost);
-	TRACE(("leave newtcpdirect: ret %d", ret));
-	return ret;
+	TRACE(("leave newtcpdirect: err %d", err));
+	return err;
 }
 
 #endif

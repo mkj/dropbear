@@ -64,7 +64,7 @@ int agentreq(struct ChanSess * chansess) {
 
 	/* create the unix socket dir and file */
 	if (bindagent(fd, chansess) == DROPBEAR_FAILURE) {
-		return DROPBEAR_FAILURE;
+		goto fail;
 	}
 
 	/* listen */
@@ -146,7 +146,7 @@ void agentcleanup(struct ChanSess * chansess) {
 		chansess->agentlistener = NULL;
 	}
 
-	if (chansess->agentfile && chansess->agentdir) {
+	if (chansess->agentfile != NULL && chansess->agentdir != NULL) {
 
 		/* Remove the dir as the user. That way they can't cause problems except
 		 * for themselves */

@@ -171,6 +171,8 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	TRACE(("enter buf_dss_verify"));
 	assert(key != NULL);
 
+	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
+
 	/* get blob, check length */
 	string = buf_getstring(buf, &stringlen);
 	if (stringlen != 2*SHA1_HASH_SIZE) {
@@ -181,8 +183,6 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_init(&hs);
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
-
-	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
 
 	/* create the signature - s' and r' are the received signatures in buf */
 	/* w = (s')-1 mod q */

@@ -273,7 +273,7 @@ static void closechansess(struct Channel *channel) {
  * or x11/authagent forwarding. These are passed to appropriate handlers */
 static void chansessionrequest(struct Channel *channel) {
 
-	unsigned char * type;
+	unsigned char * type = NULL;
 	unsigned int typelen;
 	unsigned char wantreply;
 	int ret = 1;
@@ -320,7 +320,7 @@ static void chansessionrequest(struct Channel *channel) {
 out:
 
 	if (wantreply) {
-		if (ret == 0) {
+		if (ret == DROPBEAR_SUCCESS) {
 			send_msg_channel_success(channel);
 		} else {
 			send_msg_channel_failure(channel);
@@ -336,7 +336,7 @@ out:
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
-	unsigned char* signame;
+	unsigned char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
@@ -528,11 +528,14 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
+	int ret;
 
 	TRACE(("enter sessioncommand"));
 
 	if (chansess->cmd != NULL) {
-		/* TODO - send error - multiple commands? */
+		/* Note that only one command can _succeed_. The client might try
+		 * one command (which fails), then try another. Ie fallback
+		 * from sftp to scp */
 		return DROPBEAR_FAILURE;
 	}
 
@@ -541,6 +544,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		chansess->cmd = buf_getstring(ses.payload, &cmdlen);
 
 		if (cmdlen > MAX_CMD_LEN) {
+			m_free(chansess->cmd);
 			/* TODO - send error - too long ? */
 			return DROPBEAR_FAILURE;
 		}
@@ -552,6 +556,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			} else 
 #endif
 			{
+				m_free(chansess->cmd);
 				return DROPBEAR_FAILURE;
 			}
 		}
@@ -559,11 +564,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	if (chansess->term == NULL) {
 		/* no pty */
-		return noptycommand(channel, chansess);
+		ret = noptycommand(channel, chansess);
 	} else {
 		/* want pty */
-		 return ptycommand(channel, chansess);
+		ret = ptycommand(channel, chansess);
 	}
+
+	if (ret == DROPBEAR_FAILURE) {
+		m_free(chansess->cmd);
+	}
+	return ret;
 }
 
 /* Execute a command and set up redirection of stdin/stdout/stderr without a
@@ -650,7 +660,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
-	struct logininfo *li;
+	struct logininfo *li = NULL;
 #ifdef DO_MOTD
 	buffer * motdbuf = NULL;
 	int len;
@@ -778,8 +788,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
-	char * usershell;
-	char * baseshell;
+	char * usershell = NULL;
+	char * baseshell = NULL;
 	unsigned int i;
 
 	/* wipe the hostkey */
@@ -863,6 +873,11 @@ static void execchild(struct ChanSess *chansess) {
 	agentset(chansess);
 #endif
 
+	/* Re-enable SIGPIPE for the executed process */
+	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
 	baseshell = basename(usershell);
 
 	if (chansess->cmd != NULL) {
@@ -921,7 +936,7 @@ void svr_chansessinitialise() {
 /* add a new environment variable, allocating space for the entry */
 void addnewvar(const char* param, const char* var) {
 
-	char* newvar;
+	char* newvar = NULL;
 	int plen, vlen;
 
 	plen = strlen(param);

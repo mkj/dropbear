@@ -91,7 +91,7 @@ static void send_msg_userauth_banner() {
  * checking, and handle success or failure */
 void recv_msg_userauth_request() {
 
-	unsigned char *username, *servicename, *methodname;
+	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL;
 	unsigned int userlen, servicelen, methodlen;
 
 	TRACE(("enter recv_msg_userauth_request"));
@@ -275,7 +275,7 @@ goodshell:
  * failures */
 void send_msg_userauth_failure(int partial, int incrfail) {
 
-	buffer *typebuf;
+	buffer *typebuf = NULL;
 
 	TRACE(("enter send_msg_userauth_failure"));
 

@@ -120,7 +120,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	struct TCPFwdList * iter = NULL;
 	char portstring[NI_MAXSERV];
 	int sock;
-	int ret = DROPBEAR_FAILURE;
+	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	/* We don't care what address they connected to */
 	buf_eatstring(ses.payload);
@@ -148,6 +148,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	sock = connect_remote(iter->connectaddr, portstring, 1, NULL);
 	if (sock < 0) {
 		TRACE(("leave newtcpdirect: sock failed"));
+		err = SSH_OPEN_CONNECT_FAILED;
 		goto out;
 	}
 
@@ -160,9 +161,9 @@ static int newtcpforwarded(struct Channel * channel) {
 	channel->infd = sock;
 	channel->initconn = 1;
 	
-	ret = DROPBEAR_SUCCESS;
+	err = SSH_OPEN_IN_PROGRESS;
 
 out:
-	TRACE(("leave newtcpdirect: ret %d", ret));
-	return ret;
+	TRACE(("leave newtcpdirect: err %d", err));
+	return err;
 }

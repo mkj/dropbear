@@ -172,6 +172,7 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 
 	struct Channel *channel;
 	unsigned int i;
+	int ret;
 
 	/* iterate through all the possible channels */
 	for (i = 0; i < ses.chansize; i++) {
@@ -196,8 +197,15 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 		 * see if it has errors */
 		if (channel->infd >= 0 && channel->infd != channel->outfd
 				&& FD_ISSET(channel->infd, readfd)) {
-			int ret;
-			ret = write(channel->infd, NULL, 0);
+			if (channel->initconn) {
+				/* Handling for "in progress" connection - this is needed
+				 * to avoid spinning 100% CPU when we connect to a server
+				 * which doesn't send anything (tcpfwding) */
+				checkinitdone(channel);
+				continue; /* Important not to use the channel after 
+							 checkinitdone(), as it may be NULL */
+			}
+			ret = write(channel->infd, NULL, 0); /* Fake write */
 			if (ret < 0 && errno != EINTR && errno != EAGAIN) {
 				closeinfd(channel);
 			}
@@ -209,9 +217,8 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				checkinitdone(channel);
 				continue; /* Important not to use the channel after
 							 checkinitdone(), as it may be NULL */
-			} else {
-				writechannel(channel);
 			}
+			writechannel(channel);
 		}
 	
 		/* now handle any of the channel-closing type stuff */
@@ -285,10 +292,14 @@ static void checkinitdone(struct Channel *channel) {
 
 	if (getsockopt(channel->infd, SOL_SOCKET, SO_ERROR, &val, &vallen)
 			|| val != 0) {
+		send_msg_channel_open_failure(channel->remotechan,
+				SSH_OPEN_CONNECT_FAILED, "", "");
 		close(channel->infd);
 		deletechannel(channel);
 		TRACE(("leave checkinitdone: fail"));
 	} else {
+		send_msg_channel_open_confirmation(channel, channel->recvwindow,
+				channel->recvmaxpacket);
 		channel->outfd = channel->infd;
 		channel->initconn = 0;
 		TRACE(("leave checkinitdone: success"));
@@ -489,6 +500,7 @@ static void removechannel(struct Channel * channel) {
 	TRACE(("channel index is %d", channel->index));
 
 	buf_free(channel->writebuf);
+	channel->writebuf = NULL;
 
 	/* close the FDs in case they haven't been done
 	 * yet (ie they were shutdown etc */
@@ -497,6 +509,7 @@ static void removechannel(struct Channel * channel) {
 	if (channel->errfd >= 0) {
 		close(channel->errfd);
 	}
+	channel->typedata = NULL;
 
 	deletechannel(channel);
 
@@ -587,6 +600,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 			TRACE(("leave send_msg_channel_data: read err %d", channel->index));
 		}
 		buf_free(buf);
+		buf = NULL;
 		return;
 	}
 	buf_incrlen(buf, len);
@@ -601,6 +615,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 
 	buf_putstring(ses.writepayload, buf_getptr(buf, len), len);
 	buf_free(buf);
+	buf = NULL;
 
 	channel->transwindow -= len;
 
@@ -764,6 +779,10 @@ void recv_msg_channel_open() {
 	if (channel->type->inithandler) {
 		ret = channel->type->inithandler(channel);
 		if (ret > 0) {
+			if (ret == SSH_OPEN_IN_PROGRESS) {
+				/* We'll send the confirmation later */
+				goto cleanup;
+			}
 			errtype = ret;
 			deletechannel(channel);
 			TRACE(("inithandler returned failure %d", ret));

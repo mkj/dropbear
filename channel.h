@@ -41,6 +41,9 @@
 #define SSH_OPEN_UNKNOWN_CHANNEL_TYPE           3
 #define SSH_OPEN_RESOURCE_SHORTAGE              4
 
+/* Not a real type */
+#define SSH_OPEN_IN_PROGRESS					99
+
 #define MAX_CHANNELS 60 /* simple mem restriction, includes each tcp/x11
 							connection, so can't be _too_ small */
 
