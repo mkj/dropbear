@@ -1401,8 +1401,8 @@ lastlog_filetype(char *filename)
 {
 	struct stat st;
 
-	if (stat(LASTLOG_FILE, &st) != 0) {
-		dropbear_log(LOG_WARNING, "lastlog_perform_login: Couldn't stat %s: %s", LASTLOG_FILE,
+	if (stat(filename, &st) != 0) {
+		dropbear_log(LOG_WARNING, "lastlog_perform_login: Couldn't stat %s: %s", filename,
 			strerror(errno));
 		return 0;
 	}

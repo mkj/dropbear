@@ -123,7 +123,7 @@ static void cli_session_init() {
 
 	/* Auth */
 	cli_ses.lastpubkey = NULL;
-	cli_ses.lastauthtype = NULL;
+	cli_ses.lastauthtype = 0;
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
