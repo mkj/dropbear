@@ -122,7 +122,6 @@ void read_packet() {
 	assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
 	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
-	buf_incrpos(ses.readbuf, len);
 
 	if (len == 0) {
 		session_remoteclosed();
@@ -136,6 +135,8 @@ void read_packet() {
 			dropbear_exit("error reading: %s", strerror(errno));
 		}
 	}
+
+	buf_incrpos(ses.readbuf, len);
 
 	if ((unsigned int)len == maxlen) {
 		/* The whole packet has been read */
