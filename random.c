@@ -137,7 +137,9 @@ void genrandom(unsigned char* buf, unsigned int len) {
 	unsigned char hash[SHA1_HASH_SIZE];
 	unsigned int copylen;
 
-	assert(donerandinit);
+	if (!donerandinit) {
+		dropbear_exit("seedrandom not done");
+	}
 
 	while (len > 0) {
 		sha1_init(&hs);
@@ -164,7 +166,9 @@ void genrandom(unsigned char* buf, unsigned int len) {
 void addrandom(unsigned char* buf, unsigned int len) {
 
 	hash_state hs;
-	assert(donerandinit);
+	if (!donerandinit) {
+		dropbear_exit("seedrandom not done");
+	}
 
 	sha1_init(&hs);
 	sha1_process(&hs, (void*)buf, len);
