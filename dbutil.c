@@ -111,16 +111,24 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	if (!sessinitdone) {
 		/* before session init */
-		snprintf(fmtbuf, sizeof(fmtbuf), "exited: %s", format);
+		snprintf(fmtbuf, sizeof(fmtbuf), 
+				"premature exit: %s", format);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
-				"exited after userauth (%s) from %s: %s", 
+				"exit after auth (%s) from %s: %s", 
 				ses.authstate.printableuser, ses.addrstring, format);
+	} else if (ses.authstate.username) {
+		/* we have a potential user */
+		snprintf(fmtbuf, sizeof(fmtbuf), 
+				"exit before auth (user '%s', %d fails) from %s: %s",
+				ses.authstate.username, ses.authstate.failcount,
+				ses.addrstring, format);
 	} else {
 		/* before userauth */
-		snprintf(fmtbuf, sizeof(fmtbuf), "exited before userauth: %s",
-				format);
+		snprintf(fmtbuf, sizeof(fmtbuf), 
+				"exit before auth from %s: %s",
+				ses.addrstring, format);
 	}
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
