@@ -22,6 +22,26 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* The format of the keyfiles is basically a raw dump of the buffer. Data types
+ * are specified in the transport draft - string is a 32-bit len then the
+ * non-null-terminated string, mp_int is a 32-bit len then the bignum data.
+ * The actual functions are buf_put_rsa_priv_key() and buf_put_dss_priv_key()
+
+ * RSA:
+ * string	"ssh-rsa"
+ * mp_int	e
+ * mp_int	n
+ * mp_int	d
+ *
+ * DSS:
+ * string	"ssh-dss"
+ * mp_int	x
+ * mp_int	p
+ * mp_int	q
+ * mp_int	g
+ * mp_int	y
+ *
+ */
 #include "options.h"
 #include "runopts.h"
 #include "signkey.h"
