@@ -57,7 +57,8 @@ sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -n
 
 clean: ltc-clean
-	-rm -f dropbear uclibc-dropbear dropbearkey *.o *.da *.bb *.bbg *.prof 
+	-rm -f dropbear dropbear dropbearkey staticdropbear staticdropbearkey
+	-rm -f *.o *.da *.bb *.bbg *.prof 
 
 tidy:
 	-rm -f *~ *.gcov
