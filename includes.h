@@ -111,6 +111,10 @@
 #include <libgen.h>
 #endif
 
+#ifdef HAVE_SYS_DIRENT_H
+#include <sys/dirent.h>
+#endif
+
 #include "libtomcrypt/mycrypt_custom.h"
 #include "libtommath/tommath.h"
 
