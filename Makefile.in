@@ -5,7 +5,7 @@ COMMONOBJS=dbutil.o common-session.o common-packet.o common-algo.o buffer.o \
 		common-kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o common-channel.o \
 		common-chansession.o queue.o termcodes.o  \
-		loginrec.o atomicio.o x11fwd.o tcpfwd-direct.o compat.o \
+		loginrec.o atomicio.o svr-x11fwd.o tcpfwd-direct.o compat.o \
 		tcpfwd-remote.o listener.o
 
 SVROBJS=svr-kex.o svr-packet.o svr-algo.o svr-auth.o sshpty.o \
