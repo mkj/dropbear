@@ -48,6 +48,17 @@ AC_CHECK_DECL(__UCLIBC__,
 	AC_MSG_RESULT(Using uClibc - login() and logout() probably don't work, so we won't use them.)
 	],,,)
 
+dnl If we're crosscompiling we can't check setpgrp. We know Linux allows void
+dnl form, so don't check in that case */
+AC_CHECK_DECL(__linux__,
+	[
+	AC_DEFINE(SETPGRP_VOID,,)
+	AC_MSG_RESULT(setpgrp(void) is correct for Linux.)
+	],
+	[
+	AC_FUNC_SETPGRP
+	],,)
+
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
 AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
@@ -351,14 +362,10 @@ else
 	AC_DEFINE_UNQUOTED(CONF_WTMPX_FILE, "$conf_wtmpx_location", wtmpx file location)
 fi	
 
-
-
-
 # Checks for library functions.
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_FUNC_SETPGRP
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv openpty strlcpy strlcat])
 
