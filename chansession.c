@@ -198,7 +198,6 @@ void newchansess(struct Channel *channel) {
 	chansess->master = -1;
 	chansess->slave = -1;
 	chansess->tty = NULL;
-	chansess->loginfo = NULL;
 
 	chansess->term = NULL;
 	chansess->termw = 0;
@@ -217,6 +216,8 @@ void closechansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
 	int i;
+	struct logininfo *li;
+
 	chansess = (struct ChanSess*)channel->typedata;
 
 	TRACE(("enter closechansess"));
@@ -227,14 +228,17 @@ void closechansess(struct Channel *channel) {
 
 	m_free(chansess->cmd);
 	m_free(chansess->term);
+
 	if (chansess->tty) {
+		/* write the utmp/wtmp login record */
+		li = login_alloc_entry(chansess->pid, ses.authstate.username,
+				NULL, chansess->tty);
+		login_logout(li);
+		login_free_entry(li);
+
 		pty_release(chansess->tty);
+		m_free(chansess->tty);
 	}
-	if (chansess->loginfo) {
-		login_logout(chansess->loginfo);
-		login_free_entry(chansess->loginfo);
-	}
-	m_free(chansess->tty);
 
 	/* clear child pid entries */
 	for (i = 0; i < ses.childpidsize; i++) {
@@ -599,6 +603,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
+	struct logininfo *li;
 	
 
 	TRACE(("enter ptycommand"));
@@ -609,15 +614,16 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (pid < 0)
 		return 1;
 
-	if (!pid) {
+	if (pid == 0) {
 		/* child */
 		
 		/* redirect stdin/stdout/stderr */
 		close(chansess->master);
 
 		pty_make_controlling_tty(&chansess->slave, chansess->tty);
-		m_free(chansess->tty);
 		
+		m_free(chansess->tty);
+
 		if (dup2(chansess->slave, STDIN_FILENO) < 0) {
 			TRACE(("leave sessioncommand: error redirecting stdin"));
 			return 1;
@@ -635,6 +641,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		close(chansess->slave);
 
+		/* write the utmp/wtmp login record - must be after changing the
+		 * terminal used for stdout with the dup2 above */
+		li= login_alloc_entry(getpid(), ses.authstate.username,
+				ses.addrstring, chansess->tty);
+		login_login(li);
+		login_free_entry(li);
 
 		execchild(chansess);
 		/* not reached */
@@ -646,11 +658,6 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		/* add a child pid */
 		addchildpid(chansess, pid);
-
-		/* record the login */
-		chansess->loginfo = login_alloc_entry(pid, ses.authstate.username,
-				ses.addrstring, chansess->tty);
-		login_login(chansess->loginfo);
 
 		close(chansess->slave);
 		channel->infd = chansess->master;

@@ -155,11 +155,12 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.1 2003/05/02 10:38:42 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.2 2003/05/07 10:57:49 matt Exp $");*/
 
 #include "options.h"
 #include "loginrec.h"
 #include "util.h"
+#include "atomicio.h"
 
 #ifdef HAVE_UTIL_H
 #  include <util.h>
@@ -482,19 +483,19 @@ getlast_entry(struct logininfo *li)
 	return 0;
 # else /* DISABLE_LASTLOG */
 	/* Try to retrieve the last login time from wtmp */
-#  if defined(USE_WTMP) && (defined(HAVE_TIME_IN_UTMP) || defined(HAVE_TV_IN_UTMP))
+#  if defined(USE_WTMP) && (defined(HAVE_STRUCT_UTMP_UT_TIME) || defined(HAVE_STRUCT_UTMP_UT_TV))
 	/* retrieve last login time from utmp */
 	return (wtmp_get_entry(li));
-#  else /* defined(USE_WTMP) && (defined(HAVE_TIME_IN_UTMP) || defined(HAVE_TV_IN_UTMP)) */
+#  else /* defined(USE_WTMP) && (defined(HAVE_STRUCT_UTMP_UT_TIME) || defined(HAVE_STRUCT_UTMP_UT_TV)) */
 	/* If wtmp isn't available, try wtmpx */
-#   if defined(USE_WTMPX) && (defined(HAVE_TIME_IN_UTMPX) || defined(HAVE_TV_IN_UTMPX))
+#   if defined(USE_WTMPX) && (defined(HAVE_STRUCT_UTMPX_UT_TIME) || defined(HAVE_STRUCT_UTMPX_UT_TV))
 	/* retrieve last login time from utmpx */
 	return (wtmpx_get_entry(li));
 #   else
 	/* Give up: No means of retrieving last login time */
 	return 0;
-#   endif /* USE_WTMPX && (HAVE_TIME_IN_UTMPX || HAVE_TV_IN_UTMPX) */
-#  endif /* USE_WTMP && (HAVE_TIME_IN_UTMP || HAVE_TV_IN_UTMP) */
+#   endif /* USE_WTMPX && (HAVE_STRUCT_UTMPX_UT_TIME || HAVE_STRUCT_UTMPX_UT_TV) */
+#  endif /* USE_WTMP && (HAVE_STRUCT_UTMP_UT_TIME || HAVE_STRUCT_UTMP_UT_TV) */
 # endif /* DISABLE_LASTLOG */
 #endif /* USE_LASTLOG */
 }
@@ -593,11 +594,11 @@ line_abbrevname(char *dst, const char *src, int dstsize)
 void
 set_utmp_time(struct logininfo *li, struct utmp *ut)
 {
-# ifdef HAVE_TV_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_TV
 	ut->ut_tv.tv_sec = li->tv_sec;
 	ut->ut_tv.tv_usec = li->tv_usec;
 # else
-#  ifdef HAVE_TIME_IN_UTMP
+#  ifdef HAVE_STRUCT_UTMP_UT_TIME
 	ut->ut_time = li->tv_sec;
 #  endif
 # endif
@@ -614,11 +615,11 @@ construct_utmp(struct logininfo *li,
 
 	/* First fill out fields used for both logins and logouts */
 
-# ifdef HAVE_ID_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_ID
 	line_abbrevname(ut->ut_id, li->line, sizeof(ut->ut_id));
 # endif
 
-# ifdef HAVE_TYPE_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_TYPE
 	/* This is done here to keep utmp constants out of struct logininfo */
 	switch (li->type) {
 	case LTYPE_LOGIN:
@@ -637,9 +638,11 @@ construct_utmp(struct logininfo *li,
 # endif
 	set_utmp_time(li, ut);
 
+	dropbear_log(LOG_DEBUG, "user's line is %s\n", li->line);
 	line_stripname(ut->ut_line, li->line, sizeof(ut->ut_line));
+	dropbear_log(LOG_DEBUG, "line is %s\n", ut->ut_line);
 
-# ifdef HAVE_PID_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_PID
 	ut->ut_pid = li->pid;
 # endif
 
@@ -654,10 +657,10 @@ construct_utmp(struct logininfo *li,
 
 	/* Use strncpy because we don't necessarily want null termination */
 	strncpy(ut->ut_name, li->username, MIN_SIZEOF(ut->ut_name, li->username));
-# ifdef HAVE_HOST_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_HOST
 	strncpy(ut->ut_host, li->hostname, MIN_SIZEOF(ut->ut_host, li->hostname));
 # endif
-# ifdef HAVE_ADDR_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_ADDR
 	/* this is just a 32-bit IP address */
 	if (li->hostaddr.sa.sa_family == AF_INET)
 		ut->ut_addr = li->hostaddr.sa_in.sin_addr.s_addr;
@@ -690,14 +693,14 @@ construct_utmp(struct logininfo *li,
 void
 set_utmpx_time(struct logininfo *li, struct utmpx *utx)
 {
-# ifdef HAVE_TV_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_TV
 	utx->ut_tv.tv_sec = li->tv_sec;
 	utx->ut_tv.tv_usec = li->tv_usec;
-# else /* HAVE_TV_IN_UTMPX */
-#  ifdef HAVE_TIME_IN_UTMPX
+# else /* HAVE_STRUCT_UTMPX_UT_TV */
+#  ifdef HAVE_STRUCT_UTMPX_UT_TIME
 	utx->ut_time = li->tv_sec;
-#  endif /* HAVE_TIME_IN_UTMPX */
-# endif /* HAVE_TV_IN_UTMPX */
+#  endif /* HAVE_STRUCT_UTMPX_UT_TIME */
+# endif /* HAVE_STRUCT_UTMPX_UT_TV */
 }
 
 void
@@ -707,7 +710,7 @@ construct_utmpx(struct logininfo *li, struct utmpx *utx)
 	struct sockaddr_in6 *sa6;
 #  endif
 	memset(utx, '\0', sizeof(*utx));
-# ifdef HAVE_ID_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_ID
 	line_abbrevname(utx->ut_id, li->line, sizeof(utx->ut_id));
 # endif
 
@@ -734,10 +737,10 @@ construct_utmpx(struct logininfo *li, struct utmpx *utx)
 	 * for logouts.
 	 */
 
-# ifdef HAVE_HOST_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_HOST
 	strncpy(utx->ut_host, li->hostname, MIN_SIZEOF(utx->ut_host, li->hostname));
 # endif
-# ifdef HAVE_ADDR_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_ADDR
 	/* this is just a 32-bit IP address */
 	if (li->hostaddr.sa.sa_family == AF_INET)
 		utx->ut_addr = li->hostaddr.sa_in.sin_addr.s_addr;
@@ -755,7 +758,7 @@ construct_utmpx(struct logininfo *li, struct utmpx *utx)
 		}
 	}
 # endif
-# ifdef HAVE_SYSLEN_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_SYSLEN
 	/* ut_syslen is the length of the utx_host string */
 	utx->ut_syslen = MIN(strlen(li->hostname), sizeof(utx->ut_host));
 # endif
@@ -978,10 +981,10 @@ utmpx_perform_logout(struct logininfo *li)
 	struct utmpx utx;
 
 	construct_utmpx(li, &utx);
-# ifdef HAVE_ID_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_ID
 	line_abbrevname(utx.ut_id, li->line, sizeof(utx.ut_id));
 # endif
-# ifdef HAVE_TYPE_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_TYPE
 	utx.ut_type = DEAD_PROCESS;
 # endif
 
@@ -1096,7 +1099,7 @@ wtmp_islogin(struct logininfo *li, struct utmp *ut)
 {
 	if (strncmp(li->username, ut->ut_name,
 		MIN_SIZEOF(li->username, ut->ut_name)) == 0) {
-# ifdef HAVE_TYPE_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_TYPE
 		if (ut->ut_type & USER_PROCESS)
 			return 1;
 # else
@@ -1146,16 +1149,16 @@ wtmp_get_entry(struct logininfo *li)
 			found = 1;
 			/* We've already checked for a time in struct
 			 * utmp, in login_getlast(). */
-# ifdef HAVE_TIME_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_TIME
 			li->tv_sec = ut.ut_time;
 # else
-#  if HAVE_TV_IN_UTMP
+#  if HAVE_STRUCT_UTMP_UT_TV
 			li->tv_sec = ut.ut_tv.tv_sec;
 #  endif
 # endif
 			line_fullname(li->line, ut.ut_line,
 				      MIN_SIZEOF(li->line, ut.ut_line));*/
-# ifdef HAVE_HOST_IN_UTMP
+# ifdef HAVE_STRUCT_UTMP_UT_HOST
 			strlcpy(li->hostname, ut.ut_host,
 				MIN_SIZEOF(li->hostname, ut.ut_host));
 # endif
@@ -1251,7 +1254,7 @@ wtmpx_islogin(struct logininfo *li, struct utmpx *utx)
 {
 	if ( strncmp(li->username, utx->ut_name,
 		MIN_SIZEOF(li->username, utx->ut_name)) == 0 ) {
-# ifdef HAVE_TYPE_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_TYPE
 		if (utx->ut_type == USER_PROCESS)
 			return 1;
 # else
@@ -1302,15 +1305,15 @@ wtmpx_get_entry(struct logininfo *li)
 		 * So, we just need to find the username in struct utmpx */
 		if ( wtmpx_islogin(li, &utx) ) {
 			found = 1;
-# ifdef HAVE_TV_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_TV
 			li->tv_sec = utx.ut_tv.tv_sec;
 # else
-#  ifdef HAVE_TIME_IN_UTMPX
+#  ifdef HAVE_STRUCT_UTMPX_UT_TIME
 			li->tv_sec = utx.ut_time;
 #  endif
 # endif
 			line_fullname(li->line, utx.ut_line, sizeof(li->line));
-# ifdef HAVE_HOST_IN_UTMPX
+# ifdef HAVE_STRUCT_UTMPX_UT_HOST
 			strlcpy(li->hostname, utx.ut_host,
 				MIN_SIZEOF(li->hostname, utx.ut_host));
 # endif
@@ -1357,7 +1360,7 @@ syslogin_perform_logout(struct logininfo *li)
 	(void)line_stripname(line, li->line, sizeof(line));
 
 	if (!logout(line)) {
-		dropbear_log(LOG_WARNING, "syslogin_perform_logout: logout() returned an error");
+		dropbear_log(LOG_WARNING, "syslogin_perform_logout: logout(%s) returned an error: %s", line, strerror(errno));
 #  ifdef HAVE_LOGWTMP
 	} else {
 		logwtmp(line, "", "");
@@ -1453,7 +1456,7 @@ lastlog_openseek(struct logininfo *li, int *fd, int filemode)
 
 	*fd = open(lastlog_file, filemode);
 	if ( *fd < 0) {
-		debug("lastlog_openseek: Couldn't open %s: %s",
+		dropbear_log(LOG_INFO, "lastlog_openseek: Couldn't open %s: %s",
 		    lastlog_file, strerror(errno));
 		return 0;
 	}
@@ -1537,11 +1540,11 @@ lastlog_get_entry(struct logininfo *li)
 		lastlog_populate_entry(li, &last);
 		return (1);
 	case -1:
-		error("%s: Error reading from %s: %s", __func__, 
+		dropbear_log(LOG_ERR, "%s: Error reading from %s: %s", __func__, 
 		    LASTLOG_FILE, strerror(errno));
 		return (0);
 	default:
-		error("%s: Error reading from %s: Expecting %d, got %d",
+		dropbear_log(LOG_ERR, "%s: Error reading from %s: Expecting %d, got %d",
 		    __func__, LASTLOG_FILE, sizeof(last), ret);
 		return (0);
 	}

@@ -40,7 +40,68 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-/* RCSID("$Id: loginrec.h,v 1.1 2003/05/02 10:38:42 matt Exp $"); */
+/* RCSID("$Id: loginrec.h,v 1.2 2003/05/07 10:57:49 matt Exp $"); */
+
+/* The following #defines are from OpenSSH's defines.h, required for loginrec */
+
+/* FIXME: put default paths back in */
+#ifndef UTMP_FILE
+#  ifdef _PATH_UTMP
+#    define UTMP_FILE _PATH_UTMP
+#  else
+#    ifdef CONF_UTMP_FILE
+#      define UTMP_FILE CONF_UTMP_FILE
+#    endif
+#  endif
+#endif
+#ifndef WTMP_FILE
+#  ifdef _PATH_WTMP
+#    define WTMP_FILE _PATH_WTMP
+#  else
+#    ifdef CONF_WTMP_FILE
+#      define WTMP_FILE CONF_WTMP_FILE
+#    endif
+#  endif
+#endif
+/* pick up the user's location for lastlog if given */
+#ifndef LASTLOG_FILE
+#  ifdef _PATH_LASTLOG
+#    define LASTLOG_FILE _PATH_LASTLOG
+#  else
+#    ifdef CONF_LASTLOG_FILE
+#      define LASTLOG_FILE CONF_LASTLOG_FILE
+#    endif
+#  endif
+#endif
+
+
+/* The login() library function in libutil is first choice */
+#if defined(HAVE_LOGIN) && !defined(DISABLE_LOGIN)
+#  define USE_LOGIN
+
+#else
+/* Simply select your favourite login types. */
+/* Can't do if-else because some systems use several... <sigh> */
+#  if defined(UTMPX_FILE) && !defined(DISABLE_UTMPX)
+#    define USE_UTMPX
+#  endif
+#  if defined(UTMP_FILE) && !defined(DISABLE_UTMP)
+#    define USE_UTMP
+#  endif
+#  if defined(WTMPX_FILE) && !defined(DISABLE_WTMPX)
+#    define USE_WTMPX
+#  endif
+#  if defined(WTMP_FILE) && !defined(DISABLE_WTMP)
+#    define USE_WTMP
+#  endif
+
+#endif
+
+/* I hope that the presence of LASTLOG_FILE is enough to detect this */
+#if defined(LASTLOG_FILE) && !defined(DISABLE_LASTLOG)
+#  define USE_LASTLOG
+#endif
+
 
 /**
  ** you should use the login_* calls to work around platform dependencies
