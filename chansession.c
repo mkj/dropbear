@@ -607,9 +607,9 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->infd = infds[FDOUT];
 		channel->outfd = outfds[FDIN];
 		channel->errfd = errfds[FDIN];
-		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->infd);
-		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->outfd);
-		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->errfd);
+		ses.maxfd = MAX(ses.maxfd, channel->infd);
+		ses.maxfd = MAX(ses.maxfd, channel->outfd);
+		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
 		if ((fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) ||
 			(fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) ||
@@ -681,7 +681,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->infd = chansess->master;
 		channel->outfd = chansess->master;
 		/* don't need to set stderr here */
-		ses.maxfd = MAX(ses.maxfd, (unsigned int)chansess->master);
+		ses.maxfd = MAX(ses.maxfd, chansess->master);
 
 		if (fcntl(chansess->master, F_SETFL, O_NONBLOCK) < 0) {
 			dropbear_exit("Couldn't set nonblocking");

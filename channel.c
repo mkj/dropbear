@@ -796,7 +796,7 @@ int send_msg_channel_open_init(int fd, const char * typestring) {
 	}
 
 	chan->infd = chan->outfd = fd;
-	ses.maxfd = MAX(ses.maxfd, (unsigned int)fd);
+	ses.maxfd = MAX(ses.maxfd, fd);
 
 	/* now open the channel connection */
 	CHECKCLEARTOWRITE();

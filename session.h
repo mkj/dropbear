@@ -76,7 +76,7 @@ struct sshsession {
 	unsigned char *addrstring; /* the text version of remoteaddr */
 	unsigned char *hostname; /* the remote hostname */
 
-	unsigned int maxfd; /* the maximum file descriptor to check with select() */
+	int maxfd; /* the maximum file descriptor to check with select() */
 	unsigned char *remoteident;
 
 	struct KEXState kexstate;

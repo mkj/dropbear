@@ -76,7 +76,7 @@ int agentreq(struct ChanSess * chansess) {
 	/* channel.c's channel fd code will handle the socket now */
 
 	/* set the maxfd so that select() loop will notice it */
-	ses.maxfd = MAX(ses.maxfd, (unsigned int)chansess->agentfd);
+	ses.maxfd = MAX(ses.maxfd, chansess->agentfd);
 
 	return DROPBEAR_SUCCESS;
 

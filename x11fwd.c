@@ -119,15 +119,16 @@ void x11setauth(struct ChanSess *chansess) {
 
 	char display[20]; /* space for "localhost:12345.123" */
 	FILE * authprog;
+	int val;
 
 	if (chansess->x11fd == -1) {
 		return;
 	}
 
 	/* create the DISPLAY string */
-	if (snprintf(display, sizeof(display), "localhost:%d.%d",
-			chansess->x11port - 6000, chansess->x11screennum) 
-			>= sizeof(display)) {
+	val = snprintf(display, sizeof(display), "localhost:%d.%d",
+			chansess->x11port - 6000, chansess->x11screennum);
+	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
 		return;
 	}
@@ -135,9 +136,9 @@ void x11setauth(struct ChanSess *chansess) {
 	addnewvar("DISPLAY", display);
 
 	/* create the xauth string */
-	if (snprintf(display, sizeof(display), "unix:%d.%d",
-			chansess->x11port - 6000, chansess->x11screennum) 
-			>= sizeof(display)) {
+	val = snprintf(display, sizeof(display), "unix:%d.%d",
+			chansess->x11port - 6000, chansess->x11screennum);
+	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
 		return;
 	}
