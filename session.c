@@ -74,10 +74,6 @@ void child_session(int sock, runopts *opts, int childpipe,
 	/* main loop, select()s for all sockets in use */
 	for(;;) {
 
-
-		if (ses.sock == -1 && ses.chancount == 0) {
-			dropbear_close("Exited normally");
-		}
 		timeout.tv_sec = SELECT_TIMEOUT;
 		timeout.tv_usec = 0;
 		FD_ZERO(&writefd);
@@ -178,9 +174,9 @@ static void checktimeouts() {
 /* called when the remote side closes the connection */
 void session_remoteclosed() {
 
-//	/* matt */
-//	close(ses.sock);
+	close(ses.sock);
 	ses.sock = -1;
+	dropbear_close("Exited normally");
 
 }
 

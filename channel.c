@@ -68,7 +68,6 @@ void chaninitialise() {
 	/* may as well create space for a single channel */
 	ses.channels = (struct Channel**)m_malloc(sizeof(struct Channel*));
 	ses.chansize = 1;
-	ses.chancount = 0;
 	ses.channels[0] = NULL;
 
 	chansessinitialise();
@@ -150,7 +149,6 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	newchan->recvmaxpacket = RECV_MAXPACKET;
 
 	ses.channels[i] = newchan;
-	ses.chancount++;
 
 	TRACE(("leave newchannel"));
 
@@ -526,7 +524,6 @@ static void removechannel(struct Channel * channel) {
 static void deletechannel(struct Channel *channel) {
 
 	ses.channels[channel->index] = NULL;
-	ses.chancount--;
 	m_free(channel);
 	
 }
