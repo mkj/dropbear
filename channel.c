@@ -100,7 +100,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	struct Channel * newchan;
 	unsigned int i, j;
 
-	TRACE(("enter newchannel"));
+	TRACE(("enter newchannel - remotechan %d, type %d", remotechan, type));
 	
 	/* first see if we can use existing channels */
 	for (i = 0; i < ses.chansize; i++) {
@@ -193,22 +193,22 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 		 * see if it has errors */
 		if (channel->infd >= 0 && channel->infd != channel->outfd
 				&& FD_ISSET(channel->infd, readfd)) {
-			int ret;
-			ret = write(channel->infd, NULL, 0);
-			if (ret < 0 && errno != EINTR && errno != EAGAIN) {
-				closeinfd(channel);
+			if (channel->initconn) {
+				/* Handling for "in progress" connections. */
+				checkinitdone(channel);
+				continue; /* Important not to use the channel after
+							 checkinitdone(), as it may be NULL */
+			} else {
+				if ( (write(channel->infd, NULL, 0) < 0)
+							&& errno != EINTR && errno != EAGAIN) {
+					closeinfd(channel);
+				}
 			}
 		}
 
 		/* write to program/pipe stdin */
 		if (channel->infd >= 0 && FD_ISSET(channel->infd, writefd)) {
-			if (channel->initconn) {
-				checkinitdone(channel);
-				continue; /* Important not to use the channel after
-							 checkinitdone(), as it may be NULL */
-			} else {
-				writechannel(channel);
-			}
+			writechannel(channel);
 		}
 	
 		/* handle any listening sockets */
@@ -239,6 +239,7 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 /* do all the EOF/close type stuff checking for a channel */
 static void checkclose(struct Channel *channel) {
 
+	TRACE(("enter checkclose"));
 	if (!channel->sentclosed) {
 
 		/* check for exited */
@@ -278,6 +279,7 @@ static void checkclose(struct Channel *channel) {
 		}
 		removechannel(channel);
 	}
+	TRACE(("leave checkclose"));
 }
 
 
@@ -294,10 +296,14 @@ static void checkinitdone(struct Channel *channel) {
 
 	if (getsockopt(channel->infd, SOL_SOCKET, SO_ERROR, &val, &vallen)
 			|| val != 0) {
+		send_msg_channel_open_failure(channel->remotechan,
+				SSH_OPEN_CONNECT_FAILED, "", "");
 		close(channel->infd);
 		deletechannel(channel);
 		TRACE(("leave checkinitdone: fail"));
 	} else {
+		send_msg_channel_open_confirmation(channel, channel->recvwindow,
+			channel->recvmaxpacket);
 		channel->outfd = channel->infd;
 		channel->initconn = 0;
 		TRACE(("leave checkinitdone: success"));
@@ -344,7 +350,7 @@ static void send_msg_channel_close(struct Channel *channel) {
 /* call this when trans/eof channels are closed */
 static void send_msg_channel_eof(struct Channel *channel) {
 
-	TRACE(("enter send_msg_channel_eof"));
+	TRACE(("enter send_msg_channel_eof - remotechan %d", channel->remotechan));
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_EOF);
@@ -809,6 +815,12 @@ void recv_msg_channel_open() {
 			deletechannel(channel);
 			goto failure;
 		}
+		/* This is a special case for localtcpfwd. Even if we succeeded, we
+		 * don't want to send the confirmation yet, since the connection may
+		 * just be "in progress" (so we might want to send a failure message
+		 * later).  We just drop out here to 'cleanup:', and send the real
+		 * confirmation/failure in checkinitdone() */
+		goto cleanup;
 #endif
 	}
 
@@ -857,7 +869,7 @@ void send_msg_channel_success(struct Channel *channel) {
 static void send_msg_channel_open_failure(unsigned int remotechan, 
 		int reason, const unsigned char *text, const unsigned char *lang) {
 
-	TRACE(("enter send_msg_channel_open_failure"));
+	TRACE(("enter send_msg_channel_open_failure - remotechan %d", remotechan));
 	CHECKCLEARTOWRITE();
 	
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN_FAILURE);

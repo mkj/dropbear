@@ -63,6 +63,12 @@
 /* extended data types */
 #define SSH_EXTENDED_DATA_STDERR	1
 
+/* channel connection failure types */
+#define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
+#define SSH_OPEN_CONNECT_FAILED                 2
+#define SSH_OPEN_UNKNOWN_CHANNEL_TYPE           3
+#define SSH_OPEN_RESOURCE_SHORTAGE              4
+
 /* disconnect codes */
 #define SSH_DISCONNECT_HOST_NOT_ALLOWED_TO_CONNECT      1
 #define SSH_DISCONNECT_PROTOCOL_ERROR                   2
@@ -91,3 +97,6 @@
 #define SSH_SIGNKEY_DSS_LEN 7
 #define SSH_SIGNKEY_RSA "ssh-rsa"
 #define SSH_SIGNKEY_RSA_LEN 7
+
+
+

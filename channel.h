@@ -36,11 +36,6 @@
 #define CHANNEL_ID_TCPDIRECT 4
 #define CHANNEL_ID_TCPFORWARDED 5
 
-#define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
-#define SSH_OPEN_CONNECT_FAILED                 2
-#define SSH_OPEN_UNKNOWN_CHANNEL_TYPE           3
-#define SSH_OPEN_RESOURCE_SHORTAGE              4
-
 #define MAX_CHANNELS 60 /* simple mem restriction, includes each tcp/x11
 							connection, so can't be _too_ small */
 
