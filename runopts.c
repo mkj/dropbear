@@ -86,7 +86,7 @@ runopts * getrunopts(int argc, char ** argv) {
 					next = &opts->dsskeyfile;
 					break;
 				case 'r':
-					next = &opts->dsskeyfile;
+					next = &opts->rsakeyfile;
 					break;
 				case 'F':
 					opts->forkbg = 0;
@@ -140,7 +140,7 @@ runopts * getrunopts(int argc, char ** argv) {
 		if (longport > 65534 || longport < 1) {
 			dropbear_exit("Bad port %s", portstring);
 		}
-		opts->port = (uint16_t)longport;
+		opts->port = (u_int16_t)longport;
 	} else {
 		opts->port = DROPBEAR_PORT;
 	}

@@ -71,4 +71,8 @@
 #include <shadow.h>
 #endif
 
+#ifndef u_int16_t
+typedef uint16_t u_int16_t;
+#endif
+
 #endif /* _INCLUDES_H_ */
