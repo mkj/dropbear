@@ -54,7 +54,6 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 
 	m_free(ident);
 
-	dropbear_msg("No valid key type found");
 	return -1;
 	
 }
@@ -96,7 +95,6 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 
 	m_free(ident);
 	
-	dropbear_msg("No valid key type found");
 	TRACE(("leave buf_get_priv_key"));
 	return -1;
 	

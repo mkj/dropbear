@@ -266,12 +266,10 @@ int buf_getmpint(buffer* buf, mp_int* mp) {
 
 	/* check for negative */
 	if (*buf_getptr(buf, 1) & (1 << (CHAR_BIT-1))) {
-		dropbear_msg("negative bignum");
 		return -1;
 	}
 
 	if (mp_read_unsigned_bin(mp, buf_getptr(buf, len), len) != MP_OKAY) {
-		dropbear_msg("mpint error");
 		return -1;
 	}
 

@@ -30,7 +30,6 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	if (buf_getmpint(buf, key->e) != 0
 	 || buf_getmpint(buf, key->n) != 0) {
-		dropbear_msg("failure reading rsa pubkey");
 		TRACE(("leave buf_get_rsa_pub_key: failure"));
 		return -1;
 	}
@@ -50,17 +49,14 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
 	ret = buf_get_rsa_pub_key(buf, key);
 	if (ret != 0) {
-		goto out;
+		TRACE(("leave buf_get_rsa_priv_key: ret != 0"));
+		return ret;
 	}
 
 	key->d = m_malloc(sizeof(mp_int));
 	m_mp_init(key->d);
 	ret = buf_getmpint(buf, key->d);
-out:
-	if (ret != 0) {
-		dropbear_msg("failure reading rsa privkey");
-	}
-		
+
 	TRACE(("leave buf_get_rsa_priv_key"));
 	return ret;
 }

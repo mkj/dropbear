@@ -32,7 +32,6 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	 || buf_getmpint(buf, key->q) != 0
 	 || buf_getmpint(buf, key->g) != 0
 	 || buf_getmpint(buf, key->y) != 0) {
-		dropbear_msg("failure reading dss pubkey");
 		return -1;
 	}
 
@@ -49,17 +48,13 @@ int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 
 	ret = buf_get_dss_pub_key(buf, key);
 	if (ret != 0) {
-		goto out;
+		return ret;
 	}
 
 	key->x = m_malloc(sizeof(mp_int));
 	m_mp_init(key->x);
 	ret = buf_getmpint(buf, key->x);
-out:
-	
-	if (ret != 0) {
-		dropbear_msg("failure reading dss privkey");
-	}
+
 	return ret;
 }
 	
