@@ -76,6 +76,8 @@ static void cli_session_init() {
 	cli_ses.state = STATE_NOTHING;
 	cli_ses.kex_state = KEX_NOTHING;
 
+	cli_ses.tty_raw_mode = 0;
+
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
 	ses.buf_match_algo = cli_buf_match_algo;

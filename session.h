@@ -208,6 +208,9 @@ struct clientsession {
 	int something; /* XXX */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
+	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
+	struct termios saved_tio;
+
 };
 
 /* Global structs storing the state */
