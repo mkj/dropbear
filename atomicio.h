@@ -1,6 +1,9 @@
-/*	$OpenBSD: atomicio.h,v 1.4 2001/06/26 06:32:46 itojun Exp $	*/
 
 /*
+ * Copied from OpenSSH 3.6.1p2, required for loginrec.c
+ *
+ * $OpenBSD: atomicio.h,v 1.4 2001/06/26 06:32:46 itojun Exp $
+ *
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
  * All rights reserved.
  *

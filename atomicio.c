@@ -1,4 +1,6 @@
 /*
+ * Copied from OpenSSH 3.6.1p2, required for loginrec.c
+ * 
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
  * All rights reserved.
  *
