@@ -1,3 +1,8 @@
+0.34 - Sun August 17 2003 05:37:47 +0800
+
+- Fix for remotely exploitable format string buffer overflow.
+  (thanks to Joel Eriksson <je at bitnux.com>)
+
 0.34 - Fri August 15 2003 15:10:00 +0800
 
 - Made syslog optional, both at compile time and as a compile option

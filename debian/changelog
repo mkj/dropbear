@@ -1,3 +1,10 @@
+dropbear (0.35-1) unstable; urgency=high
+
+  * updated to 0.35 release - contains fix for remotely exploitable
+    vulnerability.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sun, 17 Aug 2003 05:37:47 +0800
+
 dropbear (0.34-1) unstable; urgency=medium
 
   * updated to 0.34 release
