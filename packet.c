@@ -38,6 +38,7 @@
 static void read_packet_init();
 static void process_postauth_packet(unsigned int type);
 static void recv_unimplemented();
+static void writemac(buffer * outputbuffer, buffer * clearwritebuf);
 
 #define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
 #define ZLIB_DECOMPRESS_INCR 100
@@ -55,10 +56,12 @@ void write_packet() {
 	TRACE(("enter write_packet"));
 	assert(!isempty(&ses.writequeue));
 
+	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
 	len = writebuf->len - writebuf->pos;
 	assert(len > 0);
+	/* Try to write as much as possible */
 	written = write(ses.sock, buf_getptr(writebuf, len), len);
 
 	if (written < 0) {
@@ -75,16 +78,18 @@ void write_packet() {
 	}
 
 	if (written == len) {
+		/* We've finished with the packet, free it */
 		dequeue(&ses.writequeue);
 		buf_free(writebuf);
 	} else {
+		/* More packet left to write, leave it in the queue for later */
 		buf_incrpos(writebuf, written);
 	}
 
 	TRACE(("leave write_packet"));
 }
 
-/* non-blocking function reading available portion of a packet into the
+/* Non-blocking function reading available portion of a packet into the
  * ses's buffer, decrypting the length if encrypted, decrypting the
  * full portion if possible */
 void read_packet() {
@@ -97,15 +102,22 @@ void read_packet() {
 	blocksize = ses.keys->recv_algo_crypt->blocksize;
 	
 	if (ses.readbuf == NULL || ses.readbuf->len < blocksize) {
-		/* don't know the packetsize since we haven't got the first block to
-		 * decrypt */
+		/* In the first blocksize of a packet */
+
+		/* Read the first blocksize of the packet, so we can decrypt it and
+		 * find the length of the whole packet */
 		read_packet_init();
-		/* we should return so that we can select(), to make sure that the
-		 * next read won't return 0 simply because there are no more bytes */
-		TRACE(("leave read_packet: packetinit done"));
-		return;
+
+		/* If we don't have the length of decryptreadbuf, we didn't read
+		 * a whole blocksize and should exit */
+		if (ses.decryptreadbuf->len == 0) {
+			TRACE(("leave read_packet: packetinit done"));
+			return;
+		}
 	}
 
+	/* Attempt to read the remainder of the packet, note that there
+	 * mightn't be any available (EAGAIN) */
 	assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
 	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
@@ -116,8 +128,8 @@ void read_packet() {
 	}
 
 	if (len < 0) {
-		if (errno == EINTR) {
-			TRACE(("leave read_packet: EINTR"));
+		if (errno == EINTR || errno == EAGAIN) {
+			TRACE(("leave read_packet: EINTR or EAGAIN"));
 			return;
 		} else {
 			dropbear_exit("error reading");
@@ -125,13 +137,15 @@ void read_packet() {
 	}
 
 	if ((unsigned int)len == maxlen) {
+		/* The whole packet has been read */
 		decrypt_packet();
-		/* process_packet() will handle the packet from the main select loop */
+		/* The main select() loop in session.h will process_packet() to
+		 * handle the packet contents... */
 	}
 	TRACE(("leave read_packet"));
 }
 
-/* function used to read the initial portion of a packet, and determine the
+/* Function used to read the initial portion of a packet, and determine the
  * length. Only called during the first BLOCKSIZE of a packet. */
 static void read_packet_init() {
 
@@ -160,10 +174,15 @@ static void read_packet_init() {
 		dropbear_close("remote host closed connection");
 	}
 	if (len < 0) {
+		if (errno == EINTR) {
+			TRACE(("leave read_packet_init: EINTR"));
+			return;
+		}
 		dropbear_exit("error reading");
 	}
 
 	buf_incrwritepos(ses.readbuf, len);
+
 	if ((unsigned int)len != maxlen) {
 		/* don't have enough bytes to determine length, get next time */
 		return;
@@ -172,19 +191,12 @@ static void read_packet_init() {
 	/* now we have the first block, need to get packet length, so we decrypt
 	 * the first block (only need first 4 bytes) */
 	buf_setpos(ses.readbuf, 0);
-	buf_setpos(ses.decryptreadbuf, 0);
-	buf_setlen(ses.decryptreadbuf, 0);
-	if (ses.keys->recv_algo_crypt->cipherdesc != NULL) {
-		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-					buf_getwriteptr(ses.decryptreadbuf,blocksize),
-					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-			dropbear_exit("error decrypting");
-		}
-	} else {
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, blocksize), 
-				buf_getptr(ses.readbuf, blocksize), blocksize);
+	if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
+				buf_getwriteptr(ses.decryptreadbuf,blocksize),
+				&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
+		dropbear_exit("error decrypting");
 	}
-	buf_incrlen(ses.decryptreadbuf, blocksize);
+	buf_setlen(ses.decryptreadbuf, blocksize);
 	len = buf_getint(ses.decryptreadbuf) + 4 + macsize;
 
 	buf_setpos(ses.readbuf, blocksize);
@@ -226,21 +238,14 @@ void decrypt_packet() {
 	buf_setpos(ses.decryptreadbuf, blocksize);
 
 	/* decrypt if encryption is set, memcpy otherwise */
-	if (ses.keys->recv_algo_crypt->cipherdesc != NULL) {
-		while (ses.readbuf->pos < ses.readbuf->len - macsize) {
-			if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-						buf_getwriteptr(ses.decryptreadbuf, blocksize),
-						&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error decrypting");
-			}
-			buf_incrpos(ses.readbuf, blocksize);
-			buf_incrwritepos(ses.decryptreadbuf, blocksize);
+	while (ses.readbuf->pos < ses.readbuf->len - macsize) {
+		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
+					buf_getwriteptr(ses.decryptreadbuf, blocksize),
+					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
+			dropbear_exit("error decrypting");
 		}
-	} else {
-		/* no encryption */
-		len = ses.readbuf->len - ses.decryptreadbuf->pos;
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, len),
-				buf_getptr(ses.readbuf, len), len);
+		buf_incrpos(ses.readbuf, blocksize);
+		buf_incrwritepos(ses.decryptreadbuf, blocksize);
 	}
 
 	if (macsize > 0) {
@@ -529,8 +534,6 @@ void encrypt_packet() {
 
 	unsigned char padlen;
 	unsigned char blocksize, macsize;
-	hmac_state hmac;
-	unsigned char seqbuf[4];
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
 	
@@ -539,8 +542,8 @@ void encrypt_packet() {
 	blocksize = ses.keys->trans_algo_crypt->blocksize;
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
-	/* packet encrypted len is payload+5, then worst case is if we are 3 away
-	 * from a blocksize multiple, in which case we need to pad to the
+	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
+	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
 	clearwritebuf = buf_new((ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3
 #ifndef DISABLE_ZLIB
@@ -555,8 +558,7 @@ void encrypt_packet() {
 #ifndef DISABLE_ZLIB
 	/* compression */
 	if (ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
-		buf_compress(clearwritebuf, 
-					ses.writepayload, ses.writepayload->len);
+		buf_compress(clearwritebuf, ses.writepayload, ses.writepayload->len);
 	} else
 #endif
 	{
@@ -570,7 +572,8 @@ void encrypt_packet() {
 	buf_setpos(ses.writepayload, 0);
 	buf_setlen(ses.writepayload, 0);
 
-	/* length of padding */
+	/* length of padding - packet length must be a multiple of blocksize,
+	 * with a minimum of 4 bytes of padding */
 	padlen = blocksize - (clearwritebuf->len) % blocksize;
 	if (padlen < 4) {
 		padlen += blocksize;
@@ -581,7 +584,7 @@ void encrypt_packet() {
 	}
 
 	buf_setpos(clearwritebuf, 0);
-	/* packet length excl the packetlen uint32 */
+	/* packet length excluding the packetlength uint32 */
 	buf_putint(clearwritebuf, clearwritebuf->len + padlen - 4);
 
 	/* padding len */
@@ -597,27 +600,44 @@ void encrypt_packet() {
 	 * wire by writepacket() */
 	writebuf = buf_new(clearwritebuf->len + macsize);
 
-	if (ses.keys->trans_algo_crypt->cipherdesc != NULL) {
-		/* encrypt it */
-		while (clearwritebuf->pos < clearwritebuf->len) {
-			if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
-						buf_getwriteptr(writebuf, blocksize),
-						&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error encrypting");
-			}
-			buf_incrpos(clearwritebuf, blocksize);
-			buf_incrwritepos(writebuf, blocksize);
+	/* encrypt it */
+	while (clearwritebuf->pos < clearwritebuf->len) {
+		if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
+					buf_getwriteptr(writebuf, blocksize),
+					&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
+			dropbear_exit("error encrypting");
 		}
-	} else {
-		/* no encryption */
-		memcpy(buf_getwriteptr(writebuf, clearwritebuf->len),
-			buf_getptr(clearwritebuf, clearwritebuf->len),
-					clearwritebuf->len);
-		buf_incrwritepos(writebuf, clearwritebuf->len);
+		buf_incrpos(clearwritebuf, blocksize);
+		buf_incrwritepos(writebuf, blocksize);
 	}
 
-
 	/* now add a hmac and we're done */
+	writemac(writebuf, clearwritebuf);
+
+	/* clearwritebuf is finished with */
+	buf_free(clearwritebuf);
+
+	/* enqueue the packet for sending */
+	buf_setpos(writebuf, 0);
+	enqueue(&ses.writequeue, (void*)writebuf);
+
+	/* Update counts */
+	ses.kexstate.datatrans += writebuf->len;
+	ses.transseq++;
+
+	TRACE(("leave encrypt_packet()"));
+}
+
+
+/* Create the packet mac, and append H(seqno|clearbuf) to the output */
+static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
+
+	int macsize;
+	unsigned char seqbuf[4];
+	hmac_state hmac;
+
+	macsize = ses.keys->trans_algo_mac->hashsize;
+
 	if (macsize > 0) {
 		/* calculate the mac */
 		if (hmac_init(&hmac, 
@@ -642,25 +662,12 @@ void encrypt_packet() {
 			dropbear_exit("HMAC error");
 		}
 	
-		if (hmac_done(&hmac, buf_getwriteptr(writebuf, macsize)) 
+		if (hmac_done(&hmac, buf_getwriteptr(outputbuffer, macsize)) 
 				!= CRYPT_OK) {
 			dropbear_exit("HMAC error");
 		}
-		buf_incrlen(writebuf, macsize);
-	
-	} /* hash */
-
-	/* clearwritebuf is finished with */
-	buf_free(clearwritebuf);
-
-	ses.transseq++;
-
-	buf_setpos(writebuf, 0);
-	enqueue(&ses.writequeue, (void*)writebuf);
-
-	ses.kexstate.datatrans += writebuf->len;
-
-	TRACE(("leave encrypt_packet()"));
+		buf_incrwritepos(outputbuffer, macsize);
+	}
 }
 
 #ifndef DISABLE_ZLIB
