@@ -4,9 +4,11 @@ Things which need doing:
 
 - disconnect messages etc
 - kexfollows
+- make our own clearenv() function for platforms without it
 
 Features to add:
 
+- possible RSA blinding? need to check whether mine is vuln to timing attacks
 - PAM
 - utmp etc handling
 - TCP fwd
