@@ -19,6 +19,11 @@ const struct _hash_descriptor md4_desc =
     6,
     16,
     64,
+ 
+    /* DER encoding (not yet supported) */
+    { 0x00 },
+    0,    
+
     &md4_init,
     &md4_process,
     &md4_done,

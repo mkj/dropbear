@@ -21,6 +21,13 @@ const struct _hash_descriptor md5_desc =
     3,
     16,
     64,
+
+    /* DER identifier */
+    { 0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 
+      0x48, 0x86, 0xF7, 0x0D, 0x02, 0x05, 0x05, 0x00, 
+      0x04, 0x10 },
+    18,
+
     &md5_init,
     &md5_process,
     &md5_done,
@@ -44,6 +51,35 @@ const struct _hash_descriptor md5_desc =
 #define II(a,b,c,d,M,s,t) \
     a = (a + I(b,c,d) + M + t); a = ROL(a, s) + b;
 
+#ifdef SMALL_CODE
+
+static const unsigned char Worder[64] = {
+   0,1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,
+   1,6,11,0,5,10,15,4,9,14,3,8,13,2,7,12,
+   5,8,11,14,1,4,7,10,13,0,3,6,9,12,15,2,
+   0,7,14,5,12,3,10,1,8,15,6,13,4,11,2,9
+};
+
+static const unsigned char Rorder[64] = {
+   7,12,17,22,7,12,17,22,7,12,17,22,7,12,17,22,
+   5,9,14,20,5,9,14,20,5,9,14,20,5,9,14,20,
+   4,11,16,23,4,11,16,23,4,11,16,23,4,11,16,23,
+   6,10,15,21,6,10,15,21,6,10,15,21,6,10,15,21
+};
+
+static const ulong32 Korder[64] = {
+0xd76aa478UL, 0xe8c7b756UL, 0x242070dbUL, 0xc1bdceeeUL, 0xf57c0fafUL, 0x4787c62aUL, 0xa8304613UL, 0xfd469501UL,
+0x698098d8UL, 0x8b44f7afUL, 0xffff5bb1UL, 0x895cd7beUL, 0x6b901122UL, 0xfd987193UL, 0xa679438eUL, 0x49b40821UL,
+0xf61e2562UL, 0xc040b340UL, 0x265e5a51UL, 0xe9b6c7aaUL, 0xd62f105dUL, 0x02441453UL, 0xd8a1e681UL, 0xe7d3fbc8UL,
+0x21e1cde6UL, 0xc33707d6UL, 0xf4d50d87UL, 0x455a14edUL, 0xa9e3e905UL, 0xfcefa3f8UL, 0x676f02d9UL, 0x8d2a4c8aUL,
+0xfffa3942UL, 0x8771f681UL, 0x6d9d6122UL, 0xfde5380cUL, 0xa4beea44UL, 0x4bdecfa9UL, 0xf6bb4b60UL, 0xbebfbc70UL,
+0x289b7ec6UL, 0xeaa127faUL, 0xd4ef3085UL, 0x04881d05UL, 0xd9d4d039UL, 0xe6db99e5UL, 0x1fa27cf8UL, 0xc4ac5665UL,
+0xf4292244UL, 0x432aff97UL, 0xab9423a7UL, 0xfc93a039UL, 0x655b59c3UL, 0x8f0ccc92UL, 0xffeff47dUL, 0x85845dd1UL,
+0x6fa87e4fUL, 0xfe2ce6e0UL, 0xa3014314UL, 0x4e0811a1UL, 0xf7537e82UL, 0xbd3af235UL, 0x2ad7d2bbUL, 0xeb86d391UL
+};
+
+#endif   
+
 #ifdef CLEAN_STACK
 static void _md5_compress(hash_state *md, unsigned char *buf)
 #else
@@ -51,6 +87,9 @@ static void md5_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong32 i, W[16], a, b, c, d;
+#ifdef SMALL_CODE
+    ulong32 t;
+#endif
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
@@ -63,6 +102,28 @@ static void md5_compress(hash_state *md, unsigned char *buf)
     c = md->md5.state[2];
     d = md->md5.state[3];
 
+#ifdef SMALL_CODE
+    for (i = 0; i < 16; ++i) {
+        FF(a,b,c,d,W[Worder[i]],Rorder[i],Korder[i]);
+        t = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 32; ++i) {
+        GG(a,b,c,d,W[Worder[i]],Rorder[i],Korder[i]);
+        t = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 48; ++i) {
+        HH(a,b,c,d,W[Worder[i]],Rorder[i],Korder[i]);
+        t = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 64; ++i) {
+        II(a,b,c,d,W[Worder[i]],Rorder[i],Korder[i]);
+        t = d; d = c; c = b; b = a; a = t;
+    }
+
+#else
     FF(a,b,c,d,W[0],7,0xd76aa478UL)
     FF(d,a,b,c,W[1],12,0xe8c7b756UL)
     FF(c,d,a,b,W[2],17,0x242070dbUL)
@@ -127,6 +188,7 @@ static void md5_compress(hash_state *md, unsigned char *buf)
     II(d,a,b,c,W[11],10,0xbd3af235UL)
     II(c,d,a,b,W[2],15,0x2ad7d2bbUL)
     II(b,c,d,a,W[9],21,0xeb86d391UL)
+#endif
 
     md->md5.state[0] = md->md5.state[0] + a;
     md->md5.state[1] = md->md5.state[1] + b;

@@ -24,6 +24,11 @@ const struct _hash_descriptor rmd128_desc =
     8,
     16,
     64,
+
+    /* DER identifier (not supported) */
+    { 0x00 },
+    0,
+
     &rmd128_init,
     &rmd128_process,
     &rmd128_done,

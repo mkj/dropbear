@@ -157,6 +157,8 @@ static const ulong32 Te4[256] = {
     0xb0b0b0b0UL, 0x54545454UL, 0xbbbbbbbbUL, 0x16161616UL,
 };
 
+#ifndef ENCRYPT_ONLY
+
 static const ulong32 TD0[256] = {
     0x51f4a750UL, 0x7e416553UL, 0x1a17a4c3UL, 0x3a275e96UL,
     0x3bab6bcbUL, 0x1f9d45f1UL, 0xacfa58abUL, 0x4be30393UL,
@@ -290,6 +292,8 @@ static const ulong32 Td4[256] = {
     0xe1e1e1e1UL, 0x69696969UL, 0x14141414UL, 0x63636363UL,
     0x55555555UL, 0x21212121UL, 0x0c0c0c0cUL, 0x7d7d7d7dUL,
 };
+
+#endif /* ENCRYPT_ONLY */
 
 #ifdef SMALL_CODE
 
@@ -660,6 +664,8 @@ static const ulong32 Te4_3[] = {
 0x41000000UL, 0x99000000UL, 0x2d000000UL, 0x0f000000UL, 0xb0000000UL, 0x54000000UL, 0xbb000000UL, 0x16000000UL
 };
 
+#ifndef ENCRYPT_ONLY
+
 static const ulong32 TD1[256] = {
     0x5051f4a7UL, 0x537e4165UL, 0xc31a17a4UL, 0x963a275eUL,
     0xcb3bab6bUL, 0xf11f9d45UL, 0xabacfa58UL, 0x934be303UL,
@@ -998,6 +1004,8 @@ static const ulong32 Tks3[] = {
 0x31dccad7UL, 0x38d1c1d9UL, 0x23c6dccbUL, 0x2acbd7c5UL, 0x15e8e6efUL, 0x1ce5ede1UL, 0x07f2f0f3UL, 0x0efffbfdUL, 
 0x79b492a7UL, 0x70b999a9UL, 0x6bae84bbUL, 0x62a38fb5UL, 0x5d80be9fUL, 0x548db591UL, 0x4f9aa883UL, 0x4697a38dUL
 };
+
+#endif /* ENCRYPT_ONLY */
 
 #endif /* SMALL CODE */
 

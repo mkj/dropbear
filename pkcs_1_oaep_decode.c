@@ -15,9 +15,10 @@
 #ifdef PKCS_1
 
 int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
-                        const unsigned char *lparam, unsigned long lparamlen,
-                              unsigned long modulus_bitlen, int hash_idx,
-                              unsigned char *out,    unsigned long *outlen)
+                       const unsigned char *lparam, unsigned long lparamlen,
+                             unsigned long modulus_bitlen, int hash_idx,
+                             unsigned char *out,    unsigned long *outlen,
+                             int           *res)
 {
    unsigned char DB[1024], seed[MAXBLOCKSIZE], mask[sizeof(DB)];
    unsigned long hLen, x, y, modulus_len;
@@ -26,6 +27,10 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    _ARGCHK(msg    != NULL);
    _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
+   _ARGCHK(res    != NULL);
+
+   /* default to invalid packet */
+   *res = 0;
    
    /* test valid hash */
    if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) { 
@@ -49,7 +54,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* must have leading 0x00 byte */
    if (msg[0] != 0x00) {
-      return CRYPT_INVALID_PACKET;
+      return CRYPT_OK;
    }
 
    /* now read the masked seed */
@@ -99,7 +104,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* compare the lhash'es */
    if (memcmp(seed, DB, hLen) != 0) {
-      return CRYPT_INVALID_PACKET;
+      return CRYPT_OK;
    }
 
    /* now zeroes before a 0x01 */
@@ -109,7 +114,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* error out if wasn't 0x01 */
    if (x == (modulus_len - hLen - 1) || DB[x] != 0x01) {
-      return CRYPT_INVALID_PACKET;
+      return CRYPT_OK;
    }
 
    /* rest is the message (and skip 0x01) */
@@ -128,6 +133,9 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    zeromem(seed, sizeof(seed));
    zeromem(mask, sizeof(mask));
 #endif
+
+   /* valid packet */
+   *res = 1;
 
    return CRYPT_OK;
 }

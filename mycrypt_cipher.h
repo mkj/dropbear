@@ -261,12 +261,22 @@ extern const struct _cipher_descriptor safer_k64_desc, safer_k128_desc, safer_sk
 #define aes_test            rijndael_test
 #define aes_keysize         rijndael_keysize
 
+#define aes_enc_setup           rijndael_enc_setup
+#define aes_enc_ecb_encrypt     rijndael_enc_ecb_encrypt
+#define aes_enc_keysize         rijndael_enc_keysize
+
 extern int rijndael_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
 extern void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key);
 extern void rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key);
 extern int rijndael_test(void);
 extern int rijndael_keysize(int *desired_keysize);
+
+extern int rijndael_enc_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
+extern void rijndael_enc_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key);
+extern int rijndael_enc_keysize(int *desired_keysize);
+
 extern const struct _cipher_descriptor rijndael_desc, aes_desc;
+extern const struct _cipher_descriptor rijndael_enc_desc, aes_enc_desc;
 #endif
 
 #ifdef XTEA
@@ -342,6 +352,8 @@ extern int cfb_start(int cipher, const unsigned char *IV, const unsigned char *k
                      int keylen, int num_rounds, symmetric_CFB *cfb);
 extern int cfb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_CFB *cfb);
 extern int cfb_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_CFB *cfb);
+extern int cfb_getiv(unsigned char *IV, unsigned long *len, symmetric_CFB *cfb);
+extern int cfb_setiv(const unsigned char *IV, unsigned long len, symmetric_CFB *cfb);
 #endif
 
 #ifdef OFB
@@ -349,6 +361,8 @@ extern int ofb_start(int cipher, const unsigned char *IV, const unsigned char *k
                      int keylen, int num_rounds, symmetric_OFB *ofb);
 extern int ofb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_OFB *ofb);
 extern int ofb_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_OFB *ofb);
+extern int ofb_getiv(unsigned char *IV, unsigned long *len, symmetric_OFB *ofb);
+extern int ofb_setiv(const unsigned char *IV, unsigned long len, symmetric_OFB *ofb);
 #endif
 
 #ifdef CBC
@@ -356,6 +370,8 @@ extern int cbc_start(int cipher, const unsigned char *IV, const unsigned char *k
                      int keylen, int num_rounds, symmetric_CBC *cbc);
 extern int cbc_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_CBC *cbc);
 extern int cbc_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_CBC *cbc);
+extern int cbc_getiv(unsigned char *IV, unsigned long *len, symmetric_CBC *cbc);
+extern int cbc_setiv(const unsigned char *IV, unsigned long len, symmetric_CBC *cbc);
 #endif
 
 #ifdef CTR
@@ -363,6 +379,8 @@ extern int ctr_start(int cipher, const unsigned char *IV, const unsigned char *k
                      int keylen, int num_rounds, symmetric_CTR *ctr);
 extern int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_CTR *ctr);
 extern int ctr_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_CTR *ctr);
+extern int ctr_getiv(unsigned char *IV, unsigned long *len, symmetric_CTR *ctr);
+extern int ctr_setiv(const unsigned char *IV, unsigned long len, symmetric_CTR *ctr);
 #endif
 
 

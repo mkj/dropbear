@@ -15,8 +15,8 @@
 #ifdef PKCS_1
 
 int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
-                            unsigned long saltlen,  int           hash_idx,
-                            int           prng_idx, prng_state   *prng,
+                            unsigned long saltlen,  prng_state   *prng,     
+                            int           prng_idx, int           hash_idx,
                             unsigned long modulus_bitlen,
                             unsigned char *out,     unsigned long *outlen)
 {
@@ -104,7 +104,7 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    out[y] = 0xBC;
 
    /* now clear the 8*modulus_len - modulus_bitlen most significant bits */
-   out[0] &= 0xFF >> ((modulus_len<<3) - modulus_bitlen);
+   out[0] &= 0xFF >> ((modulus_len<<3) - (modulus_bitlen-1));
 
    /* store output size */
    *outlen = modulus_len;

@@ -16,6 +16,11 @@ const struct _hash_descriptor sha224_desc =
     10,
     28,
     64,
+
+    /* DER identifier (not supported) */
+    { 0x00 },
+    0,
+
     &sha224_init,
     &sha256_process,
     &sha224_done,

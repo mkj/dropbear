@@ -120,6 +120,9 @@ const char *crypt_build_settings =
 #if defined(RIPEMD160)
    "   RIPEMD160\n"
 #endif
+#if defined(WHIRLPOOL)
+   "   WHIRLPOOL\n"
+#endif
 
     "\nBlock Chaining Modes:\n"
 #if defined(CFB)
@@ -151,7 +154,11 @@ const char *crypt_build_settings =
 
     "\nPK Algs:\n"
 #if defined(MRSA)
-    "   RSA\n"
+    "   RSA"
+#if defined(RSA_TIMING)
+    " + RSA_TIMING "
+#endif
+    "\n"
 #endif
 #if defined(MDH)
     "   DH\n"
@@ -161,9 +168,6 @@ const char *crypt_build_settings =
 #endif
 #if defined(MDSA)
     "   DSA\n"
-#endif
-#if defined(KR)
-    "   KR\n"
 #endif
 
     "\nCompiler:\n"
@@ -187,9 +191,6 @@ const char *crypt_build_settings =
 #endif
 
     "\nVarious others: "
-#if defined(GF)
-    " GF "
-#endif
 #if defined(BASE64)
     " BASE64 "
 #endif
@@ -222,6 +223,15 @@ const char *crypt_build_settings =
 #endif
 #if defined(PKCS_5)
     " PKCS#5 "
+#endif
+#if defined(SMALL_CODE)
+    " SMALL_CODE "
+#endif
+#if defined(NO_FILE)
+    " NO_FILE "
+#endif
+#if defined(LTC_TEST)
+    " LTC_TEST "
 #endif
     "\n"
     "\n\n\n"

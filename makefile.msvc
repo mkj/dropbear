@@ -8,8 +8,7 @@ default: library
 # leave this blank and link against libtommath if you want better link resolution
 MPIOBJECT=mpi.obj
 
-#List of objects to compile.
-OBJECTS=keyring.obj gf.obj strings.obj base64.obj \
+OBJECTS=error_to_string.obj mpi_to_ltc_error.obj base64_encode.obj base64_decode.obj \
 \
 crypt.obj                    crypt_find_cipher.obj      crypt_find_hash_any.obj      \
 crypt_hash_is_valid.obj      crypt_register_hash.obj    crypt_unregister_prng.obj    \
@@ -25,12 +24,16 @@ rand_prime.obj is_prime.obj \
 \
 ecc.obj  dh.obj \
 \
-rsa.obj rsa_exptmod.obj  rsa_free.obj  rsa_make_key.obj \
+rsa_decrypt_key.obj  rsa_encrypt_key.obj  rsa_exptmod.obj  rsa_free.obj  rsa_make_key.obj  \
+rsa_sign_hash.obj  rsa_verify_hash.obj rsa_export.obj rsa_import.obj tim_exptmod.obj \
 \
-dsa_export.obj  dsa_free.obj  dsa_import.obj  dsa_make_key.obj  dsa_sign_hash.obj  dsa_verify_hash.obj  dsa_verify_key.obj \
+dsa_export.obj  dsa_free.obj  dsa_import.obj  dsa_make_key.obj  dsa_sign_hash.obj  \
+dsa_verify_hash.obj  dsa_verify_key.obj \
 \
-xtea.obj aes.obj des.obj safer_tab.obj safer.obj saferp.obj rc2.obj \
-rc6.obj rc5.obj cast5.obj noekeon.obj blowfish.obj twofish.obj skipjack.obj \
+aes.obj aes_enc.obj \
+\
+blowfish.obj des.obj safer_tab.obj safer.obj saferp.obj rc2.obj xtea.obj \
+rc6.obj rc5.obj cast5.obj noekeon.obj twofish.obj skipjack.obj \
 \
 md2.obj md4.obj md5.obj sha1.obj sha256.obj sha512.obj tiger.obj whirl.obj \
 rmd128.obj rmd160.obj \
@@ -49,10 +52,10 @@ omac_done.obj  omac_file.obj  omac_init.obj  omac_memory.obj  omac_process.obj  
 pmac_done.obj  pmac_file.obj  pmac_init.obj  pmac_memory.obj  pmac_ntz.obj  pmac_process.obj  \
 pmac_shift_xor.obj  pmac_test.obj \
 \
-cbc_start.obj cbc_encrypt.obj cbc_decrypt.obj \
-cfb_start.obj cfb_encrypt.obj cfb_decrypt.obj \
-ofb_start.obj ofb_encrypt.obj ofb_decrypt.obj \
-ctr_start.obj ctr_encrypt.obj ctr_decrypt.obj \
+cbc_start.obj cbc_encrypt.obj cbc_decrypt.obj cbc_getiv.obj cbc_setiv.obj \
+cfb_start.obj cfb_encrypt.obj cfb_decrypt.obj cfb_getiv.obj cfb_setiv.obj \
+ofb_start.obj ofb_encrypt.obj ofb_decrypt.obj ofb_getiv.obj ofb_setiv.obj \
+ctr_start.obj ctr_encrypt.obj ctr_decrypt.obj ctr_getiv.obj ctr_setiv.obj \
 ecb_start.obj ecb_encrypt.obj ecb_decrypt.obj \
 \
 hash_file.obj  hash_filehandle.obj  hash_memory.obj \
@@ -61,20 +64,19 @@ hmac_done.obj  hmac_file.obj  hmac_init.obj  hmac_memory.obj  hmac_process.obj  
 \
 pkcs_1_mgf1.obj pkcs_1_oaep_encode.obj pkcs_1_oaep_decode.obj  \
 pkcs_1_pss_encode.obj pkcs_1_pss_decode.obj pkcs_1_i2osp.obj pkcs_1_os2ip.obj \
+pkcs_1_v15_es_encode.obj pkcs_1_v15_es_decode.obj pkcs_1_v15_sa_encode.obj pkcs_1_v15_sa_decode.obj \
 \
 pkcs_5_1.obj pkcs_5_2.obj \
 \
-burn_stack.obj zeromem.obj 	\
+burn_stack.obj zeromem.obj \
 $(MPIOBJECT)
+
+#ciphers come in two flavours... enc+dec and enc 
+aes_enc.obj: aes.c aes_tab.c
+	$(CC) $(CFLAGS) /DENCRYPT_ONLY /c aes.c /Foaes_enc.obj
 
 library: $(OBJECTS)
 	lib /out:tomcrypt.lib $(OBJECTS)
-	
-test.obj: demos/test.c
-	cl $(CFLAGS) /c demos/test.c
-
-test: library test.obj
-	cl test.obj tomcrypt.lib advapi32.lib	
 	
 x86_prof: demos/x86_prof.c library
 	cl $(CFLAGS) demos/x86_prof.c tomcrypt.lib advapi32.lib 

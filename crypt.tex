@@ -47,7 +47,7 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.95}
+\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.96}
 \author{Tom St Denis \\
 \\
 tomstdenis@iahu.ca \\
@@ -103,7 +103,8 @@ to provide these low level core functions in a robust and easy to use fashion.
 
 The library also serves well as a toolkit for applications where they don't need to be OpenPGP, PKCS, etc. compliant.
 Included are fully operational public key routines for encryption, decryption, signature generation and verification.  
-These routines are fully portable but are not conformant to any known set of standards.  They are all based on established
+These routines are fully portable but are not conformant to any known set of standards\footnote{With the exception of 
+the RSA code which is based on the PKCS \#1 standards.}.  They are all based on established
 number theory and cryptography.  
 
 \subsection{What the library IS NOT for?}
@@ -241,19 +242,20 @@ that return {\bf int} will return {\bf CRYPT\_OK} if the function was successful
 if it failed.  Certain functions that return int will return $-1$ to indicate an error.  These functions will be explicitly
 commented upon.  When a function does return a CRYPT error code it can be translated into a string with
 
+\index{error\_to\_string()}
 \begin{verbatim}
-const char *error_to_string(int errno);
+const char *error_to_string(int err);
 \end{verbatim}
 
 An example of handling an error is:
 \begin{verbatim}
 void somefunc(void)
 {
-   int errno;
+   int err;
    
    /* call a cryptographic function */
-   if ((errno = some_crypto_function(...)) != CRYPT_OK) {
-      printf("A crypto error occured, %s\n", error_to_string(errno));
+   if ((err = some_crypto_function(...)) != CRYPT_OK) {
+      printf("A crypto error occured, %s\n", error_to_string(err));
       /* perform error handling */
    }
    /* continue on if no error occured */
@@ -320,14 +322,14 @@ int main(void) {
     rsa_key key;
     unsigned char buffer[1024];
     unsigned long x;
-    int errno;
+    int err;
 
     /* ... Make up the RSA key somehow */
 
     /* lets export the key, set x to the size of the output buffer */
     x = sizeof(buffer);
-    if ((errno = rsa_export(buffer, &x, PK_PUBLIC, &key)) != CRYPT_OK) {
-       printf("Export error: %s\n", error_to_string(errno));
+    if ((err = rsa_export(buffer, &x, PK_PUBLIC, &key)) != CRYPT_OK) {
+       printf("Export error: %s\n", error_to_string(err));
        return -1;
     }
     
@@ -411,12 +413,12 @@ return {\bf CRYPT\_OK} if the key size specified is acceptable.  For example:
 #include <mycrypt.h>
 int main(void)
 {
-   int keysize, errno;
+   int keysize, err;
 
    /* now given a 20 byte key what keysize does Twofish want to use? */
    keysize = 20;
-   if ((errno = twofish_keysize(&keysize)) != CRYPT_OK) {
-      printf("Error getting key size: %s\n", error_to_string(errno));
+   if ((err = twofish_keysize(&keysize)) != CRYPT_OK) {
+      printf("Error getting key size: %s\n", error_to_string(err));
       return -1;
    }
    printf("Twofish suggested a key size of %d\n", keysize);
@@ -434,22 +436,30 @@ int main(void)
 { 
    unsigned char pt[8], ct[8], key[8];
    symmetric_key skey;
-   int errno;
+   int err;
 
    /* ... key is loaded appropriately in ``key'' ... */
    /* ... load a block of plaintext in ``pt'' ... */
 
    /* schedule the key */
-   if ((errno = blowfish_setup(key, 8, 0, &skey)) != CRYPT_OK) {
-      printf("Setup error: %s\n", error_to_string(errno));
+   if ((err = blowfish_setup(key,     /* the key we will use */
+                               8,     /* key is 8 bytes (64-bits) long */
+                               0,     /* 0 == use default # of rounds */
+                           &skey)     /* where to put the scheduled key */
+       ) != CRYPT_OK) {
+      printf("Setup error: %s\n", error_to_string(err));
       return -1;
    }
 
    /* encrypt the block */
-   blowfish_ecb_encrypt(pt, ct, &skey);
+   blowfish_ecb_encrypt(pt,             /* encrypt this 8-byte array */
+                        ct,             /* store encrypted data here */ 
+                        &skey);         /* our previously scheduled key */
 
    /* decrypt the block */
-   blowfish_ecb_decrypt(ct, pt, &skey);
+   blowfish_ecb_decrypt(ct,             /* decrypt this 8-byte array */
+                        pt,             /* store decrypted data here */
+                        &skey);         /* our previously scheduled key */
 
    return 0;
 }
@@ -501,6 +511,7 @@ marked when ``name'' equals {\bf NULL}.
 
 As of this release the current cipher\_descriptors elements are
 
+\index{Cipher descriptor table}
 \begin{small}
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|}
@@ -516,6 +527,7 @@ As of this release the current cipher\_descriptors elements are
      \hline Safer K128  & safer\_k128\_desc & 8 & 16 & 6 $\ldots$ 13 \\
      \hline Safer SK128 & safer\_sk128\_desc & 8 & 16 & 6 $\ldots$ 13 \\
      \hline AES & aes\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
+                & aes\_enc\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
      \hline Twofish & twofish\_desc & 16 & 16, 24, 32 & 16 \\
      \hline DES & des\_desc & 8 & 7 & 16 \\
      \hline 3DES (EDE mode) & des3\_desc & 8 & 21 & 16 \\
@@ -528,14 +540,32 @@ As of this release the current cipher\_descriptors elements are
 \end{small}
 
 \subsection{Notes}
+\begin{small}
+\begin{enumerate}
+\item
+For AES (also known as Rijndael) there are four descriptors which complicate issues a little.  The descriptors 
+rijndael\_desc and rijndael\_enc\_desc provide the cipher named ``rijndael''.  The descriptors aes\_desc and 
+aes\_enc\_desc provide the cipher name ``aes''.  Functionally both ``rijndael'' and ``aes'' are the same cipher.  The
+only difference is when you call find\_cipher() you have to pass the correct name.  The cipher descriptors with ``enc'' 
+in the middle (e.g. rijndael\_enc\_desc) are related to an implementation of Rijndael with only the encryption routine
+and tables.  The decryption and self--test function pointers of both ``encrypt only'' descriptors are set to \textbf{NULL} and 
+should not be called.
+
+The ``encrypt only'' descriptors are useful for applications that only use the encryption function of the cipher.  Algorithms such
+as EAX, PMAC and OMAC only require the encryption function.  So far this ``encrypt only'' functionality has only been implemented for
+Rijndael as it makes the most sense for this cipher.
+
+\item
 For the 64-bit SAFER famliy of ciphers (e.g K64, SK64, K128, SK128) the ecb\_encrypt() and ecb\_decrypt()
 functions are the same.  So if you want to use those functions directly just call safer\_ecb\_encrypt()
 or safer\_ecb\_decrypt() respectively.
 
+\item
 Note that for ``DES'' and ``3DES'' they use 8 and 24 byte keys but only 7 and 21 [respectively] bytes of the keys are in
 fact used for the purposes of encryption.  My suggestion is just to use random 8/24 byte keys instead of trying to make a 8/24
 byte string from the real 7/21 byte key.
 
+\item
 Note that ``Twofish'' has additional configuration options that take place at build time.  These options are found in
 the file ``mycrypt\_cfg.h''.  The first option is ``TWOFISH\_SMALL'' which when defined will force the Twofish code
 to not pre-compute the Twofish ``$g(X)$'' function as a set of four $8 \times 32$ s-boxes.  This means that a scheduled
@@ -545,6 +575,7 @@ by the polynomials 5B and EF used in the MDS multiplication.  As a result the co
 speed increase is useful when ``TWOFISH\_SMALL'' is defined since the s-boxes and MDS multiply form the heart of the
 Twofish round function.
 
+\index{Twofish build options}
 \begin{small}
 \begin{center}
 \begin{tabular}{|l|l|l|}
@@ -558,7 +589,11 @@ Twofish round function.
 \end{center}
 \end{small}
 
+\end{enumerate}
+\end{small}
+
 To work with the cipher\_descriptor array there is a function:
+\index{find\_cipher()}
 \begin{verbatim}
 int find_cipher(char *name)
 \end{verbatim}
@@ -571,7 +606,7 @@ int main(void)
 {
    unsigned char key[8];
    symmetric_key skey;
-   int errno;
+   int err;
 
    /* you must register a cipher before you use it */
    if (register_cipher(&blowfish_desc)) == -1) {
@@ -580,8 +615,8 @@ int main(void)
    }
 
    /* generic call to function (assuming the key in key[] was already setup) */
-   if ((errno = cipher_descriptor[find_cipher("blowfish")].setup(key, 8, 0, &skey)) != CRYPT_OK) {
-      printf("Error setting up Blowfish: %s\n", error_to_string(errno));
+   if ((err = cipher_descriptor[find_cipher("blowfish")].setup(key, 8, 0, &skey)) != CRYPT_OK) {
+      printf("Error setting up Blowfish: %s\n", error_to_string(err));
       return -1;
    }
 
@@ -592,12 +627,14 @@ int main(void)
 
 A good safety would be to check the return value of ``find\_cipher()'' before accessing the desired function.  In order
 to use a cipher with the descriptor table you must register it first using:
+\index{register\_cipher()}
 \begin{verbatim}
 int register_cipher(const struct _cipher_descriptor *cipher);
 \end{verbatim}
 Which accepts a pointer to a descriptor and returns the index into the global descriptor table.  If an error occurs such
 as there is no more room (it can have 32 ciphers at most) it will return {\bf{-1}}.  If you try to add the same cipher more
 than once it will just return the index of the first copy.  To remove a cipher call:
+\index{unregister\_cipher()}
 \begin{verbatim}
 int unregister_cipher(const struct _cipher_descriptor *cipher);
 \end{verbatim}
@@ -607,7 +644,7 @@ Which returns {\bf CRYPT\_OK} if it removes it otherwise it returns {\bf CRYPT\_
 #include <mycrypt.h>
 int main(void)
 {
-   int errno;
+   int err;
    
    /* register the cipher */
    if (register_cipher(&rijndael_desc) == -1) {
@@ -618,8 +655,8 @@ int main(void)
    /* use Rijndael */
 
    /* remove it */
-   if ((errno = unregister_cipher(&rijndael_desc)) != CRYPT_OK) {
-      printf("Error removing Rijndael: %s\n", error_to_string(errno));
+   if ((err = unregister_cipher(&rijndael_desc)) != CRYPT_OK) {
+      printf("Error removing Rijndael: %s\n", error_to_string(err));
       return -1;
    }
 
@@ -636,6 +673,7 @@ size of the cipher.  Given a key $k$, a plaintext $P$ and a cipher $E$ we shall 
 $P$ under the key $k$ as $E_k(P)$.  In some modes there exists an initial vector denoted as $C_{-1}$.
 
 \subsubsection{ECB Mode}
+\index{ECB mode}
 ECB or Electronic Codebook Mode is the simplest method to use.  It is given as:
 \begin{equation}
 C_i = E_k(P_i)
@@ -644,6 +682,7 @@ This mode is very weak since it allows people to swap blocks and perform replay 
 than once.
 
 \subsubsection{CBC Mode}
+\index{CBC mode}
 CBC or Cipher Block Chaining mode is a simple mode designed to prevent trivial forms of replay and swap attacks on ciphers.
 It is given as:
 \begin{equation}
@@ -652,6 +691,7 @@ C_i = E_k(P_i \oplus C_{i - 1})
 It is important that the initial vector be unique and preferably random for each message encrypted under the same key.
 
 \subsubsection{CTR Mode}
+\index{CTR mode}
 CTR or Counter Mode is a mode which only uses the encryption function of the cipher.  Given a initial vector which is
 treated as a large binary counter the CTR mode is given as:
 \begin{eqnarray}
@@ -663,6 +703,7 @@ encrypted under the same key replay and swap attacks are infeasible.  CTR mode m
 as the block cipher is under a chosen plaintext attack (provided the initial vector is unique).
 
 \subsubsection{CFB Mode}
+\index{CFB mode}
 CFB or Ciphertext Feedback Mode is a mode akin to CBC.  It is given as:
 \begin{eqnarray}
 C_i = P_i \oplus C_{-1} \nonumber \\
@@ -673,6 +714,7 @@ to encrypt whole blocks at a time.  However, the library will buffer data allowi
 blocks without a delay.  When this mode is first setup it will initially encrypt the initial vector as required.
 
 \subsubsection{OFB Mode}
+\index{OFB mode}
 OFB or Output Feedback Mode is a mode akin to CBC as well.  It is given as:
 \begin{eqnarray}
 C_{-1} = E_k(C_{-1}) \nonumber \\
@@ -703,6 +745,7 @@ other modes.
 The library provides simple support routines for handling CBC, CTR, CFB, OFB and ECB encoded messages.  Assuming the mode 
 you want is XXX there is a structure called ``symmetric\_XXX'' that will contain the information required to
 use that mode.  They have identical setup routines (except ECB mode for obvious reasons):
+\index{ecb\_start()} \index{cfb\_start()} \index{cbc\_start()} \index{ofb\_start()} \index{ctr\_start()}
 \begin{verbatim}
 int XXX_start(int cipher, const unsigned char *IV, 
               const unsigned char *key, int keylen, 
@@ -721,6 +764,8 @@ is a pointer to the structure you want to hold the information for the mode of o
 
 Both routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise they return an error code.  To 
 actually encrypt or decrypt the following routines are provided:
+\index{ecb\_encrypt()} \index{ecb\_decrypt()} \index{cfb\_encrypt()} \index{cfb\_decrypt()} 
+\index{cbc\_encrypt()} \index{cbc\_decrypt()} \index{ofb\_encrypt()} \index{ofb\_decrypt()} \index{ctr\_encrypt()} \index{ctr\_decrypt()}
 \begin{verbatim}
 int XXX_encrypt(const unsigned char *pt, unsigned char *ct, 
                 symmetric_XXX *XXX);
@@ -739,8 +784,23 @@ and end up with the same ciphertext.  However, encrypting ``ABC'' and ``DABC'' w
 five of the modes will return {\bf CRYPT\_OK} on success from the encrypt or decrypt functions.
 
 To decrypt in either mode you simply perform the setup like before (recall you have to fetch the IV value you used)
-and use the decrypt routine on all of the blocks.  When you are done working with either mode you should wipe the 
-memory (using ``zeromem()'') to help prevent the key from leaking.  For example:
+and use the decrypt routine on all of the blocks.
+
+To change or read the IV of a previously initialized chaining mode use the following two functions.
+
+\index{cbc\_setiv()} \index{cbc\_getiv()} \index{ofb\_setiv()} \index{ofb\_getiv()} \index{cfb\_setiv()} \index{cfb\_getiv()}
+\index{ctr\_setiv()} \index{ctr\_getiv()}
+\begin{verbatim}
+int XXX_getiv(unsigned char *IV, unsigned long *len, symmetric_XXX *XXX);
+int XXX_setiv(const unsigned char *IV, unsigned long len, symmetric_XXX *XXX);
+\end{verbatim}
+
+The XXX\_getiv function will read the IV out of the chaining mode and store it into ``IV'' along with the length of the IV 
+stored in ``len''.  The XXX\_setiv will initialize the chaining mode state as if the original IV were the new IV specified.  The length
+of the IV passed in must be the size of the ciphers block size.
+
+The XXX\_setiv functions are handy if you wish to change the IV without re--keying the cipher.  
+
 \newpage
 \begin{small}
 \begin{verbatim}
@@ -749,7 +809,7 @@ int main(void)
 {
    unsigned char key[16], IV[16], buffer[512];
    symmetric_CTR ctr;
-   int x, errno;
+   int x, err;
 
    /* register twofish first */
    if (register_cipher(&twofish_desc) == -1) {
@@ -760,18 +820,46 @@ int main(void)
    /* somehow fill out key and IV */
 
    /* start up CTR mode */
-   if ((errno = ctr_start(find_cipher("twofish"), IV, key, 16, 0, &ctr)) != CRYPT_OK) {
-      printf("ctr_start error: %s\n", error_to_string(errno));
+   if ((err = ctr_start(find_cipher("twofish"), /* index of desired cipher */
+                                            IV, /* the initial vector */
+                                           key, /* the secret key */
+                                            16, /* length of secret key (16 bytes, 128 bits) */
+                                             0, /* 0 == default # of rounds */
+                                         &ctr)  /* where to store initialized CTR state */
+      ) != CRYPT_OK) {
+      printf("ctr_start error: %s\n", error_to_string(err));
       return -1;
    }
 
    /* somehow fill buffer than encrypt it */
-   if ((errno = ctr_encrypt(buffer, buffer, sizeof(buffer), &ctr)) != CRYPT_OK) {
-      printf("ctr_encrypt error: %s\n", error_to_string(errno));
+   if ((err = ctr_encrypt(        buffer, /* plaintext */
+                                  buffer, /* ciphertext */
+                          sizeof(buffer), /* length of data to encrypt */
+                                   &ctr)  /* previously initialized CTR state */
+      ) != CRYPT_OK) {
+      printf("ctr_encrypt error: %s\n", error_to_string(err));
       return -1;
    }
 
    /* make use of ciphertext... */
+
+   /* now we want to decrypt so let's use ctr_setiv */
+   if ((err = ctr_setiv(  IV, /* the initial IV we gave to ctr_start */
+                          16, /* the IV is 16 bytes long */
+                        &ctr) /* the ctr state we wish to modify */
+       ) != CRYPT_OK) {
+      printf("ctr_setiv error: %s\n", error_to_string(err));
+      return -1;
+   }
+
+   if ((err = ctr_decrypt(        buffer, /* ciphertext */
+                                  buffer, /* plaintext */
+                          sizeof(buffer), /* length of data to encrypt */
+                                   &ctr)  /* previously initialized CTR state */
+      ) != CRYPT_OK) {
+      printf("ctr_decrypt error: %s\n", error_to_string(err));
+      return -1;
+   }
 
    /* clear up and return */
    zeromem(key, sizeof(key));
@@ -787,15 +875,14 @@ int main(void)
 \subsection{EAX Mode}
 LibTomCrypt provides support for a mode called EAX\footnote{See 
 M. Bellare, P. Rogaway, D. Wagner, A Conventional Authenticated-Encryption Mode.} in a manner similar to the
-way it was intended to be used.
-
-First a short description of what EAX mode is before I explain how to use it.  EAX is a mode that requires a cipher,
-CTR and OMAC support and provides encryption and authentication.  It is initialized with a random ``nonce'' that can
-be shared publicly as well as a ``header'' which can be fixed and public as well as a random secret symmetric key.
+way it was intended to be used by the designers.  First a short description of what EAX mode is before I explain how to use it.  
+EAX is a mode that requires a cipher, CTR and OMAC support and provides encryption and authentication\footnote{Note that since EAX only requires OMAC and CTR you may use ``encrypt only'' cipher descriptors with this mode.}.  
+It is initialized with a random ``nonce'' that can be shared publicly as well as a ``header'' which can be fixed and public as well as a random 
+secret symmetric key.
 
 The ``header'' data is meant to be meta-data associated with a stream that isn't private (e.g. protocol messages).  It can
 be added at anytime during an EAX stream and is part of the authentication tag.  That is, changes in the meta-data can
-be detected by an invalid output tag.
+be detected by changes in the output tag.
 
 The mode can then process plaintext producing ciphertext as well as compute a partial checksum.  The actual checksum
 called a ``tag'' is only emitted when the message is finished.  In the interim though the user can process any arbitrary
@@ -803,6 +890,7 @@ sized message block to send to the recipient as ciphertext.  This makes the EAX 
 of operation.
 
 The mode is initialized with the following function.
+\index{eax\_init()}
 \begin{verbatim}
 int eax_init(eax_state *eax, int cipher, 
              const unsigned char *key, unsigned long keylen,
@@ -816,10 +904,11 @@ length ``noncelen''.  ``header'' is the random (or fixed or \textbf{NULL}) heade
 ``headerlen''.
 
 When this function completes ``eax'' will be initialized such that you can now either have data decrypted or 
-encrypted in EAX mode.  Note that if ``headerlen'' is zero you may pass ``header'' as \textbf{NULL}.  It will still
-initialize the EAX ``H'' value to the correct value.  
+encrypted in EAX mode.  Note that if ``headerlen'' is zero you may pass ``header'' as \textbf{NULL} to indicate
+there is no initial header data.
 
 To encrypt or decrypt data in a streaming mode use the following.
+\index{eax\_encrypt()} \index{eax\_decrypt()}
 \begin{verbatim}
 int eax_encrypt(eax_state *eax, const unsigned char *pt, 
                 unsigned char *ct, unsigned long length);
@@ -832,13 +921,14 @@ The function ``eax\_encrypt'' will encrypt the bytes in ``pt'' of ``length'' byt
 through the OMAC function.  The function ``eax\_decrypt'' decrypts ``ct'' and stores it in ``pt''.  This also allows 
 ``pt'' and ``ct'' to be the same region in memory.  
 
+You cannot both encrypt or decrypt with the same ``eax'' context.  For bi-directional communication you
+will need to initialize two EAX contexts (preferably with different headers and nonces).  
+
 Note that both of these functions allow you to send the data in any granularity but the order is important.  While
 the eax\_init() function allows you to add initial header data to the stream you can also add header data during the
 EAX stream with the following.
 
-Also note that you cannot both encrypt or decrypt with the same ``eax'' context.  For bi-directional communication you
-will need to initialize two EAX contexts (preferably with different headers and nonces).  
-
+\index{eax\_addheader()}
 \begin{verbatim}
 int eax_addheader(eax_state *eax, 
                   const unsigned char *header, unsigned long length);
@@ -847,6 +937,7 @@ int eax_addheader(eax_state *eax,
 This will add the ``length'' bytes from ``header'' to the given ``eax'' stream.  Once the message is finished the 
 ``tag'' (checksum) may be computed with the following function.
 
+\index{eax\_done()}
 \begin{verbatim}
 int eax_done(eax_state *eax, 
              unsigned char *tag, unsigned long *taglen);
@@ -855,19 +946,102 @@ This will terminate the EAX state ``eax'' and store upto ``taglen'' bytes of the
 then stores how many bytes of the tag were written out back into ``taglen''.
 
 The EAX mode code can be tested to ensure it matches the test vectors by calling the following function.
+\index{eax\_test()}
 \begin{verbatim}
 int eax_test(void);
 \end{verbatim}
 This requires that the AES (or Rijndael) block cipher be registered with the cipher\_descriptor table first.
 
+\begin{verbatim}
+#include <mycrypt.h>
+int main(void)
+{
+   int           err;
+   eax_state     eax;
+   unsigned char pt[64], ct[64], nonce[16], key[16], tag[16];
+   unsigned long taglen;
+
+   if (register_cipher(&rijndael_desc) == -1) {
+      printf("Error registering Rijndael");
+      return EXIT_FAILURE;
+   }
+
+   /* ... make up random nonce and key ... */
+
+   /* initialize context */
+   if ((err = eax_init(            &eax,  /* the context */
+                find_cipher("rijndael"),  /* cipher we want to use */
+                                  nonce,  /* our state nonce */
+                                     16,  /* none is 16 bytes */
+                              "TestApp",  /* example header, identifies this program */
+                                      7)  /* length of the header */
+       ) != CRYPT_OK) {
+      printf("Error eax_init: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* now encrypt data, say in a loop or whatever */
+   if ((err = eax_encrypt(     &eax,      /* eax context */
+                                 pt,      /* plaintext  (source) */
+                                 ct,      /* ciphertext (destination) */
+                          sizeof(pt)      /* size of plaintext */
+      ) != CRYPT_OK) {
+      printf("Error eax_encrypt: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* finish message and get authentication tag */
+   taglen = sizeof(tag);
+   if ((err = eax_done(   &eax,           /* eax context */
+                           tag,           /* where to put tag */
+                       &taglen            /* length of tag space */
+      ) != CRYPT_OK) {
+      printf("Error eax_done: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* now we have the authentication tag in "tag" and it's taglen bytes long */
+
+}
+\end{verbatim}
+                       
+You can also perform an entire EAX state on a block of memory in a single function call with the 
+following functions.
+
+
+\index{eax\_encrypt\_authenticate\_memory} \index{eax\_decrypt\_verify\_memory}
+\begin{verbatim}
+int eax_encrypt_authenticate_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  unsigned long noncelen,
+    const unsigned char *header, unsigned long headerlen,
+    const unsigned char *pt,     unsigned long ptlen,
+          unsigned char *ct,
+          unsigned char *tag,    unsigned long *taglen);
+
+int eax_decrypt_verify_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  unsigned long noncelen,
+    const unsigned char *header, unsigned long headerlen,
+    const unsigned char *ct,     unsigned long ctlen,
+          unsigned char *pt,
+          unsigned char *tag,    unsigned long taglen,
+          int           *res);
+\end{verbatim}
+
+Both essentially just call eax\_init() followed by eax\_encrypt() (or eax\_decrypt() respectively) and eax\_done().  The parameters
+have the same meaning as with those respective functions.  
+
+The only difference is eax\_decrypt\_verify\_memory() does not emit a tag.  Instead you pass it a tag as input and it compares it against
+the tag it computed while decrypting the message.  If the tags match then it stores a $1$ in ``res'', otherwise it stores a $0$.
+
 \subsection{OCB Mode}
 LibTomCrypt provides support for a mode called OCB\footnote{See 
 P. Rogaway, M. Bellare, J. Black, T. Krovetz, ``OCB: A Block Cipher Mode of Operation for Efficient Authenticated Encryption''.}
-in a mode somewhat similar to as it was meant to be used.
-
-OCB is an encryption protocol that simultaneously provides authentication.  It is slightly faster to use than EAX mode
+.  OCB is an encryption protocol that simultaneously provides authentication.  It is slightly faster to use than EAX mode
 but is less flexible.  Let's review how to initialize an OCB context.
 
+\index{ocb\_init()}
 \begin{verbatim}
 int ocb_init(ocb_state *ocb, int cipher, 
              const unsigned char *key, unsigned long keylen, 
@@ -876,11 +1050,12 @@ int ocb_init(ocb_state *ocb, int cipher,
 
 This will initialize the ``ocb'' context using cipher descriptor ``cipher''.  It will use a ``key'' of length ``keylen''
 and the random ``nonce''.  Note that ``nonce'' must be a random (public) string the same length as the block ciphers
-block size (e.g. 16 for AES).
+block size (e.g. 16 bytes for AES).
 
 This mode has no ``Associated Data'' like EAX mode does which means you cannot authenticate metadata along with the stream.
 To encrypt or decrypt data use the following.
 
+\index{ocb\_encrypt()} \index{ocb\_decrypt()}
 \begin{verbatim}
 int ocb_encrypt(ocb_state *ocb, const unsigned char *pt, unsigned char *ct);
 int ocb_decrypt(ocb_state *ocb, const unsigned char *ct, unsigned char *pt);
@@ -893,6 +1068,7 @@ states (with different nonces).  Also ``pt'' and ``ct'' may point to the same lo
 
 When you are finished encrypting the message you call the following function to compute the tag.
 
+\index{ocb\_done\_encrypt()}
 \begin{verbatim}
 int ocb_done_encrypt(ocb_state *ocb, 
                      const unsigned char *pt, unsigned long ptlen,
@@ -909,6 +1085,7 @@ an input message equal to the length of the block size then you pass the data he
 
 To terminate a decrypt stream and compared the tag you call the following.
 
+\index{ocb\_done\_decrypt()}
 \begin{verbatim}
 int ocb_done_decrypt(ocb_state *ocb, 
                      const unsigned char *ct,  unsigned long ctlen,
@@ -924,6 +1101,7 @@ message).
 
 To make life simpler the following two functions are provided for memory bound OCB.
 
+\index{ocb\_encrypt\_authenticate\_memory()}
 \begin{verbatim}
 int ocb_encrypt_authenticate_memory(int cipher,
     const unsigned char *key,    unsigned long keylen,
@@ -936,6 +1114,7 @@ int ocb_encrypt_authenticate_memory(int cipher,
 This will OCB encrypt the message ``pt'' of length ``ptlen'' and store the ciphertext in ``ct''.  The length ``ptlen''
 can be any arbitrary length.  
 
+\index{ocb\_decrypt\_verify\_memory()}
 \begin{verbatim}
 int ocb_decrypt_verify_memory(int cipher,
     const unsigned char *key,    unsigned long keylen,
@@ -948,8 +1127,6 @@ int ocb_decrypt_verify_memory(int cipher,
 
 Similarly this will OCB decrypt and compare the internally computed tag against the tag provided. ``res'' is set 
 appropriately.
-
-
 
 \chapter{One-Way Cryptographic Hash Functions}
 \section{Core Functions}
@@ -1020,7 +1197,6 @@ int main(void)
 \end{small}
 
 \section{Hash Descriptors}
-\index{Hash Descriptors}
 Like the set of ciphers the set of hashes have descriptors too.  They are stored in an array called ``hash\_descriptor'' and
 are defined by:
 \begin{verbatim}
@@ -1116,7 +1292,7 @@ To perform the above hash with md5 the following code could be used:
 #include <mycrypt.h>
 int main(void)
 {
-   int idx, errno;
+   int idx, err;
    unsigned long len;
    unsigned char out[MAXBLOCKSIZE];
 
@@ -1131,8 +1307,8 @@ int main(void)
 
    /* call the hash */
    len = sizeof(out);
-   if ((errno = hash_memory(idx, "hello world", 11, out, &len)) != CRYPT_OK) {
-      printf("Error hashing data: %s\n", error_to_string(errno));
+   if ((err = hash_memory(idx, "hello world", 11, out, &len)) != CRYPT_OK) {
+      printf("Error hashing data: %s\n", error_to_string(err));
       return -1;
    }
    return 0;
@@ -1141,6 +1317,7 @@ int main(void)
 \end{small}
 
 The following hashes are provided as of this release:
+\index{Hash descriptor table}
 \begin{center}
 \begin{tabular}{|c|c|c|}
       \hline Name & Descriptor Name & Size of Message Digest (bytes) \\
@@ -1162,6 +1339,7 @@ The following hashes are provided as of this release:
 
 Similar to the cipher descriptor table you must register your hash algorithms before you can use them.  These functions
 work exactly like those of the cipher registration code.  The functions are:
+\index{register\_hash()} \index{unregister\_hash()}
 \begin{verbatim}
 int register_hash(const struct _hash_descriptor *hash);
 int unregister_hash(const struct _hash_descriptor *hash);
@@ -1185,6 +1363,7 @@ eavesdropper will not be able to verify the authenticity of a message.
 The HMAC support works much like the normal hash functions except that the initialization routine requires you to pass a key 
 and its length.  The key is much like a key you would pass to a cipher.  That is, it is simply an array of octets stored in
 chars.  The initialization routine is:
+\index{hmac\_init()}
 \begin{verbatim}
 int hmac_init(hmac_state *hmac, int hash, 
               const unsigned char *key, unsigned long keylen);
@@ -1192,6 +1371,7 @@ int hmac_init(hmac_state *hmac, int hash,
 The ``hmac'' parameter is the state for the HMAC code.  ``hash'' is the index into the descriptor table of the hash you want
 to use to authenticate the message.  ``key'' is the pointer to the array of chars that make up the key.  ``keylen'' is the
 length (in octets) of the key you want to use to authenticate the message.  To send octets of a message through the HMAC system you must use the following function:
+\index{hmac\_process()}
 \begin{verbatim}
 int hmac_process(hmac_state *hmac, const unsigned char *buf,
                   unsigned long len);
@@ -1199,6 +1379,7 @@ int hmac_process(hmac_state *hmac, const unsigned char *buf,
 ``hmac'' is the HMAC state you are working with. ``buf'' is the array of octets to send into the HMAC process.  ``len'' is the
 number of octets to process.  Like the hash process routines you can send the data in arbitrarly sized chunks. When you 
 are finished with the HMAC process you must call the following function to get the HMAC code:
+\index{hmac\_done()}
 \begin{verbatim}
 int hmac_done(hmac_state *hmac, unsigned char *hashOut,
               unsigned long *outlen);
@@ -1212,6 +1393,7 @@ There are two  utility functions provided to make using HMACs easier todo.  They
 message (file pointer, address in memory) and produce the HMAC result in one shot.  These are useful if you want to avoid
 calling the three step process yourself.
 
+\index{hmac\_memory()}
 \begin{verbatim}
 int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
                 const unsigned char *data, unsigned long len, 
@@ -1221,6 +1403,7 @@ This will produce an HMAC code for the array of octets in ``data'' of length ``l
 table must be provided in ``hash''.  It uses the key from ``key'' with a key length of ``keylen''.  
 The result is stored in the array of octets ``dst'' and the length in ``dstlen''.  The value of ``dstlen'' must be set
 to the size of the destination buffer before calling this function.  Similarly for files there is the  following function:
+\index{hmac\_file()}
 \begin{verbatim}
 int hmac_file(int hash, const char *fname, const unsigned char *key,
               unsigned long keylen, 
@@ -1231,6 +1414,7 @@ int hmac_file(int hash, const char *fname, const unsigned char *key,
 result should be stored.
 
 To test if the HMAC code is working there is the following function:
+\index{hmac\_test()}
 \begin{verbatim}
 int hmac_test(void);
 \end{verbatim}
@@ -1242,7 +1426,7 @@ HMAC system is given below.
 #include <mycrypt.h>
 int main(void)
 {
-   int idx, errno;
+   int idx, err;
    hmac_state hmac;
    unsigned char key[16], dst[MAXBLOCKSIZE];
    unsigned long dstlen;
@@ -1259,21 +1443,21 @@ int main(void)
    /* we would make up our symmetric key in "key[]" here */
 
    /* start the HMAC */
-   if ((errno = hmac_init(&hmac, idx, key, 16)) != CRYPT_OK) {
-      printf("Error setting up hmac: %s\n", error_to_string(errno));
+   if ((err = hmac_init(&hmac, idx, key, 16)) != CRYPT_OK) {
+      printf("Error setting up hmac: %s\n", error_to_string(err));
       return -1;
    }
 
    /* process a few octets */
-   if((errno = hmac_process(&hmac, "hello", 5) != CRYPT_OK) {
-      printf("Error processing hmac: %s\n", error_to_string(errno));
+   if((err = hmac_process(&hmac, "hello", 5) != CRYPT_OK) {
+      printf("Error processing hmac: %s\n", error_to_string(err));
       return -1;
    }
 
    /* get result (presumably to use it somehow...) */
    dstlen = sizeof(dst);
-   if ((errno = hmac_done(&hmac, dst, &dstlen)) != CRYPT_OK) {
-      printf("Error finishing hmac: %s\n", error_to_string(errno));
+   if ((err = hmac_done(&hmac, dst, &dstlen)) != CRYPT_OK) {
+      printf("Error finishing hmac: %s\n", error_to_string(err));
       return -1;
    }
    printf("The hmac is %lu bytes long\n", dstlen);
@@ -1290,7 +1474,7 @@ algorithm which produces a Message Authentication Code (MAC) using only a block 
 standpoint the OMAC routines work much like the HMAC routines do.  Instead in this case a cipher is used instead of a hash.  
 
 To start an OMAC state you call
-
+\index{omac\_init()}
 \begin{verbatim}
 int omac_init(omac_state *omac, int cipher, 
               const unsigned char *key, unsigned long keylen);
@@ -1300,6 +1484,7 @@ of the cipher\footnote{The cipher must have a 64 or 128 bit block size.  Such as
 wish to use.  ``key'' and ``keylen'' are the keys used to authenticate the data.
 
 To send data through the algorithm call
+\index{omac\_process()}
 \begin{verbatim}
 int omac_process(omac_state *state, 
                  const unsigned char *buf, unsigned long len);
@@ -1320,6 +1505,7 @@ omac_process(&mystate, "hello world",  11);
 
 When you are done processing the message you can call the following to compute the message tag.
 
+\index{omac\_done()}
 \begin{verbatim}
 int omac_done(omac_state *state, 
               unsigned char *out, unsigned long *outlen);
@@ -1333,6 +1519,7 @@ size to show how many bytes were actually used.
 Similar to the HMAC code the file and memory functions are also provided.  To OMAC a buffer of memory in one shot use the 
 following function.
 
+\index{omac\_memory()}
 \begin{verbatim}
 int omac_memory(int cipher, 
                 const unsigned char *key, unsigned long keylen,
@@ -1344,6 +1531,7 @@ specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will s
 rules as omac\_done.
 
 To OMAC a file use
+\index{omac\_file()}
 \begin{verbatim}
 int omac_file(int cipher, 
               const unsigned char *key, unsigned long keylen,
@@ -1356,6 +1544,7 @@ and the cipher specified by the ``cipher'''th entry in the cipher\_descriptor ta
 the same rules as omac\_done.
 
 To test if the OMAC code is working there is the following function:
+\index{omac\_test()}
 \begin{verbatim}
 int omac_test(void);
 \end{verbatim}
@@ -1416,6 +1605,7 @@ API as the provided OMAC code.
 
 A PMAC state is initialized with the following.
 
+\index{pmac\_init()}
 \begin{verbatim}
 int pmac_init(pmac_state *pmac, int cipher, 
               const unsigned char *key, unsigned long keylen);
@@ -1425,6 +1615,7 @@ must have a 64 or 128 bit block size (e.x. AES).
 
 To MAC data simply send it through the process function.
 
+\index{pmac\_process()}
 \begin{verbatim}
 int pmac_process(pmac_state *state, 
                  const unsigned char *buf, unsigned long len);
@@ -1445,6 +1636,7 @@ pmac_process(&mystate, "hello world",  11);
 
 When a complete message has been processed the following function can be called to compute the message tag.
 
+\index{pmac\_done()}
 \begin{verbatim}
 int pmac_done(pmac_state *state, 
               unsigned char *out, unsigned long *outlen);
@@ -1455,6 +1647,7 @@ than the size of the tag it is set to the amount of bytes stored in ``out''.
 Similar to the PMAC code the file and memory functions are also provided.  To PMAC a buffer of memory in one shot use the 
 following function.
 
+\index{pmac\_memory()}
 \begin{verbatim}
 int pmac_memory(int cipher, 
                 const unsigned char *key, unsigned long keylen,
@@ -1466,6 +1659,7 @@ specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will s
 rules as omac\_done.
 
 To PMAC a file use
+\index{pmac\_file()}
 \begin{verbatim}
 int pmac_file(int cipher, 
               const unsigned char *key, unsigned long keylen,
@@ -1716,8 +1910,12 @@ int main(void)
 \end{small}
 
 \chapter{RSA Public Key Cryptography}
-\textbf{Note: } \textit{This chapter on PKCS \#1 RSA will replace the older chapter on RSA (The current chapter nine) in subsequent 
-releases of the library.  Users are encouraged to stop using the LibTomCrypt style padding functions.}
+
+\section{Introduction}
+RSA wrote the PKCS \#1 specifications which detail RSA Public Key Cryptography.  In the specifications are
+padding algorithms for encryption and signatures.  The standard includes ``v1.5'' and ``v2.0'' algorithms.
+To simplify matters a little the v2.0 encryption and signature padding algorithms are called OAEP and PSS 
+respectively.  
 
 \section{PKCS \#1 Encryption}
 
@@ -1726,11 +1924,12 @@ the library is concerned we are only dealing with th OAEP padding of the message
 
 \subsection{OAEP Encoding}
 
+\index{pkcs\_1\_oaep\_encode()}
 \begin{alltt}
 int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
                        const unsigned char *lparam, unsigned long lparamlen,
-                             unsigned long modulus_bitlen, int hash_idx,
-                             int           prng_idx,    prng_state *prng,
+                             unsigned long modulus_bitlen, prng_state *prng,
+                             int           prng_idx,         int  hash_idx,
                              unsigned char *out,    unsigned long *outlen);
 \end{alltt}
 
@@ -1752,11 +1951,13 @@ rsa\_exptmod() to encrypt it.
 
 \subsection{OAEP Decoding}
 
+\index{pkcs\_1\_oaep\_decode()}
 \begin{alltt}
 int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
                        const unsigned char *lparam, unsigned long lparamlen,
                              unsigned long modulus_bitlen, int hash_idx,
-                             unsigned char *out,    unsigned long *outlen);
+                             unsigned char *out,    unsigned long *outlen,
+                             int           *res);
 \end{alltt}
 
 This function decodes an OAEP encoded message and outputs the original message that was passed to the OAEP encoder.  ``msg'' is the 
@@ -1765,17 +1966,47 @@ match what was used during encoding this function will not decode the packet.  `
 and must match what was used during encoding.  Similarly the ``hash\_idx'' index into the hash descriptor table must match what was used
 during encoding.
 
-If the function succeeds it decodes the OAEP encoded message into ``out'' of length ``outlen''.  
+If the function succeeds it decodes the OAEP encoded message into ``out'' of length ``outlen'' and stores a 
+$1$ in ``res''.  If the packet is invalid it stores $0$ in ``res'' and if the function fails for another reason
+it returns an error code.  
+
+\subsection{PKCS \#1 v1.5 Encoding}
+
+\index{pkcs\_1\_v15\_es\_encode()}
+\begin{verbatim}
+int pkcs_1_v15_es_encode(const unsigned char *msg,    unsigned long msglen,
+                               unsigned long  modulus_bitlen, 
+                               prng_state    *prng,   int           prng_idx,
+                               unsigned char *out,    unsigned long *outlen);
+\end{verbatim}
+
+This will PKCS v1.5 encode the data in ``msg'' of length ``msglen''.  Pass the length (in bits) of your
+RSA modulus in ``modulus\_bitlen''.  The encoded data will be stored in ``out'' of length ``outlen''.
+
+\subsection{PKCS \#1 v1.5 Decoding}
+\index{pkcs\_1\_v15\_es\_decode()}
+\begin{verbatim}
+int pkcs_1_v15_es_decode(const unsigned char *msg,  unsigned long msglen,
+                               unsigned long modulus_bitlen,
+                               unsigned char *out,  unsigned long outlen,
+                               int           *res);
+\end{verbatim}
+
+This will PKCS v1.5 decode the message in ``msg'' of length ``msglen''.  It will store the output in ``out''. Note
+that the length of the output ``outlen'' is a constant.  This decoder cannot determine the original message 
+length.  If the data in ``msg'' is a valid packet then a $1$ is stored in ``res'', otherwise a $0$ is 
+stored.
 
 \section{PKCS \#1 Digital Signatures}
 
 \subsection{PSS Encoding}
 PSS encoding is the second half of the PKCS \#1 standard which is padding to be applied to messages that are signed.  
 
+\index{pkcs\_1\_pss\_encode()}
 \begin{alltt}
 int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
-                            unsigned long saltlen,  int           hash_idx,
-                            int           prng_idx, prng_state   *prng,
+                            unsigned long saltlen,  prng_state   *prng,     
+                            int           prng_idx, int           hash_idx,
                             unsigned long modulus_bitlen,
                             unsigned char *out,     unsigned long *outlen);
 \end{alltt}
@@ -1785,7 +2016,7 @@ This function assumes the message to be PSS encoded has previously been hashed. 
 ``hash\_idx'' is the index into the hash descriptor table of the hash to use.  ``prng\_idx'' and ``prng'' are the random
 number generator information required for the salt.
 
-Similar to OAEP encoding ``modulus\_bitlen'' is the size of the RSA modulus.  It limits the size of the salt.  If $m$ is the length
+Similar to OAEP encoding ``modulus\_bitlen'' is the size of the RSA modulus (in bits).  It limits the size of the salt.  If $m$ is the length
 of the modulus $h$ the length of the hash output (in octets) then there can be $m - h - 2$ bytes of salt.  
 
 This function does not actually sign the data it merely pads the hash of a message so that it can be processed by rsa\_exptmod().
@@ -1794,6 +2025,7 @@ This function does not actually sign the data it merely pads the hash of a messa
 
 To decode a PSS encoded signature block you have to use the following.
 
+\index{pkcs\_1\_pss\_decode()}
 \begin{alltt}
 int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
                       const unsigned char *sig,     unsigned long siglen,
@@ -1806,6 +2038,240 @@ it is set to zero.  The rest of the parameters are as in the PSS encode call.
 
 It's important to use the same ``saltlen'' and hash for both encoding and decoding as otherwise the procedure will not work.
 
+\subsection{PKCS \#1 v1.5 Encoding}
+
+\index{pkcs\_1\_v15\_sa\_encode()}
+\begin{verbatim}
+int pkcs_1_v15_sa_encode(const unsigned char *msghash,  unsigned long msghashlen,
+                               int            hash_idx, unsigned long modulus_bitlen,
+                               unsigned char *out,      unsigned long *outlen);
+\end{verbatim}
+
+This will PKCS \#1 v1.5 signature encode the message hash ``msghash''  of length ``msghashlen''.  You have
+to tell this routine which hash produced the message hash in ``hash\_idx''.  The encoded hash is stored
+in ``out'' of length ``outlen''.
+
+\subsection{PKCS \#1 v1.5 Decoding}
+
+\index{pkcs\_1\_v15\_sa\_decode()}
+\begin{verbatim}
+int pkcs_1_v15_sa_decode(const unsigned char *msghash, unsigned long msghashlen,
+                         const unsigned char *sig,     unsigned long siglen,
+                               int           hash_idx, unsigned long modulus_bitlen, 
+                               int          *res);
+\end{verbatim}
+
+This will PKCS \#1 v1.5 signature decode the data in ``sig'' of length ``siglen'' and compare the extracted
+hash against ``msghash'' of length ``msghashlen''.  You have to tell this routine which hash produced the
+message digest in ``hash\_idx''.  If the packet is valid and the hashes match ``res'' is set to $1$.  Otherwise,
+it is set to $0$.
+
+\section{RSA Operations}
+\subsection{Background}
+
+RSA is a public key algorithm that is based on the inability to find the ``e-th'' root modulo a composite of unknown 
+factorization.  Normally the difficulty of breaking RSA is associated with the integer factoring problem but they are
+not strictly equivalent.
+
+The system begins with with two primes $p$ and $q$ and their product $N = pq$.  The order or ``Euler totient'' of the
+multiplicative sub-group formed modulo $N$ is given as $\phi(N) = (p - 1)(q - 1)$ which can be reduced to 
+$\mbox{lcm}(p - 1, q - 1)$.  The public key consists of the composite $N$ and some integer $e$ such that 
+$\mbox{gcd}(e, \phi(N)) = 1$.  The private key consists of the composite $N$ and the inverse of $e$ modulo $\phi(N)$ 
+often simply denoted as $de \equiv 1\mbox{ }(\mbox{mod }\phi(N))$.
+
+A person who wants to encrypt with your public key simply forms an integer (the plaintext) $M$ such that 
+$1 < M < N-2$ and computes the ciphertext $C = M^e\mbox{ }(\mbox{mod }N)$.  Since finding the inverse exponent $d$
+given only $N$ and $e$ appears to be intractable only the owner of the private key can decrypt the ciphertext and compute
+$C^d \equiv \left (M^e \right)^d \equiv M^1 \equiv M\mbox{ }(\mbox{mod }N)$.  Similarly the owner of the private key 
+can sign a message by ``decrypting'' it.  Others can verify it by ``encrypting'' it.  
+
+Currently RSA is a difficult system to cryptanalyze provided that both primes are large and not close to each other.  
+Ideally $e$ should be larger than $100$ to prevent direct analysis.  For example, if $e$ is three and you do not pad
+the plaintext to be encrypted than it is possible that $M^3 < N$ in which case finding the cube-root would be trivial.  
+The most often suggested value for $e$ is $65537$ since it is large enough to make such attacks impossible and also well 
+designed for fast exponentiation (requires 16 squarings and one multiplication).
+
+It is important to pad the input to RSA since it has particular mathematical structure.  For instance  
+$M_1^dM_2^d = (M_1M_2)^d$ which can be used to forge a signature.  Suppose $M_3 = M_1M_2$ is a message you want
+to have a forged signature for.  Simply get the signatures for $M_1$ and $M_2$ on their own and multiply the result
+together.  Similar tricks can be used to deduce plaintexts from ciphertexts.  It is important not only to sign 
+the hash of documents only but also to pad the inputs with data to remove such structure.  
+
+\subsection{RSA Key Generation}
+
+For RSA routines a single ``rsa\_key'' structure is used.  To make a new RSA key call:
+\index{rsa\_make\_key()}
+\begin{verbatim}
+int rsa_make_key(prng_state *prng, 
+                 int wprng, int size, 
+                 long e, rsa_key *key);
+\end{verbatim}
+
+Where ``wprng'' is the index into the PRNG descriptor array.  ``size'' is the size in bytes of the RSA modulus desired.
+``e'' is the encryption exponent desired, typical values are 3, 17, 257 and 65537.  I suggest you stick with 65537 since its big
+enough to prevent trivial math attacks and not super slow.  ``key'' is where the key is placed.  All keys must be at 
+least 128 bytes and no more than 512 bytes in size (\textit{that is from 1024 to 4096 bits}).
+
+Note that the ``rsa\_make\_key()'' function allocates memory at runtime when you make the key.  Make sure to call 
+``rsa\_free()'' (see below) when you are finished with the key.  If ``rsa\_make\_key()'' fails it will automatically 
+free the ram allocated itself.
+
+There are three types of RSA keys.  The types are {\bf PK\_PRIVATE\_OPTIMIZED}, {\bf PK\_PRIVATE} and {\bf PK\_PUBLIC}.  The first
+two are private keys where the ``optimized'' type uses the Chinese Remainder Theorem to speed up decryption/signatures.  By 
+default all new keys are of the ``optimized'' type.  The non-optimized private type is provided for backwards compatibility
+as well as to save space since the optimized key requires about four times as much memory.
+
+\subsection{RSA Exponentiation}
+
+To do raw work with the RSA function call:
+\index{rsa\_exptmod()}
+\begin{verbatim}
+int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
+                      unsigned char *out,  unsigned long *outlen, int which,
+                      prng_state    *prng, int           prng_idx,
+                      rsa_key *key);
+\end{verbatim}
+This loads the bignum from ``in'' as a big endian word in the format PKCS specifies, raises it to either ``e'' or ``d'' and stores the result
+in ``out'' and the size of the result in ``outlen''. ``which'' is set to {\bf PK\_PUBLIC} to use ``e'' 
+(i.e. for encryption/verifying) and set to {\bf PK\_PRIVATE} to use ``d'' as the exponent (i.e. for decrypting/signing).
+
+Note that the output of his function is zero-padded as per PKCS \#1 specifications.  This allows this routine to 
+interoprate with PKCS \#1 padding functions properly.
+
+\subsection{RSA Key Encryption}
+Normally RSA is used to encrypt short symmetric keys which are then used in block ciphers to encrypt a message.
+To facilitate encrypting short keys the following functions have been provided.
+
+\index{rsa\_encrypt\_key()}
+\begin{verbatim}
+int rsa_encrypt_key(const unsigned char *inkey,  unsigned long inlen,
+                          unsigned char *outkey, unsigned long *outlen,
+                    const unsigned char *lparam, unsigned long lparamlen,
+                    prng_state *prng, int prng_idx, int hash_idx, rsa_key *key);
+\end{verbatim}
+This function will OAEP pad ``inkey'' of length inlen bytes then RSA encrypt it and store the ciphertext
+in ``outkey'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
+to pkcs\_1\_oaep\_encode().
+
+\index{rsa\_decrypt\_key()}
+\begin{verbatim}
+int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
+                          unsigned char *outkey, unsigned long *keylen, 
+                    const unsigned char *lparam, unsigned long lparamlen,
+                          prng_state    *prng,   int           prng_idx,
+                          int            hash_idx, int *res,
+                          rsa_key       *key);
+\end{verbatim}
+This function will RSA decrypt ``in'' of length ``inlen'' then OAEP depad the resulting data and store it in
+``outkey'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
+to pkcs\_1\_oaep\_decode().
+
+If the RSA decrypted data isn't a valid OAEP packet then ``res'' is set to $0$.  Otherwise, it is set to $1$.
+
+\subsection{RSA Hash Signatures}
+Similar to RSA key encryption RSA is also used to ``digitally sign'' message digests (hashes).  To facilitate this
+process the following functions have been provided.
+
+\index{rsa\_sign\_hash()}
+\begin{verbatim}
+int rsa_sign_hash(const unsigned char *msghash,  unsigned long  msghashlen, 
+                        unsigned char *sig,      unsigned long *siglen, 
+                        prng_state    *prng,     int            prng_idx,
+                        int            hash_idx, unsigned long  saltlen,
+                        rsa_key *key);
+\end{verbatim}
+
+This will PSS encode the message hash ``msghash'' of length ``msghashlen''.  Next the PSS encoded message is
+RSA ``signed'' and the output is stored in ``sig'' of length ``siglen''.  
+
+
+\index{rsa\_verify\_hash()}
+\begin{verbatim}
+int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
+                    const unsigned char *msghash,  unsigned long msghashlen,
+                          prng_state    *prng,     int           prng_idx,
+                          int            hash_idx, unsigned long saltlen,
+                          int           *stat,     rsa_key      *key);
+\end{verbatim}
+
+This will RSA ``verify'' the signature in ``sig'' of length ``siglen''.  Next the RSA decoded data is PSS decoded
+and the extracted hash is compared against the message hash ``msghash'' of length ``msghashlen''.
+
+If the RSA decoded data is not a valid PSS message or if the PSS decoded hash does not match the ``msghash'' 
+the value ``res'' is set to $0$.  Otherwise, if the function succeeds and signature is valid ``res'' is set
+to $1$.
+
+\begin{verbatim}
+#include <mycrypt.h>
+int main(void)
+{
+   int           err, hash_idx, prng_idx, res;
+   unsigned long l1, l2;
+   unsigned char pt[16], pt2[16], out[1024];
+   rsa_key       key;
+
+   /* register prng/hash */
+   if (register_prng(&sprng_desc) == -1) {
+      printf("Error registering sprng");
+      return EXIT_FAILURE;
+   }
+
+   if (register_hash(&sha1_desc) == -1) {
+      printf("Error registering sha1");
+      return EXIT_FAILURE;
+   }
+   hash_idx = find_hash("sha1");
+   prng_idx = find_prng("sprng");
+
+   /* make an RSA-1024 key */
+   if ((err = rsa_make_key(NULL,     /* PRNG state */
+                           prng_idx, /* PRNG idx */
+                           1024/8,   /* 1024-bit key */
+                           65537,    /* we like e=65537 */
+                           &key)     /* where to store the key */
+       ) != CRYPT_OK) {
+       printf("rsa_make_key %s", error_to_string(err));
+       return EXIT_FAILURE;
+   }
+
+   /* fill in pt[] with a key we want to send ... */
+   l1 = sizeof(out);
+   if ((err = rsa_encrypt_key(pt,    /* data we wish to encrypt */
+                              16,    /* data is 16 bytes long */
+                             out,    /* where to store ciphertext */
+                             &l1,    /* length of ciphertext */
+                       "TestApp",    /* our lparam for this program */
+                               7,    /* lparam is 7 bytes long */
+                            NULL,    /* PRNG state */
+                        prng_idx,    /* prng idx */
+                        hash_idx,    /* hash idx */
+                            &key)    /* our RSA key */
+       ) != CRYPT_OK) {
+       printf("rsa_encrypt_key %s", error_to_string(err));
+       return EXIT_FAILURE;
+   }
+
+   /* now let's decrypt the encrypted key */
+   l2 = sizeof(pt2);
+   if ((err = rsa_decrypt_key(out, /* encrypted data */
+                               l1, /* length of ciphertext */
+                              pt2, /* where to put plaintext */
+                              &l2, /* plaintext length */
+                        "TestApp", /* lparam for this program */
+                                7, /* lparam is 7 bytes long */
+                             NULL, /* PRNG state */
+                         prng_idx, /* prng idx */
+                         hash_idx, /* hash idx */
+                             &res, /* validity of data */
+                             &key) /* our RSA key */ 
+        ) != CRYPT_OK) {
+       printf("rsa_decrypt_key %s", error_to_string(err));
+       return EXIT_FAILURE;
+   }
+   /* if all went well pt == pt2, l2 == 16, res == 1 */
+}
+\end{verbatim}
+
 \chapter{Password Based Cryptography}
 \section{PKCS \#5}
 In order to securely handle user passwords for the purposes of creating session keys and chaining IVs the PKCS \#5 was drafted.   PKCS \#5
@@ -1817,6 +2283,7 @@ Algorithm One accepts as input a password, an 8--byte salt and an iteration coun
 people trying to brute force guess the password.  The higher the iteration counter the longer the delay.  This algorithm also requires a hash 
 algorithm and produces an output no longer than the output of the hash.  
 
+\index{pkcs\_5\_alg1()}
 \begin{alltt}
 int pkcs_5_alg1(const unsigned char *password, unsigned long password_len, 
                 const unsigned char *salt, 
@@ -1836,6 +2303,7 @@ Algorithm Two is the recommended algorithm for this task.  It allows variable le
 hash functions output.  As such it can easily be used to derive session keys for ciphers and MACs as well initial vectors as required
 from a single password and invokation of this algorithm.
 
+\index{pkcs\_5\_alg2()}
 \begin{alltt}
 int pkcs_5_alg2(const unsigned char *password, unsigned long password_len, 
                 const unsigned char *salt,     unsigned long salt_len,
@@ -1877,161 +2345,6 @@ int main(void)
     /* use material (recall to store the salt in the output) */
 \}
 \end{alltt}
-
-\chapter{RSA Routines}
-
-\textbf{Note: } \textit{This chapter has been marked for removal.  In particular any function that uses the LibTomCrypt style 
-RSA padding (e.g. rsa\_pad() rsa\_signpad())  will be removed in the v0.96 release cycle.  The functions like rsa\_make\_key() and
-rsa\_exptmod() will stay but may be slightly modified. }
-
-\section{Background}
-
-RSA is a public key algorithm that is based on the inability to find the ``e-th'' root modulo a composite of unknown 
-factorization.  Normally the difficulty of breaking RSA is associated with the integer factoring problem but they are
-not strictly equivalent.
-
-The system begins with with two primes $p$ and $q$ and their product $N = pq$.  The order or ``Euler totient'' of the
-multiplicative sub-group formed modulo $N$ is given as $\phi(N) = (p - 1)(q - 1)$ which can be reduced to 
-$\mbox{lcm}(p - 1, q - 1)$.  The public key consists of the composite $N$ and some integer $e$ such that 
-$\mbox{gcd}(e, \phi(N)) = 1$.  The private key consists of the composite $N$ and the inverse of $e$ modulo $\phi(N)$ 
-often simply denoted as $de \equiv 1\mbox{ }(\mbox{mod }\phi(N))$.
-
-A person who wants to encrypt with your public key simply forms an integer (the plaintext) $M$ such that 
-$1 < M < N-2$ and computes the ciphertext $C = M^e\mbox{ }(\mbox{mod }N)$.  Since finding the inverse exponent $d$
-given only $N$ and $e$ appears to be intractable only the owner of the private key can decrypt the ciphertext and compute
-$C^d \equiv \left (M^e \right)^d \equiv M^1 \equiv M\mbox{ }(\mbox{mod }N)$.  Similarly the owner of the private key 
-can sign a message by ``decrypting'' it.  Others can verify it by ``encrypting'' it.  
-
-Currently RSA is a difficult system to cryptanalyze provided that both primes are large and not close to each other.  
-Ideally $e$ should be larger than $100$ to prevent direct analysis.  For example, if $e$ is three and you do not pad
-the plaintext to be encrypted than it is possible that $M^3 < N$ in which case finding the cube-root would be trivial.  
-The most often suggested value for $e$ is $65537$ since it is large enough to make such attacks impossible and also well 
-designed for fast exponentiation (requires 16 squarings and one multiplication).
-
-It is important to pad the input to RSA since it has particular mathematical structure.  For instance  
-$M_1^dM_2^d = (M_1M_2)^d$ which can be used to forge a signature.  Suppose $M_3 = M_1M_2$ is a message you want
-to have a forged signature for.  Simply get the signatures for $M_1$ and $M_2$ on their own and multiply the result
-together.  Similar tricks can be used to deduce plaintexts from ciphertexts.  It is important not only to sign 
-the hash of documents only but also to pad the inputs with data to remove such structure.  
-
-\section{Core Functions}
-
-For RSA routines a single ``rsa\_key'' structure is used.  To make a new RSA key call:
-\index{rsa\_make\_key()}
-\begin{verbatim}
-int rsa_make_key(prng_state *prng, 
-                 int wprng, int size, 
-                 long e, rsa_key *key);
-\end{verbatim}
-
-Where ``wprng'' is the index into the PRNG descriptor array.  ``size'' is the size in bytes of the RSA modulus desired.
-``e'' is the encryption exponent desired, typical values are 3, 17, 257 and 65537.  I suggest you stick with 65537 since its big
-enough to prevent trivial math attacks and not super slow.  ``key'' is where the key is placed.  All keys must be at 
-least 128 bytes and no more than 512 bytes in size (\textit{that is from 1024 to 4096 bits}).
-
-Note that the ``rsa\_make\_key()'' function allocates memory at runtime when you make the key.  Make sure to call 
-``rsa\_free()'' (see below) when you are finished with the key.  If ``rsa\_make\_key()'' fails it will automatically 
-free the ram allocated itself.
-
-There are three types of RSA keys.  The types are {\bf PK\_PRIVATE\_OPTIMIZED}, {\bf PK\_PRIVATE} and {\bf PK\_PUBLIC}.  The first
-two are private keys where the ``optimized'' type uses the Chinese Remainder Theorem to speed up decryption/signatures.  By 
-default all new keys are of the ``optimized'' type.  The non-optimized private type is provided for backwards compatibility
-as well as to save space since the optimized key requires about four times as much memory.
-
-To do raw work with the RSA function call:
-\index{rsa\_exptmod()}
-\begin{verbatim}
-int rsa_exptmod(const unsigned char *in, unsigned long inlen, 
-                unsigned char *out, unsigned long *outlen, 
-                int which, rsa_key *key);
-\end{verbatim}
-This loads the bignum from ``in'' as a big endian word in the format PKCS specifies, raises it to either ``e'' or ``d'' and stores the result
-in ``out'' and the size of the result in ``outlen''. ``which'' is set to {\bf PK\_PUBLIC} to use ``e'' 
-(i.e. for encryption/verifying) and set to {\bf PK\_PRIVATE} to use ``d'' as the exponent (i.e. for decrypting/signing).
-
-Note that this function does not perform padding on the input (as per PKCS).  So if you send in ``0000001'' you will
-get ``01'' back (when you do the opposite operation).  Make sure you pad properly which usually involves setting the msb to
-a non-zero value.
-
-\section{Packet Routines}
-To encrypt or decrypt a symmetric key using RSA the following functions are provided.  The idea is that you make up
-a random symmetric key and use that to encode your message.  By RSA encrypting the symmetric key you can send it to a
-recipient who can RSA decrypt it and symmetrically decrypt the message.
-\begin{verbatim}
-int rsa_encrypt_key(const unsigned char *inkey, unsigned long inlen,
-                          unsigned char *outkey, unsigned long *outlen,
-                          prng_state *prng, int wprng, rsa_key *key);
-\end{verbatim}
-This function is used to RSA encrypt a symmetric to share with another user.  The symmetric key and its length are
-passed as ``inkey'' and ``inlen'' respectively.  The symmetric key is limited to a range of 8 to 32 bytes 
-(\textit{64 to 256 bits}).  The RSA encrypted packet is stored in ``outkey'' and will be of length ``outlen'' bytes.  The
-value of ``outlen'' must be originally set to the size of the output buffer. 
-
-\begin{verbatim}
-int rsa_decrypt_key(const unsigned char *in, unsigned long inlen, 
-                          unsigned char *outkey, unsigned long *keylen, 
-                          rsa_key *key);
-\end{verbatim}
-
-This function will decrypt an RSA packet to retrieve the original symmetric key encrypted with rsa\_encrypt\_key().  
-Similarly to sign or verify a hash of a message the following two messages are provided.  The idea is to hash your message 
-then use these functions to RSA sign the hash.  
-\begin{verbatim}
-int rsa_sign_hash(const unsigned char *in,  unsigned long inlen, 
-                        unsigned char *out, unsigned long *outlen, 
-                        rsa_key *key);
-
-int rsa_verify_hash(const unsigned char *sig, unsigned long siglen,
-                    const unsigned char *hash, int *stat, rsa_key *key);
-\end{verbatim}
-For ``rsa\_sign\_hash'' the input is intended to be the hash of a message the user wants to sign.  The output is the 
-RSA signed packet which ``rsa\_verify\_hash'' can verify.  For the verification function ``sig'' is the RSA signature
-and ``hash'' is the hash of the message.  The integer ``stat'' is set to non-zero if the signature is valid or zero 
-otherwise.
-
-To import/export RSA keys as a memory buffer (e.g. to store them to disk) call:
-\begin{verbatim}
-int rsa_export(unsigned char *out, unsigned long *outlen, 
-               int type, rsa_key *key);
-
-int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key);
-\end{verbatim}
-
-The ``type'' parameter is {\bf PK\_PUBLIC}, {\bf PK\_PRIVATE} or {\bf PK\_PRIVATE\_OPTIMIZED} to export either a public or 
-private key.  The latter type will export a key with the optimized parameters.  To free the memory used by an RSA key call:
-\index{rsa\_free()}
-\begin{verbatim}
-void rsa_free(rsa_key *key);
-\end{verbatim}
-
-Note that if the key fails to ``rsa\_import()'' you do not have to free the memory allocated for it.
-
-\section{Remarks}
-It is important that you match your RSA key size with the function you are performing.  The internal padding for both
-signatures and encryption triple the size of the plaintext.  This means to encrypt or sign
-a message of N bytes you must have a modulus of 1+3N bytes.  Note that this doesn't affect the length of the plaintext 
-you pass into functions like rsa\_encrypt().  This restriction applies only to data that is passed through the
-internal RSA routines directly directly.
-
-The following table gives the size requirements for various hashes.
-\begin{center}
-\begin{tabular}{|c|c|c|}
-      \hline Name & Size of Message Digest (bytes) & RSA Key Size (bits)\\
-      \hline SHA-512 & 64 & 1544\\
-      \hline SHA-384 & 48 & 1160 \\
-      \hline SHA-256 & 32 & 776\\
-      \hline TIGER-192 & 24 & 584\\
-      \hline SHA-1 & 20 & 488\\
-      \hline MD5 & 16 & 392\\
-      \hline MD4 & 16 & 392\\
-      \hline
-\end{tabular}
-\end{center}
-
-The symmetric ciphers will use at a maximum a 256-bit key which means at the least a 776-bit RSA key is 
-required to use all of the symmetric ciphers with the RSA routines. If you want to use any of the large size 
-message digests (SHA-512 or SHA-384) you will have to use a larger key.  Or to be simple just make 2048-bit or larger
-keys.  None of the hashes will have problems with such key sizes.
 
 \chapter{Diffie-Hellman Key Exchange}
 
@@ -2224,6 +2537,7 @@ Which stores the smallest and largest key sizes support into the two variables.
 \section{DH Packet}
 Similar to the RSA related functions there are functions to encrypt or decrypt symmetric keys using the DH public key
 algorithms.  
+\index{dh\_encrypt\_key()} \index{dh\_decrypt\_key()}
 \begin{verbatim}
 int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
                          unsigned char *out,  unsigned long *len, 
@@ -2240,6 +2554,7 @@ required data is placed in ``out'' by ``dh\_encrypt\_key()''.   The hash must pr
 as the symmetric key you are trying to share.
 
 Similar to the RSA system you can sign and verify a hash of a message.
+\index{dh\_sign\_hash()} \index{dh\_verify\_hash()}
 \begin{verbatim}
 int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
                        unsigned char *out, unsigned long *outlen,
@@ -2334,6 +2649,8 @@ Which both work like their DH counterparts.
 \section{ECC Packet}
 Similar to the RSA API there are two functions which encrypt and decrypt symmetric keys using the ECC public key
 algorithms.
+
+\index{ecc\_encrypt\_key()} \index{ecc\_decrypt\_key()}
 \begin{verbatim}
 int ecc_encrypt_key(const unsigned char *inkey, unsigned long keylen,
                           unsigned char *out,  unsigned long *len, 
@@ -2351,6 +2668,7 @@ data is placed in ``out'' by ``ecc\_encrypt\_key()''.   The hash chosen must pro
 as the symmetric key you are trying to share.
 
 There are also functions to sign and verify the hash of a message.
+\index{ecc\_sign\_hash()} \index{ecc\_verify\_hash()}
 \begin{verbatim}
 int ecc_sign_hash(const unsigned char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen,
@@ -2409,6 +2727,7 @@ $15 < group\_size < 1024$ and $modulus\_size - group\_size < 512$.  Suggested va
 \end{center}
 
 When you are finished with a DSA key you can call the following function to free the memory used.
+\index{dsa\_free()}
 \begin{verbatim}
 void dsa_free(dsa_key *key);
 \end{verbatim}
@@ -2447,6 +2766,7 @@ that $y$ belongs to a multiplicative sub-group of order $q$.
 
 The following function will perform these tests.
 
+\index{dsa\_verify\_key()}
 \begin{verbatim}
 int dsa_verify_key(dsa_key *key, int *stat);
 \end{verbatim}
@@ -2459,6 +2779,7 @@ and should not be used at all.  If the result is $stat = 1$ the DSA key is valid
 \section{Signatures}
 To generate a DSA signature call the following function
 
+\index{dsa\_sign\_hash()}
 \begin{verbatim}
 int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen,
@@ -2471,6 +2792,7 @@ is stored and the function returns an error code.  The DSA ``key'' must be of th
 
 To verify a hash created with that function use the following function
 
+\index{dsa\_verify\_hash()} 
 \begin{verbatim}
 int dsa_verify_hash(const unsigned char *sig, unsigned long siglen,
                     const unsigned char *hash, unsigned long inlen, 
@@ -2482,6 +2804,7 @@ It will set ``stat'' to $1$ if the signature is valid, otherwise it sets ``stat'
 \section{Import and Export}
 
 To export a DSA key so that it can be transported use the following function
+\index{dsa\_export()}
 \begin{verbatim}
 int dsa_export(unsigned char *out, unsigned long *outlen, 
                int type, 
@@ -2493,6 +2816,7 @@ depending on whether you want to export a private or public copy of the DSA key.
 
 To import an exported DSA key use the following function
 
+\index{dsa\_import()}
 \begin{verbatim}
 int dsa_import(const unsigned char *in, unsigned long inlen, 
                dsa_key *key);
@@ -2500,239 +2824,6 @@ int dsa_import(const unsigned char *in, unsigned long inlen,
 
 This will import the DSA key from the buffer ``in'' of length ``inlen'' to the ``key''.  If the process fails the function
 will automatically free all of the heap allocated in the process (you don't have to call dsa\_free()).  
-
-\chapter{Public Keyrings}
-\section{Introduction}
-In order to simplify the usage of the public key algorithms a set of keyring routines have been developed.  They let the 
-developer manage asymmetric keys by providing load, save, export, import routines as well as encrypt, decrypt, sign, verify
-routines in a unified API.  That is all three types of PK systems can be used within the same keyring with the same API.
-
-To define types of keys there are four enumerations used globaly:
-\begin{verbatim}
-enum {
-   NON_KEY=0,
-   RSA_KEY,
-   DH_KEY,
-   ECC_KEY
-};
-\end{verbatim}
-
-To make use of the system the developer has to know how link-lists work.  The main structure that the keyring routines use 
-is the ``pk\_key'' defined as:
-\begin{small}
-\begin{verbatim}
-typedef struct Pk_key {
-    int     key_type,             /* PUBLIC, PRIVATE, PRIVATE_OPTIMIZED */
-            system;               /* RSA, ECC or DH ?   */
-
-    char    name[MAXLEN],         /* various info's about this key */
-            email[MAXLEN],
-            description[MAXLEN];
-
-    unsigned long ID;             /* CRC32 of the name/email/description together */
-
-    _pk_key key;
-
-    struct Pk_key  *next;         /* linked list chain */
-} pk_key;
-\end{verbatim}
-\end{small}
-
-The list is chained via the ``next'' member and terminated with the node of the list that has ``system'' equal to 
-{\bf NON\_KEY}.
-
-\section{The Keyring API}
-To initialize a blank keyring the function ``kr\_init()'' is used.
-\begin{verbatim}
-int kr_init(pk_key **pk);
-\end{verbatim}
-You pass it a pointer to a pointer of type ``pk\_key'' where it will allocate ram for one node of the keyring and sets the
-pointer.
-
-Now instead of calling the PK specific ``make\_key'' functions there is one function that can make all three types of keys.
-\begin{verbatim}
-int kr_make_key(pk_key *pk, prng_state *prng, int wprng, 
-                int system, int keysize, const char *name,
-                const char *email, const char *description);
-\end{verbatim}
-The ``name'', ``email'' and ``description'' parameters are simply little pieces of information that you can tag along with a
-key.  They can each be either blank or any string less than 256 bytes.  ``system'' is one of the enumeration elements, that
-is {\bf RSA\_KEY}, {\bf DH\_KEY} or {\bf ECC\_KEY}.  ``keysize'' is the size of the key you desire which is regulated by
-the individual systems, for example, RSA keys are limited in keysize from 128 to 512 bytes.
-
-To find keys along a keyring there are two functions provided:
-\begin{verbatim}
-pk_key *kr_find(pk_key *pk, unsigned long ID);
-
-pk_key *kr_find_name(pk_key *pk, const char *name);
-\end{verbatim}
-The first searches by the 32-bit ID provided and the latter checks the name against the keyring.  They both return a pointer
-to the node in the ring of a match or {\bf NULL} if no match is found.
-
-To export or import a single node of a keyring the two functions are provided:
-\begin{verbatim}
-int kr_export(pk_key *pk, unsigned long ID, int key_type, 
-              unsigned char *out, unsigned long *outlen);
-
-int kr_import(pk_key *pk, const unsigned char *in);
-\end{verbatim}
-The export function exports the key with an ID provided and of a specific type much like the normal PK export routines.  The
-``key\_type'' is one of {\bf PK\_PUBLIC} or {\bf PK\_PRIVATE}.  In this function with RSA keys the type 
-{\bf PK\_PRIVATE\_OPTIMIZED} is the same as the {\bf PK\_PRIVATE} type.  The import function will read in a packet and 
-add it to the keyring.  
-
-To load and save whole keyrings from disk:
-\begin{verbatim}
-int kr_load(pk_key **pk, FILE *in, symmetric_CTR *ctr);
-
-int kr_save(pk_key *pk, FILE *out, symmetric_CTR *ctr);
-\end{verbatim}
-Both take file pointers to allow the user to pre-append data to the stream.  The ``ctr'' parameter should be setup with 
-``ctr\_start'' or set to NULL.  This parameter lets the user encrypt the keyring as its written to disk, if it is set
-to NULL the data is written without being encrypted.  The load function assumes the list has not been initialized yet 
-and will reset the pointer given to it.
-
-There are the four encrypt, decrypt, sign and verify functions as well
-\begin{verbatim}
-int kr_encrypt_key(pk_key *pk, unsigned long ID, 
-                   const unsigned char *in, unsigned long inlen,
-                   unsigned char *out, unsigned long *outlen,
-                   prng_state *prng, int wprng, int hash);
-
-int kr_decrypt_key(pk_key *pk, const unsigned char *in,
-                   unsigned char *out, unsigned long *outlen);
-\end{verbatim}
-
-The kr\_encrypt\_key() routine is designed to encrypt a symmetric key with a specified users public key.  The symmetric
-key is then used with a block cipher to encode the message.  The recipient can call kr\_decrypt\_key() to get the original
-symmetric key back and decode the message.  The hash specified must produce a message digest longer than symmetric key 
-provided.  
-
-\begin{verbatim}
-int kr_sign_hash(pk_key *pk, unsigned long ID, 
-                 const unsigned char *in, unsigned long inlen,
-                 unsigned char *out, unsigned long *outlen,
-                 prng_state *prng, int wprng);
-
-int kr_verify_hash(pk_key *pk, const unsigned char *in, 
-                   const unsigned char *hash, unsigned long hashlen,
-                   int *stat);
-\end{verbatim}
-
-Similar to the two previous these are used to sign a message digest or verify one.  This requires hashing the message
-first then passing the output in. 
-
-To delete keys and clear rings there are:
-\begin{verbatim}
-int kr_del(pk_key **_pk, unsigned long ID);
-int kr_clear(pk_key **pk);
-\end{verbatim}
-``kr\_del'' will try to remove a key with a given ID from the ring and ``kr\_clear'' will completely empty a list and free
-the memory associated with it.  Below is small example using the keyring API:
-
-\begin{small}
-\begin{verbatim}
-#include <mycrypt.h>
-int main(void)
-{
-   pk_key *kr;
-   unsigned char buf[4096], buf2[4096];
-   unsigned long len;
-   int err;
-
-   /* make a new list */
-   if ((err = kr_init(&kr)) != CRYPT_OK) {
-      printf("kr_init: %s\n", error_to_string(err));
-      exit(-1);
-   }
-
-   /* add a key to it */
-   register_prng(&sprng_desc);
-   if ((err = kr_make_key(kr, NULL, find_prng("sprng"), RSA_KEY, 128, 
-                "TomBot", "tomstdenis@yahoo.com", "test key")) == CRYPT_OK) {
-      printf("kr_make_key: %s\n", error_to_string(err));
-      exit(-1);
-   }
-
-   /* export the first key */
-   len = sizeof(buf);
-   if ((err = kr_export(kr, kr->ID, PK_PRIVATE, buf, &len)) != CRYPT_OK) {
-      printf("kr_export: %s\n", error_to_string(err));
-      exit(-1);
-   }
-
-   /* ... */
-}  
-\end{verbatim}
-\end{small}
-
-\chapter{$GF(2^w)$ Math Routines}
-
-The library provides a set of polynomial-basis $GF(2^w)$ routines to help facilitate algorithms such as ECC over such
-fields.  Note that the current implementation of ECC in the library is strictly over the integers only.  The routines
-are simple enough to use for other purposes outside of ECC.  
-
-At the heart of all of the GF routines is the data type ``gf\_int'.  It is simply a type definition for an array of 
-$L$ 32-bit words.  You can configure the maximum size $L$ of the ``gf\_int'' type by opening the file ``mycrypt.h'' and 
-changing ``LSIZE''.  Note that if you set it to $n$ then you can only multiply upto two $n \over 2$ bit polynomials without
-an overflow.  The type ``gf\_intp'' is associated with a pointer to an ``unsigned long'' as required in the algorithms.
-
-There are no initialization routines for ``gf\_int'' variables and you can simply use them after declaration.  There are five
-low level functions:
-\index{gf\_copy()} \index{gf\_zero()} \index{gf\_iszero()} \index{gf\_isone()} 
-\index{gf\_deg()} 
-\begin{verbatim}
-void gf_copy(gf_intp a, gf_intp b);
-void gf_zero(gf_intp a);
-int gf_iszero(gf_intp a);
-int gf_isone(gf_intp a);
-int gf_deg(gf_intp a);
-\end{verbatim}
-There are all fairly self-explanatory.  ``gf\_copy(a, b)'' copies the contents of ``a'' into ``b''.  ``gf\_zero()'' simply
-zeroes the entire polynomial.  ``gf\_iszero()'' tests to see if the polynomial is all zero and ``gf\_isone()'' tests to see
-if the polynomial is equal to the multiplicative identity.  ``gf\_deg()'' returns the degree of the polynomial or $-1$ if its
-a zero polynomial.
-
-There are five core math routines as well:
-\index{gf\_shl()} \index{gf\_shr()} \index{gf\_add()} \index{gf\_mul()} \index{gf\_div()} 
-\begin{verbatim}
-void gf_shl(gf_intp a, gf_intp b);
-void gf_shr(gf_intp a, gf_intp b);
-void gf_add(gf_intp a, gf_intp b, gf_intp c);
-void gf_mul(gf_intp a, gf_intp b, gf_intp c);
-void gf_div(gf_intp a, gf_intp b, gf_intp q, gf_intp r);
-\end{verbatim}
-
-Which are all fairly obvious.  ``gf\_shl(a,b)'' multiplies the polynomial ``a'' by $x$ and stores it in ``b''.  
-``gf\_shl(a,b)'' divides the polynomial ``a'' by $x$ and stores it in ``b''.  ``gf\_add(a,b,c)'' adds the polynomial
-``a'' to ``b'' and stores the sum in ``c''.  Similarly for ``gf\_mul(a,b,c)''.  The ``gf\_div(a,b,q,r)'' function divides
-``a'' by ``b'' and stores the quotient in ``q'' and the remainder in ``r''.
-
-There are six number theoretic functions as well:
-\index{gf\_mod()} \index{gf\_mulmod()} \index{gf\_invmod()} \index{gf\_gcd()} \index{gf\_is\_prime()} 
-\index{gf\_sqrt()}
-\begin{verbatim}
-void gf_mod(gf_intp a, gf_intp m, gf_intp b);
-void gf_mulmod(gf_intp a, gf_intp b, gf_intp m, gf_intp c);
-void gf_invmod(gf_intp A, gf_intp M, gf_intp B);
-void gf_sqrt(gf_intp a, gf_intp m, gf_intp b);
-void gf_gcd(gf_intp A, gf_intp B, gf_intp c);
-int gf_is_prime(gf_intp a);
-\end{verbatim}
-
-Which all work similarly except for  ``gf\_mulmod(a,b,m,c)'' which computes $c = ab\mbox{ }(\mbox{mod }m)$.  The 
-``gf\_is\_prime()'' function returns one if the polynomial is primitive, otherwise it returns zero.
-
-Finally to read/store a ``gf\_int'' in a binary string use:
-\index{gf\_size()} \index{gf\_toraw()} \index{gf\_readraw()} 
-\begin{verbatim}
-int gf_size(gf_intp a);
-void gf_toraw(gf_intp a, unsigned char *dst);
-void gf_readraw(gf_intp a, unsigned char *str, int len);
-\end{verbatim}
-Where ``gf\_size()'' returns the size in bytes required for the data.  ``gf\_toraw(a,b)'' stores the polynomial in ``b''
-in binary format (endian neutral).  ``gf\_readraw(a,b,c)'' reads the binary string in ``b'' back.  Note that the length 
-you pass it must be the same as returned by ``gf\_size()'' or it will not load correctly.
 
 \chapter{Miscellaneous}
 \section{Base64 Encoding and Decoding}
@@ -3036,5 +3127,7 @@ it will not speed up the encryption or decryption functions.
 \subsubsection{SMALL\_CODE}
 When this is defined some of the code such as the Rijndael and SAFER+ ciphers are replaced with smaller code variants.
 These variants are slower but can save quite a bit of code space.
+
+\input{crypt.ind}
 
 \end{document}

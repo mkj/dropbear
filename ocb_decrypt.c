@@ -22,9 +22,14 @@ int ocb_decrypt(ocb_state *ocb, const unsigned char *ct, unsigned char *pt)
    _ARGCHK(ocb != NULL);
    _ARGCHK(pt  != NULL);
    _ARGCHK(ct  != NULL);
+
+   /* check if valid cipher */
    if ((err = cipher_is_valid(ocb->cipher)) != CRYPT_OK) {
       return err;
    }
+   _ARGCHK(cipher_descriptor[ocb->cipher].ecb_decrypt != NULL);
+   
+   /* check length */
    if (ocb->block_len != cipher_descriptor[ocb->cipher].block_length) {
       return CRYPT_INVALID_ARG;
    }

@@ -15,10 +15,10 @@
 #ifdef PKCS_1
 
 int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
-                        const unsigned char *lparam, unsigned long lparamlen,
-                              unsigned long modulus_bitlen, int hash_idx,
-                              int           prng_idx,    prng_state *prng,
-                              unsigned char *out,    unsigned long *outlen)
+                       const unsigned char *lparam, unsigned long lparamlen,
+                             unsigned long modulus_bitlen, prng_state *prng,
+                             int           prng_idx,         int  hash_idx,
+                             unsigned char *out,    unsigned long *outlen)
 {
    unsigned char DB[1024], seed[MAXBLOCKSIZE], mask[sizeof(DB)];
    unsigned long hLen, x, y, modulus_len;

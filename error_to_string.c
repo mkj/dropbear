@@ -9,7 +9,6 @@
  * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
  */
 
-/* Future releases will make use of this */
 #include "mycrypt.h"
 
 static const char *err_2_str[] =
@@ -50,16 +49,6 @@ static const char *err_2_str[] =
 
 };
 
-#ifdef MPI
-static const struct {
-    int mpi_code, ltc_code;
-} mpi_to_ltc_codes[] = {
-   { MP_OKAY ,  CRYPT_OK},
-   { MP_MEM  ,  CRYPT_MEM},
-   { MP_VAL  ,  CRYPT_INVALID_ARG},
-};
-#endif
-
 const char *error_to_string(int err)
 {
    if (err < 0 || err >= (int)(sizeof(err_2_str)/sizeof(err_2_str[0]))) {
@@ -68,19 +57,4 @@ const char *error_to_string(int err)
       return err_2_str[err];
    }   
 }
-
-#ifdef MPI
-/* convert a MPI error to a LTC error (Possibly the most powerful function ever!  Oh wait... no) */
-int mpi_to_ltc_error(int err)
-{
-   int x;
-
-   for (x = 0; x < (int)(sizeof(mpi_to_ltc_codes)/sizeof(mpi_to_ltc_codes[0])); x++) {
-       if (err == mpi_to_ltc_codes[x].mpi_code) { 
-          return mpi_to_ltc_codes[x].ltc_code;
-       }
-   }
-   return CRYPT_ERROR;
-}
-#endif
 

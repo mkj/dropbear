@@ -60,7 +60,7 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
    }
 
    /* check the MSB */
-   if ((sig[0] & ~(0xFF >> ((modulus_len<<3) - modulus_bitlen))) != 0) {
+   if ((sig[0] & ~(0xFF >> ((modulus_len<<3) - (modulus_bitlen-1)))) != 0) {
       return CRYPT_OK;
    }
 
@@ -73,6 +73,9 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
    for (y = 0; y < (modulus_len - hLen - 1); y++) {
       DB[y] ^= mask[y];
    }
+   
+   /* now clear the first byte [make sure smaller than modulus] */
+   DB[0] &= 0xFF >> ((modulus_len<<3) - (modulus_bitlen-1));
 
    /* DB = PS || 0x01 || salt, PS == modulus_len - saltlen - hLen - 2 zero bytes */
 

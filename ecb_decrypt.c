@@ -19,9 +19,12 @@ int ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_ECB *ecb)
    _ARGCHK(ct != NULL);
    _ARGCHK(ecb != NULL);
 
+   /* valid cipher? */
    if ((err = cipher_is_valid(ecb->cipher)) != CRYPT_OK) {
        return err;
    }
+   _ARGCHK(cipher_descriptor[ecb->cipher].ecb_decrypt != NULL);
+   
    cipher_descriptor[ecb->cipher].ecb_decrypt(ct, pt, &ecb->key);
    return CRYPT_OK;
 }

@@ -1,0 +1,14 @@
+# make test harness, it is good.
+CFLAGS = $(CFLAGS) /W3 /Ox -I../../ -I./
+
+default: test.exe
+
+OBJECTS = test.obj cipher_hash_test.obj mac_test.obj modes_test.obj \
+pkcs_1_test.obj store_test.obj rsa_test.obj ecc_test.obj dsa_test.c dh_tests.obj 
+
+
+test.exe: $(OBJECTS)
+	cl $(OBJECTS) tomcrypt.lib advapi32.lib 
+	
+clean:
+	rm -f test.exe *.obj *~	

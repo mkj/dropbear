@@ -1,3 +1,28 @@
+May 30th, 2004
+v0.96  -- Removed GF and Keyring code
+       -- Extended OAEP decoder to distinguish better [and use a more uniform API]
+       -- Changed PSS/OAEP API slightly to be more consistent with other PK functions (order of arguments)
+       -- rsa_exptmod() now pads with leading zeroes as per I2OSP.
+       -- added error checking to yarrow code
+       -- Mike Frysinger pointed out that tommath.h from this distro will overwrite tommath.h
+          from libtommath.  I changed this to ltc_tommath.h to avoid any such problems.
+       -- Fixed bug in PSS encoder/decoder that didn't handle the MSB properly
+       -- refactored AES, now sports an "encrypt only" descriptor which uses half as much code space.
+       -- modded Yarrow to try and use refactored AES code and added WHIRLPOOL support (d'oh) ;-)
+       -- updated ECB, OCB and CBC decrypt functions to detect when "encrypt only" descriptor is used.
+       -- replaced old RSA code with new code that uses PKCS #1 v2.0 padding
+       -- replaced old test harness with new over-engineer'ed one in /demos/test/
+       -- updated cbc/cfb/ofb/ctr code with setiv/getiv functions to change/read the IV without re-keying.
+       -- Added PKCS #1 v1.5 RSA encryption and signature padding routines
+       -- Added DER OID's to most hash descriptors (as many as I could find) 
+       -- modded rsa_exptmod() to use timing-resilient tim_exptmod() when doing private key operations 
+          added #define RSA_TIMING which can turn on/off this feature.
+       -- No more config.pl so please just read mycrypt_custom.h for build-time tweaks
+       -- Small update to rand_prime()
+       -- Updated sha1, md5 and sha256 so they are smaller when SMALL_CODE is defined.  If you want speed though,
+          you're going to have to undefine SMALL_CODE ;-)
+       -- Worked over AES so that it's even smaller now [in both modes].
+       
 May 12th, 2004
 v0.95  -- Optimized AES and WHIRLPOOL for SMALL_CODE by taking advantage of the fact
           the transforms are circulant.  AES dropped 5KB and WHIRLPOOL dropped 13KB

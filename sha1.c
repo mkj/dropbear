@@ -20,6 +20,12 @@ const struct _hash_descriptor sha1_desc =
     2,
     20,
     64,
+
+    /* DER identifier */
+    { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 
+      0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14 },
+    15,
+
     &sha1_init,
     &sha1_process,
     &sha1_done,
@@ -38,6 +44,9 @@ static void sha1_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong32 a,b,c,d,e,W[80],i;
+#ifdef SMALL_CODE
+    ulong32 t;
+#endif
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
@@ -63,6 +72,26 @@ static void sha1_compress(hash_state *md, unsigned char *buf)
     #define FF2(a,b,c,d,e,i) e = (ROL(a, 5) + F2(b,c,d) + e + W[i] + 0x8f1bbcdcUL); b = ROL(b, 30);
     #define FF3(a,b,c,d,e,i) e = (ROL(a, 5) + F3(b,c,d) + e + W[i] + 0xca62c1d6UL); b = ROL(b, 30);
  
+#ifdef SMALL_CODE
+ 
+    for (i = 0; i < 20; ) {
+       FF0(a,b,c,d,e,i++); t = e; e = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 40; ) {
+       FF1(a,b,c,d,e,i++); t = e; e = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 60; ) {
+       FF2(a,b,c,d,e,i++); t = e; e = d; d = c; c = b; b = a; a = t;
+    }
+
+    for (; i < 80; ) {
+       FF3(a,b,c,d,e,i++); t = e; e = d; d = c; c = b; b = a; a = t;
+    }
+
+#else
+
     for (i = 0; i < 20; ) {
        FF0(a,b,c,d,e,i++);
        FF0(e,a,b,c,d,i++);
@@ -97,6 +126,7 @@ static void sha1_compress(hash_state *md, unsigned char *buf)
        FF3(c,d,e,a,b,i++);
        FF3(b,c,d,e,a,i++);
     }
+#endif
 
     #undef FF0
     #undef FF1

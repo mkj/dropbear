@@ -30,7 +30,15 @@ int yarrow_start(prng_state *prng)
 
    /* these are the default hash/cipher combo used */
 #ifdef RIJNDAEL
+#if    YARROW_AES==0
+   prng->yarrow.cipher = register_cipher(&rijndael_enc_desc);
+#elif  YARROW_AES==1
+   prng->yarrow.cipher = register_cipher(&aes_enc_desc);
+#elif  YARROW_AES==2
    prng->yarrow.cipher = register_cipher(&rijndael_desc);
+#elif  YARROW_AES==3
+   prng->yarrow.cipher = register_cipher(&aes_desc);
+#endif
 #elif defined(BLOWFISH)
    prng->yarrow.cipher = register_cipher(&blowfish_desc);
 #elif defined(TWOFISH)
@@ -78,6 +86,8 @@ int yarrow_start(prng_state *prng)
    prng->yarrow.hash   = register_hash(&md4_desc);
 #elif defined(MD2)
    prng->yarrow.hash   = register_hash(&md2_desc);
+#elif defined(WHIRLPOOL)
+   prng->yarrow.hash   = register_hash(&whirlpool_desc);
 #else
    #error YARROW needs at least one HASH
 #endif
@@ -107,13 +117,20 @@ int yarrow_add_entropy(const unsigned char *buf, unsigned long len, prng_state *
    hash_descriptor[prng->yarrow.hash].init(&md);
 
    /* hash the current pool */
-   hash_descriptor[prng->yarrow.hash].process(&md, prng->yarrow.pool, hash_descriptor[prng->yarrow.hash].hashsize);
+   if ((err = hash_descriptor[prng->yarrow.hash].process(&md, prng->yarrow.pool, 
+                                                        hash_descriptor[prng->yarrow.hash].hashsize)) != CRYPT_OK) {
+      return err;
+   }
 
    /* add the new entropy */
-   hash_descriptor[prng->yarrow.hash].process(&md, buf, len);
+   if ((err = hash_descriptor[prng->yarrow.hash].process(&md, buf, len)) != CRYPT_OK) {
+      return err;
+   }
 
    /* store result */
-   hash_descriptor[prng->yarrow.hash].done(&md, prng->yarrow.pool);
+   if ((err = hash_descriptor[prng->yarrow.hash].done(&md, prng->yarrow.pool)) != CRYPT_OK) {
+      return err;
+   }
 
    return CRYPT_OK;
 }

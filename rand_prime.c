@@ -54,11 +54,7 @@ int rand_prime(mp_int *N, long len, prng_state *prng, int wprng)
    /* New prime generation makes the code even more cryptoish-insane.  Do you know what this means!!!
       -- Gir:  Yeah, oh wait, er, no.
     */
-   if ((err = mp_prime_random_ex(N, mp_prime_rabin_miller_trials(len), len, type, rand_prime_helper, &rng)) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
-   }
-
-   return CRYPT_OK;
+   return mpi_to_ltc_error(mp_prime_random_ex(N, mp_prime_rabin_miller_trials(len), len, type, rand_prime_helper, &rng));
 }
       
 #endif

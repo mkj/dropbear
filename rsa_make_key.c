@@ -17,7 +17,7 @@
 int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
 {
    mp_int p, q, tmp1, tmp2, tmp3;
-   int err;
+   int    err;
 
    _ARGCHK(key != NULL);
 

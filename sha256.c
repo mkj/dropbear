@@ -22,12 +22,20 @@ const struct _hash_descriptor sha256_desc =
     0,
     32,
     64,
+
+    /* DER identifier */
+    { 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 
+      0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 
+      0x00, 0x04, 0x20 },
+    19,
+    
     &sha256_init,
     &sha256_process,
     &sha256_done,
     &sha256_test
 };
 
+#ifdef SMALL_CODE
 /* the K array */
 static const unsigned long K[64] = {
     0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL, 0x3956c25bUL,
@@ -44,6 +52,7 @@ static const unsigned long K[64] = {
     0x682e6ff3UL, 0x748f82eeUL, 0x78a5636fUL, 0x84c87814UL, 0x8cc70208UL,
     0x90befffaUL, 0xa4506cebUL, 0xbef9a3f7UL, 0xc67178f2UL
 };
+#endif
 
 /* Various logical functions */
 #define Ch(x,y,z)       (z ^ (x & (y ^ z)))
@@ -63,6 +72,9 @@ static void sha256_compress(hash_state * md, unsigned char *buf)
 #endif
 {
     ulong32 S[8], W[64], t0, t1;
+#ifdef SMALL_CODE
+    ulong32 t;
+#endif
     int i;
 
     /* copy state into S */
@@ -82,22 +94,17 @@ static void sha256_compress(hash_state * md, unsigned char *buf)
 
     /* Compress */
 #ifdef SMALL_CODE   
-#define RND(a,b,c,d,e,f,g,h,i)                    \
+#define RND(a,b,c,d,e,f,g,h,i)                         \
      t0 = h + Sigma1(e) + Ch(e, f, g) + K[i] + W[i];   \
-     t1 = Sigma0(a) + Maj(a, b, c);                  \
-     d += t0;                                        \
+     t1 = Sigma0(a) + Maj(a, b, c);                    \
+     d += t0;                                          \
      h  = t0 + t1;
 
-     for (i = 0; i < 64; i += 8) {
-         RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i+0);
-         RND(S[7],S[0],S[1],S[2],S[3],S[4],S[5],S[6],i+1);
-         RND(S[6],S[7],S[0],S[1],S[2],S[3],S[4],S[5],i+2);
-         RND(S[5],S[6],S[7],S[0],S[1],S[2],S[3],S[4],i+3);
-         RND(S[4],S[5],S[6],S[7],S[0],S[1],S[2],S[3],i+4);
-         RND(S[3],S[4],S[5],S[6],S[7],S[0],S[1],S[2],i+5);
-         RND(S[2],S[3],S[4],S[5],S[6],S[7],S[0],S[1],i+6);
-         RND(S[1],S[2],S[3],S[4],S[5],S[6],S[7],S[0],i+7);
-     }  
+     for (i = 0; i < 64; ++i) {
+         RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i);
+         t = S[7]; S[7] = S[6]; S[6] = S[5]; S[5] = S[4]; 
+         S[4] = S[3]; S[3] = S[2]; S[2] = S[1]; S[1] = S[0]; S[0] = t;
+	  }  
 #else 
 #define RND(a,b,c,d,e,f,g,h,i,ki)                    \
      t0 = h + Sigma1(e) + Ch(e, f, g) + ki + W[i];   \

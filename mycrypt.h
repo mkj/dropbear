@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 /* version */
-#define CRYPT   0x0095
-#define SCRYPT  "0.95"
+#define CRYPT   0x0096
+#define SCRYPT  "0.96"
 
 /* max size of either a cipher/hash block or symmetric key [largest of the two] */
 #define MAXBLOCKSIZE           128
@@ -68,9 +68,7 @@ enum {
 #include <mycrypt_hash.h>
 #include <mycrypt_prng.h>
 #include <mycrypt_pk.h>
-#include <mycrypt_gf.h>
 #include <mycrypt_misc.h>
-#include <mycrypt_kr.h>
 #include <mycrypt_argchk.h>
 #include <mycrypt_pkcs.h>
 

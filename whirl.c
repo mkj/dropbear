@@ -21,6 +21,11 @@ const struct _hash_descriptor whirlpool_desc =
     11,
     64,
     64,
+
+    /* DER encoding (not yet supported) */
+    { 0x00 },
+    0,
+
     &whirlpool_init,
     &whirlpool_process,
     &whirlpool_done,
@@ -34,7 +39,7 @@ const struct _hash_descriptor whirlpool_desc =
 #define GB(a,i,j) ((a[(i) & 7] >> (8 * (j))) & 255)
 
 /* shortcut macro to perform three functions at once */
-#define theta_pi_gamma(a, i)               \
+#define theta_pi_gamma(a, i)             \
     SB0(GB(a, i-0, 7)) ^                 \
     SB1(GB(a, i-1, 6)) ^                 \
     SB2(GB(a, i-2, 5)) ^                 \

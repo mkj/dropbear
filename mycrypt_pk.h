@@ -1,7 +1,7 @@
 /* ---- NUMBER THEORY ---- */
 #ifdef MPI
 
-#include "tommath.h"
+#include "ltc_tommath.h"
 
 /* in/out macros */
 #define OUTPUT_BIGNUM(num, out, y, z)                                                             \
@@ -86,7 +86,7 @@ extern int packet_valid_header(unsigned char *src, int section, int subsection);
 #define MAX_RSA_SIZE 4096
 
 /* Stack required for temps (plus padding) */
-#define RSA_STACK    (8 + (MAX_RSA_SIZE/8))
+// #define RSA_STACK    (8 + (MAX_RSA_SIZE/8))
 
 typedef struct Rsa_key {
     int type;
@@ -95,43 +95,51 @@ typedef struct Rsa_key {
 
 extern int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key);
 
-extern int rsa_exptmod(const unsigned char *in,  unsigned long inlen, 
-                             unsigned char *out, unsigned long *outlen, int which, 
-                             rsa_key *key);
+extern int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
+                      unsigned char *out,  unsigned long *outlen, int which,
+                      prng_state    *prng, int           prng_idx,
+                      rsa_key *key);
 
-extern int rsa_pad(const unsigned char *in,  unsigned long inlen, 
-                         unsigned char *out, unsigned long *outlen, 
-                         int wprng, prng_state *prng);
+#ifdef RSA_TIMING
 
-extern int rsa_signpad(const unsigned char *in,  unsigned long inlen, 
-                             unsigned char *out, unsigned long *outlen);
+extern int tim_exptmod(prng_state *prng, int prng_idx, 
+                       mp_int *c, mp_int *e, mp_int *d, mp_int *n, mp_int *m);
 
-extern int rsa_depad(const unsigned char *in,  unsigned long inlen, 
-                           unsigned char *out, unsigned long *outlen);
+#else
 
-extern int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
-                               unsigned char *out, unsigned long *outlen);
+#define tim_exptmod(prng, prng_idx, c, e, d, n, m) mpi_to_ltc_error(mp_exptmod(c, d, n, m))
 
+#endif
 
 extern void rsa_free(rsa_key *key);
 
-extern int rsa_encrypt_key(const unsigned char *inkey, unsigned long inlen,
-                                 unsigned char *outkey, unsigned long *outlen,
-                                 prng_state *prng, int wprng, rsa_key *key);
+int rsa_encrypt_key(const unsigned char *inkey,  unsigned long inlen,
+                          unsigned char *outkey, unsigned long *outlen,
+                    const unsigned char *lparam, unsigned long lparamlen,
+                    prng_state *prng, int prng_idx, int hash_idx, rsa_key *key);
+                                        
+int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
+                          unsigned char *outkey, unsigned long *keylen, 
+                    const unsigned char *lparam, unsigned long lparamlen,
+                          prng_state    *prng,   int           prng_idx,
+                          int            hash_idx, int *res,
+                          rsa_key       *key);
 
-extern int rsa_decrypt_key(const unsigned char *in, unsigned long inlen,
-                                 unsigned char *outkey, unsigned long *keylen, 
-                                 rsa_key *key);
+int rsa_sign_hash(const unsigned char *msghash,  unsigned long  msghashlen, 
+                        unsigned char *sig,      unsigned long *siglen, 
+                        prng_state    *prng,     int            prng_idx,
+                        int            hash_idx, unsigned long  saltlen,
+                        rsa_key *key);
 
-extern int rsa_sign_hash(const unsigned char *in,  unsigned long inlen, 
-                               unsigned char *out, unsigned long *outlen, 
-                               rsa_key *key);
+int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
+                    const unsigned char *msghash,  unsigned long msghashlen,
+                          prng_state    *prng,     int           prng_idx,
+                          int            hash_idx, unsigned long saltlen,
+                          int           *stat,     rsa_key      *key);
 
-extern int rsa_verify_hash(const unsigned char *sig, unsigned long siglen,
-                           const unsigned char *hash, int *stat, rsa_key *key);
-
-extern int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key);
-extern int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key);
+int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key);
+int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key);
+                        
 #endif
 
 /* ---- DH Routines ---- */
