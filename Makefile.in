@@ -93,9 +93,6 @@ export RANLIB AR STRIP
 
 ifeq ($(STATIC), 1)
 	LDFLAGS+=-static
-	SPREFIX=static
-else
-	SPREFIX=
 endif
 
 ifeq ($(MULTI), 1)
@@ -116,7 +113,7 @@ endif
 all: $(TARGETS)
 
 strip: $(TARGETS)
-	$(STRIP) $(addsuffix $(EXEEXT), $(addprefix $(SPREFIX), $(TARGETS)))
+	$(STRIP) $(addsuffix $(EXEEXT), $(TARGETS))
 
 install: $(addprefix inst_, $(TARGETS))
 
@@ -124,30 +121,30 @@ installdropbearmulti: insdbmulti $(addprefix insmulti, $(PROGRAMS))
 
 insdbmulti: dropbearmulti
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
-	$(INSTALL) -m 755 $(SPREFIX)dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)
-	-chown root $(DESTDIR)$(bindir)/$(SPREFIX)dropbearmulti$(EXEEXT)
-	-chgrp 0 $(DESTDIR)$(bindir)/$(SPREFIX)dropbearmulti$(EXEEXT)
+	$(INSTALL) -m 755 dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)
+	-chown root $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT)
 
 insmultidropbear: dropbearmulti
-	-rm -f $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
-	-ln -s $(DESTDIR)$(bindir)/$(SPREFIX)dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT) 
+	-rm -f $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
+	-ln -s $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/dropbear$(EXEEXT) 
 
 insmulti%: dropbearmulti
-	-rm -f $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT) 
-	-ln -s $(DESTDIR)$(bindir)/$(SPREFIX)dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT) 
+	-rm -f $(DESTDIR)$(bindir)/$*$(EXEEXT) 
+	-ln -s $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 
 # dropbear should go in sbin, so it needs a seperate rule
 inst_dropbear: dropbear
 	$(INSTALL) -d -m 755 $(DESTDIR)$(sbindir)
-	$(INSTALL) -m 755 $(SPREFIX)dropbear$(EXEEXT) $(DESTDIR)$(sbindir)
-	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
-	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
+	$(INSTALL) -m 755 dropbear$(EXEEXT) $(DESTDIR)$(sbindir)
+	-chown root $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
 
 inst_%: $*
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
-	$(INSTALL) -m 755 $(SPREFIX)$*$(EXEEXT) $(DESTDIR)$(bindir)
-	-chown root $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT)
-	-chgrp 0 $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT)
+	$(INSTALL) -m 755 $*$(EXEEXT) $(DESTDIR)$(bindir)
+	-chown root $(DESTDIR)$(bindir)/$*$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(bindir)/$*$(EXEEXT)
 
 
 # for some reason the rule further down doesn't like $($@objs) as a prereq.
@@ -158,11 +155,11 @@ dropbearconvert: $(dropbearconvertobjs)
 
 dropbear dbclient dropbearkey dropbearconvert: $(HEADERS)  $(LTC) $(LTM) \
 													Makefile
-	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $($@objs) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBS)
 
 # scp doesn't use the libs so is special.
 scp: $(SCPOBJS)  $(HEADERS) Makefile
-	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(SCPOBJS)
+	$(LD) $(LDFLAGS) -o $@$(EXEEXT) $(SCPOBJS)
 
 
 # multi-binary compilation.
@@ -175,13 +172,13 @@ endif
 dropbearmulti: multilink 
 
 multibinary: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM) Makefile
-	$(LD) $(LDFLAGS) -o $(SPREFIX)dropbearmulti$(EXEEXT) $(MULTIOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o dropbearmulti$(EXEEXT) $(MULTIOBJS) $(LIBS)
 
 multilink: multibinary $(addprefix link, $(PROGRAMS))
 
 link%:
-	-rm -f $(SPREFIX)$*$(EXEEXT)
-	-ln -s $(SPREFIX)dropbearmulti$(EXEEXT) $(SPREFIX)$*$(EXEEXT)
+	-rm -f $*$(EXEEXT)
+	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
 $(LTC): options.h
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)
@@ -201,10 +198,8 @@ sizes: dropbear
 clean: ltc-clean ltm-clean thisclean
 
 thisclean:
-	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress
-	-rm -f staticdropbear staticdropbearkey staticdropbearconvert staticscp
-	-rm -f dropbearmulti staticdropbearmulti
-	-rm -f *.o *.da *.bb *.bbg *.prof 
+	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress \
+			dropbearmulti *.o *.da *.bb *.bbg *.prof 
 
 distclean: clean tidy
 	-rm -f config.h
