@@ -150,7 +150,7 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.8 2003/09/24 10:23:02 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.9 2003/12/16 14:41:30 matt Exp $");*/
 
 #include "includes.h"
 #include "loginrec.h"
@@ -1525,12 +1525,12 @@ lastlog_get_entry(struct logininfo *li)
 		lastlog_populate_entry(li, &last);
 		return (1);
 	case -1:
-		dropbear_log(LOG_ERR, "%s: Error reading from %s: %s", __func__, 
+		dropbear_log(LOG_ERR, "Error reading from %s: %s",
 		    LASTLOG_FILE, strerror(errno));
 		return (0);
 	default:
-		dropbear_log(LOG_ERR, "%s: Error reading from %s: Expecting %d, got %d",
-		    __func__, LASTLOG_FILE, sizeof(last), ret);
+		dropbear_log(LOG_ERR, "Error reading from %s: Expecting %d, got %d",
+		    LASTLOG_FILE, sizeof(last), ret);
 		return (0);
 	}
 
