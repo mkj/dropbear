@@ -6,13 +6,12 @@ Things which need doing:
 - kexfollows
 - check PRNG is good
 - improved checking in DSS/RSA routines for valid sized keys etc
-- logging of IPs etc
 
 Features to add:
 
 - PAM
-- utmp etc handling
 - TCP fwd
 - X11 fwd
 - possible RSA blinding? need to check whether this is vuln to timing attacks
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
+- DH Group Exchange possibly
