@@ -439,6 +439,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 
 	if (len == 0) {
 		TRACE(("leave get_termmodes: empty terminal modes string"))
+		return;
 	}
 
 	while (((opcode = buf_getbyte(ses.payload)) != 0x00) && opcode <= 159) {
