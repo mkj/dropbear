@@ -31,7 +31,7 @@ int main(int argc, char ** argv) {
 	struct timeval seltimeout;
 	int i, j, val;
 	int maxsock;
-	struct sockaddr_in remote_addr;
+	struct sockaddr remote_addr;
 	int remote_addrlen;
 	int listensocks[MAX_LISTEN_ADDR];
 	unsigned int listensockcount = 0;
@@ -46,25 +46,29 @@ int main(int argc, char ** argv) {
 	/* get commandline options */
 	opts = getrunopts(argc, argv);
 
+
 	/* fork to background, returning (interactive) users to a term */
 	if (opts->forkbg) {
-		i = fork();
-		if (i < 0) {
-			dropbear_exit("Failed to create background process");
-		}
-		if (i > 0) {
-			exit(0);
+
+		switch (fork()) {
+			case -1:
+				dropbear_exit("Failed to create background process");
+			case 0:
+				break;
+			default:
+				exit(0);
 		}
 		if (setpgid(0,0) < 0) {
-			dropbear_exit("Failed to create background process");
+			dropbear_exit("Failed to set process group");
 		}
-		dropbear_msg("Running in background");
+		startsyslog();
+		fprintf(stderr,"Dropbear: Running in background.\n");
 	} else {
-		dropbear_msg("Not forking");
+		fprintf(stderr,"Dropbear: Not forking\n");
 	}
 	
-	/* setup the sockets */
-	/* TODO make this configurable */
+	/* setup the sockets - we're allowing for multiple listening sockets
+	 * so we can do ip6 etc in future */
 	listensocket(&listensocks[0], opts->port);
 	listensockcount = 1;
 	maxsock = listensocks[listensockcount-1];
@@ -133,7 +137,7 @@ int main(int argc, char ** argv) {
 			/* child connection */
 			remote_addrlen = sizeof(struct sockaddr_in);
 			childsock = accept(listensocks[i], 
-					(struct sockaddr*)&remote_addr, &remote_addrlen);
+					&remote_addr, &remote_addrlen);
 
 			if (childsock < 0) {
 				/* accept failed */
@@ -167,20 +171,28 @@ int main(int argc, char ** argv) {
 					dropbear_exit("Error creating child");
 				}
 
+				/* make sure we close sockets */
 				for (i = 0; i < listensockcount; i++) {
-					close(listensocks[i]);
+					if (m_close(listensocks[i]) == -1) {
+						dropbear_exit("Couldn't close socket");
+					}
 				}
-				close(childpipe[0]);
+
+				if (m_close(childpipe[0]) == -1) {
+					dropbear_exit("Couldn't close socket");
+				}
 				/* start the session */
-				child_session(childsock, opts, childpipe[1]);
+				child_session(childsock, opts, childpipe[1], &remote_addr);
 				/* don't return */
-				exit(1);
+				assert(0);
 			}
 			
 			/* parent */
 			childpipes[j] = childpipe[0];
-			close(childpipe[1]);
-			close(childsock);
+			if (m_close(childpipe[1]) == -1
+						|| m_close(childsock) == -1) {
+				dropbear_exit("Couldn't close socket");
+			}
 		}
 	} /* for(;;) loop */
 
@@ -233,7 +245,7 @@ static void listensocket(int *sock, uint16_t port) {
 	/* should really use getprotbyname, but we'd need to change "tcp" anyway */
 	setsockopt(listensock, 6, TCP_NODELAY, (void*)&val, sizeof(val));
 
-	/* bind to any currently TODO config*/
+	/* bind all ip4 addresses */
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_port = htons(port);
 	listen_addr.sin_addr.s_addr = INADDR_ANY;
