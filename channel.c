@@ -53,6 +53,7 @@ static void removechannel(struct Channel *channel);
 static void deletechannel(struct Channel *channel);
 static void send_exitsignalstatus(struct Channel *channel);
 static void checkinitdone(struct Channel *channel);
+static void checkclose(struct Channel *channel);
 
 static void closeinfd(struct Channel * channel);
 static void closeoutfd(struct Channel * channel, int fd);
@@ -223,30 +224,41 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 #endif
 		}
 
-		fprintf(stderr, "channelio, out %d, in %d, err %d buf %d\n",
-				channel->outfd, channel->infd, channel->errfd,
-				channel->writebuf->len - channel->writebuf->pos);
-
 		/* now handle any of the channel-closing type stuff */
-		if (!channel->senteof && !channel->sentclosed
-				&& channel->outfd == FD_CLOSED 
-				&& channel->errfd == FD_CLOSED) {
+		checkclose(channel);
+
+	} /* foreach channel */
+}
+
+
+/* do all the EOF/close type stuff checking for a channel */
+static void checkclose(struct Channel *channel) {
+
+	if (!channel->sentclosed) {
+
+		/* check for exited */
+		if (channel->type == CHANNEL_ID_SESSION) {
+			if (((struct ChanSess*)channel->typedata)->exited) {
+				closeinfd(channel);
+			}
+		}
+
+		if (!channel->senteof
+			&& channel->outfd == FD_CLOSED 
+			&& channel->errfd == FD_CLOSED) {
 			send_msg_channel_eof(channel);
 		}
 
-		if (!channel->sentclosed
-				&& channel->infd == FD_CLOSED
+		if (channel->infd == FD_CLOSED
 				&& channel->outfd == FD_CLOSED
 				&& channel->errfd == FD_CLOSED) {
 			send_msg_channel_close(channel);
 		}
+	}
 
-		if (channel->sentclosed && channel->recvclosed) {
-			removechannel(channel);
-		}
-
-	} /* foreach channel */
-
+	if (channel->sentclosed && channel->recvclosed) {
+		removechannel(channel);
+	}
 }
 
 
@@ -387,10 +399,6 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 			continue;
 		}
 
-		fprintf(stderr, "setchanfds, out %d, in %d, err %d buf %d\n",
-				channel->outfd, channel->infd, channel->errfd,
-				channel->writebuf->len - channel->writebuf->pos);
-
 		/* stdout and stderr */
 		if (channel->transwindow > 0) {
 
@@ -456,6 +464,9 @@ void recv_msg_channel_eof() {
 	}
 
 	channel->recveof = 1;
+	if (channel->writebuf->len == 0) {
+		closeinfd(channel);
+	}
 
 	TRACE(("leave recv_msg_channel_eof"));
 }
@@ -572,24 +583,18 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	int fd;
 
 /*	TRACE(("enter send_msg_channel_data"));
-	TRACE(("extended = %d type = %d", isextended, exttype));
-	*/
+	TRACE(("extended = %d type = %d", isextended, exttype));*/
 
 	CHECKCLEARTOWRITE();
 
-	if (channel->sentclosed) {
-		dropbear_exit("assert(!channel->sentclosed)");
-	}
+	assert(!channel->sentclosed);
 
 	if (isextended) {
 		fd = channel->errfd;
 	} else {
 		fd = channel->outfd;
 	}
-
-	if (fd < 0) {
-		dropbear_exit("fd < 0 asserted in senddata");
-	}
+	assert(fd >= 0);
 
 	maxlen = MIN(channel->transwindow, channel->transmaxpacket);
 	/* -(1+4+4) is SSH_MSG_CHANNEL_DATA, channel number, string length, and 
@@ -608,6 +613,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 		/* on error etc, send eof */
 		if (errno != EINTR) {
 			closeoutfd(channel, fd);
+			TRACE(("leave send_msg_channel_data: read err"));
 		}
 		buf_free(buf);
 		return;
@@ -650,8 +656,12 @@ void recv_msg_channel_data() {
 		dropbear_exit("Unknown channel");
 	}
 
-	if (channel->recveof || channel->infd < 0) {
-		dropbear_exit("bad internal state, recvchandata");
+	if (channel->recveof) {
+		dropbear_exit("received data after eof");
+	}
+
+ 	if (channel->infd < 0) {
+		dropbear_exit("received data with bad infd");
 	}
 
 	datalen = buf_getint(ses.payload);
@@ -934,13 +944,17 @@ static void closeoutfd(struct Channel * channel, int fd) {
 
 	/* don't close it if it is the same as infd,
 	 * unless infd is already set -1 */
+	TRACE(("enter closeoutfd"));
 	closechanfd(channel, fd, 0);
+	TRACE(("leave closeoutfd"));
 }
 
 /* close a stdin fd */
 static void closeinfd(struct Channel * channel) {
 
+	TRACE(("enter closeinfd"));
 	closechanfd(channel, channel->infd, 1);
+	TRACE(("leave closeinfd"));
 }
 
 /* close a fd, how is 0 for stdout/stderr, 1 for stdin */
