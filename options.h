@@ -58,7 +58,7 @@
  * Disabling it here will just stop it from being used as the integrity portion
  * of the ssh protocol */
 #define DROPBEAR_SHA1_HMAC
-/*#define DROPBEAR_MD5_HMAC*/
+#define DROPBEAR_MD5_HMAC
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
@@ -112,7 +112,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.32-cvs"
+#define DROPBEAR_VERSION "0.33"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
