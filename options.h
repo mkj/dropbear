@@ -42,6 +42,11 @@
 #define RSA_PRIV_FILENAME "/etc//dropbear/dropbear_rsa_host_key"
 #endif
 
+/* Setting this disables the fast exptmod bignum code. It saves ~5kB, but is
+ * perhaps 20% slower for pubkey operations (it is probably worth experimenting
+ * if you want to use this */
+/*#define NO_FAST_EXPTMOD*/
+
 /* Enable X11 Forwarding */
 #define ENABLE_X11FWD
 
@@ -164,7 +169,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.38"
+#define DROPBEAR_VERSION "0.39pre"
 #endif
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
