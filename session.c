@@ -73,15 +73,20 @@ void child_session(int sock, runopts *opts, int childpipe,
 	/* main loop, select()s for network and other connections */
 	for(;;) {
 
-		TRACE(("top of select loop"));
+
+		if (ses.sock == -1 && ses.chancount == 0) {
+			dropbear_close("Exited normally");
+		}
 		timeout.tv_sec = SELECT_TIMEOUT;
 		timeout.tv_usec = 0;
 		FD_ZERO(&writefd);
 		FD_ZERO(&readfd);
 		assert(ses.payload == NULL);
-		FD_SET(ses.sock, &readfd);
-		if (!isempty(&ses.writequeue)) {
-			FD_SET(ses.sock, &writefd);
+		if (ses.sock != -1) {
+			FD_SET(ses.sock, &readfd);
+			if (!isempty(&ses.writequeue)) {
+				FD_SET(ses.sock, &writefd);
+			}
 		}
 
 		/* set up for channels which require reading/writing */
@@ -89,7 +94,6 @@ void child_session(int sock, runopts *opts, int childpipe,
 			setchannelfds(&readfd, &writefd);
 		}
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
-		TRACE(("select val = %d", val));
 
 		if (exitflag) {
 			dropbear_exit("Terminated by signal");
@@ -111,19 +115,20 @@ void child_session(int sock, runopts *opts, int childpipe,
 			continue;
 		}
 
+		if (ses.sock != -1) {
+			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
+				write_packet();
+			}
 
-		if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
-			write_packet();
-		}
-
-		if (FD_ISSET(ses.sock, &readfd)) {
-			read_packet();
-		}
-
-		/* Process the decrypted packet. After this, the read buffer
-		 * will be ready for a new packet */
-		if (ses.payload != NULL) {
-			process_packet();
+			if (FD_ISSET(ses.sock, &readfd)) {
+				read_packet();
+			}
+			
+			/* Process the decrypted packet. After this, the read buffer
+			 * will be ready for a new packet */
+			if (ses.payload != NULL) {
+				process_packet();
+			}
 		}
 
 		/* process pipes etc for the channels */
@@ -159,6 +164,14 @@ void checktimeouts() {
 		TRACE(("rekeying after timeout or max data reached"));
 		send_msg_kexinit();
 	}
+}
+
+/* called when the remote side closes the connection */
+void session_remoteclosed() {
+
+//	close(ses.sock);
+	ses.sock = -1;
+
 }
 
 

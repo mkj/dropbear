@@ -75,7 +75,7 @@ void write_packet() {
 	} 
 
 	if (written == 0) {
-		dropbear_close("remote host closed connection");
+		session_remoteclosed();
 	}
 
 	if (written == len) {
@@ -125,7 +125,7 @@ void read_packet() {
 	buf_incrpos(ses.readbuf, len);
 
 	if (len == 0) {
-		dropbear_close("remote host closed connection");
+		session_remoteclosed();
 	}
 
 	if (len < 0) {
@@ -133,7 +133,7 @@ void read_packet() {
 			TRACE(("leave read_packet: EINTR or EAGAIN"));
 			return;
 		} else {
-			dropbear_exit("error reading");
+			dropbear_exit("error reading: %s", strerror(errno));
 		}
 	}
 
@@ -172,14 +172,14 @@ static void read_packet_init() {
 	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
-		dropbear_close("remote host closed connection");
+		session_remoteclosed();
 	}
 	if (len < 0) {
 		if (errno == EINTR) {
 			TRACE(("leave read_packet_init: EINTR"));
 			return;
 		}
-		dropbear_exit("error reading");
+		dropbear_exit("error reading: %s", strerror(errno));
 	}
 
 	buf_incrwritepos(ses.readbuf, len);

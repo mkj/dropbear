@@ -40,6 +40,7 @@ extern int exitflag;
 void session_cleanup();
 void child_session(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remoteaddr);
+void session_remoteclosed();
 
 struct key_context {
 
@@ -119,6 +120,8 @@ struct sshsession {
 	/* channels */
 	struct Channel ** channels; /* these pointers may be null */
 	unsigned int chansize; /* the number of Channel*s allocated for channels */
+	unsigned int chancount; /* the number of active channels, used to determine
+							   if we can cleanup/die */
 
 	struct ChildPid * childpids; /* array of mappings childpid<->channel */
 	unsigned int childpidsize;

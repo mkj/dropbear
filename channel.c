@@ -60,6 +60,7 @@ void chaninitialise() {
 	/* may as well create space for a single channel */
 	ses.channels = (struct Channel**)m_malloc(sizeof(struct Channel*));
 	ses.chansize = 1;
+	ses.chancount = 0;
 	ses.channels[0] = NULL;
 
 	chansessinitialise();
@@ -141,6 +142,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	newchan->recvmaxpacket = RECV_MAXPACKET;
 
 	ses.channels[i] = newchan;
+	ses.chancount++;
 
 	TRACE(("leave newchannel"));
 
@@ -179,7 +181,7 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 		/* write to program/pipe stdin */
-		if (channel->infd != -1 && channel->recveof == 0 &&
+		if (channel->infd != -1 &&
 				FD_ISSET(channel->infd, writefd)) {
 			if (channel->initconn) {
 				checkinitdone(channel);
@@ -416,6 +418,10 @@ void recv_msg_channel_eof() {
 	}
 	channel->infd = -1;
 
+	/* matt - XXX - here needs fixing for the truncation -
+	 * need to make it just set recveof, then writechannel looks at that.
+	 * Get channelio() to do all the syncing etc*/
+
 	if (channel->transeof && (channel->erreof || channel->errfd == -1)
 			&& !channel->sentclosed) {
 		send_msg_channel_close(channel);
@@ -457,7 +463,7 @@ static void closechannel(struct Channel * channel) {
 
 	TRACE(("enter closechannel"));
 	TRACE(("channel index is %d", channel->index));
-	
+
 	buf_free(channel->writebuf);
 
 	/* close the FDs in case they haven't been done
@@ -478,6 +484,7 @@ static void closechannel(struct Channel * channel) {
 static void deletechannel(struct Channel *channel) {
 
 	ses.channels[channel->index] = NULL;
+	ses.chancount--;
 	m_free(channel);
 	
 }
@@ -532,8 +539,9 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	unsigned int maxlen;
 	int fd;
 
-	TRACE(("enter send_msg_channel_data"));
+/*	TRACE(("enter send_msg_channel_data"));
 	TRACE(("extended = %d type = %d", isextended, exttype));
+	*/
 
 	CHECKCLEARTOWRITE();
 
@@ -582,10 +590,10 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 					&& channel->transeof) {
 				send_msg_channel_eof(channel);
 			}
-		}
-		buf_free(buf);
 		TRACE(("leave send_msg_channel_data: len <= 0, erreof %d transeof %d",
 					channel->erreof, channel->transeof));
+		}
+		buf_free(buf);
 		return;
 	}
 	buf_incrlen(buf, len);
@@ -670,7 +678,7 @@ void recv_msg_channel_window_adjust() {
 	channel = getchannel(chan);
 
 	if (channel == NULL) {
-		dropbear_exit("Unknown channel"); /* TODO - disconnect */
+		dropbear_exit("Unknown channel");
 	}
 	
 	incr = buf_getint(ses.payload);
