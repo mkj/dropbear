@@ -50,7 +50,7 @@ static int getauthline(buffer * line, FILE * authfile);
 
 /* process a pubkey auth request, sending success or failure message as
  * appropriate */
-void pubkeyauth() {
+void svr_auth_pubkey() {
 
 	unsigned char testkey; /* whether we're just checking if a key is usable */
 	unsigned char* algo = NULL; /* pubkey algo */
@@ -113,12 +113,12 @@ void pubkeyauth() {
 				signbuf->len) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
 				"pubkey auth succeeded for '%s' with key %s",
-				svr_ses.authstate.printableuser, fp);
+				ses.authstate.printableuser, fp);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
 				"pubkey auth bad signature for '%s' with key %s",
-				svr_ses.authstate.printableuser, fp);
+				ses.authstate.printableuser, fp);
 		send_msg_userauth_failure(0, 1);
 	}
 	m_free(fp);
@@ -178,7 +178,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
 		dropbear_log(LOG_WARNING,
 				"pubkey auth attempt with unknown algo for '%s'",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 		goto out;
 	}
 
@@ -190,12 +190,12 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 	/* we don't need to check pw and pw_dir for validity, since
 	 * its been done in checkpubkeyperms. */
-	len = strlen(svr_ses.authstate.pw->pw_dir);
+	len = strlen(ses.authstate.pw->pw_dir);
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
 	filename = m_malloc(len + 22);
 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
-				svr_ses.authstate.pw->pw_dir);
+				ses.authstate.pw->pw_dir);
 
 	/* open the file */
 	authfile = fopen(filename, "r");
@@ -352,19 +352,19 @@ static int checkpubkeyperms() {
 
 	TRACE(("enter checkpubkeyperms"));
 
-	assert(svr_ses.authstate.pw);
-	if (svr_ses.authstate.pw->pw_dir == NULL) {
+	assert(ses.authstate.pw);
+	if (ses.authstate.pw->pw_dir == NULL) {
 		goto out;
 	}
 
-	if ((len = strlen(svr_ses.authstate.pw->pw_dir)) == 0) {
+	if ((len = strlen(ses.authstate.pw->pw_dir)) == 0) {
 		goto out;
 	}
 
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
 	filename = m_malloc(len + 22);
-	strncpy(filename, svr_ses.authstate.pw->pw_dir, len+1);
+	strncpy(filename, ses.authstate.pw->pw_dir, len+1);
 
 	/* check ~ */
 	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
@@ -406,7 +406,7 @@ static int checkfileperm(char * filename) {
 		return DROPBEAR_FAILURE;
 	}
 	/* check ownership - user or root only*/
-	if (filestat.st_uid != svr_ses.authstate.pw->pw_uid
+	if (filestat.st_uid != ses.authstate.pw->pw_uid
 			&& filestat.st_uid != 0) {
 		TRACE(("leave checkfileperm: wrong ownership"));
 		return DROPBEAR_FAILURE;

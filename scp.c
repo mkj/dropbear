@@ -229,8 +229,12 @@ void tolocal(int, char *[]);
 void toremote(char *, int, char *[]);
 void usage(void);
 
-int
+#if defined(DBMULTI_scp) || !defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_scp) && defined(DROPBEAR_MULTI)
+int scp_main(int argc, char **argv)
+#else
 main(int argc, char **argv)
+#endif
 {
 	int ch, fflag, tflag, status;
 	double speed;
@@ -379,6 +383,7 @@ main(int argc, char **argv)
 	}
 	exit(errs != 0);
 }
+#endif /* DBMULTI stuff */
 
 void
 toremote(char *targ, int argc, char **argv)

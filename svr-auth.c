@@ -41,9 +41,9 @@ static int checkusername(unsigned char *username, unsigned int userlen);
 static void send_msg_userauth_banner();
 
 /* initialise the first time for a session, resetting all parameters */
-void authinitialise() {
+void svr_authinitialise() {
 
-	svr_ses.authstate.failcount = 0;
+	ses.authstate.failcount = 0;
 	authclear();
 	
 }
@@ -53,17 +53,13 @@ void authinitialise() {
  * on initialisation */
 static void authclear() {
 	
-	ses.authdone = 0;
-	svr_ses.authstate.pw = NULL;
-	svr_ses.authstate.username = NULL;
-	svr_ses.authstate.printableuser = NULL;
-	svr_ses.authstate.authtypes = 0;
+	memset(&ses.authstate, 0, sizeof(ses.authstate));
 #ifdef DROPBEAR_PUBKEY_AUTH
-	svr_ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
+	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
 #ifdef DROPBEAR_PASSWORD_AUTH
 	if (svr_opts.noauthpass) {
-		svr_ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
+		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
 #endif
 
@@ -103,7 +99,7 @@ void recv_msg_userauth_request() {
 	TRACE(("enter recv_msg_userauth_request"));
 
 	/* ignore packets if auth is already done */
-	if (ses.authdone == 1) {
+	if (ses.authstate.authdone == 1) {
 		return;
 	}
 
@@ -147,12 +143,12 @@ void recv_msg_userauth_request() {
 
 #ifdef DROPBEAR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass &&
-			!(svr_opts.norootpass && svr_ses.authstate.pw->pw_uid == 0) ) {
+			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
 		/* user wants to try password auth */
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
-			passwordauth();
+			svr_auth_password();
 			goto out;
 		}
 	}
@@ -163,7 +159,7 @@ void recv_msg_userauth_request() {
 	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
-		pubkeyauth();
+		svr_auth_pubkey();
 		goto out;
 	}
 #endif
@@ -192,21 +188,21 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* new user or username has changed */
-	if (svr_ses.authstate.username == NULL ||
-		strcmp(username, svr_ses.authstate.username) != 0) {
+	if (ses.authstate.username == NULL ||
+		strcmp(username, ses.authstate.username) != 0) {
 			/* the username needs resetting */
-			if (svr_ses.authstate.username != NULL) {
+			if (ses.authstate.username != NULL) {
 				dropbear_log(LOG_WARNING, "client trying multiple usernames");
-				m_free(svr_ses.authstate.username);
+				m_free(ses.authstate.username);
 			}
 			authclear();
-			svr_ses.authstate.pw = getpwnam((char*)username);
-			svr_ses.authstate.username = m_strdup(username);
-			m_free(svr_ses.authstate.printableuser);
+			ses.authstate.pw = getpwnam((char*)username);
+			ses.authstate.username = m_strdup(username);
+			m_free(ses.authstate.printableuser);
 	}
 
 	/* check that user exists */
-	if (svr_ses.authstate.pw == NULL) {
+	if (ses.authstate.pw == NULL) {
 		TRACE(("leave checkusername: user '%s' doesn't exist", username));
 		dropbear_log(LOG_WARNING,
 				"login attempt for nonexistent user");
@@ -215,10 +211,10 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* We can set it once we know its a real user */
-	svr_ses.authstate.printableuser = m_strdup(svr_ses.authstate.pw->pw_name);
+	ses.authstate.printableuser = m_strdup(ses.authstate.pw->pw_name);
 
 	/* check for non-root if desired */
-	if (svr_opts.norootlogin && svr_ses.authstate.pw->pw_uid == 0) {
+	if (svr_opts.norootlogin && ses.authstate.pw->pw_uid == 0) {
 		TRACE(("leave checkusername: root login disabled"));
 		dropbear_log(LOG_WARNING, "root login rejected");
 		send_msg_userauth_failure(0, 1);
@@ -226,18 +222,18 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* check for an empty password */
-	if (svr_ses.authstate.pw->pw_passwd[0] == '\0') {
+	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
 		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("shell is %s", svr_ses.authstate.pw->pw_shell));
+	TRACE(("shell is %s", ses.authstate.pw->pw_shell));
 
 	/* check that the shell is set */
-	usershell = svr_ses.authstate.pw->pw_shell;
+	usershell = ses.authstate.pw->pw_shell;
 	if (usershell[0] == '\0') {
 		/* empty shell in /etc/passwd means /bin/sh according to passwd(5) */
 		usershell = "/bin/sh";
@@ -258,7 +254,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	endusershell();
 	TRACE(("no matching shell"));
 	dropbear_log(LOG_WARNING, "user '%s' has invalid shell, rejected",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	
@@ -266,7 +262,7 @@ goodshell:
 	endusershell();
 	TRACE(("matching shell"));
 
-	TRACE(("uid = %d", svr_ses.authstate.pw->pw_uid));
+	TRACE(("uid = %d", ses.authstate.pw->pw_uid));
 	TRACE(("leave checkusername"));
 	return DROPBEAR_SUCCESS;
 
@@ -290,14 +286,14 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	/* put a list of allowed types */
 	typebuf = buf_new(30); /* long enough for PUBKEY and PASSWORD */
 
-	if (svr_ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
+	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		buf_putbytes(typebuf, AUTH_METHOD_PUBKEY, AUTH_METHOD_PUBKEY_LEN);
-		if (svr_ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
+		if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 			buf_putbyte(typebuf, ',');
 		}
 	}
 	
-	if (svr_ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
+	if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 		buf_putbytes(typebuf, AUTH_METHOD_PASSWORD, AUTH_METHOD_PASSWORD_LEN);
 	}
 
@@ -311,18 +307,18 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 
 	if (incrfail) {
 		usleep(300000); /* XXX improve this */
-		svr_ses.authstate.failcount++;
+		ses.authstate.failcount++;
 	}
 
-	if (svr_ses.authstate.failcount >= MAX_AUTH_TRIES) {
+	if (ses.authstate.failcount >= MAX_AUTH_TRIES) {
 		char * userstr;
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"));
 
-		if (svr_ses.authstate.printableuser == NULL) {
+		if (ses.authstate.printableuser == NULL) {
 			userstr = "is invalid";
 		} else {
-			userstr = svr_ses.authstate.printableuser;
+			userstr = ses.authstate.printableuser;
 		}
 		dropbear_exit("Max auth tries reached - user %s", userstr);
 	}
@@ -340,9 +336,9 @@ void send_msg_userauth_success() {
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SUCCESS);
 	encrypt_packet();
 
-	ses.authdone = 1;
+	ses.authstate.authdone = 1;
 
-	if (svr_ses.authstate.pw->pw_uid == 0) {
+	if (ses.authstate.pw->pw_uid == 0) {
 		ses.allowprivport = 1;
 	}
 

@@ -106,8 +106,8 @@ void svr_getopts(int argc, char ** argv) {
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
 	/* not yet
-	svr_opts.ipv4 = 1;
-	svr_opts.ipv6 = 1;
+	opts.ipv4 = 1;
+	opts.ipv6 = 1;
 	*/
 #ifdef DO_MOTD
 	svr_opts.domotd = 1;

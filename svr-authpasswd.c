@@ -35,7 +35,7 @@
 
 /* Process a password auth request, sending success or failure messages as
  * appropriate */
-void passwordauth() {
+void svr_auth_password() {
 	
 #ifdef HAVE_SHADOW_H
 	struct spwd *spasswd;
@@ -47,10 +47,10 @@ void passwordauth() {
 
 	unsigned char changepw;
 
-	passwdcrypt = svr_ses.authstate.pw->pw_passwd;
+	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
-	spasswd = getspnam(svr_ses.authstate.pw->pw_name);
+	spasswd = getspnam(ses.authstate.pw->pw_name);
 	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
 		passwdcrypt = spasswd->sp_pwdp;
 	}
@@ -66,7 +66,7 @@ void passwordauth() {
 	 * in auth.c */
 	if (passwdcrypt[0] == '\0') {
 		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
@@ -92,12 +92,12 @@ void passwordauth() {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
 				"password auth succeeded for '%s'",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
 				"bad password attempt for '%s'",
-				svr_ses.authstate.printableuser);
+				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 	}
 

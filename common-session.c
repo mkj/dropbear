@@ -45,8 +45,6 @@ int sessinitdone = 0; /* GLOBAL */
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
 int exitflag = 0; /* GLOBAL */
 
-void(*session_remoteclosed)() = NULL;
-
 
 static void checktimeouts();
 static int ident_readln(int fd, char* buf, int count);
@@ -63,7 +61,7 @@ void common_session_init(int sock, char* remotehost) {
 
 	ses.connecttimeout = 0;
 	
-	kexinitialise(); /* initialise the kex state */
+	kexfirstinitialise(); /* initialise the kex state */
 	chaninitialise(); /* initialise the channel state */
 
 	ses.writepayload = buf_new(MAX_TRANS_PAYLOAD_LEN);
@@ -103,8 +101,6 @@ void common_session_init(int sock, char* remotehost) {
 	ses.transkexinit = NULL;
 	ses.dh_K = NULL;
 	ses.remoteident = NULL;
-
-	ses.authdone = 0;
 
 	ses.chantypes = NULL;
 

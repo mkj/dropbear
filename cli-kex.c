@@ -34,6 +34,7 @@
 #include "bignum.h"
 #include "random.h"
 #include "runopts.h"
+#include "signkey.h"
 
 
 

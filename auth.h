@@ -27,11 +27,27 @@
 
 #include "includes.h"
 
-void authinitialise();
+void svr_authinitialise();
+void cli_authinitialise();
 
+void svr_auth_password();
+void svr_auth_pubkey();
+
+int cli_auth_password();
+int cli_auth_pubkey();
+
+/* Server functions */
 void recv_msg_userauth_request();
 void send_msg_userauth_failure(int partial, int incrfail);
 void send_msg_userauth_success();
+
+/* Client functions */
+void recv_msg_userauth_failure();
+void recv_msg_userauth_success();
+void cli_get_user();
+void cli_auth_getmethods();
+void cli_auth_try();
+
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
 
@@ -46,17 +62,23 @@ void send_msg_userauth_success();
 #define AUTH_METHOD_PASSWORD "password"
 #define AUTH_METHOD_PASSWORD_LEN 8
 
+/* This structure is shared between server and client - it contains
+ * relatively little extraneous bits when used for the client rather than the
+ * server */
 struct AuthState {
 
 	char *username; /* This is the username the client presents to check. It
 					   is updated each run through, used for auth checking */
-	char *printableuser; /* stripped of control chars, used for logs etc */
-	struct passwd * pw;
 	unsigned char authtypes; /* Flags indicating which auth types are still 
 								valid */
 	unsigned int failcount; /* Number of (failed) authentication attempts.*/
-	unsigned authdone : 1; /* 0 if we haven't authed, 1 if we have */
+	unsigned authdone : 1; /* 0 if we haven't authed, 1 if we have. Applies for
+							  client and server (though has differing [obvious]
+							  meanings). */
 
+	/* These are only used for the server */
+	char *printableuser; /* stripped of control chars, used for logs etc */
+	struct passwd * pw;
 
 };
 

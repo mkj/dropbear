@@ -79,7 +79,7 @@ void svr_session(int sock, int childpipe, char* remotehost) {
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
-	authinitialise();
+	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
@@ -90,10 +90,11 @@ void svr_session(int sock, int childpipe, char* remotehost) {
 	ses.connecttimeout = timeout.tv_sec + AUTH_TIMEOUT;
 
 	/* set up messages etc */
-	session_remoteclosed = svr_remoteclosed;
+	ses.remoteclosed = svr_remoteclosed;
 
 	/* packet handlers */
 	ses.packettypes = svr_packettypes;
+	ses.buf_match_algo = svr_buf_match_algo;
 
 	/* We're ready to go now */
 	sessinitdone = 1;
@@ -123,16 +124,16 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		/* before session init */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
 				"premature exit: %s", format);
-	} else if (svr_ses.authstate.authdone) {
+	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
 				"exit after auth (%s): %s", 
-				svr_ses.authstate.printableuser, format);
-	} else if (svr_ses.authstate.printableuser) {
+				ses.authstate.printableuser, format);
+	} else if (ses.authstate.printableuser) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
 				"exit before auth (user '%s', %d fails): %s",
-				svr_ses.authstate.printableuser, svr_ses.authstate.failcount, format);
+				ses.authstate.printableuser, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 

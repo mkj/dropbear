@@ -29,8 +29,6 @@
  * Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
  * parts are to allow for commandline -DDROPBEAR_XXX options etc.
  ******************************************************************/
-#define DROPBEAR_SERVER
-//#define DROPBEAR_CLIENT
 
 #ifndef DROPBEAR_PORT
 #define DROPBEAR_PORT 22
@@ -48,7 +46,6 @@
  * perhaps 20% slower for pubkey operations (it is probably worth experimenting
  * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
-#define DROPBEAR_SMALL_CODE
 
 /* Enable X11 Forwarding */
 #define ENABLE_X11FWD
@@ -114,7 +111,7 @@
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
 #define DROPBEAR_PASSWORD_AUTH
-#define DROPBEAR_PUBKEY_AUTH
+//#define DROPBEAR_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
  * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
@@ -162,20 +159,8 @@
 /* This is used by the scp binary when used as a client binary */
 #define _PATH_SSH_PROGRAM "/usr/bin/ssh"
 
-/* Multi-purpose binary  configuration - if you want to make the combined
- * binary, first define DROPBEAR_MULTI, and then define which of the three
- * components you want. You should then compile Dropbear with 
- * "make clean; make dropbearmulti". You'll need to install the binary
- * manually, see MULTI for details */
-
-/* #define DROPBEAR_MULTI */
-
-/* The three multi binaries: dropbear, dropbearkey, dropbearconvert
- * Comment out these if you don't want some of them */
-#define DBMULTI_DROPBEAR
-#define DBMULTI_KEY
-#define DBMULTI_CONVERT
-
+/* Multi-purpose binary configuration has now moved. Look at the top
+ * of the Makefile for instructions, or INSTALL */
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
@@ -246,7 +231,7 @@
 #define DROPBEAR_COMP_ZLIB 1
 
 /* Required for pubkey auth */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#if defined(DROPBEAR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
 

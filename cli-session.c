@@ -8,9 +8,11 @@
 #include "tcpfwd-remote.h"
 #include "channel.h"
 #include "random.h"
+#include "service.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();
+static void cli_session_init();
 
 struct clientsession cli_ses; /* GLOBAL */
 
@@ -28,6 +30,8 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_CLOSE, recv_msg_channel_close},
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
+	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure},
+	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success},
 	{0, 0} /* End */
 };
 
@@ -37,6 +41,7 @@ static const struct ChanType *cli_chantypes[] = {
 	 * that forwarding */
 	NULL /* Null termination */
 };
+
 void cli_session(int sock, char* remotehost) {
 
 	crypto_init();
@@ -44,11 +49,9 @@ void cli_session(int sock, char* remotehost) {
 
 	chaninitialise(cli_chantypes);
 
-	/* For printing "remote host closed" for the user */
-	session_remoteclosed = cli_remoteclosed;
 
-	/* packet handlers */
-	ses.packettypes = cli_packettypes;
+	/* Set up cli_ses vars */
+	cli_session_init();
 
 	/* Ready to go */
 	sessinitdone = 1;
@@ -66,26 +69,85 @@ void cli_session(int sock, char* remotehost) {
 
 	/* Not reached */
 
-
 }
 
+static void cli_session_init() {
+
+	cli_ses.state = STATE_NOTHING;
+	cli_ses.kex_state = KEX_NOTHING;
+
+	/* For printing "remote host closed" for the user */
+	ses.remoteclosed = cli_remoteclosed;
+	ses.buf_match_algo = cli_buf_match_algo;
+
+	/* packet handlers */
+	ses.packettypes = cli_packettypes;
+}
+
+/* This function drives the progress of the session - it initiates KEX,
+ * service, userauth and channel requests */
 static void cli_sessionloop() {
+
+	TRACE(("enter cli_sessionloop"));
+
+	if (cli_ses.kex_state == KEX_NOTHING && ses.kexstate.recvkexinit) {
+		cli_ses.state = KEXINIT_RCVD;
+	}
+
+	if (cli_ses.state == KEXINIT_RCVD) {
+
+		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
+		 * negotiation would have failed. */
+		send_msg_kexdh_init();
+		cli_ses.kex_state = KEXDH_INIT_SENT;
+		TRACE(("leave cli_sessionloop: done with KEXINIT_RCVD"));
+		return;
+	}
+
+	/* A KEX has finished, so we should go back to our KEX_NOTHING state */
+	if (cli_ses.kex_state != KEX_NOTHING && ses.kexstate.recvkexinit == 0
+			&& ses.kexstate.sentkexinit == 0) {
+		cli_ses.kex_state = KEX_NOTHING;
+	}
+
+	/* We shouldn't do anything else if a KEX is in progress */
+	if (cli_ses.kex_state != KEX_NOTHING) {
+		TRACE(("leave cli_sessionloop: kex_state != KEX_NOTHING"));
+		return;
+	}
+
+	/* We should exit if we haven't donefirstkex: we shouldn't reach here
+	 * in normal operation */
+	if (ses.kexstate.donefirstkex == 0) {
+		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"));
+	}
 
 	switch (cli_ses.state) {
 
-		KEXINIT_RCVD:
-			/* We initiate the KEX. If DH wasn't the correct type, the KEXINIT
-			 * negotiation would have failed. */
-			send_msg_kexdh_init();
-			cli_ses.state = KEXDH_INIT_SENT;
-			break;
+		case STATE_NOTHING:
+			/* We've got the transport layer sorted, we now need to request
+			 * userauth */
+			send_msg_service_request(SSH_SERVICE_USERAUTH);
+			cli_ses.state = SERVICE_AUTH_REQ_SENT;
+			return;
 
-		default:
-			break;
+		/* userauth code */
+		case SERVICE_AUTH_ACCEPT_RCVD:
+			cli_get_user();
+			cli_auth_getmethods();
+			cli_ses.state = USERAUTH_METHODS_SENT;
+			return;
+			
+		case USERAUTH_FAIL_RCVD:
+			cli_auth_try();
+			return;
+
+		/* XXX more here needed */
+
+
+	default:
+		break;
 	}
-
-	if (cli_ses.donefirstkex && !cli_ses.authdone) {
-
 
 
 }
@@ -97,5 +159,5 @@ static void cli_remoteclosed() {
 	 * already sent/received disconnect message(s) ??? */
 	close(ses.sock);
 	ses.sock = -1;
-	dropbear_exit("%s closed the connection", ses.remotehost);
+	dropbear_exit("remote closed the connection");
 }

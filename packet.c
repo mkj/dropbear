@@ -73,7 +73,7 @@ void write_packet() {
 	} 
 
 	if (written == 0) {
-		session_remoteclosed();
+		ses.remoteclosed();
 	}
 
 	if (written == len) {
@@ -122,7 +122,7 @@ void read_packet() {
 	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
 
 	if (len == 0) {
-		session_remoteclosed();
+		ses.remoteclosed();
 	}
 
 	if (len < 0) {
@@ -171,7 +171,7 @@ static void read_packet_init() {
 	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
-		session_remoteclosed();
+		ses.remoteclosed();
 	}
 	if (len < 0) {
 		if (errno == EINTR) {

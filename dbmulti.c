@@ -19,6 +19,11 @@ int main(int argc, char ** argv) {
 			return dropbear_main(argc, argv);
 		}
 #endif
+#ifdef DBMULTI_dbclient
+		if (strcmp(progname, "dbclient") == 0) {
+			return cli_main(argc, argv);
+		}
+#endif
 #ifdef DBMULTI_dropbearkey
 		if (strcmp(progname, "dropbearkey") == 0) {
 			return dropbearkey_main(argc, argv);
@@ -40,6 +45,9 @@ int main(int argc, char ** argv) {
 			"Make a symlink pointing at this binary with one of the following names:\n"
 #ifdef DBMULTI_dropbear
 			"'dropbear' - the Dropbear server\n"
+#endif
+#ifdef DBMULTI_dbclient
+			"'dbclient' - the Dropbear client\n"
 #endif
 #ifdef DBMULTI_dropbearkey
 			"'dropbearkey' - the key generator\n"

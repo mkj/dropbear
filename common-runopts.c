@@ -22,72 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _RUNOPTS_H_
-#define _RUNOPTS_H_
-
 #include "includes.h"
-#include "signkey.h"
-#include "buffer.h"
+#include "runopts.h"
 
-typedef struct runopts {
-
-	int nolocaltcp;
-	int noremotetcp;
-
-} runopts;
-
-extern runopts opts;
-
-typedef struct svr_runopts {
-
-	char * rsakeyfile;
-	char * dsskeyfile;
-	char * bannerfile;
-
-	int forkbg;
-	int usingsyslog;
-
-	/* ports is an array of the portcount listening ports */
-	uint16_t *ports;
-	unsigned int portcount;
-
-	/* Flags indicating whether to use ipv4 and ipv6 */
-	/* not used yet
-	int ipv4;
-	int ipv6;
-	*/
-
-#ifdef DO_MOTD
-	/* whether to print the MOTD */
-	int domotd;
-#endif
-
-	int norootlogin;
-
-	int noauthpass;
-	int norootpass;
-
-	sign_key *hostkey;
-	buffer * banner;
-
-} svr_runopts;
-
-extern svr_runopts svr_opts;
-
-void svr_getopts(int argc, char ** argv);
-
-/* Uncompleted XXX matt */
-typedef struct cli_runopts {
-
-	char *remotehost;
-	char *remoteport;
-
-	char *username;
-	/* XXX TODO */
-
-} cli_runopts;
-
-extern cli_runopts cli_opts;
-void cli_getopts(int argc, char ** argv);
-
-#endif /* _RUNOPTS_H_ */
+runopts opts; /* GLOBAL */

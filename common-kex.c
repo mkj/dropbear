@@ -5,7 +5,7 @@
  * This code is copied from the larger file "kex.c" 
  * some functions are verbatim, others are generalized --mihnea
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2004 Matt Johnston
  * Portions Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
  * 
@@ -54,10 +54,12 @@ const unsigned char dh_p_val[] = {
 
 const int DH_G_VAL = 2;
 
+static void kexinitialise();
 static void gen_new_keys();
 #ifndef DISABLE_ZLIB
 static void gen_new_zstreams();
 #endif
+static void read_kex_algos();
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, unsigned const char X);
@@ -145,6 +147,7 @@ void send_msg_newkeys() {
 		kexinitialise(); /* we've finished with this kex */
 		TRACE((" -> DATAALLOWED=1"));
 		ses.dataallowed = 1; /* we can send other packets again now */
+		ses.kexstate.donefirstkex = 1;
 	} else {
 		ses.kexstate.sentnewkeys = 1;
 		TRACE(("SENTNEWKEYS=1"));
@@ -168,6 +171,7 @@ void recv_msg_newkeys() {
 		kexinitialise(); /* we've finished with this kex */
 	    TRACE((" -> DATAALLOWED=1"));
 	    ses.dataallowed = 1; /* we can send other packets again now */
+		ses.kexstate.donefirstkex = 1;
 	} else {
 		TRACE(("RECVNEWKEYS=1"));
 		ses.kexstate.recvnewkeys = 1;
@@ -177,8 +181,15 @@ void recv_msg_newkeys() {
 }
 
 
-/* Duplicated verbatim from kex.c --mihnea */
-void kexinitialise() {
+/* Set up the kex for the first time */
+void kexfirstinitialise() {
+
+	ses.kexstate.donefirstkex = 0;
+	kexinitialise();
+}
+
+/* Reset the kex state, ready for a new negotiation */
+static void kexinitialise() {
 
 	struct timeval tv;
 
@@ -404,7 +415,7 @@ void recv_msg_kexinit() {
 #ifdef DROPBEAR_CLIENT
 
 		/* read the peer's choice of algos */
-		read_kex_algos(cli_buf_match_algo);
+		read_kex_algos();
 
 		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf,
@@ -423,14 +434,13 @@ void recv_msg_kexinit() {
 			buf_getptr(ses.payload, ses.payload->len),
 			ses.payload->len);
 
-		cli_ses.state = KEXINIT_RCVD;
 #endif
 	} else {
 		/* SERVER */
 #ifdef DROPBEAR_SERVER
 
 		/* read the peer's choice of algos */
-		read_kex_algos(svr_buf_match_algo);
+		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf, 
 			ses.remoteident, strlen((char*)ses.remoteident));
@@ -583,9 +593,7 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 
 /* read the other side's algo list. buf_match_algo is a callback to match
  * algos for the client or server. */
-void read_kex_algos(
-		algo_type*(buf_match_algo)(buffer*buf, algo_type localalgos[],
-			int *goodguess)) {
+static void read_kex_algos() {
 
 	algo_type * algo;
 	char * erralgo = NULL;
@@ -599,7 +607,7 @@ void read_kex_algos(
 	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
 
 	/* kex_algorithms */
-	algo = buf_match_algo(ses.payload, sshkex, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshkex, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "kex";
@@ -608,7 +616,7 @@ void read_kex_algos(
 	ses.newkeys->algo_kex = algo->val;
 
 	/* server_host_key_algorithms */
-	algo = buf_match_algo(ses.payload, sshhostkey, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshhostkey, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";
@@ -617,7 +625,7 @@ void read_kex_algos(
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
@@ -625,7 +633,7 @@ void read_kex_algos(
 	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
 
 	/* encryption_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
@@ -633,7 +641,7 @@ void read_kex_algos(
 	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
 
 	/* mac_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
@@ -641,7 +649,7 @@ void read_kex_algos(
 	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
 
 	/* mac_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
@@ -649,7 +657,7 @@ void read_kex_algos(
 	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
 
 	/* compression_algorithms_client_to_server */
-	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -657,7 +665,7 @@ void read_kex_algos(
 	ses.newkeys->recv_algo_comp = algo->val;
 
 	/* compression_algorithms_server_to_client */
-	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
+	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;

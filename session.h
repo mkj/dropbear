@@ -45,7 +45,6 @@ void common_session_cleanup();
 void checktimeouts();
 void session_identification();
 
-extern void(*session_remoteclosed)();
 
 /* Server */
 void svr_session(int sock, int childpipe, char *remotehost);
@@ -135,13 +134,18 @@ struct sshsession {
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
 							 can add it to the hash when generating keys */
 
+	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
+			int *goodguess); /* The function to use to choose which algorithm
+								to use from the ones presented by the remote
+								side. Is specific to the client/server mode,
+								hence the function-pointer callback.*/
 
-	unsigned char authdone;	/* Indicates when authentication has been
-							   completed. This applies to both client and
-							   server - in the server it gets set to 1 when
-							   authentication is successful, in the client it
-							   is set when the server has told us that auth
-							   succeeded */
+	void(*remoteclosed)(); /* A callback to handle closure of the
+									  remote connection */
+
+
+	struct AuthState authstate; /* Common amongst client and server, since most
+								   struct elements are common */
 
 	/* Channel related */
 	struct Channel ** channels; /* these pointers may be null */
@@ -165,7 +169,6 @@ struct serversession {
 	/* Server specific options */
 	int childpipe; /* kept open until we successfully authenticate */
 	/* userauth */
-	struct AuthState authstate;
 
 	struct ChildPid * childpids; /* array of mappings childpid<->channel */
 	unsigned int childpidsize;
@@ -173,17 +176,30 @@ struct serversession {
 };
 
 typedef enum {
-	NOTHING,
+	KEX_NOTHING,
 	KEXINIT_RCVD,
 	KEXDH_INIT_SENT,
-	KEXDH_REPLY_RCVD,
+	KEXDONE,
+
+} cli_kex_state;
+
+typedef enum {
+	STATE_NOTHING,
+	SERVICE_AUTH_REQ_SENT,
+	SERVICE_AUTH_ACCEPT_RCVD,
+	SERVICE_CONN_REQ_SENT,
+	SERVICE_CONN_ACCEPT_RCVD,
+	USERAUTH_METHODS_SENT,
+	USERAUTH_REQ_SENT,
+	USERAUTH_FAIL_RCVD,
 
 } cli_state;
 
 struct clientsession {
 
 	mp_int *dh_e, *dh_x; /* Used during KEX */
-	cli_state state; /* Used to progress the KEX/auth/channelsession etc */
+	cli_kex_state kex_state; /* Used for progressing KEX */
+	cli_state state; /* Used to progress auth/channelsession etc */
 	int something; /* XXX */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 

@@ -56,7 +56,7 @@ void recv_msg_service_request() {
 	/* ssh-connection */
 	if (len == SSH_SERVICE_CONNECTION_LEN &&
 			(strncmp(SSH_SERVICE_CONNECTION, name, len) == 0)) {
-		if (ses.authdone != 1) {
+		if (ses.authstate.authdone != 1) {
 			dropbear_exit("request for connection before auth");
 		}
 
@@ -70,7 +70,6 @@ void recv_msg_service_request() {
 	/* TODO this should be a MSG_DISCONNECT */
 	dropbear_exit("unrecognised SSH_MSG_SERVICE_REQUEST");
 
-	TRACE(("leave recv_msg_service_request"));
 
 }
 
