@@ -329,7 +329,7 @@ void send_msg_userauth_success() {
 	encrypt_packet();
 
 	ses.authstate.authdone = 1;
-	close(ses.childpipe);
+	close(ses.childpipe); /* remove from the list of pre-auth sockets */
 	TRACE(("leave send_msg_userauth_success"));
 
 }
