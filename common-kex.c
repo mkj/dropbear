@@ -634,42 +634,44 @@ static void read_kex_algos() {
 
 	/* encryption_algorithms_client_to_server */
 	c2s_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
-	if (algo == NULL) {
+	if (c2s_cipher_algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
 	}
+	TRACE(("c2s is  %s", c2s_cipher_algo->name));
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
-	if (algo == NULL) {
+	if (s2c_cipher_algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
 	}
+	TRACE(("s2c is  %s", s2c_cipher_algo->name));
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
-	if (algo == NULL) {
+	if (c2s_hash_algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
 	}
 
 	/* mac_algorithms_server_to_client */
 	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
-	if (algo == NULL) {
+	if (s2c_hash_algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
 	}
 
 	/* compression_algorithms_client_to_server */
 	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
-	if (algo == NULL) {
+	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
 	}
 
 	/* compression_algorithms_server_to_client */
 	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
-	if (algo == NULL) {
+	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
 	}
