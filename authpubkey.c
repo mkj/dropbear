@@ -38,7 +38,9 @@
 #ifdef DROPBEAR_PUBKEY_AUTH
 
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
-#define MAX_AUTHKEYS_LINE 1000 /* max length of a line in authkeys */
+#define INIT_AUTHKEYS_LINE 1200 /* initial length of a line in authkeys */
+#define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
+#define INCR_AUTHKEYS_LINE 1000 /* increment to length of a line in authkeys */
 
 static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
@@ -204,10 +206,11 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	}
 	TRACE(("checkpubkey: opened authorized_keys OK"));
 
-	line = buf_new(MAX_AUTHKEYS_LINE);
+	line = buf_new(INIT_AUTHKEYS_LINE);
 
 	/* iterate through the lines */
 	do {
+		char* thealgo  = NULL;
 		/* free reused vars */
 		if (decodekey) {
 			buf_free(decodekey);
@@ -229,6 +232,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		/* check the key type - this also stops us from using keys
 		 * which have options with them */
 		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
+			TRACE(("unexpected algo, got %s we expected %s", thealgo, algo));
 			continue;
 		}
 		buf_incrpos(line, algolen);
@@ -318,6 +322,12 @@ static int getauthline(buffer * line, FILE * authfile) {
 			goto out;
 		}
 		buf_putbyte(line, (unsigned char)c);
+		/* we only grow as big as we need */
+		if (line->len == line->size && line->size < MAX_AUTHKEYS_LINE) {
+			TRACE(("resizing line from %d to %d", line->size, 
+						line->size + INIT_AUTHKEYS_LINE));
+			buf_resize(line, line->size + INCR_AUTHKEYS_LINE);
+		}
 	}
 
 	TRACE(("leave getauthline: line too long"));
