@@ -183,4 +183,3 @@ extern int hmac_file(int hash, const char *fname, const unsigned char *key,
                      unsigned long keylen, 
                      unsigned char *dst, unsigned long *dstlen);
 #endif
-

@@ -37,7 +37,7 @@ int hmac_init(hmac_state *hmac, int hash, const unsigned char *key, unsigned lon
         return err;
     }
 
-    if(key == NULL || keylen == 0) {
+    if (keylen == 0) {
         return CRYPT_INVALID_KEYSIZE;
     }
 
@@ -231,6 +231,9 @@ Category: Informational                                        R. Glenn
 
 int hmac_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
     unsigned char digest[MAXBLOCKSIZE];
     int i;
 
@@ -497,6 +500,7 @@ Key First"
     } else {
         return CRYPT_OK;
     }
+ #endif
 }
 
 #endif

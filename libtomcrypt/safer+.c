@@ -407,6 +407,9 @@ void saferp_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_ke
 
 int saferp_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const struct {
        int keylen;
        unsigned char key[32], pt[16], ct[16];
@@ -443,11 +446,11 @@ int saferp_test(void)
 
    unsigned char buf[2][16];
    symmetric_key skey;
-   int errno, i;
+   int err, i;
 
    for (i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {
-      if ((errno = saferp_setup(tests[i].key, tests[i].keylen, 0, &skey)) != CRYPT_OK)  {
-         return errno;
+      if ((err = saferp_setup(tests[i].key, tests[i].keylen, 0, &skey)) != CRYPT_OK)  {
+         return err;
       }
       saferp_ecb_encrypt(tests[i].pt, buf[0], &skey);
       saferp_ecb_decrypt(buf[0], buf[1], &skey);
@@ -459,6 +462,7 @@ int saferp_test(void)
    }
 
    return CRYPT_OK;
+ #endif
 }
 
 int saferp_keysize(int *desired_keysize)

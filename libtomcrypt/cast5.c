@@ -552,6 +552,9 @@ void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key
 
 int cast5_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const struct {
        int keylen;
        unsigned char key[16];
@@ -590,6 +593,7 @@ int cast5_test(void)
    
    }
    return CRYPT_OK;
+ #endif
 }
 
 int cast5_keysize(int *desired_keysize)

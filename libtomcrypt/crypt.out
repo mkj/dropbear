@@ -1,0 +1,76 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [1][-]{section.1.1}{What is the LibTomCrypt?}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.1.1}{What the library IS for?}{section.1.1}
+\BOOKMARK [2][-]{subsection.1.1.2}{What the library IS NOT for?}{section.1.1}
+\BOOKMARK [1][-]{section.1.2}{Why did I write it?}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.2.1}{Modular}{section.1.2}
+\BOOKMARK [1][-]{section.1.3}{License}{chapter.1}
+\BOOKMARK [1][-]{section.1.4}{Patent Disclosure}{chapter.1}
+\BOOKMARK [1][-]{section.1.5}{Building the library}{chapter.1}
+\BOOKMARK [1][-]{section.1.6}{Building against the library}{chapter.1}
+\BOOKMARK [1][-]{section.1.7}{Thanks}{chapter.1}
+\BOOKMARK [0][-]{chapter.2}{The Application Programming Interface \(API\)}{}
+\BOOKMARK [1][-]{section.2.1}{Introduction}{chapter.2}
+\BOOKMARK [1][-]{section.2.2}{Macros}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Functions with Variable Length Output}{chapter.2}
+\BOOKMARK [1][-]{section.2.4}{Functions that need a PRNG}{chapter.2}
+\BOOKMARK [1][-]{section.2.5}{Functions that use Arrays of Octets}{chapter.2}
+\BOOKMARK [0][-]{chapter.3}{Symmetric Block Ciphers}{}
+\BOOKMARK [1][-]{section.3.1}{Core Functions}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{Key Sizes and Number of Rounds}{chapter.3}
+\BOOKMARK [1][-]{section.3.3}{The Cipher Descriptors}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.3.1}{Notes}{section.3.3}
+\BOOKMARK [1][-]{section.3.4}{Symmetric Modes of Operations}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.4.1}{Background}{section.3.4}
+\BOOKMARK [2][-]{subsection.3.4.2}{Choice of Mode}{section.3.4}
+\BOOKMARK [2][-]{subsection.3.4.3}{Implementation}{section.3.4}
+\BOOKMARK [0][-]{chapter.4}{One-Way Cryptographic Hash Functions}{}
+\BOOKMARK [1][-]{section.4.1}{Core Functions}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{Hash Descriptors}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.2.1}{Notice}{section.4.2}
+\BOOKMARK [1][-]{section.4.3}{Hash based Message Authenication Codes}{chapter.4}
+\BOOKMARK [0][-]{chapter.5}{Pseudo-Random Number Generators}{}
+\BOOKMARK [1][-]{section.5.1}{Core Functions}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.1.1}{Remarks}{section.5.1}
+\BOOKMARK [2][-]{subsection.5.1.2}{Example}{section.5.1}
+\BOOKMARK [1][-]{section.5.2}{PRNG Descriptors}{chapter.5}
+\BOOKMARK [1][-]{section.5.3}{The Secure RNG}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.3.1}{The Secure PRNG Interface}{section.5.3}
+\BOOKMARK [0][-]{chapter.6}{RSA Routines}{}
+\BOOKMARK [1][-]{section.6.1}{Background}{chapter.6}
+\BOOKMARK [1][-]{section.6.2}{Core Functions}{chapter.6}
+\BOOKMARK [1][-]{section.6.3}{Packet Routines}{chapter.6}
+\BOOKMARK [1][-]{section.6.4}{Remarks}{chapter.6}
+\BOOKMARK [0][-]{chapter.7}{Diffie-Hellman Key Exchange}{}
+\BOOKMARK [1][-]{section.7.1}{Background}{chapter.7}
+\BOOKMARK [1][-]{section.7.2}{Core Functions}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.2.1}{Remarks on Usage}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.2}{Remarks on The Snippet}{section.7.2}
+\BOOKMARK [1][-]{section.7.3}{Other Diffie-Hellman Functions}{chapter.7}
+\BOOKMARK [1][-]{section.7.4}{DH Packet}{chapter.7}
+\BOOKMARK [0][-]{chapter.8}{Elliptic Curve Cryptography}{}
+\BOOKMARK [1][-]{section.8.1}{Background}{chapter.8}
+\BOOKMARK [1][-]{section.8.2}{Core Functions}{chapter.8}
+\BOOKMARK [1][-]{section.8.3}{ECC Packet}{chapter.8}
+\BOOKMARK [1][-]{section.8.4}{ECC Keysizes}{chapter.8}
+\BOOKMARK [0][-]{chapter.9}{Public Keyrings}{}
+\BOOKMARK [1][-]{section.9.1}{Introduction}{chapter.9}
+\BOOKMARK [1][-]{section.9.2}{The Keyring API}{chapter.9}
+\BOOKMARK [0][-]{chapter.10}{GF\(2w\) Math Routines}{}
+\BOOKMARK [0][-]{chapter.11}{Miscellaneous}{}
+\BOOKMARK [1][-]{section.11.1}{Base64 Encoding and Decoding}{chapter.11}
+\BOOKMARK [1][-]{section.11.2}{The Multiple Precision Integer Library \(MPI\)}{chapter.11}
+\BOOKMARK [2][-]{subsection.11.2.1}{Binary Forms of ``mp\137int'' Variables}{section.11.2}
+\BOOKMARK [2][-]{subsection.11.2.2}{Primality Testing}{section.11.2}
+\BOOKMARK [0][-]{chapter.12}{Programming Guidelines}{}
+\BOOKMARK [1][-]{section.12.1}{Secure Pseudo Random Number Generators}{chapter.12}
+\BOOKMARK [1][-]{section.12.2}{Preventing Trivial Errors}{chapter.12}
+\BOOKMARK [1][-]{section.12.3}{Registering Your Algorithms}{chapter.12}
+\BOOKMARK [1][-]{section.12.4}{Key Sizes}{chapter.12}
+\BOOKMARK [2][-]{subsection.12.4.1}{Symmetric Ciphers}{section.12.4}
+\BOOKMARK [2][-]{subsection.12.4.2}{Assymetric Ciphers}{section.12.4}
+\BOOKMARK [1][-]{section.12.5}{Thread Safety}{chapter.12}
+\BOOKMARK [0][-]{chapter.13}{Configuring the Library}{}
+\BOOKMARK [1][-]{section.13.1}{Introduction}{chapter.13}
+\BOOKMARK [1][-]{section.13.2}{mycrypt\137cfg.h}{chapter.13}
+\BOOKMARK [1][-]{section.13.3}{The Configure Script}{chapter.13}

@@ -1,29 +1,109 @@
 #include "mycrypt.h"
 #include <signal.h>
 
-/* decreased to 4 from 32 for Dropbear, this saves ~3kB of binary size */
-#define TAB_SIZE    4
+#define TAB_SIZE    32
 
 struct _cipher_descriptor cipher_descriptor[TAB_SIZE] = {
 { NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-};
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL } };
 
 struct _hash_descriptor hash_descriptor[TAB_SIZE] = {
 { NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
 { NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
-};
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL },
+{ NULL, 0, 0, 0, NULL, NULL, NULL, NULL } };
 
 struct _prng_descriptor prng_descriptor[TAB_SIZE] = {
 { NULL, NULL, NULL, NULL, NULL },
 { NULL, NULL, NULL, NULL, NULL },
 { NULL, NULL, NULL, NULL, NULL },
 { NULL, NULL, NULL, NULL, NULL },
-};
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL },
+{ NULL, NULL, NULL, NULL, NULL } };
 
 /* ch1-01-1 */
 #if (ARGTYPE == 0)
@@ -303,9 +383,6 @@ const char *crypt_build_settings =
 #endif
 #if defined(RC6)
    "   RC6\n"
-#endif
-#if defined(SERPENT)
-   "   Serpent\n"
 #endif
 #if defined(SAFERP)
    "   Safer+\n"

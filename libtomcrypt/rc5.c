@@ -152,6 +152,9 @@ void rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
 
 int rc5_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const struct {
        unsigned char key[16], pt[8], ct[8];
    } tests[] = {
@@ -194,6 +197,7 @@ int rc5_test(void)
       }
    }
    return CRYPT_OK;
+  #endif
 }
 
 int rc5_keysize(int *desired_keysize)

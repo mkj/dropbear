@@ -23,7 +23,7 @@ extern clock_t XCLOCK(void);
 
 /* Controls endianess and size of registers.  Leave uncommented to get platform neutral [slower] code */
 /* detect x86-32 machines somewhat */
-#if (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__)))
+#if (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__i386__)))
    #define ENDIAN_LITTLE
    #define ENDIAN_32BITWORD
 #endif

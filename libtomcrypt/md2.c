@@ -136,6 +136,9 @@ void md2_done(hash_state * md, unsigned char *hash)
 
 int md2_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const struct {
         char *msg;
         unsigned char md[16];
@@ -184,6 +187,7 @@ int md2_test(void)
        }
    }
    return CRYPT_OK;        
+  #endif
 }
 
 #endif

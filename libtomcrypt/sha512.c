@@ -59,7 +59,7 @@ CONST64(0x5fcb6fab3ad6faec), CONST64(0x6c44198c4a475817)
 };
 
 /* Various logical functions */
-#define Ch(x,y,z)       ((x & y) | (~x & z))
+#define Ch(x,y,z)       (z ^ (x & (y ^ z)))
 #define Maj(x,y,z)      (((x | y) & z) | (x & y)) 
 #define S(x, n)         ROR64((x),(n))
 #define R(x, n)         (((x)&CONST64(0xFFFFFFFFFFFFFFFF))>>((ulong64)n))
@@ -152,7 +152,7 @@ void sha512_process(hash_state * md, const unsigned char *buf, unsigned long len
         buf               += n;
         len               -= n;
 
-        /* is 64 bytes full? */
+        /* is 128 bytes full? */
         if (md->sha512.curlen == 128) {
             sha512_compress(md);
             md->sha512.length += 1024;
@@ -209,6 +209,9 @@ void sha512_done(hash_state * md, unsigned char *hash)
 
 int  sha512_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
   static const struct {
       char *msg;
       unsigned char hash[64];
@@ -248,6 +251,7 @@ int  sha512_test(void)
       }
   }
   return CRYPT_OK;
+  #endif
 }
 
 #ifdef SHA384

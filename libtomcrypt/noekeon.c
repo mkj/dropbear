@@ -169,6 +169,9 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
 
 int noekeon_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const unsigned char
           key[] = 
              { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
@@ -193,13 +196,14 @@ int noekeon_test(void)
    }
    
    return CRYPT_OK;
+ #endif
 }
 
 int noekeon_keysize(int *desired_keysize)
 {
    _ARGCHK(desired_keysize != NULL);
    if (*desired_keysize < 16) {
-   	  return CRYPT_INVALID_KEYSIZE;
+      return CRYPT_INVALID_KEYSIZE;
    } else {
       *desired_keysize = 16;
       return CRYPT_OK;

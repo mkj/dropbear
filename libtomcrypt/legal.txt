@@ -4,19 +4,6 @@ Tom St Denis
 The bulk of the code was written or donated under the TDCAL "Tom Doesn't Care About License" license.  It entitles the developer to free-reign on
 the use and distribution of derived works, commercial or otherwise.  Certain files are taken from public domain packages.
 
-AES.C
------
-Author: Dr Brian Gladman
-Email : gladman@seven77.demon.co.uk
-Disclaimer (verbatim)
-----
-/* Copyright in this implementation is held by Dr B R Gladman but I     */
-/* hereby give permission for its free direct or derivative use subject */
-/* to acknowledgment of its origin and compliance with any conditions   */
-/* that the originators of the algorithm place on its exploitation.     */
-----
-Status:  Public Domain, modified [not original]
-
 DES.C
 -----
 Author:  Unknown,  Submitted by Dobes Vandermeer
@@ -64,17 +51,3 @@ Author: [copied verbatim]
 Email: demoliner@isi.ee.ethz.ch
 Disclaimer:  Appears to be Public Domain [not quite sure]
 Status: Public Domain, modified [not original]
-
-SERPENT.C
----------
-Author:  Dr. Brian Gladman
-Email : gladman@seven77.demon.co.uk
-Disclaimer (verbatim)
-----
-/* Copyright in this implementation is held by Dr B R Gladman but I     */
-/* hereby give permission for its free direct or derivative use subject */
-/* to acknowledgment of its origin and compliance with any conditions   */
-/* that the originators of the algorithm place on its exploitation.     */
-----
-Status:  Public Domain, modified [not original]
-

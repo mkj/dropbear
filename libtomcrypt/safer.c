@@ -344,6 +344,9 @@ int safer_128_keysize(int *keysize)
 
 int safer_k64_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const unsigned char k64_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               k64_key[] = { 8, 7, 6, 5, 4, 3, 2, 1 },
                               k64_ct[]  = { 200, 242, 156, 221, 135, 120, 62, 217 };
@@ -364,11 +367,15 @@ int safer_k64_test(void)
    }
 
    return CRYPT_OK;
+ #endif
 }
 
 
 int safer_sk64_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const unsigned char sk64_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk64_key[] = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk64_ct[]  = { 95, 206, 155, 162, 5, 132, 56, 199 };
@@ -390,10 +397,14 @@ int safer_sk64_test(void)
    }
 
    return CRYPT_OK;
+  #endif
 }
 
 int safer_sk128_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const unsigned char sk128_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk128_key[] = { 1, 2, 3, 4, 5, 6, 7, 8,
                                               0, 0, 0, 0, 0, 0, 0, 0 },
@@ -413,9 +424,8 @@ int safer_sk128_test(void)
    if (memcmp(buf[0], sk128_ct, 8) != 0 || memcmp(buf[1], sk128_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
-
-
-   return CRYPT_OK;
+  return CRYPT_OK;
+ #endif
 }
 
 #endif

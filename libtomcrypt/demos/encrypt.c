@@ -13,7 +13,7 @@ int errno;
 
 static const struct _cipher_descriptor *ciphers[] = {
    &blowfish_desc,   &xtea_desc,        &rc5_desc,        &rc6_desc,
-   &saferp_desc,     &serpent_desc,     &rijndael_desc,
+   &saferp_desc,     &rijndael_desc,
    &twofish_desc,    &safer_k64_desc,   &safer_sk64_desc,
    &safer_k128_desc, &safer_sk128_desc, &rc2_desc,
    &des_desc,        &des3_desc,        &cast5_desc, NULL

@@ -14,7 +14,7 @@ const struct _hash_descriptor md5_desc =
     &md5_test
 };
 
-#define F(x,y,z)  ((x&y)|((~x)&z))
+#define F(x,y,z)  (z ^ (x & (y ^ z)))
 #define G(x,y,z)  ((x&z)|(y&(~z)))
 #define H(x,y,z)  (x^y^z)
 #define I(x,y,z)  (y^(x|(~z)))
@@ -208,6 +208,9 @@ void md5_done(hash_state * md, unsigned char *hash)
 
 int  md5_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
   static const struct {
       char *msg;
       unsigned char hash[16];
@@ -249,6 +252,7 @@ int  md5_test(void)
       }
   }
   return CRYPT_OK;
+ #endif
 }
 
 #endif
