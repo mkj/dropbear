@@ -137,7 +137,7 @@ pk_key *kr_find_name(pk_key *pk, const char *name)
 }
  
 
-int kr_add(pk_key *pk, int key_type, int system, const unsigned char *name, 
+int kr_add(pk_key *pk, int key_type, int sys, const unsigned char *name, 
            const unsigned char *email, const unsigned char *description, const _pk_key *key)
 {
    _ARGCHK(pk != NULL);
@@ -151,7 +151,7 @@ int kr_add(pk_key *pk, int key_type, int system, const unsigned char *name,
       return CRYPT_PK_INVALID_TYPE;
    }
  
-   if (system != RSA_KEY && system != DH_KEY && system != ECC_KEY) {
+   if (sys != RSA_KEY && sys != DH_KEY && sys != ECC_KEY) {
       return CRYPT_PK_INVALID_SYSTEM;
    }
 
@@ -177,7 +177,7 @@ int kr_add(pk_key *pk, int key_type, int system, const unsigned char *name,
 
    /* now add this new data to this ring spot */
    pk->key_type = key_type;
-   pk->system   = system;
+   pk->system   = sys;
    strncpy((char *)pk->name, (char *)name, sizeof(pk->name)-1);
    strncpy((char *)pk->email, (char *)email, sizeof(pk->email)-1);
    strncpy((char *)pk->description, (char *)description, sizeof(pk->description)-1);
@@ -187,7 +187,7 @@ int kr_add(pk_key *pk, int key_type, int system, const unsigned char *name,
    zeromem(&(pk->key), sizeof(pk->key));
 
    /* copy the key */
-   switch (system) {
+   switch (sys) {
          case RSA_KEY:
               memcpy(&(pk->key.rsa), &(key->rsa), sizeof(key->rsa));
               break;
@@ -366,7 +366,7 @@ int kr_export(pk_key *pk, unsigned long ID, int key_type, unsigned char *out, un
 int kr_import(pk_key *pk, const unsigned char *in, unsigned long inlen)
 {
    _pk_key key;
-   int system, key_type, err;
+   int sys, key_type, err;
    unsigned long ID;
 
    _ARGCHK(pk != NULL);
@@ -380,7 +380,7 @@ int kr_import(pk_key *pk, const unsigned char *in, unsigned long inlen)
       return CRYPT_INVALID_PACKET;
    }
    key_type = in[4];                                 /* get type */
-   system   = in[5];                                 /* get system */
+   sys      = in[5];                                 /* get system */
    LOAD32L(ID,in+6);                                 /* the ID */
 
    if (ID != kr_crc(in+10, in+10+MAXLEN, in+10+MAXLEN+MAXLEN)) {
@@ -392,7 +392,7 @@ int kr_import(pk_key *pk, const unsigned char *in, unsigned long inlen)
    /* size of remaining packet */
    inlen -= 10 + 3*MAXLEN;
    
-   switch (system) {
+   switch (sys) {
         case RSA_KEY:
             if ((err = rsa_import(in+10+3*MAXLEN, inlen, &(key.rsa))) != CRYPT_OK) {
                return err;
@@ -409,7 +409,7 @@ int kr_import(pk_key *pk, const unsigned char *in, unsigned long inlen)
             }
             break;
    }
-   return kr_add(pk, key_type, system, 
+   return kr_add(pk, key_type, sys, 
                  in+10,                           /* the name */
                  in+10+MAXLEN,                    /* email address */
                  in+10+MAXLEN+MAXLEN,             /* description */
@@ -509,7 +509,7 @@ done:
 }
 
 int kr_make_key(pk_key *pk, prng_state *prng, int wprng, 
-                int system, int keysize, const unsigned char *name,
+                int sys, int keysize, const unsigned char *name,
                 const unsigned char *email, const unsigned char *description)
 {
    _pk_key key;
@@ -527,7 +527,7 @@ int kr_make_key(pk_key *pk, prng_state *prng, int wprng,
 
    /* make the key first */
    zeromem(&key, sizeof(key));
-   switch (system) {
+   switch (sys) {
       case RSA_KEY: 
           if ((err = rsa_make_key(prng, wprng, keysize, 65537, &(key.rsa))) != CRYPT_OK) {
              return err;
@@ -551,7 +551,7 @@ int kr_make_key(pk_key *pk, prng_state *prng, int wprng,
    }
 
    /* now add the key */
-   if ((err = kr_add(pk, key_type, system, name, email, description, &key)) != CRYPT_OK) {
+   if ((err = kr_add(pk, key_type, sys, name, email, description, &key)) != CRYPT_OK) {
       return err;
    }
 

@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 /* version */
-#define CRYPT   0x0082
-#define SCRYPT  "0.82"
+#define CRYPT   0x0083
+#define SCRYPT  "0.83"
 
 /* max size of either a cipher/hash block or symmetric key [largest of the two] */
 #define MAXBLOCKSIZE           128
@@ -27,6 +27,7 @@ extern "C" {
 enum {
    CRYPT_OK=0,             /* Result OK */
    CRYPT_ERROR,            /* Generic Error */
+   CRYPT_NOP,              /* Not a failure but no operation was performed */
 
    CRYPT_INVALID_KEYSIZE,  /* Invalid key size given */
    CRYPT_INVALID_ROUNDS,   /* Invalid number of rounds */

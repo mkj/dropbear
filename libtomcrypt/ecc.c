@@ -235,8 +235,13 @@ static ecc_point *new_point(void)
 
 static void del_point(ecc_point *p)
 {
-   mp_clear_multi(&p->x, &p->y, NULL);
-   XFREE(p);
+   /* prevents free'ing null arguments */
+   if (p == NULL) {
+      return;
+   } else {
+      mp_clear_multi(&p->x, &p->y, NULL);
+      XFREE(p);
+   }
 }
 
 /* double a point R = 2P, R can be P*/
@@ -344,155 +349,160 @@ done:
    return res;
 }
 
+/* size of sliding window, don't change this! */
+#define WINSIZE 4
+
 /* perform R = kG where k == integer and G == ecc_point */
 static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
 {
-   ecc_point *tG, *M[30];
-   int i, j, z, res, Q;
-   mp_digit d;
-   unsigned char bits[150], m, first;
+   ecc_point *tG, *M[8];
+   int i, j, res;
    mp_int mu;
-   
-   
-   if ((USED(k) * MP_DIGIT_BIT) > 256) {
-      Q = 5;
-   } else {
-      Q = 4;
-   }
-   
-   if (mp_init(&mu) != MP_OKAY) {
-      return CRYPT_MEM;
-   }
+   mp_digit buf;
+   int     first, bitbuf, bitcpy, bitcnt, mode, digidx;
    
   /* init barrett reduction */
-  mp_set(&mu, 1); 
-  mp_lshd(&mu, 2 * USED(modulus));
-  if (mp_div(&mu, modulus, &mu, NULL) != MP_OKAY) {
-    mp_clear(&mu);
-    return CRYPT_MEM;
+  if (mp_init(&mu) != MP_OKAY) {
+      return CRYPT_MEM;
+  }
+  if (mp_reduce_setup(&mu, modulus) != MP_OKAY) {
+      mp_clear(&mu);
+      return CRYPT_MEM;
   }
    
+  /* alloc ram for window temps */
+  for (i = 0; i < 8; i++) {
+      M[i] = new_point();
+      if (M[i] == NULL) {
+         for (j = 0; j < i; j++) {
+             del_point(M[j]);
+         }
+         mp_clear(&mu);
+         return CRYPT_MEM;
+      }
+  }
    
-   /* init M tab (alloc here, calculate below)
-    
-    This table holds the first 2^Q multiples of the input base point G, that is 
-    
-       M[x] = x * G
-       
-    Where G is the point and x is a scalar.  The implementation is optimized
-    since M[0] == 0 and M[1] == G so there is no need to waste space for those.  In
-    effect M'[x] == M[x+2] where M'[] is the table we make.  If M[0] or M[1] are needed
-    we handle them with if statements.   
-   
-   */
-   for (i = 0; i < ((1<<Q)-2); i++) {
-       M[i] = new_point();
-       if (M[i] == NULL) {
-          for (j = 0; j < i; j++) {
-              del_point(M[j]);
-          }
-          mp_clear(&mu);
-          return CRYPT_MEM;
-       }
-   }
-   
-   /* get bits of k in groupings of Q 
-   
-    The multiplicand is read in groupings of four bits.  This is because the multiplication
-    routine is a Q-ary left-to-write (see HAC chapter 14, algorithm 14.82).
-   */
-   first = m = (unsigned char)0;
-   for (z = i = 0; z < (int)USED(k); z++) {
-       /* grab a digit from the mp_int, these have MP_DIGIT_BIT bits in them */
-       d = DIGIT(k, z);
-       for (j = 0; j < (int)MP_DIGIT_BIT; j++) {
-           /* OR the bits against an accumulator */
-           first |= (d&1)<<(unsigned)(m++);
-           /* if the bit count is Q then we have a Q-bit word ready */
-           if (m == (unsigned char)Q) {
-              /* store the four bit word and reset counters */
-              bits[i++] = first;
-              first = m = (unsigned char)0;
-           }
-           /* shift the digit down to extract the next bit */
-           d >>= 1;
-       }
-   }
-   
-   /* residue of multiplicand [if any] */
-   if (m) {
-      bits[i++] = first;
-   }
-
    /* make a copy of G incase R==G */
    tG = new_point();
-   if (tG == NULL)                                               { goto error; }
+   if (tG == NULL)                                                    { goto error; }
 
-   /* skip leading digits which are zero */   
-   --i; while (i != 0 && bits[i] == (unsigned char)0) { --i; }
-   
-   /* if the multiplicand has no non-zero 4-bit words its invalid. */
-   if (i == 0) {
-      res = CRYPT_INVALID_ARG;
-      goto done;
-   }
-   
-   /* now calc the M tab, note that there are only 2^Q - 2 spots, the normal M[0] is a no-op, and M[1] is the input
-      point (saves ram)
-   */
-   
-   /* M[0] now is 2*G */
+   /* calc the M tab, which holds kG for k==8..15 */
+   /* M[0] == 8G */
    if (dbl_point(G, M[0], modulus, &mu) != CRYPT_OK)                  { goto error; }
-   for (j = 1; j < ((1<<Q)-2); j++) {
-       if (add_point(M[j-1], G, M[j], modulus, &mu) != CRYPT_OK)      { goto error; }
+   if (dbl_point(M[0], M[0], modulus, &mu) != CRYPT_OK)               { goto error; }
+   if (dbl_point(M[0], M[0], modulus, &mu) != CRYPT_OK)               { goto error; }
+   
+   /* now find (8+k)G for k=1..7 */
+   for (j = 9; j < 16; j++) {
+       if (add_point(M[j-9], G, M[j-8], modulus, &mu) != CRYPT_OK)    { goto error; }
    }
   
    /* tG = G */
-   if (mp_copy(&G->x, &tG->x) != MP_OKAY)                        { goto error; }
-   if (mp_copy(&G->y, &tG->y) != MP_OKAY)                        { goto error; }
+   if (mp_copy(&G->x, &tG->x) != MP_OKAY)                             { goto error; }
+   if (mp_copy(&G->y, &tG->y) != MP_OKAY)                             { goto error; }
 
-   /* set result M[bits[i]] */
-   if (bits[i] == (unsigned char)1) {
-     if (mp_copy(&G->x, &R->x) != MP_OKAY)                       { goto error; }
-     if (mp_copy(&G->y, &R->y) != MP_OKAY)                       { goto error; }
-   } else if (bits[i] >= (unsigned char)2) {
-     if (mp_copy(&M[(int)bits[i]-2]->x, &R->x) != MP_OKAY)       { goto error; }
-     if (mp_copy(&M[(int)bits[i]-2]->y, &R->y) != MP_OKAY)       { goto error; }
-   }
+   /* setup sliding window */
+   mode   = 0;
+   bitcnt = 1;
+   buf    = 0;
+   digidx = k->used - 1;
+   bitcpy = bitbuf = 0;
+   first  = 1;
    
-   while (--i >= 0) {
-       /* double */
-       for (j = 0; j < Q; j++) {
-          if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)              { goto error; }
+   /* perform ops */
+   for (;;) {
+     /* grab next digit as required */
+     if (--bitcnt == 0) {
+       if (digidx == -1) {
+ 	break;
        }
-       
-       /* now based on the value of bits[i] we do ops */
-       if (bits[i] == (unsigned char)0) {
-          /* nop */
-       } else if (bits[i] == (unsigned char)1) {
-          /* add base point */
-          if (add_point(R, tG, R, modulus, &mu) != CRYPT_OK)          { goto error; }
+       buf = k->dp[digidx--];
+       bitcnt = (int) DIGIT_BIT;
+     }
+
+     /* grab the next msb from the multiplicand */
+     i = (buf >> (DIGIT_BIT - 1)) & 1;
+     buf <<= 1;
+     
+     /* skip leading zero bits */
+     if (mode == 0 && i == 0)
+       continue;
+     
+     /* if the bit is zero and mode == 1 then we double */
+     if (mode == 1 && i == 0) {
+        if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                          { goto error; }   
+        continue;
+     }
+   
+     /* else we add it to the window */
+     bitbuf |= (i << (WINSIZE - ++bitcpy));
+     mode = 2;
+
+     if (bitcpy == WINSIZE) {
+       /* if this is the first window we do a simple copy */
+       if (first == 1) {
+          /* R = kG [k = first window] */
+          if (mp_copy(&M[bitbuf-8]->x, &R->x) != MP_OKAY)                    { goto error; }
+          if (mp_copy(&M[bitbuf-8]->y, &R->y) != MP_OKAY)                    { goto error; }
+          first = 0;
        } else {
-          /* other case */
-          if (add_point(R, M[(int)bits[i] - 2], R, modulus, &mu) != CRYPT_OK) { goto error; }
+         /* normal window */
+         /* ok window is filled so double as required and add  */
+         /* double first */
+         for (j = 0; j < WINSIZE; j++) {
+           if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }   
+         }
+
+         /* then add, bitbuf will be 1..15 [1..2^WINSIZE] guaranteed */
+         if (bitbuf == 1) {
+            if (add_point(R, tG, R, modulus, &mu) != CRYPT_OK)                  { goto error; }
+         } else {
+            if (add_point(R, M[bitbuf-8], R, modulus, &mu) != CRYPT_OK)         { goto error; }
+         }
        }
-   }
+       /* empty window and reset */
+       bitcpy = bitbuf = 0;
+       mode = 1;
+    }
+  }
    
+   /* if bits remain then double/add */
+   if (mode == 2 && bitcpy > 0) {
+     /* double then add */
+     for (j = 0; j < bitcpy; j++) {
+       /* only double if we have had at least one add first */
+       if (first == 0) {
+          if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }   
+       }
+ 
+       bitbuf <<= 1;
+       if ((bitbuf & (1 << WINSIZE)) != 0) {
+         if (first == 1){
+            /* first add, so copy */
+            if (mp_copy(&tG->x, &R->x) != MP_OKAY)                             { goto error; }
+            if (mp_copy(&tG->y, &R->y) != MP_OKAY)                             { goto error; }
+            first = 0;
+         } else {
+            /* then add */
+            if (add_point(R, tG, R, modulus, &mu) != CRYPT_OK)                 { goto error; }
+         }
+       }
+     }
+   }
    res = CRYPT_OK; 
    goto done;
 error:
    res = CRYPT_MEM;
 done:
    del_point(tG);
-   for (i = 0; i < ((1<<Q)-2); i++) {
+   for (i = 0; i < 8; i++) {
        del_point(M[i]);
    }
    mp_clear(&mu);
-#ifdef CLEAN_STACK
-   zeromem(bits, sizeof(bits)); 
-#endif
    return res;
 }
+
+#undef WINSIZE
 
 int ecc_test(void)
 {

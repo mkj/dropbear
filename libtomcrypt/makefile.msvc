@@ -2,7 +2,7 @@
 #
 #Tom St Denis
 
-CFLAGS = /I. /Ogityb2 /Gs /DWIN32 /W3
+CFLAGS = /I. /Ogiyb2t /Gs /DWIN32 /W3
 
 default: library
 

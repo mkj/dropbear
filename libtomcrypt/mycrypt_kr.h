@@ -42,13 +42,13 @@ extern unsigned long kr_crc(const unsigned char *name, const unsigned char *emai
 extern pk_key *kr_find(pk_key *pk, unsigned long ID);
 extern pk_key *kr_find_name(pk_key *pk, const char *name);
 
-extern int kr_add(pk_key *pk, int key_type, int system, const unsigned char *name, 
+extern int kr_add(pk_key *pk, int key_type, int sys, const unsigned char *name, 
                   const unsigned char *email, const unsigned char *description, const _pk_key *key);
                   
 extern int kr_del(pk_key **_pk, unsigned long ID);
 extern int kr_clear(pk_key **pk);
 extern int kr_make_key(pk_key *pk, prng_state *prng, int wprng, 
-                       int system, int keysize, const unsigned char *name,
+                       int sys, int keysize, const unsigned char *name,
                        const unsigned char *email, const unsigned char *description);
 
 extern int kr_export(pk_key *pk, unsigned long ID, int key_type, unsigned char *out, unsigned long *outlen);

@@ -85,7 +85,7 @@ extern char *crypt_error;
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32L(x, y)        \
-     { unsigned long t = (x); memcpy(y, &t, 4); }
+     { unsigned long __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
      memcpy(&(x), y, 4);
@@ -105,13 +105,13 @@ extern char *crypt_error;
 #else /* 64-bit words then  */
 
 #define STORE32L(x, y)        \
-     { unsigned long t = (x); memcpy(y, &t, 4); }
+     { unsigned long __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
      { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
 
 #define STORE64L(x, y)        \
-     { ulong64 t = (x); memcpy(y, &t, 8); }
+     { ulong64 __t = (x); memcpy(y, &__t, 8); }
 
 #define LOAD64L(x, y)         \
     { memcpy(&(x), y, 8); }
@@ -146,7 +146,7 @@ extern char *crypt_error;
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32H(x, y)        \
-     { unsigned long t = (x); memcpy(y, &t, 4); }
+     { unsigned long __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
      memcpy(&(x), y, 4);
@@ -166,13 +166,13 @@ extern char *crypt_error;
 #else /* 64-bit words then  */
 
 #define STORE32H(x, y)        \
-     { unsigned long t = (x); memcpy(y, &t, 4); }
+     { unsigned long __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
      { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
 
 #define STORE64H(x, y)        \
-     { ulong64 t = (x); memcpy(y, &t, 8); }
+     { ulong64 __t = (x); memcpy(y, &__t, 8); }
 
 #define LOAD64H(x, y)         \
     { memcpy(&(x), y, 8); }

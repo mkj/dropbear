@@ -1,3 +1,11 @@
+Mar 29th, 2003
+v0.83  -- Optimized the ecc_mulmod, it's faster and takes less heap/stack space
+       -- Fixed a free memory error in ecc_mulmod and del_point which would try to free NULL
+       -- Fixed two serious bugs in rsa_decrypt_key and rsa_verify_hash that would allow a trivialy
+          buffer overflow.
+       -- Fixed a bug in the hmac testing code if you don't register all the hashes it won't return
+          errors now.
+       
 Mar 15th, 2003
 v0.82  -- Manual updated
        -- Added MSVC makefile [back, actually its written from scratch to work with NMAKE]

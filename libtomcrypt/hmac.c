@@ -456,9 +456,11 @@ Key First"
 
     unsigned long outlen;
     int err;
-    int failed=0;
+    int tested=0,failed=0;
     for(i=0; i < (int)(sizeof(cases) / sizeof(cases[0])); i++) {
         int hash = find_hash(cases[i].algo);
+        if (hash == -1) continue;
+        ++tested;
         outlen = sizeof(digest);
         if((err = hmac_memory(hash, cases[i].key, cases[i].keylen, cases[i].data, cases[i].datalen, digest, &outlen)) != CRYPT_OK) {
 #if 0
@@ -490,9 +492,11 @@ Key First"
 
     if (failed != 0) {
         return CRYPT_FAIL_TESTVECTOR;
+    } else if (tested == 0) {
+        return CRYPT_NOP;
+    } else {
+        return CRYPT_OK;
     }
-
-    return CRYPT_OK;
 }
 
 #endif
