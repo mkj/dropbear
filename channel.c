@@ -86,9 +86,8 @@ void chancleanup() {
 struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
 		unsigned int transwindow, unsigned int transmaxpacket, int outgoing) {
 
-	struct Channel ** chanlist;
 	struct Channel * newchan;
-	int i;
+	int i, j;
 
 	TRACE(("enter newchannel"));
 	
@@ -107,11 +106,16 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 		}
 
 		/* extend the channels */
-		chanlist = (struct Channel**)m_realloc(ses.channels,
+		ses.channels = (struct Channel**)m_realloc(ses.channels,
 				(ses.chansize+CHAN_EXTEND_SIZE)*sizeof(struct Channel*));
 
-		ses.channels = chanlist;
 		ses.chansize += CHAN_EXTEND_SIZE;
+
+		/* set the new channels to null */
+		for (j = i; j < ses.chansize; j++) {
+			ses.channels[j] = NULL;
+		}
+
 	}
 	
 	newchan = (struct Channel*)m_malloc(sizeof(struct Channel));
@@ -181,6 +185,14 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 			writechannel(channel);
 		}
 		
+	}
+
+	for (i = 0; i < ses.chansize; i++) {
+		channel = ses.channels[i];
+		if (channel == NULL) {
+			continue;
+		}
+
 		/* handle any listening sockets - should get optimised away if
 		 * we don't have x11 or agent fwd */
 		if (channel->type == CHANNEL_ID_SESSION) {
@@ -742,7 +754,9 @@ void recv_msg_channel_open_confirmation() {
 
 	unsigned int chan;
 	struct Channel * channel;
-	chan = buf_getbyte(ses.payload);
+
+	TRACE(("enter recv_msg_channel_open_confirmation"));
+	chan = buf_getint(ses.payload);
 
 	channel = getchannel(chan);
 	if (channel == NULL) {
@@ -750,9 +764,11 @@ void recv_msg_channel_open_confirmation() {
 	}
 
 	channel->remotechan =  buf_getint(ses.payload);
+	TRACE(("remotechan = %d\n", channel->remotechan));
 	channel->recvwindow = buf_getint(ses.payload);
 	channel->recvmaxpacket = buf_getint(ses.payload);
 
+	TRACE(("leave recv_msg_channel_open_confirmation"));
 }
 
 void recv_msg_channel_open_failure() {

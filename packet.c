@@ -433,12 +433,15 @@ void process_packet() {
 			recv_msg_newkeys();
 			break;
 
+		/* this is ugly, need to make a cleaner way to do it */
 		case SSH_MSG_CHANNEL_DATA:
 		case SSH_MSG_CHANNEL_WINDOW_ADJUST:
 		case SSH_MSG_CHANNEL_REQUEST:
 		case SSH_MSG_CHANNEL_OPEN:
 		case SSH_MSG_CHANNEL_EOF:
 		case SSH_MSG_CHANNEL_CLOSE:
+		case SSH_MSG_CHANNEL_OPEN_CONFIRMATION:
+		case SSH_MSG_CHANNEL_OPEN_FAILURE:
 			/* these should be checked for authdone below */
 			process_postauth_packet(type);
 			break;

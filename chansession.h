@@ -55,7 +55,7 @@ struct ChanSess {
 	char * x11authprot;
 	char * x11authcookie;
 	unsigned int x11screennum;
-	unsigned int x11singleconn;
+	unsigned char x11singleconn;
 #endif /* X11 fowarding */
 };
 
