@@ -112,12 +112,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
-//#define DROPBEAR_PASSWORD_AUTH
-/* Only set PAM auth if you aren't using PASSWORD auth. Also, you'll need
- * to make sure PAM libraries etc are installed */
-#define DROPBEAR_PAM_AUTH
-#define DROPBEAR_PUBKEY_AUTH
-#define ENABLE_SVR_PASSWORD_AUTH
+/*#define ENABLE_SVR_PASSWORD_AUTH*/
+/* Only set PAM auth if you aren't using SVR_PASSWORD_AUTH. Also, you'll need
+ * to make sure PAM libraries etc are installed. To the client, PAM auth looks
+ * just like password auth. */
+#define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -178,7 +177,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.44test3"
+#define DROPBEAR_VERSION "0.44rez1"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -325,6 +324,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
+#endif
+
+#if defined(ENABLE_SVR_PASSWORD_AUTH) && defined(ENABLE_SVR_PAM_AUTH)
+#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
 #endif
 
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant

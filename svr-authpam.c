@@ -36,180 +36,174 @@
 #include <pam/pam_appl.h>
 #endif
 
-#ifdef DROPBEAR_PAM_AUTH
-
 struct UserDataS {
-    char* user;
-    char* passwd;
+	char* user;
+	char* passwd;
 };
 
-/* PAM conversation function */
+/* PAM conversation function - for now we only handle one message */
 int 
 pamConvFunc(int num_msg, 
-	    const struct pam_message **msg,
-	    struct pam_response **respp, 
-	    void *appdata_ptr) {
-  int rc = PAM_SUCCESS;
-  struct pam_response* resp = NULL;
-  struct UserDataS* userDatap = (struct UserDataS*) appdata_ptr;
+		const struct pam_message **msg,
+		struct pam_response **respp, 
+		void *appdata_ptr) {
 
-  /* tbd only handles one msg */
-    
-  switch((*msg)->msg_style) {
-  case PAM_PROMPT_ECHO_OFF:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_PROMPT_ECHO_OFF: (*msg)->msg=\"%s\"", (*msg)->msg);
+	int rc = PAM_SUCCESS;
+	struct pam_response* resp = NULL;
+	struct UserDataS* userDatap = (struct UserDataS*) appdata_ptr;
+	const char* message = (*msg)->msg;
 
-    if (strcmp((*msg)->msg, "Password:") == 0) {
-      resp = (struct pam_response*) malloc(sizeof(struct pam_response));
-      resp->resp = (char*) strdup(userDatap->passwd);
-      /* dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_PROMPT_ECHO_ON: userDatap->passwd=\"%s\"", userDatap->passwd); */
-      resp->resp_retcode = 0;
-      (*respp) = resp;
-    }
-    else {
-      dropbear_log(LOG_WARNING, "pamConvFunc(): PAM_PROMPT_ECHO_OFF: unrecognized prompt, (*msg)->msg=\"%s\"", (*msg)->msg);
-      rc = PAM_CONV_ERR;
-    }
-    break;
-  case PAM_PROMPT_ECHO_ON:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_PROMPT_ECHO_ON: (*msg)->msg=\"%s\"", (*msg)->msg);
+	TRACE(("enter pamConvFunc"));
+	TRACE(("msg_style is %d", (*msg)->msg_style));
+	if (message) {
+		TRACE(("message is '%s'", message));
+	} else {
+		TRACE(("null message"));
+	}
 
-    if ((strcmp((*msg)->msg, "login: " ) == 0) || (strcmp((*msg)->msg, "Please enter username: " ) == 0)) {
-      resp = (struct pam_response*) malloc(sizeof(struct pam_response));
-      resp->resp = (char*) strdup(userDatap->user);
-      dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_PROMPT_ECHO_ON: userDatap->user=\"%s\"", userDatap->user);
-      resp->resp_retcode = 0;
-      (*respp) = resp;
-    }
-    else {
-      dropbear_log(LOG_WARNING, "pamConvFunc(): PAM_PROMPT_ECHO_ON: unrecognized prompt, (*msg)->msg=\"%s\"", 
-		   (*msg)->msg);
-      rc = PAM_CONV_ERR;
-    }
-    break;
-  case PAM_ERROR_MSG:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_ERROR_MSG: (*msg)->msg=\"%s\"", (*msg)->msg);
-    /* printf("error msg: '%s'\n", (*msg)->msg); */
-    rc = PAM_CONV_ERR;
-    break;
-  case PAM_TEXT_INFO:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_TEXT_INFO: (*msg)->msg=\"%s\"", (*msg)->msg);
-    /* printf("text info: '%s'\n", (*msg)->msg); */
-    rc = PAM_CONV_ERR;
-    break;
-  case PAM_RADIO_TYPE:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_RADIO_TYPE: (*msg)->msg=\"%s\"", (*msg)->msg);
-    /* printf("radio type: '%s'\n", (*msg)->msg); */
-    rc = PAM_CONV_ERR;
-    break;
-  case PAM_BINARY_PROMPT:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): PAM_BINARY_PROMPT: (*msg)->msg=\"%s\"", (*msg)->msg);
-    /* printf("binary prompt: '%s'\n", (*msg)->msg); */
-    rc = PAM_CONV_ERR;
-    break;
-  default:
-    dropbear_log(LOG_DEBUG, "pamConvFunc(): Unknown PAM message");
-    /* printf("unknown message\n"); */
-    rc = PAM_CONV_ERR;
-    break;      
-  }
+	switch((*msg)->msg_style) {
 
-  return rc;
+		case PAM_PROMPT_ECHO_OFF:
+
+			if (strcmp(message, "Password:") != 0) {
+					TRACE(("PAM_PROMPT_ECHO_OFF: unrecognized prompt"));
+					rc = PAM_CONV_ERR;
+					break;
+			}
+
+			/* XXX leak */
+			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
+			/* XXX leak */
+			resp->resp = (char*) m_strdup(userDatap->passwd);
+			resp->resp_retcode = 0;
+			(*respp) = resp;
+			break;
+
+
+		case PAM_PROMPT_ECHO_ON:
+
+			if ((strcmp(message, "login: " ) != 0) 
+					&& (strcmp(message, "login:" ) != 0)
+					&& (strcmp(message, "Please enter username: " ) != 0)) {
+				TRACE(("PAM_PROMPT_ECHO_ON: unrecognized prompt"));
+				rc = PAM_CONV_ERR;
+				break;
+			}
+
+			/* XXX leak */
+			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
+			/* XXX leak */
+			resp->resp = (char*) m_strdup(userDatap->user);
+			TRACE(("userDatap->user='%s'", userDatap->user));
+
+			resp->resp_retcode = 0;
+			(*respp) = resp;
+			break;
+
+		case PAM_ERROR_MSG:
+		case PAM_TEXT_INFO:
+		case PAM_RADIO_TYPE:
+		case PAM_BINARY_PROMPT:
+			TRACE(("Unhandled message type"));
+			rc = PAM_CONV_ERR;
+			break;
+
+		default:
+			TRACE(("Unknown message type"));
+			rc = PAM_CONV_ERR;
+			break;      
+	}
+
+	TRACE(("leave pamConvFunc, rc %d", rc));
+
+	return rc;
 }
 
 /* Process a password auth request, sending success or failure messages as
- * appropriate */
+ * appropriate. To the client it looks like it's doing normal password auth (as opposed to keyboard-interactive or something), so the pam module has to be fairly standard (ie just "what's your username, what's your password, OK").
+ *
+ * Keyboard interactive would be a lot nicer, but since PAM is synchronous, it
+ * gets very messy trying to send the interactive challenges, and read the
+ * interactive responses, over the network. */
 void svr_auth_pam() {
-  // PAM stuff
-  int rc = PAM_SUCCESS;
-  struct UserDataS userData;
-  struct pam_conv pamConv = {
-    pamConvFunc,
-    &userData /* submitted to pamvConvFunc as appdata_ptr */ 
-  };
-  pam_handle_t* pamHandlep = NULL;
-  unsigned char * password = NULL;
-  unsigned int passwordlen;
 
-  unsigned char changepw;
+	struct UserDataS userData;
+	struct pam_conv pamConv = {
+		pamConvFunc,
+		&userData /* submitted to pamvConvFunc as appdata_ptr */ 
+	};
 
-  /* check if client wants to change password */
-  changepw = buf_getbyte(ses.payload);
-  if (changepw) {
-    /* not implemented by this server */
-    send_msg_userauth_failure(0, 1);
-    return;
-  }
+	pam_handle_t* pamHandlep = NULL;
 
-  password = buf_getstring(ses.payload, &passwordlen);
+	unsigned char * password = NULL;
+	unsigned int passwordlen;
 
-  /* clear the buffer containing the password */
-  buf_incrpos(ses.payload, -passwordlen - 4);
-  m_burn(buf_getptr(ses.payload, passwordlen + 4), passwordlen + 4);
+	int rc = PAM_SUCCESS;
+	unsigned char changepw;
 
-  /* used to pass data to the PAM conversation function */
-  userData.user = ses.authstate.printableuser;
-  TRACE(("user is %s\n", userData.user));
-  userData.passwd = password;
+	/* check if client wants to change password */
+	changepw = buf_getbyte(ses.payload);
+	if (changepw) {
+		/* not implemented by this server */
+		send_msg_userauth_failure(0, 1);
+		goto cleanup;
+	}
 
-  /* Init pam */
-  if ((rc = pam_start("sshd", NULL, &pamConv, &pamHandlep)) != PAM_SUCCESS) {
-    dropbear_log(LOG_WARNING, "pam_start() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc));
-    /* fprintf(stderr, "pam_start() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc)); */
-    goto clean;
-  }
-  
-  /*
-  if ((rc = pam_set_item(pamHandlep, PAM_RHOST, webReqp->ipaddr) != PAM_SUCCESS)) {
-    dropbear_log(LOG_WARNING, "pam_set_item() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc));
-    return;
-  }
-  */
-  
-  /* just to set it to something */
-  if ((rc = pam_set_item(pamHandlep, PAM_TTY, "ssh") != PAM_SUCCESS)) {
-    dropbear_log(LOG_WARNING, "pam_set_item() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc));
-    goto clean;
-  }
-  
-  (void) pam_fail_delay(pamHandlep, 0 /* musec_delay */);
- 
-  /* (void) pam_set_item(pamHandlep, PAM_FAIL_DELAY, (void*) pamDelayFunc); */
-  
-  if ((rc = pam_authenticate(pamHandlep, 0)) != PAM_SUCCESS) {
-    dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc));
-    /* fprintf(stderr, "pam_authenticate() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc)); */
-    dropbear_log(LOG_WARNING,
-		 "bad pam password attempt for '%s'",
-		 ses.authstate.printableuser);
-    send_msg_userauth_failure(0, 1);
-    goto clean;
-  }
+	password = buf_getstring(ses.payload, &passwordlen);
 
-  if ((rc = pam_acct_mgmt(pamHandlep, 0)) != PAM_SUCCESS) {
-    dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc));
-    /* fprintf(stderr, "pam_acct_mgmt() failed, rc=%d, %s\n", rc, pam_strerror(pamHandlep, rc)); */
-    dropbear_log(LOG_WARNING,
-		 "bad pam password attempt for '%s'",
-		 ses.authstate.printableuser);
-    send_msg_userauth_failure(0, 1);
-    goto clean;
-  }
+	/* used to pass data to the PAM conversation function */
+	userData.user = ses.authstate.printableuser;
+	userData.passwd = password;
 
-  /* successful authentication */
-  dropbear_log(LOG_NOTICE, 
-	       "password auth succeeded for '%s'",
-	       ses.authstate.printableuser);
-  send_msg_userauth_success();
-  
- clean:
-  if (password != NULL) {
-    m_burn(password, passwordlen);
-    m_free(password);
-  }
-  if (pamHandlep != NULL) {
-    (void) pam_end(pamHandlep, 0 /* pam_status */);
-  }
+	/* Init pam */
+	if ((rc = pam_start("sshd", NULL, &pamConv, &pamHandlep)) != PAM_SUCCESS) {
+		dropbear_log(LOG_WARNING, "pam_start() failed, rc=%d, %s\n", 
+				rc, pam_strerror(pamHandlep, rc));
+		goto cleanup;
+	}
+
+	/* just to set it to something */
+	if ((rc = pam_set_item(pamHandlep, PAM_TTY, "ssh") != PAM_SUCCESS)) {
+		dropbear_log(LOG_WARNING, "pam_set_item() failed, rc=%d, %s\n", 
+				rc, pam_strerror(pamHandlep, rc));
+		goto cleanup;
+	}
+
+	(void) pam_fail_delay(pamHandlep, 0 /* musec_delay */);
+
+	/* (void) pam_set_item(pamHandlep, PAM_FAIL_DELAY, (void*) pamDelayFunc); */
+
+	if ((rc = pam_authenticate(pamHandlep, 0)) != PAM_SUCCESS) {
+		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s\n", 
+				rc, pam_strerror(pamHandlep, rc));
+		dropbear_log(LOG_WARNING,
+				"bad pam password attempt for '%s'",
+				ses.authstate.printableuser);
+		send_msg_userauth_failure(0, 1);
+		goto cleanup;
+	}
+
+	if ((rc = pam_acct_mgmt(pamHandlep, 0)) != PAM_SUCCESS) {
+		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s\n", 
+				rc, pam_strerror(pamHandlep, rc));
+		dropbear_log(LOG_WARNING,
+				"bad pam password attempt for '%s'",
+				ses.authstate.printableuser);
+		send_msg_userauth_failure(0, 1);
+		goto cleanup;
+	}
+
+	/* successful authentication */
+	dropbear_log(LOG_NOTICE, "pam password auth succeeded for '%s'",
+			ses.authstate.printableuser);
+	send_msg_userauth_success();
+
+cleanup:
+	if (password != NULL) {
+		m_burn(password, passwordlen);
+		m_free(password);
+	}
+	if (pamHandlep != NULL) {
+		(void) pam_end(pamHandlep, 0 /* pam_status */);
+	}
 }
-
-#endif /* DROPBEAR_PAM_AUTH */

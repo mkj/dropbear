@@ -55,8 +55,7 @@ static void authclear() {
 #ifdef ENABLE_SVR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
-#if defined(DROPBEAR_PASSWORD_AUTH) || defined(DROPBEAR_PAM_AUTH)
-#ifdef ENABLE_SVR_PASSWORD_AUTH
+#if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
@@ -155,7 +154,7 @@ void recv_msg_userauth_request() {
 	}
 #endif
 
-#ifdef DROPBEAR_PAM_AUTH
+#ifdef ENABLE_SVR_PAM_AUTH
 	if (!svr_opts.noauthpass &&
 			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
 		/* user wants to try password auth */

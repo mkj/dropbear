@@ -80,10 +80,6 @@ void svr_auth_password() {
 
 	password = buf_getstring(ses.payload, &passwordlen);
 
-	/* clear the buffer containing the password */
-	buf_incrpos(ses.payload, -passwordlen - 4);
-	m_burn(buf_getptr(ses.payload, passwordlen + 4), passwordlen + 4);
-
 	/* the first bytes of passwdcrypt are the salt */
 	testcrypt = crypt((char*)password, passwdcrypt);
 	m_burn(password, passwordlen);
