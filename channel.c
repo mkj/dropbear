@@ -409,8 +409,6 @@ void recv_msg_channel_close() {
 
 static void closechannel(struct Channel * channel) {
 
-	unsigned int index;
-
 	TRACE(("enter closechannel"));
 	TRACE(("channel index is %d", channel->index));
 	
