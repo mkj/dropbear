@@ -35,6 +35,48 @@ void cli_auth_getmethods() {
 
 }
 
+void recv_msg_userauth_banner() {
+
+	unsigned char* banner = NULL;
+	unsigned int bannerlen;
+	unsigned int i, linecount;
+
+	TRACE(("enter recv_msg_userauth_banner"));
+	if (ses.authstate.authdone) {
+		TRACE(("leave recv_msg_userauth_banner: banner after auth done"));
+		return;
+	}
+
+	banner = buf_getstring(ses.payload, &bannerlen);
+	buf_eatstring(ses.payload); /* The language string */
+
+	if (bannerlen > MAX_BANNER_SIZE) {
+		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen));
+		goto out;
+	}
+
+	cleantext(banner);
+
+	/* Limit to 25 lines */
+	linecount = 1;
+	for (i = 0; i < bannerlen; i++) {
+		if (banner[i] == '\n') {
+			if (linecount >= MAX_BANNER_LINES) {
+				banner[i] = '\0';
+				break;
+			}
+			linecount++;
+		}
+	}
+
+	printf("%s\n", banner);
+
+out:
+	m_free(banner);
+	TRACE(("leave recv_msg_userauth_banner"));
+}
+
+
 void recv_msg_userauth_failure() {
 
 	unsigned char * methods = NULL;

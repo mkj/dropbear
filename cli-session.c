@@ -36,6 +36,7 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, // client
 	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, // client
+	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, // client
 	{0, 0} /* End */
 };
 
@@ -216,4 +217,25 @@ static void cli_remoteclosed() {
 	close(ses.sock);
 	ses.sock = -1;
 	dropbear_exit("remote closed the connection");
+}
+
+/* Operates in-place turning dirty (untrusted potentially containing control
+ * characters) text into clean text. */
+void cleantext(unsigned char* dirtytext) {
+
+	unsigned int i, j;
+	unsigned char c, lastchar;
+
+	j = 0;
+	for (i = 0; dirtytext[i] != '\0'; i++) {
+
+		c = dirtytext[i];
+		/* We can ignore '\r's */
+		if ( (c >= ' ' && c <= '~') || c == '\n' || c == '\t') {
+			dirtytext[j] = c;
+			j++;
+		}
+	}
+	/* Null terminate */
+	dirtytext[j] = '\0';
 }

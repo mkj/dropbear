@@ -47,6 +47,7 @@ void recv_msg_userauth_success();
 void cli_get_user();
 void cli_auth_getmethods();
 void cli_auth_try();
+void recv_msg_userauth_banner();
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */

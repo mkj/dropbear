@@ -56,6 +56,7 @@ void cli_session(int sock, char *remotehost);
 void cli_dropbear_exit(int exitcode, const char* format, va_list param);
 void cli_dropbear_log(int priority, const char* format, va_list param);
 void cli_session_cleanup();
+void cleantext(unsigned char* dirtytext);
 
 struct key_context {
 

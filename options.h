@@ -195,6 +195,7 @@
 #endif
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
+#define MAX_BANNER_LINES 20 /* How many lines the client will display */
 
 #define DEV_URANDOM "/dev/urandom"
 
