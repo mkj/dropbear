@@ -115,13 +115,23 @@ void recv_msg_kexdh_reply() {
 static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 
 	char* fp = NULL;
+	FILE *tty = NULL;
+	char response = 'z';
 
 	fp = sign_key_fingerprint(keyblob, keybloblen);
 	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n)\n", 
 			cli_opts.remotehost, 
 			fp);
 
-	if (getc(stdin) == 'y') {
+	tty = fopen(_PATH_TTY, "r");
+	if (tty) {
+		response = getc(tty);
+		fclose(tty);
+	} else {
+		response = getc(stdin);
+	}
+
+	if (response == 'y') {
 		m_free(fp);
 		return;
 	}

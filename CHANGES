@@ -1,3 +1,6 @@
+- Read "y/n" response for fingerprints from /dev/tty directly so that dbclient
+  will work with scp.
+
 0.44 - Mon Jan 3 2005
 
 - SECURITY: Fix for PAM auth so that usernames are logged and conversation
