@@ -43,6 +43,7 @@
 
 static void read_packet_init();
 static void process_postauth_packet(unsigned int type);
+static void recv_unimplemented();
 
 #define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
 #define ZLIB_DECOMPRESS_INCR 100
@@ -451,6 +452,8 @@ void process_packet() {
 		default:
 			/* TODO this possibly should be handled */
 			TRACE(("unknown packet"));
+			recv_unimplemented();
+			break;
 	}
 
 out:
@@ -493,7 +496,32 @@ static void process_postauth_packet(unsigned int type) {
 		case SSH_MSG_CHANNEL_CLOSE:
 			recv_msg_channel_close();
 			break;
+			
+		default:
+			TRACE(("unknown packet()"));
+			recv_unimplemented();
+			break;
 	}
+}
+
+/* This must be called directly after receiving the unimplemented packet.
+ * Isn't the most clean implementation, it relies on packet processing
+ * occurring directly after decryption. This is reasonably valid, since
+ * there is only a single decryption buffer */
+static void recv_unimplemented() {
+
+	unsigned int seq;
+
+	/* the decryption routine increments the sequence number, we must
+	 * decrement */
+	seq = ses.recvseq - 1;
+
+	CHECKCLEARTOWRITE();
+
+	buf_putbyte(ses.writepayload, SSH_MSG_UNIMPLEMENTED);
+	buf_putint(ses.writepayload, seq);
+
+	encrypt_packet();
 }
 	
 
