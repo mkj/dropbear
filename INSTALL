@@ -75,9 +75,21 @@ OpenSSH is possibly buggy in this regard, it seems you need to disable it
 globally in ~/.ssh/config, not just in the host entry in that file.
 
 You may want to manually disable lastlog recording when using uClibc, configure
-with --disable-lastlog. Some uClibc systems have problems using openpty(), so
-if you can't log in to a terminal, try ./configure with --disable-openpty to
-use an alternative method of tty allocation.
+with --disable-lastlog.
+
+One common problem is pty allocation. There are a number of types of pty allocation which can be used -- if they work properly, the end result is the same for each type. Running configure should detect the best type to use automatically, however for some embedded systems, this may be incorrect. Some things to note:
+
+    If your system expects /dev/pts to be mounted (this is a uClibc option),
+	make sure that it is.
+
+	Make sure that your libc headers match the library version you are using.
+
+	If openpty() is being used (HAVE_OPENPTY defined in config.h) and it fails,
+	you can try compiling with --disable-openpty. You will probably then need
+	to create all the /dev/pty?? and /dev/tty?? devices, which can be
+	problematic for devfs. In general, openpty() is the best way to allocate
+	PTYs, so it's best to try and get it working.
+
 
 ============================================================================
 
@@ -91,5 +103,5 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+Z
 You must make sure that ~/.ssh, and the key file, are only writable by the
 user.
 
-NOTE: dropbear ignores authorized_keys options such as those described in the
+NOTE: Dropbear ignores authorized_keys options such as those described in the
 OpenSSH sshd manpage, and will not allow a login for these keys. 
