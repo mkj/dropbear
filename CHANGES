@@ -1,3 +1,41 @@
+0.44test3 - Fri Aug 27 22:20:54 +0800
+
+- Fixed a bunch of warnings.
+
+- scp works correctly when passed a username (fix for the dbclient program
+  itself as well, "-lmatt" works as well as "-l matt").
+
+- Remove unrequired debian files
+
+- Exit with the remote process's return code for dbclient
+
+- Display stderr messages from the server in the client
+
+- Add circular buffering to the channel code. This should dramatically reduce
+  the amount of backtraffic sent in response to traffic incoming to the
+  Dropbear end - improves high-latency performance (ie dialup).
+
+- Various other related channel-handling fixups.
+
+- Allow leading lines in the banner when connecting to servers
+
+- Fixed printing out errors onto the network socket with stderr (for inetd
+  mode when using xinetd)
+
+- Remove obselete documentation
+
+- Fix a null-pointer exception when trying to free non-existant listeners
+  at cleanup.
+
+- DEBUG_TRACE now only works if you add "-v" to the program commandline
+
+- Don't leave stdin non-blocking on exit - this caused the parent shell
+  of dbclient to close when dbclient exited, for some shells in BusyBox
+
+- Server connections no longer timeout after 5 minutes
+
+- Fixed stupid DSS hostkey typo (server couldn't load host keys)
+
 0.44test2 - Tues Aug 17 2004 17:43:54 +0800
 
 - Fix up dropbearmulti targets in the Makefile - symlinks are now created

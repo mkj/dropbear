@@ -2,10 +2,6 @@ Current:
 
 Things which might need doing:
 
-- exit with returned exit codes?
-
-- errfd needs fixing
-
 - Make options.h generated from configure perhaps?
 
 - Improved queueing of unauthed connections
@@ -13,8 +9,6 @@ Things which might need doing:
 - fix agent fwd problems
 
 - handle /etc/environment in AIX
-
-- improve channel window adjustment algorithm (circular buffering)
 
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
