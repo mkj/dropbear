@@ -57,7 +57,7 @@ static void authclear() {
 #ifdef DROPBEAR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
-#ifdef DROPBEAR_PASSWORD_AUTH
+#if defined(DROPBEAR_PASSWORD_AUTH) || defined(DROPBEAR_PAM_AUTH)
 	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
@@ -151,6 +151,19 @@ void recv_msg_userauth_request() {
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
 			svr_auth_password();
+			goto out;
+		}
+	}
+#endif
+
+#ifdef DROPBEAR_PAM_AUTH
+	if (!svr_opts.noauthpass &&
+			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
+		/* user wants to try password auth */
+		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
+				strncmp(methodname, AUTH_METHOD_PASSWORD,
+					AUTH_METHOD_PASSWORD_LEN) == 0) {
+			svr_auth_pam();
 			goto out;
 		}
 	}

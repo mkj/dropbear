@@ -110,7 +110,10 @@
 
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
-#define DROPBEAR_PASSWORD_AUTH
+//#define DROPBEAR_PASSWORD_AUTH
+/* Only set PAM auth if you aren't using PASSWORD auth. Also, you'll need
+ * to make sure PAM libraries etc are installed */
+#define DROPBEAR_PAM_AUTH
 #define DROPBEAR_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
