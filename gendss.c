@@ -33,6 +33,8 @@
 
 #define QSIZE 20 /* 160 bit */
 
+/* This is just a test */
+
 #ifdef DROPBEAR_DSS
 
 static void getq(dss_key *key);
@@ -150,7 +152,6 @@ static void getp(dss_key *key, unsigned int size) {
 
 static void getg(dss_key * key) {
 
-	char printbuf[1000];
 	DEF_MP_INT(div);
 	DEF_MP_INT(h);
 	DEF_MP_INT(val);
@@ -182,8 +183,6 @@ static void getg(dss_key * key) {
 		}
 	
 	} while (mp_cmp_d(key->g, 1) != MP_GT);
-
-	mp_toradix(key->g, printbuf, 10);
 
 	mp_clear_multi(&div, &h, &val, NULL);
 }
