@@ -88,7 +88,7 @@ dropbearmulti: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS
 	@echo "You should now create symlinks, ie 'ln -s dropbearmulti dropbear'"
 
 dropbearmultistatic: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o
-	$(LD) $(LDFLAGS) -o staticdropbearmulti $(OBJS) $(LTM) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o $(LIBS)
+	$(LD) $(LDFLAGS) -o staticdropbearmulti $(OBJS) $(LTM) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o $(LIBS) -static
 	@echo
 	@echo "You should now create symlinks, ie 'ln -s staticdropbearmulti staticdropbear'"
 
