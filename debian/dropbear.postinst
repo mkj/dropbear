@@ -2,7 +2,6 @@
 set -e
 
 test "$1" = 'configure' || exit 0
-test -n "$2" || chown log /etc/dropbear/log/main || true
 
 if test ! -e /etc/dropbear/dropbear_rsa_host_key; then
   if test -f /etc/ssh/ssh_host_rsa_key; then
