@@ -34,6 +34,7 @@
 #include "queue.h"
 #include "runopts.h"
 #include "listener.h"
+#include "packet.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
@@ -106,10 +107,13 @@ struct sshsession {
 	unsigned int transseq, recvseq; /* Sequence IDs */
 
 	/* Packet-handling flags */
+	const packettype * packettypes; /* Packet handler mappings for this
+										session, see process-packet.c */
+
 	unsigned dataallowed : 1; /* whether we can send data packets or we are in
 								 the middle of a KEX or something */
 
-	unsigned char expecting; /* byte indicating what packet we expect next, 
+	unsigned char requirenext; /* byte indicating what packet we require next, 
 								or 0x00 for any */
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
@@ -130,6 +134,12 @@ struct sshsession {
 							 can add it to the hash when generating keys */
 
 
+	unsigned char authdone;	/* Indicates when authentication has been
+							   completed. This applies to both client and
+							   server - in the server it gets set to 1 when
+							   authentication is successful, in the client it
+							   is set when the server has told us that auth
+							   succeeded */
 
 	/* Channel related */
 	struct Channel ** channels; /* these pointers may be null */
@@ -138,10 +148,13 @@ struct sshsession {
 
 	
 	/* TCP forwarding - where manage listeners */
-#ifndef DISABLE_REMOTETCPFWD
+#ifdef USING_LISTENERS
 	struct Listener ** listeners;
 	unsigned int listensize;
+	/* Whether to allow binding to privileged ports (<1024). This doesn't
+	 * really belong here, but nowhere else fits nicely */
 #endif
+	int allowprivport;
 
 };
 

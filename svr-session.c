@@ -36,17 +36,38 @@
 #include "chansession.h"
 #include "atomicio.h"
 #include "tcpfwd-direct.h"
+#include "service.h"
+#include "auth.h"
+#include "tcpfwd-remote.h"
 
 static void svr_remoteclosed();
 
 struct serversession svr_ses;
 
-const struct ChanType *chantypes[] = {
+static const packettype svr_packettypes[] = {
+	/* TYPE, AUTHREQUIRED, FUNCTION */
+	{SSH_MSG_SERVICE_REQUEST, recv_msg_service_request}, // server
+	{SSH_MSG_USERAUTH_REQUEST, recv_msg_userauth_request}, //server
+	{SSH_MSG_KEXINIT, recv_msg_kexinit},
+	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init},
+	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
+	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
+	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
+	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
+	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
+	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},
+	{SSH_MSG_CHANNEL_EOF, recv_msg_channel_eof},
+	{SSH_MSG_CHANNEL_CLOSE, recv_msg_channel_close},
+	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
+	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
+	{0, 0} /* End */
+};
+
+static const struct ChanType *svr_chantypes[] = {
 	&svrchansess,
 	&chan_tcpdirect,
 	NULL /* Null termination is mandatory. */
 };
-
 
 void svr_session(int sock, runopts *opts, int childpipe, 
 		struct sockaddr* remoteaddr) {
@@ -64,7 +85,7 @@ void svr_session(int sock, runopts *opts, int childpipe,
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
 	authinitialise();
-	chaninitialise(chantypes);
+	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
 	if (gettimeofday(&timeout, 0) < 0) {
@@ -75,6 +96,9 @@ void svr_session(int sock, runopts *opts, int childpipe,
 
 	/* set up messages etc */
 	session_remoteclosed = svr_remoteclosed;
+
+	/* packet handlers */
+	ses.packettypes = svr_packettypes;
 
 	/* We're ready to go now */
 	sessinitdone = 1;
@@ -145,7 +169,7 @@ void svr_session(int sock, runopts *opts, int childpipe,
 			/* Process the decrypted packet. After this, the read buffer
 			 * will be ready for a new packet */
 			if (ses.payload != NULL) {
-				svr_process_packet();
+				process_packet();
 			}
 		}
 

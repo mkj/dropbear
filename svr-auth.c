@@ -52,7 +52,7 @@ void authinitialise() {
  * on initialisation */
 static void authclear() {
 	
-	svr_ses.authstate.authdone = 0;
+	ses.authdone = 0;
 	svr_ses.authstate.pw = NULL;
 	svr_ses.authstate.username = NULL;
 	svr_ses.authstate.printableuser = NULL;
@@ -102,7 +102,7 @@ void recv_msg_userauth_request() {
 	TRACE(("enter recv_msg_userauth_request"));
 
 	/* ignore packets if auth is already done */
-	if (svr_ses.authstate.authdone == 1) {
+	if (ses.authdone == 1) {
 		return;
 	}
 
@@ -339,7 +339,11 @@ void send_msg_userauth_success() {
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SUCCESS);
 	encrypt_packet();
 
-	svr_ses.authstate.authdone = 1;
+	ses.authdone = 1;
+
+	if (svr_ses.authstate.pw->pw_uid == 0) {
+		ses.allowprivport = 1;
+	}
 
 	/* Remove from the list of pre-auth sockets. Should be m_close(), since if
 	 * we fail, we might end up leaking connection slots, and disallow new

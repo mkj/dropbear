@@ -32,9 +32,13 @@ void write_packet();
 void read_packet();
 void decrypt_packet();
 void encrypt_packet();
-void recv_unimplemented();
 
-void svr_process_packet();
+void process_packet();
+
+typedef struct PacketType {
+	unsigned char type; /* SSH_MSG_FOO */
+	void (*handler)();
+} packettype;
 
 #define PACKET_PADDING_OFF 4
 #define PACKET_PAYLOAD_OFF 5

@@ -450,8 +450,8 @@ void recv_msg_kexinit() {
 	/* the rest of ses.kexhashbuf will be done after DH exchange */
 
 	ses.kexstate.recvkexinit = 1;
-//	ses.expecting = SSH_MSG_KEXDH_INIT;
-	ses.expecting = 0;
+	ses.requirenext = SSH_MSG_KEXDH_INIT;
+//	ses.expecting = 0; // client matt
 
 	TRACE(("leave recv_msg_kexinit"));
 }

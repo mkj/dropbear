@@ -56,7 +56,7 @@ void recv_msg_service_request() {
 	/* ssh-connection */
 	if (len == SSH_SERVICE_CONNECTION_LEN &&
 			(strncmp(SSH_SERVICE_CONNECTION, name, len) == 0)) {
-		if (svr_ses.authstate.authdone != 1) {
+		if (ses.authdone != 1) {
 			dropbear_exit("request for connection before auth");
 		}
 

@@ -402,21 +402,6 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 
 
 
-/* This must be called directly after receiving the unimplemented packet.
- * Isn't the most clean implementation, it relies on packet processing
- * occurring directly after decryption. This is reasonably valid, since
- * there is only a single decryption buffer */
-void recv_unimplemented() {
-
-	CHECKCLEARTOWRITE();
-
-	buf_putbyte(ses.writepayload, SSH_MSG_UNIMPLEMENTED);
-	/* the decryption routine increments the sequence number, we must
-	 * decrement */
-	buf_putint(ses.writepayload, ses.recvseq - 1);
-
-	encrypt_packet();
-}
 	
 /* encrypt the writepayload, putting into writebuf, ready for write_packet()
  * to put on the wire */

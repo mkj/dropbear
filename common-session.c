@@ -76,7 +76,7 @@ void common_session_init(int sock, runopts *opts) {
 	ses.payload = NULL;
 	ses.recvseq = 0;
 
-	ses.expecting = SSH_MSG_KEXINIT;
+	ses.requirenext = SSH_MSG_KEXINIT;
 	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
 	ses.ignorenext = 0;
 
@@ -106,7 +106,11 @@ void common_session_init(int sock, runopts *opts) {
 	ses.dh_K = NULL;
 	ses.remoteident = NULL;
 
+	ses.authdone = 0;
+
 	ses.chantypes = NULL;
+
+	ses.allowprivport = 0;
 
 
 	TRACE(("leave session_init"));
