@@ -25,4 +25,8 @@ void setusershell();
 void endusershell();
 #endif
 
+#ifndef _PATH_DEVNULL
+#define _PATH_DEVNULL "/dev/null"
+#endif
+
 #endif /* _COMPAT_H_ */

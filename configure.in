@@ -51,6 +51,9 @@ case "$host" in
 	AC_DEFINE(AIX,,Using AIX)
 	;;
 	
+*-*-hpux*)
+	LIBS="$LIBS -lsec"
+	;;
 esac
 
 AC_CHECK_TOOL(AR, ar, :)

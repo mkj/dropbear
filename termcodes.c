@@ -43,7 +43,11 @@ const struct TermCode termcodes[MAX_TERMCODE+1] = {
 #else
 		{0, 0},
 #endif
+#ifdef VREPRINT
 		{VREPRINT, TERMCODE_CONTROLCHAR},
+#else
+		{0, 0},
+#endif
 #ifdef AIX
 		{CERASE, TERMCODE_CONTROLCHAR},
 #else
@@ -67,8 +71,10 @@ const struct TermCode termcodes[MAX_TERMCODE+1] = {
 #endif
 #ifdef AIX
 		{CKILL, TERMCODE_CONTROLCHAR},
-#else
+#elif defined(VDISCARD)
 		{VDISCARD, TERMCODE_CONTROLCHAR},
+#else
+		{0, 0},
 #endif
 		{0, 0}, /* 19 */
 		{0, 0},

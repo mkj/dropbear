@@ -55,6 +55,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	int readlen;
 #ifdef DROPBEAR_EGD
 	struct sockaddr_un egdsock;
+	char egdcmd[2];
 #endif
 
 #ifdef DROPBEAR_DEV_URANDOM
@@ -78,6 +79,13 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 			sizeof(struct sockaddr_un)) < 0) {
 		dropbear_exit("couldn't open random device");
 	}
+
+	if (buflen > 255)
+		dropbear_exit("can't request more than 255 bytes from egd");
+	egdcmd[0] = 0x02;	/* blocking read */
+	egdcmd[1] = (unsigned char)buflen;
+	if (write(readfd, egdcmd, 2) < 0)
+		dropbear_exit("can't send command to egd");
 #endif
 
 	/* read the actual random data */
