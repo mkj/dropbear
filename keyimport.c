@@ -47,17 +47,152 @@
 	((unsigned long)(unsigned char)(cp)[2] << 8) | \
 	((unsigned long)(unsigned char)(cp)[3]))
 
-int openssh_encrypted(const char *filename);
-sign_key *openssh_read(const char *filename, char *passphrase);
-int openssh_write(const char *filename, sign_key *key,
-				  char *passphrase, int keytype);
+static int openssh_encrypted(const char *filename);
+static sign_key *openssh_read(const char *filename, char *passphrase);
+static int openssh_write(const char *filename, sign_key *key,
+				  char *passphrase);
+
+static int dropbear_write(const char*filename, sign_key * key);
+static sign_key *dropbear_read(const char* filename);
 
 #if 0
-int sshcom_encrypted(const char *filename, char **comment);
-struct ssh2_userkey *sshcom_read(const char *filename, char *passphrase);
-int sshcom_write(const char *filename, struct ssh2_userkey *key,
+static int sshcom_encrypted(const char *filename, char **comment);
+static struct ssh2_userkey *sshcom_read(const char *filename, char *passphrase);
+static int sshcom_write(const char *filename, struct ssh2_userkey *key,
 				 char *passphrase);
 #endif
+
+int import_encrypted(const char* filename, int filetype) {
+
+	if (filetype == KEYFILE_OPENSSH) {
+		return openssh_encrypted(filename);
+#if 0
+	} else if (filetype == KEYFILE_SSHCOM) {
+		return sshcom_encrypted(filename, NULL);
+#endif
+	}
+	return 0;
+}
+
+sign_key *import_read(const char *filename, char *passphrase, int filetype) {
+
+	if (filetype == KEYFILE_OPENSSH) {
+		return openssh_read(filename, passphrase);
+	} else if (filetype == KEYFILE_DROPBEAR) {
+		return dropbear_read(filename);
+#if 0
+	} else if (filetype == KEYFILE_SSHCOM) {
+		return sshcom_read(filename, passphrase);
+#endif
+	}
+	return NULL;
+}
+
+int import_write(const char *filename, sign_key *key, char *passphrase,
+		int filetype) {
+
+	if (filetype == KEYFILE_OPENSSH) {
+		return openssh_write(filename, key, passphrase);
+	} else if (filetype == KEYFILE_DROPBEAR) {
+		return dropbear_write(filename, key);
+#if 0
+	} else if (filetype == KEYFILE_SSHCOM) {
+		return sshcom_write(filename, key, passphrase);
+#endif
+	}
+	return 0;
+}
+
+static sign_key *dropbear_read(const char* filename) {
+
+	buffer * buf = NULL;
+	int len, maxlen;
+	FILE *fp;
+	sign_key *ret = NULL;
+
+	buf = buf_new(2000);
+	/* can't use buf_readfile since we might have "-" as filename */
+	if (strlen(filename) == 1 && filename[0] == '-') {
+		fp = stdin;
+	} else {
+		fp = fopen(filename, "r");
+	}
+	if (!fp) {
+		goto error;
+	}
+
+	do {
+		maxlen = buf->size - buf->pos;
+		len = fread(buf_getwriteptr(buf, maxlen), maxlen, 1, fp);
+		buf_incrwritepos(buf, len);
+	} while (len != maxlen && len > 0);
+
+	fclose(fp);
+
+	buf_setpos(buf, 0);
+	ret = new_sign_key();
+
+	if (buf_get_priv_key(buf, ret, DROPBEAR_SIGNKEY_ANY) == DROPBEAR_FAILURE){
+		goto error;
+	}
+	buf_free(buf);
+
+	return ret;
+
+error:
+	if (buf) {
+		buf_free(buf);
+	}
+	if (ret) {
+		sign_key_free(ret);
+	}
+	return NULL;
+}
+
+/* returns 0 on fail, 1 on success */
+static int dropbear_write(const char*filename, sign_key * key) {
+
+	int keytype;
+	buffer * buf;
+	FILE*fp;
+	int len;
+	int ret;
+
+	if (key->rsakey != NULL) {
+		keytype = DROPBEAR_SIGNKEY_RSA;
+	} else {
+		keytype = DROPBEAR_SIGNKEY_DSS;
+	}
+
+	buf = buf_new(2000);
+	buf_put_priv_key(buf, key, keytype);
+
+	if (strlen(filename) == 1 && filename[0] == '-') {
+		fp = stdout;
+	} else {
+		fp = fopen(filename, "w");
+	}
+	if (!fp) {
+		ret = 0;
+		goto out;
+	}
+
+	do {
+		len = fwrite(buf_getptr(buf, buf->len - buf->pos),
+				buf->len - buf->pos, 1, fp);
+		buf_incrpos(buf, len);
+	} while (len > 0 && buf->len != buf->pos);
+
+	if (buf->pos != buf->len) {
+		ret = 0;
+	} else {
+		ret = 1;
+	}
+out:
+	buf_free(buf);
+	return ret;
+}
+
 
 /* ----------------------------------------------------------------------
  * Helper routines. (The base64 ones are defined in sshpubk.c.)
@@ -69,7 +204,8 @@ int sshcom_write(const char *filename, struct ssh2_userkey *key,
 						 (c) == '+' || (c) == '/' || (c) == '=' \
 						 )
 
-void base64_encode_fp(FILE * fp, unsigned char *data, int datalen, int cpl)
+static void base64_encode_fp(FILE * fp, unsigned char *data,
+		int datalen, int cpl)
 {
     int linelen = 0;
     char out[4];
@@ -249,7 +385,11 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	ret->encrypted = 0;
 	memset(ret->iv, 0, sizeof(ret->iv));
 
-	fp = fopen(filename, "r");
+	if (strlen(filename) == 1 && filename[0] == '-') {
+		fp = stdin;
+	} else {
+		fp = fopen(filename, "r");
+	}
 	if (!fp) {
 		errmsg = "Unable to open key file";
 		goto error;
@@ -378,7 +518,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	return NULL;
 }
 
-int openssh_encrypted(const char *filename)
+static int openssh_encrypted(const char *filename)
 {
 	struct openssh_key *key = load_openssh_key(filename);
 	int ret;
@@ -393,15 +533,15 @@ int openssh_encrypted(const char *filename)
 	return ret;
 }
 
-sign_key *openssh_read(const char *filename, char *passphrase)
+static sign_key *openssh_read(const char *filename, char *passphrase)
 {
 	struct openssh_key *key;
 	unsigned char *p;
 	int ret, id, len, flags;
-	int i, num_integers;
+	int i, num_integers = 0;
 	sign_key *retval = NULL;
 	char *errmsg;
-	char *modptr;
+	char *modptr = NULL;
 	int modlen;
 
 	sign_key *retkey;
@@ -574,8 +714,8 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 	return retval;
 }
 
-int openssh_write(const char *filename, sign_key *key,
-				  char *passphrase, int keytype)
+static int openssh_write(const char *filename, sign_key *key,
+				  char *passphrase)
 {
 	buffer * keyblob = NULL;
 	buffer * extrablob = NULL; /* used for calculated values to write */
@@ -589,6 +729,13 @@ int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
+	int keytype;
+
+	if (key->rsakey != NULL) {
+		keytype = DROPBEAR_SIGNKEY_RSA;
+	} else {
+		keytype = DROPBEAR_SIGNKEY_DSS;
+	}
 
 	/*
 	 * Fetch the key blobs.
@@ -823,7 +970,11 @@ int openssh_write(const char *filename, sign_key *key,
 	 * And save it. We'll use Unix line endings just in case it's
 	 * subsequently transferred in binary mode.
 	 */
-	fp = fopen(filename, "wb");	  /* ensure Unix line endings */
+	if (strlen(filename) == 1 && filename[0] == '-') {
+		fp = stdout;
+	} else {
+		fp = fopen(filename, "wb");	  /* ensure Unix line endings */
+	}
 	if (!fp)
 		goto error;
 	fputs(header, fp);
