@@ -1,7 +1,7 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-void initrandom();
+void seedrandom();
 void genrandom(unsigned char* buf, int len);
 void addrandom(unsigned char* buf, int len);
 

@@ -117,9 +117,8 @@ void crypto_init() {
 	};
 
 	const struct _hash_descriptor *reghashes[] = {
-#ifdef DROPBEAR_SHA1_HMAC
+		/* we need sha1 for hostkey stuff regardless */
 		&sha1_desc,
-#endif
 #ifdef DROPBEAR_MD5_HMAC
 		&md5_desc,
 #endif
@@ -139,9 +138,6 @@ void crypto_init() {
 		}
 	}
 
-	if (register_prng(&yarrow_desc) == -1) {
-		dropbear_exit("error registering crypto");
-	}
 }
 
 /* returns 0 if we have a match for algo, -1 otherwise */

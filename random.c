@@ -15,42 +15,38 @@
 
 int donerandinit = 0;
 
-prng_state prng;
+/* this is used to generate unique output from the same hashpool */
+unsigned int counter = 0;
+#define MAX_COUNTER 1000000/* the max value for the counter, so it won't loop */
 
-#define ENTROPY_ADD_AMOUNT 200
-#define MAX_ENTROPY_ADD 2000 /* basically to stop overflow of the counter */
+unsigned char hashpool[SHA1_HASH_SIZE];
+
 #define INIT_SEED_SIZE 32 /* 256 bits */
 
-/* we reseed after addcount reaches ENTROPY_ADD_AMOUNT, though we also include
- * the previous state to avoid someone flushing the state to something known */
-unsigned int addcount = 0;
+static void readrand(unsigned char* buf, unsigned int buflen);
 
-/* The basic approach of the PRNG is to start with an initial good random
- * source (such as /dev/random on supported systems), then feed in further
- * entropy from timings etc. This is all hashed with libtomcrypt's yarrow
- * implementation, which should ensure that as as long as there is some initial
- * random data, it will not be possible to calculate further states, or force
- * the generator into a known state - at least not without guessing the initial
- * state or breaking the hash function */
+/* The basic setup is we read some data from DEV_URANDOM or PRNGD and hash it
+ * into hashpool. To read data, we hash together current hashpool contents,
+ * and a counter. We feed more data in by hashing the current pool and new
+ * data into the pool.
+ *
+ * It is important to ensure that counter doesn't wrap around before we
+ * feed in new entropy.
+ *
+ */
 
-/* Will read in randomness from /dev/random or EGD, and initialise the yarrow
- * state */
-void initrandom() {
-		
-	unsigned char randbuf[INIT_SEED_SIZE];
-	int randfd;
-	int readlen, readpos;
+static void readrand(unsigned char* buf, unsigned int buflen) {
+
+	int readfd;
+	unsigned int readpos, readlen;
 #ifdef DROPBEAR_EGD
 	struct sockaddr_un egdsock;
 #endif
-
-	/* clear the state if it has already been started */
-	m_burn(&prng, sizeof(prng));
-	addcount = 0;
+	int ret;
 
 #ifdef DROPBEAR_DEV_RANDOM
-	randfd = open(DEV_RANDOM, O_RDONLY);
-	if (!randfd) {
+	readfd = open(DEV_RANDOM, O_RDONLY);
+	if (!readfd) {
 		dropbear_exit("couldn't open random device");
 	}
 #endif
@@ -60,25 +56,20 @@ void initrandom() {
 	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
 			sizeof(egdsock.sun_path));
 
-	if ((randfd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+	if ((readfd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
 		dropbear_exit("couldn't open random device");
 	}
 	/* todo - try various common locations */
-	if (connect(randfd, (struct sockaddr*)&egdsock, 
+	if (connect(readfd, (struct sockaddr*)&egdsock, 
 			sizeof(struct sockaddr_un)) < 0) {
 		dropbear_exit("couldn't open random device");
 	}
 #endif
 
-	if (yarrow_start(&prng) != CRYPT_OK) {
-		dropbear_exit("error in yarrow PRNG");
-	}
-
-	
 	/* read the actual random data */
 	readpos = 0;
 	do {
-		readlen = read(randfd, &randbuf[readpos], sizeof(randbuf) - readpos);
+		readlen = read(readfd, &buf[readpos], buflen - readpos);
 		if (readlen <= 0) {
 			if (errno == EINTR) {
 				continue;
@@ -86,60 +77,77 @@ void initrandom() {
 			dropbear_exit("error reading random source");
 		}
 		readpos += readlen;
-	} while (readpos < sizeof(randbuf));
+	} while (readpos < buflen);
 
-	close (randfd);
-
-	if (yarrow_add_entropy(randbuf, sizeof(randbuf), &prng) != CRYPT_OK) {
-		dropbear_exit("error in yarrow PRNG");
-	}
-	m_burn(randbuf, sizeof(randbuf));
-	
-
-	if (yarrow_ready(&prng) != CRYPT_OK) {
-		dropbear_exit("error in yarrow PRNG");
-	}
-
-	donerandinit = 1;
-
+	close (readfd);
 }
 
-void genrandom(unsigned char* buf, int len) {
+/* initialise the prng from /dev/urandom or prngd */
+void seedrandom() {
+		
+	unsigned char readbuf[INIT_SEED_SIZE];
+
+	hash_state hs;
+
+	/* initialise so compilers will be happy about hashing it */
+	if (!donerandinit) {
+		m_burn(hashpool, sizeof(hashpool));
+	}
+
+	/* get the seed data */
+	readrand(readbuf, sizeof(readbuf));
+
+	/* hash in the new seed data */
+	sha1_init(&hs);
+	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
+	sha1_process(&hs, (void*)readbuf, sizeof(readbuf));
+	sha1_done(&hs, hashpool);
+
+	counter = 0;
+	donerandinit = 1;
+}
+
+/* return len bytes of pseudo-random data */
+void genrandom(unsigned char* buf, unsigned int len) {
+
+	hash_state hs;
+	unsigned int i;
+	unsigned char hash[SHA1_HASH_SIZE];
+	unsigned int copylen;
 
 	assert(donerandinit);
 
-	/* XXX m_burn is required since yarrow_read relies on the contents of
-	 * buf for its prng. This isn't a problem in itself, but memory
-	 * debuggers like Valgrind don't like the undefined memory being used */
-	m_burn(buf, len);
-	if (yarrow_read(buf, len, &prng) != len) {
-		dropbear_exit("error in yarrow PRNG");
+	while (len > 0) {
+		sha1_init(&hs);
+		sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
+		sha1_process(&hs, (void*)&counter, sizeof(counter));
+		sha1_done(&hs, hash);
+
+		counter++;
+		if (counter > MAX_COUNTER) {
+			seedrandom();
+		}
+
+		copylen = MIN(len, SHA1_HASH_SIZE);
+		memcpy(buf, hash, copylen);
+		len -= copylen;
+		buf += copylen;
 	}
-	
+	m_burn(hash, sizeof(hash));
 }
 
 /* Adds entropy to the PRNG state. As long as the hash is strong, then we
  * don't need to worry about entropy being added "diluting" the current
- * state - it should only make it stronger. After every ENTROPY_ADD_AMOUNT we
- * reseed. Reseeding also includes the previous state, so we can't get forced
- * to use just the new stuff */
-void addrandom(unsigned char* buf, int len) {
+ * state - it should only make it stronger. */
+void addrandom(unsigned char* buf, unsigned int len) {
 
+	hash_state hs;
 	assert(donerandinit);
 
-	if (len > MAX_ENTROPY_ADD) {
-		dropbear_exit("error in yarrow PRNG");
-	}
+	sha1_init(&hs);
+	sha1_process(&hs, (void*)buf, len);
+	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
+	sha1_done(&hs, hashpool);
+	counter = 0;
 
-	if (yarrow_add_entropy(buf, len, &prng) != CRYPT_OK) {
-		dropbear_exit("error in yarrow PRNG");
-	}
-	addcount += len;
-	
-	if (addcount >= ENTROPY_ADD_AMOUNT) {
-		if (yarrow_ready(&prng) != CRYPT_OK) {
-			dropbear_exit("error in yarrow PRNG");
-		}
-		addcount = 0;
-	}
 }
