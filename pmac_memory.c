@@ -20,25 +20,37 @@ int pmac_memory(int cipher,
                       unsigned char *out, unsigned long *outlen)
 {
    int err;
-   pmac_state pmac;
+   pmac_state *pmac;
 
    _ARGCHK(key    != NULL);
    _ARGCHK(msg    != NULL);
    _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
+   /* allocate ram for pmac state */
+   pmac = XMALLOC(sizeof(pmac_state));
+   if (pmac == NULL) {
+      return CRYPT_MEM;
+   }
+   
+   if ((err = pmac_init(pmac, cipher, key, keylen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+   if ((err = pmac_process(pmac, msg, msglen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+   if ((err = pmac_done(pmac, out, outlen)) != CRYPT_OK) {
+      goto __ERR;
+   }
 
-   if ((err = pmac_init(&pmac, cipher, key, keylen)) != CRYPT_OK) {
-      return err;
-   }
-   if ((err = pmac_process(&pmac, msg, msglen)) != CRYPT_OK) {
-      return err;
-   }
-   if ((err = pmac_done(&pmac, out, outlen)) != CRYPT_OK) {
-      return err;
-   }
+   err = CRYPT_OK;
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(pmac, sizeof(pmac_state));
+#endif
 
-   return CRYPT_OK;
+   XFREE(pmac);
+   return err;   
 }
 
 #endif

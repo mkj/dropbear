@@ -33,7 +33,6 @@ static const ulong32 RC[] = {
    0x000000d4UL 
 };
 
-
 #define kTHETA(a, b, c, d)                                 \
     temp = a^c; temp = temp ^ ROL(temp, 8) ^ ROR(temp, 8); \
     b ^= temp; d ^= temp;                                  \
@@ -97,9 +96,7 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
 #endif
 {
    ulong32 a,b,c,d,temp;
-#ifdef SMALL_CODE
    int r;
-#endif
 
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -115,16 +112,9 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d);
 
-#ifdef SMALL_CODE
    for (r = 0; r < 16; ++r) {
        ROUND(r);
    }
-#else 
-   ROUND( 0); ROUND( 1); ROUND( 2); ROUND( 3);
-   ROUND( 4); ROUND( 5); ROUND( 6); ROUND( 7);
-   ROUND( 8); ROUND( 9); ROUND(10); ROUND(11);
-   ROUND(12); ROUND(13); ROUND(14); ROUND(15);
-#endif
 
 #undef ROUND
 
@@ -150,9 +140,7 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
 #endif
 {
    ulong32 a,b,c,d, temp;
-#ifdef SMALL_CODE
    int r;
-#endif
 
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -169,17 +157,10 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d); 
 
-#ifdef SMALL_CODE
    for (r = 16; r > 0; --r) {
        ROUND(r);
    }
-#else
-   ROUND(16); ROUND(15); ROUND(14); ROUND(13);
-   ROUND(12); ROUND(11); ROUND(10); ROUND( 9);
-   ROUND( 8); ROUND( 7); ROUND( 6); ROUND( 5);
-   ROUND( 4); ROUND( 3); ROUND( 2); ROUND( 1);
-#endif
-   
+
 #undef ROUND
 
    THETA(key->noekeon.dK, a,b,c,d);

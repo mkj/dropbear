@@ -1,0 +1,19 @@
+# make test harness, it is good.
+CFLAGS += -Wall -W -Os -I../../ -I./
+
+# if you're not debugging
+CFLAGS += -fomit-frame-pointer
+
+default: test
+
+#if you don't have mpi.o 
+#MPISHARED=-ltommath
+
+OBJECTS=test.o cipher_hash_test.o mac_test.o modes_test.o \
+pkcs_1_test.o store_test.o rsa_test.o ecc_test.o dsa_test.o dh_tests.o der_tests.o 
+
+test: $(OBJECTS)
+	libtool --mode=link gcc $(CFLAGS) $(OBJECTS) -o test -ltomcrypt $(MPISHARED)
+	
+clean:
+	rm -f test *.o *.obj *.exe *~	

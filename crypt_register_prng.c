@@ -26,7 +26,7 @@ int register_prng(const struct _prng_descriptor *prng)
    /* find a blank spot */
    for (x = 0; x < TAB_SIZE; x++) {
        if (prng_descriptor[x].name == NULL) {
-          memcpy(&prng_descriptor[x], prng, sizeof(struct _prng_descriptor));
+          XMEMCPY(&prng_descriptor[x], prng, sizeof(struct _prng_descriptor));
           return x;
        }
    }

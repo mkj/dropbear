@@ -8,20 +8,28 @@
 #define MYCRYPT_CFG_H
 
 /* you can change how memory allocation works ... */
-extern void *XMALLOC(size_t n);
-extern void *REALLOC(void *p, size_t n);
-extern void *XCALLOC(size_t n, size_t s);
-extern void XFREE(void *p);
+void *XMALLOC(size_t n);
+void *REALLOC(void *p, size_t n);
+void *XCALLOC(size_t n, size_t s);
+void XFREE(void *p);
 
 /* change the clock function too */
-extern clock_t XCLOCK(void);
+ clock_t XCLOCK(void);
 
-/* ch1-01-1 */
+/* various other functions */
+void *XMEMCPY(void *dest, const void *src, size_t n);
+int   XMEMCMP(const void *s1, const void *s2, size_t n);
+
 /* type of argument checking, 0=default, 1=fatal and 2=none */
 #define ARGTYPE  0
-/* ch1-01-1 */
 
-/* Controls endianess and size of registers.  Leave uncommented to get platform neutral [slower] code */
+/* Controls endianess and size of registers.  Leave uncommented to get platform neutral [slower] code 
+ * 
+ * Note: in order to use the optimized macros your platform must support unaligned 32 and 64 bit read/writes.
+ * The x86 platforms allow this but some others [ARM for instance] do not.  On those platforms you **MUST**
+ * use the portable [slower] macros.
+ */
+
 /* detect x86-32 machines somewhat */
 #if defined(INTEL_CC) || (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__i386__)))
    #define ENDIAN_LITTLE
@@ -30,6 +38,12 @@ extern clock_t XCLOCK(void);
 
 /* detects MIPS R5900 processors (PS2) */
 #if (defined(__R5900) || defined(R5900) || defined(__R5900__)) && (defined(_mips) || defined(__mips__) || defined(mips))
+   #define ENDIAN_LITTLE
+   #define ENDIAN_64BITWORD
+#endif
+
+/* detect amd64 */
+#if defined(__x86_64__)
    #define ENDIAN_LITTLE
    #define ENDIAN_64BITWORD
 #endif
@@ -46,12 +60,6 @@ extern clock_t XCLOCK(void);
 
 #if !(defined(ENDIAN_BIG) || defined(ENDIAN_LITTLE))
    #define ENDIAN_NEUTRAL
-#endif
-
-#ifdef YARROW
-   #ifndef CTR
-      #error YARROW requires CTR chaining mode to be defined!
-   #endif
 #endif
 
 /* packet code */

@@ -12,6 +12,9 @@
 
 #ifdef MDH
 
+/* max export size we'll encounter (smaller than this but lets round up a bit */
+#define DH_BUF_SIZE 1200
+
 /* This holds the key settings.  ***MUST*** be organized by size from smallest to largest. */
 static const struct {
     int size;
@@ -226,7 +229,7 @@ int dh_get_size(dh_key *key)
 
 int dh_make_key(prng_state *prng, int wprng, int keysize, dh_key *key)
 {
-   unsigned char buf[512];
+   unsigned char *buf;
    unsigned long x;
    mp_int p, g;
    int err;
@@ -251,14 +254,21 @@ int dh_make_key(prng_state *prng, int wprng, int keysize, dh_key *key)
    }
    key->idx = x;
 
+   /* allocate buffer */
+   buf = XMALLOC(keysize);
+   if (buf == NULL) {
+      return CRYPT_MEM;
+   }
+
    /* make up random string */
    if (prng_descriptor[wprng].read(buf, keysize, prng) != (unsigned long)keysize) {
-      return CRYPT_ERROR_READPRNG;
+      err = CRYPT_ERROR_READPRNG; 
+      goto error2;
    }
 
    /* init parameters */
    if ((err = mp_init_multi(&g, &p, &key->x, &key->y, NULL)) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
+      goto error;
    }
    if ((err = mp_read_radix(&g, sets[key->idx].base, 64)) != MP_OKAY)      { goto error; }
    if ((err = mp_read_radix(&p, sets[key->idx].prime, 64)) != MP_OKAY)     { goto error; }
@@ -276,10 +286,14 @@ int dh_make_key(prng_state *prng, int wprng, int keysize, dh_key *key)
    goto done;
 error:
    err = mpi_to_ltc_error(err);
+error2:
    mp_clear_multi(&key->x, &key->y, NULL);
 done:
+#ifdef CLEAN_STACK
+   zeromem(buf, keysize);
+#endif
    mp_clear_multi(&p, &g, NULL);
-   zeromem(buf, sizeof(buf));
+   XFREE(buf);
    return err;
 }
 

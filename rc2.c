@@ -33,17 +33,8 @@ const struct _cipher_descriptor rc2_desc = {
    &rc2_keysize
 };
 
-
-/**********************************************************************\
-* Expand a variable-length user key (between 1 and 128 bytes) to a     *
-* 64-short working rc2 key, of at most "bits" effective key bits.      *
-* The effective key bits parameter looks like an export control hack.  *
-* For normal use, it should always be set to 1024.  For convenience,   *
-* zero is accepted as an alias for 1024.                               *
-\**********************************************************************/
-
-   /* 256-entry permutation table, probably derived somehow from pi */
-    static const unsigned char permute[256] = {
+/* 256-entry permutation table, probably derived somehow from pi */
+static const unsigned char permute[256] = {
         217,120,249,196, 25,221,181,237, 40,233,253,121, 74,160,216,157,
         198,126, 55,131, 43,118, 83,142, 98, 76,100,136, 68,139,251,162,
          23,154, 89,245,135,179, 79, 19, 97, 69,109,141,  9,129,125, 50,
@@ -60,7 +51,7 @@ const struct _cipher_descriptor rc2_desc = {
         211,  0,230,207,225,158,168, 44, 99, 22,  1, 63, 88,226,137,169,
          13, 56, 52, 27,171, 51,255,176,187, 72, 12, 95,185,177,205, 46,
         197,243,219, 71,229,165,156,119, 10,166, 32,104,254,127,193,173
-    };
+};
 
 int rc2_setup(const unsigned char *key, int keylen, int rounds, symmetric_key *skey)
 {
@@ -87,24 +78,23 @@ int rc2_setup(const unsigned char *key, int keylen, int rounds, symmetric_key *s
     /* Phase 1: Expand input key to 128 bytes */
     if (keylen < 128) {
         for (i = keylen; i < 128; i++) {
-            tmp[i] = permute[(int)((tmp[i - 1] + tmp[i - keylen]) & 255)];
+            tmp[i] = permute[(tmp[i - 1] + tmp[i - keylen]) & 255];
         }
     }
     
     /* Phase 2 - reduce effective key size to "bits" */
-    bits = keylen*8;
+    bits = keylen<<3;
     T8   = (unsigned)(bits+7)>>3;
     TM   = (255 >> (unsigned)(7 & -bits));
-    tmp[128 - T8] = permute[(int)(tmp[128 - T8] & TM)];
+    tmp[128 - T8] = permute[tmp[128 - T8] & TM];
     for (i = 127 - T8; i >= 0; i--) {
-        tmp[i] = permute[(int)(tmp[i + 1] ^ tmp[i + T8])];
+        tmp[i] = permute[tmp[i + 1] ^ tmp[i + T8]];
     }
 
     /* Phase 3 - copy to xkey in little-endian order */
-    i = 63;
-    do {
+    for (i = 0; i < 64; i++) {
         xkey[i] =  (unsigned)tmp[2*i] + ((unsigned)tmp[2*i+1] << 8);
-    } while (i-- > 0);
+    }        
 
 #ifdef CLEAN_STACK
     zeromem(tmp, sizeof(tmp));
@@ -129,9 +119,9 @@ void rc2_ecb_encrypt( const unsigned char *plain,
     unsigned *xkey;
     unsigned x76, x54, x32, x10, i;
 
-    _ARGCHK(plain != NULL);
+    _ARGCHK(plain  != NULL);
     _ARGCHK(cipher != NULL);
-    _ARGCHK(skey != NULL);
+    _ARGCHK(skey   != NULL);
 
     xkey = skey->rc2.xkey;
 
@@ -142,16 +132,16 @@ void rc2_ecb_encrypt( const unsigned char *plain,
 
     for (i = 0; i < 16; i++) {
         x10 = (x10 + (x32 & ~x76) + (x54 & x76) + xkey[4*i+0]) & 0xFFFF;
-        x10 = ((x10 << 1) | (x10 >> 15)) & 0xFFFF;
+        x10 = ((x10 << 1) | (x10 >> 15));
 
         x32 = (x32 + (x54 & ~x10) + (x76 & x10) + xkey[4*i+1]) & 0xFFFF;
-        x32 = ((x32 << 2) | (x32 >> 14)) & 0xFFFF;
+        x32 = ((x32 << 2) | (x32 >> 14));
 
         x54 = (x54 + (x76 & ~x32) + (x10 & x32) + xkey[4*i+2]) & 0xFFFF;
-        x54 = ((x54 << 3) | (x54 >> 13)) & 0xFFFF;
+        x54 = ((x54 << 3) | (x54 >> 13));
 
         x76 = (x76 + (x10 & ~x54) + (x32 & x54) + xkey[4*i+3]) & 0xFFFF;
-        x76 = ((x76 << 5) | (x76 >> 11)) & 0xFFFF;
+        x76 = ((x76 << 5) | (x76 >> 11));
 
         if (i == 4 || i == 10) {
             x10 = (x10 + xkey[x76 & 63]) & 0xFFFF;
@@ -199,9 +189,9 @@ void rc2_ecb_decrypt( const unsigned char *cipher,
     unsigned *xkey;
     int i;
 
-    _ARGCHK(plain != NULL);
+    _ARGCHK(plain  != NULL);
     _ARGCHK(cipher != NULL);
-    _ARGCHK(skey != NULL);
+    _ARGCHK(skey   != NULL);
 
     xkey = skey->rc2.xkey;
 
@@ -218,16 +208,16 @@ void rc2_ecb_decrypt( const unsigned char *cipher,
             x10 = (x10 - xkey[x76 & 63]) & 0xFFFF;
         }
 
-        x76 = ((x76 << 11) | (x76 >> 5)) & 0xFFFF;
+        x76 = ((x76 << 11) | (x76 >> 5));
         x76 = (x76 - ((x10 & ~x54) + (x32 & x54) + xkey[4*i+3])) & 0xFFFF;
 
-        x54 = ((x54 << 13) | (x54 >> 3)) & 0xFFFF;
+        x54 = ((x54 << 13) | (x54 >> 3));
         x54 = (x54 - ((x76 & ~x32) + (x10 & x32) + xkey[4*i+2])) & 0xFFFF;
 
-        x32 = ((x32 << 14) | (x32 >> 2)) & 0xFFFF;
+        x32 = ((x32 << 14) | (x32 >> 2));
         x32 = (x32 - ((x54 & ~x10) + (x76 & x10) + xkey[4*i+1])) & 0xFFFF;
 
-        x10 = ((x10 << 15) | (x10 >> 1)) & 0xFFFF;
+        x10 = ((x10 << 15) | (x10 >> 1));
         x10 = (x10 - ((x32 & ~x76) + (x54 & x76) + xkey[4*i+0])) & 0xFFFF;
     }
 

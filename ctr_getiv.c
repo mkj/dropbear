@@ -21,7 +21,7 @@ int ctr_getiv(unsigned char *IV, unsigned long *len, symmetric_CTR *ctr)
    if ((unsigned long)ctr->blocklen > *len) {
       return CRYPT_BUFFER_OVERFLOW;
    }
-   memcpy(IV, ctr->ctr, ctr->blocklen);
+   XMEMCPY(IV, ctr->ctr, ctr->blocklen);
    *len = ctr->blocklen;
 
    return CRYPT_OK;

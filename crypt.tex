@@ -1,4 +1,4 @@
-\documentclass[b5paper]{book}
+\documentclass[a4paper]{book}
 \usepackage{hyperref}
 \usepackage{makeidx}
 \usepackage{amssymb}
@@ -47,20 +47,15 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.96}
+\title{LibTomCrypt \\ Version 0.99}
 \author{Tom St Denis \\
 \\
 tomstdenis@iahu.ca \\
-http://libtomcrypt.org \\ \\
-Phone: 1-613-836-3160\\
-111 Banning Rd \\
-Kanata, Ontario \\
-K2L 1C3 \\
-Canada
+http://libtomcrypt.org
 }
 \maketitle
 This text and source code library are both hereby placed in the public domain.  This book has been 
-formatted for B5 [176x250] paper using the \LaTeX{} {\em book} macro package.
+formatted for A4 paper using the \LaTeX{} {\em book} macro package.
 
 \vspace{10cm}
 
@@ -70,7 +65,15 @@ formatted for B5 [176x250] paper using the \LaTeX{} {\em book} macro package.
 
 Tom St Denis,
 
-Ontario, Canada
+Phone: 1-613-836-3160
+
+111 Banning Rd 
+
+Kanata, Ontario 
+
+K2L 1C3 
+
+Canada
 \end{flushright}
 \newpage
 \tableofcontents
@@ -182,7 +185,7 @@ under a public domain license:
 library.
 
 ``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c''
-was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and is public domain.
+was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and seems to be free for use.
 
 The project is hereby released as public domain.
 
@@ -190,33 +193,15 @@ The project is hereby released as public domain.
 
 The author (Tom St Denis) is not a patent lawyer so this section is not to be treated as legal advice.  To the best
 of the authors knowledge the only patent related issues within the library are the RC5 and RC6 symmetric block ciphers.  
-They can be removed from a build by simply commenting out the two appropriate lines in the makefile script.  The rest
+They can be removed from a build by simply commenting out the two appropriate lines in ``mycrypt\_custom.h''.  The rest
 of the ciphers and hashes are patent free or under patents that have since expired.
 
 The RC2 and RC4 symmetric ciphers are not under patents but are under trademark regulations.  This means you can use 
 the ciphers you just can't advertise that you are doing so.  
 
-\section{Building the library}
-
-To build the library on a GCC equipped platform simply type ``make'' at your command prompt.  It will build the library
-file ``libtomcrypt.a''.  
-
-To install the library copy all of the ``.h'' files into your ``\#include'' path and the single libtomcrypt.a file into 
-your library path.
-
-With MSVC you can build the library with ``nmake -f makefile.msvc''.  This will produce a ``tomcrypt.lib'' file which
-is the core library.  Copy the header files into your MSVC include path and the library in the lib path (typically
-under where VC98 is installed).
-
-\section{Building against the library}
-
-In the recent versions the build steps have changed.  The build options are now stored in ``mycrypt\_custom.h'' and
-no longer in the makefile.  If you change a build option in that file you must re-build the library from clean to
-ensure the build is intact.  The perl script ``config.pl'' will help setup the custom header and a custom makefile
-if you want one (the provided ``makefile'' will work with custom configs).
-
 \section{Thanks}
-I would like to give thanks to the following people (in no particular order) for helping me develop this project:
+I would like to give thanks to the following people (in no particular order) for helping me develop this project from
+early on:
 \begin{enumerate}
    \item Richard van de Laarschot
    \item Richard Heathfield
@@ -232,6 +217,10 @@ I would like to give thanks to the following people (in no particular order) for
    \item Sky Schulz
    \item Christopher Imes
 \end{enumerate}
+
+There have been quite a few other people as well.  Please check the change log to see who else has contributed from
+time to time.
+
 
 \chapter{The Application Programming Interface (API)}
 \section{Introduction}
@@ -581,9 +570,9 @@ Twofish round function.
 \begin{tabular}{|l|l|l|}
 \hline TWOFISH\_SMALL & TWOFISH\_TABLES & Speed and Memory (per key) \\
 \hline undefined & undefined & Very fast, 4.2KB of ram. \\
-\hline undefined & defined & As above, faster keysetup, larger code (1KB more). \\
+\hline undefined & defined & Faster keysetup, larger code. \\
 \hline defined & undefined & Very slow, 0.2KB of ram. \\
-\hline defined & defined & Somewhat faster, 0.2KB of ram, larger code. \\
+\hline defined & defined & Faster, 0.2KB of ram, larger code. \\
 \hline
 \end{tabular}
 \end{center}
@@ -615,7 +604,8 @@ int main(void)
    }
 
    /* generic call to function (assuming the key in key[] was already setup) */
-   if ((err = cipher_descriptor[find_cipher("blowfish")].setup(key, 8, 0, &skey)) != CRYPT_OK) {
+   if ((err = cipher_descriptor[find_cipher("blowfish")].setup(key, 8, 0, &skey)) != 
+       CRYPT_OK) {
       printf("Error setting up Blowfish: %s\n", error_to_string(err));
       return -1;
    }
@@ -820,12 +810,13 @@ int main(void)
    /* somehow fill out key and IV */
 
    /* start up CTR mode */
-   if ((err = ctr_start(find_cipher("twofish"), /* index of desired cipher */
-                                            IV, /* the initial vector */
-                                           key, /* the secret key */
-                                            16, /* length of secret key (16 bytes, 128 bits) */
-                                             0, /* 0 == default # of rounds */
-                                         &ctr)  /* where to store initialized CTR state */
+   if ((err = ctr_start(
+        find_cipher("twofish"), /* index of desired cipher */
+                            IV, /* the initial vector */
+                           key, /* the secret key */
+                            16, /* length of secret key (16 bytes, 128 bits) */
+                             0, /* 0 == default # of rounds */
+                         &ctr)  /* where to store initialized CTR state */
       ) != CRYPT_OK) {
       printf("ctr_start error: %s\n", error_to_string(err));
       return -1;
@@ -1345,7 +1336,60 @@ int register_hash(const struct _hash_descriptor *hash);
 int unregister_hash(const struct _hash_descriptor *hash);
 \end{verbatim}
 
-\subsection{Notice}
+\section{Cipher Hash Construction}
+\index{Cipher Hash Construction}
+An addition to the suite of hash functions is the ``Cipher Hash Construction'' or ``CHC'' mode.  In this mode
+applicable block ciphers (such as AES) can be turned into hash functions that other LTC functions can use.  In 
+particular this allows a cryptosystem to be designed using very few moving parts.
+
+In order to use the CHC system the developer will have to take a few extra steps.  First the ``chc\_desc'' hash
+descriptor must be registered with register\_hash().  At this point the CHC hash cannot be used to hash
+data.  While it is in the hash system you still have to tell the CHC code which cipher to use.  This is accomplished
+via the chc\_register() function.
+
+\index{chc\_register()}
+\begin{verbatim}
+int chc_register(int cipher);
+\end{verbatim}
+
+A cipher has to be registered with CHC (and also in the cipher descriptor tables with 
+register\_cipher()).  The chc\_register() function will bind a cipher to the CHC system.  Only one cipher can 
+be bound to the CHC hash at a time.  There are additional requirements for the system to work.
+
+\begin{enumerate}
+   \item The cipher must have a block size greater than 64--bits.  
+   \item The cipher must allow an input key the size of the block size.
+\end{enumerate}
+
+Example of using CHC with the AES block cipher.
+
+\begin{verbatim}
+#include <mycrypt.h>
+int main(void)
+{
+   int err; 
+
+   /* register cipher and hash */
+   if (register_cipher(&aes_enc_desc) == -1) {
+      printf("Could not register cipher\n");
+      return EXIT_FAILURE;
+   }
+   if (register_hash(&chc_desc) == -1) {
+      printf("Could not register hash\n");
+      return EXIT_FAILURE;
+   }
+
+   /* start chc with AES */
+   if ((err = chc_register(find_cipher("aes"))) != CRYPT_OK) {
+      printf("Error binding AES to CHC: %s\n", error_to_string(err));
+   }
+
+   /* now you can use chc_hash in any LTC function [aside from pkcs...] */
+   /* ... */
+\end{verbatim}
+
+
+\section{Notice}
 It is highly recommended that you \textbf{not} use the MD4 or MD5 hashes for the purposes of digital signatures or authentication codes.  
 These hashes are provided for completeness and they still can be used for the purposes of password hashing or one-way accumulators
 (e.g. Yarrow).
@@ -1678,12 +1722,15 @@ int pmac_test(void);
 Which returns {\bf CRYPT\_OK} if the code passes otherwise it returns an error code.
 
 
+
+
+
 \chapter{Pseudo-Random Number Generators}
 \section{Core Functions}
-
 The library provides an array of core functions for Pseudo-Random Number Generators (PRNGs) as well.  A cryptographic PRNG is
 used to expand a shorter bit string into a longer bit string.  PRNGs are used wherever random data is required such as Public Key (PK)
 key generation.  There is a universal structure called ``prng\_state''.  To initialize a PRNG call:
+\index{PRNG start}
 \begin{verbatim}
 int XXX_start(prng_state *prng);
 \end{verbatim}
@@ -1691,6 +1738,7 @@ int XXX_start(prng_state *prng);
 This will setup the PRNG for future use and not seed it.  In order 
 for the PRNG to be cryptographically useful you must give it entropy.  Ideally you'd have some OS level source to tap 
 like in UNIX (see section 5.3).  To add entropy to the PRNG call:
+\index{PRNG add\_entropy}
 \begin{verbatim}
 int XXX_add_entropy(const unsigned char *in, unsigned long len, 
                     prng_state *prng);
@@ -1698,17 +1746,77 @@ int XXX_add_entropy(const unsigned char *in, unsigned long len,
 
 Which returns {\bf CRYPTO\_OK} if the entropy was accepted.  Once you think you have enough entropy you call another
 function to put the entropy into action.
+\index{PRNG ready}
 \begin{verbatim}
 int XXX_ready(prng_state *prng);
 \end{verbatim}
 
 Which returns {\bf CRYPTO\_OK} if it is ready.  Finally to actually read bytes call:
+\index{PRNG read}
 \begin{verbatim}
 unsigned long XXX_read(unsigned char *out, unsigned long len,
                        prng_state *prng);
 \end{verbatim}
 
-Which returns the number of bytes read from the PRNG.
+Which returns the number of bytes read from the PRNG.  When you are finished with a PRNG state you call
+the following.
+
+\index{PRNG done}
+\begin{verbatim}
+void XXX_done(prng_state *prng);
+\end{verbatim}
+
+This will terminate a PRNG state and free any memory (if any) allocated.  To export a PRNG state
+so that you can later resume the PRNG call the following.
+
+\index{PRNG export}
+\begin{verbatim}
+int XXX_export(unsigned char *out, unsigned long *outlen, 
+               prng_state    *prng);
+\end{verbatim}
+
+This will write a ``PRNG state'' to the buffer ``out'' of length ``outlen'' bytes.  The idea of 
+the export is meant to be used as a ``seed file''.  That is, when the program starts up there will not likely
+be that much entropy available.   To import a state to seed a PRNG call the following function.
+
+\index{PRNG import}
+\begin{verbatim}
+int XXX_import(const unsigned char *in, unsigned long inlen, 
+                     prng_state     *prng);
+\end{verbatim}
+
+This will call the start and add\_entropy functions of the given PRNG.  It will use the state in
+``in'' of length ``inlen'' as the initial seed.  You must pass the same seed length as was exported
+by the corresponding export function.
+
+Note that importing a state will not ``resume'' the PRNG from where it left off.  That is, if you export
+a state, emit (say) 8 bytes and then import the previously exported state the next 8 bytes will not 
+specifically equal the 8 bytes you generated previously.
+
+When a program is first executed the normal course of operation is 
+
+\begin{enumerate}
+   \item Gather entropy from your sources for a given period of time or number of events.
+   \item Start, use your entropy via add\_entropy and ready the PRNG yourself.
+\end{enumerate}
+
+When your program is finished you simply call the export function and save the state to a medium (disk,
+flash memory, etc).  The next time your application starts up you can detect the state, feed it to the 
+import function and go on your way.  It is ideal that (as soon as possible) after startup you export a
+fresh state.  This helps in the case that the program aborts or the machine is powered down without
+being given a chance to exit properly.  
+
+Note that even if you have a state to import it is important to add new entropy to the state.  However,
+there is less pressure to do so.  
+
+To test a PRNG for operational conformity call the following functions.
+
+\index{PRNG test}
+\begin{verbatim}
+int XXX_test(void);
+\end{verbatim}
+
+This will return \textbf{CRYPT\_OK} if PRNG is operating properly.
 
 \subsection{Remarks}
 
@@ -1719,8 +1827,8 @@ checking is guaranteed to see if the entropy is sufficient or if the PRNG is eve
 
 \subsection{Example}
 
-Below is a simple snippet to read 10 bytes from yarrow.  Its important to note that this snippet is {\bf NOT} secure since
-the entropy added is not random.
+Below is a simple snippet to read 10 bytes from yarrow.  Its important to note that this snippet is 
+{\bf NOT} secure since the entropy added is not random.
 
 \begin{verbatim}
 #include <mycrypt.h>
@@ -1753,10 +1861,15 @@ PRNGs have descriptors too (surprised?). Stored in the structure ``prng\_descrip
 \begin{verbatim}
 struct _prng_descriptor {
     char *name;
+    int  export_size;    /* size in bytes of exported state */
     int (*start)      (prng_state *);
     int (*add_entropy)(const unsigned char *, unsigned long, prng_state *);
     int (*ready)      (prng_state *);
     unsigned long (*read)(unsigned char *, unsigned long len, prng_state *);
+    void (*done)(prng_state *);
+    int (*export)(unsigned char *, unsigned long *, prng_state *);
+    int (*import)(const unsigned char *, unsigned long, prng_state *);
+    int (*test)(void);
 };
 \end{verbatim}
 
@@ -1770,16 +1883,82 @@ int register_prng(const struct _prng_descriptor *prng);
 int unregister_prng(const struct _prng_descriptor *prng);
 \end{verbatim}
 
-\subsubsection{PRNGs Provided}
-Currently Yarrow (yarrow\_desc), RC4 (rc4\_desc) and the secure RNG (sprng\_desc) are provided as PRNGs within the 
-library.  
+\subsection{PRNGs Provided}
+\begin{figure}[here]
+\begin{center}
+\begin{small}
+\begin{tabular}{|c|c|l|}
+\hline \textbf{Name} & \textbf{Descriptor} & \textbf{Usage} \\
+\hline Yarrow & yarrow\_desc & Fast short-term PRNG \\
+\hline Fortuna & fortuna\_desc & Fast long-term PRNG (recommended) \\
+\hline RC4 & rc4\_desc & Stream Cipher \\
+\hline SOBER-128 & sober128\_desc & Stream Cipher (also very fast PRNG) \\
+\hline
+\end{tabular}
+\end{small}
+\end{center}
+\caption{List of Provided PRNGs}
+\end{figure}
 
-RC4 is provided with a PRNG interface because it is a stream cipher and not well suited for the symmetric block cipher
-interface.  You provide the key for RC4 via the rc4\_add\_entropy() function.  By calling rc4\_ready() the key will be used
-to setup the RC4 state for encryption or decryption.  The rc4\_read() function has been modified from RC4 since it will 
-XOR the output of the RC4 keystream generator against the input buffer you provide.  The following snippet will demonstrate
-how to encrypt a buffer with RC4:
+\subsubsection{Yarrow}
+Yarrow is fast PRNG meant to collect an unspecified amount of entropy from sources 
+(keyboard, mouse, interrupts, etc) and produce an unbounded string of random bytes.  
 
+\textit{Note:} This PRNG is still secure for most taskings but is no longer recommended.  Users
+should use Fortuna instead.
+
+\subsubsection{Fortuna}
+
+Fortuna is a fast attack tolerant and more thoroughly designed PRNG suitable for long term
+usage.  It is faster than the default implementation of Yarrow\footnote{Yarrow has been implemented
+to work with most cipher and hash combos based on which you have chosen to build into the library.} while
+providing more security.  
+
+Fortuna is slightly less flexible than Yarrow in the sense that it only works with the AES block cipher 
+and SHA--256 hash function.  Technically Fortuna will work with any block cipher that accepts a 256--bit
+key and any hash that produces at least a 256--bit output.  However, to make the implementation simpler
+it has been fixed to those choices.
+
+Fortuna is more secure than Yarrow in the sense that attackers who learn parts of the entropy being 
+added to the PRNG learn far less about the state than that of Yarrow.  Without getting into to many
+details Fortuna has the ability to recover from state determination attacks where the attacker starts
+to learn information from the PRNGs output about the internal state.  Yarrow on the other hand cannot 
+recover from that problem until new entropy is added to the pool and put to use through the ready() function.
+
+\subsubsection{RC4}
+
+RC4 is an old stream cipher that can also double duty as a PRNG in a pinch.  You ``key'' it by
+calling add\_entropy() and setup the key by calling ready().  You can only add upto 256 bytes via
+add\_entropy().  
+
+When you read from RC4 the output of the RC4 algorithm is XOR'd against your buffer you provide.  In this
+manner you can use rc4\_read() as an encrypt (and decrypt) function.  
+
+You really shouldn't use RC4 anymore.  This isn't because RC4 is weak (though biases are known to exist) just
+simply that faster alternatives exist.
+
+\subsubsection{SOBER-128}
+
+SOBER-128 is a stream cipher designed by the QUALCOMM Australia team.  Like RC4 you ``key'' it by 
+calling add\_entropy().  There is no need to call ready() for this PRNG as it does not do anything.  
+
+Note that this cipher has several oddities about how it operates.  The first time you call 
+add\_entropy() that sets the cipher's key.  Every other time you call the same function it sets
+the cipher's IV variable.  The IV mechanism allows you to encrypt several messages with the same
+key and not re--use the same key material.
+
+Unlike Yarrow and Fortuna all of the entropy (and hence security) of this algorithm rests in the data
+you pass it on the first call to add\_entropy().  All buffers sent to add\_entropy() must have a length
+that is a multiple of four bytes.
+
+Like RC4 the output of SOBER--128 is XOR'ed against the buffer you provide it.  In this manner you can use
+sober128\_read() as an encrypt (and decrypt) function.
+
+Since SOBER-128 has a fixed keying scheme and is very fast (faster than RC4) the ideal usage of SOBER-128 is to 
+key it from the output of Fortuna (or Yarrow) and use it to encrypt messages.  It is also ideal for
+simulations which need a high quality (and fast) stream of bytes.  
+
+\subsubsection{Example Usage}
 \begin{small}
 \begin{verbatim}
 #include <mycrypt.h>
@@ -2116,10 +2295,11 @@ Note that the ``rsa\_make\_key()'' function allocates memory at runtime when you
 ``rsa\_free()'' (see below) when you are finished with the key.  If ``rsa\_make\_key()'' fails it will automatically 
 free the ram allocated itself.
 
-There are three types of RSA keys.  The types are {\bf PK\_PRIVATE\_OPTIMIZED}, {\bf PK\_PRIVATE} and {\bf PK\_PUBLIC}.  The first
-two are private keys where the ``optimized'' type uses the Chinese Remainder Theorem to speed up decryption/signatures.  By 
-default all new keys are of the ``optimized'' type.  The non-optimized private type is provided for backwards compatibility
-as well as to save space since the optimized key requires about four times as much memory.
+\index{PK\_PRIVATE} \index{PK\_PUBLIC}
+There are two types of RSA keys.  The types are {\bf PK\_PRIVATE} and {\bf PK\_PUBLIC}.  The first type is a private 
+RSA key which includes the CRT parameters\footnote{As of v0.99 the PK\_PRIVATE\_OPTIMIZED type has been deprecated
+and has been replaced by the PK\_PRIVATE type.} in the form of a RSAPrivateKey.  The second type is a public RSA key
+which only includes the modulus and public exponent.  It takes the form of a RSAPublicKey.
 
 \subsection{RSA Exponentiation}
 
@@ -2272,79 +2452,6 @@ int main(void)
 }
 \end{verbatim}
 
-\chapter{Password Based Cryptography}
-\section{PKCS \#5}
-In order to securely handle user passwords for the purposes of creating session keys and chaining IVs the PKCS \#5 was drafted.   PKCS \#5
-is made up of two algorithms, Algorithm One and Algorithm Two.  Algorithm One is the older fairly limited algorithm which has been implemented
-for completeness.  Algorithm Two is a bit more modern and more flexible to work with.
-
-\section{Algorithm One}
-Algorithm One accepts as input a password, an 8--byte salt and an iteration counter.  The iteration counter is meant to act as delay for
-people trying to brute force guess the password.  The higher the iteration counter the longer the delay.  This algorithm also requires a hash 
-algorithm and produces an output no longer than the output of the hash.  
-
-\index{pkcs\_5\_alg1()}
-\begin{alltt}
-int pkcs_5_alg1(const unsigned char *password, unsigned long password_len, 
-                const unsigned char *salt, 
-                int iteration_count,  int hash_idx,
-                unsigned char *out,   unsigned long *outlen)
-\end{alltt}
-Where ``password'' is the users password.  Since the algorithm allows binary passwords you must also specify the length in ``password\_len''.  
-The ``salt'' is a fixed size 8--byte array which should be random for each user and session.  The ``iteration\_count'' is the delay desired
-on the password.  The ``hash\_idx'' is the index of the hash you wish to use in the descriptor table.  
-
-The output of length upto ``outlen'' is stored in ``out''.  If ``outlen'' is initially larger than the size of the hash functions output
-it is set to the number of bytes stored.  If it is smaller than not all of the hash output is stored in ``out''.
-
-\section{Algorithm Two}
-
-Algorithm Two is the recommended algorithm for this task.  It allows variable length salts and can produce outputs larger than the 
-hash functions output.  As such it can easily be used to derive session keys for ciphers and MACs as well initial vectors as required
-from a single password and invokation of this algorithm.
-
-\index{pkcs\_5\_alg2()}
-\begin{alltt}
-int pkcs_5_alg2(const unsigned char *password, unsigned long password_len, 
-                const unsigned char *salt,     unsigned long salt_len,
-                int iteration_count,           int hash_idx,
-                unsigned char *out,            unsigned long *outlen)
-\end{alltt}
-Where ``password'' is the users password.  Since the algorithm allows binary passwords you must also specify the length in ``password\_len''.  
-The ``salt'' is an array of size ``salt\_len''.  It should be random for each user and session.  The ``iteration\_count'' is the delay desired
-on the password.  The ``hash\_idx'' is the index of the hash you wish to use in the descriptor table.   The output of length upto 
-``outlen'' is stored in ``out''.
-
-\begin{alltt}
-/* demo to show how to make session state material from a password */
-#include <mycrypt.h>
-int main(void)
-\{
-    unsigned char password[100], salt[100],
-                  cipher_key[16], cipher_iv[16],
-                  mac_key[16], outbuf[48];
-    int           err, hash_idx;
-    unsigned long outlen, password_len, salt_len;
-
-    /* register hash and get it's idx .... */
-
-    /* get users password and make up a salt ... */
-
-    /* create the material (100 iterations in algorithm) */
-    outlen = sizeof(outbuf);
-    if ((err = pkcs_5_alg2(password, password_len, salt, salt_len, 
-                           100, hash_idx, outbuf, &outlen)) != CRYPT_OK) \{
-       /* error handle */
-    \}
-
-    /* now extract it */
-    memcpy(cipher_key, outbuf, 16);
-    memcpy(cipher_iv,  outbuf+16, 16);
-    memcpy(mac_key,    outbuf+32, 16);
-
-    /* use material (recall to store the salt in the output) */
-\}
-\end{alltt}
 
 \chapter{Diffie-Hellman Key Exchange}
 
@@ -2774,8 +2881,6 @@ int dsa_verify_key(dsa_key *key, int *stat);
 This will test ``key'' and store the result in ``stat''.  If the result is $stat = 0$ the DSA key failed one of the tests
 and should not be used at all.  If the result is $stat = 1$ the DSA key is valid (as far as valid mathematics are concerned).
 
-
-
 \section{Signatures}
 To generate a DSA signature call the following function
 
@@ -2824,6 +2929,153 @@ int dsa_import(const unsigned char *in, unsigned long inlen,
 
 This will import the DSA key from the buffer ``in'' of length ``inlen'' to the ``key''.  If the process fails the function
 will automatically free all of the heap allocated in the process (you don't have to call dsa\_free()).  
+
+\chapter{Standards Support}
+\section{DER Support}
+DER or ``Distinguished Encoding Rules'' is a subset of the ASN.1 encoding rules that is fully deterministic and
+ideal for cryptography.  In particular ASN.1 specifies an INTEGER type for storing arbitrary sized integers.  DER
+further limits the ASN.1 specifications to a deterministic encoding.
+
+\subsection{Storing INTEGER types}
+\index{der\_encode\_integer()}
+\begin{alltt}
+int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen);
+\end{alltt}
+
+This will store the integer in ``num'' to the output buffer ``out'' of length ``outlen''.  It only stores
+non--negative numbers.  It stores the number of octets used back in ``outlen''.
+
+\subsection{Reading INTEGER types}
+\index{der\_decode\_integer()}
+\begin{alltt}
+int der_decode_integer(const unsigned char *in, unsigned long *inlen, mp_int *num);
+\end{alltt}
+This will decode the DER encoded INTEGER in ``in'' of length ``inlen'' and store the resulting integer
+in ``num''.  It will store the bytes read in ``inlen'' which is handy if you have to parse multiple
+data items out of a binary packet.
+
+\subsection{INTEGER length}
+\index{der\_length\_integer()}
+\begin{alltt}
+int der_length_integer(mp_int *num, unsigned long *len);
+\end{alltt}
+This will determine the length of the DER encoding of the integer ``num'' and store it in ``len''.
+
+\subsection{Multiple INTEGER types}
+To simplify the DER encoding/decoding there are two functions two handle multple types at once.
+
+\index{der\_put\_multi\_integer()}
+\index{der\_get\_multi\_integer()}
+\begin{alltt}
+int der_put_multi_integer(unsigned char *dst, unsigned long *outlen, mp_int *num, ...);
+int der_get_multi_integer(const unsigned char *src, unsigned long *inlen,  mp_int *num, ...);
+\end{alltt}
+
+These will handle multiple encodings/decodings at once.  They work like their single operand counterparts
+except they handle a \textbf{NULL} terminated list of operands.
+
+\begin{verbatim}
+#include <mycrypt.h>
+int main(void)
+{
+   mp_int        a, b, c, d;
+   unsigned char buffer[1000];
+   unsigned long len;
+   int           err;
+
+   /* init a,b,c,d with some values ... */
+
+   /* ok we want to store them now... */
+   len = sizeof(buffer);
+   if ((err = der_put_multi_integer(buffer, &len, 
+                                    &a, &b, &c, &d, NULL)) != CRYPT_OK) {
+      // error
+   }
+   printf("I stored %lu bytes in buf\n", len);
+
+   /* ok say we want to get them back for fun */
+   /* len set previously...otherwise set it to the size of the packet */
+   if ((err = der_get_multi_integer(buffer, &len,
+                                    &a, &b, &c, &d, NULL)) != CRYPT_OK) {
+      // error
+   }
+   printf("I read %lu bytes from buf\n", len);
+}
+\end{verbatim}
+\section{Password Based Cryptography}
+\subsection{PKCS \#5}
+In order to securely handle user passwords for the purposes of creating session keys and chaining IVs the PKCS \#5 was drafted.   PKCS \#5
+is made up of two algorithms, Algorithm One and Algorithm Two.  Algorithm One is the older fairly limited algorithm which has been implemented
+for completeness.  Algorithm Two is a bit more modern and more flexible to work with.
+
+\subsection{Algorithm One}
+Algorithm One accepts as input a password, an 8--byte salt and an iteration counter.  The iteration counter is meant to act as delay for
+people trying to brute force guess the password.  The higher the iteration counter the longer the delay.  This algorithm also requires a hash 
+algorithm and produces an output no longer than the output of the hash.  
+
+\index{pkcs\_5\_alg1()}
+\begin{alltt}
+int pkcs_5_alg1(const unsigned char *password, unsigned long password_len, 
+                const unsigned char *salt, 
+                int iteration_count,  int hash_idx,
+                unsigned char *out,   unsigned long *outlen)
+\end{alltt}
+Where ``password'' is the users password.  Since the algorithm allows binary passwords you must also specify the length in ``password\_len''.  
+The ``salt'' is a fixed size 8--byte array which should be random for each user and session.  The ``iteration\_count'' is the delay desired
+on the password.  The ``hash\_idx'' is the index of the hash you wish to use in the descriptor table.  
+
+The output of length upto ``outlen'' is stored in ``out''.  If ``outlen'' is initially larger than the size of the hash functions output
+it is set to the number of bytes stored.  If it is smaller than not all of the hash output is stored in ``out''.
+
+\subsection{Algorithm Two}
+
+Algorithm Two is the recommended algorithm for this task.  It allows variable length salts and can produce outputs larger than the 
+hash functions output.  As such it can easily be used to derive session keys for ciphers and MACs as well initial vectors as required
+from a single password and invokation of this algorithm.
+
+\index{pkcs\_5\_alg2()}
+\begin{alltt}
+int pkcs_5_alg2(const unsigned char *password, unsigned long password_len, 
+                const unsigned char *salt,     unsigned long salt_len,
+                int iteration_count,           int hash_idx,
+                unsigned char *out,            unsigned long *outlen)
+\end{alltt}
+Where ``password'' is the users password.  Since the algorithm allows binary passwords you must also specify the length in ``password\_len''.  
+The ``salt'' is an array of size ``salt\_len''.  It should be random for each user and session.  The ``iteration\_count'' is the delay desired
+on the password.  The ``hash\_idx'' is the index of the hash you wish to use in the descriptor table.   The output of length upto 
+``outlen'' is stored in ``out''.
+
+\begin{alltt}
+/* demo to show how to make session state material from a password */
+#include <mycrypt.h>
+int main(void)
+\{
+    unsigned char password[100], salt[100],
+                  cipher_key[16], cipher_iv[16],
+                  mac_key[16], outbuf[48];
+    int           err, hash_idx;
+    unsigned long outlen, password_len, salt_len;
+
+    /* register hash and get it's idx .... */
+
+    /* get users password and make up a salt ... */
+
+    /* create the material (100 iterations in algorithm) */
+    outlen = sizeof(outbuf);
+    if ((err = pkcs_5_alg2(password, password_len, salt, salt_len, 
+                           100, hash_idx, outbuf, &outlen)) != CRYPT_OK) \{
+       /* error handle */
+    \}
+
+    /* now extract it */
+    memcpy(cipher_key, outbuf, 16);
+    memcpy(cipher_iv,  outbuf+16, 16);
+    memcpy(mac_key,    outbuf+32, 16);
+
+    /* use material (recall to store the salt in the output) */
+\}
+\end{alltt}
+
 
 \chapter{Miscellaneous}
 \section{Base64 Encoding and Decoding}
@@ -3058,18 +3310,77 @@ possible as some compilers may ignore the ``volatile'' keyword or have multiple 
 is modular enough putting the locks in the right place should not bloat the code significantly and will solve all thread
 safety issues within the library.
 
-\chapter{Configuring the Library}
+\chapter{Configuring and Building the Library}
 \section{Introduction}
 The library is fairly flexible about how it can be built, used and generally distributed.  Additions are being made with
-each new release that will make the library even more flexible.  Most options are placed in the makefile and others
-are in ``mycrypt\_cfg.h''.  All are used when the library is built from scratch.
+each new release that will make the library even more flexible.  Each of the classes of functions can be disabled during
+the build process to make a smaller library.  This is particularly useful for shared libraries.
 
-For GCC platforms the file ``makefile'' is the makefile to be used.  On MSVC platforms ``makefile.vc'' and on PS2 platforms
-``makefile.ps2''.
+\section{Building a Static Library}
+The library can be built as a static library which is generally the simplest and most portable method of 
+building the library.  With a CC or GCC equipped platform you can issue the following
+
+\begin{alltt}
+make install_lib
+\end{alltt}
+
+Which will build the library and install it in /usr/lib (as well as the headers in /usr/include).  The destination
+directory of the library and headers can be changed by editing ``makefile''.  The variable LIBNAME controls
+where the library is to be installed and INCNAME controls where the headers are to be installed.  A developer can 
+then use the library by including ``mycrypt.h'' in their program and linking against ``libtomcrypt.a''.
+
+A static library can also be built with the Intel C Compiler  (ICC) by issuing the following
+
+\begin{alltt}
+make -f makefile.icc install
+\end{alltt}
+
+This will also build ``libtomcrypt.a'' except that it will use ICC.  Additionally Microsoft's Visual C 6.00 can be used
+by issuing
+
+\begin{alltt}
+nmake -f makefile.msvc
+\end{alltt}
+
+You will have to manually copy ``tomcrypt.lib'' and the headers to your MSVC lib/inc directories.
+
+\subsection{MPI Control}
+If you already have LibTomMath installed you can safely remove it from the build.  By commenting the line
+in the appropriate makefile which starts with 
+
+\begin{alltt}
+MPIOBJECT=mpi
+\end{alltt}
+
+Simply place a \# at the start and re-build the library.  To properly link applications you will have to also
+link in LibTomMath.  Removing MPI has the benefit of cutting down the library size as well potentially have access
+to the latest mpi.
+
+\section{Building a Shared Library}
+LibTomCrypt can also be built as a shared library (.so, .dll, etc...).  With non-Windows platforms the assumption
+of the presence of gcc and ``libtool'' has been made.  These are fairly common on Unix/Linux/BSD platforms.  To
+build a .so shared library issue 
+
+\begin{alltt}
+make -f makefile.shared
+\end{alltt}
+This will use libtool and gcc to build a shared library ``libtomcrypt.la'' as well as a static library ``libtomcrypt.a''
+and install them into /usr/lib (and the headers into /usr/include).  To link your application you should use the 
+libtool program in ``--mode=link''.
+
+You can also build LibTomCrypt as a shared library (DLL) in Windows with Cygwin.  Issue the following
+
+\begin{alltt}
+make -f makefile.cygwin_dll
+\end{alltt}
+This will build ``libtomcrypt.dll.a'' which is an import library for ``libtomcrypt.dll''.  You must copy 
+``libtomcrypt.dll.a'' to your library directory, ``libtomcrypt.dll' to somewhere in your PATH and the header
+files to your include directory.  So long as ``libtomcrypt.dll'' is in your system path you can run any LibTomCrypt
+program that uses it.
 
 \section{mycrypt\_cfg.h}
-The file ``mycrypt\_cfg.h'' is what lets you control what functionality you want to remove from the library.  By default,
-everything the library has to offer it built.  
+The file ``mycrypt\_cfg.h'' is what lets you control various high level macros which control the behaviour 
+of the library. 
 
 \subsubsection{ARGTYPE}
 This lets you control how the \_ARGCHK macro will behave.  The macro is used to check pointers inside the functions against
@@ -3082,17 +3393,18 @@ and no error checking will be performed.
 There are five macros related to endianess issues.  For little endian platforms define, ENDIAN\_LITTLE.  For big endian
 platforms define ENDIAN\_BIG.  Similarly when the default word size of an ``unsigned long'' is 32-bits define ENDIAN\_32BITWORD
 or define ENDIAN\_64BITWORD when its 64-bits.  If you do not define any of them the library will automatically use ENDIAN\_NEUTRAL
-which will work on all platforms.  Currently the system will automatically detect GCC or MSVC on a windows platform as well
-as GCC on a PS2 platform.
+which will work on all platforms.
+
+Currently LibTomCrypt will detect x86-32 and x86-64 running GCC as well as x86-32 running MSVC.  
 
 \section{The Configure Script}
-There are also options you can specify from the configure script or ``mycrypt\_config.h''.  
+There are also options you can specify from the configure script or ``mycrypt\_custom.h''.  
 
 \subsubsection{X memory routines}
-The makefiles must define three macros denoted as XMALLOC, XCALLOC and XFREE which resolve to the name of the respective
-functions.  This lets you substitute in your own memory routines.  If you substitute in your own functions they must behave
-like the standard C library functions in terms of what they expect as input and output.  By default the library uses the
-standard C routines.
+At the top of mycrypt\_custom.h are four macros denoted as XMALLOC, XCALLOC, XREALLOC and XFREE which resolve to 
+the name of the respective functions.  This lets you substitute in your own memory routines.  If you substitute in 
+your own functions they must behave like the standard C library functions in terms of what they expect as input and 
+output.  By default the library uses the standard C routines.
 
 \subsubsection{X clock routines}
 The rng\_get\_bytes() function can call a function that requires the clock() function.  These macros let you override
@@ -3100,17 +3412,22 @@ the default clock() used with a replacement.  By default the standard C library 
 
 \subsubsection{NO\_FILE}
 During the build if NO\_FILE is defined then any function in the library that uses file I/O will not call the file I/O 
-functions and instead simply return CRYPT\_ERROR.  This should help resolve any linker errors stemming from a lack of
+functions and instead simply return CRYPT\_NOP.  This should help resolve any linker errors stemming from a lack of
 file I/O on embedded platforms.
 
 \subsubsection{CLEAN\_STACK}
-When this functions is defined the functions that store key material on the stack will clean up afterwards.  Assumes that
-you have no memory paging with the stack.
+When this functions is defined the functions that store key material on the stack will clean up afterwards.  
+Assumes that you have no memory paging with the stack.
+
+\subsubsection{LTC\_TEST}
+When this has been defined the various self--test functions (for ciphers, hashes, prngs, etc) are included in the build.
+When this has been undefined the tests are removed and if called will return CRYPT\_NOP.
 
 \subsubsection{Symmetric Ciphers, One-way Hashes, PRNGS and Public Key Functions}
-There are a plethora of macros for the ciphers, hashes, PRNGs and public key functions which are fairly self-explanatory.  
-When they are defined the functionality is included otherwise it is not.  There are some dependency issues which are
-noted in the file.  For instance, Yarrow requires CTR chaining mode, a block cipher and a hash function.
+There are a plethora of macros for the ciphers, hashes, PRNGs and public key functions which are fairly 
+self-explanatory.  When they are defined the functionality is included otherwise it is not.  There are some 
+dependency issues which are noted in the file.  For instance, Yarrow requires CTR chaining mode, a block 
+cipher and a hash function.
 
 \subsubsection{TWOFISH\_SMALL and TWOFISH\_TABLES}
 Twofish is a 128-bit symmetric block cipher that is provided within the library.  The cipher itself is flexible enough
@@ -3127,6 +3444,20 @@ it will not speed up the encryption or decryption functions.
 \subsubsection{SMALL\_CODE}
 When this is defined some of the code such as the Rijndael and SAFER+ ciphers are replaced with smaller code variants.
 These variants are slower but can save quite a bit of code space.
+
+\section{MPI Tweaks}
+\subsection{RSA Only Tweak}
+If you plan on only using RSA with moduli in the range of 1024 to 2560 bits you can enable a series of tweaks
+to reduce the library size.  Follow these steps
+
+\begin{enumerate}
+   \item Undefine MDSA, MECC and MDH from mycrypt\_custom.h
+   \item Undefine LTM\_ALL  from tommath\_superclass.h
+   \item Define SC\_RSA\_1 from tommath\_superclass.h
+   \item Rebuild the library.
+\end{enumerate}
+
+
 
 \input{crypt.ind}
 

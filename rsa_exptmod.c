@@ -14,6 +14,7 @@
 
 #ifdef MRSA
 
+/* compute an RSA modular exponentiation */
 int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
                       unsigned char *out,  unsigned long *outlen, int which,
                       prng_state    *prng, int           prng_idx,
@@ -28,11 +29,13 @@ int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
    _ARGCHK(outlen != NULL);
    _ARGCHK(key    != NULL);
    
+   /* valid prng? */
    if ((err = prng_is_valid(prng_idx)) != CRYPT_OK) {
       return err;
    }
 
-   if (which == PK_PRIVATE && (key->type != PK_PRIVATE && key->type != PK_PRIVATE_OPTIMIZED)) {
+   /* is the key of the right type for the operation? */
+   if (which == PK_PRIVATE && (key->type != PK_PRIVATE)) {
       return CRYPT_PK_NOT_PRIVATE;
    }
 
@@ -42,7 +45,7 @@ int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
    }
 
    /* init and copy into tmp */
-   if ((err = mp_init_multi(&tmp, &tmpa, &tmpb, NULL)) != MP_OKAY)                     { goto error; }
+   if ((err = mp_init_multi(&tmp, &tmpa, &tmpb, NULL)) != MP_OKAY)                     { return mpi_to_ltc_error(err); }
    if ((err = mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen)) != MP_OKAY) { goto error; }
 
    /* sanity check on the input */
@@ -52,24 +55,23 @@ int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
    }
 
    /* are we using the private exponent and is the key optimized? */
-   if (which == PK_PRIVATE && key->type == PK_PRIVATE_OPTIMIZED) {
+   if (which == PK_PRIVATE) {
       /* tmpa = tmp^dP mod p */
       if ((err = tim_exptmod(prng, prng_idx, &tmp, &key->e, &key->dP, &key->p, &tmpa)) != MP_OKAY)    { goto error; }
 
       /* tmpb = tmp^dQ mod q */
       if ((err = tim_exptmod(prng, prng_idx, &tmp, &key->e,  &key->dQ, &key->q, &tmpb)) != MP_OKAY)    { goto error; }
 
-      /* tmp = tmpa*qP + tmpb*pQ mod N */
-      if ((err = mp_mul(&tmpa, &key->qP, &tmpa)) != MP_OKAY)                { goto error; }
-      if ((err = mp_mul(&tmpb, &key->pQ, &tmpb)) != MP_OKAY)                { goto error; }
-      if ((err = mp_addmod(&tmpa, &tmpb, &key->N, &tmp)) != MP_OKAY)        { goto error; }
+      /* tmp = (tmpa - tmpb) * qInv (mod p) */
+      if ((err = mp_sub(&tmpa, &tmpb, &tmp)) != MP_OKAY)                    { goto error; }
+      if ((err = mp_mulmod(&tmp, &key->qP, &key->p, &tmp)) != MP_OKAY)      { goto error; }
+
+      /* tmp = tmpb + q * tmp */
+      if ((err = mp_mul(&tmp, &key->q, &tmp)) != MP_OKAY)                   { goto error; }
+      if ((err = mp_add(&tmp, &tmpb, &tmp)) != MP_OKAY)                     { goto error; }
    } else {
       /* exptmod it */
-      if (which == PK_PRIVATE) {
-         if ((err = tim_exptmod(prng, prng_idx, &tmp, &key->e, &key->d, &key->N, &tmp)) != MP_OKAY) { goto error; }
-      } else {
-         if ((err = mp_exptmod(&tmp, &key->e, &key->N, &tmp)) != MP_OKAY) { goto error; }
-      }
+      if ((err = mp_exptmod(&tmp, &key->e, &key->N, &tmp)) != MP_OKAY) { goto error; }
    }
 
    /* read it back */

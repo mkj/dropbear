@@ -13,7 +13,7 @@
 
 #ifdef MRSA
 
-/* PSS pad then sign */
+/* (PKCS #1, v2.0) PSS pad then sign */
 int rsa_sign_hash(const unsigned char *msghash,  unsigned long  msghashlen, 
                         unsigned char *sig,      unsigned long *siglen, 
                         prng_state    *prng,     int            prng_idx,

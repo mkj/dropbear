@@ -20,8 +20,8 @@ int pkcs_1_mgf1(const unsigned char *seed, unsigned long seedlen,
 {
    unsigned long hLen, counter, x;
    int           err;
-   hash_state    md;
-   unsigned char buf[MAXBLOCKSIZE];
+   hash_state    *md;
+   unsigned char *buf;
  
    _ARGCHK(seed != NULL);
    _ARGCHK(mask != NULL);
@@ -34,6 +34,19 @@ int pkcs_1_mgf1(const unsigned char *seed, unsigned long seedlen,
    /* get hash output size */
    hLen = hash_descriptor[hash_idx].hashsize;
 
+   /* allocate memory */
+   md  = XMALLOC(sizeof(hash_state));
+   buf = XMALLOC(hLen);
+   if (md == NULL || buf == NULL) {
+      if (md != NULL) {
+         XFREE(md);
+      }
+      if (buf != NULL) {
+         XFREE(buf);
+      }
+      return CRYPT_MEM;
+   }
+
    /* start counter */
    counter = 0;
 
@@ -43,15 +56,17 @@ int pkcs_1_mgf1(const unsigned char *seed, unsigned long seedlen,
        ++counter;
 
        /* get hash of seed || counter */
-       hash_descriptor[hash_idx].init(&md);
-       if ((err = hash_descriptor[hash_idx].process(&md, seed, seedlen)) != CRYPT_OK) {
-          return err;
+       if ((err = hash_descriptor[hash_idx].init(md)) != CRYPT_OK) {
+          goto __ERR;
        }
-       if ((err = hash_descriptor[hash_idx].process(&md, buf, 4)) != CRYPT_OK) {
-          return err;
+       if ((err = hash_descriptor[hash_idx].process(md, seed, seedlen)) != CRYPT_OK) {
+          goto __ERR;
        }
-       if ((err = hash_descriptor[hash_idx].done(&md, buf)) != CRYPT_OK) {
-          return err;
+       if ((err = hash_descriptor[hash_idx].process(md, buf, 4)) != CRYPT_OK) {
+          goto __ERR;
+       }
+       if ((err = hash_descriptor[hash_idx].done(md, buf)) != CRYPT_OK) {
+          goto __ERR;
        }
 
        /* store it */
@@ -60,7 +75,17 @@ int pkcs_1_mgf1(const unsigned char *seed, unsigned long seedlen,
        }
    }
 
-   return CRYPT_OK;
+   err = CRYPT_OK;
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(buf, hLen);
+   zeromem(md,  sizeof(hash_state));
+#endif
+
+   XFREE(buf);
+   XFREE(md);
+
+   return err;
 }
 
 #endif /* PKCS_1 */

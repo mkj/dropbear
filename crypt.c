@@ -123,6 +123,9 @@ const char *crypt_build_settings =
 #if defined(WHIRLPOOL)
    "   WHIRLPOOL\n"
 #endif
+#if defined(CHC_HASH)
+   "   CHC_HASH \n"
+#endif
 
     "\nBlock Chaining Modes:\n"
 #if defined(CFB)
@@ -141,6 +144,26 @@ const char *crypt_build_settings =
     "   CTR\n"
 #endif
 
+    "\nMACs:\n"
+#if defined(HMAC)
+    "   HMAC\n"
+#endif
+#if defined(OMAC)
+    "   OMAC\n"
+#endif
+#if defined(PMAC)
+    "   PMAC\n"
+#endif
+
+    "\nENC + AUTH modes:\n"
+#if defined(EAX_MODE)
+    "   EAX_MODE\n"
+#endif
+#if defined(OCB_MODE)
+    "   OCB_MODE\n"
+#endif
+
+
     "\nPRNG:\n"
 #if defined(YARROW)
     "   Yarrow\n"
@@ -150,6 +173,12 @@ const char *crypt_build_settings =
 #endif
 #if defined(RC4)
     "   RC4\n"
+#endif
+#if defined(FORTUNA)
+    "   Fortuna\n"
+#endif
+#if defined(SOBER128)
+    "   SOBER128\n"
 #endif
 
     "\nPK Algs:\n"
@@ -197,21 +226,6 @@ const char *crypt_build_settings =
 #if defined(MPI)
     " MPI "
 #endif
-#if defined(HMAC)
-    " HMAC "
-#endif
-#if defined(OMAC)
-    " OMAC "
-#endif
-#if defined(PMAC)
-    " PMAC "
-#endif
-#if defined(EAX_MODE)
-    " EAX_MODE "
-#endif
-#if defined(OCB_MODE)
-    " OCB_MODE "
-#endif
 #if defined(TRY_UNRANDOM_FIRST)
     " TRY_UNRANDOM_FIRST "
 #endif
@@ -230,8 +244,8 @@ const char *crypt_build_settings =
 #if defined(NO_FILE)
     " NO_FILE "
 #endif
-#if defined(LTC_TEST)
-    " LTC_TEST "
+#if defined(LTMSSE)
+    " LTMSSE "
 #endif
     "\n"
     "\n\n\n"

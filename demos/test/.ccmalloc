@@ -1,0 +1,356 @@
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+                %%%% generic configuration file for %%%%
+                %%%%  the ccmalloc memory profiler  %%%%
+                %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+    
+    %-----------------------------------------------------------------%
+    % COPY THIS FILE TO '.ccmalloc' in your project or home directory %
+    %-----------------------------------------------------------------%
+
+##############################################################################
+## (C) 1997-2003 Armin Biere, 1998 Johannes Keukelaar
+## $Id: ccmalloc.cfg,v 1.6 2003/02/03 08:03:54 biere Exp $
+##############################################################################
+
+%%% '%' and '#' are comments !!!!!!!
+
+% This file must be called '.ccmalloc' and is searched for in the
+% current directory and in the home directory of the user. If it
+% does not exist then the default values mentioned below are used.
+
+% It is also the only available user manual yet ;-) So here is a reading
+% hint. First have a look at the short one line descriptions of each option
+% ...
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% with 'file' the executable is specified [a.out]
+% ----------------------------------------------------------------------
+% This should not be necessary for Linux and Solaris because the proc
+% file system can be used to find argv[0].
+%
+% (the rest of this comment only applies to other OS)
+%
+% For other OS you should use this option unless the executable is
+% in the current directory or its name is 'a.out'.
+%
+% If you do not specify this then ccmalloc tries to find an executable
+% in the current directory that matches the running program starting
+% with 'a.out'. For this process it must call 'nm' on each executable
+% file in the directory which may be time consuming. With this option
+% you can speed up this process.
+%
+% You can also specify absolute or relative path names. This is 
+% necessary if you do not start your program from the current directory.
+% But you can also simply link or name your program to 'a.out'.
+
+%file FILE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'log' specify the logfile [stderr]
+% ----------------------------------------------------------------------
+% The default is to use stderr. The argument to 'log' is the name of
+% the file you want to write to. It can also be 'stdout' or '-' which 
+% sets stdout as logfile. If the logfile is stdout or stderr and is
+% connected to a terminal then the output is slightly different.
+%
+% For big programs the logfile can be really big. To reduce the size
+% you can use a small chain length (see 'chain-length' below). The other
+% possibility is to use compressed logfiles. This can be done by
+% specifying a logfile name with  a '.gz' (or a '.Z') suffix. This means
+% that gnuzip (resp. compress) is used to compress the output.
+
+%log FILE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'logpid' specify the logfile
+% ----------------------------------------------------------------------
+% Can be used alternatively to the 'log' command if you want to use
+% ccmalloc for debugging parallel applications where several copies of
+% the program you are debugging must be run simoultaneously. In this
+% case you can not use 'log' because you do not want to write to the same
+% log file. Using 'logpid' uses a file name ending with the <pid> of
+% the process which means the name is unique even if several copies of
+% your program are run simoultaneously.
+%
+% If you use the compressing suffixes then the <pid> is inserted before
+% the suffix (e.g. 'logpid ccmalloc.log.gz' uses 'ccmalloc.log.<pid>.gz'
+% as the name for the log file).
+
+%logpid FILE
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'dont-log-chain' skip info about certain chains []
+% ----------------------------------------------------------------------
+% This command may be repeated any number of times. The argument to this
+% command is a comma-separated list of function-or-file-and-line
+% specifications. Garbage allocated from a callchain that contains this
+% subchain anywhere will _not_ be logged.
+%
+% The ';'-separated list should not contain any spaces. E.g. not:
+%
+%    main ; foo ; bar
+%
+% but:
+%
+%     main;foo;bar
+%
+% A function-or-file-and-line specification is a string followed by an
+% optional colon and number, for example: main or main:14 or main.c or
+% main.c:15. Note that the string is compared with both the function and the
+% file name, if available. If main.c happens to be a function name, that
+% will cause a match (for that string at least).  Not specifying a line
+% number will match any line number. If line number information is not
+% available, anything will match!  Not specifying a name (e.g. ;;;) will
+% match an unknown function name.  Not giving any parameters at all, will
+% match a chain containing at least one unknown function.
+%
+% Note that if you say 'dont-log-chain wrapper.c' nothing will be logged.
+
+%dont-log-chain
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'only-log-chain' skip info about other chains []
+% ----------------------------------------------------------------------
+% The obvious counterpart to dont-log-chain. In this case, only matching
+% chains will be reported. Non-matching chains will not be reported.
+% Can be repeated any number of times; if the chain matches any of the
+% instances, it will be reported.
+
+%only-log-chain
+
+########################################################################
+#                                                                      #
+# This is the 'flag' section                                           #
+#                                                                      #
+#    'set FLAG' is the same as 'set FLAG 1'                            #
+#                                                                      #
+# The default values are those set below.  If 'silent' is disabled     #
+# then you will find the banner in the log file (or it is listed on    #
+# stdout or stderr). The banner describes the current settings of all  #
+# these flags.                                                         #
+#                                                                      #
+########################################################################
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% with 'only-count' ccmalloc only counts garbage - no call chains [0]
+% ----------------------------------------------------------------------
+% If only-count is set to one then only one additional pointer for
+% each allocated data is used and no call chain is generated. This is
+% the fasted and most space efficient mode ccmalloc can operate
+% in. In this mode you get at least the size of garbage produced.
+%
+% Note that 'check-free-space' does not work at all with 'only-count'
+% set and over writes ('check-overwrites') are only checked when
+% calling free.
+
+%set only-count 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'load-dynlibs' load dynamic linked libraries into gdb [0]
+% ----------------------------------------------------------------------
+% If your program is linked with dynamic libraries, function and file
+% name information is not available for addresses in those libraries,
+% unless you set 'load-dynlibs' to 1.
+
+%set load-dynlibs 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'keep-deallocated-data' does not recycle deallocated data [0]
+% ----------------------------------------------------------------------
+% If you enable keep-deallocated-data then all data deallocated with
+% 'free' (or 'delete' in C++) is not given back to the free store
+% but stays associated with the call chain of its allocation. This is
+% very useful if your program does multiple deallocation of the
+% same data.
+
+%set keep-deallocated-data 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'check-overwrites' detect overwrites [0]
+% ----------------------------------------------------------------------
+% If you want to detect 'off by n bytes' errors you should set
+% 'checking-overwrites' to n/4 (on 32-Bit machines).
+%
+% ccmalloc inserts a boundary above allocated data. This boundary
+% consists of 'check-overwrites' words. If your program writes to
+% this area then ccmalloc can detect this (see also check-start
+% and check-interval). 'ccmalloc' also does checking for overwrites
+% at non word boundaries (e.g. strcpy(malloc(strlen("hello")),"hello");)
+
+set check-overwrites 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'check-underwrites' detect underwrites [0]
+% ----------------------------------------------------------------------
+% same with writes below allocated data. You do not have to set this
+% option if you only want detect 'off (below) by one' errors because
+% ccmalloc keeps a magic value just before the user data.
+
+set check-underwrites 1
+
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'check-free-space' can be used to find dangling pointers. [0]
+% ----------------------------------------------------------------------
+% A very serious type of bug is to write on data that has already been
+% freed. If this happens the free space management of malloc is in
+% trouble and you will perhaps encounter non deterministic behaviour of
+% your program. To test this first enable 'keep-deallocated-data' and
+% restart your program. If the problem goes away and ccmalloc does not
+% report anything then you should *also* enable 'check-free-space'. Now
+% ccmalloc checks already deallocated data for corruption.
+%
+% Note that to perform this check 'keep-deallocated-data' also must
+% be enabled and 'only-count' disabled.
+
+set check-free-space 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'check-interval' can be used to speed up checks [0]
+% ----------------------------------------------------------------------
+% If check-overwrite, check-underwrites or check-free-space is set then
+% the default is to do 'write checks' when data is deallocated and
+% to do 'free space checks' when reporting together with
+% 'write checks' for garbage. When you want these checks to be
+% performed more often then you should set 'check-interval' to a
+% positive number. This number is the interval between the number of
+% calls to free or malloc without performing the checks.
+
+%set check-interval 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'check-start' can be used to speed up checks [0]
+% ----------------------------------------------------------------------
+% The flag 'check-start' delays the start of checks until the given
+% number of calls to free and malloc have occured. Together with
+% 'check-interval' you can use a binary search to find an aproximation
+% when a corruption occured! If you simply set check-interval to 1 and
+% check-start to 0 then this will slow done your program too much.
+
+%set check-start 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'silent' disables banner [0]
+% ----------------------------------------------------------------------
+% If you don't want to see the banner of ccmalloc then set
+% 'silent' to 1 (f.e. when logging to stderr)
+
+%set silent
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'file-info' en/disables file and line number information [1]
+% ----------------------------------------------------------------------
+% If your program was compiled with debugging information (-g) then
+% ccmalloc can generate line number and file info for call chains opening
+% a pipe to gdb. For very big programs this method is slow. In this case
+% you can set 'file-info' to zero and you will only get the function
+% names. For SunOS 4.3.1 'nm' does not 'demangle' C++ identifiers
+% very well. So gdb is called instead but only if 'file-info' is
+% not set to 0.
+
+%set file-info 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'continue' if ccmalloc aborts when something weired happened [0]
+% ----------------------------------------------------------------------
+% If the free function of ccmalloc is called with an argument that does
+% not make sense to ccmalloc or that has already been freed then you
+% probably want the program to stop at this point. This is also
+% the default behaviour. But you can force ccmalloc also to ignore
+% this if you set 'continue' to 1. This flag also controls the behaviour
+% of ccmalloc when free space is found to be corrupted or a write
+% boundary has been overwritten.
+
+%set continue 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'chain-length' is the length of the maximal call chain [0 = infinite]
+% ----------------------------------------------------------------------
+% You can restrict the length of call chains by setting 'chain-length'
+% to a number greater than zero. If 'chain-length' is zero (the default)
+% then chains are as long as possible (on a non x86 system only call
+% chains with a finite maximal length can be generated). For big
+% programs especially if keep-deallocated-data is enabled this can
+% reduce the size of the log file from over 100MB to several MB!
+
+%set chain-length 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'print-addresses' of data [0]
+% ----------------------------------------------------------------------
+% If you want to see the addresses of the allocated data (and
+% deallocated data if keep-deallocated-data is set to 1) set
+% 'print-addresses' to 1.
+
+%set print-addresses 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'print-on-one-line' shortens log file [0]
+% ----------------------------------------------------------------------
+% The default is to print function names and file/line number info
+% on separate lines. With 'print-on-one-line' set 1 all are printed
+% on one line.
+
+%set print-on-one-line 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'additional-line' enlarges readability [1]
+% ----------------------------------------------------------------------
+% When printing call chains an empty line is printed between to
+% call points. Set 'additional-line' to 0 to disable this feature.
+
+%set additional-line 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% 'statistics' enables more accurate profiling [0] 
+% ----------------------------------------------------------------------
+% Calculate number of allocations and deallocations and bytes also on
+% a per call chain basis. This uses 4 additional pointers for each
+% call chain.
+
+set statistics 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% set order for sorting of call chains [1] [1]
+% ----------------------------------------------------------------------
+% When printing the report to the log file the call chains are sorted by
+% default with respect to the largest accumulated garbage produced by
+% that call chain. This can be changed with setting 'sort-by-wasted'
+% to 0. In this case they are sorted by the number of allocated bytes.
+% If you want the number of allocations (only possible if 'statistics'
+% is enabled) as sorting criteria instead then set 'sort-by-size' to 0.
+
+%set sort-by-wasted 1
+%set sort-by-size 1
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% report library chains [0]
+% ----------------------------------------------------------------------
+% Some external libraries (like libg++) have memory leaks. On some
+% systems even a call to printf produces a leak. ccmalloc tries to
+% detect this (only heuristically!) and with this flag you can control
+% if leaks produced by such library calls are reported.
+%
+% Since version 0.2.1 some similar effect can be achieved by using
+% 'dont-log-chain' with no argument.
+
+%set library-chains 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% print debugging information [X] (compile time dependend)
+% ----------------------------------------------------------------------
+
+%set debug X
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% align memory on 8 byte boundary [0] (no effect on SunOS or Solaris)
+% ----------------------------------------------------------------------
+
+%set align-8-byte 0
+
+%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+% only report allocations which ended up being wasted (i.e don't report
+% allocations which were completely freed properly. ) [1]
+% ----------------------------------------------------------------------
+
+%set only-wasting-alloc 1

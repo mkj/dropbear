@@ -558,7 +558,7 @@ static const ulong64 table[4*256] = {
 #endif   
 
 /* one round of the hash function */
-INLINE static void round(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 x, int mul)
+INLINE static void tiger_round(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 x, int mul)
 {
     ulong64 tmp;
     tmp = (*c ^= x); 
@@ -574,14 +574,14 @@ INLINE static void round(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 x, int mul)
 /* one complete pass */
 static void pass(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 *x, int mul)
 {
-   round(a,b,c,x[0],mul); 
-   round(b,c,a,x[1],mul); 
-   round(c,a,b,x[2],mul); 
-   round(a,b,c,x[3],mul); 
-   round(b,c,a,x[4],mul); 
-   round(c,a,b,x[5],mul); 
-   round(a,b,c,x[6],mul); 
-   round(b,c,a,x[7],mul);          
+   tiger_round(a,b,c,x[0],mul); 
+   tiger_round(b,c,a,x[1],mul); 
+   tiger_round(c,a,b,x[2],mul); 
+   tiger_round(a,b,c,x[3],mul); 
+   tiger_round(b,c,a,x[4],mul); 
+   tiger_round(c,a,b,x[5],mul); 
+   tiger_round(a,b,c,x[6],mul); 
+   tiger_round(b,c,a,x[7],mul);          
 }   
 
 /* The key mixing schedule */
@@ -606,9 +606,9 @@ static void key_schedule(ulong64 *x)
 }    
 
 #ifdef CLEAN_STACK
-static void _tiger_compress(hash_state *md, unsigned char *buf)
+static int _tiger_compress(hash_state *md, unsigned char *buf)
 #else
-static void tiger_compress(hash_state *md, unsigned char *buf)
+static int  tiger_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong64 a, b, c, x[8];
@@ -632,17 +632,21 @@ static void tiger_compress(hash_state *md, unsigned char *buf)
     md->tiger.state[0] = a ^ md->tiger.state[0];
     md->tiger.state[1] = b - md->tiger.state[1];
     md->tiger.state[2] = c + md->tiger.state[2];
+
+    return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void tiger_compress(hash_state *md, unsigned char *buf)
+static int tiger_compress(hash_state *md, unsigned char *buf)
 {
-   _tiger_compress(md, buf);
+   int err;
+   err = _tiger_compress(md, buf);
    burn_stack(sizeof(ulong64) * 11 + sizeof(unsigned long));
+   return err;
 }
 #endif
 
-void tiger_init(hash_state *md)
+int tiger_init(hash_state *md)
 {
     _ARGCHK(md != NULL);
     md->tiger.state[0] = CONST64(0x0123456789ABCDEF);
@@ -650,6 +654,7 @@ void tiger_init(hash_state *md)
     md->tiger.state[2] = CONST64(0xF096A5B4C3B2E187);
     md->tiger.curlen = 0;
     md->tiger.length = 0;
+    return CRYPT_OK;
 }
 
 HASH_PROCESS(tiger_process, tiger_compress, tiger, 64)

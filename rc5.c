@@ -81,7 +81,7 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 
     /* setup the S array */
     t = (ulong32)(2 * (num_rounds + 1));
-    memcpy(S, stab, t * sizeof(*S));
+    XMEMCPY(S, stab, t * sizeof(*S));
 
     /* mix buffer */
     s = 3 * MAX(t, j);

@@ -73,7 +73,7 @@ int ocb_init(ocb_state *ocb, int cipher,
    cipher_descriptor[cipher].ecb_encrypt(ocb->R, ocb->R, &ocb->key);
 
    /* find Ls[i] = L << i for i == 0..31 */
-   memcpy(ocb->Ls[0], ocb->L, ocb->block_len);
+   XMEMCPY(ocb->Ls[0], ocb->L, ocb->block_len);
    for (x = 1; x < 32; x++) {
        m = ocb->Ls[x-1][0] >> 7;
        for (y = 0; y < ocb->block_len-1; y++) {
@@ -104,7 +104,7 @@ int ocb_init(ocb_state *ocb, int cipher,
     }
 
     /* set Li, checksum */
-    zeromem(ocb->Li, ocb->block_len);
+    zeromem(ocb->Li,       ocb->block_len);
     zeromem(ocb->checksum, ocb->block_len);
 
     /* set other params */

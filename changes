@@ -1,10 +1,138 @@
+October 29th, 2004
+v0.99  -- Merged in the latest version of LTM which includes all of the recent bug fixes
+       -- Deprecated LTMSSE and removed it (to be replaced with TFM later on)
+       -- Stefan Arentz pointed out that mp_s_rmap should be extern
+       -- Kristian Gjøsteen pointed out that there are typos in the 
+          "test" makefile and minor issues in Yarrow and Sober [just cosmetics really]
+       -- Matthew P. Cashdollar pointed out that "export" is a C++ keyword 
+          so changed the PRNG api to use "pexport" and "pimport"
+       -- Updated "hashsum" demo so it builds ;-)
+       -- Added automatic support for x86-64 (will configure for 64-bit little endian automagically)
+       -- Zhi Chen pointed out a bug in rsa_exptmod which would leak memory on error. 
+       -- Made hash functions "init" return an int.  slight change to API ;-(
+       -- Added "CHC" mode which turns any cipher into a hash the other LTC functions can use
+       -- Added CHC mode stuff to demos such as tv_gen and hashsum
+       -- Added "makefile.shared" which builds and installs shared/static object copies
+          of the library.
+       -- Added DER for bignum support 
+       -- RSA is now fully joy.  rsa_export/rsa_import use PKCS #1 encodings and should be 
+          compatible with other crypto libs that use the format.
+       -- Added support for x86-64 for the ROL/ROR macros 
+       -- Changed the DLL and SO makefiles to optimize for speed, commented SMALL_CODE in
+          mycrypt_custom.h and added -DSMALL_CODE to the default makefile
+       -- Updated primality testing code so it does a minimum of 5 tests [of Miller-Rabin]
+          (AFAIK not a security fix, just warm fuzzies)
+       -- Minor updates to the OMAC code (additional __ARGCHK and removed printf from omac_test... oops!)
+       -- Update build and configuration info which was really really really out of date.  (Chapter 14)
+       ++ Minor update, switch RSA to use the PKCS style CRT
+
+August 6th, 2004
+v0.98  -- Update to hmac_init to free all allocated memory on error
+       -- Update to PRNG API to fix import/export functions of Fortuna and Yarrow
+       -- Added test functions to PRNG api, RC4 now conforms ;-) [was a minor issue]
+       -- Added the SOBER-128 PRNG based off of code donated by Greg Rose.
+       -- Added Tech Note #4 [notes/tech0004.txt] 
+       -- Changed RC4 back [due to request].  It will now XOR the output so you can use it like 
+          a stream cipher easily.
+       -- Update Fortuna's export() to emit a hash of each pool.  This means that the accumulated 
+          entropy that was spread over all the pools isn't entirely lost when you export/import.
+       -- Zhi Chen suggested a comment for rsa_encrypt_key() to let users know [easily] that it was
+          PKCS #1 v2.0 padding.  (updated other rsa_* functions)
+       -- Cleaned up Noekeon to remove unrolling [wasn't required, was messy and actually slower with GCC/ICC]
+       -- Updated RC4 so that when you feed it >256 bytes of entropy it quietly ignores additional
+          bytes.  Also removed the % from the key setup to speed it up a bit.
+       -- Added cipher/hash/prng tests to x86_prof to help catch bugs while testing
+       -- Made the PRNG "done" return int, fixed sprng_done to not require prng* to be non-null
+       -- Spruced up mycrypt_custom.h to trap more errors and also help prevent LTMSSE from being defined
+          on non-i386 platforms by accident.
+       -- Added RSA/ECC/DH speed tests to x86_prof and cleaned it up to build with zero warnings
+       -- Changed Fortuna to count only entropy [not the 2 byte header] added to pool[0] into the 
+          reseed mechanism.  
+       -- Added "export_size" member to prng_descriptor tables so you can know in advance the size of 
+          the exported state for any given PRNG.  
+       -- Ported over patch on LTM 0.30 [not ready to release LTM 0.31] that fixes bug in mp_mul()/mp_div()
+          that used to result in negative zeroes when you multiplied zero by a negative integer.  
+          (patch due to "Wolfgang Ehrhardt" <Wolfgang.Ehrhardt@munich.netsurf.de>)
+       -- Fixed rsa_*decrypt_key() and rsa_*verify_hash() to default to invalid "stat" or "res".  This way
+          if any of the higher level functions fail [before you get to the padding] the result will be in
+          a known state].  Applied to both v2 and v1.5 padding helpers.
+       -- Added MACs to x86_prof
+       -- Fixed up "warnings" in x86_prof and tv_gen
+       -- Added a "profiled" target back [for GCC 3.4 and ICC v8].  Doesn't seem to help but might be worth
+          tinkering with.
+       -- Beefed up load/store test in demos/test
+
+       ++ New note, in order to use the optimized LOAD/STORE macros your platform
+          must support unaligned 32/64 bit load/stores.  The x86s support this
+          but some [ARM for instance] do not.  If your platform cannot perform
+          unaligned operations you must use the endian neutral code which is safe for 
+          any sort of platform.
+
+July 23rd, 2004
+v0.97b -- Added PKCS #1 v1.5 RSA encrypt/sign helpers (like rsa_sign_hash, etc...)
+       -- Added missing prng check to rsa_decrypt_key() [not critical as I don't use 
+          descriptors directly in that function]
+       -- Merged in LTM-SSE, define LTMSSE before you build and you will get SSE2 optimized math ;-)
+          (roughly 3x faster on a P4 Northwood).  By default it will compile as ISO C portable
+          code (when LTMSSE is undefined).
+       -- Fixed bug in ltc_tommath.h where I had the kara/toom cutoffs not marked as ``extern''
+          Thanks to "Stefan Arentz" <stefan at organicnetwork.net>
+       -- Steven Dake <scd@broked.org> and Richard Amacker <ramacker@yahoo.com> submitted patches to 
+          fix pkcs_5_2().  It now matches the output of another crypto library.  Whoops... hehehe
+       -- Updated PRNG api.  Added Fortuna PRNG to the list of supported PRNGs
+       -- Fixed up the descriptor tables since globals are automatically zero'ed on startup.
+       -- Changed RC4 to store it's output.  If you want to encrypt with RC4
+          you'll have to do the XOR yourself.
+       -- Fixed buffer overflows/overruns in the HMAC code.  
+
+       ++ API change for the PRNGs there now is a done() function per PRNG.  You
+          should call it when you are done with a prng state.  So far it's
+          not absolutely required (won't cause problems) but is a good idea to
+          start.  
+
+
+June 23rd, 2004
+v0.97a ++ Fixed several potentially crippling bugs... [read on]
+       -- Fixed bug in OAEP decoder that would incorrectly report 
+          buffer overflows. [Zhi Chen]
+       -- Fixed headers which had various C++ missing [extern "C"]'s
+       -- Added "extern" to sha384_desc descriptor which I removed by mistake
+       -- Fixed bugs in ENDIAN_BIG macros using the wrong byte order [Matt Johnston]
+       -- Updated tiger.c and des.c to not shadow "round" which is intrinsic on
+          some C compilers.
+       -- Updated demos/test/rsa_test.c to test the RSA functionality better
+       ++ This update has been tested with GCC [v3.3.3], ICC [v8] and MSVC [v6+SP6] 
+          all on a x86 P4  [GCC/ICC tested in Gentoo Linux, MSVC in WinXP]
+       ++ Outcome: The bug Zhi Chen pointed out has been fixed.  So have the bugs
+          that Matt Johnston found.  
+
+June 19th, 2004
+v0.97  -- Removed spurious unused files [arrg!]
+       -- Patched buffer overflow in tim_exptmod()
+       -- Fixed buffer overrun bug in pkcs_1_v15_es_decode()
+       -- Reduced stack usage in PKCS #1 v2.0 padding functions (by several KBs)
+       -- Removed useless extern's that were an artifact from the project start... ;-)
+       -- Replaced memcpy/memset with XMEMCPY and XMEMSET for greater flexibility
+       -- fixed bugs in hmac_done()/hmac_init()/[various others()] where I didn't trap errors 
+       -- Reduced stack usage in OMAC/PMAC/HMAC/EAX/OCB/PKCS#5 by mallocing any significant sized
+          arrays (e.g. > 100 bytes or so).  Only in non-critical functions (e.g. eax_init())
+       -- "Zhi Chen" <zhi@massiveincorporated.com> pointed out that rsa_decrypt_key() requires
+          an incorrect output size (too large).  Fixed.
+       -- Added a "pretty" target to the GCC makefile.  Requires PERL.  It is NEAT!
+       -- Minor updates to ch1 of the manual.
+       -- Cleaned up the indentation and added comments to rsa_make_key(), rsa_exptmod() and 
+          rsa_verify_hash()
+       -- Updated makefile.icc so the "install" target would work ;-)
+       -- Removed demos/test.c [deprecated from demos/test/test.c]
+       -- Changed MAXBLOCKSIZE from 128 to 64 to reflect the true size...
+
 May 30th, 2004
 v0.96  -- Removed GF and Keyring code
        -- Extended OAEP decoder to distinguish better [and use a more uniform API]
        -- Changed PSS/OAEP API slightly to be more consistent with other PK functions (order of arguments)
        -- rsa_exptmod() now pads with leading zeroes as per I2OSP.
        -- added error checking to yarrow code
-       -- Mike Frysinger pointed out that tommath.h from this distro will overwrite tommath.h
+       --  pointed out that tommath.h from this distro will overwrite tommath.h
           from libtommath.  I changed this to ltc_tommath.h to avoid any such problems.
        -- Fixed bug in PSS encoder/decoder that didn't handle the MSB properly
        -- refactored AES, now sports an "encrypt only" descriptor which uses half as much code space.

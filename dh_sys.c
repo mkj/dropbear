@@ -13,7 +13,7 @@ int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
                          prng_state *prng, int wprng, int hash,
                          dh_key *key)
 {
-    unsigned char pub_expt[768], dh_shared[768], skey[MAXBLOCKSIZE];
+    unsigned char *pub_expt, *dh_shared, *skey;
     dh_key pubkey;
     unsigned long x, y, z, hashsize, pubkeysize;
     int err;
@@ -36,36 +36,54 @@ int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
         return CRYPT_INVALID_HASH;
     }
 
-    /* make a random key and export the public copy */
-    if ((err = dh_make_key(prng, wprng, dh_get_size(key), &pubkey)) != CRYPT_OK) {
-       return err;
+    /* allocate memory */
+    pub_expt  = XMALLOC(DH_BUF_SIZE);
+    dh_shared = XMALLOC(DH_BUF_SIZE);
+    skey      = XMALLOC(MAXBLOCKSIZE);
+    if (pub_expt == NULL || dh_shared == NULL || skey == NULL) {
+       if (pub_expt != NULL) {
+          XFREE(pub_expt);
+       }
+       if (dh_shared != NULL) {
+          XFREE(dh_shared);
+       }
+       if (skey != NULL) {
+          XFREE(skey);
+       }
+       return CRYPT_MEM;
     }
 
-    pubkeysize = sizeof(pub_expt);
+    /* make a random key and export the public copy */
+    if ((err = dh_make_key(prng, wprng, dh_get_size(key), &pubkey)) != CRYPT_OK) {
+       goto __ERR;
+    }
+
+    pubkeysize = DH_BUF_SIZE;
     if ((err = dh_export(pub_expt, &pubkeysize, PK_PUBLIC, &pubkey)) != CRYPT_OK) {
        dh_free(&pubkey);
-       return err;
+       goto __ERR;
     }
 
     /* now check if the out buffer is big enough */
     if (*len < (1 + 4 + 4 + PACKET_SIZE + pubkeysize + keylen)) {
        dh_free(&pubkey);
-       return CRYPT_BUFFER_OVERFLOW;
+       err = CRYPT_BUFFER_OVERFLOW;
+       goto __ERR;
     }
 
     /* make random key */
     hashsize  = hash_descriptor[hash].hashsize;
 
-    x = (unsigned long)sizeof(dh_shared);
+    x = DH_BUF_SIZE;
     if ((err = dh_shared_secret(&pubkey, key, dh_shared, &x)) != CRYPT_OK) {
        dh_free(&pubkey);
-       return err;
+       goto __ERR;
     }
     dh_free(&pubkey);
 
-    z = sizeof(skey);
+    z = MAXBLOCKSIZE;
     if ((err = hash_memory(hash, dh_shared, x, skey, &z)) != CRYPT_OK) {
-       return err;
+       goto __ERR;
     }
 
     /* store header */
@@ -93,21 +111,26 @@ int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
     }
     *len = y;
 
+    err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
     /* clean up */
-    zeromem(pub_expt, sizeof(pub_expt));
-    zeromem(dh_shared, sizeof(dh_shared));
-    zeromem(skey, sizeof(skey));
+    zeromem(pub_expt,  DH_BUF_SIZE);
+    zeromem(dh_shared, DH_BUF_SIZE);
+    zeromem(skey,      MAXBLOCKSIZE);
 #endif
+    XFREE(skey);
+    XFREE(dh_shared);
+    XFREE(pub_expt);
 
-    return CRYPT_OK;
+    return err;
 }
 
 int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
                          unsigned char *outkey, unsigned long *keylen, 
                          dh_key *key)
 {
-   unsigned char shared_secret[768], skey[MAXBLOCKSIZE];
+   unsigned char *shared_secret, *skey;
    unsigned long x, y, z,hashsize, keysize;
    int  hash, err;
    dh_key pubkey;
@@ -122,23 +145,38 @@ int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
       return CRYPT_PK_NOT_PRIVATE;
    }
 
+   /* allocate ram */
+   shared_secret = XMALLOC(DH_BUF_SIZE);
+   skey          = XMALLOC(MAXBLOCKSIZE);
+   if (shared_secret == NULL || skey == NULL) {
+      if (shared_secret != NULL) {
+         XFREE(shared_secret);
+      }
+      if (skey != NULL) {
+         XFREE(skey);
+      }
+      return CRYPT_MEM;
+   }
+
    /* check if initial header should fit */
    if (inlen < PACKET_SIZE+1+4+4) {
-      return CRYPT_INVALID_PACKET;
+      err =  CRYPT_INVALID_PACKET;
+      goto __ERR;
    } else {
       inlen -= PACKET_SIZE+1+4+4;
    }
 
    /* is header correct? */
    if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_DH, PACKET_SUB_ENC_KEY)) != CRYPT_OK)  {
-      return err;
+      goto __ERR;
    }
 
    /* now lets get the hash name */
    y = PACKET_SIZE;
    hash = find_hash_id(in[y++]);
    if (hash == -1) {
-      return CRYPT_INVALID_HASH;
+      err = CRYPT_INVALID_HASH;
+      goto __ERR;
    }
 
    /* common values */
@@ -149,28 +187,29 @@ int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
    
    /* now check if the imported key will fit */
    if (inlen < x) {
-      return CRYPT_INVALID_PACKET;
+      err = CRYPT_INVALID_PACKET;
+      goto __ERR;
    } else {
       inlen -= x;
    }
    
    y += 4;
    if ((err = dh_import(in+y, x, &pubkey)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
    y += x;
 
    /* make shared key */
-   x = (unsigned long)sizeof(shared_secret);
+   x = DH_BUF_SIZE;
    if ((err = dh_shared_secret(key, &pubkey, shared_secret, &x)) != CRYPT_OK) {
       dh_free(&pubkey);
-      return err;
+      goto __ERR;
    }
    dh_free(&pubkey);
 
-   z = sizeof(skey);
+   z = MAXBLOCKSIZE;
    if ((err = hash_memory(hash, shared_secret, x, skey, &z)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* load in the encrypted key */
@@ -178,14 +217,15 @@ int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
    
    /* will the outkey fit as part of the input */
    if (inlen < keysize) {
-      return CRYPT_INVALID_PACKET;
+      err = CRYPT_INVALID_PACKET;
+      goto __ERR;
    } else {
       inlen -= keysize;
    }
    
    if (keysize > *keylen) {
        err = CRYPT_BUFFER_OVERFLOW;
-       goto done;
+       goto __ERR;
    }
    y += 4;
 
@@ -196,11 +236,15 @@ int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
    }
 
    err = CRYPT_OK;
-done:
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(shared_secret, sizeof(shared_secret));
-   zeromem(skey, sizeof(skey));
+   zeromem(shared_secret, DH_BUF_SIZE);
+   zeromem(skey,          MAXBLOCKSIZE);
 #endif
+
+   XFREE(skey);
+   XFREE(shared_secret);
+
    return err;
 }
 
@@ -227,7 +271,7 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
                        prng_state *prng, int wprng, dh_key *key)
 {
    mp_int a, b, k, m, g, p, p1, tmp;
-   unsigned char buf[520];
+   unsigned char *buf;
    unsigned long x, y;
    int err;
 
@@ -250,18 +294,23 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
       return CRYPT_PK_INVALID_TYPE;
    }
 
+   /* allocate ram for buf */
+   buf = XMALLOC(520);
+
    /* make up a random value k,
     * since the order of the group is prime
     * we need not check if gcd(k, r) is 1 
     */
    if (prng_descriptor[wprng].read(buf, sets[key->idx].size, prng) != 
        (unsigned long)(sets[key->idx].size)) {
-      return CRYPT_ERROR_READPRNG;
+      err = CRYPT_ERROR_READPRNG;
+      goto __ERR;
    }
 
    /* init bignums */
    if ((err = mp_init_multi(&a, &b, &k, &m, &p, &g, &p1, &tmp, NULL)) != MP_OKAY) { 
-      return mpi_to_ltc_error(err);
+      err = mpi_to_ltc_error(err);
+      goto __ERR;
    }
 
    /* load k and m */
@@ -290,7 +339,7 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    /* check for overflow */
    if ((unsigned long)(PACKET_SIZE + 4 + 4 + mp_unsigned_bin_size(&a) + mp_unsigned_bin_size(&b)) > *outlen) {
       err = CRYPT_BUFFER_OVERFLOW;
-      goto done;
+      goto __ERR;
    }
    
    /* store header  */
@@ -310,7 +359,7 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    /* check if size too big */
    if (*outlen < y) {
       err = CRYPT_BUFFER_OVERFLOW;
-      goto done;
+      goto __ERR;
    }
 
    /* store header */
@@ -318,11 +367,14 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    *outlen = y;
 
    err = CRYPT_OK;
-   goto done;
+   goto __ERR;
 error:
    err = mpi_to_ltc_error(err);
-done:
+__ERR:
    mp_clear_multi(&tmp, &p1, &g, &p, &m, &k, &b, &a, NULL);
+
+   XFREE(buf);
+
    return err;
 }
 

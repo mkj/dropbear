@@ -71,7 +71,7 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     }
 
     /* setup the S array */
-    memcpy(S, stab, 44 * sizeof(stab[0]));
+    XMEMCPY(S, stab, 44 * sizeof(stab[0]));
 
     /* mix buffer */
     s = 3 * MAX(44, j);

@@ -20,8 +20,8 @@ int pkcs_5_alg2(const unsigned char *password, unsigned long password_len,
 {
    int err, itts;
    unsigned long stored, left, x, y, blkno;
-   unsigned char buf[2][MAXBLOCKSIZE];
-   hmac_state    hmac;
+   unsigned char *buf[2];
+   hmac_state    *hmac;
 
    _ARGCHK(password != NULL);
    _ARGCHK(salt     != NULL);
@@ -33,37 +33,51 @@ int pkcs_5_alg2(const unsigned char *password, unsigned long password_len,
       return err;
    }
 
+   buf[0] = XMALLOC(MAXBLOCKSIZE * 2);
+   hmac   = XMALLOC(sizeof(hmac_state));
+   if (hmac == NULL || buf[0] == NULL) {
+      if (hmac != NULL) {
+         XFREE(hmac);
+      }
+      if (buf[0] != NULL) {
+         XFREE(buf[0]);
+      }
+      return CRYPT_MEM;
+   }
+   /* buf[1] points to the second block of MAXBLOCKSIZE bytes */
+   buf[1] = buf[0] + MAXBLOCKSIZE;
+
    left   = *outlen;
    blkno  = 1;
    stored = 0;
    while (left != 0) {
        /* process block number blkno */
-       zeromem(buf, sizeof(buf));
+       zeromem(buf[0], MAXBLOCKSIZE*2);
        
        /* store current block number and increment for next pass */
        STORE32H(blkno, buf[1]);
        ++blkno;
 
        /* get PRF(P, S||int(blkno)) */
-       if ((err = hmac_init(&hmac, hash_idx, password, password_len)) != CRYPT_OK) { 
-          return err; 
+       if ((err = hmac_init(hmac, hash_idx, password, password_len)) != CRYPT_OK) { 
+          goto __ERR;
        }
-       if ((err = hmac_process(&hmac, salt, salt_len)) != CRYPT_OK) {
-          return err;
+       if ((err = hmac_process(hmac, salt, salt_len)) != CRYPT_OK) {
+          goto __ERR;
        }
-       if ((err = hmac_process(&hmac, buf[1], 4)) != CRYPT_OK) {
-          return err;
+       if ((err = hmac_process(hmac, buf[1], 4)) != CRYPT_OK) {
+          goto __ERR;
        }
-       x = sizeof(buf[0]);
-       if ((err = hmac_done(&hmac, buf[0], &x)) != CRYPT_OK) {
-          return err;
+       x = MAXBLOCKSIZE;
+       if ((err = hmac_done(hmac, buf[0], &x)) != CRYPT_OK) {
+          goto __ERR;
        }
 
        /* now compute repeated and XOR it in buf[1] */
-       memcpy(buf[1], buf[0], x);
-       for (itts = 2; itts < iteration_count; ++itts) {
+       XMEMCPY(buf[1], buf[0], x);
+       for (itts = 1; itts < iteration_count; ++itts) {
            if ((err = hmac_memory(hash_idx, password, password_len, buf[0], x, buf[0], &x)) != CRYPT_OK) {
-              return err;
+              goto __ERR;
            }
            for (y = 0; y < x; y++) {
                buf[1][y] ^= buf[0][y];
@@ -78,10 +92,17 @@ int pkcs_5_alg2(const unsigned char *password, unsigned long password_len,
    }
    *outlen = stored;
 
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
+   zeromem(buf[0], MAXBLOCKSIZE*2);
+   zeromem(hmac, sizeof(hmac_state));
 #endif
-   return CRYPT_OK;
+
+   XFREE(hmac);
+   XFREE(buf[0]);
+
+   return err;
 }
 
 #endif

@@ -20,7 +20,7 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
                             unsigned long modulus_bitlen,
                             unsigned char *out,     unsigned long *outlen)
 {
-   unsigned char DB[1024], mask[sizeof(DB)], salt[sizeof(DB)], hash[sizeof(DB)];
+   unsigned char *DB, *mask, *salt, *hash;
    unsigned long x, y, hLen, modulus_len;
    int           err;
    hash_state    md;
@@ -40,32 +40,58 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    hLen        = hash_descriptor[hash_idx].hashsize;
    modulus_len = (modulus_bitlen>>3) + (modulus_bitlen & 7 ? 1 : 0);
 
+   /* allocate ram for DB/mask/salt/hash of size modulus_len */
+   DB   = XMALLOC(modulus_len);
+   mask = XMALLOC(modulus_len);
+   salt = XMALLOC(modulus_len);
+   hash = XMALLOC(modulus_len);
+   if (DB == NULL || mask == NULL || salt == NULL || hash == NULL) {
+      if (DB != NULL) {
+         XFREE(DB);
+      }
+      if (mask != NULL) {
+         XFREE(mask);
+      }
+      if (salt != NULL) {
+         XFREE(salt);
+      }
+      if (hash != NULL) {
+         XFREE(hash);
+      }
+      return CRYPT_MEM;
+   }
+
+
    /* check sizes */
-   if ((saltlen > sizeof(salt)) || (modulus_len > sizeof(DB)) || (modulus_len < hLen + saltlen + 2)) {
-      return CRYPT_INVALID_ARG;
+   if ((saltlen > modulus_len) || (modulus_len < hLen + saltlen + 2)) {
+      err = CRYPT_INVALID_ARG;
+      goto __ERR;
    }
 
    /* generate random salt */
    if (saltlen > 0) {
       if (prng_descriptor[prng_idx].read(salt, saltlen, prng) != saltlen) {
-         return CRYPT_ERROR_READPRNG;
+         err = CRYPT_ERROR_READPRNG;
+         goto __ERR;
       }
    }
 
    /* M = (eight) 0x00 || msghash || salt, hash = H(M) */
-   hash_descriptor[hash_idx].init(&md);
+   if ((err = hash_descriptor[hash_idx].init(&md)) != CRYPT_OK) {
+      goto __ERR;
+   }
    zeromem(DB, 8);
    if ((err = hash_descriptor[hash_idx].process(&md, DB, 8)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
    if ((err = hash_descriptor[hash_idx].process(&md, msghash, msghashlen)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
    if ((err = hash_descriptor[hash_idx].process(&md, salt, saltlen)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
    if ((err = hash_descriptor[hash_idx].done(&md, hash)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* generate DB = PS || 0x01 || salt, PS == modulus_len - saltlen - hLen - 2 zero bytes */
@@ -79,7 +105,7 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
 
    /* generate mask of length modulus_len - hLen - 1 from hash */
    if ((err = pkcs_1_mgf1(hash, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* xor against DB */
@@ -89,7 +115,8 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
 
    /* output is DB || hash || 0xBC */
    if (*outlen < modulus_len) {
-      return CRYPT_BUFFER_OVERFLOW;
+      err = CRYPT_BUFFER_OVERFLOW;
+      goto __ERR;
    }
 
    /* DB */
@@ -108,15 +135,21 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
 
    /* store output size */
    *outlen = modulus_len;
-
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(DB,   sizeof(DB));   
-   zeromem(mask, sizeof(mask));   
-   zeromem(salt, sizeof(salt));   
-   zeromem(hash, sizeof(hash));   
+   zeromem(DB,   modulus_len);   
+   zeromem(mask, modulus_len);   
+   zeromem(salt, modulus_len);   
+   zeromem(hash, modulus_len);   
 #endif
 
-   return CRYPT_OK;
+   XFREE(hash);
+   XFREE(salt);
+   XFREE(mask);
+   XFREE(DB);
+
+   return err;
 }
 
 #endif /* PKCS_1 */

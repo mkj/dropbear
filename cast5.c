@@ -418,7 +418,7 @@ int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_
 
    /* extend the key as required */
    zeromem(buf, sizeof(buf));
-   memcpy(buf, key, (size_t)keylen);
+   XMEMCPY(buf, key, (size_t)keylen);
 
    /* load and start the awful looking network */
    for (y = 0; y < 4; y++) {

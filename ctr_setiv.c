@@ -30,7 +30,7 @@ int ctr_setiv(const unsigned char *IV, unsigned long len, symmetric_CTR *ctr)
    }
 
    /* set IV */
-   memcpy(ctr->ctr, IV, len);
+   XMEMCPY(ctr->ctr, IV, len);
    
    /* force next block */
    ctr->padlen = 0;

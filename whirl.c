@@ -50,9 +50,9 @@ const struct _hash_descriptor whirlpool_desc =
     SB7(GB(a, i-7, 0))
 
 #ifdef CLEAN_STACK
-static void _whirlpool_compress(hash_state *md, unsigned char *buf)
+static int _whirlpool_compress(hash_state *md, unsigned char *buf)
 #else
-static void whirlpool_compress(hash_state *md, unsigned char *buf)
+static int whirlpool_compress(hash_state *md, unsigned char *buf)
 #endif
 {
    ulong64 K[2][8], T[3][8];
@@ -90,7 +90,7 @@ static void whirlpool_compress(hash_state *md, unsigned char *buf)
        /* xor the constant */
        K[0][0] ^= cont[x+1];
        
-       /* apply main transform to T[0] into T[1] */
+       /* apply main transform to T[1] into T[0] */
        for (y = 0; y < 8; y++) {
            T[0][y] = theta_pi_gamma(T[1], y) ^ K[0][y];
        }
@@ -100,22 +100,27 @@ static void whirlpool_compress(hash_state *md, unsigned char *buf)
    for (x = 0; x < 8; x++) {
       md->whirlpool.state[x] ^= T[0][x] ^ T[2][x];
    }
+
+   return CRYPT_OK;
 }
 
 
 #ifdef CLEAN_STACK
-static void whirlpool_compress(hash_state *md, unsigned char *buf)
+static int whirlpool_compress(hash_state *md, unsigned char *buf)
 {
-   _whirlpool_compress(md, buf);
+   int err;
+   err = _whirlpool_compress(md, buf);
    burn_stack((5 * 8 * sizeof(ulong64)) + (2 * sizeof(int)));
+   return err;
 }
 #endif
 
 
-void whirlpool_init(hash_state * md)
+int whirlpool_init(hash_state * md)
 {
    _ARGCHK(md != NULL);
    zeromem(&md->whirlpool, sizeof(md->whirlpool));
+   return CRYPT_OK;
 }
 
 HASH_PROCESS(whirlpool_process, whirlpool_compress, whirlpool, 64)

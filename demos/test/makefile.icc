@@ -5,7 +5,7 @@ CC=icc
 default: test
 
 OBJECTS=test.o cipher_hash_test.o mac_test.o modes_test.o \
-pkcs_1_test.o store_test.o rsa_test.o ecc_test.o dsa_test.c dh_tests.o 
+pkcs_1_test.o store_test.o rsa_test.o ecc_test.o dsa_test.o dh_tests.o der_tests.o
 
 test: $(OBJECTS)
 	$(CC) $(OBJECTS) -ltomcrypt -o test

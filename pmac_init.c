@@ -35,7 +35,7 @@ static const struct {
 int pmac_init(pmac_state *pmac, int cipher, const unsigned char *key, unsigned long keylen)
 {
    int poly, x, y, m, err;
-   unsigned char L[MAXBLOCKSIZE];
+   unsigned char *L;
 
    _ARGCHK(pmac  != NULL);
    _ARGCHK(key   != NULL);
@@ -61,12 +61,18 @@ int pmac_init(pmac_state *pmac, int cipher, const unsigned char *key, unsigned l
       return err;
    }
  
+   /* allocate L */
+   L = XMALLOC(pmac->block_len);
+   if (L == NULL) {
+      return CRYPT_MEM;
+   }
+
    /* find L = E[0] */
    zeromem(L, pmac->block_len);
    cipher_descriptor[cipher].ecb_encrypt(L, L, &pmac->key);
 
    /* find Ls[i] = L << i for i == 0..31 */
-   memcpy(pmac->Ls[0], L, pmac->block_len);
+   XMEMCPY(pmac->Ls[0], L, pmac->block_len);
    for (x = 1; x < 32; x++) {
        m = pmac->Ls[x-1][0] >> 7;
        for (y = 0; y < pmac->block_len-1; y++) {
@@ -105,8 +111,10 @@ int pmac_init(pmac_state *pmac, int cipher, const unsigned char *key, unsigned l
     zeromem(pmac->checksum, sizeof(pmac->checksum));
 
 #ifdef CLEAN_STACK
-    zeromem(L, sizeof(L));
+    zeromem(L, pmac->block_len);
 #endif
+
+    XFREE(L);
 
     return CRYPT_OK;
 }

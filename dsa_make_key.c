@@ -14,9 +14,9 @@
 
 int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, dsa_key *key)
 {
-   mp_int tmp, tmp2;
-   int err, res;
-   unsigned char buf[512];
+   mp_int         tmp, tmp2;
+   int            err, res;
+   unsigned char *buf;
 
    _ARGCHK(key  != NULL);
 
@@ -26,26 +26,33 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    }
 
    /* check size */
-   if (group_size >= 1024 || group_size <= 15 || 
-       group_size >= modulus_size || (modulus_size - group_size) >= (int)sizeof(buf)) {
+   if (group_size >= MDSA_MAX_GROUP || group_size <= 15 || 
+       group_size >= modulus_size || (modulus_size - group_size) >= MDSA_DELTA) {
       return CRYPT_INVALID_ARG;
+   }
+
+   /* allocate ram */
+   buf = XMALLOC(MDSA_DELTA);
+   if (buf == NULL) {
+      return CRYPT_MEM;
    }
 
    /* init mp_ints  */
    if ((err = mp_init_multi(&tmp, &tmp2, &key->g, &key->q, &key->p, &key->x, &key->y, NULL)) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
+      err = mpi_to_ltc_error(err);
+      goto __ERR;
    }
 
    /* make our prime q */
-   if ((err = rand_prime(&key->q, group_size*8, prng, wprng)) != CRYPT_OK)             { goto error2; }
+   if ((err = rand_prime(&key->q, group_size*8, prng, wprng)) != CRYPT_OK)             { goto __ERR; }
 
    /* double q  */
-   if ((err = mp_mul_2(&key->q, &tmp)) != MP_OKAY)                                   { goto error; }
+   if ((err = mp_mul_2(&key->q, &tmp)) != MP_OKAY)                                     { goto error; }
 
    /* now make a random string and multply it against q */
    if (prng_descriptor[wprng].read(buf+1, modulus_size - group_size, prng) != (unsigned long)(modulus_size - group_size)) {
       err = CRYPT_ERROR_READPRNG;
-      goto error2;
+      goto __ERR;
    }
 
    /* force magnitude */
@@ -60,7 +67,7 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    
    /* now loop until p is prime */
    for (;;) {
-       if ((err = is_prime(&key->p, &res)) != CRYPT_OK)                                { goto error2; }
+       if ((err = is_prime(&key->p, &res)) != CRYPT_OK)                                { goto __ERR; }
        if (res == MP_YES) break;
 
        /* add 2q to p and 2 to tmp2 */
@@ -85,7 +92,7 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    do {
       if (prng_descriptor[wprng].read(buf, group_size, prng) != (unsigned long)group_size) {
          err = CRYPT_ERROR_READPRNG;
-         goto error2;
+         goto __ERR;
       }
       if ((err = mp_read_unsigned_bin(&key->x, buf, group_size)) != MP_OKAY)           { goto error; }
    } while (mp_cmp_d(&key->x, 1) != MP_GT);
@@ -101,17 +108,21 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    if ((err = mp_shrink(&key->x)) != MP_OKAY)                                          { goto error; }
    if ((err = mp_shrink(&key->y)) != MP_OKAY)                                          { goto error; }
 
-   err = CRYPT_OK;
-
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, MDSA_DELTA);
 #endif
 
+   err = CRYPT_OK;
    goto done;
-error : err = mpi_to_ltc_error(err);
-error2: mp_clear_multi(&key->g, &key->q, &key->p, &key->x, &key->y, NULL);
-done  : mp_clear_multi(&tmp, &tmp2, NULL);
-   return err;
+error: 
+    err = mpi_to_ltc_error(err);
+__ERR: 
+    mp_clear_multi(&key->g, &key->q, &key->p, &key->x, &key->y, NULL);
+done: 
+    mp_clear_multi(&tmp, &tmp2, NULL);
+
+    XFREE(buf);
+    return err;
 }
 
 #endif

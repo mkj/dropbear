@@ -15,10 +15,12 @@
 
 int omac_done(omac_state *state, unsigned char *out, unsigned long *outlen)
 {
-   int err, mode, x;
+   int       err, mode;
+   unsigned  x;
 
-   _ARGCHK(state != NULL);
-   _ARGCHK(out   != NULL);
+   _ARGCHK(state  != NULL);
+   _ARGCHK(out    != NULL);
+   _ARGCHK(outlen != NULL);
    if ((err = cipher_is_valid(state->cipher_idx)) != CRYPT_OK) {
       return err;
    }
@@ -43,7 +45,7 @@ int omac_done(omac_state *state, unsigned char *out, unsigned long *outlen)
    }
 
    /* now xor prev + Lu[mode] */
-   for (x = 0; x < state->blklen; x++) {
+   for (x = 0; x < (unsigned)state->blklen; x++) {
        state->block[x] ^= state->prev[x] ^ state->Lu[mode][x];
    }
 
@@ -51,7 +53,7 @@ int omac_done(omac_state *state, unsigned char *out, unsigned long *outlen)
    cipher_descriptor[state->cipher_idx].ecb_encrypt(state->block, state->block, &state->key);
  
    /* output it */
-   for (x = 0; x < state->blklen && (unsigned long)x < *outlen; x++) {
+   for (x = 0; x < (unsigned)state->blklen && x < *outlen; x++) {
        out[x] = state->block[x];
    }
    *outlen = x;

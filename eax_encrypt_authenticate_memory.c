@@ -23,21 +23,31 @@ int eax_encrypt_authenticate_memory(int cipher,
           unsigned char *tag,    unsigned long *taglen)
 {
    int err;
-   eax_state eax;
+   eax_state *eax;
 
-   if ((err = eax_init(&eax, cipher, key, keylen, nonce, noncelen, header, headerlen)) != CRYPT_OK) {
-      return err;
+   eax = XMALLOC(sizeof(eax_state));
+
+   if ((err = eax_init(eax, cipher, key, keylen, nonce, noncelen, header, headerlen)) != CRYPT_OK) {
+      goto __ERR; 
    }
 
-   if ((err = eax_encrypt(&eax, pt, ct, ptlen)) != CRYPT_OK) {
-      return err;
+   if ((err = eax_encrypt(eax, pt, ct, ptlen)) != CRYPT_OK) {
+      goto __ERR; 
    }
  
-   if ((err = eax_done(&eax, tag, taglen)) != CRYPT_OK) {
-      return err;
+   if ((err = eax_done(eax, tag, taglen)) != CRYPT_OK) {
+      goto __ERR; 
    }
 
-   return CRYPT_OK;
+   err = CRYPT_OK;
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(eax, sizeof(eax_state));
+#endif
+
+   XFREE(eax);
+
+   return err;   
 }
 
 #endif

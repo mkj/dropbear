@@ -19,24 +19,38 @@ int omac_memory(int cipher,
                       unsigned char *out, unsigned long *outlen)
 {
    int err;
-   omac_state omac;
+   omac_state *omac;
 
-   _ARGCHK(key != NULL);
-   _ARGCHK(msg != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(key    != NULL);
+   _ARGCHK(msg    != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
-   if ((err = omac_init(&omac, cipher, key, keylen)) != CRYPT_OK) {
-      return err;
-   }
-   if ((err = omac_process(&omac, msg, msglen)) != CRYPT_OK) {
-      return err;
-   }
-   if ((err = omac_done(&omac, out, outlen)) != CRYPT_OK) {
-      return err;
+   /* allocate ram for omac state */
+   omac = XMALLOC(sizeof(omac_state));
+   if (omac == NULL) {
+      return CRYPT_MEM;
    }
 
-   return CRYPT_OK;
+   /* omac process the message */
+   if ((err = omac_init(omac, cipher, key, keylen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+   if ((err = omac_process(omac, msg, msglen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+   if ((err = omac_done(omac, out, outlen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+
+   err = CRYPT_OK;
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(omac, sizeof(omac_state));
+#endif
+
+   XFREE(omac);
+   return err;   
 }
 
 #endif

@@ -28,12 +28,12 @@ int pkcs_1_v15_es_decode(const unsigned char *msg,  unsigned long msglen,
    /* default to failed */
    *res = 0;
 
-   /* must be at least 12 bytes long */
-   if (msglen < 12) {
+   modulus_bytelen = (modulus_bitlen>>3) + (modulus_bitlen & 7 ? 1 : 0);
+
+   /* must be at least modulus_bytelen bytes long */
+   if (msglen != modulus_bytelen) {
       return CRYPT_INVALID_ARG;
    }
-
-   modulus_bytelen = (modulus_bitlen>>3) + (modulus_bitlen & 7 ? 1 : 0);
 
    /* should start with 0x00 0x02 */
    if (msg[0] != 0x00 || msg[1] != 0x02) {
@@ -52,7 +52,7 @@ int pkcs_1_v15_es_decode(const unsigned char *msg,  unsigned long msglen,
    if (x + outlen > modulus_bytelen) {
       return CRYPT_PK_INVALID_SIZE;
    }
-   memcpy(out, msg + x, outlen);
+   XMEMCPY(out, msg + x, outlen);
    *res = 1;
    return CRYPT_OK;
 }

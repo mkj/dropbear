@@ -12,7 +12,7 @@
 
 int hash_memory(int hash, const unsigned char *data, unsigned long len, unsigned char *dst, unsigned long *outlen)
 {
-    hash_state md;
+    hash_state *md;
     int err;
 
     _ARGCHK(data   != NULL);
@@ -26,10 +26,25 @@ int hash_memory(int hash, const unsigned char *data, unsigned long len, unsigned
     if (*outlen < hash_descriptor[hash].hashsize) {
        return CRYPT_BUFFER_OVERFLOW;
     }
-    *outlen = hash_descriptor[hash].hashsize;
 
-    hash_descriptor[hash].init(&md);
-    hash_descriptor[hash].process(&md, data, len);
-    hash_descriptor[hash].done(&md, dst);
-    return CRYPT_OK;
+    md = XMALLOC(sizeof(hash_state));
+    if (md == NULL) {
+       return CRYPT_MEM;
+    }
+
+    if ((err = hash_descriptor[hash].init(md)) != CRYPT_OK) {
+       goto __ERR;
+    }
+    if ((err = hash_descriptor[hash].process(md, data, len)) != CRYPT_OK) {
+       goto __ERR;
+    }
+    err = hash_descriptor[hash].done(md, dst);
+    *outlen = hash_descriptor[hash].hashsize;
+__ERR:
+#ifdef CLEAN_STACK
+    zeromem(md, sizeof(hash_state));
+#endif
+    XFREE(md);
+
+    return err;
 }

@@ -10,37 +10,5 @@
  */
 #include "mycrypt.h"
 
-struct _cipher_descriptor cipher_descriptor[TAB_SIZE] = {
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, 0, 0, NULL, NULL, NULL, NULL, NULL } };
+struct _cipher_descriptor cipher_descriptor[TAB_SIZE];
 

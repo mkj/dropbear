@@ -22,7 +22,7 @@ int ocb_encrypt_authenticate_memory(int cipher,
           unsigned char *tag,    unsigned long *taglen)
 {
    int err;
-   ocb_state ocb;
+   ocb_state *ocb;
 
    _ARGCHK(key    != NULL);
    _ARGCHK(nonce  != NULL);
@@ -31,20 +31,34 @@ int ocb_encrypt_authenticate_memory(int cipher,
    _ARGCHK(tag    != NULL);
    _ARGCHK(taglen != NULL);
 
-   if ((err = ocb_init(&ocb, cipher, key, keylen, nonce)) != CRYPT_OK) {
-      return err;
+   /* allocate ram */
+   ocb = XMALLOC(sizeof(ocb_state));
+   if (ocb == NULL) {
+      return CRYPT_MEM;
    }
 
-   while (ptlen > (unsigned long)ocb.block_len) {
-        if ((err = ocb_encrypt(&ocb, pt, ct)) != CRYPT_OK) {
-           return err;
+   if ((err = ocb_init(ocb, cipher, key, keylen, nonce)) != CRYPT_OK) {
+      goto __ERR;
+   }
+
+   while (ptlen > (unsigned long)ocb->block_len) {
+        if ((err = ocb_encrypt(ocb, pt, ct)) != CRYPT_OK) {
+           goto __ERR;
         }
-        ptlen   -= ocb.block_len;
-        pt      += ocb.block_len;
-        ct      += ocb.block_len;
+        ptlen   -= ocb->block_len;
+        pt      += ocb->block_len;
+        ct      += ocb->block_len;
    }
 
-   return ocb_done_encrypt(&ocb, pt, ptlen, ct, tag, taglen);
+   err = ocb_done_encrypt(ocb, pt, ptlen, ct, tag, taglen);
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(ocb, sizeof(ocb_state));
+#endif
+
+   XFREE(ocb);
+
+   return err;
 }
 
 #endif

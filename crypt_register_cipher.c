@@ -26,7 +26,7 @@ int register_cipher(const struct _cipher_descriptor *cipher)
    /* find a blank spot */
    for (x = 0; x < TAB_SIZE; x++) {
        if (cipher_descriptor[x].name == NULL) {
-          memcpy(&cipher_descriptor[x], cipher, sizeof(struct _cipher_descriptor));
+          XMEMCPY(&cipher_descriptor[x], cipher, sizeof(struct _cipher_descriptor));
           return x;
        }
    }

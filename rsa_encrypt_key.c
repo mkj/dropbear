@@ -13,7 +13,7 @@
 
 #ifdef MRSA
 
-/* OAEP pad then encrypt */
+/* (PKCS #1 v2.0) OAEP pad then encrypt */
 int rsa_encrypt_key(const unsigned char *inkey,  unsigned long inlen,
                           unsigned char *outkey, unsigned long *outlen,
                     const unsigned char *lparam, unsigned long lparamlen,

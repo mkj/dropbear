@@ -26,7 +26,7 @@ int register_hash(const struct _hash_descriptor *hash)
    /* find a blank spot */
    for (x = 0; x < TAB_SIZE; x++) {
        if (hash_descriptor[x].name == NULL) {
-          memcpy(&hash_descriptor[x], hash, sizeof(struct _hash_descriptor));
+          XMEMCPY(&hash_descriptor[x], hash, sizeof(struct _hash_descriptor));
           return x;
        }
    }

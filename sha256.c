@@ -66,9 +66,9 @@ static const unsigned long K[64] = {
 
 /* compress 512-bits */
 #ifdef CLEAN_STACK
-static void _sha256_compress(hash_state * md, unsigned char *buf)
+static int _sha256_compress(hash_state * md, unsigned char *buf)
 #else
-static void sha256_compress(hash_state * md, unsigned char *buf)
+static int  sha256_compress(hash_state * md, unsigned char *buf)
 #endif
 {
     ulong32 S[8], W[64], t0, t1;
@@ -104,7 +104,7 @@ static void sha256_compress(hash_state * md, unsigned char *buf)
          RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i);
          t = S[7]; S[7] = S[6]; S[6] = S[5]; S[5] = S[4]; 
          S[4] = S[3]; S[3] = S[2]; S[2] = S[1]; S[1] = S[0]; S[0] = t;
-	  }  
+     }  
 #else 
 #define RND(a,b,c,d,e,f,g,h,i,ki)                    \
      t0 = h + Sigma1(e) + Ch(e, f, g) + ki + W[i];   \
@@ -185,19 +185,21 @@ static void sha256_compress(hash_state * md, unsigned char *buf)
     for (i = 0; i < 8; i++) {
         md->sha256.state[i] = md->sha256.state[i] + S[i];
     }
-
+    return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void sha256_compress(hash_state * md, unsigned char *buf)
+static int sha256_compress(hash_state * md, unsigned char *buf)
 {
-    _sha256_compress(md, buf);
+    int err;
+    err = _sha256_compress(md, buf);
     burn_stack(sizeof(ulong32) * 74);
+    return err;
 }
 #endif
 
 /* init the sha256 state */
-void sha256_init(hash_state * md)
+int sha256_init(hash_state * md)
 {
     _ARGCHK(md != NULL);
 
@@ -211,6 +213,7 @@ void sha256_init(hash_state * md)
     md->sha256.state[5] = 0x9B05688CUL;
     md->sha256.state[6] = 0x1F83D9ABUL;
     md->sha256.state[7] = 0x5BE0CD19UL;
+    return CRYPT_OK;
 }
 
 HASH_PROCESS(sha256_process, sha256_compress, sha256, 64)

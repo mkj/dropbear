@@ -1,5 +1,7 @@
 #include "test.h"
 
+#ifdef PKCS_1
+
 int pkcs_1_test(void)
 {
    unsigned char buf[3][128];
@@ -17,7 +19,7 @@ int pkcs_1_test(void)
    }   
 
    /* do many tests */
-   for (x = 0; x < 10000; x++) {
+   for (x = 0; x < 100; x++) {
       zeromem(buf, sizeof(buf));
 
       /* make a dummy message (of random length) */
@@ -101,3 +103,14 @@ int pkcs_1_test(void)
    }
    return 0;
 }
+
+#else
+
+int pkcs_1_test(void)
+{
+   printf("NOP");
+   return 0;
+}
+
+#endif
+

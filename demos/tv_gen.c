@@ -2,6 +2,8 @@
 
 void reg_algs(void)
 {
+  int err;
+
 #ifdef RIJNDAEL
   register_cipher (&aes_desc);
 #endif
@@ -82,26 +84,45 @@ void reg_algs(void)
 #ifdef WHIRLPOOL
   register_hash (&whirlpool_desc);
 #endif
+#ifdef CHC_HASH
+  register_hash(&chc_desc);
+  if ((err = chc_register(register_cipher(&aes_desc))) != CRYPT_OK) {
+     printf("chc_register error: %s\n", error_to_string(err));
+     exit(EXIT_FAILURE);
+  }
+#endif
+
 }
 
 void hash_gen(void)
 {
-   unsigned char md[MAXBLOCKSIZE], buf[MAXBLOCKSIZE*2+2];
+   unsigned char md[MAXBLOCKSIZE], *buf;
    unsigned long outlen, x, y, z;
    FILE *out;
+   int   err;
    
    out = fopen("hash_tv.txt", "w");
+   if (out == NULL) {
+      perror("can't open hash_tv");
+   }
    
    fprintf(out, "Hash Test Vectors:\n\nThese are the hashes of nn bytes '00 01 02 03 .. (nn-1)'\n\n");
    for (x = 0; hash_descriptor[x].name != NULL; x++) {
+      buf = XMALLOC(2 * hash_descriptor[x].blocksize + 1);
+      if (buf == NULL) {
+         perror("can't alloc mem");
+         exit(EXIT_FAILURE);
+      }
       fprintf(out, "Hash: %s\n", hash_descriptor[x].name);
-      
       for (y = 0; y <= (hash_descriptor[x].blocksize * 2); y++) {
          for (z = 0; z < y; z++) {
             buf[z] = (unsigned char)(z & 255);
          }
          outlen = sizeof(md);
-         hash_memory(x, buf, y, md, &outlen);
+         if ((err = hash_memory(x, buf, y, md, &outlen)) != CRYPT_OK) {
+            printf("hash_memory error: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
          fprintf(out, "%3lu: ", y);
          for (z = 0; z < outlen; z++) {
             fprintf(out, "%02X", md[z]);
@@ -109,15 +130,16 @@ void hash_gen(void)
          fprintf(out, "\n");
       }
       fprintf(out, "\n");
+      XFREE(buf);
    }
    fclose(out);
 }
 
 void cipher_gen(void)
 {
-   unsigned char key[MAXBLOCKSIZE], pt[MAXBLOCKSIZE];
+   unsigned char *key, pt[MAXBLOCKSIZE];
    unsigned long x, y, z, w;
-   int kl, lastkl;
+   int err, kl, lastkl;
    FILE *out;
    symmetric_key skey;
    
@@ -138,15 +160,27 @@ void cipher_gen(void)
             case 1: kl = (cipher_descriptor[x].min_key_length + cipher_descriptor[x].max_key_length)/2; break;
             case 2: kl = cipher_descriptor[x].max_key_length; break;
          }
-         cipher_descriptor[x].keysize(&kl);
+         if ((err = cipher_descriptor[x].keysize(&kl)) != CRYPT_OK) {
+            printf("keysize error: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
          if (kl == lastkl) break;
          lastkl = kl;
          fprintf(out, "Key Size: %d bytes\n", kl);
 
+         key = XMALLOC(kl);
+         if (key == NULL) {
+            perror("can't malloc memory");
+            exit(EXIT_FAILURE);
+         }
+
          for (z = 0; (int)z < kl; z++) {
              key[z] = (unsigned char)z;
          }
-         cipher_descriptor[x].setup(key, kl, 0, &skey);
+         if ((err = cipher_descriptor[x].setup(key, kl, 0, &skey)) != CRYPT_OK) {
+            printf("setup error: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
          
          for (z = 0; (int)z < cipher_descriptor[x].block_length; z++) {
             pt[z] = (unsigned char)z;
@@ -163,9 +197,13 @@ void cipher_gen(void)
              for (z = 0; z < (unsigned long)kl; z++) {
                  key[z] = pt[z % cipher_descriptor[x].block_length];
              }
-             cipher_descriptor[x].setup(key, kl, 0, &skey);
+             if ((err = cipher_descriptor[x].setup(key, kl, 0, &skey)) != CRYPT_OK) {
+                printf("cipher setup2 error: %s\n", error_to_string(err));
+                exit(EXIT_FAILURE);
+             }
          }
          fprintf(out, "\n");
+         XFREE(key);
      }
      fprintf(out, "\n");
   }
@@ -174,8 +212,8 @@ void cipher_gen(void)
 
 void hmac_gen(void)
 {
-   unsigned char key[MAXBLOCKSIZE], output[MAXBLOCKSIZE], input[MAXBLOCKSIZE*2+2];
-   int x, y, z, kl, err;
+   unsigned char key[MAXBLOCKSIZE], output[MAXBLOCKSIZE], *input;
+   int x, y, z, err;
    FILE *out;
    unsigned long len;
   
@@ -192,6 +230,12 @@ void hmac_gen(void)
       /* initial key */
       for (y = 0; y < (int)hash_descriptor[x].hashsize; y++) {
           key[y] = (y&255);
+      }
+
+      input = XMALLOC(hash_descriptor[x].blocksize * 2 + 1);
+      if (input == NULL) {
+         perror("Can't malloc memory");
+         exit(EXIT_FAILURE);
       }
       
       for (y = 0; y <= (int)(hash_descriptor[x].blocksize * 2); y++) {
@@ -212,6 +256,7 @@ void hmac_gen(void)
          /* forward the key */
          memcpy(key, output, hash_descriptor[x].hashsize);
       }
+      XFREE(input);
       fprintf(out, "\n");
    }
    fclose(out);

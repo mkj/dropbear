@@ -13,67 +13,55 @@
 
 #ifdef MRSA
 
+/* import an RSAPublicKey or RSAPrivateKey [two-prime only, defined in PKCS #1 v2.1] */
 int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
 {
-   unsigned long x, y;
+   unsigned long x;
    int err;
 
    _ARGCHK(in  != NULL);
    _ARGCHK(key != NULL);
 
-   /* check length */
-   if (inlen < (1+PACKET_SIZE)) {
-      return CRYPT_INVALID_PACKET;
-   }
-
-   /* test packet header */
-   if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_RSA, PACKET_SUB_KEY)) != CRYPT_OK) {
-      return err;
-   }
-
    /* init key */
    if ((err = mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP,
-                     &key->pQ, &key->p, &key->q, NULL)) != MP_OKAY) {
+                     &key->p, &key->q, NULL)) != MP_OKAY) {
       return mpi_to_ltc_error(err);
    }
 
-   /* get key type */
-   y = PACKET_SIZE;
-   key->type = (int)in[y++];
-
-   /* load the modulus  */
-   INPUT_BIGNUM(&key->N, in, x, y, inlen);
-
-   /* load public exponent */
-   INPUT_BIGNUM(&key->e, in, x, y, inlen);
-
-   /* get private exponent */
-   if (key->type == PK_PRIVATE || key->type == PK_PRIVATE_OPTIMIZED) {
-      INPUT_BIGNUM(&key->d, in, x, y, inlen);
+   /* read first number, it's either N or 0 [0 == private key] */
+   x = inlen;
+   if ((err = der_get_multi_integer(in, &x, &key->N, NULL)) != CRYPT_OK) {
+      goto __ERR;
    }
 
-   /* get CRT private data if required */
-   if (key->type == PK_PRIVATE_OPTIMIZED) {
-      INPUT_BIGNUM(&key->dQ, in, x, y, inlen);
-      INPUT_BIGNUM(&key->dP, in, x, y, inlen);
-      INPUT_BIGNUM(&key->pQ, in, x, y, inlen);
-      INPUT_BIGNUM(&key->qP, in, x, y, inlen);
-      INPUT_BIGNUM(&key->p, in, x, y, inlen);
-      INPUT_BIGNUM(&key->q, in, x, y, inlen);
-   }
+   /* advance */
+   inlen -= x;
+   in    += x;
 
-   /* free up ram not required */
-   if (key->type != PK_PRIVATE_OPTIMIZED) {
-      mp_clear_multi(&key->dQ, &key->dP, &key->pQ, &key->qP, &key->p, &key->q, NULL);
-   }
-   if (key->type != PK_PRIVATE && key->type != PK_PRIVATE_OPTIMIZED) {
-      mp_clear(&key->d);
-   }
+   if (mp_cmp_d(&key->N, 0) == MP_EQ) {
+      /* it's a private key */
+      if ((err = der_get_multi_integer(in, &inlen, &key->N, &key->e,
+                          &key->d, &key->p, &key->q, &key->dP,
+                          &key->dQ, &key->qP, NULL)) != CRYPT_OK) {
+         goto __ERR;
+      }
 
+      key->type = PK_PRIVATE;
+   } else {
+      /* it's a public key and we lack e */
+      if ((err = der_get_multi_integer(in, &inlen, &key->e, NULL)) != CRYPT_OK) {
+         goto __ERR;
+      }
+
+      /* free up some ram */
+      mp_clear_multi(&key->p, &key->q, &key->qP, &key->dP, &key->dQ, NULL);
+
+      key->type = PK_PUBLIC;
+   }
    return CRYPT_OK;
-error:
+__ERR:
    mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
-                  &key->pQ, &key->qP, &key->p, &key->q, NULL);
+                  &key->qP, &key->p, &key->q, NULL);
    return err;
 }
 

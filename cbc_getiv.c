@@ -21,7 +21,7 @@ int cbc_getiv(unsigned char *IV, unsigned long *len, symmetric_CBC *cbc)
    if ((unsigned long)cbc->blocklen > *len) {
       return CRYPT_BUFFER_OVERFLOW;
    }
-   memcpy(IV, cbc->IV, cbc->blocklen);
+   XMEMCPY(IV, cbc->IV, cbc->blocklen);
    *len = cbc->blocklen;
 
    return CRYPT_OK;

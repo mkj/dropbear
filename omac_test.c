@@ -65,7 +65,7 @@ int omac_test(void)
 
     };
     unsigned char out[16];
-    int x, y, err, idx;
+    int x, err, idx;
     unsigned long len;
 
 
@@ -83,8 +83,11 @@ int omac_test(void)
        }
 
        if (memcmp(out, tests[x].tag, 16) != 0) {
+#if 0
+          int y;
           printf("\n\nTag: ");
           for (y = 0; y < 16; y++) printf("%02x", out[y]); printf("\n\n");
+#endif
           return CRYPT_FAIL_TESTVECTOR;
        }
     }

@@ -16,11 +16,10 @@ int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
                         unsigned char *out, unsigned long *outlen,
                         prng_state *prng, int wprng, dsa_key *key)
 {
-   mp_int k, kinv, tmp, r, s;
-   unsigned char buf[512];
-   int err, y;
-   unsigned long len;
-
+   mp_int         k, kinv, tmp, r, s;
+   unsigned char *buf;
+   int            err, y;
+   unsigned long  len;
 
    _ARGCHK(in     != NULL);
    _ARGCHK(out    != NULL);
@@ -35,8 +34,13 @@ int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    }
 
    /* check group order size  */
-   if (key->qord >= (int)sizeof(buf)) {
+   if (key->qord >= MDSA_MAX_GROUP) {
       return CRYPT_INVALID_ARG;
+   }
+
+   buf = XMALLOC(MDSA_MAX_GROUP);
+   if (buf == NULL) {
+      return CRYPT_MEM;
    }
 
    /* Init our temps */
@@ -48,7 +52,7 @@ retry:
       /* gen random k */
       if (prng_descriptor[wprng].read(buf, key->qord, prng) != (unsigned long)key->qord) {
          err = CRYPT_ERROR_READPRNG;
-         goto done;
+         goto __ERR;
       }
 
       /* read k */
@@ -83,7 +87,7 @@ retry:
    /* first check that we have enough room */
    if (*outlen < (unsigned long)(PACKET_SIZE + 4 + mp_unsigned_bin_size(&s) + mp_unsigned_bin_size(&r))) {
       err = CRYPT_BUFFER_OVERFLOW;
-      goto done;
+      goto __ERR;
    }
 
    /* packet header */
@@ -112,13 +116,16 @@ retry:
    *outlen = y;
 
    err = CRYPT_OK;
-   goto done;
+   goto __ERR;
 
-error : err = mpi_to_ltc_error(err);
-done  : mp_clear_multi(&k, &kinv, &r, &s, &tmp, NULL);
+error: 
+   err = mpi_to_ltc_error(err);
+__ERR: 
+   mp_clear_multi(&k, &kinv, &r, &s, &tmp, NULL);
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, MDSA_MAX_GROUP);
 #endif
+   XFREE(buf);
    return err;
 }
 

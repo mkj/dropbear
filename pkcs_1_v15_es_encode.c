@@ -46,7 +46,7 @@ int pkcs_1_v15_es_encode(const unsigned char *msg,    unsigned long msglen,
    }
    x += y;
    out[x++] = 0x00;
-   memcpy(out+x, msg, msglen);
+   XMEMCPY(out+x, msg, msglen);
    *outlen = modulus_bytelen;
 
    return CRYPT_OK;

@@ -38,9 +38,9 @@ const struct _hash_descriptor sha1_desc =
 #define F3(x,y,z)  (x ^ y ^ z)
 
 #ifdef CLEAN_STACK
-static void _sha1_compress(hash_state *md, unsigned char *buf)
+static int _sha1_compress(hash_state *md, unsigned char *buf)
 #else
-static void sha1_compress(hash_state *md, unsigned char *buf)
+static int  sha1_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong32 a,b,c,d,e,W[80],i;
@@ -139,17 +139,21 @@ static void sha1_compress(hash_state *md, unsigned char *buf)
     md->sha1.state[2] = md->sha1.state[2] + c;
     md->sha1.state[3] = md->sha1.state[3] + d;
     md->sha1.state[4] = md->sha1.state[4] + e;
+
+    return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void sha1_compress(hash_state *md, unsigned char *buf)
+static int sha1_compress(hash_state *md, unsigned char *buf)
 {
-   _sha1_compress(md, buf);
+   int err;
+   err = _sha1_compress(md, buf);
    burn_stack(sizeof(ulong32) * 87);
+   return err;
 }
 #endif
 
-void sha1_init(hash_state * md)
+int sha1_init(hash_state * md)
 {
    _ARGCHK(md != NULL);
    md->sha1.state[0] = 0x67452301UL;
@@ -159,6 +163,7 @@ void sha1_init(hash_state * md)
    md->sha1.state[4] = 0xc3d2e1f0UL;
    md->sha1.curlen = 0;
    md->sha1.length = 0;
+   return CRYPT_OK;
 }
 
 HASH_PROCESS(sha1_process, sha1_compress, sha1, 64)

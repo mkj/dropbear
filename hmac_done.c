@@ -35,14 +35,14 @@
 
 int hmac_done(hmac_state *hmac, unsigned char *hashOut, unsigned long *outlen)
 {
-    unsigned char buf[MAXBLOCKSIZE];
-    unsigned char isha[MAXBLOCKSIZE];
+    unsigned char *buf, *isha;
     unsigned long hashsize, i;
     int hash, err;
 
-    _ARGCHK(hmac != NULL);
+    _ARGCHK(hmac    != NULL);
     _ARGCHK(hashOut != NULL);
 
+    /* test hash */
     hash = hmac->hash;
     if((err = hash_is_valid(hash)) != CRYPT_OK) {
         return err;
@@ -51,34 +51,62 @@ int hmac_done(hmac_state *hmac, unsigned char *hashOut, unsigned long *outlen)
     /* get the hash message digest size */
     hashsize = hash_descriptor[hash].hashsize;
 
-    // Get the hash of the first HMAC vector plus the data
-    if ((err = hash_descriptor[hash].done(&hmac->md, isha)) != CRYPT_OK) {
-       return err;
+    /* allocate buffers */
+    buf  = XMALLOC(HMAC_BLOCKSIZE);
+    isha = XMALLOC(hashsize);
+    if (buf == NULL || isha == NULL) { 
+       if (buf != NULL) {
+          XFREE(buf);
+       } 
+       if (isha != NULL) {
+          XFREE(isha);
+       }  
+       return CRYPT_MEM;
     }
 
-    // Create the second HMAC vector vector for step (3)
+    /* Get the hash of the first HMAC vector plus the data */
+    if ((err = hash_descriptor[hash].done(&hmac->md, isha)) != CRYPT_OK) {
+       goto __ERR;
+    }
+
+    /* Create the second HMAC vector vector for step (3) */
     for(i=0; i < HMAC_BLOCKSIZE; i++) {
         buf[i] = hmac->key[i] ^ 0x5C;
     }
 
-    // Now calculate the "outer" hash for step (5), (6), and (7)
-    hash_descriptor[hash].init(&hmac->md);
-    hash_descriptor[hash].process(&hmac->md, buf, HMAC_BLOCKSIZE);
-    hash_descriptor[hash].process(&hmac->md, isha, hashsize);
-    hash_descriptor[hash].done(&hmac->md, buf);
+    /* Now calculate the "outer" hash for step (5), (6), and (7) */
+    if ((err = hash_descriptor[hash].init(&hmac->md)) != CRYPT_OK) {
+       goto __ERR;
+    }
+    if ((err = hash_descriptor[hash].process(&hmac->md, buf, HMAC_BLOCKSIZE)) != CRYPT_OK) {
+       goto __ERR;
+    }
+    if ((err = hash_descriptor[hash].process(&hmac->md, isha, hashsize)) != CRYPT_OK) {
+       goto __ERR;
+    }
+    if ((err = hash_descriptor[hash].done(&hmac->md, buf)) != CRYPT_OK) {
+       goto __ERR;
+    }
 
-    // copy to output 
+    /* copy to output  */
     for (i = 0; i < hashsize && i < *outlen; i++) {
         hashOut[i] = buf[i];
     }
     *outlen = i;
 
+    err = CRYPT_OK;
+__ERR:
+    XFREE(hmac->key);
 #ifdef CLEAN_STACK
-    zeromem(isha, sizeof(buf));
-    zeromem(buf,  sizeof(isha));
+    zeromem(isha, hashsize);
+    zeromem(buf,  hashsize);
     zeromem(hmac, sizeof(*hmac));
 #endif
-    return CRYPT_OK;
+
+    XFREE(isha);
+    XFREE(buf);
+
+    return err;
 }
 
 #endif

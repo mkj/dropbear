@@ -75,9 +75,9 @@ const struct _hash_descriptor rmd128_desc =
       (a) = ROL((a), (s));
 
 #ifdef CLEAN_STACK
-static void _rmd128_compress(hash_state *md, unsigned char *buf)
+static int _rmd128_compress(hash_state *md, unsigned char *buf)
 #else
-static void rmd128_compress(hash_state *md, unsigned char *buf)
+static int  rmd128_compress(hash_state *md, unsigned char *buf)
 #endif
 {
    ulong32 aa,bb,cc,dd,aaa,bbb,ccc,ddd,X[16];
@@ -244,17 +244,21 @@ static void rmd128_compress(hash_state *md, unsigned char *buf)
    md->rmd128.state[2] = md->rmd128.state[3] + aa + bbb;
    md->rmd128.state[3] = md->rmd128.state[0] + bb + ccc;
    md->rmd128.state[0] = ddd;
+
+   return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void rmd128_compress(hash_state *md, unsigned char *buf)
+static int rmd128_compress(hash_state *md, unsigned char *buf)
 {
-   _rmd128_compress(md, buf);
+   int err;
+   err = _rmd128_compress(md, buf);
    burn_stack(sizeof(ulong32) * 24 + sizeof(int));
+   return err;
 }
 #endif
 
-void rmd128_init(hash_state * md)
+int rmd128_init(hash_state * md)
 {
    _ARGCHK(md != NULL);
    md->rmd128.state[0] = 0x67452301UL;
@@ -263,6 +267,7 @@ void rmd128_init(hash_state * md)
    md->rmd128.state[3] = 0x10325476UL;
    md->rmd128.curlen   = 0;
    md->rmd128.length   = 0;
+   return CRYPT_OK;
 }
 
 HASH_PROCESS(rmd128_process, rmd128_compress, rmd128, 64)

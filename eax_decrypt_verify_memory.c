@@ -23,38 +23,58 @@ int eax_decrypt_verify_memory(int cipher,
           unsigned char *tag,    unsigned long taglen,
           int           *res)
 {
-   int err;
-   eax_state eax;
-   unsigned char buf[MAXBLOCKSIZE];
-   unsigned long buflen;
+   int            err;
+   eax_state     *eax;
+   unsigned char *buf;
+   unsigned long  buflen;
 
    _ARGCHK(res != NULL);
 
    /* default to zero */
    *res = 0;
 
-   if ((err = eax_init(&eax, cipher, key, keylen, nonce, noncelen, header, headerlen)) != CRYPT_OK) {
-      return err;
+   /* allocate ram */
+   buf = XMALLOC(taglen);
+   eax = XMALLOC(sizeof(eax_state));
+   if (eax == NULL || buf == NULL) {
+      if (eax != NULL) {
+         XFREE(eax);
+      }
+      if (buf != NULL) {
+         XFREE(buf);
+      }
+      return CRYPT_MEM;
    }
 
-   if ((err = eax_decrypt(&eax, ct, pt, ctlen)) != CRYPT_OK) {
-      return err;
+   if ((err = eax_init(eax, cipher, key, keylen, nonce, noncelen, header, headerlen)) != CRYPT_OK) {
+      goto __ERR;
+   }
+
+   if ((err = eax_decrypt(eax, ct, pt, ctlen)) != CRYPT_OK) {
+      goto __ERR;
    }
  
-   buflen = MIN(sizeof(buf), taglen);
-   if ((err = eax_done(&eax, buf, &buflen)) != CRYPT_OK) {
-      return err;
+   buflen = taglen;
+   if ((err = eax_done(eax, buf, &buflen)) != CRYPT_OK) {
+      goto __ERR;
    }
 
    /* compare tags */
    if (buflen >= taglen && memcmp(buf, tag, taglen) == 0) {
       *res = 1;
    }
-
+   
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, taglen);
+   zeromem(eax, sizeof(eax_state));
 #endif
-   return CRYPT_OK;
+
+   XFREE(eax);
+   XFREE(buf);
+
+   return err;
 }
 
 #endif

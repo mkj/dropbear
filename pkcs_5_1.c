@@ -20,8 +20,8 @@ int pkcs_5_alg1(const unsigned char *password, unsigned long password_len,
 {
    int err;
    unsigned long x;
-   hash_state md;
-   unsigned char buf[MAXBLOCKSIZE];
+   hash_state    *md;
+   unsigned char *buf;
 
    _ARGCHK(password != NULL);
    _ARGCHK(salt     != NULL);
@@ -33,17 +33,38 @@ int pkcs_5_alg1(const unsigned char *password, unsigned long password_len,
       return err;
    }
 
+   /* allocate memory */
+   md  = XMALLOC(sizeof(hash_state));
+   buf = XMALLOC(MAXBLOCKSIZE);
+   if (md == NULL || buf == NULL) {
+      if (md != NULL) {
+         XFREE(md);
+      }
+      if (buf != NULL) { 
+         XFREE(buf);
+      }
+      return CRYPT_MEM;
+   }        
+
    /* hash initial password + salt */
-   hash_descriptor[hash_idx].init(&md);
-   hash_descriptor[hash_idx].process(&md, password, password_len);
-   hash_descriptor[hash_idx].process(&md, salt, 8);
-   hash_descriptor[hash_idx].done(&md, buf);
+   if ((err = hash_descriptor[hash_idx].init(md)) != CRYPT_OK) {
+       goto __ERR;
+   }
+   if ((err = hash_descriptor[hash_idx].process(md, password, password_len)) != CRYPT_OK) {
+       goto __ERR;
+   }
+   if ((err = hash_descriptor[hash_idx].process(md, salt, 8)) != CRYPT_OK) {
+       goto __ERR;
+   }
+   if ((err = hash_descriptor[hash_idx].done(md, buf)) != CRYPT_OK) {
+       goto __ERR;
+   }
 
    while (--iteration_count) {
       // code goes here.
-      x = sizeof(buf);
+      x = MAXBLOCKSIZE;
       if ((err = hash_memory(hash_idx, buf, hash_descriptor[hash_idx].hashsize, buf, &x)) != CRYPT_OK) {
-         return err;
+         goto __ERR;
       }
    }
 
@@ -52,12 +73,17 @@ int pkcs_5_alg1(const unsigned char *password, unsigned long password_len,
        out[x] = buf[x];
    }
    *outlen = x;
-
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK 
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, MAXBLOCKSIZE);
+   zeromem(md, sizeof(hash_state));
 #endif
 
-   return CRYPT_OK;
+   XFREE(buf);
+   XFREE(md);
+
+   return err;
 }
 
 #endif

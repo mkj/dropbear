@@ -10,7 +10,11 @@
 /* this is the "32-bit at least" data type 
  * Re-define it to suit your platform but it must be at least 32-bits 
  */
-typedef unsigned long ulong32;
+#if defined(__x86_64__)
+   typedef unsigned ulong32;
+#else
+   typedef unsigned long ulong32;
+#endif
 
 /* ---- HELPER MACROS ---- */
 #ifdef ENDIAN_NEUTRAL
@@ -125,26 +129,26 @@ typedef unsigned long ulong32;
 
 #ifdef ENDIAN_BIG
 #define STORE32L(x, y)                                                                     \
-     { (y)[z0] = (unsigned char)(((x)>>24)&255); (y)[1] = (unsigned char)(((x)>>16)&255);   \
-       (y)[2] = (unsigned char)(((x)>>8)&255); (y)[3] = (unsigned char)((x)&255); }
+     { (y)[3] = (unsigned char)(((x)>>24)&255); (y)[2] = (unsigned char)(((x)>>16)&255);   \
+       (y)[1] = (unsigned char)(((x)>>8)&255); (y)[0] = (unsigned char)((x)&255); }
 
 #define LOAD32L(x, y)                            \
-     { x = ((unsigned long)((y)[0] & 255)<<24) | \
-           ((unsigned long)((y)[1] & 255)<<16) | \
-           ((unsigned long)((y)[2] & 255)<<8)  | \
-           ((unsigned long)((y)[3] & 255)); }
+     { x = ((unsigned long)((y)[3] & 255)<<24) | \
+           ((unsigned long)((y)[2] & 255)<<16) | \
+           ((unsigned long)((y)[1] & 255)<<8)  | \
+           ((unsigned long)((y)[0] & 255)); }
 
 #define STORE64L(x, y)                                                                     \
-   { (y)[0] = (unsigned char)(((x)>>56)&255); (y)[1] = (unsigned char)(((x)>>48)&255);     \
-     (y)[2] = (unsigned char)(((x)>>40)&255); (y)[3] = (unsigned char)(((x)>>32)&255);     \
-     (y)[4] = (unsigned char)(((x)>>24)&255); (y)[5] = (unsigned char)(((x)>>16)&255);     \
-     (y)[6] = (unsigned char)(((x)>>8)&255); (y)[7] = (unsigned char)((x)&255); }
+   { (y)[7] = (unsigned char)(((x)>>56)&255); (y)[6] = (unsigned char)(((x)>>48)&255);     \
+     (y)[5] = (unsigned char)(((x)>>40)&255); (y)[4] = (unsigned char)(((x)>>32)&255);     \
+     (y)[3] = (unsigned char)(((x)>>24)&255); (y)[2] = (unsigned char)(((x)>>16)&255);     \
+     (y)[1] = (unsigned char)(((x)>>8)&255); (y)[0] = (unsigned char)((x)&255); }
 
 #define LOAD64L(x, y)                                                      \
-   { x = (((ulong64)((y)[0] & 255))<<56)|(((ulong64)((y)[1] & 255))<<48) | \
-         (((ulong64)((y)[2] & 255))<<40)|(((ulong64)((y)[3] & 255))<<32) | \
-         (((ulong64)((y)[4] & 255))<<24)|(((ulong64)((y)[5] & 255))<<16) | \
-         (((ulong64)((y)[6] & 255))<<8)|(((ulong64)((y)[7] & 255))); }
+   { x = (((ulong64)((y)[7] & 255))<<56)|(((ulong64)((y)[6] & 255))<<48) | \
+         (((ulong64)((y)[5] & 255))<<40)|(((ulong64)((y)[4] & 255))<<32) | \
+         (((ulong64)((y)[3] & 255))<<24)|(((ulong64)((y)[2] & 255))<<16) | \
+         (((ulong64)((y)[1] & 255))<<8)|(((ulong64)((y)[0] & 255))); }
 
 #ifdef ENDIAN_32BITWORD 
 
@@ -155,16 +159,16 @@ typedef unsigned long ulong32;
      memcpy(&(x), y, 4);
 
 #define STORE64H(x, y)                                                                     \
-     { (y)[7] = (unsigned char)(((x)>>56)&255); (y)[6] = (unsigned char)(((x)>>48)&255);   \
-       (y)[5] = (unsigned char)(((x)>>40)&255); (y)[4] = (unsigned char)(((x)>>32)&255);   \
-       (y)[3] = (unsigned char)(((x)>>24)&255); (y)[2] = (unsigned char)(((x)>>16)&255);   \
-       (y)[1] = (unsigned char)(((x)>>8)&255); (y)[0] = (unsigned char)((x)&255); }
+     { (y)[0] = (unsigned char)(((x)>>56)&255); (y)[1] = (unsigned char)(((x)>>48)&255);   \
+       (y)[2] = (unsigned char)(((x)>>40)&255); (y)[3] = (unsigned char)(((x)>>32)&255);   \
+       (y)[4] = (unsigned char)(((x)>>24)&255); (y)[5] = (unsigned char)(((x)>>16)&255);   \
+       (y)[6] = (unsigned char)(((x)>>8)&255);  (y)[7] = (unsigned char)((x)&255); }
 
 #define LOAD64H(x, y)                                                       \
-     { x = (((ulong64)((y)[7] & 255))<<56)|(((ulong64)((y)[6] & 255))<<48)| \
-           (((ulong64)((y)[5] & 255))<<40)|(((ulong64)((y)[4] & 255))<<32)| \
-           (((ulong64)((y)[3] & 255))<<24)|(((ulong64)((y)[2] & 255))<<16)| \
-           (((ulong64)((y)[1] & 255))<<8)|(((ulong64)((y)[0] & 255))); }
+     { x = (((ulong64)((y)[0] & 255))<<56)|(((ulong64)((y)[1] & 255))<<48)| \
+           (((ulong64)((y)[2] & 255))<<40)|(((ulong64)((y)[3] & 255))<<32)| \
+           (((ulong64)((y)[4] & 255))<<24)|(((ulong64)((y)[5] & 255))<<16)| \
+           (((ulong64)((y)[6] & 255))<<8)| (((ulong64)((y)[7] & 255))); }
 
 #else /* 64-bit words then  */
 
@@ -194,9 +198,9 @@ typedef unsigned long ulong32;
 #define ROR(x,n) _lrotr(x,n)
 #define ROL(x,n) _lrotl(x,n)
 
-#elif defined(__GNUC__) && defined(__i386__) && !defined(INTEL_CC)
+#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && !defined(INTEL_CC)
 
-static inline unsigned long ROL(unsigned long word, int i)
+static inline unsigned ROL(unsigned word, int i)
 {
    __asm__("roll %%cl,%0"
       :"=r" (word)
@@ -204,7 +208,7 @@ static inline unsigned long ROL(unsigned long word, int i)
    return word;
 }
 
-static inline unsigned long ROR(unsigned long word, int i)
+static inline unsigned ROR(unsigned word, int i)
 {
    __asm__("rorl %%cl,%0"
       :"=r" (word)
@@ -220,6 +224,26 @@ static inline unsigned long ROR(unsigned long word, int i)
 
 #endif
 
+#if defined(__GNUCC__) && defined(__x86_64__)
+
+static inline unsigned long ROL64(unsigned long word, int i)
+{
+   __asm__("rolq %%cl,%0"
+      :"=r" (word)
+      :"0" (word),"c" (i));
+   return word;
+}
+
+static inline unsigned long ROR64(unsigned long word, int i)
+{
+   __asm__("rorq %%cl,%0"
+      :"=r" (word)
+      :"0" (word),"c" (i));
+   return word;
+}
+
+#else
+
 #define ROL64(x, y) \
     ( (((x)<<((ulong64)(y)&63)) | \
       (((x)&CONST64(0xFFFFFFFFFFFFFFFF))>>((ulong64)64-((y)&63)))) & CONST64(0xFFFFFFFFFFFFFFFF))
@@ -227,6 +251,8 @@ static inline unsigned long ROR(unsigned long word, int i)
 #define ROR64(x, y) \
     ( ((((x)&CONST64(0xFFFFFFFFFFFFFFFF))>>((ulong64)(y)&CONST64(63))) | \
       ((x)<<((ulong64)(64-((y)&CONST64(63)))))) & CONST64(0xFFFFFFFFFFFFFFFF))
+
+#endif
 
 #undef MAX
 #undef MIN

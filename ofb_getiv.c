@@ -21,7 +21,7 @@ int ofb_getiv(unsigned char *IV, unsigned long *len, symmetric_OFB *ofb)
    if ((unsigned long)ofb->blocklen > *len) {
       return CRYPT_BUFFER_OVERFLOW;
    }
-   memcpy(IV, ofb->IV, ofb->blocklen);
+   XMEMCPY(IV, ofb->IV, ofb->blocklen);
    *len = ofb->blocklen;
 
    return CRYPT_OK;

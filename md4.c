@@ -68,9 +68,9 @@ const struct _hash_descriptor md4_desc =
   }
 
 #ifdef CLEAN_STACK
-static void _md4_compress(hash_state *md, unsigned char *buf)
+static int _md4_compress(hash_state *md, unsigned char *buf)
 #else
-static void md4_compress(hash_state *md, unsigned char *buf)
+static int  md4_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong32 x[16], a, b, c, d;
@@ -147,17 +147,21 @@ static void md4_compress(hash_state *md, unsigned char *buf)
     md->md4.state[1] = md->md4.state[1] + b;
     md->md4.state[2] = md->md4.state[2] + c;
     md->md4.state[3] = md->md4.state[3] + d;
+
+    return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void md4_compress(hash_state *md, unsigned char *buf)
+static int md4_compress(hash_state *md, unsigned char *buf)
 {
-   _md4_compress(md, buf);
+   int err;
+   err = _md4_compress(md, buf);
    burn_stack(sizeof(ulong32) * 20 + sizeof(int));
+   return err;
 }
 #endif
 
-void md4_init(hash_state * md)
+int md4_init(hash_state * md)
 {
    _ARGCHK(md != NULL);
    md->md4.state[0] = 0x67452301UL;
@@ -166,6 +170,7 @@ void md4_init(hash_state * md)
    md->md4.state[3] = 0x10325476UL;
    md->md4.length  = 0;
    md->md4.curlen  = 0;
+   return CRYPT_OK;
 }
 
 HASH_PROCESS(md4_process, md4_compress, md4, 64)

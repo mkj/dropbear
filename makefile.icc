@@ -41,7 +41,7 @@ default:library
 #   B - Blend of P4 and PM [mobile]
 #
 # Default to just generic max opts
-CFLAGS += -O3 -xN -ip
+CFLAGS += -O3 -xN -ip 
 
 # want to see stuff?
 #CFLAGS += -opt_report
@@ -79,7 +79,7 @@ crypt_find_cipher_id.o     crypt_find_prng.o        crypt_prng_is_valid.o      \
 crypt_unregister_cipher.o  crypt_cipher_is_valid.o  crypt_find_hash.o          \
 crypt_hash_descriptor.o    crypt_register_cipher.o  crypt_unregister_hash.o    \
 \
-sprng.o yarrow.o rc4.o rng_get_bytes.o  rng_make_prng.o \
+sober128.o fortuna.o sprng.o yarrow.o rc4.o rng_get_bytes.o  rng_make_prng.o \
 \
 rand_prime.o is_prime.o \
 \
@@ -87,6 +87,7 @@ ecc.o  dh.o \
 \
 rsa_decrypt_key.o  rsa_encrypt_key.o  rsa_exptmod.o  rsa_free.o  rsa_make_key.o  \
 rsa_sign_hash.o  rsa_verify_hash.o rsa_export.o rsa_import.o tim_exptmod.o \
+rsa_v15_encrypt_key.o rsa_v15_decrypt_key.o rsa_v15_sign_hash.o rsa_v15_verify_hash.o \
 \
 dsa_export.o  dsa_free.o  dsa_import.o  dsa_make_key.o  dsa_sign_hash.o  \
 dsa_verify_hash.o  dsa_verify_key.o \
@@ -97,7 +98,7 @@ blowfish.o des.o safer_tab.o safer.o saferp.o rc2.o xtea.o \
 rc6.o rc5.o cast5.o noekeon.o twofish.o skipjack.o \
 \
 md2.o md4.o md5.o sha1.o sha256.o sha512.o tiger.o whirl.o \
-rmd128.o rmd160.o \
+rmd128.o rmd160.o chc.o \
 \
 packet_store_header.o  packet_valid_header.o \
 \
@@ -129,7 +130,11 @@ pkcs_1_v15_es_encode.o pkcs_1_v15_es_decode.o pkcs_1_v15_sa_encode.o pkcs_1_v15_
 \
 pkcs_5_1.o pkcs_5_2.o \
 \
+der_encode_integer.o der_decode_integer.o der_length_integer.o \
+der_put_multi_integer.o der_get_multi_integer.o \
+\
 burn_stack.o zeromem.o \
+\
 $(MPIOBJECT)
 
 
@@ -150,7 +155,7 @@ LEFTOVERS=*.dvi *.log *.aux *.toc *.idx *.ilg *.ind
 COMPRESSED=crypt.tar.bz2 crypt.zip crypt.tar.gz
 
 #Header files used by libtomcrypt.
-HEADERS=tommath.h mycrypt_cfg.h mycrypt_gf.h mycrypt_kr.h \
+HEADERS=ltc_tommath.h mycrypt_cfg.h \
 mycrypt_misc.h  mycrypt_prng.h mycrypt_cipher.h  mycrypt_hash.h \
 mycrypt_macros.h  mycrypt_pk.h mycrypt.h mycrypt_argchk.h mycrypt_custom.h
 
@@ -186,6 +191,13 @@ x86_prof: library $(PROFS)
 
 tv_gen: library $(TVS)
 	$(CC) $(TVS) $(LIBNAME) -o $(TV)
+
+profiled:
+	make clean
+	make CFLAGS="$(CFLAGS) -prof_gen" x86_prof
+	./x86_prof
+	rm *.o *.a x86_prof
+	make CFLAGS="$(CFLAGS) -prof_use" x86_prof
 
   
 #This rule installs the library and the header files. This must be run

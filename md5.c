@@ -81,9 +81,9 @@ static const ulong32 Korder[64] = {
 #endif   
 
 #ifdef CLEAN_STACK
-static void _md5_compress(hash_state *md, unsigned char *buf)
+static int _md5_compress(hash_state *md, unsigned char *buf)
 #else
-static void md5_compress(hash_state *md, unsigned char *buf)
+static int  md5_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong32 i, W[16], a, b, c, d;
@@ -194,17 +194,21 @@ static void md5_compress(hash_state *md, unsigned char *buf)
     md->md5.state[1] = md->md5.state[1] + b;
     md->md5.state[2] = md->md5.state[2] + c;
     md->md5.state[3] = md->md5.state[3] + d;
+
+    return CRYPT_OK;
 }
 
 #ifdef CLEAN_STACK
-static void md5_compress(hash_state *md, unsigned char *buf)
+static int md5_compress(hash_state *md, unsigned char *buf)
 {
-   _md5_compress(md, buf);
+   int err;
+   err = _md5_compress(md, buf);
    burn_stack(sizeof(ulong32) * 21);
+   return err;
 }
 #endif
 
-void md5_init(hash_state * md)
+int md5_init(hash_state * md)
 {
    _ARGCHK(md != NULL);
    md->md5.state[0] = 0x67452301UL;
@@ -213,6 +217,7 @@ void md5_init(hash_state * md)
    md->md5.state[3] = 0x10325476UL;
    md->md5.curlen = 0;
    md->md5.length = 0;
+   return CRYPT_OK;
 }
 
 HASH_PROCESS(md5_process, md5_compress, md5, 64)

@@ -19,6 +19,12 @@
 
 #ifdef MECC
 
+/* size of our temp buffers for exported keys */
+#define ECC_BUF_SIZE 160
+
+/* max private key size */
+#define ECC_MAXSIZE  66
+
 /* This holds the key settings.  ***MUST*** be organized by size from smallest to largest. */
 static const struct {
    int size;
@@ -219,9 +225,6 @@ void ecc_find_base(void)
  
 #endif
 
-
-
-
 static int is_valid_idx(int n)
 {
    int x;
@@ -368,10 +371,10 @@ done:
 static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
 {
    ecc_point *tG, *M[8];
-   int i, j, err;
-   mp_int mu;
-   mp_digit buf;
-   int     first, bitbuf, bitcpy, bitcnt, mode, digidx;
+   int        i, j, err;
+   mp_int     mu;
+   mp_digit   buf;
+   int        first, bitbuf, bitcpy, bitcnt, mode, digidx;
 
   /* init barrett reduction */
   if ((err = mp_init(&mu)) != MP_OKAY) {
@@ -595,10 +598,10 @@ void ecc_sizes(int *low, int *high)
 
 int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
 {
-   int x, err;
-   ecc_point *base;
-   mp_int prime;
-   unsigned char buf[128];
+   int            x, err;
+   ecc_point     *base;
+   mp_int         prime;
+   unsigned char *buf;
 
    _ARGCHK(key != NULL);
 
@@ -610,25 +613,36 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    /* find key size */
    for (x = 0; (keysize > sets[x].size) && (sets[x].size != 0); x++);
    keysize = sets[x].size;
+   _ARGCHK(keysize <= ECC_MAXSIZE);
 
    if (sets[x].size == 0) {
       return CRYPT_INVALID_KEYSIZE;
    }
    key->idx = x;
 
+   /* allocate ram */
+   base = NULL;
+   buf  = XMALLOC(ECC_MAXSIZE);
+   if (buf == NULL) {
+      return CRYPT_MEM;
+   }
+
    /* make up random string */
    if (prng_descriptor[wprng].read(buf, (unsigned long)keysize, prng) != (unsigned long)keysize) {
-      return CRYPT_ERROR_READPRNG;
+      err = CRYPT_ERROR_READPRNG;
+      goto __ERR2;
    }
 
    /* setup the key variables */
    if ((err = mp_init_multi(&key->pubkey.x, &key->pubkey.y, &key->k, &prime, NULL)) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
+      err = mpi_to_ltc_error(err);
+      goto __ERR;
    }
    base = new_point();
    if (base == NULL) {
       mp_clear_multi(&key->pubkey.x, &key->pubkey.y, &key->k, &prime, NULL);
-      return CRYPT_MEM;
+      err = CRYPT_MEM;
+      goto __ERR;
    }
 
    /* read in the specs for this key */
@@ -638,7 +652,7 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    if ((err = mp_read_unsigned_bin(&key->k, (unsigned char *)buf, keysize)) != MP_OKAY) { goto error; }
 
    /* make the public key */
-   if ((err = ecc_mulmod(&key->k, base, &key->pubkey, &prime)) != CRYPT_OK)             { goto done; }
+   if ((err = ecc_mulmod(&key->k, base, &key->pubkey, &prime)) != CRYPT_OK)             { goto __ERR; }
    key->type = PK_PRIVATE;
 
    /* shrink key */
@@ -648,15 +662,19 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
 
    /* free up ram */
    err = CRYPT_OK;
-   goto done;
+   goto __ERR;
 error:
    err = mpi_to_ltc_error(err);
-done:
+__ERR:
    del_point(base);
    mp_clear(&prime);
+__ERR2:
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, ECC_MAXSIZE);
 #endif
+
+   XFREE(buf);
+
    return err;
 }
 

@@ -1,5 +1,7 @@
 #include "test.h"
 
+#ifdef MECC
+
 int ecc_tests (void)
 {
   unsigned char buf[4][4096];
@@ -10,8 +12,8 @@ int ecc_tests (void)
   DO(ecc_test ());
 
   /* make up two keys */
-  DO(ecc_make_key (&test_yarrow, find_prng ("yarrow"), 24, &usera));
-  DO(ecc_make_key (&test_yarrow, find_prng ("yarrow"), 24, &userb));
+  DO(ecc_make_key (&test_yarrow, find_prng ("yarrow"), 65, &usera));
+  DO(ecc_make_key (&test_yarrow, find_prng ("yarrow"), 65, &userb));
 
   /* make the shared secret */
   x = 4096;
@@ -53,7 +55,7 @@ int ecc_tests (void)
   ecc_free (&userb);
 
 /* test encrypt_key */
-  ecc_make_key (&test_yarrow, find_prng ("yarrow"), 20, &usera);
+  ecc_make_key (&test_yarrow, find_prng ("yarrow"), 65, &usera);
   for (x = 0; x < 32; x++) {
     buf[0][x] = x;
   }
@@ -87,3 +89,13 @@ int ecc_tests (void)
   ecc_free (&usera);
   return 0;
 }
+
+#else
+
+int ecc_tests(void)
+{
+   printf("NOP");
+   return 0;
+}
+
+#endif

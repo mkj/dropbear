@@ -34,13 +34,13 @@ int tim_exptmod(prng_state *prng, int prng_idx,
    }
 
    /* pick random r */ 
-   rtmp = XMALLOC(MAX_RSA_SIZE/8);
+   rlen = mp_unsigned_bin_size(n);
+   rtmp = XMALLOC(rlen);
    if (rtmp == NULL) {
       return CRYPT_MEM;
    }
 
-
-   rlen = mp_unsigned_bin_size(n);
+   /* read in random value "r" */
    if (prng_descriptor[prng_idx].read(rtmp, rlen, prng) != rlen) {
       XFREE(rtmp);
       return CRYPT_ERROR_READPRNG;

@@ -10,36 +10,5 @@
  */
 #include "mycrypt.h"
 
-struct _hash_descriptor hash_descriptor[TAB_SIZE] = {
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL },
-{ NULL, 0, 0, 0, { 0x00 }, 0, NULL, NULL, NULL, NULL } };
+struct _hash_descriptor hash_descriptor[TAB_SIZE];
+

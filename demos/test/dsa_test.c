@@ -1,10 +1,12 @@
 #include "test.h"
 
+#ifdef MDSA
+
 int dsa_test(void)
 {
    unsigned char msg[16], out[1024], out2[1024];
-   unsigned long x, y;
-   int err, stat1, stat2;
+   unsigned long x;
+   int stat1, stat2;
    dsa_key key, key2;
 
    /* make a random key */
@@ -49,3 +51,13 @@ int dsa_test(void)
 
    return 0;
 }
+
+#else
+
+int dsa_test(void)
+{
+  printf("NOP");
+  return 0;
+}
+
+#endif

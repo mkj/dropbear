@@ -18,9 +18,9 @@ int eax_init(eax_state *eax, int cipher, const unsigned char *key, unsigned long
              const unsigned char *nonce, unsigned long noncelen,
              const unsigned char *header, unsigned long headerlen)
 {
-   unsigned char buf[MAXBLOCKSIZE];
+   unsigned char *buf;
    int           err, blklen;
-   omac_state    omac;
+   omac_state    *omac;
    unsigned long len;
 
 
@@ -36,42 +36,56 @@ int eax_init(eax_state *eax, int cipher, const unsigned char *key, unsigned long
    }
    blklen = cipher_descriptor[cipher].block_length;
 
+   /* allocate ram */
+   buf  = XMALLOC(MAXBLOCKSIZE);
+   omac = XMALLOC(sizeof(omac_state));
+
+   if (buf == NULL || omac == NULL) {
+      if (buf != NULL) {
+         XFREE(buf);
+      }
+      if (omac != NULL) {
+         XFREE(omac);
+      }
+      return CRYPT_MEM;
+   }
+
    /* N = OMAC_0K(nonce) */
-   zeromem(buf, sizeof(buf));
-   if ((err = omac_init(&omac, cipher, key, keylen)) != CRYPT_OK) {
-      return err;
+   zeromem(buf, MAXBLOCKSIZE);
+   if ((err = omac_init(omac, cipher, key, keylen)) != CRYPT_OK) {
+      goto __ERR; 
    }
 
    /* omac the [0]_n */
-   if ((err = omac_process(&omac, buf, blklen)) != CRYPT_OK) {
-      return err;
+   if ((err = omac_process(omac, buf, blklen)) != CRYPT_OK) {
+      goto __ERR; 
    }
    /* omac the nonce */
-   if ((err = omac_process(&omac, nonce, noncelen)) != CRYPT_OK) {
-      return err;
+   if ((err = omac_process(omac, nonce, noncelen)) != CRYPT_OK) {
+      goto __ERR; 
    }
    /* store result */
    len = sizeof(eax->N);
-   if ((err = omac_done(&omac, eax->N, &len)) != CRYPT_OK) {
-      return err;
+   if ((err = omac_done(omac, eax->N, &len)) != CRYPT_OK) {
+      goto __ERR; 
    }
 
    /* H = OMAC_1K(header) */
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, MAXBLOCKSIZE);
    buf[blklen - 1] = 1;
 
    if ((err = omac_init(&eax->headeromac, cipher, key, keylen)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
 
    /* omac the [1]_n */
    if ((err = omac_process(&eax->headeromac, buf, blklen)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
    /* omac the header */
    if (headerlen != 0) {
       if ((err = omac_process(&eax->headeromac, header, headerlen)) != CRYPT_OK) {
-         return err;
+          goto __ERR; 
       }
    }
 
@@ -79,28 +93,34 @@ int eax_init(eax_state *eax, int cipher, const unsigned char *key, unsigned long
 
    /* setup the CTR mode */
    if ((err = ctr_start(cipher, eax->N, key, keylen, 0, &eax->ctr)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
    /* use big-endian counter */
    eax->ctr.mode = 1;
 
    /* setup the OMAC for the ciphertext */
    if ((err = omac_init(&eax->ctomac, cipher, key, keylen)) != CRYPT_OK) { 
-      return err;
+      goto __ERR; 
    }
 
    /* omac [2]_n */
-   zeromem(buf, sizeof(buf));
+   zeromem(buf, MAXBLOCKSIZE);
    buf[blklen-1] = 2;
    if ((err = omac_process(&eax->ctomac, buf, blklen)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
 
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(buf, sizeof(buf));
-   zeromem(&omac, sizeof(omac));
+   zeromem(buf,  MAXBLOCKSIZE);
+   zeromem(omac, sizeof(omac_state));
 #endif
-   return CRYPT_OK;
+
+   XFREE(omac);
+   XFREE(buf);
+
+   return err;
 }
 
 #endif 

@@ -18,7 +18,7 @@ crypt_find_cipher_id.obj     crypt_find_prng.obj        crypt_prng_is_valid.obj 
 crypt_unregister_cipher.obj  crypt_cipher_is_valid.obj  crypt_find_hash.obj          \
 crypt_hash_descriptor.obj    crypt_register_cipher.obj  crypt_unregister_hash.obj    \
 \
-sprng.obj yarrow.obj rc4.obj rng_get_bytes.obj  rng_make_prng.obj \
+sober128.obj fortuna.obj sprng.obj yarrow.obj rc4.obj rng_get_bytes.obj  rng_make_prng.obj \
 \
 rand_prime.obj is_prime.obj \
 \
@@ -26,6 +26,7 @@ ecc.obj  dh.obj \
 \
 rsa_decrypt_key.obj  rsa_encrypt_key.obj  rsa_exptmod.obj  rsa_free.obj  rsa_make_key.obj  \
 rsa_sign_hash.obj  rsa_verify_hash.obj rsa_export.obj rsa_import.obj tim_exptmod.obj \
+rsa_v15_encrypt_key.obj rsa_v15_decrypt_key.obj rsa_v15_sign_hash.obj rsa_v15_verify_hash.obj \
 \
 dsa_export.obj  dsa_free.obj  dsa_import.obj  dsa_make_key.obj  dsa_sign_hash.obj  \
 dsa_verify_hash.obj  dsa_verify_key.obj \
@@ -36,7 +37,7 @@ blowfish.obj des.obj safer_tab.obj safer.obj saferp.obj rc2.obj xtea.obj \
 rc6.obj rc5.obj cast5.obj noekeon.obj twofish.obj skipjack.obj \
 \
 md2.obj md4.obj md5.obj sha1.obj sha256.obj sha512.obj tiger.obj whirl.obj \
-rmd128.obj rmd160.obj \
+rmd128.obj rmd160.obj chc.obj \
 \
 packet_store_header.obj  packet_valid_header.obj \
 \
@@ -68,7 +69,11 @@ pkcs_1_v15_es_encode.obj pkcs_1_v15_es_decode.obj pkcs_1_v15_sa_encode.obj pkcs_
 \
 pkcs_5_1.obj pkcs_5_2.obj \
 \
+der_encode_integer.obj der_decode_integer.obj der_length_integer.obj \
+der_put_multi_integer.obj der_get_multi_integer.obj \
+\
 burn_stack.obj zeromem.obj \
+\
 $(MPIOBJECT)
 
 #ciphers come in two flavours... enc+dec and enc 

@@ -46,7 +46,7 @@ int pmac_process(pmac_state *state, const unsigned char *buf, unsigned long len)
 
        /* add bytes */
        n = MIN(len, (unsigned long)(state->block_len - state->buflen));
-       memcpy(state->block + state->buflen, buf, n);
+       XMEMCPY(state->block + state->buflen, buf, n);
        state->buflen += n;
        len           -= n;
        buf           += n;

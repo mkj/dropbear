@@ -20,7 +20,7 @@ int cbc_setiv(const unsigned char *IV, unsigned long len, symmetric_CBC *cbc)
    if (len != (unsigned long)cbc->blocklen) {
       return CRYPT_INVALID_ARG;
    }
-   memcpy(cbc->IV, IV, len);
+   XMEMCPY(cbc->IV, IV, len);
    return CRYPT_OK;
 }
 

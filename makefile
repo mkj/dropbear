@@ -2,14 +2,9 @@
 #
 # Tom St Denis
 # Modified by Clay Culver
-#
-# NOTE: This should later be replaced by autoconf/automake scripts, but for
-# the time being this is actually pretty clean. The only ugly part is
-# handling CFLAGS so that the x86 specific optimizations don't break
-# a build. This is easy to remedy though, for those that have problems.
 
 # The version
-VERSION=0.96
+VERSION=0.99
 
 # Compiler and Linker Names
 #CC=gcc
@@ -24,17 +19,16 @@ CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wshadow
 # -Werror
 
 # optimize for SPEED
-#CFLAGS += -O3 -funroll-loops
+#CFLAGS += -O3 -funroll-all-loops
 
-#add -fomit-frame-pointer.  GCC v3.2 is buggy for certain platforms!
-CFLAGS += -fomit-frame-pointer
+#add -fomit-frame-pointer.  hinders debugging!
+#CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
-CFLAGS += -Os
+CFLAGS += -Os -DSMALL_CODE
 
-# compile for DEBUGING
+# compile for DEBUGING (required for ccmalloc checking!!!)
 #CFLAGS += -g3
-#ch1-01-3
 
 #These flags control how the library gets built.
 
@@ -69,7 +63,7 @@ crypt_find_cipher_id.o     crypt_find_prng.o        crypt_prng_is_valid.o      \
 crypt_unregister_cipher.o  crypt_cipher_is_valid.o  crypt_find_hash.o          \
 crypt_hash_descriptor.o    crypt_register_cipher.o  crypt_unregister_hash.o    \
 \
-sprng.o yarrow.o rc4.o rng_get_bytes.o  rng_make_prng.o \
+sober128.o fortuna.o sprng.o yarrow.o rc4.o rng_get_bytes.o  rng_make_prng.o \
 \
 rand_prime.o is_prime.o \
 \
@@ -77,6 +71,7 @@ ecc.o  dh.o \
 \
 rsa_decrypt_key.o  rsa_encrypt_key.o  rsa_exptmod.o  rsa_free.o  rsa_make_key.o  \
 rsa_sign_hash.o  rsa_verify_hash.o rsa_export.o rsa_import.o tim_exptmod.o \
+rsa_v15_encrypt_key.o rsa_v15_decrypt_key.o rsa_v15_sign_hash.o rsa_v15_verify_hash.o \
 \
 dsa_export.o  dsa_free.o  dsa_import.o  dsa_make_key.o  dsa_sign_hash.o  \
 dsa_verify_hash.o  dsa_verify_key.o \
@@ -87,7 +82,7 @@ blowfish.o des.o safer_tab.o safer.o saferp.o rc2.o xtea.o \
 rc6.o rc5.o cast5.o noekeon.o twofish.o skipjack.o \
 \
 md2.o md4.o md5.o sha1.o sha256.o sha512.o tiger.o whirl.o \
-rmd128.o rmd160.o \
+rmd128.o rmd160.o chc.o \
 \
 packet_store_header.o  packet_valid_header.o \
 \
@@ -119,7 +114,11 @@ pkcs_1_v15_es_encode.o pkcs_1_v15_es_decode.o pkcs_1_v15_sa_encode.o pkcs_1_v15_
 \
 pkcs_5_1.o pkcs_5_2.o \
 \
+der_encode_integer.o der_decode_integer.o der_length_integer.o \
+der_put_multi_integer.o der_get_multi_integer.o \
+\
 burn_stack.o zeromem.o \
+\
 $(MPIOBJECT)
 
 TESTOBJECTS=demos/test.o
@@ -139,7 +138,7 @@ COMPRESSED=crypt-$(VERSION).tar.bz2 crypt-$(VERSION).zip
 HEADERS=ltc_tommath.h mycrypt_cfg.h \
 mycrypt_misc.h  mycrypt_prng.h mycrypt_cipher.h  mycrypt_hash.h \
 mycrypt_macros.h  mycrypt_pk.h mycrypt.h mycrypt_argchk.h \
-mycrypt_custom.h mycrypt_pkcs.h
+mycrypt_custom.h mycrypt_pkcs.h tommath_class.h tommath_superclass.h
 
 #The default rule for make builds the libtomcrypt library.
 default:library
@@ -147,8 +146,11 @@ default:library
 #ciphers come in two flavours... enc+dec and enc 
 aes_enc.o: aes.c aes_tab.c
 	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c aes.c -o aes_enc.o
-		
+
 #These are the rules to make certain object files.
+aes.o: aes.c aes_tab.c
+twofish.o: twofish.c twofish_tab.c
+whirl.o: whirl.c whirltab.c
 ecc.o: ecc.c ecc_sys.c
 dh.o: dh.c dh_sys.c
 sha512.o: sha512.c sha384.c
@@ -173,10 +175,10 @@ small: library $(SMALLOBJECTS)
 	$(CC) $(SMALLOBJECTS) $(LIBNAME) -o $(SMALL) $(WARN)
 	
 x86_prof: library $(PROFS)
-	$(CC) $(PROFS) $(LIBNAME) -o $(PROF)
+	$(CC) $(PROFS) $(LIBNAME) $(EXTRALIBS) -o $(PROF)
 
 tv_gen: library $(TVS)
-	$(CC) $(TVS) $(LIBNAME) -o $(TV)
+	$(CC) $(TVS) $(LIBNAME) $(EXTRALIBS) -o $(TV)
 
 #This rule installs the library and the header files. This must be run
 #as root in order to have a high enough permission to write to the correct
@@ -189,15 +191,22 @@ install: library docs
 	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
 	install -g root -o root doc/crypt.pdf $(DESTDIR)$(DATAPATH)
 
+install_lib: library
+	install -d -g root -o root $(DESTDIR)$(LIBPATH)
+	install -d -g root -o root $(DESTDIR)$(INCPATH)
+	install -g root -o root $(LIBNAME) $(DESTDIR)$(LIBPATH)
+	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
+
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
 clean:
 	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
 	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
-	rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
-         *.gcda *.gcno demos/*.gcno demos/*.gcda *~ doc/*
+	rm -f *.la *.lo *.o *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
+	*.gcda *.gcno demos/*.gcno demos/*.gcda *~ doc/*
 	cd demos/test ; make clean   
-
+	rm -rf .libs demos/.libs demos/test/.libs
+	
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the
 #nice pre-compiled crypt.pdf that comes with libtomcrypt! We only need to
@@ -206,8 +215,8 @@ docs: crypt.tex
 	rm -f doc/crypt.pdf $(LEFTOVERS)
 	echo "hello" > crypt.ind
 	latex crypt > /dev/null
-	makeindex crypt > /dev/null
 	latex crypt > /dev/null
+	makeindex crypt.idx > /dev/null
 	latex crypt > /dev/null
 	dvipdf crypt
 	mv -ivf crypt.pdf doc/crypt.pdf
@@ -217,19 +226,24 @@ docdvi: crypt.tex
 	echo hello > crypt.ind
 	latex crypt > /dev/null
 	latex crypt > /dev/null
-	makeindex crypt
+	makeindex crypt.idx
 	latex crypt > /dev/null
 
-#beta
-beta: clean
-	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION)-beta ; mkdir libtomcrypt-$(VERSION)-beta ; \
-	cp -R ./libtomcrypt/* ./libtomcrypt-$(VERSION)-beta/ ; tar -c libtomcrypt-$(VERSION)-beta/* > crypt-$(VERSION)-beta.tar ; \
-	bzip2 -9vv crypt-$(VERSION)-beta.tar ; zip -9 -r crypt-$(VERSION)-beta.zip libtomcrypt-$(VERSION)-beta/*
+#pretty build
+pretty:
+	perl pretty.build
+
+#for GCC 3.4+
+profiled:
+	make clean
+	make CFLAGS="$(CFLAGS) -fprofile-generate" EXTRALIBS=-lgcov x86_prof
+	./x86_prof
+	rm *.o *.a x86_prof
+	make CFLAGS="$(CFLAGS) -fprofile-use" EXTRALIBS=-lgcov x86_prof
 
 #zipup the project (take that!)
 zipup: clean docs
 	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION) ; mkdir libtomcrypt-$(VERSION) ; \
 	cp -R ./libtomcrypt/* ./libtomcrypt-$(VERSION)/ ; tar -c libtomcrypt-$(VERSION)/* > crypt-$(VERSION).tar ; \
 	bzip2 -9vv crypt-$(VERSION).tar ; zip -9 -r crypt-$(VERSION).zip libtomcrypt-$(VERSION)/* ; \
-	gpg -b -a crypt-$(VERSION).tar.bz2 ; \
-   gpg -b -a crypt-$(VERSION).zip
+	gpg -b -a crypt-$(VERSION).tar.bz2 ; gpg -b -a crypt-$(VERSION).zip

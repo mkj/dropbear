@@ -20,7 +20,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
                              unsigned char *out,    unsigned long *outlen,
                              int           *res)
 {
-   unsigned char DB[1024], seed[MAXBLOCKSIZE], mask[sizeof(DB)];
+   unsigned char *DB, *seed, *mask;
    unsigned long hLen, x, y, modulus_len;
    int           err;
 
@@ -39,9 +39,28 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    hLen        = hash_descriptor[hash_idx].hashsize;
    modulus_len = (modulus_bitlen >> 3) + (modulus_bitlen & 7 ? 1 : 0);
 
+   /* allocate ram for DB/mask/salt of size modulus_len */
+   DB   = XMALLOC(modulus_len);
+   mask = XMALLOC(modulus_len);
+   seed = XMALLOC(modulus_len);
+   if (DB == NULL || mask == NULL || seed == NULL) {
+      if (DB != NULL) {
+         XFREE(DB);
+      }
+      if (mask != NULL) {
+         XFREE(mask);
+      }
+      if (seed != NULL) {
+         XFREE(seed);
+      }
+      return CRYPT_MEM;
+   }
+
+
    /* test message size */
-   if (modulus_len >= sizeof(DB) || msglen != modulus_len) {
-      return CRYPT_PK_INVALID_SIZE;
+   if (msglen != modulus_len) {
+      err = CRYPT_PK_INVALID_SIZE;
+      goto __ERR;
    }
 
    /* ok so it's now in the form
@@ -54,7 +73,8 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* must have leading 0x00 byte */
    if (msg[0] != 0x00) {
-      return CRYPT_OK;
+      err = CRYPT_OK;
+      goto __ERR;
    }
 
    /* now read the masked seed */
@@ -69,7 +89,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* compute MGF1 of maskedDB (hLen) */ 
    if ((err = pkcs_1_mgf1(DB, modulus_len - hLen - 1, hash_idx, mask, hLen)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* XOR against seed */
@@ -79,7 +99,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* compute MGF1 of seed (k - hlen - 1) */
    if ((err = pkcs_1_mgf1(seed, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* xor against DB */
@@ -90,21 +110,22 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    /* now DB == lhash || PS || 0x01 || M, PS == k - mlen - 2hlen - 2 zeroes */
 
    /* compute lhash and store it in seed [reuse temps!] */
-   x = sizeof(seed);
+   x = modulus_len;
    if (lparam != NULL) {
       if ((err = hash_memory(hash_idx, lparam, lparamlen, seed, &x)) != CRYPT_OK) {
-         return err;
+         goto __ERR;
       }
    } else {
       /* can't pass hash_memory a NULL so use DB with zero length */
       if ((err = hash_memory(hash_idx, DB, 0, seed, &x)) != CRYPT_OK) {
-         return err;
+         goto __ERR;
       }
    }
 
    /* compare the lhash'es */
    if (memcmp(seed, DB, hLen) != 0) {
-      return CRYPT_OK;
+      err = CRYPT_OK;
+      goto __ERR;
    }
 
    /* now zeroes before a 0x01 */
@@ -114,12 +135,14 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* error out if wasn't 0x01 */
    if (x == (modulus_len - hLen - 1) || DB[x] != 0x01) {
-      return CRYPT_OK;
+      err = CRYPT_OK;
+      goto __ERR;
    }
 
    /* rest is the message (and skip 0x01) */
-   if (msglen - ++x > *outlen) {
-      return CRYPT_BUFFER_OVERFLOW;
+   if ((modulus_len - hLen - 1) - ++x > *outlen) {
+      err = CRYPT_BUFFER_OVERFLOW;
+      goto __ERR;
    }
 
    /* copy message */
@@ -128,16 +151,22 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
        out[y++] = DB[x++];
    }
 
-#ifdef CLEAN_STACK
-   zeromem(DB,   sizeof(DB));
-   zeromem(seed, sizeof(seed));
-   zeromem(mask, sizeof(mask));
-#endif
-
    /* valid packet */
    *res = 1;
 
-   return CRYPT_OK;
+   err = CRYPT_OK;
+__ERR:
+#ifdef CLEAN_STACK
+   zeromem(DB,   modulus_len);
+   zeromem(seed, modulus_len);
+   zeromem(mask, modulus_len);
+#endif
+
+   XFREE(seed);
+   XFREE(mask);
+   XFREE(DB);
+
+   return err;
 }
 
 #endif /* PKCS_1 */

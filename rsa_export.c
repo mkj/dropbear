@@ -13,59 +13,43 @@
 
 #ifdef MRSA
 
+/* This will export either an RSAPublicKey or RSAPrivateKey [defined in PKCS #1 v2.1] */
 int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key)
 {
-   unsigned long y, z; 
    int err;
 
    _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
    _ARGCHK(key    != NULL);
-   
-   /* can we store the static header?  */
-   if (*outlen < (PACKET_SIZE + 1)) {
-      return CRYPT_BUFFER_OVERFLOW;
-   }   
 
    /* type valid? */
-   if (!(key->type == PK_PRIVATE || key->type == PK_PRIVATE_OPTIMIZED) &&
-        (type == PK_PRIVATE || type == PK_PRIVATE_OPTIMIZED)) {
+   if (!(key->type == PK_PRIVATE) && (type == PK_PRIVATE)) {
       return CRYPT_PK_INVALID_TYPE;
    }
+  
+   if (type == PK_PRIVATE) {
+      /* private key */
+      mp_int zero;
 
-   /* start at offset y=PACKET_SIZE */
-   y = PACKET_SIZE;
-
-   /* output key type */
-   out[y++] = type;
-
-   /* output modulus */
-   OUTPUT_BIGNUM(&key->N, out, y, z);
-
-   /* output public key */
-   OUTPUT_BIGNUM(&key->e, out, y, z);
-
-   if (type == PK_PRIVATE || type == PK_PRIVATE_OPTIMIZED) {
-      OUTPUT_BIGNUM(&key->d, out, y, z);
+      /* first INTEGER == 0 to signify two-prime RSA */
+      if ((err = mp_init(&zero)) != MP_OKAY) {
+         return mpi_to_ltc_error(err);
+      }
+ 
+      /* output is 
+            Version, n, e, d, p, q, d mod (p-1), d mod (q - 1), 1/q mod p
+       */
+      err = der_put_multi_integer(out, outlen, &zero, &key->N, &key->e,
+                          &key->d, &key->p, &key->q, &key->dP,
+                          &key->dQ, &key->qP, NULL);
+ 
+      /* clear zero and return */
+      mp_clear(&zero);
+      return err;
+   } else {
+      /* public key */
+      return der_put_multi_integer(out, outlen, &key->N, &key->e, NULL);
    }
-
-   if (type == PK_PRIVATE_OPTIMIZED) {
-      OUTPUT_BIGNUM(&key->dQ, out, y, z);
-      OUTPUT_BIGNUM(&key->dP, out, y, z);
-      OUTPUT_BIGNUM(&key->pQ, out, y, z);
-      OUTPUT_BIGNUM(&key->qP, out, y, z);
-      OUTPUT_BIGNUM(&key->p, out, y, z);
-      OUTPUT_BIGNUM(&key->q, out, y, z);
-   }
-
-   /* store packet header */
-   packet_store_header(out, PACKET_SECT_RSA, PACKET_SUB_KEY);
-
-   /* copy to the user buffer */
-   *outlen = y;
-
-   /* clear stack and return */
-   return CRYPT_OK;
 }
 
 #endif /* MRSA */

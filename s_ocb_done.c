@@ -25,7 +25,7 @@ int __ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
                      unsigned char *ct, unsigned char *tag, unsigned long *taglen, int mode)
 
 {
-   unsigned char Z[MAXBLOCKSIZE], Y[MAXBLOCKSIZE], X[MAXBLOCKSIZE];
+   unsigned char *Z, *Y, *X;
    int err, x;
 
    _ARGCHK(ocb    != NULL);
@@ -41,9 +41,26 @@ int __ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
       return CRYPT_INVALID_ARG;
    }
 
+   /* allocate ram */
+   Z = XMALLOC(MAXBLOCKSIZE);
+   Y = XMALLOC(MAXBLOCKSIZE);
+   X = XMALLOC(MAXBLOCKSIZE);
+   if (X == NULL || Y == NULL || Z == NULL) {
+      if (X != NULL) {
+         XFREE(X);
+      }
+      if (Y != NULL) {
+         XFREE(Y);
+      }
+      if (Z != NULL) {
+         XFREE(Z);
+      }
+      return CRYPT_MEM;
+   }
+
    /* compute X[m] = len(pt[m]) XOR Lr XOR Z[m] */
    ocb_shift_xor(ocb, X); 
-   memcpy(Z, X, ocb->block_len);
+   XMEMCPY(Z, X, ocb->block_len);
 
    X[ocb->block_len-1] ^= (ptlen*8)&255;
    X[ocb->block_len-2] ^= ((ptlen*8)>>8)&255;
@@ -90,11 +107,16 @@ int __ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
    *taglen = x;
 
 #ifdef CLEAN_STACK
-   zeromem(X, sizeof(X));
-   zeromem(Y, sizeof(Y));
-   zeromem(Z, sizeof(Z));
+   zeromem(X, MAXBLOCKSIZE);
+   zeromem(Y, MAXBLOCKSIZE);
+   zeromem(Z, MAXBLOCKSIZE);
    zeromem(ocb, sizeof(*ocb));
 #endif
+   
+   XFREE(X);
+   XFREE(Y);
+   XFREE(Z);
+
    return CRYPT_OK;
 }
 

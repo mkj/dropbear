@@ -7,7 +7,7 @@
  * more functions ;)
 */
 
-#include <mycrypt_custom.h>
+#include <mycrypt.h>
 
 int errno;
 
@@ -26,7 +26,7 @@ int main(int argc, char **argv)
       printf("usage: ./hash algorithm file [file ...]\n");
       printf("Algorithms:\n");
       for (x = 0; hash_descriptor[x].name != NULL; x++) {
-         printf(" %s\n", hash_descriptor[x].name);
+         printf(" %s (%d)\n", hash_descriptor[x].name, hash_descriptor[x].ID);
       }
       exit(EXIT_SUCCESS);
    }
@@ -66,6 +66,8 @@ int main(int argc, char **argv)
 
 void register_algs(void)
 {
+  int err;
+
 #ifdef TIGER
   register_hash (&tiger_desc);
 #endif
@@ -101,6 +103,13 @@ void register_algs(void)
 #endif
 #ifdef WHIRLPOOL
   register_hash (&whirlpool_desc);
+#endif
+#ifdef CHC_HASH
+  register_hash(&chc_desc);
+  if ((err = chc_register(register_cipher(&aes_enc_desc))) != CRYPT_OK) {
+     printf("chc_register error: %s\n", error_to_string(err));
+     exit(EXIT_FAILURE);
+  }
 #endif
 
 }

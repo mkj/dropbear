@@ -20,7 +20,7 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
                              int           prng_idx,         int  hash_idx,
                              unsigned char *out,    unsigned long *outlen)
 {
-   unsigned char DB[1024], seed[MAXBLOCKSIZE], mask[sizeof(DB)];
+   unsigned char *DB, *seed, *mask;
    unsigned long hLen, x, y, modulus_len;
    int           err;
 
@@ -41,22 +41,40 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
    hLen        = hash_descriptor[hash_idx].hashsize;
    modulus_len = (modulus_bitlen >> 3) + (modulus_bitlen & 7 ? 1 : 0);
 
+   /* allocate ram for DB/mask/salt of size modulus_len */
+   DB   = XMALLOC(modulus_len);
+   mask = XMALLOC(modulus_len);
+   seed = XMALLOC(modulus_len);
+   if (DB == NULL || mask == NULL || seed == NULL) {
+      if (DB != NULL) {
+         XFREE(DB);
+      }
+      if (mask != NULL) {
+         XFREE(mask);
+      }
+      if (seed != NULL) {
+         XFREE(seed);
+      }
+      return CRYPT_MEM;
+   }
+
    /* test message size */
-   if (modulus_len >= sizeof(DB) || msglen > (modulus_len - 2*hLen - 2)) {
-      return CRYPT_PK_INVALID_SIZE;
+   if (msglen > (modulus_len - 2*hLen - 2)) {
+      err = CRYPT_PK_INVALID_SIZE;
+      goto __ERR;
    }
 
    /* get lhash */
-// DB == lhash || PS || 0x01 || M, PS == k - mlen - 2hlen - 2 zeroes
-   x = sizeof(DB);
+   /* DB == lhash || PS || 0x01 || M, PS == k - mlen - 2hlen - 2 zeroes */
+   x = modulus_len;
    if (lparam != NULL) {
       if ((err = hash_memory(hash_idx, lparam, lparamlen, DB, &x)) != CRYPT_OK) {
-         return err;
+         goto __ERR;
       }
    } else {
       /* can't pass hash_memory a NULL so use DB with zero length */
       if ((err = hash_memory(hash_idx, DB, 0, DB, &x)) != CRYPT_OK) {
-         return err;
+         goto __ERR;
       }
    }
 
@@ -76,12 +94,13 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
 
    /* now choose a random seed */
    if (prng_descriptor[prng_idx].read(seed, hLen, prng) != hLen) {
-      return CRYPT_ERROR_READPRNG;
+      err = CRYPT_ERROR_READPRNG;
+      goto __ERR;
    }
 
    /* compute MGF1 of seed (k - hlen - 1) */
    if ((err = pkcs_1_mgf1(seed, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* xor against DB */
@@ -91,7 +110,7 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
 
    /* compute MGF1 of maskedDB (hLen) */ 
    if ((err = pkcs_1_mgf1(DB, modulus_len - hLen - 1, hash_idx, mask, hLen)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    /* XOR against seed */
@@ -101,7 +120,8 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
 
    /* create string of length modulus_len */
    if (*outlen < modulus_len) {
-      return CRYPT_BUFFER_OVERFLOW;
+      err = CRYPT_BUFFER_OVERFLOW;
+      goto __ERR;
    }
 
    /* start output which is 0x00 || maskedSeed || maskedDB */
@@ -114,14 +134,20 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
       out[x++] = DB[y];
    }
    *outlen = x;
-
+    
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(DB,   sizeof(DB));
-   zeromem(seed, sizeof(seed));
-   zeromem(mask, sizeof(mask));
+   zeromem(DB,   modulus_len);
+   zeromem(seed, modulus_len);
+   zeromem(mask, modulus_len);
 #endif
 
-   return CRYPT_OK;
+   XFREE(seed);
+   XFREE(mask);
+   XFREE(DB);
+
+   return err;
 }
 
 #endif /* PKCS_1 */

@@ -13,7 +13,7 @@
 
 #ifdef MRSA
 
-/* design then PSS depad */
+/* (PKCS #1, v2.0) de-sign then PSS depad */
 int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
                     const unsigned char *msghash,  unsigned long msghashlen,
                           prng_state    *prng,     int           prng_idx,
@@ -28,6 +28,9 @@ int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
   _ARGCHK(sig      != NULL);
   _ARGCHK(stat     != NULL);
   _ARGCHK(key      != NULL);
+
+  /* default to invalid */
+  *stat = 0;
   
   /* valid hash ? */
   if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
@@ -48,7 +51,7 @@ int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
   }
   
   /* allocate temp buffer for decoded sig */
-  tmpbuf = XCALLOC(1, modulus_bytelen + 1);
+  tmpbuf = XMALLOC(siglen);
   if (tmpbuf == NULL) {
      return CRYPT_MEM;
   }

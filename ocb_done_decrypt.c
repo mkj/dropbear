@@ -20,7 +20,7 @@ int ocb_done_decrypt(ocb_state *ocb,
                      const unsigned char *tag, unsigned long taglen, int *res)
 {
    int err;
-   unsigned char tagbuf[MAXBLOCKSIZE];
+   unsigned char *tagbuf;
    unsigned long tagbuflen;
 
    _ARGCHK(ocb != NULL);
@@ -29,22 +29,33 @@ int ocb_done_decrypt(ocb_state *ocb,
    _ARGCHK(tag != NULL);
    _ARGCHK(res != NULL);
 
+   /* default to failed */
    *res = 0;
 
-   tagbuflen = sizeof(tagbuf);
+   /* allocate memory */
+   tagbuf = XMALLOC(MAXBLOCKSIZE);
+   if (tagbuf == NULL) {
+      return CRYPT_MEM;
+   }
+
+   tagbuflen = MAXBLOCKSIZE;
    if ((err = __ocb_done(ocb, ct, ctlen, pt, tagbuf, &tagbuflen, 1)) != CRYPT_OK) {
-      return err;
+      goto __ERR;
    }
 
    if (taglen <= tagbuflen && memcmp(tagbuf, tag, taglen) == 0) {
       *res = 1;
    }
 
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(tagbuf, sizeof(tagbuf));
+   zeromem(tagbuf, MAXBLOCKSIZE);
 #endif
 
-   return CRYPT_OK;
+   XFREE(tagbuf);
+
+   return err;
 }
 
 #endif

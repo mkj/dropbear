@@ -89,7 +89,7 @@ static ulong32 setup_mix(ulong32 temp)
 }
 
 #ifndef ENCRYPT_ONLY
-
+#ifdef SMALL_CODE
 static ulong32 setup_mix2(ulong32 temp)
 {
    return Td0(255 & Te4[byte(temp, 3)]) ^
@@ -97,7 +97,7 @@ static ulong32 setup_mix2(ulong32 temp)
           Td2(255 & Te4[byte(temp, 1)]) ^
           Td3(255 & Te4[byte(temp, 0)]);
 }
-
+#endif
 #endif
 
 int SETUP(const unsigned char *key, int keylen, int rounds, symmetric_key *skey)

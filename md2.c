@@ -90,7 +90,7 @@ static void md2_compress(hash_state *md)
    }
 }
 
-void md2_init(hash_state *md)
+int md2_init(hash_state *md)
 {
    _ARGCHK(md != NULL);
 
@@ -99,6 +99,7 @@ void md2_init(hash_state *md)
    zeromem(md->md2.chksum, sizeof(md->md2.chksum));
    zeromem(md->md2.buf, sizeof(md->md2.buf));
    md->md2.curlen = 0;
+   return CRYPT_OK;
 }
 
 int md2_process(hash_state *md, const unsigned char *buf, unsigned long len)
@@ -111,7 +112,7 @@ int md2_process(hash_state *md, const unsigned char *buf, unsigned long len)
     }                                                                                       
     while (len > 0) {
         n = MIN(len, (16 - md->md2.curlen));
-        memcpy(md->md2.buf + md->md2.curlen, buf, (size_t)n);
+        XMEMCPY(md->md2.buf + md->md2.curlen, buf, (size_t)n);
         md->md2.curlen += n;
         buf            += n;
         len            -= n;
@@ -149,11 +150,11 @@ int md2_done(hash_state * md, unsigned char *hash)
     md2_update_chksum(md);
 
     /* hash checksum */
-    memcpy(md->md2.buf, md->md2.chksum, 16);
+    XMEMCPY(md->md2.buf, md->md2.chksum, 16);
     md2_compress(md);
 
     /* output is lower 16 bytes of X */
-    memcpy(hash, md->md2.X, 16);
+    XMEMCPY(hash, md->md2.X, 16);
 
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));

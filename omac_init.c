@@ -59,7 +59,7 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
  
        /* copy up as require */
        if (x == 0) {
-          memcpy(omac->Lu[1], omac->Lu[0], sizeof(omac->Lu[0]));
+          XMEMCPY(omac->Lu[1], omac->Lu[0], sizeof(omac->Lu[0]));
        }
    }
 

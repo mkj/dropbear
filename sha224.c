@@ -28,7 +28,7 @@ const struct _hash_descriptor sha224_desc =
 };
 
 /* init the sha256 er... sha224 state ;-) */
-void sha224_init(hash_state * md)
+int sha224_init(hash_state * md)
 {
     _ARGCHK(md != NULL);
 
@@ -42,6 +42,7 @@ void sha224_init(hash_state * md)
     md->sha256.state[5] = 0x68581511UL;
     md->sha256.state[6] = 0x64f98fa7UL;
     md->sha256.state[7] = 0xbefa4fa4UL;
+    return CRYPT_OK;
 }
 
 int sha224_done(hash_state * md, unsigned char *hash)
@@ -50,7 +51,7 @@ int sha224_done(hash_state * md, unsigned char *hash)
     int err;
 
     err = sha256_done(md, buf);
-    memcpy(hash, buf, 28);
+    XMEMCPY(hash, buf, 28);
 #ifdef CLEAN_STACK
     zeromem(buf, sizeof(buf));
 #endif 

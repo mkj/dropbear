@@ -30,7 +30,7 @@ const struct _hash_descriptor sha384_desc =
     &sha384_test
 };
 
-void sha384_init(hash_state * md)
+int sha384_init(hash_state * md)
 {
     _ARGCHK(md != NULL);
 
@@ -44,6 +44,7 @@ void sha384_init(hash_state * md)
     md->sha512.state[5] = CONST64(0x8eb44a8768581511);
     md->sha512.state[6] = CONST64(0xdb0c2e0d64f98fa7);
     md->sha512.state[7] = CONST64(0x47b5481dbefa4fa4);
+    return CRYPT_OK;
 }
 
 int sha384_done(hash_state * md, unsigned char *hash)
@@ -58,7 +59,7 @@ int sha384_done(hash_state * md, unsigned char *hash)
     }
 
    sha512_done(md, buf);
-   memcpy(hash, buf, 48);
+   XMEMCPY(hash, buf, 48);
 #ifdef CLEAN_STACK
    zeromem(buf, sizeof(buf));
 #endif

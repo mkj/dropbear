@@ -17,17 +17,31 @@
 int eax_done(eax_state *eax, unsigned char *tag, unsigned long *taglen)
 {
    int           err;
-   unsigned char headermac[MAXBLOCKSIZE], ctmac[MAXBLOCKSIZE];
+   unsigned char *headermac, *ctmac;
    unsigned long x, len;
 
    _ARGCHK(eax    != NULL);
    _ARGCHK(tag    != NULL);
    _ARGCHK(taglen != NULL);
 
+   /* allocate ram */
+   headermac = XMALLOC(MAXBLOCKSIZE);
+   ctmac     = XMALLOC(MAXBLOCKSIZE);
+
+   if (headermac == NULL || ctmac == NULL) {
+      if (headermac != NULL) {
+         XFREE(headermac);
+      }
+      if (ctmac != NULL) {
+         XFREE(ctmac);
+      }
+      return CRYPT_MEM;
+   }
+
    /* finish ctomac */
-   len = sizeof(ctmac);
+   len = MAXBLOCKSIZE;
    if ((err = omac_done(&eax->ctomac, ctmac, &len)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
 
    /* finish headeromac */
@@ -35,7 +49,7 @@ int eax_done(eax_state *eax, unsigned char *tag, unsigned long *taglen)
    /* note we specifically don't reset len so the two lens are minimal */
 
    if ((err = omac_done(&eax->headeromac, headermac, &len)) != CRYPT_OK) {
-      return err;
+      goto __ERR; 
    }
 
    /* compute N xor H xor C */
@@ -44,13 +58,18 @@ int eax_done(eax_state *eax, unsigned char *tag, unsigned long *taglen)
    }
    *taglen = x;
 
+   err = CRYPT_OK;
+__ERR:
 #ifdef CLEAN_STACK
-   zeromem(ctmac, sizeof(ctmac));
-   zeromem(headermac, sizeof(headermac));
-   zeromem(eax, sizeof(*eax));
+   zeromem(ctmac,     MAXBLOCKSIZE);
+   zeromem(headermac, MAXBLOCKSIZE);
+   zeromem(eax,       sizeof(*eax));
 #endif
 
-   return CRYPT_OK;
+   XFREE(ctmac);
+   XFREE(headermac);
+
+   return err;
 }
 
 #endif

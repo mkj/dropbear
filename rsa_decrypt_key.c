@@ -13,7 +13,7 @@
 
 #ifdef MRSA
 
-/* decrypt then OAEP depad  */
+/* (PKCS #1 v2.0) decrypt then OAEP depad  */
 int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
                           unsigned char *outkey, unsigned long *keylen, 
                     const unsigned char *lparam, unsigned long lparamlen,
@@ -23,13 +23,20 @@ int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
 {
   unsigned long modulus_bitlen, modulus_bytelen, x;
   int           err;
+  unsigned char *tmp;
   
   _ARGCHK(outkey != NULL);
   _ARGCHK(keylen != NULL);
   _ARGCHK(key    != NULL);
   _ARGCHK(res    != NULL);
-  
-  /* valid hash ? */
+
+  /* default to invalid */
+  *res = 0;
+
+  /* valid hash/prng ? */
+  if ((err = prng_is_valid(prng_idx)) != CRYPT_OK) {
+     return err;
+  }
   if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
      return err;
   }
@@ -43,15 +50,24 @@ int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
      return CRYPT_INVALID_PACKET;
   }
 
+  /* allocate ram */
+  tmp = XMALLOC(inlen);
+  if (tmp == NULL) {
+     return CRYPT_MEM;
+  }
+
   /* rsa decode the packet */
-  x = *keylen;
-  if ((err = rsa_exptmod(in, inlen, outkey, &x, PK_PRIVATE, prng, prng_idx, key)) != CRYPT_OK) {
+  x = inlen;
+  if ((err = rsa_exptmod(in, inlen, tmp, &x, PK_PRIVATE, prng, prng_idx, key)) != CRYPT_OK) {
+     XFREE(tmp);
      return err;
   }
 
   /* now OAEP decode the packet */
-  return pkcs_1_oaep_decode(outkey, x, lparam, lparamlen, modulus_bitlen, hash_idx,
-                            outkey, keylen, res);
+  err = pkcs_1_oaep_decode(tmp, x, lparam, lparamlen, modulus_bitlen, hash_idx,
+                           outkey, keylen, res);
+  XFREE(tmp);
+  return err;
 }
 
 #endif /* MRSA */
