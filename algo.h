@@ -66,10 +66,9 @@ void crypto_init();
 int have_algo(char* algo, size_t algolen, algo_type algos[]);
 void buf_put_algolist(buffer * buf, algo_type localalgos[]);
 
-algo_type * common_buf_match_algo(buffer* buf, algo_type localalgos[],
-		int *goodguess);
 algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 		int *goodguess);
-algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[]);
+algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
+		int *goodguess);
 
 #endif /* _ALGO_H_ */

@@ -27,6 +27,7 @@ static int newtcpdirect(struct Channel * channel) {
 	unsigned int destport;
 	unsigned char* orighost = NULL;
 	unsigned int origport;
+	char portstring[6];
 	int sock;
 	int len;
 	int ret = DROPBEAR_FAILURE;
@@ -58,7 +59,8 @@ static int newtcpdirect(struct Channel * channel) {
 		goto out;
 	}
 
-	sock = newtcp(desthost, destport);
+	snprintf(portstring, sizeof(portstring), "%d", destport);
+	sock = connect_remote(desthost, portstring, 1, NULL);
 	if (sock < 0) {
 		TRACE(("leave newtcpdirect: sock failed"));
 		goto out;
@@ -86,6 +88,7 @@ out:
  * returned will need to be checked for success when it is first written.
  * Similarities with OpenSSH's connect_to() are not coincidental.
  * Returns -1 on failure */
+#if 0
 static int newtcp(const char * host, int port) {
 
 	int sock = -1;
@@ -152,4 +155,5 @@ static int newtcp(const char * host, int port) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 	return sock;
 }
+#endif
 #endif /* DISABLE_TCPFWD_DIRECT */

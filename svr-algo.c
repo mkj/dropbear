@@ -16,6 +16,8 @@ algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 	unsigned int count, i, j;
 	algo_type * ret = NULL;
 
+	*goodguess = 0;
+
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
 	/* Debug this */
@@ -57,8 +59,6 @@ algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 					/* set if it was a good guess */
 					if (i == 0 && j == 0) {
 						*goodguess = 1;
-					} else {
-						*goodguess = 0;
 					}
 					/* set the algo to return */
 					ret = &localalgos[j];

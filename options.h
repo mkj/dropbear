@@ -30,7 +30,7 @@
  * parts are to allow for commandline -DDROPBEAR_XXX options etc.
  ******************************************************************/
 #define DROPBEAR_SERVER
-/* #define DROPBEAR_CLIENT */
+//#define DROPBEAR_CLIENT
 
 #ifndef DROPBEAR_PORT
 #define DROPBEAR_PORT 22
@@ -48,6 +48,7 @@
  * perhaps 20% slower for pubkey operations (it is probably worth experimenting
  * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
+#define DROPBEAR_SMALL_CODE
 
 /* Enable X11 Forwarding */
 #define ENABLE_X11FWD
@@ -181,7 +182,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.41"
+#define DROPBEAR_VERSION "0.41-and-client"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

@@ -240,8 +240,10 @@ int main(int argc, char ** argv)
 				if (m_close(childpipe[0]) == DROPBEAR_FAILURE) {
 					dropbear_exit("Couldn't close socket");
 				}
+
 				/* start the session */
-				svr_session(childsock, childpipe[1], &remoteaddr);
+				svr_session(childsock, childpipe[1], 
+								getaddrhostname(&remoteaddr));
 				/* don't return */
 				assert(0);
 			}

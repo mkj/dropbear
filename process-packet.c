@@ -104,9 +104,11 @@ void process_packet() {
 		 */
 		 
 		/* check that we aren't expecting a particular packet */
+#if 0
 		if (cli_ses.expecting && cli_ses.expecting == type) {
 			cli_ses.expecting = 0;
 		}
+#endif
 	}
 #endif
 

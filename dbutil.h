@@ -45,6 +45,8 @@ void printhex(unsigned char* buf, int len);
 #endif
 char * stripcontrol(const char * text);
 unsigned char * getaddrstring(struct sockaddr * addr);
+int connect_remote(const char* remotehost, const char* remoteport,
+		int nonblocking, char ** errstring);
 char* getaddrhostname(struct sockaddr * addr);
 int buf_readfile(buffer* buf, const char* filename);
 
@@ -55,5 +57,8 @@ void * m_realloc(void* ptr, size_t size);
 #define m_free(X) __m_free(X); (X) = NULL;
 void __m_free(void* ptr);
 void m_burn(void* data, unsigned int len);
+
+/* Used to force mp_ints to be initialised */
+#define DEF_MP_INT(X) mp_int X = {0, 0, 0, NULL}
 
 #endif /* _DBUTIL_H_ */

@@ -33,13 +33,16 @@
  * direction MUST be the first algorithm  on the client's list
  * that is also on the server's list.
  */
-algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[]) {
+algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
+		int *goodguess) {
 
 	unsigned char * algolist = NULL;
 	unsigned char * remotealgos[MAX_PROPOSED_ALGO];
 	unsigned int len;
 	unsigned int count, i, j;
 	algo_type * ret = NULL;
+
+	*goodguess = 0;
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
@@ -78,6 +81,10 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[]) {
 				if (len == strlen(remotealgos[i]) 
 						&& strncmp(localalgos[j].name, 
 							remotealgos[i], len) == 0) {
+					if (i == 0 && j == 0) {
+						/* was a good guess */
+						*goodguess = 1;
+					}
 					ret = &localalgos[j];
 					goto out;
 				}

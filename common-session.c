@@ -35,6 +35,7 @@
 #include "channel.h"
 #include "atomicio.h"
 
+
 struct sshsession ses; /* GLOBAL */
 
 /* need to know if the session struct has been initialised, this way isn't the
@@ -44,19 +45,18 @@ int sessinitdone = 0; /* GLOBAL */
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
 int exitflag = 0; /* GLOBAL */
 
-static int ident_readln(int fd, char* buf, int count);
-
-
 void(*session_remoteclosed)() = NULL;
 
 
+static void checktimeouts();
+static int ident_readln(int fd, char* buf, int count);
+
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock) {
+void common_session_init(int sock, char* remotehost) {
 
 	TRACE(("enter session_init"));
 
-	ses.remoteaddr = NULL;
-	ses.remotehost = NULL;
+	ses.remotehost = remotehost;
 
 	ses.sock = sock;
 	ses.maxfd = sock;
@@ -114,6 +114,86 @@ void common_session_init(int sock) {
 	TRACE(("leave session_init"));
 }
 
+void session_loop(void(*loophandler)()) {
+
+	fd_set readfd, writefd;
+	struct timeval timeout;
+	int val;
+
+	/* main loop, select()s for all sockets in use */
+	for(;;) {
+
+		timeout.tv_sec = SELECT_TIMEOUT;
+		timeout.tv_usec = 0;
+		FD_ZERO(&writefd);
+		FD_ZERO(&readfd);
+		assert(ses.payload == NULL);
+		if (ses.sock != -1) {
+			FD_SET(ses.sock, &readfd);
+			if (!isempty(&ses.writequeue)) {
+				FD_SET(ses.sock, &writefd);
+			}
+		}
+
+		/* set up for channels which require reading/writing */
+		if (ses.dataallowed) {
+			setchannelfds(&readfd, &writefd);
+		}
+		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
+
+		if (exitflag) {
+			dropbear_exit("Terminated by signal");
+		}
+		
+		if (val < 0) {
+			if (errno == EINTR) {
+				continue;
+			} else {
+				dropbear_exit("Error in select");
+			}
+		}
+
+		/* check for auth timeout, rekeying required etc */
+		checktimeouts();
+		
+		if (val == 0) {
+			/* timeout */
+			TRACE(("select timeout"));
+			continue;
+		}
+
+		/* process session socket's incoming/outgoing data */
+		if (ses.sock != -1) {
+			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
+				write_packet();
+			}
+
+			if (FD_ISSET(ses.sock, &readfd)) {
+				read_packet();
+			}
+			
+			/* Process the decrypted packet. After this, the read buffer
+			 * will be ready for a new packet */
+			if (ses.payload != NULL) {
+				process_packet();
+			}
+		}
+
+		/* process pipes etc for the channels, ses.dataallowed == 0
+		 * during rekeying ) */
+		if (ses.dataallowed) {
+			channelio(&readfd, &writefd);
+		}
+
+		if (loophandler) {
+			loophandler();
+		}
+
+	} /* for(;;) */
+	
+	/* Not reached */
+}
+
 /* clean up a session on exit */
 void common_session_cleanup() {
 	
@@ -134,35 +214,7 @@ void common_session_cleanup() {
 	TRACE(("leave session_cleanup"));
 }
 
-/* Check all timeouts which are required. Currently these are the time for
- * user authentication, and the automatic rekeying. */
-void checktimeouts() {
 
-	struct timeval tv;
-	long secs;
-
-	if (gettimeofday(&tv, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-
-	secs = tv.tv_sec;
-	
-	if (ses.connecttimeout != 0 && secs > ses.connecttimeout) {
-			dropbear_close("Timeout before auth");
-	}
-
-	/* we can't rekey if we haven't done remote ident exchange yet */
-	if (ses.remoteident == NULL) {
-		return;
-	}
-
-	if (!ses.kexstate.sentkexinit
-			&& (secs - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
-			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)){
-		TRACE(("rekeying after timeout or max data reached"));
-		send_msg_kexinit();
-	}
-}
 void session_identification() {
 
 	/* max length of 255 chars */
@@ -266,5 +318,35 @@ static int ident_readln(int fd, char* buf, int count) {
 	buf[pos] = '\0';
 	TRACE(("leave ident_readln: return %d", pos+1));
 	return pos+1;
+}
+
+/* Check all timeouts which are required. Currently these are the time for
+ * user authentication, and the automatic rekeying. */
+static void checktimeouts() {
+
+	struct timeval tv;
+	long secs;
+
+	if (gettimeofday(&tv, 0) < 0) {
+		dropbear_exit("Error getting time");
+	}
+
+	secs = tv.tv_sec;
+	
+	if (ses.connecttimeout != 0 && secs > ses.connecttimeout) {
+			dropbear_close("Timeout before auth");
+	}
+
+	/* we can't rekey if we haven't done remote ident exchange yet */
+	if (ses.remoteident == NULL) {
+		return;
+	}
+
+	if (!ses.kexstate.sentkexinit
+			&& (secs - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
+			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)){
+		TRACE(("rekeying after timeout or max data reached"));
+		send_msg_kexinit();
+	}
 }
 

@@ -113,6 +113,95 @@ void dropbear_trace(const char* format, ...) {
 }
 #endif /* DEBUG_TRACE */
 
+/* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
+ * return immediately if nonblocking is set */
+int connect_remote(const char* remotehost, const char* remoteport,
+		int nonblocking, char ** errstring) {
+
+	struct addrinfo *res0 = NULL, *res = NULL, hints;
+	int sock;
+	int err;
+
+	TRACE(("enter connect_remote"));
+
+	if (errstring != NULL) {
+		*errstring = NULL;
+	}
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = PF_UNSPEC;
+
+	err = getaddrinfo(remotehost, remoteport, &hints, &res0);
+	if (err) {
+		if (errstring != NULL && *errstring == NULL) {
+			int len;
+			len = 20 + strlen(gai_strerror(err));
+			*errstring = (char*)m_malloc(len);
+			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
+		}
+		TRACE(("Error resolving: %s", gai_strerror(err)));
+		return -1;
+	}
+
+	sock = -1;
+	err = EADDRNOTAVAIL;
+	for (res = res0; res; res = res->ai_next) {
+
+		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
+		if (sock < 0) {
+			err = errno;
+			continue;
+		}
+
+		if (nonblocking) {
+			if (fcntl(sock, F_SETFL, O_NONBLOCK) < 0) {
+				close(sock);
+				sock = -1;
+				if (errstring != NULL && *errstring == NULL) {
+					*errstring = m_strdup("Failed non-blocking");
+				}
+				TRACE(("Failed non-blocking: %s", strerror(errno)));
+				continue;
+			}
+		}
+
+		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
+			if (errno == EINPROGRESS) {
+				TRACE(("Connect in progress"));
+				break;
+			} else {
+				err = errno;
+				close(sock);
+				sock = -1;
+				continue;
+			}
+		}
+
+		break; /* Success */
+	}
+
+	if (sock < 0) {
+		/* Failed */
+		if (errstring != NULL && *errstring == NULL) {
+			int len;
+			len = 20 + strlen(strerror(err));
+			*errstring = (char*)m_malloc(len);
+			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
+		}
+		TRACE(("Error connecting: %s", strerror(err)));
+	} else {
+		/* Success */
+		/* (err is used as a dummy var here) */
+		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&err, sizeof(err));
+	}
+
+	freeaddrinfo(res0);
+
+	TRACE(("leave connect_remote: sock %d", sock));
+	return sock;
+}
+
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
 unsigned char * getaddrstring(struct sockaddr * addr) {
@@ -304,3 +393,4 @@ void m_burn(void *data, unsigned int len) {
 		*p++ = 0x66;
 	}
 }
+

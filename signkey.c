@@ -45,7 +45,8 @@ sign_key * new_sign_key() {
 }
 
 /* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
- * type is set to hold the type returned */
+ * type should be set by the caller to specify the type to read, and
+ * on return is set to the type read (useful when type = _ANY) */
 int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 
 	unsigned char* ident;

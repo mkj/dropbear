@@ -50,7 +50,7 @@ static const packettype svr_packettypes[] = {
 	{SSH_MSG_SERVICE_REQUEST, recv_msg_service_request}, // server
 	{SSH_MSG_USERAUTH_REQUEST, recv_msg_userauth_request}, //server
 	{SSH_MSG_KEXINIT, recv_msg_kexinit},
-	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init},
+	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init}, // server
 	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
@@ -70,17 +70,12 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
-void svr_session(int sock, int childpipe, struct sockaddr* remoteaddr) {
+void svr_session(int sock, int childpipe, char* remotehost) {
 
-	fd_set readfd, writefd;
 	struct timeval timeout;
-	int val;
 	
 	crypto_init();
-	common_session_init(sock);
-
-	ses.remoteaddr = remoteaddr;
-	ses.remotehost = getaddrhostname(remoteaddr);
+	common_session_init(sock, remotehost);
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
@@ -111,75 +106,12 @@ void svr_session(int sock, int childpipe, struct sockaddr* remoteaddr) {
 	/* start off with key exchange */
 	send_msg_kexinit();
 
-	FD_ZERO(&readfd);
-	FD_ZERO(&writefd);
+	/* Run the main for loop. NULL is for the dispatcher - only the client
+	 * code makes use of it */
+	session_loop(NULL);
 
-	/* main loop, select()s for all sockets in use */
-	for(;;) {
+	/* Not reached */
 
-		timeout.tv_sec = SELECT_TIMEOUT;
-		timeout.tv_usec = 0;
-		FD_ZERO(&writefd);
-		FD_ZERO(&readfd);
-		assert(ses.payload == NULL);
-		if (ses.sock != -1) {
-			FD_SET(ses.sock, &readfd);
-			if (!isempty(&ses.writequeue)) {
-				FD_SET(ses.sock, &writefd);
-			}
-		}
-
-		/* set up for channels which require reading/writing */
-		if (ses.dataallowed) {
-			setchannelfds(&readfd, &writefd);
-		}
-		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
-
-		if (exitflag) {
-			dropbear_exit("Terminated by signal");
-		}
-		
-		if (val < 0) {
-			if (errno == EINTR) {
-				continue;
-			} else {
-				dropbear_exit("Error in select");
-			}
-		}
-
-		/* check for auth timeout, rekeying required etc */
-		checktimeouts();
-		
-		if (val == 0) {
-			/* timeout */
-			TRACE(("select timeout"));
-			continue;
-		}
-
-		/* process session socket's incoming/outgoing data */
-		if (ses.sock != -1) {
-			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
-				write_packet();
-			}
-
-			if (FD_ISSET(ses.sock, &readfd)) {
-				read_packet();
-			}
-			
-			/* Process the decrypted packet. After this, the read buffer
-			 * will be ready for a new packet */
-			if (ses.payload != NULL) {
-				process_packet();
-			}
-		}
-
-		/* process pipes etc for the channels, ses.dataallowed == 0
-		 * during rekeying ) */
-		if (ses.dataallowed) {
-			channelio(&readfd, &writefd);
-		}
-
-	} /* for(;;) */
 }
 
 /* failure exit - format must be <= 100 chars */

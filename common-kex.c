@@ -193,7 +193,6 @@ void kexinitialise() {
 	ses.kexstate.sentnewkeys = 0;
 
 	/* first_packet_follows */
-	/* TODO - currently not handled */
 	ses.kexstate.firstfollows = 0;
 
 	ses.kexstate.datatrans = 0;
@@ -402,47 +401,54 @@ void recv_msg_kexinit() {
 
 
 	if (IS_DROPBEAR_CLIENT) {
+#ifdef DROPBEAR_CLIENT
 
-	/* read the peer's choice of algos */
-		cli_read_kex();
+		/* read the peer's choice of algos */
+		read_kex_algos(cli_buf_match_algo);
 
-	/* V_C, the client's version string (CR and NL excluded) */
+		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf,
 			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
-	/* V_S, the server's version string (CR and NL excluded) */
+		/* V_S, the server's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf, 
 			ses.remoteident, strlen((char*)ses.remoteident));
 
-	/* I_C, the payload of the client's SSH_MSG_KEXINIT */
+		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
 			buf_getptr(ses.transkexinit, ses.transkexinit->len),
 			ses.transkexinit->len);
-	/* I_S, the payload of the server's SSH_MSG_KEXINIT */
+		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
 	    buf_putstring(ses.kexhashbuf,
 			buf_getptr(ses.payload, ses.payload->len),
 			ses.payload->len);
 
+		cli_ses.state = KEXINIT_RCVD;
+#endif
 	} else {
+		/* SERVER */
+#ifdef DROPBEAR_SERVER
 
-	/* read the peer's choice of algos */
-		svr_read_kex();
-	/* V_C, the client's version string (CR and NL excluded) */
+		/* read the peer's choice of algos */
+		read_kex_algos(svr_buf_match_algo);
+		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf, 
 			ses.remoteident, strlen((char*)ses.remoteident));
-	/* V_S, the server's version string (CR and NL excluded) */
+		/* V_S, the server's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf,
 			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
 
-	/* I_C, the payload of the client's SSH_MSG_KEXINIT */
+		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
 	    buf_putstring(ses.kexhashbuf,
 			buf_getptr(ses.payload, ses.payload->len),
 			ses.payload->len);
-	/* I_S, the payload of the server's SSH_MSG_KEXINIT */
+		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
 			buf_getptr(ses.transkexinit, ses.transkexinit->len),
 			ses.transkexinit->len);
+		ses.requirenext = SSH_MSG_KEXDH_INIT;
+#endif
 	}
 
 	buf_free(ses.transkexinit);
@@ -450,9 +456,233 @@ void recv_msg_kexinit() {
 	/* the rest of ses.kexhashbuf will be done after DH exchange */
 
 	ses.kexstate.recvkexinit = 1;
-	ses.requirenext = SSH_MSG_KEXDH_INIT;
 //	ses.expecting = 0; // client matt
 
 	TRACE(("leave recv_msg_kexinit"));
 }
 
+/* Initialises and generate one side of the diffie-hellman key exchange values.
+ * See the ietf-secsh-transport draft, section 6, for details */
+void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
+
+	mp_int dh_p, dh_q, dh_g;
+	unsigned char randbuf[DH_P_LEN];
+	int dh_q_len;
+
+	TRACE(("enter send_msg_kexdh_reply"));
+	
+	m_mp_init_multi(&dh_g, &dh_p, &dh_q, dh_priv, dh_pub, NULL);
+
+	/* read the prime and generator*/
+	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
+			!= MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+	
+	if (mp_set_int(&dh_g, DH_G_VAL) != MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	/* calculate q = (p-1)/2 */
+	/* dh_priv is just a temp var here */
+	if (mp_sub_d(&dh_p, 1, dh_priv) != MP_OKAY) { 
+		dropbear_exit("Diffie-Hellman error");
+	}
+	if (mp_div_2(dh_priv, &dh_q) != MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	dh_q_len = mp_unsigned_bin_size(&dh_q);
+
+	/* calculate our random value dh_y */
+	do {
+		assert((unsigned int)dh_q_len <= sizeof(randbuf));
+		genrandom(randbuf, dh_q_len);
+		if (mp_read_unsigned_bin(dh_priv, randbuf, dh_q_len) != MP_OKAY) {
+			dropbear_exit("Diffie-Hellman error");
+		}
+	} while (mp_cmp(dh_priv, &dh_q) == MP_GT || mp_cmp_d(dh_priv, 0) != MP_GT);
+
+	/* f = g^y mod p */
+	if (mp_exptmod(&dh_g, dh_priv, &dh_p, dh_pub) != MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+	mp_clear_multi(&dh_g, &dh_p, &dh_q, NULL);
+}
+
+/* This function is fairly common between client/server, with some substitution
+ * of dh_e/dh_f etc. Hence these arguments:
+ * dh_pub_us is 'e' for the client, 'f' for the server. dh_pub_them is 
+ * vice-versa. dh_priv is the x/y value corresponding to dh_pub_us */
+void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
+		sign_key *hostkey) {
+
+	mp_int dh_p;
+	mp_int *dh_e = NULL, *dh_f = NULL;
+	hash_state hs;
+
+	/* read the prime and generator*/
+	mp_init(&dh_p);
+	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
+			!= MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
+	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
+			|| mp_cmp_d(dh_pub_them, 0) != MP_GT) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+	
+	/* K = e^y mod p = f^x mod p */
+	ses.dh_K = (mp_int*)m_malloc(sizeof(mp_int));
+	m_mp_init(ses.dh_K);
+	if (mp_exptmod(dh_pub_them, dh_priv, &dh_p, ses.dh_K) != MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	/* clear no longer needed vars */
+	mp_clear_multi(&dh_p, NULL);
+
+	/* From here on, the code needs to work with the _same_ vars on each side,
+	 * not vice-versaing for client/server */
+	if (IS_DROPBEAR_CLIENT) {
+		dh_e = dh_pub_us;
+		dh_f = dh_pub_them;
+	} else {
+		dh_e = dh_pub_them;
+		dh_f = dh_pub_us;
+	} 
+
+	/* Create the remainder of the hash buffer, to generate the exchange hash */
+	/* K_S, the host key */
+	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
+	/* e, exchange value sent by the client */
+	buf_putmpint(ses.kexhashbuf, dh_e);
+	/* f, exchange value sent by the server */
+	buf_putmpint(ses.kexhashbuf, dh_f);
+	/* K, the shared secret */
+	buf_putmpint(ses.kexhashbuf, ses.dh_K);
+
+	/* calculate the hash H to sign */
+	sha1_init(&hs);
+	buf_setpos(ses.kexhashbuf, 0);
+	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
+			ses.kexhashbuf->len);
+	sha1_done(&hs, ses.hash);
+	buf_free(ses.kexhashbuf);
+	ses.kexhashbuf = NULL;
+	
+	/* first time around, we set the session_id to H */
+	if (ses.session_id == NULL) {
+		/* create the session_id, this never needs freeing */
+		ses.session_id = (unsigned char*)m_malloc(SHA1_HASH_SIZE);
+		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
+	}
+}
+
+/* read the other side's algo list. buf_match_algo is a callback to match
+ * algos for the client or server. */
+void read_kex_algos(
+		algo_type*(buf_match_algo)(buffer*buf, algo_type localalgos[],
+			int *goodguess)) {
+
+	algo_type * algo;
+	char * erralgo = NULL;
+
+	int goodguess = 0;
+	int allgood = 1; /* we AND this with each goodguess and see if its still
+						true after */
+
+	buf_incrpos(ses.payload, 16); /* start after the cookie */
+
+	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
+
+	/* kex_algorithms */
+	algo = buf_match_algo(ses.payload, sshkex, &goodguess);
+	allgood &= goodguess;
+	if (algo == NULL) {
+		erralgo = "kex";
+		goto error;
+	}
+	ses.newkeys->algo_kex = algo->val;
+
+	/* server_host_key_algorithms */
+	algo = buf_match_algo(ses.payload, sshhostkey, &goodguess);
+	allgood &= goodguess;
+	if (algo == NULL) {
+		erralgo = "hostkey";
+		goto error;
+	}
+	ses.newkeys->algo_hostkey = algo->val;
+
+	/* encryption_algorithms_client_to_server */
+	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
+	if (algo == NULL) {
+		erralgo = "enc c->s";
+		goto error;
+	}
+	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
+
+	/* encryption_algorithms_server_to_client */
+	algo = buf_match_algo(ses.payload, sshciphers, &goodguess);
+	if (algo == NULL) {
+		erralgo = "enc s->c";
+		goto error;
+	}
+	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
+
+	/* mac_algorithms_client_to_server */
+	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
+	if (algo == NULL) {
+		erralgo = "mac c->s";
+		goto error;
+	}
+	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
+
+	/* mac_algorithms_server_to_client */
+	algo = buf_match_algo(ses.payload, sshhashes, &goodguess);
+	if (algo == NULL) {
+		erralgo = "mac s->c";
+		goto error;
+	}
+	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
+
+	/* compression_algorithms_client_to_server */
+	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
+	if (algo == NULL) {
+		erralgo = "comp c->s";
+		goto error;
+	}
+	ses.newkeys->recv_algo_comp = algo->val;
+
+	/* compression_algorithms_server_to_client */
+	algo = buf_match_algo(ses.payload, sshcompress, &goodguess);
+	if (algo == NULL) {
+		erralgo = "comp s->c";
+		goto error;
+	}
+	ses.newkeys->trans_algo_comp = algo->val;
+
+	/* languages_client_to_server */
+	buf_eatstring(ses.payload);
+
+	/* languages_server_to_client */
+	buf_eatstring(ses.payload);
+
+	/* first_kex_packet_follows */
+	if (buf_getbyte(ses.payload)) {
+		ses.kexstate.firstfollows = 1;
+		/* if the guess wasn't good, we ignore the packet sent */
+		if (!allgood) {
+			ses.ignorenext = 1;
+		}
+	}
+
+	/* reserved for future extensions */
+	buf_getint(ses.payload);
+	return;
+
+error:
+	dropbear_exit("no matching algo %s", erralgo);
+}

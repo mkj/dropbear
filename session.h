@@ -26,6 +26,7 @@
 #define _SESSION_H_
 
 #include "includes.h"
+#include "options.h"
 #include "buffer.h"
 #include "signkey.h"
 #include "kex.h"
@@ -38,7 +39,8 @@
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
-void common_session_init(int sock);
+void common_session_init(int sock, char* remotehost);
+void session_loop(void(*loophandler)());
 void common_session_cleanup();
 void checktimeouts();
 void session_identification();
@@ -46,10 +48,14 @@ void session_identification();
 extern void(*session_remoteclosed)();
 
 /* Server */
-void svr_session(int sock, int childpipe, struct sockaddr *remoteaddr);
+void svr_session(int sock, int childpipe, char *remotehost);
 void svr_dropbear_exit(int exitcode, const char* format, va_list param);
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
+/* Client */
+void cli_session(int sock, char *remotehost);
+void cli_dropbear_exit(int exitcode, const char* format, va_list param);
+void cli_dropbear_log(int priority, const char* format, va_list param);
 
 struct key_context {
 
@@ -85,8 +91,8 @@ struct sshsession {
 
 	int sock;
 
-	struct sockaddr *remoteaddr;
 	unsigned char *remotehost; /* the peer hostname */
+
 	unsigned char *remoteident;
 
 	int maxfd; /* the maximum file descriptor to check with select() */
@@ -166,11 +172,20 @@ struct serversession {
 
 };
 
+typedef enum {
+	NOTHING,
+	KEXINIT_RCVD,
+	KEXDH_INIT_SENT,
+	KEXDH_REPLY_RCVD,
 
+} cli_state;
 
 struct clientsession {
 
+	mp_int *dh_e, *dh_x; /* Used during KEX */
+	cli_state state; /* Used to progress the KEX/auth/channelsession etc */
 	int something; /* XXX */
+	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
 };
 
@@ -182,7 +197,7 @@ extern struct serversession svr_ses;
 #endif /* DROPBEAR_SERVER */
 
 #ifdef DROPBEAR_CLIENT
-extern struct serversession cli_ses;
+extern struct clientsession cli_ses;
 #endif /* DROPBEAR_CLIENT */
 
 #endif /* _SESSION_H_ */
