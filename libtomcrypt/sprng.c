@@ -1,3 +1,14 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
+
 /* A secure PRNG using the RNG functions.  Basically this is a
  * wrapper that allows you to use a secure RNG as a PRNG
  * in the various other functions.

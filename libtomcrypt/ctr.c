@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 #include "mycrypt.h"
 
 #ifdef CTR
@@ -25,6 +35,7 @@ int ctr_start(int cipher, const unsigned char *count, const unsigned char *key, 
    ctr->blocklen = cipher_descriptor[cipher].block_length;
    ctr->cipher   = cipher;
    ctr->padlen   = 0;
+   ctr->mode     = 0;
    for (x = 0; x < ctr->blocklen; x++) {
        ctr->ctr[x] = count[x];
    }
@@ -54,10 +65,21 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
       /* is the pad empty? */
       if (ctr->padlen == ctr->blocklen) {
          /* increment counter */
-         for (x = 0; x < ctr->blocklen; x++) {
-            ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
-            if (ctr->ctr[x] != (unsigned char)0) {
-               break;
+         if (ctr->mode == 0) {
+            /* little-endian */
+            for (x = 0; x < ctr->blocklen; x++) {
+               ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
+               if (ctr->ctr[x] != (unsigned char)0) {
+                  break;
+               }
+            }
+         } else {
+            /* big-endian */
+            for (x = ctr->blocklen-1; x >= 0; x--) {
+               ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
+               if (ctr->ctr[x] != (unsigned char)0) {
+                  break;
+               }
             }
          }
 

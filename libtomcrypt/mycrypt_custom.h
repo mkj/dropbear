@@ -22,7 +22,6 @@
 #define RC5
 #define RC6
 #define SAFERP
-#define SAFER
 #define RIJNDAEL
 #define XTEA
 #define TWOFISH
@@ -36,6 +35,7 @@
 #define ECB
 #define CBC
 #define CTR
+#define WHIRLPOOL
 #define SHA512
 #define SHA384
 #define SHA256
@@ -49,6 +49,9 @@
 #define RIPEMD160
 #define HMAC
 #define OMAC
+#define PMAC
+#define EAX_MODE
+#define OCB_MODE
 #define BASE64
 #define YARROW
 #define SPRNG

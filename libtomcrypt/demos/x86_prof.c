@@ -52,9 +52,9 @@ void tally_results(int type)
 static ulong64 rdtsc (void)
    {
    #if defined __GNUC__
-      #ifdef i386
+      #ifdef __i386__
          ulong64 a;
-         asm volatile("rdtsc ":"=A" (a));
+         __asm__ __volatile__ ("rdtsc ":"=A" (a));
          return a;
       #else /* gcc-IA64 version */
          unsigned long result;
@@ -189,6 +189,9 @@ void reg_algs(void)
 #endif
 #ifdef RIPEMD160
   register_hash (&rmd160_desc);
+#endif
+#ifdef WHIRLPOOL
+  register_hash (&whirlpool_desc);
 #endif
 
 register_prng(&yarrow_desc);

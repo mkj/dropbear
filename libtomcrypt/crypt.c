@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 #include "mycrypt.h"
 #include <signal.h>
 
@@ -109,13 +119,8 @@ struct _prng_descriptor prng_descriptor[TAB_SIZE] = {
 #if (ARGTYPE == 0)
 void crypt_argchk(char *v, char *s, int d)
 {
-#ifdef SONY_PS2
- printf("_ARGCHK '%s' failure on line %d of file %s\n",
-         v, d, s);
-#else
  fprintf(stderr, "_ARGCHK '%s' failure on line %d of file %s\n",
          v, d, s);
-#endif
  (void)raise(SIGABRT);
 }
 #endif
@@ -189,13 +194,40 @@ int find_cipher_any(const char *name, int blocklen, int keylen)
    x = find_cipher(name);
    if (x != -1) return x;
 
-   for (x = 0; cipher_descriptor[x].name != NULL && x < TAB_SIZE; x++) {
+   for (x = 0; x < TAB_SIZE; x++) {
+       if (cipher_descriptor[x].name == NULL) {
+          continue;
+       }
        if (blocklen <= (int)cipher_descriptor[x].block_length && keylen <= (int)cipher_descriptor[x].max_key_length) {
           return x;
        }
    }
    return -1;
 }
+
+/* return first hash with at least [amount over] digestlen bytes of output */
+int find_hash_any(const char *name, int digestlen)
+{
+   int x, y, z;
+   _ARGCHK(name != NULL);
+
+   x = find_hash(name);
+   if (x != -1) return x;
+
+   y = MAXBLOCKSIZE+1;
+   z = -1;
+   for (x = 0; x < TAB_SIZE; x++) {
+       if (hash_descriptor[x].name == NULL) {
+          continue;
+       }
+       if ((int)hash_descriptor[x].hashsize >= digestlen && (int)hash_descriptor[x].hashsize < y) {
+          z = x;
+          y = hash_descriptor[x].hashsize;
+       }
+   }
+   return z;
+}
+
 
 int register_cipher(const struct _cipher_descriptor *cipher)
 {
@@ -494,6 +526,9 @@ const char *crypt_build_settings =
 #if defined(MECC)
     "   ECC\n"
 #endif
+#if defined(MDSA)
+    "   DSA\n"
+#endif
 #if defined(KR)
     "   KR\n"
 #endif
@@ -527,6 +562,18 @@ const char *crypt_build_settings =
 #endif
 #if defined(HMAC)
     " HMAC "
+#endif
+#if defined(OMAC)
+    " OMAC "
+#endif
+#if defined(PMAC)
+    " PMAC "
+#endif
+#if defined(EAX_MODE)
+    " EAX_MODE "
+#endif
+#if defined(OCB_MODE)
+    " OCB_MODE "
 #endif
 #if defined(TRY_UNRANDOM_FIRST)
     " TRY_UNRANDOM_FIRST "

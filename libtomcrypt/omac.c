@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 /* OMAC1 Support by Tom St Denis (for 64 and 128 bit block ciphers only) */
 #include "mycrypt.h"
 
@@ -15,16 +25,6 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
       return err;
    }
 
-   if ((err = cipher_descriptor[cipher].setup(key, keylen, 0, &omac->key)) != CRYPT_OK) {
-      return err;
-   }
-
-   /* ok now we need Lu and Lu^2 [calc one from the other] */
-
-   /* first calc L which is Ek(0) */
-   zeromem(omac->Lu[0], cipher_descriptor[cipher].block_length);
-   cipher_descriptor[cipher].ecb_encrypt(omac->Lu[0], omac->Lu[0], &omac->key);
-
    /* now setup the system */
    switch (cipher_descriptor[cipher].block_length) {
        case 8:  mask = 0x1B;
@@ -35,6 +35,16 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
                 break;
        default: return CRYPT_INVALID_ARG;
    }
+
+   if ((err = cipher_descriptor[cipher].setup(key, keylen, 0, &omac->key)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* ok now we need Lu and Lu^2 [calc one from the other] */
+
+   /* first calc L which is Ek(0) */
+   zeromem(omac->Lu[0], cipher_descriptor[cipher].block_length);
+   cipher_descriptor[cipher].ecb_encrypt(omac->Lu[0], omac->Lu[0], &omac->key);
 
    /* now do the mults, whoopy! */
    for (x = 0; x < 2; x++) {
@@ -57,7 +67,7 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
    omac->cipher_idx = cipher;
    omac->buflen     = 0;
    omac->blklen     = len;
-   zeromem(omac->prev, sizeof(omac->prev));
+   zeromem(omac->prev,  sizeof(omac->prev));
    zeromem(omac->block, sizeof(omac->block));
 
    return CRYPT_OK;
@@ -155,6 +165,11 @@ int omac_memory(int cipher, const unsigned char *key, unsigned long keylen,
    int err;
    omac_state omac;
 
+   _ARGCHK(key != NULL);
+   _ARGCHK(msg != NULL);
+   _ARGCHK(out != NULL);
+   _ARGCHK(outlen != NULL);
+
    if ((err = omac_init(&omac, cipher, key, keylen)) != CRYPT_OK) {
       return err;
    }
@@ -164,6 +179,11 @@ int omac_memory(int cipher, const unsigned char *key, unsigned long keylen,
    if ((err = omac_done(&omac, out, outlen)) != CRYPT_OK) {
       return err;
    }
+
+#ifdef CLEAN_STACK
+   zeromem(&omac, sizeof(omac));
+#endif
+
    return CRYPT_OK;
 }
 
@@ -177,6 +197,13 @@ int omac_file(int cipher, const unsigned char *key, unsigned long keylen,
    omac_state omac;
    FILE *in;
    unsigned char buf[512];
+
+
+   _ARGCHK(key      != NULL);
+   _ARGCHK(filename != NULL);
+   _ARGCHK(out      != NULL);
+   _ARGCHK(outlen   != NULL);
+
 
    in = fopen(filename, "rb");
    if (in == NULL) {
@@ -200,6 +227,11 @@ int omac_file(int cipher, const unsigned char *key, unsigned long keylen,
    if ((err = omac_done(&omac, out, outlen)) != CRYPT_OK) {
       return err;
    }
+
+#ifdef CLEAN_STACK
+   zeromem(buf, sizeof(buf));
+#endif
+
    return CRYPT_OK;
 #endif
 }
@@ -209,17 +241,54 @@ int omac_test(void)
 #if !defined(LTC_TEST)
     return CRYPT_NOP;
 #else
-    static const unsigned char key[] = { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
-                                         0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c };
-    static const unsigned char pt[]  = { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
-                                         0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
-                                         0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 
-                                         0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
-                                         0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11 };
-    static const unsigned char tag[] = { 0xdf, 0xa6, 0x67, 0x47, 0xde, 0x9a, 0xe6, 0x30,
-                                         0x30, 0xca, 0x32, 0x61, 0x14, 0x97, 0xc8, 0x27 };
+    static const struct { 
+        int keylen, msglen;
+        unsigned char key[16], msg[64], tag[16];
+    } tests[] = {
+    { 16, 0,
+      { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c },
+      { 0x00 },
+      { 0xbb, 0x1d, 0x69, 0x29, 0xe9, 0x59, 0x37, 0x28,
+        0x7f, 0xa3, 0x7d, 0x12, 0x9b, 0x75, 0x67, 0x46 }
+    },
+    { 16, 16, 
+      { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c },
+      { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+        0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a },
+      { 0x07, 0x0a, 0x16, 0xb4, 0x6b, 0x4d, 0x41, 0x44, 
+        0xf7, 0x9b, 0xdd, 0x9d, 0xd0, 0x4a, 0x28, 0x7c }
+    },
+    { 16, 40, 
+      { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c },
+      { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+        0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+        0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 
+        0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+        0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11 },
+      { 0xdf, 0xa6, 0x67, 0x47, 0xde, 0x9a, 0xe6, 0x30,
+        0x30, 0xca, 0x32, 0x61, 0x14, 0x97, 0xc8, 0x27 }
+    },
+    { 16, 64, 
+      { 0x2b, 0x7e, 0x15, 0x16, 0x28, 0xae, 0xd2, 0xa6, 
+        0xab, 0xf7, 0x15, 0x88, 0x09, 0xcf, 0x4f, 0x3c },
+      { 0x6b, 0xc1, 0xbe, 0xe2, 0x2e, 0x40, 0x9f, 0x96,
+        0xe9, 0x3d, 0x7e, 0x11, 0x73, 0x93, 0x17, 0x2a,
+        0xae, 0x2d, 0x8a, 0x57, 0x1e, 0x03, 0xac, 0x9c, 
+        0x9e, 0xb7, 0x6f, 0xac, 0x45, 0xaf, 0x8e, 0x51,
+        0x30, 0xc8, 0x1c, 0x46, 0xa3, 0x5c, 0xe4, 0x11,
+        0xe5, 0xfb, 0xc1, 0x19, 0x1a, 0x0a, 0x52, 0xef,
+        0xf6, 0x9f, 0x24, 0x45, 0xdf, 0x4f, 0x9b, 0x17,
+        0xad, 0x2b, 0x41, 0x7b, 0xe6, 0x6c, 0x37, 0x10 },
+      { 0x51, 0xf0, 0xbe, 0xbf, 0x7e, 0x3b, 0x9d, 0x92, 
+        0xfc, 0x49, 0x74, 0x17, 0x79, 0x36, 0x3c, 0xfe }
+    }
+
+    };
     unsigned char out[16];
-    int err, idx;
+    int x, y, err, idx;
     unsigned long len;
 
 
@@ -229,13 +298,18 @@ int omac_test(void)
           return CRYPT_NOP;
        }
     }
-    len = sizeof(out);
-    if ((err = omac_memory(idx, key, 16, pt, 40, out, &len)) != CRYPT_OK) {
-       return err;
-    }
 
-    if (memcmp(out, tag, 16) != 0) {
-       return CRYPT_FAIL_TESTVECTOR;
+    for (x = 0; x < (int)(sizeof(tests)/sizeof(tests[0])); x++) {
+       len = sizeof(out); 
+       if ((err = omac_memory(idx, tests[x].key, tests[x].keylen, tests[x].msg, tests[x].msglen, out, &len)) != CRYPT_OK) {
+          return err;
+       }
+
+       if (memcmp(out, tests[x].tag, 16) != 0) {
+          printf("\n\nTag: ");
+          for (y = 0; y < 16; y++) printf("%02x", out[y]); printf("\n\n");
+          return CRYPT_FAIL_TESTVECTOR;
+       }
     }
     return CRYPT_OK;
 #endif

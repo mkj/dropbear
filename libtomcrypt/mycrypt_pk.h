@@ -3,6 +3,48 @@
 
 #include "tommath.h"
 
+/* in/out macros */
+#define OUTPUT_BIGNUM(num, out, y, z)                                                             \
+{                                                                                                 \
+      if ((y + 4) > *outlen) { return CRYPT_BUFFER_OVERFLOW; }                                    \
+      z = (unsigned long)mp_unsigned_bin_size(num);                                               \
+      STORE32L(z, out+y);                                                                         \
+      y += 4;                                                                                     \
+      if ((y + z) > *outlen) { return CRYPT_BUFFER_OVERFLOW; }                                    \
+      if ((err = mp_to_unsigned_bin(num, out+y)) != MP_OKAY) { return mpi_to_ltc_error(err); }    \
+      y += z;                                                                                     \
+}
+
+
+#define INPUT_BIGNUM(num, in, x, y)                              \
+{                                                                \
+     /* load value */                                            \
+     if ((y + 4) > inlen) {                                      \
+        err = CRYPT_INVALID_PACKET;                              \
+        goto error;                                              \
+     }                                                           \
+     LOAD32L(x, in+y);                                           \
+     y += 4;                                                     \
+                                                                 \
+     /* sanity check... */                                       \
+     if ((x+y) > inlen) {                                        \
+        err = CRYPT_INVALID_PACKET;                              \
+        goto error;                                              \
+     }                                                           \
+                                                                 \
+     /* load it */                                               \
+     if ((err = mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x)) != MP_OKAY) {\
+        err = mpi_to_ltc_error(err);                             \
+        goto error;                                              \
+     }                                                           \
+     y += x;                                                     \
+     if ((err = mp_shrink(num)) != MP_OKAY) {                    \
+        err = mpi_to_ltc_error(err);                             \
+        goto error;                                              \
+     }                                                           \
+}
+
+
 extern int is_prime(mp_int *, int *);
 extern int rand_prime(mp_int *N, long len, prng_state *prng, int wprng);
 extern mp_err mp_init_multi(mp_int* mp, ...);

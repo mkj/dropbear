@@ -509,7 +509,7 @@ pad_test (void)
 void
 rsa_test (void)
 {
-  unsigned char in[4096], out[4096];
+  unsigned char in[520], out[520];
   unsigned long x, y, z, limit;
   int     stat;
   rsa_key key;
@@ -1375,6 +1375,9 @@ register_all_algs (void)
 #ifdef RIPEMD160
   register_hash (&rmd160_desc);
 #endif
+#ifdef WHIRLPOOL
+  register_hash (&whirlpool_desc);
+#endif
 
 #ifdef YARROW
   register_prng (&yarrow_desc);
@@ -1837,9 +1840,24 @@ main (void)
   if (hmac_test() != CRYPT_OK) exit(EXIT_FAILURE);
 #endif
 
-#ifdef HMAC
+#ifdef OMAC
   printf ("OMAC: %s\n", omac_test () == CRYPT_OK ? "passed" : "failed");
   if (omac_test() != CRYPT_OK) exit(EXIT_FAILURE);
+#endif
+
+#ifdef PMAC
+  printf ("PMAC: %s\n", pmac_test () == CRYPT_OK ? "passed" : "failed");
+  if (pmac_test() != CRYPT_OK) exit(EXIT_FAILURE);
+#endif
+
+#ifdef EAX_MODE
+  printf ("EAX : %s\n", eax_test () == CRYPT_OK ? "passed" : "failed");
+  if (eax_test() != CRYPT_OK) exit(EXIT_FAILURE);
+#endif
+
+#ifdef OCB_MODE
+  printf ("OCB : %s\n", ocb_test () == CRYPT_OK ? "passed" : "failed");
+  if (ocb_test() != CRYPT_OK) exit(EXIT_FAILURE);
 #endif
 
   store_tests ();

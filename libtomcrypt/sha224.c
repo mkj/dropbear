@@ -1,3 +1,14 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
+
 /* SHA-224 new NIST standard based off of SHA-256 truncated to 224 bits */
 const struct _hash_descriptor sha224_desc =
 {
@@ -58,7 +69,7 @@ int  sha224_test(void)
     },
     { "abcdbcdecdefdefgefghfghighijhijkijkljklmklmnlmnomnopnopq",
       { 0x75, 0x38, 0x8b, 0x16, 0x51, 0x27, 0x76,
-	0xcc, 0x5d, 0xba, 0x5d, 0xa1, 0xfd, 0x89,
+        0xcc, 0x5d, 0xba, 0x5d, 0xa1, 0xfd, 0x89,
         0x01, 0x50, 0xb0, 0xc6, 0x45, 0x5c, 0xb4,
         0xf5, 0x8b, 0x19, 0x52, 0x52, 0x25, 0x25 }
     },

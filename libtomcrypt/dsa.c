@@ -1,8 +1,16 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 #include "mycrypt.h"
 
 #ifdef MDSA
-
-#define DRAW(x) { char __buf[1000]; mp_toradix(x, __buf, 16); printf("\n%s == %s\n", #x, __buf); }
 
 int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, dsa_key *key)
 {
@@ -10,7 +18,6 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    int err, res;
    unsigned char buf[512];
 
-   _ARGCHK(prng != NULL);
    _ARGCHK(key  != NULL);
 
    /* check prng */
@@ -80,7 +87,7 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
          err = CRYPT_ERROR_READPRNG;
          goto error2;
       }
-      if ((err = mp_read_unsigned_bin(&key->x, buf, group_size)) != MP_OKAY)              { goto error; }
+      if ((err = mp_read_unsigned_bin(&key->x, buf, group_size)) != MP_OKAY)           { goto error; }
    } while (mp_cmp_d(&key->x, 1) != MP_GT);
    if ((err = mp_exptmod(&key->g, &key->x, &key->p, &key->y)) != MP_OKAY)              { goto error; }
    
@@ -124,11 +131,10 @@ int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    unsigned long len;
 
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
-   _ARGCHK(prng != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
-   _ARGCHK(key != NULL);
+   _ARGCHK(key    != NULL);
 
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
       return err;
@@ -146,14 +152,23 @@ int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    if ((err = mp_init_multi(&k, &kinv, &r, &s, &tmp, NULL)) != MP_OKAY)               { goto error; }
 
 retry:
-   /* gen random k */
-   if (prng_descriptor[wprng].read(buf, key->qord, prng) != (unsigned long)key->qord) {
-      err = CRYPT_ERROR_READPRNG;
-      goto done;
-   }
 
-   /* read k */
-   if ((err = mp_read_unsigned_bin(&k, buf, key->qord)) != MP_OKAY)                   { goto error; }
+   do {
+      /* gen random k */
+      if (prng_descriptor[wprng].read(buf, key->qord, prng) != (unsigned long)key->qord) {
+         err = CRYPT_ERROR_READPRNG;
+         goto done;
+      }
+
+      /* read k */
+      if ((err = mp_read_unsigned_bin(&k, buf, key->qord)) != MP_OKAY)                { goto error; }
+
+      /* k > 1 ? */
+      if (mp_cmp_d(&k, 1) != MP_GT)                                                   { goto retry; }
+
+      /* test gcd */
+      if ((err = mp_gcd(&k, &key->q, &tmp)) != MP_OKAY)                               { goto error; }
+   } while (mp_cmp_d(&tmp, 1) != MP_EQ);
 
    /* now find 1/k mod q */
    if ((err = mp_invmod(&k, &key->q, &kinv)) != MP_OKAY)                              { goto error; }
@@ -187,19 +202,19 @@ retry:
    /* store length of r */
    len = mp_unsigned_bin_size(&r);
    out[y++] = (len>>8)&255;
-   out[y++] = (len & 255);
+   out[y++] = len&255;
    
    /* store r */
-   mp_to_unsigned_bin(&r, out+y);
+   if ((err = mp_to_unsigned_bin(&r, out+y)) != MP_OKAY)                              { goto error; }
    y += len;
 
    /* store length of s */
    len = mp_unsigned_bin_size(&s);
    out[y++] = (len>>8)&255;
-   out[y++] = (len & 255);
+   out[y++] = len&255;
    
    /* store s */
-   mp_to_unsigned_bin(&s, out+y);
+   if ((err = mp_to_unsigned_bin(&s, out+y)) != MP_OKAY)                              { goto error; }
    y += len;
 
    /* reset size */
@@ -224,10 +239,10 @@ int dsa_verify_hash(const unsigned char *sig, unsigned long siglen,
    unsigned long x, y;
    int err;
 
-   _ARGCHK(sig != NULL);
+   _ARGCHK(sig  != NULL);
    _ARGCHK(hash != NULL);
    _ARGCHK(stat != NULL);
-   _ARGCHK(key != NULL);
+   _ARGCHK(key  != NULL);
 
    /* default to invalid signature */
    *stat = 0;
@@ -297,35 +312,27 @@ done  : mp_clear_multi(&r, &s, &w, &v, &u1, &u2, NULL);
    return err;
 }
 
-#define OUTPUT_BIGNUM(num, buf2, y, z)         \
-{                                              \
-      z = (unsigned long)mp_unsigned_bin_size(num);  \
-      if ((y + 4 + z) > *outlen) { return CRYPT_BUFFER_OVERFLOW; } \
-      STORE32L(z, out+y);                     \
-      y += 4;                                  \
-      if (mp_to_unsigned_bin(num, out+y) != MP_OKAY) { return CRYPT_MEM; }  \
-      y += z;                                  \
-}
 
 int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key)
 {
    unsigned long y, z;
+   int err;
 
-   _ARGCHK(out != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
-   _ARGCHK(key != NULL);
+   _ARGCHK(key    != NULL);
 
+   /* can we store the static header?  */
+   if (*outlen < (PACKET_SIZE + 1 + 2)) {
+      return CRYPT_BUFFER_OVERFLOW;
+   }
+   
    if (type == PK_PRIVATE && key->type != PK_PRIVATE) {
       return CRYPT_PK_TYPE_MISMATCH;
    }
 
    if (type != PK_PUBLIC && type != PK_PRIVATE) {
       return CRYPT_INVALID_ARG;
-   }
-
-   /* can we store the static header?  */
-   if (*outlen < (PACKET_SIZE + 1 + 2)) {
-      return CRYPT_BUFFER_OVERFLOW;
    }
 
    /* store header */
@@ -352,40 +359,12 @@ int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key
    return CRYPT_OK;
 }
 
-#define INPUT_BIGNUM(num, in, x, y)                              \
-{                                                                \
-     /* load value */                                            \
-     if (y+4 > inlen) {                                          \
-        err = CRYPT_INVALID_PACKET;                              \
-        goto error;                                              \
-     }                                                           \
-     LOAD32L(x, in+y);                                           \
-     y += 4;                                                     \
-                                                                 \
-     /* sanity check... */                                       \
-     if (y+x > inlen) {                                          \
-        err = CRYPT_INVALID_PACKET;                              \
-        goto error;                                              \
-     }                                                           \
-                                                                 \
-     /* load it */                                               \
-     if (mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x) != MP_OKAY) {\
-        err = CRYPT_MEM;                                         \
-        goto error;                                              \
-     }                                                           \
-     y += x;                                                     \
-     if (mp_shrink(num) != MP_OKAY) {                            \
-        err = CRYPT_MEM;                                         \
-        goto error;                                              \
-     }                                                           \
-}
-
 int dsa_import(const unsigned char *in, unsigned long inlen, dsa_key *key)
 {
    unsigned long x, y;
    int err;
 
-   _ARGCHK(in != NULL);
+   _ARGCHK(in  != NULL);
    _ARGCHK(key != NULL);
 
    /* check length */
@@ -429,7 +408,7 @@ int dsa_verify_key(dsa_key *key, int *stat)
    mp_int tmp, tmp2;
    int res, err;
 
-   _ARGCHK(key != NULL);
+   _ARGCHK(key  != NULL);
    _ARGCHK(stat != NULL);
 
    *stat = 0;

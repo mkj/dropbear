@@ -1,3 +1,14 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
+
 /* Implementation of Twofish by Tom St Denis */
 #include "mycrypt.h"
 
@@ -329,7 +340,7 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
    unsigned char tmp[4], tmp2[4], M[8*4];
    ulong32 A, B;
 
-   _ARGCHK(key != NULL);
+   _ARGCHK(key  != NULL);
    _ARGCHK(skey != NULL);
 
    /* invalid arguments? */
@@ -448,8 +459,8 @@ void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
     ulong32 *S1, *S2, *S3, *S4;
 #endif    
 
-    _ARGCHK(pt != NULL);
-    _ARGCHK(ct != NULL);
+    _ARGCHK(pt  != NULL);
+    _ARGCHK(ct  != NULL);
     _ARGCHK(key != NULL);
     
 #if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
@@ -467,18 +478,17 @@ void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
     d ^= key->twofish.K[3];
     
     k  = key->twofish.K + 8;
-    for (r = 0; r < 16; r += 2) {
-        t1 = g_func(a, key);
+    for (r = 8; r != 0; --r) {
         t2 = g1_func(b, key);
-        c  = ROR(c ^ (t1 + t2 + k[0]), 1);
-        d  = ROL(d, 1) ^ (t2 + t2 + t1 + k[1]);
-        k += 2;
+        t1 = g_func(a, key) + t2;
+        c  = ROR(c ^ (t1 + k[0]), 1);
+        d  = ROL(d, 1) ^ (t2 + t1 + k[1]);
         
-        t1 = g_func(c, key);
         t2 = g1_func(d, key);
-        a  = ROR(a ^ (t1 + t2 + k[0]), 1);
-        b  = ROL(b, 1) ^ (t2 + t2 + t1 + k[1]);
-        k += 2;
+        t1 = g_func(c, key) + t2;
+        a  = ROR(a ^ (t1 + k[2]), 1);
+        b  = ROL(b, 1) ^ (t2 + t1 + k[3]);
+        k += 4;
    }
 
     /* output with "undo last swap" */
@@ -533,19 +543,18 @@ void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
     c = ta ^ key->twofish.K[4];
     d = tb ^ key->twofish.K[5];
 
-    k = key->twofish.K + 38;
-    for (r = 14; r >= 0; r -= 2) {
-        t1 = g_func(c, key);
+    k = key->twofish.K + 36;
+    for (r = 8; r != 0; --r) {
         t2 = g1_func(d, key);
-        a = ROL(a, 1) ^ (t1 + t2 + k[0]);
-        b = ROR(b ^ (t2 + t2 + t1 + k[1]), 1);
-        k -= 2;
+        t1 = g_func(c, key) + t2;
+        a = ROL(a, 1) ^ (t1 + k[2]);
+        b = ROR(b ^ (t2 + t1 + k[3]), 1);
 
-        t1 = g_func(a, key);
         t2 = g1_func(b, key);
-        c = ROL(c, 1) ^ (t1 + t2 + k[0]);
-        d = ROR(d ^ (t2 + t2 + t1 + k[1]), 1);
-        k -= 2;
+        t1 = g_func(a, key) + t2;
+        c = ROL(c, 1) ^ (t1 + k[0]);
+        d = ROR(d ^ (t2 +  t1 + k[1]), 1);
+        k -= 4;
     }
 
     /* pre-white */

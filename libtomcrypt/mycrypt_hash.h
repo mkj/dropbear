@@ -70,7 +70,18 @@ struct rmd160_state {
 };
 #endif
 
+#ifdef WHIRLPOOL
+struct whirlpool_state {
+    ulong64 length, state[8];
+    unsigned char buf[64];
+    ulong32 curlen;
+};
+#endif
+
 typedef union Hash_state {
+#ifdef WHIRLPOOL
+    struct whirlpool_state whirlpool;
+#endif
 #ifdef SHA512
     struct sha512_state sha512;
 #endif
@@ -110,6 +121,15 @@ extern struct _hash_descriptor {
     int (*done)(hash_state *, unsigned char *);
     int  (*test)(void);
 } hash_descriptor[];
+
+
+#ifdef WHIRLPOOL
+extern void whirlpool_init(hash_state * md);
+extern int whirlpool_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int whirlpool_done(hash_state * md, unsigned char *hash);
+extern int  whirlpool_test(void);
+extern const struct _hash_descriptor whirlpool_desc;
+#endif
 
 #ifdef SHA512
 extern void sha512_init(hash_state * md);
@@ -208,6 +228,7 @@ extern const struct _hash_descriptor rmd160_desc;
 
 extern int find_hash(const char *name);
 extern int find_hash_id(unsigned char ID);
+extern int find_hash_any(const char *name, int digestlen);
 extern int register_hash(const struct _hash_descriptor *hash);
 extern int unregister_hash(const struct _hash_descriptor *hash);
 extern int hash_is_valid(int idx);
@@ -289,5 +310,128 @@ extern int omac_memory(int cipher, const unsigned char *key, unsigned long keyle
 extern int omac_file(int cipher, const unsigned char *key, unsigned long keylen,
               const char *filename, unsigned char *out, unsigned long *outlen);
 extern int omac_test(void);
+#endif /* OMAC */
+
+#ifdef PMAC
+
+typedef struct {
+   unsigned char     Ls[32][MAXBLOCKSIZE],    /* L shifted by i bits to the left */
+                     Li[MAXBLOCKSIZE],        /* value of Li [current value, we calc from previous recall] */
+                     Lr[MAXBLOCKSIZE],        /* L * x^-1 */
+                     block[MAXBLOCKSIZE],     /* currently accumulated block */
+                     checksum[MAXBLOCKSIZE];  /* current checksum */
+
+   symmetric_key     key;                     /* scheduled key for cipher */
+   unsigned long     block_index;             /* index # for current block */
+   int               cipher_idx,              /* cipher idx */
+                     block_len,               /* length of block */
+                     buflen;                  /* number of bytes in the buffer */
+} pmac_state;
+
+extern int pmac_init(pmac_state *pmac, int cipher, const unsigned char *key, unsigned long keylen);
+extern int pmac_process(pmac_state *state, const unsigned char *buf, unsigned long len);
+extern int pmac_done(pmac_state *state, unsigned char *out, unsigned long *outlen);
+
+extern int pmac_memory(int cipher, const unsigned char *key, unsigned long keylen,
+                const unsigned char *msg, unsigned long msglen,
+                unsigned char *out, unsigned long *outlen);
+
+extern int pmac_file(int cipher, const unsigned char *key, unsigned long keylen,
+              const char *filename, unsigned char *out, unsigned long *outlen);
+
+extern int pmac_test(void);
+
+#endif /* PMAC */
+
+#ifdef EAX_MODE
+
+#if !(defined(OMAC) && defined(CTR))
+   #error EAX_MODE requires OMAC and CTR
 #endif
+
+typedef struct {
+   unsigned char N[MAXBLOCKSIZE];
+   symmetric_CTR ctr;
+   omac_state    headeromac, ctomac;
+} eax_state;
+
+extern int eax_init(eax_state *eax, int cipher, const unsigned char *key, unsigned long keylen,
+                    const unsigned char *nonce, unsigned long noncelen,
+                    const unsigned char *header, unsigned long headerlen);
+
+extern int eax_encrypt(eax_state *eax, const unsigned char *pt, unsigned char *ct, unsigned long length);
+extern int eax_decrypt(eax_state *eax, const unsigned char *ct, unsigned char *pt, unsigned long length);
+extern int eax_addheader(eax_state *eax, const unsigned char *header, unsigned long length);
+extern int eax_done(eax_state *eax, unsigned char *tag, unsigned long *taglen);
+
+extern int eax_encrypt_authenticate_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  unsigned long noncelen,
+    const unsigned char *header, unsigned long headerlen,
+    const unsigned char *pt,     unsigned long ptlen,
+          unsigned char *ct,
+          unsigned char *tag,    unsigned long *taglen);
+
+extern int eax_decrypt_verify_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  unsigned long noncelen,
+    const unsigned char *header, unsigned long headerlen,
+    const unsigned char *ct,     unsigned long ctlen,
+          unsigned char *pt,
+          unsigned char *tag,    unsigned long taglen,
+          int           *res);
+
+extern int eax_test(void);
+#endif /* EAX MODE */
+
+#ifdef OCB_MODE
+typedef struct {
+   unsigned char     L[MAXBLOCKSIZE],         /* L value */
+                     Ls[32][MAXBLOCKSIZE],    /* L shifted by i bits to the left */
+                     Li[MAXBLOCKSIZE],        /* value of Li [current value, we calc from previous recall] */
+                     Lr[MAXBLOCKSIZE],        /* L * x^-1 */
+                     R[MAXBLOCKSIZE],         /* R value */
+                     checksum[MAXBLOCKSIZE];  /* current checksum */
+
+   symmetric_key     key;                     /* scheduled key for cipher */
+   unsigned long     block_index;             /* index # for current block */
+   int               cipher,                  /* cipher idx */
+                     block_len;               /* length of block */
+} ocb_state;
+
+extern int ocb_init(ocb_state *ocb, int cipher, 
+             const unsigned char *key, unsigned long keylen, const unsigned char *nonce);
+
+extern int ocb_encrypt(ocb_state *ocb, const unsigned char *pt, unsigned char *ct);
+extern int ocb_decrypt(ocb_state *ocb, const unsigned char *ct, unsigned char *pt);
+
+extern int ocb_done_encrypt(ocb_state *ocb, 
+                     const unsigned char *pt,  unsigned long ptlen,
+                           unsigned char *ct, 
+                           unsigned char *tag, unsigned long *taglen);
+
+extern int ocb_done_decrypt(ocb_state *ocb, 
+                     const unsigned char *ct,  unsigned long ctlen,
+                           unsigned char *pt, 
+                     const unsigned char *tag, unsigned long taglen, int *res);
+
+extern int ocb_encrypt_authenticate_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  
+    const unsigned char *pt,     unsigned long ptlen,
+          unsigned char *ct,
+          unsigned char *tag,    unsigned long *taglen);
+
+extern int ocb_decrypt_verify_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  
+    const unsigned char *ct,     unsigned long ctlen,
+          unsigned char *pt,
+    const unsigned char *tag,    unsigned long taglen,
+          int           *res);
+
+extern int ocb_test(void);
+
+#endif /* OCB_MODE */
+
 

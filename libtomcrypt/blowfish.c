@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 #include "mycrypt.h"
 
 #ifdef BLOWFISH
@@ -350,7 +360,11 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    return CRYPT_OK;
 }
 
+#ifndef __GNUC__
 #define F(x) ((S1[byte(x,3)] + S2[byte(x,2)]) ^ S3[byte(x,1)]) + S4[byte(x,0)]
+#else
+#define F(x) ((key->blowfish.S[0][byte(x,3)] + key->blowfish.S[1][byte(x,2)]) ^ key->blowfish.S[2][byte(x,1)]) + key->blowfish.S[3][byte(x,0)]
+#endif
 
 #ifdef CLEAN_STACK
 static void _blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
@@ -360,16 +374,20 @@ void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
 {
    ulong32 L, R;
    int r;
+#ifndef __GNUC__
    ulong32 *S1, *S2, *S3, *S4;
+#endif
 
     _ARGCHK(pt != NULL);
     _ARGCHK(ct != NULL);
     _ARGCHK(key != NULL);
 
+#ifndef __GNUC__
     S1 = key->blowfish.S[0];
     S2 = key->blowfish.S[1];
     S3 = key->blowfish.S[2];
     S4 = key->blowfish.S[3];
+#endif
 
    /* load it */
    LOAD32H(L, &pt[0]);
@@ -408,16 +426,20 @@ void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
 {
    ulong32 L, R;
    int r;
+#ifndef __GNUC__
    ulong32 *S1, *S2, *S3, *S4;
+#endif
 
     _ARGCHK(pt != NULL);
     _ARGCHK(ct != NULL);
     _ARGCHK(key != NULL);
     
+#ifndef __GNUC__
     S1 = key->blowfish.S[0];
     S2 = key->blowfish.S[1];
     S3 = key->blowfish.S[2];
     S4 = key->blowfish.S[3];
+#endif
 
    /* load it */
    LOAD32H(R, &ct[0]);

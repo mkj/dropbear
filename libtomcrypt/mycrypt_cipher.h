@@ -173,7 +173,7 @@ typedef struct Symmetric_CBC {
 
 /* A block cipher CTR structure */
 typedef struct Symmetric_CTR {
-   int                 cipher, blocklen, padlen;
+   int                 cipher, blocklen, padlen, mode;
    unsigned char       ctr[MAXBLOCKSIZE], pad[MAXBLOCKSIZE];
    symmetric_key       key;
 } symmetric_CTR;
@@ -364,6 +364,8 @@ extern int ctr_start(int cipher, const unsigned char *IV, const unsigned char *k
 extern int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_CTR *ctr);
 extern int ctr_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_CTR *ctr);
 #endif
+
+
     
 extern int find_cipher(const char *name);
 extern int find_cipher_any(const char *name, int blocklen, int keylen);

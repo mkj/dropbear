@@ -1,3 +1,14 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
+
 /* Implementation of RIPEMD-160 based on the source by Antoon Bosselaers, ESAT-COSIC
  *
  * This source has been radically overhauled to be portable and work within
