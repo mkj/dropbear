@@ -69,6 +69,10 @@ If you disable zlib, you must explicitly disable compression for the client -
 OpenSSH is possibly buggy in this regard, it seems you need to disable it
 globally in ~/.ssh/config, not just in the host entry in that file.
 
+Note that in uClibc, login() and logout() support may be disabled even
+if the functions exist (they do nothing, you should get a compile warning).
+If this is the case, ./configure with --disable-libutil
+
 =====
 
 Public key auth:
