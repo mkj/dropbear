@@ -35,17 +35,22 @@ void m_mp_init(mp_int *mp) {
 	}
 }
 
-void m_mp_init_multi(mp_int *mp, ...) {
+/* simplified duplication of bn_mp_multi's mp_init_multi, but die fatally
+ * on error */
+void m_mp_init_multi(mp_int *mp, ...) 
+{
+    mp_int* cur_arg = mp;
+    va_list args;
 
-	va_list param;
-
-	va_start(param, mp);
-	if (mp_init_multi(param) != MP_OKAY) {
-		dropbear_exit("mem alloc error");
-	}
-	va_end(param);
+    va_start(args, mp);        /* init args to next argument from caller */
+    while (cur_arg != NULL) {
+        if (mp_init(cur_arg) != MP_OKAY) {
+			dropbear_exit("mem alloc error");
+        }
+        cur_arg = va_arg(args, mp_int*);
+    }
+    va_end(args);
 }
-
 
 /* convert an unsigned mp into an array of bytes, malloced.
  * This array must be freed after use, len contains the length of the array,

@@ -51,7 +51,7 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	key->q = (mp_int*)m_malloc(sizeof(mp_int));
 
 	m_mp_init_multi(key->e, key->n, key->d, key->p, key->q,
-			&pminus, &lcm, &qminus);
+			&pminus, &lcm, &qminus, NULL);
 
 	seedrandom();
 
@@ -105,7 +105,6 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		   the next prime above it */
 		genrandom(buf, size+1);
 		buf[0] |= 0x80; /* MSB set */
-		buf[size] |= 0x01; /* LSB for odd */
 
 		if (mp_read_unsigned_bin(prime, buf, size+1) != MP_OKAY) {
 			fprintf(stderr, "rsa generation failed\n");
