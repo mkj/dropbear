@@ -232,7 +232,7 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 
 	assert(mp != NULL);
 
-	if (SIGN(mp)) {
+	if (SIGN(mp) == MP_NEG) {
 		dropbear_exit("negative bignum");
 	}
 
