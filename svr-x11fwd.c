@@ -37,7 +37,7 @@
 #define X11BASEPORT 6000
 #define X11BINDBASE 6010
 
-static void x11accept(struct Listener* listener);
+static void x11accept(struct Listener* listener, int sock);
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 
@@ -82,7 +82,7 @@ int x11req(struct ChanSess * chansess) {
 	/* listener code will handle the socket now.
 	 * No cleanup handler needed, since listener_remove only happens
 	 * from our cleanup anyway */
-	chansess->x11listener = new_listener( fd, 0, chansess, x11accept, NULL);
+	chansess->x11listener = new_listener( &fd, 1, 0, chansess, x11accept, NULL);
 	if (chansess->x11listener == NULL) {
 		goto fail;
 	}
@@ -100,7 +100,7 @@ fail:
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-static void x11accept(struct Listener* listener) {
+static void x11accept(struct Listener* listener, int sock) {
 
 	int fd;
 	struct sockaddr_in addr;
@@ -110,7 +110,7 @@ static void x11accept(struct Listener* listener) {
 
 	len = sizeof(addr);
 
-	fd = accept(listener->sock, (struct sockaddr*)&addr, &len);
+	fd = accept(sock, (struct sockaddr*)&addr, &len);
 	if (fd < 0) {
 		return;
 	}

@@ -13,17 +13,22 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign);
 void cli_pubkeyfail() {
 
 	struct PubkeyList *keyitem;
+	struct PubkeyList **previtem;
 
 	TRACE(("enter cli_pubkeyfail"));
+	previtem = &cli_opts.pubkeys;
+
 	/* Find the key we failed with, and remove it */
 	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
-		if (keyitem->next == cli_ses.lastpubkey) {
-			keyitem->next = cli_ses.lastpubkey->next;
+		if (keyitem == cli_ses.lastpubkey) {
+			*previtem = keyitem->next;
 		}
+		previtem = &keyitem;
 	}
 
 	sign_key_free(cli_ses.lastpubkey->key); /* It won't be used again */
 	m_free(cli_ses.lastpubkey);
+
 	TRACE(("leave cli_pubkeyfail"));
 }
 
@@ -145,6 +150,7 @@ int cli_auth_pubkey() {
 		/* Send a trial request */
 		send_msg_userauth_pubkey(cli_opts.pubkeys->key,
 				cli_opts.pubkeys->type, 0);
+		cli_ses.lastpubkey = cli_opts.pubkeys;
 		TRACE(("leave cli_auth_pubkey-success"));
 		return 1;
 	} else {

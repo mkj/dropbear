@@ -6,11 +6,12 @@
 
 struct Listener {
 
-	int sock;
+	int socks[DROPBEAR_MAX_SOCKS];
+	unsigned int nsocks;
 
 	int index; /* index in the array of listeners */
 
-	void (*accepter)(struct Listener*);
+	void (*accepter)(struct Listener*, int sock);
 	void (*cleanup)(struct Listener*);
 
 	int type; /* CHANNEL_ID_X11, CHANNEL_ID_AGENT, 
@@ -25,8 +26,9 @@ void listeners_initialise();
 void handle_listeners(fd_set * readfds);
 void set_listener_fds(fd_set * readfds);
 
-struct Listener* new_listener(int sock, int type, void* typedata, 
-		void (*accepter)(struct Listener*), 
+struct Listener* new_listener(int socks[], unsigned int nsocks, 
+		int type, void* typedata, 
+		void (*accepter)(struct Listener*, int sock), 
 		void (*cleanup)(struct Listener*));
 
 struct Listener * get_listener(int type, void* typedata,

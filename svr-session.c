@@ -35,10 +35,10 @@
 #include "channel.h"
 #include "chansession.h"
 #include "atomicio.h"
-#include "tcpfwd-direct.h"
+#include "tcp-accept.h"
+#include "tcp-connect.h"
 #include "service.h"
 #include "auth.h"
-#include "tcpfwd-remote.h"
 #include "runopts.h"
 
 static void svr_remoteclosed();
@@ -65,7 +65,7 @@ static const packettype svr_packettypes[] = {
 
 static const struct ChanType *svr_chantypes[] = {
 	&svrchansess,
-	&chan_tcpdirect,
+	&svr_chan_tcpdirect,
 	NULL /* Null termination is mandatory. */
 };
 

@@ -48,6 +48,12 @@ static void printhelp() {
 #ifdef DROPBEAR_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
+#ifndef DISABLE_REMOTETCPFWD
+					"-L <listenport:remotehsot:reportport> Local port forwarding\n"
+#endif
+#ifndef DISABLE_TCPFWD_DIRECT
+					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
+#endif
 					,DROPBEAR_VERSION, cli_opts.progname);
 }
 
@@ -58,6 +64,12 @@ void cli_getopts(int argc, char ** argv) {
 	unsigned int cmdlen;
 #ifdef DROPBEAR_PUBKEY_AUTH
 	int nextiskey = 0; /* A flag if the next argument is a keyfile */
+#endif
+#ifdef DROPBEAR_CLI_LOCALTCP
+	int nextislocal = 0;
+#endif
+#ifdef DROPBEAR_CLI_REMOTETCP
+	int nextisremote = 0;
 #endif
 
 
@@ -71,6 +83,12 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 #ifdef DROPBEAR_PUBKEY_AUTH
 	cli_opts.pubkeys = NULL;
+#endif
+#ifdef DROPBEAR_CLI_LOCALTCP
+	cli_opts.localports = NULL;
+#endif
+#ifdef DROPBEAR_CLI_REMOTETCP
+	cli_opts.remoteports = NULL;
 #endif
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;

@@ -29,7 +29,7 @@
 #include "signkey.h"
 #include "runopts.h"
 
-static int listensockets(int *sock, int *maxfd);
+static int listensockets(int *sock, int sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
@@ -49,10 +49,10 @@ int main(int argc, char ** argv)
 	unsigned int i, j;
 	int val;
 	int maxsock = -1;
-	struct sockaddr remoteaddr;
+	struct sockaddr_storage remoteaddr;
 	int remoteaddrlen;
 	int listensocks[MAX_LISTEN_ADDR];
-	unsigned int listensockcount = 0;
+	int listensockcount = 0;
 	FILE * pidfile;
 
 	int childsock;
@@ -127,7 +127,10 @@ int main(int argc, char ** argv)
 	
 	/* Set up the listening sockets */
 	/* XXX XXX ports */
-	listensockcount = listensockets(listensocks, &maxsock);
+	listensockcount = listensockets(listensocks, MAX_LISTEN_ADDR, &maxsock);
+	if (listensockcount < 0) {
+		dropbear_exit("No listening ports available.");
+	}
 
 	/* incoming connection select loop */
 	for(;;) {
@@ -138,7 +141,7 @@ int main(int argc, char ** argv)
 		seltimeout.tv_usec = 0;
 		
 		/* listening sockets */
-		for (i = 0; i < listensockcount; i++) {
+		for (i = 0; i < (unsigned int)listensockcount; i++) {
 			FD_SET(listensocks[i], &fds);
 		}
 
@@ -179,12 +182,12 @@ int main(int argc, char ** argv)
 		}
 
 		/* handle each socket which has something to say */
-		for (i = 0; i < listensockcount; i++) {
+		for (i = 0; i < (unsigned int)listensockcount; i++) {
 			if (!FD_ISSET(listensocks[i], &fds)) 
 				continue;
 
 			/* child connection XXX - ip6 stuff here */
-			remoteaddrlen = sizeof(struct sockaddr_in);
+			remoteaddrlen = sizeof(remoteaddr);
 			childsock = accept(listensocks[i], &remoteaddr, &remoteaddrlen);
 
 			if (childsock < 0) {
@@ -222,7 +225,7 @@ int main(int argc, char ** argv)
 				monstartup((u_long)&_start, (u_long)&etext);
 #endif /* DEBUG_FORKGPROF */
 
-				addrstring = getaddrstring(&remoteaddr);
+				addrstring = getaddrstring(&remoteaddr, 1);
 				dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
 				m_free(addrstring);
 
@@ -231,7 +234,7 @@ int main(int argc, char ** argv)
 				}
 
 				/* make sure we close sockets */
-				for (i = 0; i < listensockcount; i++) {
+				for (i = 0; i < (unsigned int)listensockcount; i++) {
 					if (m_close(listensocks[i]) == DROPBEAR_FAILURE) {
 						dropbear_exit("Couldn't close socket");
 					}
@@ -289,59 +292,30 @@ static void sigintterm_handler(int fish) {
 }
 
 /* Set up listening sockets for all the requested ports */
-static int listensockets(int *sock, int *maxfd) {
+static int listensockets(int *sock, int sockcount, int *maxfd) {
 	
-	int listensock; /* listening fd */
-	struct sockaddr_in listen_addr;
-	struct linger linger;
 	unsigned int i;
-	int val;
+	char portstring[6];
+	char* errstring = NULL;
+	unsigned int sockpos = 0;
+	int nsock;
 
 	for (i = 0; i < svr_opts.portcount; i++) {
 
-		/* iterate through all the sockets to listen on */
-		listensock = socket(PF_INET, SOCK_STREAM, 0);
-		if (listensock < 0) {
-			dropbear_exit("Failed to create socket");
+		snprintf(portstring, sizeof(portstring), "%d", svr_opts.ports[i]);
+		nsock = dropbear_listen(NULL, portstring, &sock[sockpos], 
+				sockcount - sockpos,
+				&errstring, maxfd);
+
+		if (nsock < 0) {
+			dropbear_log(LOG_WARNING, "Failed listening on port %s: %s", 
+							portstring, errstring);
+			m_free(errstring);
+			continue;
 		}
 
-		val = 1;
-		/* set to reuse, quick timeout */
-		setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR,
-				(void*) &val, sizeof(val));
-		linger.l_onoff = 1;
-		linger.l_linger = 5;
-		setsockopt(listensock, SOL_SOCKET, SO_LINGER,
-				(void*)&linger, sizeof(linger));
+		sockpos += nsock;
 
-		/* disable nagle */
-		setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY,
-				(void*)&val, sizeof(val));
-
-		memset((void*)&listen_addr, 0x0, sizeof(listen_addr));
-		listen_addr.sin_family = AF_INET;
-		listen_addr.sin_port = htons(svr_opts.ports[i]);
-		listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-		memset(&(listen_addr.sin_zero), '\0', 8);
-
-		if (bind(listensock, (struct sockaddr *)&listen_addr,
-					sizeof(listen_addr)) < 0) {
-			dropbear_exit("Bind failed port %d", svr_opts.ports[i]);
-		}
-
-		/* listen */
-		if (listen(listensock, 20) < 0) { /* TODO set listen count */
-			dropbear_exit("Listen failed");
-		}
-
-		/* nonblock */
-		if (fcntl(listensock, F_SETFL, O_NONBLOCK) < 0) {
-			dropbear_exit("Failed to set non-blocking");
-		}
-
-		sock[i] = listensock;
-		*maxfd = MAX(listensock, *maxfd);
 	}
-
-	return svr_opts.portcount;
+	return sockpos;
 }

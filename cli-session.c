@@ -4,8 +4,8 @@
 #include "kex.h"
 #include "ssh.h"
 #include "packet.h"
-#include "tcpfwd-direct.h"
-#include "tcpfwd-remote.h"
+#include "tcp-accept.h"
+#include "tcp-connect.h"
 #include "channel.h"
 #include "random.h"
 #include "service.h"
@@ -31,7 +31,6 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_KEXDH_REPLY, recv_msg_kexdh_reply}, /* client */
 	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
 	{SSH_MSG_SERVICE_ACCEPT, recv_msg_service_accept}, /* client */
-	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
 	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
 	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},
 	{SSH_MSG_CHANNEL_EOF, recv_msg_channel_eof},

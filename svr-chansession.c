@@ -408,6 +408,8 @@ static void get_termmodes(struct ChanSess *chansess) {
 	}
 
 	len = buf_getint(ses.payload);
+	TRACE(("term mode str %d p->l %d p->p %d", 
+				len, ses.payload->len , ses.payload->pos));
 	if (len != ses.payload->len - ses.payload->pos) {
 		dropbear_exit("bad term mode string");
 	}

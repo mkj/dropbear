@@ -44,7 +44,7 @@
 
 static int send_msg_channel_open_agent(int fd);
 static int bindagent(int fd, struct ChanSess * chansess);
-static void agentaccept(struct Listener * listener);
+static void agentaccept(struct Listener * listener, int sock);
 
 /* Handles client requests to start agent forwarding, sets up listening socket.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
@@ -78,7 +78,7 @@ int agentreq(struct ChanSess * chansess) {
 	}
 
 	/* pass if off to listener */
-	chansess->agentlistener = new_listener( fd, 0, chansess, 
+	chansess->agentlistener = new_listener( &fd, 1, 0, chansess, 
 								agentaccept, NULL);
 
 	if (chansess->agentlistener == NULL) {
@@ -97,11 +97,11 @@ fail:
 /* accepts a connection on the forwarded socket and opens a new channel for it
  * back to the client */
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-static void agentaccept(struct Listener * listener) {
+static void agentaccept(struct Listener * listener, int sock) {
 
 	int fd;
 
-	fd = accept(listener->sock, NULL, NULL);
+	fd = accept(sock, NULL, NULL);
 	if (fd < 0) {
 		TRACE(("accept failed"));
 		return;

@@ -280,6 +280,9 @@
 /* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
 #define MAX_PRIVKEY_SIZE 1600
 
+#define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
+								in a few years time.... */
+
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD
 #endif

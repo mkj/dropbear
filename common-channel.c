@@ -32,8 +32,6 @@
 #include "dbutil.h"
 #include "channel.h"
 #include "ssh.h"
-#include "tcpfwd-direct.h"
-#include "tcpfwd-remote.h"
 #include "listener.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
@@ -307,13 +305,6 @@ static void send_msg_channel_close(struct Channel *channel) {
 	if (channel->type->closehandler) {
 		channel->type->closehandler(channel);
 	}
-#if 0
-	if (channel->type == CHANNEL_ID_SESSION) {
-		send_exitsignalstatus(channel);
-
-		closechansess(channel);
-	}
-#endif
 	
 	CHECKCLEARTOWRITE();
 
@@ -544,23 +535,6 @@ void recv_msg_channel_request() {
 	} else {
 		send_msg_channel_failure(channel);
 	}
-
-#if 0
-	/* handle according to channel type */
-	switch (channel->type) {
-
-		case CHANNEL_ID_SESSION:
-			TRACE(("continue recv_msg_channel_request: session request"));
-			/* XXX server */
-			/* Here we need to do things channel-specific style. Function 
-			 * pointer callbacks perhaps */
-			chansessionrequest(channel);
-			break;
-
-		default:
-			send_msg_channel_failure(channel);
-	}
-#endif
 
 	TRACE(("leave recv_msg_channel_request"));
 
@@ -796,23 +770,6 @@ void recv_msg_channel_open() {
 			goto failure;
 		}
 	}
-
-#if 0
-	/* type specific initialisation */
-	if (typeval == CHANNEL_ID_SESSION) {
-		newchansess(channel);
-#ifndef DISABLE_LOCALTCPFWD
-	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
-		if (ses.opts->nolocaltcp) {
-			errtype = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
-		} else if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
-			errtype = SSH_OPEN_CONNECT_FAILED;
-			deletechannel(channel);
-			goto failure;
-		}
-#endif
-	}
-#endif
 
 	/* success */
 	send_msg_channel_open_confirmation(channel, channel->recvwindow,
