@@ -127,7 +127,7 @@ void recv_msg_userauth_failure() {
 
 	methods = buf_getstring(ses.payload, &methlen);
 
-	partial = buf_getbyte(ses.payload);
+	partial = buf_getbool(ses.payload);
 
 	if (partial) {
 		dropbear_log(LOG_INFO, "Authentication partially succeeded, more attempts required");

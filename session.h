@@ -218,6 +218,10 @@ struct clientsession {
 	struct termios saved_tio;
 	int stdincopy;
 	int stdinflags;
+	int stdoutcopy;
+	int stdoutflags;
+	int stderrcopy;
+	int stderrflags;
 
 	int winchange; /* Set to 1 when a windowchange signal happens */
 

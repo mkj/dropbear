@@ -33,15 +33,12 @@
 /* We receive channel data - only used by the client chansession code*/
 void recv_msg_channel_extended_data() {
 
-	unsigned int chan;
 	struct Channel *channel;
 	unsigned int datatype;
 
 	TRACE(("enter recv_msg_channel_extended_data"))
 
-	chan = buf_getint(ses.payload);
-	channel = getchannel(chan);
-
+	channel = getchannel();
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}

@@ -62,7 +62,7 @@ static void cli_chansessreq(struct Channel *channel) {
 	TRACE(("enter cli_chansessreq"))
 
 	type = buf_getstring(ses.payload, NULL);
-	wantreply = buf_getbyte(ses.payload);
+	wantreply = buf_getbool(ses.payload);
 
 	if (strcmp(type, "exit-status") != 0) {
 		TRACE(("unknown request '%s'", type))

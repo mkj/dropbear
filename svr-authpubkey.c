@@ -64,7 +64,7 @@ void svr_auth_pubkey() {
 
 	/* 0 indicates user just wants to check if key can be used, 1 is an
 	 * actual attempt*/
-	testkey = (buf_getbyte(ses.payload) == 0);
+	testkey = (buf_getbool(ses.payload) == 0);
 
 	algo = buf_getstring(ses.payload, &algolen);
 	keybloblen = buf_getint(ses.payload);

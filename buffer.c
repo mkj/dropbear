@@ -160,6 +160,16 @@ unsigned char buf_getbyte(buffer* buf) {
 	return buf->data[buf->pos++];
 }
 
+/* Get a bool from the buffer and increment the pos */
+unsigned char buf_getbool(buffer* buf) {
+
+	unsigned char b;
+	b = buf_getbyte(buf);
+	if (b != 0)
+		b = 1;
+	return b;
+}
+
 /* put a byte, incrementing the length if required */
 void buf_putbyte(buffer* buf, unsigned char val) {
 
