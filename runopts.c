@@ -212,6 +212,7 @@ void freerunopts(runopts* opts) {
 
 	if (opts->hostkey) {
 		sign_key_free(opts->hostkey);
+		opts->hostkey = NULL;
 	}
 
 	m_free(opts->ports);

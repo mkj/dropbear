@@ -131,7 +131,7 @@ out:
 	}
 	if (key) {
 		sign_key_free(key);
-
+		key = NULL;
 	}
 	TRACE(("leave pubkeyauth"));
 }

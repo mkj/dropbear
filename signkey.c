@@ -186,9 +186,11 @@ void sign_key_free(sign_key *key) {
 
 #ifdef DROPBEAR_DSS
 	dss_key_free(key->dsskey);
+	key->dsskey = NULL;
 #endif
 #ifdef DROPBEAR_RSA
 	rsa_key_free(key->rsakey);
+	key->rsakey = NULL;
 #endif
 
 	m_free(key);

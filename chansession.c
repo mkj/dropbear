@@ -725,6 +725,7 @@ static void execchild(struct ChanSess *chansess) {
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
+	ses.opts->hostkey = NULL;
 
 	/* overwrite the prng state */
 	seedrandom();
