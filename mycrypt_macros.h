@@ -125,7 +125,7 @@ typedef unsigned long ulong32;
 
 #ifdef ENDIAN_BIG
 #define STORE32L(x, y)                                                                     \
-     { (y)[z0] = (unsigned char)(((x)>>24)&255); (y)[1] = (unsigned char)(((x)>>16)&255);   \
+     { (y)[0] = (unsigned char)(((x)>>24)&255); (y)[1] = (unsigned char)(((x)>>16)&255);   \
        (y)[2] = (unsigned char)(((x)>>8)&255); (y)[3] = (unsigned char)((x)&255); }
 
 #define LOAD32L(x, y)                            \
