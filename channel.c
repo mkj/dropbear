@@ -190,17 +190,6 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 
-		/* Check if we can read from the infd which would normally be written
-		 * to. This is only the case when it has closed, assuming it is a 
-		 * "write-only" fd, ie not a pty */
-		/*
-		if (channel->infd != channel->outfd &&
-				channel->infd >= 0 && FD_ISSET(channel->infd, readfd)) {
-			dropbear_log(LOG_DEBUG, "channelio closeinfd *****");
-			closeinfd(channel);
-		}
-		*/
-
 		/* write to program/pipe stdin */
 		if (channel->infd >= 0 && FD_ISSET(channel->infd, writefd)) {
 			if (channel->initconn) {
@@ -242,7 +231,6 @@ static void checkclose(struct Channel *channel) {
 		/* check for exited */
 		if (channel->type == CHANNEL_ID_SESSION) {
 			if (((struct ChanSess*)channel->typedata)->exited) {
-				dropbear_log(LOG_DEBUG, "checkclose closeinfd *****");
 				closeinfd(channel);
 			}
 		}
@@ -361,7 +349,6 @@ static void writechannel(struct Channel* channel) {
 		if (errno != EINTR) {
 
 			/* no more to write */
-			dropbear_log(LOG_DEBUG, "writechannel err closeinfd *****");
 			closeinfd(channel);
 		}
 		TRACE(("leave writechannel: len <= 0"));
@@ -375,7 +362,6 @@ static void writechannel(struct Channel* channel) {
 		if (channel->recveof) {
 			/* we're closing up */
 			closeinfd(channel);
-			dropbear_log(LOG_DEBUG, "writechannel recveof closeinfd *****");
 			return;
 			TRACE(("leave writechannel: recveof set"));
 		}
@@ -418,15 +404,6 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 					FD_SET(channel->errfd, readfd);
 			}
 		}
-
-		/* set the stdin (writing) fd to read, just so that we know when
-		 * it has closed */
-		/*
-		if (channel->infd >= 0 &&
-				channel->infd != channel->outfd) {
-			FD_SET(channel->infd, readfd);
-		}
-		*/
 
 		/* stdin */
 		if (channel->infd >= 0 &&
@@ -473,7 +450,6 @@ void recv_msg_channel_eof() {
 
 	channel->recveof = 1;
 	if (channel->writebuf->len == 0) {
-		dropbear_log(LOG_DEBUG, "recveof closeinfd *****");
 		closeinfd(channel);
 	}
 
@@ -961,11 +937,9 @@ static void closeoutfd(struct Channel * channel, int fd) {
 /* close a stdin fd */
 static void closeinfd(struct Channel * channel) {
 
-	fprintf(stderr, "@@@@ closeinfd");
 	TRACE(("enter closeinfd"));
 	closechanfd(channel, channel->infd, 1);
 	TRACE(("leave closeinfd"));
-	fprintf(stderr, "@@@@ done closeinfd");
 }
 
 /* close a fd, how is 0 for stdout/stderr, 1 for stdin */
