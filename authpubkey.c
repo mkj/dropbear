@@ -303,7 +303,7 @@ out:
 static int getauthline(buffer * line, FILE * authfile) {
 
 	int c = EOF;
-	int count = 0;
+	unsigned int count = 0;
 
 	TRACE(("enter getauthline"));
 
