@@ -32,14 +32,14 @@ dropbear: $(DROPBEAROBJS) $(HEADERS) Makefile
 	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS)
 
 dropbear-static: $(DROPBEAROBJS) $(HEADERS) Makefile 
-	$(LD) $(LDFLAGS) -o dropbear-static $(DROPBEAROBJS) $(LIBS) -static
+	$(LD) $(LDFLAGS) -o staticdropbear $(DROPBEAROBJS) $(LIBS) -static
 
 dropbearkey: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
 	$(LD) $(LDFLAGS) -o dropbearkey dropbearkey.o gendss.o genrsa.o \
 		$(OBJS) $(LIBS)
 
 dropbearkey-static: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
-	$(LD) $(LDFLAGS) -o dropbearkey-static dropbearkey.o gendss.o genrsa.o \
+	$(LD) $(LDFLAGS) -o staticdropbearkey dropbearkey.o gendss.o genrsa.o \
 		$(OBJS) $(LIBS) -static
 
 sizes: dropbear
