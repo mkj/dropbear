@@ -41,8 +41,10 @@ struct RunOpts {
 	unsigned int portcount;
 
 	/* Flags indicating whether to use ipv4 and ipv6 */
+	/* not used yet
 	int ipv4;
 	int ipv6;
+	*/
 	
 	sign_key *hostkey;
 	buffer * banner;

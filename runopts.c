@@ -54,9 +54,9 @@ static void printhelp(const char * progname) {
 #endif
 					"-p port           Listen on specified tcp port, up to %d can be specified\n"
 					"                  (default %d if none specified)\n"
-					"-4/-6             Disable listening on ipv4/ipv6 respectively\n",
+/*					"-4/-6             Disable listening on ipv4/ipv6 respectively\n"*/
 
-					DROPBEAR_VERSION,
+					,DROPBEAR_VERSION,
 					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME,
 					DROPBEAR_MAX_PORTS, DROPBEAR_PORT);
 }
@@ -125,12 +125,14 @@ runopts * getrunopts(int argc, char ** argv) {
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);
 					break;
+					/*
 				case '4':
 					opts->ipv4 = 0;
 					break;
 				case '6':
 					opts->ipv6 = 0;
 					break;
+					*/
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);
