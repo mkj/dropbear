@@ -1,7 +1,6 @@
 #include "options.h"
 #include "util.h"
 #include "libtomcrypt/mycrypt.h"
-#include "libtomcrypt/mpi.h"
 #include "buffer.h"
 
 buffer* buf_new(unsigned int size) {

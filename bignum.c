@@ -1,7 +1,6 @@
 #include "options.h"
 #include "util.h"
 #include "stdlib.h"
-#include "libtomcrypt/mpi.h"
 #include "libtomcrypt/mycrypt.h"
 
 /* wrapper for mp_init to handle errors */

@@ -3,7 +3,6 @@
 #define _BUFFER_H_
 
 #include "options.h"
-#include "libtomcrypt/mpi.h"
 
 #define MAX_STRING_LEN MAX_PACKET_LEN
 struct buf {

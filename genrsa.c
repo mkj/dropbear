@@ -11,7 +11,6 @@
 #include "rsa.h"
 #include "genrsa.h"
 
-#include "libtomcrypt/mpi.h"
 #include "libtomcrypt/mycrypt.h"
 
 #define RSA_E 65537
@@ -44,12 +43,14 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 		exit(1);
 	}
 
-	wprng = register_prng(&sprng_desc);
+	initrandom();
+
+	/* XXX this relies on initrandom for entropy etc */
+	wprng = register_prng(&yarrow_desc);
 	if (wprng == -1) {
 		fprintf(stderr, "rsa generation failed\n");
 		exit(1);
 	}
-	initrandom();
 	
 	m_mp_init(&pminus);
 	m_mp_init(&p);
@@ -98,7 +99,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 	m_mp_init(&temp_gcd);
 	buf = (unsigned char*)m_malloc(size+1);
 	do {
-#if 0
+#if 0 /* currently rand_prime way is broken, use the other */
 		/* generate a prime with libtomcrypt */
 		if (rand_prime(prime, size, NULL, wprng) != CRYPT_OK) {
 			fprintf(stderr, "rsa generation failed\n");

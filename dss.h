@@ -1,7 +1,6 @@
 #ifndef _DSS_H_
 #define _DSS_H_
 
-#include "libtomcrypt/mpi.h"
 #include "buffer.h"
 
 #ifdef DROPBEAR_DSS 

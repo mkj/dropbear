@@ -6,7 +6,6 @@
 #include "ssh.h"
 #include "random.h"
 
-#include "libtomcrypt/mpi.h"
 #include "libtomcrypt/mycrypt.h"
 
 #ifdef DROPBEAR_DSS 

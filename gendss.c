@@ -5,8 +5,6 @@
 #include <sys/types.h>
 #include <sys/stat.h>
 
-
-
 #include "options.h"
 #include "util.h"
 #include "signkey.h"
@@ -15,7 +13,6 @@
 #include "buffer.h"
 #include "gendss.h"
 #include "dss.h"
-#include "libtomcrypt/mpi.h"
 #include "libtomcrypt/mycrypt.h"
 
 #define PSIZE 128 /* 1024 bit*/

@@ -106,7 +106,6 @@ void initrandom() {
 
 void genrandom(unsigned char* buf, int len) {
 
-	int i;
 	assert(donerandinit);
 
 	/* XXX m_burn is required since yarrow_read relies on the contents of

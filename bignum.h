@@ -1,7 +1,6 @@
 #ifndef _BIGNUM_H_
 #define _BIGNUM_H_
 
-#include "libtomcrypt/mpi.h"
 #include "libtomcrypt/mycrypt.h"
 
 void m_mp_init(mp_int *mp);
