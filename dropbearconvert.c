@@ -53,8 +53,8 @@ static void printhelp(char * progname) {
 					"standard input or standard output.\n", progname);
 }
 
-#if defined(DBMULTI_CONVERT) || !defined(DROPBEAR_MULTI)
-#if defined(DBMULTI_CONVERT) && defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dropbearconvert) || !defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dropbearconvert) && defined(DROPBEAR_MULTI)
 int dropbearconvert_main(int argc, char ** argv) {
 #else 
 int main(int argc, char ** argv) {

@@ -36,8 +36,8 @@ static void sigintterm_handler(int fish);
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
-#if defined(DBMULTI_DROPBEAR) || !defined(DROPBEAR_MULTI)
-#if defined(DBMULTI_DROPBEAR) && defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dropbear) || !defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dropbear) && defined(DROPBEAR_MULTI)
 int dropbear_main(int argc, char ** argv)
 #else
 int main(int argc, char ** argv)

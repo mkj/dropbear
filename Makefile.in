@@ -10,18 +10,17 @@
 # This makefile is quite evil.
 
 ifndef PROGRAMS
-	PROGRAMS="dropbear dbclient dropbearkey dropbearmulti"
+	PROGRAMS=dropbear dbclient dropbearkey dropbearmulti
 endif
 
 LTC=libtomcrypt/libtomcrypt.a
 LTM=libtommath/libtommath.a
 
-COMMONOBJS=dbutil.o common-session.o packet.o common-algo.o buffer.o \
-		common-kex.o dss.o bignum.o \
-		signkey.o rsa.o random.o common-channel.o \
-		common-chansession.o queue.o termcodes.o  \
-		loginrec.o atomicio.o tcpfwd-direct.o compat.o \
-		tcpfwd-remote.o listener.o process-packet.o common-runopts.o
+COMMONOBJS=dbutil.o buffer.o \
+		dss.o bignum.o \
+		signkey.o rsa.o random.o \
+		queue.o \
+		atomicio.o compat.o 
 
 SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-session.o svr-service.o \
@@ -30,9 +29,12 @@ SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 CLIOBJS=cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o \
 		cli-session.o cli-service.o
 
-DROPBEAROBJS=
+CLISVROBJS=common-session.o packet.o common-algo.o common-kex.o \
+			common-channel.o common-chansession.o termcodes.o loginrec.o \
+			tcpfwd-direct.o tcpfwd-remote.o listener.o process-packet.o \
+			common-runopts.o
 
-DROPBEARKEYOBJS=dropbearkey.o gendss.o genrsa.o
+KEYOBJS=dropbearkey.o gendss.o genrsa.o
 
 CONVERTOBJS=dropbearconvert.o keyimport.o
 
@@ -45,8 +47,8 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd-direct.h compat.h \
 		tcpfwd-remote.h listener.h
 
-dropbearobjs=$(COMMONOBJS) $(SVROBJS) 
-dbclientobjs=$(COMMONOBJS) $(CLIOBJS)
+dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) 
+dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
 dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
 dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
 scpobjs=$(SCPOBJS)
@@ -57,7 +59,7 @@ bindir=${exec_prefix}/bin
 sbindir=${exec_prefix}/sbin
 
 CC=@CC@
-LD=@CC@
+LD=@LD@
 AR=@AR@
 RANLIB=@RANLIB@
 STRIP=@STRIP@
@@ -69,17 +71,15 @@ LDFLAGS=@LDFLAGS@
 EXEEXT=@EXEEXT@
 
 # whether we're building client, server, or both for the common objects.
-space:= $(empty) $(empty)
-CLISVRFLAGS=
 # evilness so we detect 'dropbear' by itself as a word
-ifneq (,$(findstring $(space)dropbear$(space), $(space)$(PROGRAMS)$(space)))
-	CLISVRFLAGS+= -DDROPBEAR_SERVER
+space:= $(empty) $(empty)
+ifneq (,$(strip $(foreach prog, $(PROGRAMS), $(findstring ZdropbearZ, Z$(prog)Z))))
+	CFLAGS+= -DDROPBEAR_SERVER
 endif
-ifneq (,$(findstring $(space)dbclient$(space), $(space)$(PROGRAMS)$(space)))
-	CLISVRFLAGS+= -DDROPBEAR_CLIENT
+ifneq (,$(strip $(foreach prog, $(PROGRAMS), $(findstring ZdbclientZ, Z$(prog)Z))))
+	CFLAGS+= -DDROPBEAR_CLIENT
 endif
 
-CFLAGS+=$(CLISVRFLAGS)
 
 # these are exported so that libtomcrypt's makefile will use them
 export CC
@@ -108,12 +108,15 @@ endif
 #%: $(HEADERS) Makefile
 # TODO
 
+all: $(TARGETS)
+
+test:
+	 @echo Z$(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))Z
 
 strip: $(TARGETS)
-	$(STRIP) $(foreach prog, $(TARGETS), $(SPREFIX)$(prog)$(EXEEXT))
+	$(STRIP) $(addsuffix $(EXEEXT), $(addprefix $(SPREFIX), $(TARGETS)))
 
-
-install: $(foreach prog, $(TARGETS), install$prog)
+install: $(addprefix install, $(TARGETS))
 
 # dropbear should go in sbin, so it needs a seperate rule
 installdropbear: dropbear
@@ -128,33 +131,39 @@ install%: $*
 	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
 	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
 	ifeq ($(MULTI), 1)
+		@echo 
 		@echo "You must manually create links for $*"
 	endif
 
 
 
-# The actual binaries
+# for some reason the rule further down doesn't like $($@objs) as a prereq.
 dropbear: $(dropbearobjs)
+dbclient: $(dbclientobjs)
+dropbearkey: $(dropbearkeyobjs)
+dropbearconvert: $(dropbearconvertobjs)
 
-dropbear dbclient dropbearkey dropbearconvert: $($($@objs)) $(HEADERS) \
-														$(LTC) $(LTM)
-	@echo $(CLISVRFLAGS)
+dropbear dbclient dropbearkey dropbearconvert: $(HEADERS)  $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $($@objs) $(LIBS)
-
 
 # scp doesn't use the libs so is special.
 scp: $(SCPOBJS)  $(HEADERS)
 	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(SCPOBJS)
 
 
-MULTIOBJS=dbmulti.o
+# multi-binary compilation.
+MULTIOBJS=
 ifeq ($(MULTI),1)
-	deftarget=multi
-	MULTIOBJS=$(foreach prog, $(PROGRAMS), $($(prog)objs))
+	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))
+	CFLAGS+=$(addprefix -DDBMULTI_, $(PROGRAMS)) -DDROPBEAR_MULTI
 endif
+
+testfoo:
+	echo $(MULTIOBJS)
 
 dropbearmulti: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(MULTIOBJS) $(LIBS)
+	@echo
 	@echo "You should now create symlinks to the programs you have included"
 	@echo "ie 'ln -s dropbearmulti dropbear'"
 
