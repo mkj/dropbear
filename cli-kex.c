@@ -164,13 +164,16 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
 	hostsfile = fopen(filename, "a+");
-	fseek(hostsfile, 0, SEEK_SET);
 	
-	/* We mightn't have been able to open it if it was read-only */
-	if (hostsfile == NULL && (errno == EACCES || errno == EROFS)) {
-			TRACE(("trying readonly: %s", strerror(errno)));
-			readonly = 1;
-			hostsfile = fopen(filename, "r");
+	if (hostsfile != NULL) {
+		fseek(hostsfile, 0, SEEK_SET);
+	} else {
+		/* We mightn't have been able to open it if it was read-only */
+		if (errno == EACCES || errno == EROFS) {
+				TRACE(("trying readonly: %s", strerror(errno)));
+				readonly = 1;
+				hostsfile = fopen(filename, "r");
+		}
 	}
 
 	if (hostsfile == NULL) {
