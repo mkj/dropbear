@@ -110,12 +110,18 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MOTD_FILENAME "/etc/motd"
 #endif
 
-/* Authentication types to enable, at least one required.
+/* Authentication Types - at least one required.
    RFC Draft requires pubkey auth, and recommends password */
+
+/* PAM auth is quite simple, and only works for PAM modules which just do a
+ * simple "Login: " "Password: " (or something like that - if your module is
+ * similar but not quite like that, edit the strings in svr-authpam.c).
+ * Basically, it's useful for systems like OS X where standard password crypts
+ * don't work, but there's and interface via a PAM module. You'll need to
+ * configure with --enable-pam as well, since it's off by default. And you
+ * should only enable either PASSWORD _or_ PAM auth, not both. */
+
 /*#define ENABLE_SVR_PASSWORD_AUTH*/
-/* Only set PAM auth if you aren't using SVR_PASSWORD_AUTH. Also, you'll need
- * to make sure PAM libraries etc are installed. To the client, PAM auth looks
- * just like password auth. */
 #define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 

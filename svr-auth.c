@@ -55,7 +55,7 @@ static void authclear() {
 #ifdef ENABLE_SVR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
-#if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
+#if defined(ENABLE_SVR_PASSWORD_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}

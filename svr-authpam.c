@@ -1,7 +1,8 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 Martin Carlsson
+ * Portions (c) 2004 Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,7 +23,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-/* Validates a user password */
+/* Validates a user password using PAM */
 
 #include "includes.h"
 #include "session.h"
@@ -51,9 +52,19 @@ pamConvFunc(int num_msg,
 	int rc = PAM_SUCCESS;
 	struct pam_response* resp = NULL;
 	struct UserDataS* userDatap = (struct UserDataS*) appdata_ptr;
+
 	const char* message = (*msg)->msg;
 
 	TRACE(("enter pamConvFunc"));
+
+	if (num_msg != 1) {
+		/* If you're getting here - Dropbear probably can't support your pam
+		 * modules. This whole file is a bit of a hack around lack of
+		 * asynchronocity in PAM anyway */
+		dropbear_log(LOG_INFO, "pamConvFunc() called with >1 messages: not supported.");
+		return PAM_CONV_ERR;
+	}
+	
 	TRACE(("msg_style is %d", (*msg)->msg_style));
 	if (message) {
 		TRACE(("message is '%s'", message));
@@ -71,11 +82,14 @@ pamConvFunc(int num_msg,
 					break;
 			}
 
-			/* XXX leak */
+			/* This looks leaky, but the PAM module-writer docs
+			 * assure us that the caller will free it... */
 			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
-			/* XXX leak */
-			resp->resp = (char*) m_strdup(userDatap->passwd);
-			resp->resp_retcode = 0;
+			memset(resp, 0, sizeof(struct pam_response));
+
+			/* Safe to just use the direct pointer (no strdup) since
+			 * it shouldn't be getting munged at all */
+			resp->resp = userDatap->passwd;
 			(*respp) = resp;
 			break;
 
@@ -90,22 +104,16 @@ pamConvFunc(int num_msg,
 				break;
 			}
 
-			/* XXX leak */
+			/* This looks leaky, but the PAM module-writer docs
+			 * assure us that the caller will free it... */
 			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
-			/* XXX leak */
-			resp->resp = (char*) m_strdup(userDatap->user);
+			memset(resp, 0, sizeof(struct pam_response));
+
+			/* Safe to just use the direct pointer (no strdup) since
+			 * it shouldn't be getting munged at all */
+			resp->resp = userDatap->user;
 			TRACE(("userDatap->user='%s'", userDatap->user));
-
-			resp->resp_retcode = 0;
 			(*respp) = resp;
-			break;
-
-		case PAM_ERROR_MSG:
-		case PAM_TEXT_INFO:
-		case PAM_RADIO_TYPE:
-		case PAM_BINARY_PROMPT:
-			TRACE(("Unhandled message type"));
-			rc = PAM_CONV_ERR;
 			break;
 
 		default:
@@ -120,7 +128,9 @@ pamConvFunc(int num_msg,
 }
 
 /* Process a password auth request, sending success or failure messages as
- * appropriate. To the client it looks like it's doing normal password auth (as opposed to keyboard-interactive or something), so the pam module has to be fairly standard (ie just "what's your username, what's your password, OK").
+ * appropriate. To the client it looks like it's doing normal password auth (as
+ * opposed to keyboard-interactive or something), so the pam module has to be
+ * fairly standard (ie just "what's your username, what's your password, OK").
  *
  * Keyboard interactive would be a lot nicer, but since PAM is synchronous, it
  * gets very messy trying to send the interactive challenges, and read the
