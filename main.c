@@ -285,7 +285,7 @@ static void listensocket(int *sock, uint16_t port) {
 	/* bind all ip4 addresses */
 	listen_addr.sin_family = AF_INET;
 	listen_addr.sin_port = htons(port);
-	listen_addr.sin_addr.s_addr = INADDR_ANY;
+	listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
 	memset(&(listen_addr.sin_zero), '\0', 8); /* XXX neccesary? */
 
 	if (bind(listensock, (struct sockaddr *)&listen_addr, 
