@@ -15,7 +15,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/*RCSID("$OpenBSD: sshpty.c,v 1.7 2002/06/24 17:57:20 deraadt Exp $");*/
+/*RCSID("OpenBSD: sshpty.c,v 1.7 2002/06/24 17:57:20 deraadt Exp ");*/
 
 #include "includes.h"
 #include "dbutil.h"

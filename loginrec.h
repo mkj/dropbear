@@ -31,7 +31,7 @@
 
 #include "includes.h"
 
-/* RCSID("$Id: loginrec.h,v 1.2 2004/05/04 10:17:43 matt Exp $"); */
+/* RCSID("Id: loginrec.h,v 1.2 2004/05/04 10:17:43 matt Exp "); */
 
 /* The following #defines are from OpenSSH's defines.h, required for loginrec */
 

@@ -22,7 +22,7 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/*RCSID("$OpenBSD: misc.c,v 1.22 2003/09/18 08:49:45 markus Exp $");*/
+/*RCSID("OpenBSD: misc.c,v 1.22 2003/09/18 08:49:45 markus Exp ");*/
 
 /* For xmalloc, xfree etc:
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -38,7 +38,7 @@
  * called by a name other than "ssh" or "Secure Shell".
  */
 
-/*RCSID("$OpenBSD: xmalloc.c,v 1.16 2001/07/23 18:21:46 stevesk Exp $");*/
+/*RCSID("OpenBSD: xmalloc.c,v 1.16 2001/07/23 18:21:46 stevesk Exp ");*/
 
 #include "includes.h"
 #include "scpmisc.h"

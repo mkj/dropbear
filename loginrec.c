@@ -150,7 +150,6 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.2 2004/05/04 10:17:43 matt Exp $");*/
 
 #include "includes.h"
 #include "loginrec.h"
