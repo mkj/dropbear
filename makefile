@@ -158,6 +158,7 @@ library: $(LIBNAME)
 
 $(LIBNAME): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
+	$(RANLIB) $(LIBNAME)
 
 #This rule makes the test program included with libtomcrypt
 test: library $(TESTOBJECTS)
