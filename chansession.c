@@ -168,8 +168,6 @@ void newchansess(struct Channel *channel) {
 	chansess->cmd = NULL;
 	chansess->pid = 0;
 
-	chansess->errfd = -1;
-
 	/* pty details */
 	chansess->master = -1;
 	chansess->slave = -1;
@@ -545,10 +543,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		close(errfds[FDOUT]);
 		channel->infd = infds[FDOUT];
 		channel->outfd = outfds[FDIN];
-		chansess->errfd = errfds[FDIN];
+		channel->errfd = errfds[FDIN];
 		ses.maxfd = MAX(ses.maxfd, channel->infd);
 		ses.maxfd = MAX(ses.maxfd, channel->outfd);
-		ses.maxfd = MAX(ses.maxfd, chansess->errfd);
+		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
 		if (fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) {
 			dropbear_exit("Couldn't set nonblocking");
@@ -556,7 +554,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if (fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) {
 			dropbear_exit("Couldn't set nonblocking");
 		}
-		if (fcntl(chansess->errfd, F_SETFL, O_NONBLOCK) < 0) {
+		if (fcntl(channel->errfd, F_SETFL, O_NONBLOCK) < 0) {
 			dropbear_exit("Couldn't set nonblocking");
 		}
 	}

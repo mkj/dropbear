@@ -102,6 +102,7 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 	newchan->typedata = NULL;
 	newchan->infd = -1;
 	newchan->outfd = -1;
+	newchan->errfd = -1;
 
 	newchan->writebuf = buf_new(RECV_MAXWINDOW);
 	newchan->recvwindow = RECV_MAXWINDOW;
@@ -141,12 +142,9 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 			send_msg_channel_data(channel, 0, 0);
 		}
 		/* read from program stderr for interactive sessions */
-		if (channel->type == CHANNEL_ID_SESSION && channel->erreof == 0) {
-			int errfd = ((struct ChanSess *)channel->typedata)->errfd;
-			if (errfd != -1 && FD_ISSET(errfd, readfd)) {
+		if (channel->errfd != -1 && channel->erreof == 0 &&
+				FD_ISSET(channel->errfd, readfd)) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
-		
-			}
 		}
 		/* write to program stdin */
 		if (channel->infd != -1 && channel->recveof == 0 &&
@@ -235,7 +233,8 @@ static void writechannel(struct Channel* channel) {
 			channel->recveof = 1;
 
 			/* if everything's closed the close it all up */
-			if (channel->transeof && channel->erreof) {
+			if (channel->transeof && 
+					(channel->erreof || channel->errfd == -1)) {
 				send_msg_channel_close(channel);
 			}
 		}
@@ -277,12 +276,8 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 				FD_SET(channel->outfd, readfd);
 			}
 			/* stderr for interactive sessions */
-			if (channel->type == CHANNEL_ID_SESSION && channel->erreof == 0) {
-				int errfd = 
-					((struct ChanSess *)channel->typedata)->errfd;
-				if (errfd != -1) {
-					FD_SET(errfd, readfd);
-				}
+			if (channel->errfd != -1 && channel->erreof == 0) {
+					FD_SET(channel->errfd, readfd);
 			}
 		}
 		/* stdin */
@@ -311,7 +306,8 @@ void recv_msg_channel_eof() {
 
 	channel->recveof = 1;
 
-	if (channel->transeof && channel->erreof && !channel->sentclosed) {
+	if (channel->transeof && (channel->erreof || channel->errfd == -1)
+			&& !channel->sentclosed) {
 		send_msg_channel_close(channel);
 	}
 
@@ -426,7 +422,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 			return;
 		}
 		assert(exttype == SSH_EXTENDED_DATA_STDERR);
-		fd = ((struct ChanSess*)channel->typedata)->errfd;
+		fd = channel->errfd;
 	} else {
 		if (channel->transeof) {
 			TRACE(("leave send_msg_channel_data: transeof already set"));
@@ -459,7 +455,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 				channel->transeof = 1;
 			}
 			
-			if (channel->erreof && channel->transeof) {
+			if ((channel->erreof || channel->errfd == -1)
+					&& channel->transeof) {
 				send_msg_channel_eof(channel);
 			}
 		} else {

@@ -32,6 +32,10 @@ struct Channel {
 	void* typedata; /* a pointer to type specific data */
 	int infd; /* stdin for the program, we write to this */
 	int outfd; /* stdout for the program, we read from this */
+	int errfd; /* stdout for a program. This doesn't really fit here,
+				  but makes the code a lot tidyer without being too bad. This
+				  is -1 for channels which don't requre it. Currently only
+				  a 'session' without a pty will use it */
 	buffer *writebuf; /* data for the program */
 
 	int sentclosed;

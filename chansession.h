@@ -9,8 +9,6 @@ struct ChanSess {
 	unsigned char * cmd; /* command to exec */
 	pid_t pid; /* child process pid */
 
-	int errfd; /* stderr only exists for sessions */
-
 	/* pty details */
 	int master; /* the master terminal fd*/
 	int slave;
