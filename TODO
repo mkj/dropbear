@@ -6,6 +6,8 @@ Things which need doing:
 - kexfollows
 - check PRNG is good
 - improved checking in DSS/RSA routines for valid sized keys etc
+- check that there aren't timing issues with valid/invalid user authentication
+  feedback.
 
 Features to add:
 
