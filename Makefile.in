@@ -18,6 +18,11 @@ HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 
 ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 
+prefix=@prefix@
+exec_prefix=${prefix}
+bindir=${exec_prefix}/bin
+sbindir=${exec_prefix}/sbin
+
 CC=@CC@
 LD=@CC@
 CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
@@ -29,6 +34,10 @@ export CC
 export CFLAGS
 
 all: dropbear dropbearkey
+
+install: all
+	install -o root -g root dropbear $(sbindir)
+	install -o root -g root dropbearkey $(bindir)
 
 static: dropbear-static dropbearkey-static
 
