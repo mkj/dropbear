@@ -62,6 +62,10 @@
 #include <utmpx.h>
 #endif
 
+#ifdef HAVE_LASTLOG_H
+#include <lastlog.h>
+#endif
+
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif

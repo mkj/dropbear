@@ -26,6 +26,16 @@ case "$host" in
 	no_ptmx_check=1
 	;;
 *-*-solaris*)
+	conf_lastlog_location="/var/adm/lastlog"
+	AC_MSG_CHECKING(for obsolete utmp and wtmp in solaris2.x)
+	sol2ver=`echo "$host"| sed -e 's/.*[[0-9]]\.//'`
+	if test "$sol2ver" -ge 8; then
+		AC_MSG_RESULT(yes)
+		AC_DEFINE(DISABLE_UTMP,,Disable utmp)
+		AC_DEFINE(DISABLE_WTMP,,Disable wtmp)
+	else
+		AC_MSG_RESULT(no)
+	fi
 	;;
 
 esac
@@ -75,7 +85,7 @@ AC_ARG_ENABLE(zlib,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h sys/stropts.h utmp.h utmpx.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h sys/stropts.h utmp.h utmpx.h lastlog.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
