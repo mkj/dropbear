@@ -29,13 +29,11 @@
 #include "options.h"
 #include "buffer.h"
 
-#define CHANNEL_TYPE_SESSION "session"
-#define CHANNEL_TYPE_X11 "x11"
-
-/* channel.type values */
+/* channel->type values */
 #define CHANNEL_ID_NONE 0
 #define CHANNEL_ID_SESSION 1
 #define CHANNEL_ID_X11 2
+#define CHANNEL_ID_AGENT 3
 
 #define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
 #define SSH_OPEN_CONNECT_FAILED                 2
