@@ -190,6 +190,14 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 
+		if (channel->infd >= 0 && channel->infd != channel->outfd
+				&& FD_ISSET(channel->infd, readfd)) {
+			int ret;
+			ret = read(channel->infd, NULL, 0);
+			fprintf(stderr, "ret %d, errno %d, str %s\n",
+					ret, errno, strerror(errno));
+		}
+
 		/* write to program/pipe stdin */
 		if (channel->infd >= 0 && FD_ISSET(channel->infd, writefd)) {
 			if (channel->initconn) {
@@ -320,6 +328,9 @@ static void send_msg_channel_eof(struct Channel *channel) {
 	TRACE(("enter send_msg_channel_eof"));
 	CHECKCLEARTOWRITE();
 
+	fprintf(stderr, "senteof in %d out %d err %d\n",
+			channel->infd, channel->outfd, channel->errfd);
+
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_EOF);
 	buf_putint(ses.writepayload, channel->remotechan);
 
@@ -403,6 +414,10 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 			if (channel->errfd >= 0) {
 					FD_SET(channel->errfd, readfd);
 			}
+		}
+
+		if (channel->infd >= 0 && channel->infd != channel->outfd) {
+			FD_SET(channel->infd, readfd);
 		}
 
 		/* stdin */
