@@ -89,16 +89,31 @@ void dropbear_exit(const char* format, ...) {
 /* failure exit - format must be <= 100 chars */
 static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 
-#define EXIT_MESSAGE "exited: "
-#define EXIT_MESSAGE_LEN 8
+#define EXIT_MESSAGE "exited "
+#define EXIT_MESSAGE_LEN 7
+#define MAX_INFOSTR 100
 
-	char fmtbuf[MAX_FMT+EXIT_MESSAGE_LEN+1];
+	char fmtbuf[MAX_FMT + EXIT_MESSAGE_LEN + MAX_INFOSTR + 1];
+	char infostr[MAX_INFOSTR + 1];
 
 #ifdef DOCLEANUP
 	session_cleanup();
 #endif
 
 	strcpy(fmtbuf, EXIT_MESSAGE);
+
+	/* include the username if possible */
+	if (sessinitdone && ses.authstate.authdone) {
+		/* user has authenticated */
+		assert(ses.authstate.username);
+		snprintf(infostr, sizeof(infostr), "post-userauth (%s): ", 
+				ses.authstate.username);
+	} else {
+		/* before userauth */
+		snprintf(infostr, sizeof(infostr), "before userauth: ");
+	}
+	strncat(fmtbuf, infostr, MAX_FMT);
+	
 	strncat(fmtbuf, format, MAX_FMT);
 
 	_dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);

@@ -39,6 +39,8 @@
 #include "queue.h"
 #include "runopts.h"
 
+extern int sessinitdone;
+
 void child_session(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remote_addr);
 #ifdef DOCLEANUP

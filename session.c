@@ -43,6 +43,9 @@
 #include "kex.h"
 #include "channel.h"
 
+/* need to know if the session struct has been initialised, this way isn't the
+ * cleanest, but works OK */
+int sessinitdone = 0;
 
 static void session_init(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remote_addr);
@@ -243,6 +246,8 @@ static void session_init(int sock, runopts *opts, int childpipe,
 	ses.kexhashbuf = NULL;
 	ses.transkexinit = NULL;
 	ses.dh_K = NULL;
+
+	sessinitdone = 1;
 
 	TRACE(("leave session_init"));
 }

@@ -278,6 +278,8 @@ void send_msg_userauth_success() {
 
 	CHECKCLEARTOWRITE();
 
+	assert(ses.authstate.username);
+
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SUCCESS);
 	encrypt_packet();
 
