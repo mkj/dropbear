@@ -1,9 +1,9 @@
 This is dropbear, a smallish and friendly ssh2 daemon.
 
 It is currently usable though betaish, requiring work in certain areas before
-use in a production environment. If you need a small sshd to run on a
-4 meg laptop, then sure, use it now. But don't use it on your payroll systems
-yet :)
+use in a production environment. If you need a small sshd to run on a 4 meg
+laptop, then sure, use it now. But test it thoroughly before using it somewhere
+important :)
 
 See TODO for a few of the things I know need looking at.
 
@@ -13,12 +13,12 @@ matt@ucc.asn.au
 
 Basic build instructions:
 
-First time after CVS checkout, or after changing autoconf stuff, do
-autoconf; autoheader
+(if you're using it from CVS, you need to automake; autoconf)
 
-edit options.h to choose ciphers/hashes/other options
-edit debug.h if you want some debug options
-./configure, optionally with --disable-zlib
+- Edit options.h to choose ciphers/hashes/other options
+- Edit debug.h if you want some debug options
+
+./configure                 <- optionally with --disable-zlib
 cd libtomcrypt; make        <- note that you should make clean in libtomcrypt
                                if you change options.h
 cd ..; make
@@ -27,13 +27,15 @@ You need to generate server keys, this is one-off:
 ./dropbearkey -t rsa -f dropbear_rsa_host_key
 ./dropbearkey -t dss -f dropbear_dss_host_key
 
-And you can now run the server
+And you can now run the server.
 ./dropbear
 
 or './dropbear -h' to get options.
 
-Now ssh to port 2244, you need to run dropbear as root if you want to get a
-pseudo-tty
+The default listening port is currently 2244 (defined in options.h).
+If the server is run as non-root, you most likely won't be able to allocate a
+pty, and you cannot login as any user other than that running the daemon
+(obviously).
 
 =====
 
@@ -56,6 +58,16 @@ binaries, and it is advisable to strip the binaries too. If you're looking
 to make a small binary, you should remove unneeded ciphers and md5, by 
 editing options.h
 
+It is possible to compile zlib in, by copying zlib.h and zconf.h into a subdirectory (ie zlibincludes), and 
+export CFLAGS="-Izlibincludes -I../zlibincludes"
+export LDFLAGS=/usr/lib/libz.a
+
+before ./configure and make.
+
+If you disable zlib, you must explicitly disable compression for the client -
+OpenSSH is possibly buggy in this regard, it seems you need to disable it
+globallyin ~/.ssh/config, not just in the host entry in that file.
+
 =====
 
 Public key auth:
@@ -67,3 +79,6 @@ ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+Z
 
 You must make sure that ~/.ssh, and the key file, are only writable by the
 user.
+
+NOTE: dropbear ignores authorized_keys options such as those described in the
+OpenSSH sshd manpage, and will not allow a login for these keys. 
