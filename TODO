@@ -3,8 +3,9 @@ Current:
 Things which need doing:
 
 - disconnect messages etc
+- more syslog stuff, making consistent
 - kexfollows
-- feed the PRNG with new entropy
+- check PRNG is good
 
 Features to add:
 
