@@ -4,7 +4,7 @@ Things which need doing:
 
 - disconnect messages etc
 - kexfollows
-- make our own clearenv() function for platforms without it
+- feed the PRNG with new entropy
 
 Features to add:
 
