@@ -1,3 +1,17 @@
+0.44test1 - Sun Aug 16 2004 17:43:54 +0800
+
+- TESTING RELEASE - this is the first public release of the client codebase,
+  so there are sure to be bugs to be found. In addition, if you're just using
+  the server portion, the final binary size probably will increase - I'll
+  be trying to get it back down in future releases.
+
+- Dropbear client added - lots of changes to the server code as well to 
+  generalise things
+
+- IPv6 support added for client, server, and forwarding
+
+- New makefile with more generic support for multiple-program binaries
+
 0.43 - Fri Jul 16 2004 17:44:54 +0800
 
 - SECURITY: Don't try to free() uninitialised variables in DSS verification
