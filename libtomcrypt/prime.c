@@ -14,7 +14,7 @@ int is_prime(mp_int *N, int *result)
    return CRYPT_OK;
 }   
 
-int next_prime(mp_int *N, mp_digit step)
+static int next_prime(mp_int *N, mp_digit step)
 {
     long x, s, j, total_dist;
     int res;
