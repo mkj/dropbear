@@ -55,6 +55,7 @@ install: deb-checkdir deb-checkuid build-stamp
 	install -d -m0755 "$(DIR)"/usr/sbin
 	install -m0755 dropbear "$(DIR)"/usr/sbin/dropbear
 	install -d -m0755 "$(DIR)"/usr/bin
+	install -m0755 dbclient "$(DIR)"/usr/bin/dbclient
 	install -m0755 dropbearkey "$(DIR)"/usr/bin/dropbearkey
 	install -d -m0755 "$(DIR)"/usr/lib/dropbear
 	install -m0755 dropbearconvert \

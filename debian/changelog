@@ -1,3 +1,10 @@
+dropbear (0.44test1-1) unstable; urgency=low
+
+  * Upstream beta 0.44test1
+  * Huge changes to allow client functionality
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sat, 14 August 2004 23:00:00 +0800
+
 dropbear (0.43-1) unstable; urgency=high
 
   * New upstream release 0.43
