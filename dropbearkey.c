@@ -32,6 +32,8 @@
  * mp_int	e
  * mp_int	n
  * mp_int	d
+ * mp_int	p (newer versions only)
+ * mp_int	q (newer versions only) 
  *
  * DSS:
  * string	"ssh-dss"

@@ -50,7 +50,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 rsa_key * gen_rsa_priv_key(unsigned int size) {
 
 	rsa_key * key;
-	mp_int p, pminus, q, qminus, lcm;
+	mp_int pminus, qminus, lcm;
 	int wprng;
 
 	key = (rsa_key*)m_malloc(sizeof(rsa_key));
@@ -61,6 +61,10 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	m_mp_init(key->n);
 	key->d = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init(key->d);
+	key->p = (mp_int*)m_malloc(sizeof(mp_int));
+	m_mp_init(key->p);
+	key->q = (mp_int*)m_malloc(sizeof(mp_int));
+	m_mp_init(key->q);
 
 	if (mp_set_int(key->e, RSA_E) != MP_OKAY) {
 		fprintf(stderr, "rsa generation failed\n");
@@ -70,17 +74,15 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	seedrandom();
 
 	m_mp_init(&pminus);
-	m_mp_init(&p);
 	m_mp_init(&qminus);
-	m_mp_init(&q);
 
 	/* PuTTY doesn't like it if the modulus isn't a multiple of 8 bits,
 	 * so we just generate them until we get one which is OK */
 	do {
-		getrsaprime(&p, &pminus, key->e, size/2, wprng);
-		getrsaprime(&q, &qminus, key->e, size/2, wprng);
+		getrsaprime(key->p, &pminus, key->e, size/2, wprng);
+		getrsaprime(key->q, &qminus, key->e, size/2, wprng);
 
-		if (mp_mul(&p, &q, key->n) != MP_OKAY) {
+		if (mp_mul(key->p, key->q, key->n) != MP_OKAY) {
 			fprintf(stderr, "rsa generation failed\n");
 			exit(1);
 		}

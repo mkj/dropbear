@@ -68,23 +68,44 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
-	int ret;
 	assert(key != NULL);
 
 	TRACE(("enter buf_get_rsa_priv_key"));
 
-	ret = buf_get_rsa_pub_key(buf, key);
-	if (ret == DROPBEAR_FAILURE) {
-		TRACE(("leave buf_get_rsa_priv_key: ret == DROPBEAR_FAILURE"));
+	if (buf_get_rsa_pub_key(buf, key) == DROPBEAR_FAILURE) {
+		TRACE(("leave buf_get_rsa_priv_key: pub: ret == DROPBEAR_FAILURE"));
 		return DROPBEAR_FAILURE;
 	}
 
 	key->d = m_malloc(sizeof(mp_int));
 	m_mp_init(key->d);
-	ret = buf_getmpint(buf, key->d);
+	if (buf_getmpint(buf, key->d) == DROPBEAR_FAILURE) {
+		TRACE(("leave buf_get_rsa_priv_key: d: ret == DROPBEAR_FAILURE"));
+		return DROPBEAR_FAILURE;
+	}
+
+	/* old Dropbear private keys didn't keep p and q, so we will ignore them*/
+	if (buf->pos == buf->len) {
+		key->p = NULL;
+		key->q = NULL;
+	} else {
+		key->p = m_malloc(sizeof(mp_int));
+		m_mp_init(key->p);
+		if (buf_getmpint(buf, key->p) == DROPBEAR_FAILURE) {
+			TRACE(("leave buf_get_rsa_priv_key: p: ret == DROPBEAR_FAILURE"));
+			return DROPBEAR_FAILURE;
+		}
+
+		key->q = m_malloc(sizeof(mp_int));
+		m_mp_init(key->q);
+		if (buf_getmpint(buf, key->q) == DROPBEAR_FAILURE) {
+			TRACE(("leave buf_get_rsa_priv_key: q: ret == DROPBEAR_FAILURE"));
+			return DROPBEAR_FAILURE;
+		}
+	}
 
 	TRACE(("leave buf_get_rsa_priv_key"));
-	return ret;
+	return DROPBEAR_SUCCESS;
 }
 	
 
@@ -140,6 +161,15 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 	assert(key != NULL);
 	buf_put_rsa_pub_key(buf, key);
 	buf_putmpint(buf, key->d);
+
+	/* new versions have p and q, old versions don't */
+	if (key->p) {
+		buf_putmpint(buf, key->p);
+	}
+	if (key->q) {
+		buf_putmpint(buf, key->p);
+	}
+
 
 	TRACE(("leave buf_put_rsa_priv_key"));
 
