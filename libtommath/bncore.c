@@ -20,6 +20,18 @@
 -------------------------------------------------------------
  Intel P4               /GCC v3.2     /        81/       110
  AMD Athlon XP          /GCC v3.2     /       109/       127
+ Intel Celeron          /GCC v3.2.1   /        97/       127
+ Mendocino 366mhz (evil)
+ Intel P3 750mhz        /GCC v3.2.1   /        95/       110
+ Coppermine (mussel)
+ Intel Celeron          /GCC v3.2.1   /        85/       125
+ Coppermine 700mhz
+ Alpha                  /compaq       /        54/        87
+ Compaq C V6.4-014 on Compaq Tru64 UNIX V5.1A (Rev. 1885)
+ AlphaServer 1000A 5/300
+ morwong
+ Pentium classic 75     /GCC v3.2.1   /        73/       127
+ plod
 
 */
 
