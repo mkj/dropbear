@@ -42,7 +42,7 @@ int main(int argc, char ** argv) {
 	struct timeval seltimeout;
 	unsigned int i, j;
 	int val;
-	int maxsock;
+	int maxsock = -1;
 	struct sockaddr remoteaddr;
 	int remoteaddrlen;
 	int listensocks[MAX_LISTEN_ADDR];
@@ -169,7 +169,7 @@ int main(int argc, char ** argv) {
 			if (!FD_ISSET(listensocks[i], &fds)) 
 				continue;
 
-			/* child connection */
+			/* child connection XXX - ip6 stuff here */
 			remoteaddrlen = sizeof(struct sockaddr_in);
 			childsock = accept(listensocks[i], &remoteaddr, &remoteaddrlen);
 
@@ -270,85 +270,54 @@ static int listensockets(int *sock, runopts * opts, int *maxfd) {
 	
 	int listensock; /* listening fd */
 	struct sockaddr_in listen_addr;
-	struct addrinfo hints, *res;
 	struct linger linger;
 	unsigned int i;
 	int val;
-	int sockcount = 0;
-	char servicename[6]; /* max 65535 */
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_flags = AI_PASSIVE;
-	hints.ai_socktype = SOCK_STREAM;
-
-	if (!opts->ipv6) {
-		hints.ai_family = PF_INET;
-	} else if (!opts->ipv4) {
-		hints.ai_family = PF_INET6;
-	} else {
-		hints.ai_family = PF_UNSPEC;
-	}
 
 	for (i = 0; i < opts->portcount; i++) {
-		res = NULL;
 
-		snprintf(servicename, sizeof(servicename), "%5ud", opts->ports[i]);
-		
-		if (getaddrinfo(NULL, servicename, &hints, &res) == 0) {
-		while (res) {
-
-			/* TODO check for ipv6/ipv4 */
-
-			if (sockcount >= MAX_LISTEN_ADDR) {
-				dropbear_exit("Max listen sockets reached, increase MAX_LISTEN_ADDR");
-				break;
-			}
-
-			/* iterate through all the sockets to listen on */
-			listensock = socket(res->ai_family, res->ai_socktype, 
-					res->ai_protocol);
-			if (listensock < 0) {
-				dropbear_exit("Failed to create socket");
-			}
-
-			/* set to reuse, quick timeout */
-			setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR,
-					(void*) &val, sizeof(val));
-			linger.l_onoff = 1;
-			linger.l_linger = 5;
-			setsockopt(listensock, SOL_SOCKET, SO_LINGER,
-					(void*)&linger, sizeof(linger));
-
-			/* disable nagle, ie don't collate data (delaying them) */
-			val = 1;
-			setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY,
-					(void*)&val, sizeof(val));
-
-			if (bind(listensock, res->ai_addr, res->ai_addrlen) < 0) {
-				dropbear_exit("Bind failed port %d", opts->ports[i]);
-			}
-
-			/* listen */
-			if (listen(listensock, 20) < 0) { /* TODO set listen count */
-				dropbear_exit("Listen failed");
-			}
-
-			/* nonblock */
-			if (fcntl(listensock, F_SETFL, O_NONBLOCK) < 0) {
-				dropbear_exit("Failed to set non-blocking");
-			}
-
-			sock[i] = listensock;
-			*maxfd = MAX(listensock, *maxfd);
-			sockcount++;
-			res = res->ai_next;
-			
-		} }
-
-		if (res) {
-			freeaddrinfo(res);
-			res = NULL;
+		/* iterate through all the sockets to listen on */
+		listensock = socket(PF_INET, SOCK_STREAM, 0);
+		if (listensock < 0) {
+			dropbear_exit("Failed to create socket");
 		}
+
+		val = 1;
+		/* set to reuse, quick timeout */
+		setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR,
+				(void*) &val, sizeof(val));
+		linger.l_onoff = 1;
+		linger.l_linger = 5;
+		setsockopt(listensock, SOL_SOCKET, SO_LINGER,
+				(void*)&linger, sizeof(linger));
+
+		/* disable nagle */
+		setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY,
+				(void*)&val, sizeof(val));
+
+		listen_addr.sin_family = AF_INET;
+		listen_addr.sin_port = htons(opts->ports[i]);
+		listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
+		memset(&(listen_addr.sin_zero), '\0', 8);
+
+		if (bind(listensock, (struct sockaddr *)&listen_addr,
+					sizeof(listen_addr)) < 0) {
+			dropbear_exit("Bind failed port %d", opts->ports[i]);
+		}
+
+		/* listen */
+		if (listen(listensock, 20) < 0) { /* TODO set listen count */
+			dropbear_exit("Listen failed");
+		}
+
+		/* nonblock */
+		if (fcntl(listensock, F_SETFL, O_NONBLOCK) < 0) {
+			dropbear_exit("Failed to set non-blocking");
+		}
+
+		sock[i] = listensock;
+		*maxfd = MAX(listensock, *maxfd);
 	}
-	return sockcount;
+
+	return opts->portcount;
 }
