@@ -388,7 +388,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 		if (mp_read_unsigned_bin(&dh_y, randbuf, dh_q_len) != MP_OKAY) {
 			dropbear_exit("Diffie-Hellman error");
 		}
-	} while (mp_cmp(&dh_y, &dh_q) >= 0 || mp_cmp_d(&dh_y, 0) <= 0);
+	} while (mp_cmp(&dh_y, &dh_q) == MP_GT || mp_cmp_d(&dh_y, 0) != MP_GT);
 
 	/* f = g^y mod p */
 	if (mp_exptmod(&dh_g, &dh_y, &dh_p, &dh_f) != MP_OKAY) {

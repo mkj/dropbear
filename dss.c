@@ -227,7 +227,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	}
 	
 	/* check whether signatures verify */
-	if (mp_cmp(&val2, &val1) == 0) {
+	if (mp_cmp(&val2, &val1) == MP_EQ) {
 		/* good sig */
 		ret = DROPBEAR_SUCCESS;
 	}
@@ -311,7 +311,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 		if (mp_read_unsigned_bin(&dss_k, kbuf, SHA1_HASH_SIZE) != MP_OKAY) {
 			dropbear_exit("dss error");
 		}
-	} while (mp_cmp(&dss_k, key->q) >= 0 || mp_cmp_d(&dss_k, 0) <= 0);
+	} while (mp_cmp(&dss_k, key->q) == MP_GT || mp_cmp_d(&dss_k, 0) != MP_GT);
 	m_burn(kbuf, SHA1_HASH_SIZE);
 #endif
 

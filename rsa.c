@@ -221,7 +221,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 		goto out;
 	}
 
-	if (mp_cmp(rsa_em, &rsa_mdash) == 0) {
+	if (mp_cmp(rsa_em, &rsa_mdash) == MP_EQ) {
 		/* signature is valid */
 		ret = DROPBEAR_SUCCESS;
 	}
