@@ -49,7 +49,7 @@ all: dropbear dropbearkey dropbearconvert
 	@echo Run \"make strip\" if you want stripped binaries,
 	@echo or \"make install\" to install to ${prefix}
 
-strip:
+strip: all
 	-$(STRIP) dropbear
 	-$(STRIP) dropbearkey
 	-$(STRIP) dropbearconvert
@@ -68,6 +68,24 @@ install: all
 	-chown root $(DESTDIR)$(bindir)/dropbearconvert
 	-chgrp 0 $(DESTDIR)$(bindir)/dropbearconvert
 
+strip-static: static
+	-$(STRIP) staticdropbear
+	-$(STRIP) staticdropbear
+	-$(STRIP) staticdropbear
+
+install-static: static
+	$(INSTALL) -d -m 755 $(DESTDIR)$(sbindir)
+	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
+	$(INSTALL) -m 755 staticdropbear $(DESTDIR)$(sbindir)/dropbear
+	$(INSTALL) -m 755 staticdropbearkey $(DESTDIR)$(bindir)/dropbearkey
+	$(INSTALL) -m 755 staticdropbearconvert $(DESTDIR)$(bindir)/dropbearconvert
+	# chown might fail, so do it separately to the install
+	-chown root $(DESTDIR)$(sbindir)/dropbear
+	-chgrp 0 $(DESTDIR)$(sbindir)/dropbear
+	-chown root $(DESTDIR)$(bindir)/dropbearkey
+	-chgrp 0 $(DESTDIR)$(bindir)/dropbearkey
+	-chown root $(DESTDIR)$(bindir)/dropbearconvert
+	-chgrp 0 $(DESTDIR)$(bindir)/dropbearconvert
 
 static: dropbear-static dropbearkey-static dropbearconvert-static
 
