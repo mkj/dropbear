@@ -48,21 +48,21 @@
 int sessinitdone = 0;
 
 static void session_init(int sock, runopts *opts, int childpipe,
-		struct sockaddr *remote_addr);
+		struct sockaddr *remoteaddr);
 static void session_identification();
 static void checktimeouts();
 
 struct sshsession ses;
 
 void child_session(int sock, runopts *opts, int childpipe,
-		struct sockaddr *remote_addr) {
+		struct sockaddr *remoteaddr) {
 
 	fd_set readfd, writefd;
 	struct timeval timeout;
 	int val;
 	
 	crypto_init();
-	session_init(sock, opts, childpipe, remote_addr);
+	session_init(sock, opts, childpipe, remoteaddr);
 
 	/* exchange identification, version etc */
 	session_identification();
@@ -187,12 +187,12 @@ void session_cleanup() {
 
 /* called only at the start of a session, set up initial state */
 static void session_init(int sock, runopts *opts, int childpipe,
-		struct sockaddr *remote_addr) {
+		struct sockaddr *remoteaddr) {
 
 	struct timeval tv;
 	TRACE(("enter session_init"));
 
-	ses.remote_addr = remote_addr;
+	ses.remoteaddr = remoteaddr;
 
 	ses.sock = sock;
 	ses.maxfd = sock;

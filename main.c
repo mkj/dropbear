@@ -55,8 +55,8 @@ int main(int argc, char ** argv) {
 	struct timeval seltimeout;
 	int i, j, val;
 	int maxsock;
-	struct sockaddr remote_addr;
-	int remote_addrlen;
+	struct sockaddr remoteaddr;
+	int remoteaddrlen;
 	int listensocks[MAX_LISTEN_ADDR];
 	unsigned int listensockcount = 0;
 	runopts * opts;
@@ -159,9 +159,9 @@ int main(int argc, char ** argv) {
 				continue;
 
 			/* child connection */
-			remote_addrlen = sizeof(struct sockaddr_in);
+			remoteaddrlen = sizeof(struct sockaddr_in);
 			childsock = accept(listensocks[i], 
-					&remote_addr, &remote_addrlen);
+					&remoteaddr, &remoteaddrlen);
 
 			if (childsock < 0) {
 				/* accept failed */
@@ -206,7 +206,7 @@ int main(int argc, char ** argv) {
 					dropbear_exit("Couldn't close socket");
 				}
 				/* start the session */
-				child_session(childsock, opts, childpipe[1], &remote_addr);
+				child_session(childsock, opts, childpipe[1], &remoteaddr);
 				/* don't return */
 				assert(0);
 			}
