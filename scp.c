@@ -674,7 +674,7 @@ bwlimit(int amount)
 {
 	static struct timeval bwstart, bwend;
 	static int lamt, thresh = 16384;
-	u_int64_t wait;
+	uint64_t wait;
 	struct timespec ts, rm;
 
 	if (!timerisset(&bwstart)) {

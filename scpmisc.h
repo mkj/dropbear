@@ -33,7 +33,7 @@ struct arglist {
 	int     num;
 	int     nalloc;
 };
-void	 addargs(arglist *, char *, ...) __attribute__((format(printf, 2, 3)));
+void	 addargs(arglist *, char *, ...);
 
 /* from xmalloc.h */
 void	*xmalloc(size_t);

@@ -145,7 +145,7 @@ print OUT "#makefile generated with config.pl\n#\n#Tom St Denis (tomstdenis\@yah
 for (@settings) {
    @m = split(",", $_);
    print OUT "@m[0] = @vars{@m[0]}\n"   if (@vars{@m[0]} ne "" && @m[0] ne "CFLAGS");
-   print OUT "CFLAGS += @vars{@m[0]}\n" if (@vars{@m[0]} ne "" && @m[0] eq "CFLAGS");
+   print OUT "CFLAGS+=@vars{@m[0]}\n" if (@vars{@m[0]} ne "" && @m[0] eq "CFLAGS");
    @vars{@m[0]} = "";
 }
 
