@@ -49,12 +49,16 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 		unsigned int exttype);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
-static void closechannel(struct Channel *channel);
+static void removechannel(struct Channel *channel);
 static void deletechannel(struct Channel *channel);
 static void send_exitsignalstatus(struct Channel *channel);
 static void checkinitdone(struct Channel *channel);
 
-/* initialise channels */
+static void closeinfd(struct Channel * channel);
+static void closeoutfd(struct Channel * channel, int fd);
+static void closechanfd(struct Channel *channel, int fd, int how);
+
+/* Initialise all the channels */
 void chaninitialise() {
 
 	/* may as well create space for a single channel */
@@ -75,14 +79,14 @@ void chancleanup() {
 	for (i = 0; i < ses.chansize; i++) {
 		if (ses.channels[i] != NULL) {
 			TRACE(("channel %d closing", i));
-			closechannel(ses.channels[i]);
+			removechannel(ses.channels[i]);
 		}
 	}
 	m_free(ses.channels);
 	TRACE(("leave chancleanup"));
 }
 
-/* create a new channel entry, send a reply confirm or failure */
+/* Create a new channel entry, send a reply confirm or failure */
 /* If remotechan, transwindow and transmaxpacket are not know (for a new
  * outgoing connection, with them to be filled on confirmation), they should
  * all be set to 0 */
@@ -124,17 +128,19 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	newchan = (struct Channel*)m_malloc(sizeof(struct Channel));
 	newchan->type = type;
 	newchan->index = i;
-	newchan->sentclosed = 0;
-	newchan->recveof = newchan->transeof = newchan->erreof = 0;
+	newchan->sentclosed = newchan->recvclosed = 0;
+	newchan->recveof = 0;
 
 	newchan->remotechan = remotechan;
 	newchan->transwindow = transwindow;
 	newchan->transmaxpacket = transmaxpacket;
 	
 	newchan->typedata = NULL;
-	newchan->infd = -1;
-	newchan->outfd = -1;
-	newchan->errfd = -1;
+	/* we use -2 to differntiate between "not started yet" and "closed" which
+	 * is -1 */
+	newchan->infd = -2;
+	newchan->outfd = -2;
+	newchan->errfd = -2;
 	newchan->initconn = 0;
 
 	newchan->writebuf = buf_new(RECV_MAXWINDOW);
@@ -163,26 +169,27 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 	struct Channel *channel;
 	unsigned int i;
 
+	/* iterate through all the possible channels */
 	for (i = 0; i < ses.chansize; i++) {
 
 		channel = ses.channels[i];
-		if (channel == NULL || channel->sentclosed) {
+		if (channel == NULL) {
+			/* only process in-use channels */
 			continue;
 		}
 
-		/* read from program/pipe/etc stdout */
-		if (channel->outfd != -1 && channel->transeof == 0 &&
-				FD_ISSET(channel->outfd, readfd)) {
+		/* read from program/pipe stdout */
+		if (channel->outfd > -1 && FD_ISSET(channel->outfd, readfd)) {
 			send_msg_channel_data(channel, 0, 0);
 		}
-		/* read from program/pipe stderr for interactive sessions */
-		if (channel->errfd != -1 && channel->erreof == 0 &&
-				FD_ISSET(channel->errfd, readfd)) {
+
+		/* read from program/pipe stderr */
+		if (channel->errfd > -1 && FD_ISSET(channel->errfd, readfd)) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
+
 		/* write to program/pipe stdin */
-		if (channel->infd != -1 &&
-				FD_ISSET(channel->infd, writefd)) {
+		if (channel->infd > -1 && FD_ISSET(channel->infd, writefd)) {
 			if (channel->initconn) {
 				checkinitdone(channel);
 				continue; /* Important not to use the channel after
@@ -191,24 +198,40 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				writechannel(channel);
 			}
 		}
-		
+	
 		/* handle any listening sockets */
 		if (channel->type == CHANNEL_ID_SESSION) {
 			struct ChanSess * chansess = (struct ChanSess*)channel->typedata;
 #ifndef DISABLE_X11FWD
-			if (chansess->x11fd != -1 && FD_ISSET(chansess->x11fd, readfd)) {
+			if (chansess->x11fd > -1 && FD_ISSET(chansess->x11fd, readfd)) {
 				x11accept(chansess);
 			}
 #endif
 #ifndef DISABLE_AGENTFWD
-			if (chansess->agentfd != -1 && FD_ISSET(chansess->agentfd,readfd)) {
+			if (chansess->agentfd > -1 && FD_ISSET(chansess->agentfd,readfd)) {
 				agentaccept(chansess);
 			}
 #endif
 		}
+
+		/* now handle any of the channel-closing type stuff */
+		if (!channel->senteof && channel->outfd == -1 && channel->errfd == -1) {
+			send_msg_channel_eof(channel);
+		}
+
+		if (channel->infd == -1 
+				&& channel->outfd == -1 && channel->errfd == -1) {
+			send_msg_channel_close(channel);
+		}
+
+		if (channel->sentclosed && channel->recvclosed) {
+			removechannel(channel);
+		}
+
 	} /* foreach channel */
 
 }
+
 
 /* Check whether a deferred (EINPROGRESS) connect() was successful, and
  * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
@@ -224,6 +247,7 @@ static void checkinitdone(struct Channel *channel) {
 	if (getsockopt(channel->infd, SOL_SOCKET, SO_ERROR, &val, &vallen)
 			|| val != 0) {
 		close(channel->infd);
+		channel->infd = -1;
 		deletechannel(channel);
 		TRACE(("leave checkinitdone: fail"));
 	} else {
@@ -280,8 +304,7 @@ static void send_msg_channel_eof(struct Channel *channel) {
 
 	encrypt_packet();
 
-	/* we already know that trans/eof channels are closed */
-	send_msg_channel_close(channel);
+	channel->senteof = 1;
 
 	TRACE(("leave send_msg_channel_eof"));
 }
@@ -297,11 +320,6 @@ static void writechannel(struct Channel* channel) {
 
 	TRACE(("enter writechannel"));
 
-	if (channel->recveof || channel->sentclosed) {
-		TRACE(("leave writechannel: already recveof or sentclosed"));
-		return;
-	}
-
 	buf = channel->writebuf;
 	maxlen = buf->len - buf->pos;
 
@@ -310,23 +328,26 @@ static void writechannel(struct Channel* channel) {
 		if (errno != EINTR) {
 
 			/* no more to write */
-			channel->recveof = 1;
-
-			/* if everything's closed then close it all up */
-			if (channel->transeof && 
-					(channel->erreof || channel->errfd == -1)) {
-				send_msg_channel_close(channel);
-			}
+			closeinfd(channel);
 		}
 		TRACE(("leave writechannel: len <= 0"));
 		return;
 	}
 	
-	/* extend the window */
-	/* TODO - this is inefficient */
 	if (len == maxlen) {
 		buf_setpos(buf, 0);
 		buf_setlen(buf, 0);
+
+		if (channel->recveof) {
+			/* we're closing up */
+			closeinfd(channel);
+			channel->infd = -1;
+			return;
+			TRACE(("leave writechannel: recveof set"));
+		}
+
+		/* extend the window if we're at the end*/
+		/* TODO - this is inefficient */
 		send_msg_channel_window_adjust(channel, buf->size
 				- channel->recvwindow);
 		channel->recvwindow = buf->size;
@@ -346,7 +367,7 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 	for (i = 0; i < ses.chansize; i++) {
 
 		channel = ses.channels[i];
-		if (channel == NULL || channel->sentclosed == 1) {
+		if (channel == NULL) {
 			continue;
 		}
 
@@ -354,34 +375,34 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 		if (channel->transwindow > 0) {
 
 			/* stdout */
-			if (channel->outfd != -1 && channel->transeof == 0) {
+			if (channel->outfd > -1) {
 				/* there's space to read more from the program */
 				FD_SET(channel->outfd, readfd);
 			}
-			/* stderr for interactive sessions */
-			if (channel->errfd != -1 && channel->erreof == 0) {
+			/* stderr */
+			if (channel->errfd > -1) {
 					FD_SET(channel->errfd, readfd);
 			}
 		}
+
 		/* stdin */
-		if (channel->infd != -1 && channel->recveof == 0 &&
+		if (channel->infd > -1 &&
 				(channel->writebuf->pos < channel->writebuf->len ||
 				 channel->initconn)) {
 			/* there's space to write more to the program */
 			FD_SET(channel->infd, writefd);
 		}
 
-		/* handle any listening sockets - should get optimised away if
-		 * we don't have x11 or agent fwd */
+		/* handle any listening sockets if we have x11 or agent fwd */
 		if (channel->type == CHANNEL_ID_SESSION) {
 			struct ChanSess * chansess = (struct ChanSess*)channel->typedata;
 #ifndef DISABLE_X11FWD
-			if (chansess->x11fd != -1) {
+			if (chansess->x11fd > -1) {
 				FD_SET(chansess->x11fd, readfd);
 			}
 #endif
 #ifndef DISABLE_AGENTFWD
-			if (chansess->agentfd != -1) {
+			if (chansess->agentfd > -1) {
 				FD_SET(chansess->agentfd, readfd);
 			}
 #endif
@@ -409,24 +430,6 @@ void recv_msg_channel_eof() {
 
 	channel->recveof = 1;
 
-	/* we should close the channel */
-	if (channel->type == CHANNEL_ID_X11 || channel->type == CHANNEL_ID_AGENT
-			|| channel->type == CHANNEL_ID_TCPDIRECT) {
-		shutdown(channel->infd, 0);
-	} else {
-		close(channel->infd);
-	}
-	channel->infd = -1;
-
-	/* matt - XXX - here needs fixing for the truncation -
-	 * need to make it just set recveof, then writechannel looks at that.
-	 * Get channelio() to do all the syncing etc*/
-
-	if (channel->transeof && (channel->erreof || channel->errfd == -1)
-			&& !channel->sentclosed) {
-		send_msg_channel_close(channel);
-	}
-
 	TRACE(("leave recv_msg_channel_eof"));
 }
 
@@ -448,20 +451,21 @@ void recv_msg_channel_close() {
 		dropbear_exit("Close for unknown channel");
 	}
 
-	if (!channel->sentclosed) {
-		send_msg_channel_close(channel);
+	channel->recveof = 1;
+	channel->recvclosed = 1;
+
+	if (channel->sentclosed) {
+		removechannel(channel);
 	}
 
-	closechannel(channel);
-	
 	TRACE(("leave recv_msg_channel_close"));
 }
 
 /* Remove a channel entry, this is only executed after both sides have sent
  * channel close */
-static void closechannel(struct Channel * channel) {
+static void removechannel(struct Channel * channel) {
 
-	TRACE(("enter closechannel"));
+	TRACE(("enter removechannel"));
 	TRACE(("channel index is %d", channel->index));
 
 	buf_free(channel->writebuf);
@@ -473,14 +477,15 @@ static void closechannel(struct Channel * channel) {
 
 	if (channel->type == CHANNEL_ID_SESSION) {
 		closechansess(channel);
+		close(channel->errfd);
 	}
 
 	deletechannel(channel);
 
-	TRACE(("leave closechannel"));
+	TRACE(("leave removechannel"));
 }
 
-/* Just remove a channel entry, don't try to close descriptors etc */
+/* Remove a channel entry */
 static void deletechannel(struct Channel *channel) {
 
 	ses.channels[channel->index] = NULL;
@@ -545,29 +550,25 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 
 	CHECKCLEARTOWRITE();
 
-	assert(!channel->sentclosed);
+	if (channel->sentclosed) {
+		dropbear_exit("assert(!channel->sentclosed)");
+	}
 
 	if (isextended) {
-		if (channel->erreof) {
-			TRACE(("leave send_msg_channel_data: erreof already set"));
-			return;
-		}
-		assert(exttype == SSH_EXTENDED_DATA_STDERR);
 		fd = channel->errfd;
 	} else {
-		if (channel->transeof) {
-			TRACE(("leave send_msg_channel_data: transeof already set"));
-			return;
-		}
 		fd = channel->outfd;
 	}
-	assert(fd >= 0);
+
+	if (fd < 0) {
+		dropbear_exit("assert(*fd > -1)");
+	}
 
 	maxlen = MIN(channel->transwindow, channel->transmaxpacket);
 	/* -(1+4+4) is SSH_MSG_CHANNEL_DATA, channel number, string length, and 
 	 * exttype if is extended */
-	maxlen = MIN(maxlen, ses.writepayload->size 
-			- 1 - 4 - 4 - (isextended ? 4 : 0));
+	maxlen = MIN(maxlen, 
+			ses.writepayload->size - 1 - 4 - 4 - (isextended ? 4 : 0));
 	if (maxlen == 0) {
 		TRACE(("leave send_msg_channel_data: no window"));
 		return; /* the data will get written later */
@@ -579,19 +580,12 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	if (len <= 0) {
 		/* on error etc, send eof */
 		if (errno != EINTR) {
-			
+			closeoutfd(channel, fd);
 			if (isextended) {
-				channel->erreof = 1;
+				channel->errfd = -1;
 			} else {
-				channel->transeof = 1;
+				channel->outfd = -1;
 			}
-			
-			if ((channel->erreof || channel->errfd == -1)
-					&& channel->transeof) {
-				send_msg_channel_eof(channel);
-			}
-		TRACE(("leave send_msg_channel_data: len <= 0, erreof %d transeof %d",
-					channel->erreof, channel->transeof));
 		}
 		buf_free(buf);
 		return;
@@ -631,11 +625,12 @@ void recv_msg_channel_data() {
 	chan = buf_getint(ses.payload);
 	channel = getchannel(chan);
 	if (channel == NULL) {
-		/* disconnect ? */
 		dropbear_exit("Unknown channel");
 	}
 
-	assert(channel->infd != -1);
+	if (channel->recveof || channel->infd < 0) {
+		dropbear_exit("bad internal state, recvchandata");
+	}
 
 	datalen = buf_getint(ses.payload);
 
@@ -656,6 +651,8 @@ void recv_msg_channel_data() {
 	buf_setpos(channel->writebuf, pos); /* revert pos */
 
 	channel->recvwindow -= datalen;
+
+	/* matt - this might be for later */
 /*	if (channel->recvwindow < RECV_MINWINDOW) {
 		send_msg_channel_window_adjust(channel, 
 				RECV_MAXWINDOW - channel->recvwindow);
@@ -907,6 +904,28 @@ void recv_msg_channel_open_failure() {
 		dropbear_exit("Unknown channel");
 	}
 
-	closechannel(channel);
+	removechannel(channel);
 }
+
+/* close a stdout/stderr fd */
+static void closeoutfd(struct Channel * channel, int fd) {
+	closechanfd(channel, fd, 0);
+}
+
+/* close a stdin fd */
+static void closeinfd(struct Channel * channel) {
+	closechanfd(channel, channel->infd, 1);
+}
+
+/* close a fd, how is 0 for stdout/stderr, 1 for stdin */
+static void closechanfd(struct Channel *channel, int fd, int how) {
+
+	if (channel->type == CHANNEL_ID_X11 || channel->type == CHANNEL_ID_AGENT
+			|| channel->type == CHANNEL_ID_TCPDIRECT) {
+		shutdown(fd, how);
+	} else {
+		close(fd);
+	}
+}
+
 #endif /* USE_LISTENERS */

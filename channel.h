@@ -69,10 +69,10 @@ struct Channel {
 				  a 'session' without a pty will use it */
 	buffer *writebuf; /* data for the program */
 
-	int sentclosed;
-	/* whether we've reached the end of reading/writing to/from/err for a pipe
-	 * or program */
-	int transeof, recveof, erreof; 
+	int sentclosed, recvclosed;
+
+	/* this is set when we receive/send a channel eof packet */
+	int recveof, senteof;
 
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
