@@ -160,7 +160,6 @@ void kexinitialise() {
 	ses.kexstate.sentnewkeys = 0;
 
 	/* first_packet_follows */
-	/* TODO - currently not handled */
 	ses.kexstate.firstfollows = 0;
 
 	ses.kexstate.datatrans = 0;
@@ -545,9 +544,7 @@ static void read_kex() {
 	if (buf_getbyte(ses.payload)) {
 		ses.kexstate.firstfollows = 1;
 		/* if the guess wasn't good, we ignore the packet sent */
-		TRACE(("first_kex_packet_follows set"));
 		if (!allgood) {
-			TRACE(("set ignorenext"));
 			ses.ignorenext = 1;
 		}
 	}
