@@ -168,7 +168,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	unsigned long decodekeylen;
 	unsigned char* filealgo = NULL;
 	unsigned int filealgolen;
-	int len;
+	unsigned int len, pos;
 	
 	TRACE(("enter checkpubkey"));
 
@@ -232,6 +232,14 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 			continue;
 		}
 
+		/* truncate the line at the space after the base64 data */
+		pos = line->pos;
+		for (len = 0; line->pos < line->len; len++) {
+			if (buf_getbyte(line) == ' ') break;
+		}	
+		buf_setpos(line, pos);
+		buf_setlen(line, line->pos + len);
+
 		/* now we have the actual data */
 		decodekeylen = (line->len - line->pos) * 2;
 		decodekey = buf_new(decodekeylen);
@@ -280,34 +288,30 @@ out:
 }
 
 /* get a line from the file into buffer in the style expected for an
- * authkeys file, we stop after reaching a '=', but will read out to the
- * end of the file.
- * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.
- * Note that it may return DROPBEAR_SUCCESS even with an empty line */
+ * authkeys file.
+ * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
 static int getauthline(buffer * line, FILE * authfile) {
 
-	int endofbase64 = 0;
 	int c;
 	int count = 0;
+
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
+
 	for (;;) {
 		c = getc(authfile);
 		if (c == EOF || c == '\n' || c == '\r') {
-			buf_setpos(line, 0);
-			if (count == 0 && c == EOF) {
-				return DROPBEAR_FAILURE;
-			} else {
-				return DROPBEAR_SUCCESS;
-			}
+			break;
 		}
-		if (c == '=') { /* base64 end char */
-			endofbase64 = 1;
-		}
-		if ((!endofbase64 || c == '=') && line->pos < line->size) {
-			buf_putbyte(line, (unsigned char)c);
-		} /* otherwise loop until EOL, ignoring extra */
+		buf_putbyte(line, (unsigned char)c);
 		count++;
+	}
+
+	buf_setpos(line, 0);
+	if (count == 0 && c == EOF) {
+		return DROPBEAR_FAILURE;
+	} else {
+		return DROPBEAR_SUCCESS;
 	}
 }	
 
