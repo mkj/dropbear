@@ -170,10 +170,9 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
 	switch (addr->sa_family) {
 		case PF_INET: 
 			/* max len is "XXX.XXX.XXX.XXX:PPPPP\0" */
-			ret = (unsigned char*)m_malloc(15 + 1 + 5 + 1);
-			snprintf(ret, 15+1+5+1, "%s:%.5d",
-					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr),
-					((struct sockaddr_in*)addr)->sin_port);
+			ret = (unsigned char*)m_malloc(15 + 1);
+			snprintf(ret, 15+1, "%s",
+					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr));
 			return ret;
 			break;
 		default:
@@ -210,7 +209,7 @@ int getaddrhostname(char * dest, unsigned int len, char * addr) {
 		retstring = host->h_name;
 	}
 
-	retlen = strlen(retstring);
+	retlen = strlen(retstring) + 1;
 	retlen = MIN(len, retlen);
 
 	/* we don't need null-termination if it fills the buffer */

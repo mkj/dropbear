@@ -51,6 +51,7 @@
 #include <unistd.h>
 #include <syslog.h>
 #include <netdb.h>
+#include <utmp.h>
 
 #include <arpa/inet.h>
 
