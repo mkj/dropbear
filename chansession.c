@@ -392,12 +392,10 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	/* allocate the pty */
 	assert(chansess->master == -1); /* haven't already got one */
-	TRACE(("about to pty_allocate"));
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"));
 		return 1;
 	}
-	TRACE(("pty_allocate success (probably)"));
 	
 	chansess->tty = (char*)strdup(namebuf);
 	if (!chansess->tty) {
@@ -405,11 +403,8 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 
 	pty_setowner(ses.authstate.pw, chansess->tty);
-	TRACE(("done setowner"));
 	pty_change_window_size(chansess->master, chansess->termr, chansess->termc,
 			chansess->termw, chansess->termh);
-	TRACE(("done windowsize"));
-	
 
 	/* Term modes */
 	/* We'll ignore errors and continue if we can't set modes.
@@ -473,9 +468,7 @@ static int sessionpty(struct ChanSess * chansess) {
 			}
 		}
 		if (tcsetattr(chansess->master, TCSANOW, &termio) < 0) {
-			TRACE(("tcsetattr error"));
-		} else {
-			TRACE(("tcsetattr success"));
+			dropbear_log(LOG_INFO, "error setting terminal attributes");
 		}
 	}
 
@@ -544,24 +537,17 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* redirect stdin/stdout */
 #define FDIN 0
 #define FDOUT 1
-		if (dup2(infds[FDIN], STDIN_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stdin"));
+		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
+			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
+			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
+			TRACE(("leave sessioncommand: error redirecting FDs"));
 			return 1;
 		}
+
 		close(infds[FDOUT]);
 		close(infds[FDIN]);
-
-		if (dup2(outfds[FDOUT], STDOUT_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stdout"));
-			return 1;
-		}
 		close(outfds[FDIN]);
 		close(outfds[FDOUT]);
-
-		if (dup2(errfds[FDOUT], STDERR_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stderr"));
-			return 1;
-		}
 		close(errfds[FDIN]);
 		close(errfds[FDOUT]);
 
@@ -586,13 +572,9 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		ses.maxfd = MAX(ses.maxfd, channel->outfd);
 		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-		if (fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
-		if (fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
-		if (fcntl(channel->errfd, F_SETFL, O_NONBLOCK) < 0) {
+		if ((fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) ||
+			(fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) ||
+			(fcntl(channel->errfd, F_SETFL, O_NONBLOCK) < 0)) {
 			dropbear_exit("Couldn't set nonblocking");
 		}
 	}
@@ -626,18 +608,10 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		pty_make_controlling_tty(&chansess->slave, chansess->tty);
 		
-		if (dup2(chansess->slave, STDIN_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stdin"));
-			return 1;
-		}
-
-		if (dup2(chansess->slave, STDOUT_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stdout"));
-			return 1;
-		}
-
-		if (dup2(chansess->slave, STDERR_FILENO) < 0) {
-			TRACE(("leave sessioncommand: error redirecting stderr"));
+		if ((dup2(chansess->slave, STDIN_FILENO) < 0) ||
+			(dup2(chansess->slave, STDERR_FILENO) < 0) ||
+			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
+			TRACE(("leave sessioncommand: error redirecting filedesc"));
 			return 1;
 		}
 
@@ -738,13 +712,10 @@ static void execchild(struct ChanSess *chansess) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if (setgid(ses.authstate.pw->pw_gid) < 0
-			|| initgroups(ses.authstate.pw->pw_name,
-				ses.authstate.pw->pw_gid) < 0) {
-			dropbear_exit("error changing user");
-		}
-
-		if (setuid(ses.authstate.pw->pw_uid) < 0) {
+		if ((setgid(ses.authstate.pw->pw_gid) < 0) ||
+			(initgroups(ses.authstate.pw->pw_name, 
+						ses.authstate.pw->pw_gid) < 0) ||
+			(setuid(ses.authstate.pw->pw_uid) < 0)) {
 			dropbear_exit("error changing user");
 		}
 	} else {
