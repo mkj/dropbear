@@ -72,6 +72,8 @@ void common_session_init(int sock, char* remotehost) {
 	ses.payload = NULL;
 	ses.recvseq = 0;
 
+	initqueue(&ses.writequeue);
+
 	ses.requirenext = SSH_MSG_KEXINIT;
 	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
 	ses.ignorenext = 0;
