@@ -610,5 +610,7 @@ fi
 AC_EXEEXT
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
+AC_OUTPUT(libtomcrypt/Makefile)
+AC_OUTPUT(libtommath/Makefile)
 AC_MSG_RESULT()
 AC_MSG_RESULT(Now edit options.h to choose features.)

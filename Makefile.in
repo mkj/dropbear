@@ -54,6 +54,9 @@ dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
 dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
 scpobjs=$(SCPOBJS)
 
+VPATH=@srcdir@
+srcdir=@srcdir@
+
 prefix=@prefix@
 exec_prefix=${prefix}
 bindir=${exec_prefix}/bin
@@ -65,7 +68,7 @@ AR=@AR@
 RANLIB=@RANLIB@
 STRIP=@STRIP@
 INSTALL=@INSTALL@
-CFLAGS=-Ilibtomcrypt @CFLAGS@
+CFLAGS=-I. -I$(srcdir)/libtomcrypt @CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
 
