@@ -140,7 +140,7 @@ runopts * getrunopts(int argc, char ** argv) {
 		if (longport > 65534 || longport < 1) {
 			dropbear_exit("Bad port %s", portstring);
 		}
-		opts->port = (u_int16_t)longport;
+		opts->port = (uint16_t)longport;
 	} else {
 		opts->port = DROPBEAR_PORT;
 	}

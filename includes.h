@@ -51,6 +51,10 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#ifdef HAVE_INTTYPES_H
+#include <inttypes.h>
+#endif
+
 #ifdef HAVE_LIBUTIL_H
 #include <libutil.h>
 #endif
@@ -69,6 +73,10 @@
 
 #ifdef HAVE_SHADOW_H
 #include <shadow.h>
+#endif
+
+#ifdef HAVE_LIBGEN_H
+#include <libgen.h>
 #endif
 
 #endif /* _INCLUDES_H_ */

@@ -43,7 +43,7 @@
 #include "signkey.h"
 #include "runopts.h"
 
-static void listensocket(int *sock, u_int16_t port);
+static void listensocket(int *sock, uint16_t port);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 
@@ -244,7 +244,7 @@ static void sigsegv_handler(int fish) {
 	exit(EXIT_FAILURE);
 }
 
-static void listensocket(int *sock, u_int16_t port) {
+static void listensocket(int *sock, uint16_t port) {
 	
 	int listensock; /* listening fd */
 	struct sockaddr_in listen_addr;
