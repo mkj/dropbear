@@ -42,8 +42,8 @@ build-stamp: config.status
 
 clean: deb-checkdir deb-checkuid
 	-$(MAKE) distclean
-	test ! -e patch-stamp || \
-	  for i in debian/diff/*.diff; do patch -p0 -R <$$i; done
+#	test ! -e patch-stamp || \
+#	  for i in debian/diff/*.diff; do patch -p0 -R <$$i; done
 	rm -f patch-stamp build-stamp config.log config.status
 	rm -rf "$(DIR)"
 	rm -f debian/files debian/substvars debian/copyright changelog
