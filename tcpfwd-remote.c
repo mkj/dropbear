@@ -208,13 +208,10 @@ static int remotetcpreq() {
 		goto out;
 	}
 
-	/* XXX matt - server change
-	if (ses.authstate.pw->pw_uid != 0
-			&& port < IPPORT_RESERVED) {
+	if (!ses.allowprivport && port < IPPORT_RESERVED) {
 		TRACE(("can't assign port < 1024 for non-root"));
 		goto out;
 	}
-	*/
 
 	ret = listen_tcpfwd(bindaddr, port);
 

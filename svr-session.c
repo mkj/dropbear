@@ -183,12 +183,6 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 				"exit before auth: %s", format);
 	}
 
-	if (errno != 0) {
-		/* XXX - is this valid? */
-		snprintf(fmtbuf, sizeof(fmtbuf), "%s [%d %s]", fmtbuf, 
-				errno, strerror(errno));
-	}
-
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
 	/* must be after we've done with username etc */

@@ -108,6 +108,8 @@ void common_session_init(int sock, runopts *opts) {
 
 	ses.chantypes = NULL;
 
+	ses.allowprivport = 0;
+
 
 	TRACE(("leave session_init"));
 }

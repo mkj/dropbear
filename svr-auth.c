@@ -341,6 +341,10 @@ void send_msg_userauth_success() {
 
 	svr_ses.authstate.authdone = 1;
 
+	if (svr_ses.authstate.pw->pw_uid == 0) {
+		ses.allowprivport = 1;
+	}
+
 	/* Remove from the list of pre-auth sockets. Should be m_close(), since if
 	 * we fail, we might end up leaking connection slots, and disallow new
 	 * logins - a nasty situation. */							
