@@ -64,6 +64,12 @@ static void printhelp(const char * progname) {
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
 #endif
+#ifndef DISABLE_LOCALTCPFWD
+					"-j		Disable local port forwarding\n"
+#endif
+#ifndef DISABLE_REMOTETCPFWD
+					"-k		Disable remote port forwarding\n"
+#endif
 					"-p port	Listen on specified tcp port, up to %d can be specified\n"
 					"		(default %d if none specified)\n"
 /*					"-4/-6		Disable listening on ipv4/ipv6 respectively\n"*/
@@ -99,6 +105,8 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->norootlogin = 0;
 	opts->noauthpass = 0;
 	opts->norootpass = 0;
+	opts->nolocaltcp = 0;
+	opts->noremotetcp = 0;
 	/* not yet
 	opts->ipv4 = 1;
 	opts->ipv6 = 1;
@@ -141,6 +149,16 @@ runopts * getrunopts(int argc, char ** argv) {
 #ifndef DISABLE_SYSLOG
 				case 'E':
 					usingsyslog = 0;
+					break;
+#endif
+#ifndef DISABLE_LOCALTCPFWD
+				case 'j':
+					opts->nolocaltcp = 1;
+					break;
+#endif
+#ifndef DISABLE_REMOTETCPFWD
+				case 'k':
+					opts->noremotetcp = 1;
 					break;
 #endif
 				case 'p':

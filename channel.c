@@ -36,6 +36,7 @@
 #include "x11fwd.h"
 #include "agentfwd.h"
 #include "localtcpfwd.h"
+#include "remotetcpfwd.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -110,7 +111,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 
 	/* otherwise extend the list */
 	if (i == ses.chansize) {
-		if (ses.chansize > MAX_CHANNELS) {
+		if (ses.chansize >= MAX_CHANNELS) {
 			TRACE(("leave newchannel: max chans reached"));
 			return NULL;
 		}
@@ -222,6 +223,9 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 			if (chansess->agentfd >= 0 && FD_ISSET(chansess->agentfd,readfd)) {
 				agentaccept(chansess);
 			}
+#endif
+#ifndef DISABLE_REMOTETCPFWD
+			handleremotetcp(readfd);
 #endif
 		}
 
@@ -451,6 +455,9 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 			if (chansess->agentfd >= 0) {
 				FD_SET(chansess->agentfd, readfd);
 			}
+#endif
+#ifndef DISABLE_REMOTETCPFWD
+			setremotetcpfds(readfd);
 #endif
 		}
 	} /* foreach channel */
@@ -793,7 +800,10 @@ void recv_msg_channel_open() {
 		newchansess(channel);
 #ifndef DISABLE_LOCALTCPFWD
 	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
-		if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
+		if (ses.runopts->nolocaltcp) {
+			errtype = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
+		} else if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
+			errtype = SSH_OPEN_CONNECT_FAILED;
 			deletechannel(channel);
 			goto failure;
 		}

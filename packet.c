@@ -481,13 +481,14 @@ void process_packet() {
 		case SSH_MSG_CHANNEL_CLOSE:
 		case SSH_MSG_CHANNEL_OPEN_CONFIRMATION:
 		case SSH_MSG_CHANNEL_OPEN_FAILURE:
+		case SSH_MSG_GLOBAL_REQUEST:
 			/* these should be checked for authdone below */
 			process_postauth_packet(type);
 			break;
 	
 		default:
 			/* TODO this possibly should be handled */
-			TRACE(("unknown packet"));
+			TRACE(("preauth unknown packet"));
 			recv_unimplemented();
 			break;
 	}
@@ -503,6 +504,9 @@ out:
 static void process_postauth_packet(unsigned int type) {
 
 	/* messages following here require userauth before use */
+
+	/* IF YOU ADD MORE PACKET TYPES, MAKE SURE THEY'RE ALSO ADDED TO THE LIST
+	 * IN process_packet() XXX XXX XXX */
 	if (!ses.authstate.authdone) {
 		dropbear_exit("received message %d before userauth", type);
 	}
@@ -516,6 +520,13 @@ static void process_postauth_packet(unsigned int type) {
 		case SSH_MSG_CHANNEL_WINDOW_ADJUST:
 			recv_msg_channel_window_adjust();
 			break;
+
+#ifndef DISABLE_REMOTETCPFWD
+		case SSH_MSG_GLOBAL_REQUEST:
+			/* currently only used for remote tcp, so we cheat a little */
+			recv_msg_global_request_remotetcp();
+			break;
+#endif
 
 		case SSH_MSG_CHANNEL_REQUEST:
 			recv_msg_channel_request();

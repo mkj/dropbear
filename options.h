@@ -51,9 +51,10 @@
 #define ENABLE_X11FWD
 
 /* Enable TCP Fowarding */
-/* NOTE: TCP forwarding is still work-in-progress, -L forwarding should work,
- * -R forwarding isn't implemented yet */
-#define ENABLE_TCPFWD
+/* OpenSSH's "-L" style forwarding (client port forwarded via server) */
+#define ENABLE_LOCALTCPFWD
+/* OpenSSH's "-R" style forwarding (server port forwarded via client) */
+#define ENABLE_REMOTETCPFWD
 
 /* Enable Authentication Agent Forwarding */
 #define ENABLE_AGENTFWD
@@ -217,6 +218,7 @@
 #define MAX_TERM_LEN 200 /* max length of TERM name */
 
 #define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
+#define MAX_IP_LEN 15 /* strlen("255.255.255.255") == 15 */
 
 #define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
 								 ipv4 and ipv6 don't count twice */
@@ -283,11 +285,6 @@
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
 
-/* some quick hacks to reduce the double-negatives above */
-#ifndef ENABLE_TCPFWD
-#define DISABLE_TCPFWD
-#endif
-
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD
 #endif
@@ -296,8 +293,11 @@
 #define DISABLE_AGENTFWD
 #endif
 
-#ifdef DISABLE_TCPFWD
+#ifndef ENABLE_LOCALTCPFWD
 #define DISABLE_LOCALTCPFWD
+#endif
+
+#ifndef ENABLE_REMOTETCPFWD
 #define DISABLE_REMOTETCPFWD
 #endif
 

@@ -34,13 +34,16 @@
 #define CHANNEL_ID_X11 2
 #define CHANNEL_ID_AGENT 3
 #define CHANNEL_ID_TCPDIRECT 4
+#define CHANNEL_ID_TCPFORWARDED 5
 
 #define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
 #define SSH_OPEN_CONNECT_FAILED                 2
 #define SSH_OPEN_UNKNOWN_CHANNEL_TYPE           3
 #define SSH_OPEN_RESOURCE_SHORTAGE              4
 
-#define MAX_CHANNELS 400 /* arbitrary, includes each tcp/x11 connection */
+#define MAX_CHANNELS 60 /* simple mem restriction, includes each tcp/x11
+							connection, so can't be _too_ small */
+
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
 #define RECV_MAXWINDOW 6000 /* tweak */

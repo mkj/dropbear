@@ -33,6 +33,7 @@
 #include "channel.h"
 #include "queue.h"
 #include "runopts.h"
+#include "remotetcpfwd.h"
 
 extern int sessinitdone;
 extern int exitflag;
@@ -126,6 +127,11 @@ struct sshsession {
 
 	struct ChildPid * childpids; /* array of mappings childpid<->channel */
 	unsigned int childpidsize;
+	
+#ifndef DISABLE_REMOTETCPFWD
+	struct TCPListener ** tcplisteners;
+	unsigned int tcplistensize;
+#endif
 
 };
 

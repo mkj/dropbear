@@ -55,6 +55,9 @@ struct RunOpts {
 
 	int noauthpass;
 	int norootpass;
+
+	int nolocaltcp;
+	int noremotetcp;
 	
 	sign_key *hostkey;
 	buffer * banner;
