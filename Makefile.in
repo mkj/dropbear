@@ -47,7 +47,7 @@ dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC)
 	$(LD) $(LDFLAGS) -o staticdropbearkey $(DROPBEARKEYOBJS) \
 		$(OBJS) $(LIBS) -static
 
-$(LTC):
+$(LTC): $(HEADERS)
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)
 
 ltc-clean:
