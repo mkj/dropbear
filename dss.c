@@ -30,6 +30,13 @@
 #include "ssh.h"
 #include "random.h"
 
+/* Handle DSS (Digital Signature Standard), aka DSA (D.S. Algorithm),
+ * operations, such as key reading, signing, verification. Key generation
+ * is in gendss.c, since it isn't required in the server itself.
+ *
+ * See FIPS186 or the Handbook of Applied Cryptography for details of the
+ * algorithm */
+
 #ifdef DROPBEAR_DSS 
 
 /* Load a dss key from a buffer, initialising the values.
@@ -60,7 +67,7 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* same as buf_get_dss_pub_key, but reads a private "x" key at the end.
+/* Same as buf_get_dss_pub_key, but reads a private "x" key at the end.
  * Loads a private dss key from a buffer
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
@@ -82,7 +89,7 @@ int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 }
 	
 
-/* clear and free the memory used by a public key */
+/* Clear and free the memory used by a public or private key */
 void dss_key_free(dss_key *key) {
 
 	TRACE(("enter dsa_key_free"));
@@ -114,7 +121,7 @@ void dss_key_free(dss_key *key) {
 	TRACE(("leave dsa_key_free"));
 }
 
-/* put the dss key into the buffer in the required format:
+/* put the dss public key into the buffer in the required format:
  *
  * string	"ssh-dss"
  * mpint	p
@@ -143,7 +150,8 @@ void buf_put_dss_priv_key(buffer* buf, dss_key *key) {
 }
 
 #ifdef DROPBEAR_SIGNKEY_VERIFY
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Verify a DSS signature (in buf) made on data by the key given. 
+ * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
@@ -242,10 +250,10 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
-/* sign the data presented in len with key, writing the signature contents
+/* Sign the data presented with key, writing the signature contents
  * to the buffer
  *
- * when DSS_PROTOK is #defined:
+ * When DSS_PROTOK is #defined:
  * The alternate k generation method is based on the method used in PuTTY. 
  * In particular to avoid being vulnerable to attacks using flaws in random
  * generation of k, we use the following:

@@ -61,6 +61,8 @@ static void printhelp(char * progname);
 #define DSS_SIZE (1024/8) /* 1024 bit */
 
 static void buf_writefile(buffer * buf, const char * filename);
+
+/* Print a help message */
 static void printhelp(char * progname) {
 
 	fprintf(stderr, "Usage: %s -t <type> -f <filename> [-s bits]\n"
@@ -135,6 +137,7 @@ int main(int argc, char ** argv) {
 #ifdef DROPBEAR_DSS
 				"dss\n"
 #endif
+				"\n"
 			   );
 		printhelp(argv[0]);
 		exit(EXIT_FAILURE);
@@ -230,6 +233,7 @@ int main(int argc, char ** argv) {
 	return EXIT_SUCCESS;
 }
 
+/* Write a buffer to a file specified, failing if the file exists */
 static void buf_writefile(buffer * buf, const char * filename) {
 
 	int fd;

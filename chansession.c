@@ -37,6 +37,8 @@
 #include "x11fwd.h"
 #include "agentfwd.h"
 
+/* Handles sessions (either shells or programs) requested by the client */
+
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd);
 static int sessionpty(struct ChanSess * chansess);
@@ -53,6 +55,7 @@ struct SigMap {
 	char* name;
 };
 
+/* Mapping of signal values to ssh signal strings */
 struct SigMap signames[] = {
 	{SIGABRT, "ABRT"},
 	{SIGALRM, "ALRM"},
@@ -73,6 +76,8 @@ struct SigMap signames[] = {
 /* required to clear environment */
 extern char** environ;
 
+/* Set up the general chansession environment, in particular child-exit
+ * handling */
 void chansessinitialise() {
 
 	struct sigaction sa_chld;
@@ -90,6 +95,7 @@ void chansessinitialise() {
 	
 }
 
+/* handler for childs exiting, store the state for return to the client */
 static void sesssigchild_handler(int val) {
 
 	int status;
@@ -128,6 +134,7 @@ static void sesssigchild_handler(int val) {
 	TRACE(("leave sigchld handler"));
 }
 
+/* send the exitstatus to the client */
 void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess) {
 
@@ -146,6 +153,7 @@ void send_msg_chansess_exitstatus(struct Channel * channel,
 
 }
 
+/* send the signal causing the exit to the client */
 void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess) {
 
@@ -184,7 +192,7 @@ void send_msg_chansess_exitsignal(struct Channel * channel,
 	encrypt_packet();
 }
 
-/* set up a session type channel */
+/* set up a session channel */
 void newchansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
@@ -223,7 +231,7 @@ void newchansess(struct Channel *channel) {
 
 }
 
-/* clean up a session type channel */
+/* clean a session channel */
 void closechansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
@@ -276,6 +284,8 @@ void closechansess(struct Channel *channel) {
 	TRACE(("leave closechansess"));
 }
 
+/* Handle requests for a channel. These can be execution requests,
+ * or x11/authagent forwarding. These are passed to appropriate handlers */
 void chansessionrequest(struct Channel *channel) {
 
 	unsigned char * type;
@@ -337,7 +347,7 @@ void chansessionrequest(struct Channel *channel) {
 }
 
 
-/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Send a signal to a session's process as requested by the client*/
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
@@ -374,7 +384,8 @@ static int sessionsignal(struct ChanSess *chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* Returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
+/* Let the process know that the window size has changed, as notified from the
+ * client. Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionwinchange(struct ChanSess *chansess) {
 
 	if (chansess->master < 0) {
@@ -393,9 +404,9 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	return DROPBEAR_FAILURE;
 }
 
-
-
-/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Set up a session pty which will be used to execute the shell or program.
+ * The pty is allocated now, and kept for when the shell/program executes.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
@@ -500,7 +511,10 @@ static int sessionpty(struct ChanSess * chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Handle a command request from the client. This is used for both shell
+ * and command-execution requests, and passes the command to
+ * noptycommand or ptycommand as appropriate.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd) {
 
@@ -532,7 +546,9 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	}
 }
 
-/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Execute a command and set up redirection of stdin/stdout/stderr without a
+ * pty.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	int infds[2];
@@ -563,7 +579,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
 			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
-			TRACE(("leave sessioncommand: error redirecting FDs"));
+			TRACE(("leave noptycommand: error redirecting FDs"));
 			return DROPBEAR_FAILURE;
 		}
 
@@ -579,7 +595,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	} else {
 		/* parent */
-		TRACE(("continue sessioncommand: parent"));
+		TRACE(("continue noptycommand: parent"));
 		chansess->pid = pid;
 
 		/* add a child pid */
@@ -608,7 +624,9 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Execute a command or shell within a pty environment, and set up
+ * redirection as appropriate.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
@@ -633,7 +651,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if ((dup2(chansess->slave, STDIN_FILENO) < 0) ||
 			(dup2(chansess->slave, STDERR_FILENO) < 0) ||
 			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
-			TRACE(("leave sessioncommand: error redirecting filedesc"));
+			TRACE(("leave ptycommand: error redirecting filedesc"));
 			return DROPBEAR_FAILURE;
 		}
 
@@ -653,7 +671,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	} else {
 		/* parent */
-		TRACE(("continue sessioncommand: parent"));
+		TRACE(("continue ptycommand: parent"));
 		chansess->pid = pid;
 
 		/* add a child pid */
@@ -675,6 +693,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
+/* Add the pid of a child to the list for exit-handling */
 static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 	unsigned int i;

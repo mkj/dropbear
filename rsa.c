@@ -22,6 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* Perform RSA operations on data, including reading keys, signing and
+ * verification.
+ *
+ * The format is specified in rfc2437, Applied Cryptography or The Handbook of
+ * Applied Cryptography detail the general algorithm. */
+
 #include "includes.h"
 #include "util.h"
 #include "bignum.h"
@@ -35,7 +41,7 @@
 static mp_int * rsa_pad_em(rsa_key * key,
 		const unsigned char * data, unsigned int len);
 
-/* Load a rsa key from a buffer, initialising the values.
+/* Load a public rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
  * These should be freed with rsa_key_free.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
@@ -63,7 +69,7 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 }
 
-/* same as buf_get_rsa_pub_key, but reads a private "x" key at the end.
+/* Same as buf_get_rsa_pub_key, but reads a private "x" key at the end.
  * Loads a private rsa key from a buffer
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
@@ -109,7 +115,7 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 }
 	
 
-/* clear and free the memory used by a public key */
+/* Clear and free the memory used by a public or private key */
 void rsa_key_free(rsa_key *key) {
 
 	TRACE(("enter rsa_key_free"));
@@ -142,7 +148,7 @@ void rsa_key_free(rsa_key *key) {
 	TRACE(("leave rsa_key_free"));
 }
 
-/* put the rsa key into the buffer in the required format:
+/* Put the public rsa key into the buffer in the required format:
  *
  * string	"ssh-rsa"
  * mp_int	e
@@ -184,7 +190,8 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 }
 
 #ifdef DROPBEAR_SIGNKEY_VERIFY
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Verify a signature in buf, made on data by the key given.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 		unsigned int len) {
 
@@ -231,7 +238,7 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
-/* sign the data presented with key, writing the signature contents
+/* Sign the data presented with key, writing the signature contents
  * to the buffer */
 void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 		unsigned int len) {
@@ -283,7 +290,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	TRACE(("leave buf_put_rsa_sign"));
 }
 
-/* creates the message value as expected by PKCS, see rfc2437 etc */
+/* Creates the message value as expected by PKCS, see rfc2437 etc */
 /* format to be padded to is:
  * EM = 01 | FF* | 00 | prefix | hash
  *
@@ -296,6 +303,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 static mp_int * rsa_pad_em(rsa_key * key,
 		const unsigned char * data, unsigned int len) {
 
+	/* ASN1 designator */
 	const char rsa_asn1_magic[] = 
 		{0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 
 		 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14};

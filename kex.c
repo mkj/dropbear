@@ -46,9 +46,7 @@ const unsigned char dh_p_val[] = {
 	0xEE, 0x38, 0x6B, 0xFB, 0x5A, 0x89, 0x9F, 0xA5, 0xAE, 0x9F, 0x24, 0x11,
 	0x7C, 0x4B, 0x1F, 0xE6, 0x49, 0x28, 0x66, 0x51, 0xEC, 0xE6, 0x53, 0x81,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
-
 #define DH_P_LEN 128
-const unsigned int dh_p_digits = 310;
 
 const unsigned int dh_g_val = 2;
 
@@ -59,6 +57,12 @@ static void hashkeys(unsigned char *out, int outlen,
 		const hash_state * hs, unsigned const char X);
 static void send_msg_kexdh_reply(mp_int *dh_e);
 
+/* Executed upon receiving a kexinit message from the client to initiate
+ * key exchange. If we haven't already done so, we send the list of our
+ * preferred algorithms. The client's requested algorithms are processed,
+ * and we calculate the first portion of the key-exchange-hash for used
+ * later in the key exchange. No response is sent, as the client should
+ * initiate the diffie-hellman key exchange */
 void recv_msg_kexinit() {
 	
 	TRACE(("enter recv_msg_kexinit"));
@@ -100,6 +104,7 @@ void recv_msg_kexinit() {
 	TRACE(("leave recv_msg_kexinit"));
 }
 
+/* Bring new keys into use after a key exchange, and let the client know*/
 void send_msg_newkeys() {
 
 	TRACE(("enter send_msg_newkeys"));
@@ -121,6 +126,7 @@ void send_msg_newkeys() {
 	TRACE(("leave send_msg_newkeys"));
 }
 
+/* Bring the new keys into use after a key exchange */
 void recv_msg_newkeys() {
 
 	TRACE(("enter recv_msg_newkeys"));
@@ -138,7 +144,7 @@ void recv_msg_newkeys() {
 	TRACE(("leave recv_msg_newkeys"));
 }
 
-/* set the kex state variables to initial values, ready to receive a new
+/* Set the kex state variables to initial values, ready to receive a new
  * SSH_MSG_KEXINIT (or send one) */
 void kexinitialise() {
 
@@ -166,12 +172,14 @@ void kexinitialise() {
 
 }
 
-/* helper function for gen_new_keys, creates a hash. It makes a copy of the
+/* Helper function for gen_new_keys, creates a hash. It makes a copy of the
  * already initialised hash_state hs, which should already have processed
  * the dh_K and hash, since these are common. X is the letter 'A', 'B' etc.
  * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
  * The output will only be expanded once, since that is all that is required
- * (for 3DES and SHA, with 24 and 20 bytes respectively). */
+ * (for 3DES and SHA, with 24 and 20 bytes respectively). 
+ *
+ * See Section 5.2 of the IETF secsh Transport Draft for details */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, const unsigned char X) {
 
@@ -191,8 +199,12 @@ static void hashkeys(unsigned char *out, int outlen,
 	}
 }
 
-/* generate the actual encryption/integrity keys, using the results of the
- * key exchange */
+/* Generate the actual encryption/integrity keys, using the results of the
+ * key exchange, as specified in section 5.2 of the IETF secsh-transport
+ * draft. This occurs after the DH key-exchange.
+ *
+ * ses.newkeys is the key set of keys which are generated, these are only
+ * taken into use after both sides have sent a newkeys message */
 static void gen_new_keys() {
 
 	unsigned char IV[MAX_IV_LEN];
@@ -311,6 +323,10 @@ static void gen_new_keys() {
 	TRACE(("leave gen_new_keys"));
 }
 
+/* Handle a diffie-hellman key exchange initialisation. This involves
+ * calculating a session key reply value, and corresponding hash. These
+ * are carried out by send_msg_kexdh_reply(). recv_msg_kexdh_init() calls
+ * that function, then brings the new keys into use */
 void recv_msg_kexdh_init() {
 
 	mp_int dh_e;
@@ -332,7 +348,12 @@ void recv_msg_kexdh_init() {
 	TRACE(("leave recv_msg_kexdh_init"));
 }
 	
-/* some mp_ints are cleared before the end to attempt to minimise memory */
+/* Generate our side of the diffie-hellman key exchange value (dh_f), and
+ * calculate the session key using the diffie-hellman algorithm. Following
+ * that, the session hash is calculated, and signed with RSA or DSS. The
+ * result is sent to the client. 
+ *
+ * See the ietf-secsh-transport draft, section 6, for details */
 static void send_msg_kexdh_reply(mp_int *dh_e) {
 
 	mp_int dh_p, dh_q, dh_g, dh_y, dh_f;
@@ -345,7 +366,6 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	assert(ses.kexstate.recvkexinit);
 
 	m_mp_init(&dh_g);
-	/*mp_set_prec(dh_p_digits);*/ /* we may as well set the size right to start */
 	m_mp_init(&dh_p);
 	m_mp_init(&dh_q);
 	m_mp_init(&dh_y);
@@ -409,28 +429,12 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 
-	/* calculate the hash H */
+	/* calculate the hash H to sign */
 	sha1_init(&hs);
 	buf_setpos(ses.kexhashbuf, 0);
 	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
 	sha1_done(&hs, ses.hash);
-#if defined(DEBUG_KEXHASH) && defined(DEBUG_TRACE)
-	{
-		int hashfd;
-		int hashwritelen;
-		hashfd = creat("/tmp/hashbufm", S_IRUSR|S_IWUSR|S_IROTH|S_IRGRP);
-	
-		hashwritelen = write(hashfd, 
-				buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
-				ses.kexhashbuf->len);
-		if (hashwritelen != ses.kexhashbuf->len) {
-			dropbear_exit("bad hashwritelen debugging");
-		}
-		close(hashfd);
-		printhex(ses.hash, SHA1_HASH_SIZE);
-	}
-#endif /* DEBUG_KEXHASH */
 	buf_free(ses.kexhashbuf);
 	ses.kexhashbuf = NULL;
 	
@@ -560,6 +564,7 @@ error:
 
 }
 
+/* Send our list of algorithms we can use */
 void send_msg_kexinit() {
 
 	CHECKCLEARTOWRITE();
