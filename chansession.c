@@ -701,7 +701,7 @@ static void execchild(struct ChanSess *chansess) {
 
 	/* clear environment */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
-	 * etc. this is hazardous, so should only be used for debugging. */
+	 * etc. This is hazardous, so should only be used for debugging. */
 #ifndef DEBUG_KEEP_ENV
 #ifdef HAVE_CLEARENV
 	clearenv();
@@ -711,20 +711,30 @@ static void execchild(struct ChanSess *chansess) {
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_KEEP_ENV */
 
-	/* change user */
-	if (setgid(ses.authstate.pw->pw_gid) < 0) {
-		dropbear_exit("error changing user");
-	}
-#ifndef DEBUG_HACKCRYPT
-	if (initgroups(ses.authstate.pw->pw_name,
-				ses.authstate.pw->pw_gid) < 0) {
-		dropbear_exit("error changing user");
-	}
-#endif
-	if (setuid(ses.authstate.pw->pw_uid) < 0) {
-		dropbear_exit("error changing user");
-	}
+	/* We can only change uid/gid as root ... */
+	if (getuid() == 0) {
 
+		if (setgid(ses.authstate.pw->pw_gid) < 0
+			|| initgroups(ses.authstate.pw->pw_name,
+				ses.authstate.pw->pw_gid) < 0) {
+			dropbear_exit("error changing user");
+		}
+
+		if (setuid(ses.authstate.pw->pw_uid) < 0) {
+			dropbear_exit("error changing user");
+		}
+	} else {
+		/* ... but if the daemon is the same uid as the requested uid, we don't
+		 * need to */
+
+		/* XXX - there is a minor issue here, in that if there are multiple
+		 * usernames with the same uid, but differing groups, then the
+		 * differing groups won't be set (as with initgroups()). The solution
+		 * is for the sysadmin not to give out the UID twice */
+		if (getuid() != ses.authstate.pw->pw_uid) { dropbear_exit("couldn't
+				change user as non-root");
+		}
+	}
 
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw->pw_name);
