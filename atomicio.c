@@ -1,5 +1,5 @@
 /*
- * Copied from OpenSSH 3.6.1p2, required for loginrec.c
+ * Copied from OpenSSH 3.6.1p2.
  * 
  * Copyright (c) 1995,1999 Theo de Raadt.  All rights reserved.
  * All rights reserved.
@@ -25,8 +25,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-/* Taken from OpenSSH for use with the loginrec code */
-
 /* RCSID("OpenBSD: atomicio.c,v 1.10 2001/05/08 22:48:07 markus Exp "); */
 
 #include "atomicio.h"
@@ -42,7 +40,8 @@ atomicio(f, fd, _s, n)
 	size_t n;
 {
 	char *s = _s;
-	ssize_t res, pos = 0;
+	ssize_t res;
+	size_t pos = 0;
 
 	while (n > pos) {
 		res = (f) (fd, s + pos, n - pos);
