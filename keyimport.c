@@ -31,6 +31,9 @@
  */
 
 #include "keyimport.h"
+#include "bignum.h"
+#include "buffer.h"
+#include "util.h"
 
 #define PUT_32BIT(cp, value) do { \
   (cp)[3] = (unsigned char)(value); \
@@ -46,8 +49,8 @@
 
 int openssh_encrypted(const char *filename);
 sign_key *openssh_read(const char *filename, char *passphrase);
-int openssh_write(const char *filename, struct ssh2_userkey *key,
-				  char *passphrase);
+int openssh_write(const char *filename, sign_key *key,
+				  char *passphrase, int keytype);
 
 #if 0
 int sshcom_encrypted(const char *filename, char **comment);
@@ -55,73 +58,6 @@ struct ssh2_userkey *sshcom_read(const char *filename, char *passphrase);
 int sshcom_write(const char *filename, struct ssh2_userkey *key,
 				 char *passphrase);
 #endif
-
-/*
- * Given a key type, determine whether we know how to import it.
- */
-int import_possible(int type)
-{
-	if (type == SSH_KEYTYPE_OPENSSH)
-		return 1;
-	if (type == SSH_KEYTYPE_SSHCOM)
-		return 1;
-	return 0;
-}
-
-/*
- * Given a key type, determine what native key type
- * (SSH_KEYTYPE_SSH1 or SSH_KEYTYPE_SSH2) it will come out as once
- * we've imported it.
- */
-int import_target_type(int type)
-{
-	/*
-	 * There are no known foreign SSH1 key formats.
-	 */
-	return SSH_KEYTYPE_SSH2;
-}
-
-/*
- * Determine whether a foreign key is encrypted.
- */
-int import_encrypted(const char *filename, int type, char **comment)
-{
-	if (type == SSH_KEYTYPE_OPENSSH) {
-		/* OpenSSH doesn't do key comments */
-		*comment = dupstr(filename_to_str(filename));
-		return openssh_encrypted(filename);
-	}
-	if (type == SSH_KEYTYPE_SSHCOM) {
-		return sshcom_encrypted(filename, comment);
-	}
-	return 0;
-}
-
-/*
- * Import an SSH2 key.
- */
-sign_key *import_ssh2(const char *filename, int type,
-								 char *passphrase)
-{
-	if (type == SSH_KEYTYPE_OPENSSH)
-		return openssh_read(filename, passphrase);
-	if (type == SSH_KEYTYPE_SSHCOM)
-		return sshcom_read(filename, passphrase);
-	return NULL;
-}
-
-/*
- * Export an SSH2 key.
- */
-int export_ssh2(const char *filename, int type,
-				sign_key *key, char *passphrase)
-{
-	if (type == SSH_KEYTYPE_OPENSSH)
-		return openssh_write(filename, key, passphrase);
-	if (type == SSH_KEYTYPE_SSHCOM)
-		return sshcom_write(filename, key, passphrase);
-	return 0;
-}
 
 /* ----------------------------------------------------------------------
  * Helper routines. (The base64 ones are defined in sshpubk.c.)
@@ -133,6 +69,29 @@ int export_ssh2(const char *filename, int type,
 						 (c) == '+' || (c) == '/' || (c) == '=' \
 						 )
 
+void base64_encode_fp(FILE * fp, unsigned char *data, int datalen, int cpl)
+{
+    int linelen = 0;
+    char out[4];
+    int n, i;
+	unsigned long empty;
+
+    while (datalen > 0) {
+	n = (datalen < 3 ? datalen : 3);
+	base64_encode(data, n, out, &empty);
+	data += n;
+	datalen -= n;
+	for (i = 0; i < 4; i++) {
+	    if (linelen >= cpl) {
+		linelen = 0;
+		fputc('\n', fp);
+	    }
+	    fputc(out[i], fp);
+	    linelen++;
+	}
+    }
+    fputc('\n', fp);
+}
 /*
  * Read an ASN.1/BER identifier and length pair.
  * 
@@ -261,27 +220,6 @@ static int ber_write_id_len(void *dest, int id, int length, int flags)
 /* Simple structure to point to an mp-int within a blob. */
 struct mpint_pos { void *start; int bytes; };
 
-static int ssh2_read_mpint(void *data, int len, struct mpint_pos *ret)
-{
-	int bytes;
-	unsigned char *d = (unsigned char *) data;
-
-	if (len < 4)
-		goto error;
-	bytes = GET_32BIT(d);
-	if (len < 4+bytes)
-		goto error;
-
-	ret->start = d + 4;
-	ret->bytes = bytes;
-	return bytes+4;
-
-	error:
-	ret->start = NULL;
-	ret->bytes = -1;
-	return len;						/* ensure further calls fail as well */
-}
-
 /* ----------------------------------------------------------------------
  * Code to read and write OpenSSH private keys.
  */
@@ -305,13 +243,13 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	char base64_bit[4];
 	int base64_chars = 0;
 
-	ret = snew(struct openssh_key);
+	ret = (struct openssh_key*)m_malloc(sizeof(struct openssh_key));
 	ret->keyblob = NULL;
 	ret->keyblob_len = ret->keyblob_size = 0;
 	ret->encrypted = 0;
 	memset(ret->iv, 0, sizeof(ret->iv));
 
-	fp = f_open(*filename, "r");
+	fp = fopen(filename, "r");
 	if (!fp) {
 		errmsg = "Unable to open key file";
 		goto error;
@@ -382,11 +320,13 @@ static struct openssh_key *load_openssh_key(const char *filename)
 				base64_bit[base64_chars++] = *p;
 				if (base64_chars == 4) {
 					unsigned char out[3];
-					int len;
+					unsigned long len;
 
 					base64_chars = 0;
 
-					len = base64_decode_atom(base64_bit, out);
+					/* not real efficient, but eh, this code doesn't run often.
+					 * matt */
+					base64_decode(base64_bit, 4, out, &len);
 
 					if (len <= 0) {
 						errmsg = "Invalid base64 encoding";
@@ -395,8 +335,8 @@ static struct openssh_key *load_openssh_key(const char *filename)
 
 					if (ret->keyblob_len + len > ret->keyblob_size) {
 						ret->keyblob_size = ret->keyblob_len + len + 256;
-						ret->keyblob = sresize(ret->keyblob, ret->keyblob_size,
-											   unsigned char);
+						ret->keyblob = (unsigned char*)m_realloc(ret->keyblob,
+								ret->keyblob_size);
 					}
 
 					memcpy(ret->keyblob + ret->keyblob_len, out, len);
@@ -473,6 +413,8 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 		return NULL;
 
 	if (key->encrypted) {
+		errmsg = "encrypted keys not supported currently";
+		goto error;
 #if 0
 		/* matt TODO */
 		/*
@@ -532,8 +474,7 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 	ret = ber_read_id_len(p, key->keyblob_len, &id, &len, &flags);
 	p += ret;
 	if (ret < 0 || id != 16) {
-		errmsg = "ASN.1 decoding failure";
-		retval = SSH2_WRONG_PASSPHRASE;
+		errmsg = "ASN.1 decoding failure - wrong password?";
 		goto error;
 	}
 
@@ -546,8 +487,7 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 	/*
 	 * Space to create key blob in.
 	 */
-	blobsize = 256+key->keyblob_len;
-	blobbuf = buf_new(blobsize);
+	blobbuf = buf_new(3000);
 
 	if (key->type == OSSH_DSA) {
 		buf_putstring(blobbuf, "ssh-dss", 7);
@@ -577,13 +517,13 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 		} else if (key->type == OSSH_RSA) {
 			/*
 			 * OpenSSH key order is n, e, d, p, q, dmp1, dmq1, iqmp
-			 * but we want e, n, d
+			 * but we want e, n, d, p, q
 			 */
 			if (i == 1) {
 				/* Save the details for after we deal with number 2. */
 				modptr = (char *)p;
 				modlen = len;
-			} else if (i == 2 || i == 3) {
+			} else if (i <= 2 && i <= 5) {
 				buf_putstring(blobbuf, p, len);
 				if (i == 2) {
 					buf_putstring(blobbuf, modptr, len);
@@ -628,15 +568,18 @@ sign_key *openssh_read(const char *filename, char *passphrase)
 	m_free(key->keyblob);
 	m_burn(&key, sizeof(key));
 	m_free(key);
+	if (errmsg) {
+		fprintf(stderr, "Error: %s\n", errmsg);
+	}
 	return retval;
 }
 
 int openssh_write(const char *filename, sign_key *key,
-				  char *passphrase)
+				  char *passphrase, int keytype)
 {
-	unsigned char *pubblob, *privblob, *spareblob;
-	int publen, privlen, sparelen;
-	unsigned char *outblob;
+	buffer * keyblob = NULL;
+	buffer * extrablob = NULL; /* used for calculated values to write */
+	unsigned char *outblob = NULL;
 	int outlen;
 	struct mpint_pos numbers[9];
 	int nnumbers, pos, len, seqlen, i;
@@ -645,92 +588,131 @@ int openssh_write(const char *filename, sign_key *key,
 	unsigned char iv[8];
 	int ret = 0;
 	FILE *fp;
+	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
 
 	/*
 	 * Fetch the key blobs.
 	 */
-	pubblob = key->alg->public_blob(key->data, &publen);
-	privblob = key->alg->private_blob(key->data, &privlen);
-	spareblob = outblob = NULL;
+	keyblob = buf_new(3000);
+	buf_put_priv_key(keyblob, key, keytype);
+
+	/* skip the "ssh-rsa" or "ssh-dss" header */
+	buf_incrpos(keyblob, buf_getint(keyblob));
 
 	/*
 	 * Find the sequence of integers to be encoded into the OpenSSH
 	 * key blob, and also decide on the header line.
 	 */
-	if (key->alg == &ssh_rsa) {
-		int pos;
-		struct mpint_pos n, e, d, p, q, iqmp, dmp1, dmq1;
-		Bignum bd, bp, bq, bdmp1, bdmq1;
+	numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
+	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 
-		pos = 4 + GET_32BIT(pubblob);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &e);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &n);
-		pos = 0;
-		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &d);
-		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &p);
-		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &q);
-		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &iqmp);
+		if (key->rsakey->p == NULL) {
+			fprintf(stderr, "Pre-0.33 Dropbear keys cannot be converted to OpenSSH keys.\n");
+			goto error;
+		}
 
-		assert(e.start && iqmp.start); /* can't go wrong */
+		/* e */
+		numbers[2].bytes = buf_getint(keyblob);
+		numbers[2].start = buf_getptr(keyblob, numbers[2].bytes);
+		buf_incrpos(keyblob, numbers[2].bytes);
+		
+		/* n */
+		numbers[1].bytes = buf_getint(keyblob);
+		numbers[1].start = buf_getptr(keyblob, numbers[1].bytes);
+		buf_incrpos(keyblob, numbers[1].bytes);
+		
+		/* d */
+		numbers[3].bytes = buf_getint(keyblob);
+		numbers[3].start = buf_getptr(keyblob, numbers[3].bytes);
+		buf_incrpos(keyblob, numbers[3].bytes);
+		
+		/* p */
+		numbers[4].bytes = buf_getint(keyblob);
+		numbers[4].start = buf_getptr(keyblob, numbers[4].bytes);
+		buf_incrpos(keyblob, numbers[4].bytes);
+		
+		/* q */
+		numbers[5].bytes = buf_getint(keyblob);
+		numbers[5].start = buf_getptr(keyblob, numbers[5].bytes);
+		buf_incrpos(keyblob, numbers[5].bytes);
 
-		/* We also need d mod (p-1) and d mod (q-1). */
-		bd = bignum_from_bytes(d.start, d.bytes);
-		bp = bignum_from_bytes(p.start, p.bytes);
-		bq = bignum_from_bytes(q.start, q.bytes);
-		decbn(bp);
-		decbn(bq);
-		bdmp1 = bigmod(bd, bp);
-		bdmq1 = bigmod(bd, bq);
-		freebn(bd);
-		freebn(bp);
-		freebn(bq);
+		/* now calculate some extra parameters: */
+		m_mp_init(&tmpval);
+		m_mp_init(&dmp1);
+		m_mp_init(&dmq1);
+		m_mp_init(&iqmp);
 
-		dmp1.bytes = (bignum_bitcount(bdmp1)+8)/8;
-		dmq1.bytes = (bignum_bitcount(bdmq1)+8)/8;
-		sparelen = dmp1.bytes + dmq1.bytes;
-		spareblob = snewn(sparelen, unsigned char);
-		dmp1.start = spareblob;
-		dmq1.start = spareblob + dmp1.bytes;
-		for (i = 0; i < dmp1.bytes; i++)
-			spareblob[i] = bignum_byte(bdmp1, dmp1.bytes-1 - i);
-		for (i = 0; i < dmq1.bytes; i++)
-			spareblob[i+dmp1.bytes] = bignum_byte(bdmq1, dmq1.bytes-1 - i);
-		freebn(bdmp1);
-		freebn(bdmq1);
+		/* dmp1 = d mod (p-1) */
+		if (mp_sub_d(key->rsakey->p, 1, &tmpval) != MP_OKAY) {
+			goto error;
+		}
+		if (mp_mod(key->rsakey->d, &tmpval, &dmp1) != MP_OKAY) {
+			goto error;
+		}
 
-		numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
-		numbers[1] = n;
-		numbers[2] = e;
-		numbers[3] = d;
-		numbers[4] = p;
-		numbers[5] = q;
-		numbers[6] = dmp1;
-		numbers[7] = dmq1;
-		numbers[8] = iqmp;
+		/* dmq1 = d mod (q-1) */
+		if (mp_sub_d(key->rsakey->q, 1, &tmpval) != MP_OKAY) {
+			goto error;
+		}
+		if (mp_mod(key->rsakey->d, &tmpval, &dmq1) != MP_OKAY) {
+			goto error;
+		}
+
+		/* iqmp = (q^-1) mod p */
+		if (mp_invmod(key->rsakey->q, key->rsakey->p, &tmpval) != MP_OKAY) {
+			goto error;
+		}
+
+		extrablob = buf_new(2000);
+		buf_putmpint(extrablob, &dmp1);
+		buf_putmpint(extrablob, &dmq1);
+		buf_putmpint(extrablob, &iqmp);
+		buf_setpos(extrablob, 0);
+		
+		/* dmp1 */
+		numbers[6].bytes = buf_getint(extrablob);
+		numbers[6].start = buf_getptr(extrablob, numbers[6].bytes);
+		buf_incrpos(extrablob, numbers[6].bytes);
+		
+		/* dmq1 */
+		numbers[7].bytes = buf_getint(extrablob);
+		numbers[7].start = buf_getptr(extrablob, numbers[7].bytes);
+		buf_incrpos(extrablob, numbers[7].bytes);
+		
+		/* iqmp */
+		numbers[8].bytes = buf_getint(extrablob);
+		numbers[8].start = buf_getptr(extrablob, numbers[8].bytes);
+		buf_incrpos(extrablob, numbers[8].bytes);
 
 		nnumbers = 9;
 		header = "-----BEGIN RSA PRIVATE KEY-----\n";
 		footer = "-----END RSA PRIVATE KEY-----\n";
-	} else if (key->alg == &ssh_dss) {
-		int pos;
-		struct mpint_pos p, q, g, y, x;
+	} else if (keytype == DROPBEAR_SIGNKEY_DSS) {
 
-		pos = 4 + GET_32BIT(pubblob);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &p);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &q);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &g);
-		pos += ssh2_read_mpint(pubblob+pos, publen-pos, &y);
-		pos = 0;
-		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &x);
+		/* x */
+		numbers[5].bytes = buf_getint(extrablob);
+		numbers[5].start = buf_getptr(extrablob, numbers[5].bytes);
+		buf_incrpos(extrablob, numbers[5].bytes);
 
-		assert(y.start && x.start); /* can't go wrong */
+		/* p */
+		numbers[1].bytes = buf_getint(extrablob);
+		numbers[1].start = buf_getptr(extrablob, numbers[1].bytes);
+		buf_incrpos(extrablob, numbers[1].bytes);
 
-		numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0'; 
-		numbers[1] = p;
-		numbers[2] = q;
-		numbers[3] = g;
-		numbers[4] = y;
-		numbers[5] = x;
+		/* q */
+		numbers[1].bytes = buf_getint(extrablob);
+		numbers[2].start = buf_getptr(extrablob, numbers[2].bytes);
+		buf_incrpos(extrablob, numbers[2].bytes);
+
+		/* g */
+		numbers[3].bytes = buf_getint(extrablob);
+		numbers[3].start = buf_getptr(extrablob, numbers[3].bytes);
+		buf_incrpos(extrablob, numbers[3].bytes);
+
+		/* y */
+		numbers[4].bytes = buf_getint(extrablob);
+		numbers[4].start = buf_getptr(extrablob, numbers[4].bytes);
+		buf_incrpos(extrablob, numbers[4].bytes);
 
 		nnumbers = 6;
 		header = "-----BEGIN DSA PRIVATE KEY-----\n";
@@ -760,7 +742,7 @@ int openssh_write(const char *filename, sign_key *key,
 	/*
 	 * Now we know how big outblob needs to be. Allocate it.
 	 */
-	outblob = snewn(outlen, unsigned char);
+	outblob = (unsigned char*)m_malloc(outlen);
 
 	/*
 	 * And write the data into it.
@@ -799,6 +781,9 @@ int openssh_write(const char *filename, sign_key *key,
 	 * Encrypt the key.
 	 */
 	if (passphrase) {
+		fprintf(stderr, "Encrypted keys aren't supported currently\n");
+		goto error;
+#if 0
 		/*
 		 * Invent an iv. Then derive encryption key from passphrase
 		 * and iv/salt:
@@ -831,13 +816,14 @@ int openssh_write(const char *filename, sign_key *key,
 
 		memset(&md5c, 0, sizeof(md5c));
 		memset(keybuf, 0, sizeof(keybuf));
+#endif
 	}
 
 	/*
 	 * And save it. We'll use Unix line endings just in case it's
 	 * subsequently transferred in binary mode.
 	 */
-	fp = f_open(*filename, "wb");	  /* ensure Unix line endings */
+	fp = fopen(filename, "wb");	  /* ensure Unix line endings */
 	if (!fp)
 		goto error;
 	fputs(header, fp);
@@ -847,7 +833,7 @@ int openssh_write(const char *filename, sign_key *key,
 			fprintf(fp, "%02X", iv[i]);
 		fprintf(fp, "\n\n");
 	}
-	base64_encode(fp, outblob, outlen, 64);
+	base64_encode_fp(fp, outblob, outlen, 64);
 	fputs(footer, fp);
 	fclose(fp);
 	ret = 1;
@@ -857,20 +843,19 @@ int openssh_write(const char *filename, sign_key *key,
 		memset(outblob, 0, outlen);
 		m_free(outblob);
 	}
-	if (spareblob) {
-		memset(spareblob, 0, sparelen);
-		m_free(spareblob);
+	if (keyblob) {
+		buf_burn(keyblob);
+		buf_free(keyblob);
 	}
-	if (privblob) {
-		memset(privblob, 0, privlen);
-		m_free(privblob);
-	}
-	if (pubblob) {
-		memset(pubblob, 0, publen);
-		m_free(pubblob);
+	if (extrablob) {
+		buf_burn(extrablob);
+		buf_free(extrablob);
 	}
 	return ret;
 }
+
+#if 0
+/* XXX TODO ssh.com stuff isn't going yet */
 
 /* ----------------------------------------------------------------------
  * Code to read ssh.com private keys.
@@ -970,7 +955,7 @@ static struct sshcom_key *load_sshcom_key(const char *filename)
 	ret->keyblob = NULL;
 	ret->keyblob_len = ret->keyblob_size = 0;
 
-	fp = f_open(*filename, "r");
+	fp = fopen(filename, "r");
 	if (!fp) {
 		errmsg = "Unable to open key file";
 		goto error;
@@ -1552,7 +1537,7 @@ int sshcom_write(const char *filename, sign_key *key,
 	 * And save it. We'll use Unix line endings just in case it's
 	 * subsequently transferred in binary mode.
 	 */
-	fp = f_open(*filename, "wb");	  /* ensure Unix line endings */
+	fp = fopen(filename, "wb");	  /* ensure Unix line endings */
 	if (!fp)
 		goto error;
 	fputs("---- BEGIN SSH2 ENCRYPTED PRIVATE KEY ----\n", fp);
@@ -1573,7 +1558,7 @@ int sshcom_write(const char *filename, sign_key *key,
 		}
 		fprintf(fp, "%s\"\n", c);
 	}
-	base64_encode(fp, outblob, pos, 70);
+	base64_encode_fp(fp, outblob, pos, 70);
 	fputs("---- END SSH2 ENCRYPTED PRIVATE KEY ----\n", fp);
 	fclose(fp);
 	ret = 1;
@@ -1593,3 +1578,4 @@ int sshcom_write(const char *filename, sign_key *key,
 	}
 	return ret;
 }
+#endif /* ssh.com stuff disabled */
