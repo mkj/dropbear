@@ -15,4 +15,7 @@ extern void burn_stack(unsigned long len);
 extern const char *error_to_string(int errno);
 /* ch1-01-1*/
 
+#if 0
+/* Takes up space we don\'t need for Dropbear */
 extern const char *crypt_build_settings;
+#endif

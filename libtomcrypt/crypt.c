@@ -265,6 +265,9 @@ int prng_is_valid(int idx)
    return CRYPT_OK;
 }
 
+/*
+Takes up space we don't need for Dropbear
+
 const char *crypt_build_settings = 
    "LibTomCrypt " SCRYPT "\n\n"
    "Endianess: "
@@ -449,4 +452,6 @@ const char *crypt_build_settings =
 
     "\n\n\n"
     ;
+* End of unneeded compile string
+*/
 
