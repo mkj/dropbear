@@ -198,16 +198,23 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				checkinitdone(channel);
 				continue; /* Important not to use the channel after
 							 checkinitdone(), as it may be NULL */
-			} else {
-				if ( (write(channel->infd, NULL, 0) < 0)
-							&& errno != EINTR && errno != EAGAIN) {
-					closeinfd(channel);
-				}
+			}
+			if ( (write(channel->infd, NULL, 0) < 0)
+						&& errno != EINTR && errno != EAGAIN) {
+				closeinfd(channel);
 			}
 		}
 
 		/* write to program/pipe stdin */
 		if (channel->infd >= 0 && FD_ISSET(channel->infd, writefd)) {
+			if (channel->initconn) {
+				/* Handling for "in progress" connections. */
+				/* Required here for servers which don't sent a banner -
+				 * otherwise we get CPU looping, patch from Nikola Vladov */
+				checkinitdone(channel);
+				continue; /* Important not to use the channel after
+							 checkinitdone(), as it may be NULL */
+			}
 			writechannel(channel);
 		}
 	
