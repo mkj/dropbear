@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _UTIL_H_
+#ifndef _DBUTIL_H_
 
-#define _UTIL_H_
+#define _DBUTIL_H_
 
 #include "includes.h"
 #include "buffer.h"
@@ -62,4 +62,4 @@ size_t strlcpy(char *dst, const char *src, size_t size);
 size_t strlcat(char *dst, const char *src, size_t siz);
 #endif
 
-#endif /* _UTIL_H_ */
+#endif /* _DBUTIL_H_ */

@@ -49,7 +49,7 @@
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "buffer.h"
 #include "session.h"
 #include "atomicio.h"
