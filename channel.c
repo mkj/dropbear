@@ -412,8 +412,6 @@ void recv_msg_channel_request() {
 			chansessionrequest(channel);
 			break;
 
-		case CHANNEL_ID_X11:
-
 		default:
 			send_msg_channel_failure(channel);
 	}
@@ -605,14 +603,10 @@ void recv_msg_channel_open() {
 
 	type = buf_getstring(ses.payload, &typelen);
 
-	TRACE(("thing here"));
 	remotechan = buf_getint(ses.payload);
-	TRACE(("thing here"));
 	transwindow = buf_getint(ses.payload);
 	transwindow = MIN(transwindow, MAX_TRANS_WINDOW);
-	TRACE(("thing here"));
 	transmaxpacket = buf_getint(ses.payload);
-	TRACE(("thing here"));
 	transmaxpacket = MIN(transmaxpacket, MAX_TRANS_PAYLOAD_LEN);
 
 
@@ -624,10 +618,6 @@ void recv_msg_channel_open() {
 			if (channel != NULL) {
 				newchansess(channel);
 			}
-			goto out;
-	} else if (strcmp(type, "x11") == 0) {
-			newchannel(remotechan, CHANNEL_ID_X11,
-					transwindow, transmaxpacket);
 			goto out;
 	}
 

@@ -282,18 +282,22 @@ void chansessionrequest(struct Channel *channel) {
 	assert(chansess != NULL);
 	TRACE(("type is %s\n", type));
 
-	if (strcmp(type, "exec") == 0) {
-		ret = sessioncommand(channel, chansess, 1);
+	if (strcmp(type, "window-change") == 0) {
+		ret = sessionwinchange(chansess);
 	} else if (strcmp(type, "shell") == 0) {
 		ret = sessioncommand(channel, chansess, 0);
 	} else if (strcmp(type, "pty-req") == 0) {
 		ret = sessionpty(chansess);
-	} else if (strcmp(type, "window-change") == 0) {
-		ret = sessionwinchange(chansess);
+	} else if (strcmp(type, "exec") == 0) {
+		ret = sessioncommand(channel, chansess, 1);
+#ifndef DISABLE_X11FWD
+	} else if (strcmp(type, "x11-req") == 0) {
+		ret = x11req(chansess);
+#endif
 	} else if (strcmp(type, "signal") == 0) {
 		ret = sessionsignal(chansess);
 	} else {
-		/* etc, todo "env", "subsystem", "x11-req" */
+		/* etc, todo "env", "subsystem" */
 	}
 
 	if (wantreply) {
