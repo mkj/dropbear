@@ -167,15 +167,17 @@ void session_cleanup() {
 	
 	TRACE(("enter session_cleanup"));
 	
+	/* we can't cleanup if we don't know the session state */
+	if (!sessinitdone) {
+		return;
+	}
+	
 	m_free(ses.session_id);
 	if (ses.opts->hostkey) {
 		sign_key_free(ses.opts->hostkey);
 	}
 	m_free(ses.keys);
 
-	if (!sessinitdone) {
-		return;
-	}
 	chancleanup();
 
 	TRACE(("leave session_cleanup"));
