@@ -1,22 +1,36 @@
+# This Makefile is for Dropbear SSH Server and Client
+
+# invocation:
+# make PROGRAMS="dropbear dbclient scp" MULTI=1 STATIC=1 SCPPROGRESS=1
+#
+# to make a single multiple statically linked binary "staticdropbearmulti",
+# which includes dropbear, scp and dbclient functionality, and includes the
+# progress-bar functionality in scp. Hopefully that seems intuitive.
+
+# This makefile is quite evil.
+
+ifndef PROGRAMS
+	PROGRAMS="dropbear dbclient dropbearkey dropbearmulti"
+endif
+
 LTC=libtomcrypt/libtomcrypt.a
 LTM=libtommath/libtommath.a
 
-COMMONOBJS=dbutil.o common-session.o common-packet.o common-algo.o buffer.o \
+COMMONOBJS=dbutil.o common-session.o packet.o common-algo.o buffer.o \
 		common-kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o common-channel.o \
 		common-chansession.o queue.o termcodes.o  \
-		loginrec.o atomicio.o svr-x11fwd.o tcpfwd-direct.o compat.o \
+		loginrec.o atomicio.o tcpfwd-direct.o compat.o \
 		tcpfwd-remote.o listener.o process-packet.o common-runopts.o
 
 SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-session.o svr-service.o \
-		svr-chansession.o svr-runopts.o svr-agentfwd.o
+		svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o
 
-CLIOBJS=
+CLIOBJS=cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o \
+		cli-session.o cli-service.o
 
-OBJS=$(COMMONOBJS) $(SVROBJS)
-
-DROPBEAROBJS=main.o
+DROPBEAROBJS=
 
 DROPBEARKEYOBJS=dropbearkey.o gendss.o genrsa.o
 
@@ -31,7 +45,11 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd-direct.h compat.h \
 		tcpfwd-remote.h listener.h
 
-ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
+dropbearobjs=$(COMMONOBJS) $(SVROBJS) 
+dbclientobjs=$(COMMONOBJS) $(CLIOBJS)
+dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
+dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
+scpobjs=$(SCPOBJS)
 
 prefix=@prefix@
 exec_prefix=${prefix}
@@ -44,97 +62,101 @@ AR=@AR@
 RANLIB=@RANLIB@
 STRIP=@STRIP@
 INSTALL=@INSTALL@
-CFLAGS=-Ilibtomcrypt @CFLAGS@
+CFLAGS=@CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
+
+EXEEXT=@EXEEXT@
+
+# whether we're building client, server, or both for the common objects.
+space:= $(empty) $(empty)
+CLISVRFLAGS=
+# evilness so we detect 'dropbear' by itself as a word
+ifneq (,$(findstring $(space)dropbear$(space), $(space)$(PROGRAMS)$(space)))
+	CLISVRFLAGS+= -DDROPBEAR_SERVER
+endif
+ifneq (,$(findstring $(space)dbclient$(space), $(space)$(PROGRAMS)$(space)))
+	CLISVRFLAGS+= -DDROPBEAR_CLIENT
+endif
+
+CFLAGS+=$(CLISVRFLAGS)
 
 # these are exported so that libtomcrypt's makefile will use them
 export CC
 export CFLAGS
 export RANLIB AR STRIP
 
-all: dropbear dropbearkey dropbearconvert
-	@echo
-	@echo Run \"make strip\" if you want stripped binaries,
-	@echo or \"make install\" to install to ${prefix}
+ifeq ($(STATIC), 1)
+	LDFLAGS+=-static
+	SPREFIX=static
+else
+	SPREFIX=
+endif
 
-strip:
-	-$(STRIP) dropbear
-	-$(STRIP) dropbearkey
-	-$(STRIP) dropbearconvert
+ifeq ($(MULTI), 1)
+	TARGETS=dropbearmulti
+else
+	TARGETS=$(PROGRAMS)
+endif
 
-install: all
+# for the scp progress meter. The -D doesn't affect anything else.
+ifeq ($(SCPPROGRESS), 1)
+	CFLAGS+=-DPROGRESS_METER
+endif
+
+#%: $(HEADERS)
+#%: $(HEADERS) Makefile
+# TODO
+
+
+strip: $(TARGETS)
+	$(STRIP) $(foreach prog, $(TARGETS), $(SPREFIX)$(prog)$(EXEEXT))
+
+
+install: $(foreach prog, $(TARGETS), install$prog)
+
+# dropbear should go in sbin, so it needs a seperate rule
+installdropbear: dropbear
 	$(INSTALL) -d -m 755 $(DESTDIR)$(sbindir)
+	$(INSTALL) -m 755 $(SPREFIX)dropbear$(EXEEXT) $(DESTDIR)$(sbindir)
+	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
+
+install%: $*
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
-	$(INSTALL) -m 755 dropbear $(DESTDIR)$(sbindir)
-	$(INSTALL) -m 755 dropbearkey $(DESTDIR)$(bindir)
-	$(INSTALL) -m 755 dropbearconvert $(DESTDIR)$(bindir)
-	# chown might fail, so do it separately to the install
-	-chown root $(DESTDIR)$(sbindir)/dropbear
-	-chgrp 0 $(DESTDIR)$(sbindir)/dropbear
-	-chown root $(DESTDIR)$(bindir)/dropbearkey
-	-chgrp 0 $(DESTDIR)$(bindir)/dropbearkey
-	-chown root $(DESTDIR)$(bindir)/dropbearconvert
-	-chgrp 0 $(DESTDIR)$(bindir)/dropbearconvert
+	$(INSTALL) -m 755 $(SPREFIX)$*$(EXEEXT) $(DESTDIR)$(bindir)
+	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
+	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)$*$(EXEEXT)
+	ifeq ($(MULTI), 1)
+		@echo "You must manually create links for $*"
+	endif
 
 
-static: dropbear-static dropbearkey-static dropbearconvert-static
 
-$(ALLOBJS): $(HEADERS) Makefile
+# The actual binaries
+dropbear: $(dropbearobjs)
 
-dropbear: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(OBJS) $(LIBS)
+dropbear dbclient dropbearkey dropbearconvert: $($($@objs)) $(HEADERS) \
+														$(LTC) $(LTM)
+	@echo $(CLISVRFLAGS)
+	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $($@objs) $(LIBS)
 
-dropbear-static: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile  $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o staticdropbear $(DROPBEAROBJS) $(OBJS) $(LIBS) -static
 
-dropbearkey: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o dropbearkey $(DROPBEARKEYOBJS) \
-		$(OBJS) $(LIBS)
+# scp doesn't use the libs so is special.
+scp: $(SCPOBJS)  $(HEADERS)
+	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(SCPOBJS)
 
-dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o staticdropbearkey $(DROPBEARKEYOBJS) \
-		$(OBJS) $(LIBS) -static
 
-dropbearconvert: $(OBJS) $(HEADERS) Makefile $(CONVERTOBJS) $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o dropbearconvert $(CONVERTOBJS) $(OBJS) $(LIBS)
+MULTIOBJS=dbmulti.o
+ifeq ($(MULTI),1)
+	deftarget=multi
+	MULTIOBJS=$(foreach prog, $(PROGRAMS), $($(prog)objs))
+endif
 
-dropbearconvert-static: $(OBJS) $(HEADERS) Makefile $(CONVERTOBJS) $(LTC) $(LTM)
-	$(LD) $(LDFLAGS) -o staticdropbearconvert $(CONVERTOBJS) $(OBJS) $(LIBS) \
-		-static
-
-multi: dropbearmulti
-
-dropbearmulti: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) \
-				$(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o
-	$(LD) $(LDFLAGS) -o dropbearmulti $(OBJS) $(LTM) $(LTM) $(CONVERTOBJS) \
-			$(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o $(LIBS)
+dropbearmulti: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM)
+	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(MULTIOBJS) $(LIBS)
 	@echo "You should now create symlinks to the programs you have included"
 	@echo "ie 'ln -s dropbearmulti dropbear'"
-
-dropbearmultistatic: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) \
-						$(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o
-	$(LD) $(LDFLAGS) -o staticdropbearmulti $(OBJS) $(LTM) $(LTM) \
-			$(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) \
-			dbmulti.o $(LIBS) -static
-	@echo "You should now create symlinks to the programs you have included"
-	@echo "ie 'ln -s dropbearmultistatic dropbear'"
-
-stripmulti: dropbearmulti
-	-$(STRIP) dropbearmulti
-
-
-scp: $(SCPOBJS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(SCPOBJS)
-
-# gnumake before 3.80 is broken. So this is uglyish
-scp-progress: atomicio.o scpmisc.o $(HEADERS) Makefile
-	-rm scp.o progressmeter.o
-	$(MAKE) CFLAGS="$(CFLAGS) -DPROGRESS_METER" scp.o progressmeter.o
-	$(LD) $(LDFLAGS) -o $@ $(SCPOBJS)
-
-scpstatic: $(SCPOBJS) $(HEADERS) Makefile
-	$(LD) $(LDFLAGS) -o $@ $(SCPOBJS) -static
 
 $(LTC): $(HEADERS)
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)
@@ -152,13 +174,14 @@ sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -rn
 
 clean: ltc-clean ltm-clean
-	-rm -f dropbear dropbear dropbearkey staticdropbear staticdropbearkey
-	-rm -f dropbearconvert staticdropbearconvert scp scp-progress scpstatic
-	-rm -f dropbearmulti dropbearmultistatic
+	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress
+	-rm -f staticdropbear staticdropbearkey staticdropbearconvert staticscp
+	-rm -f dropbearmulti staticdropbearmulti
 	-rm -f *.o *.da *.bb *.bbg *.prof 
 
 distclean: clean tidy
-	-rm -f Makefile config.h
+	-rm -f config.h
+	-rm -f Makefile
 
 tidy:
 	-rm -f *~ *.gcov */*~
