@@ -135,17 +135,22 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 /* type is either DROPBEAR_SIGNKEY_DSS or DROPBEAR_SIGNKEY_RSA */
 void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 
+	TRACE(("enter buf_put_priv_key"));
+	TRACE(("type is %d\n", type));
+
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
 		buf_put_dss_priv_key(buf, key->dsskey);
-	}
+	TRACE(("leave buf_put_priv_key: dss done"));
 	return;
+	}
 #endif
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
 		buf_put_rsa_priv_key(buf, key->rsakey);
-	}
+	TRACE(("leave buf_put_priv_key: rsa done"));
 	return;
+	}
 #endif
 	dropbear_exit("bad key types in put pub key");
 }
