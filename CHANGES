@@ -1,3 +1,26 @@
+0.40 - Tue Jan 13 2004 21:05:19 +0800
+
+- Remote TCP forwarding (-R) style implemented
+
+- Local and remote TCP forwarding can each be disabled at runtime (-k and -j
+  switches)
+
+- Fix for problems detecting openpty() with uClibc - many thanks to various
+  people for reporting and testing fixes, including (in random order) Cristian
+  Ionescu-Idbohrn, James Ewing, Steve Dover, Thomas Lundquist and Frederic
+  Lavernhe
+
+- Improved portability for IRIX, thanks to Paul Marinceu
+
+- AIX and HPUX portability fixes, thanks to Darren Tucker for patches
+
+- prngd should now work correctly, thanks to Darren Tucker for the patch
+
+- scp compilation on systems without strlcpy() is fixed, thanks to Peter
+  Jannesen and David Muse for reporting it (independently and simultaneously :)
+
+- Merged in new LibTomCrypt 0.92 and LibTomMath 0.28
+
 0.39 - Tue Dec 16 2003 15:19:19 +0800
 
 - Better checking of key lengths and parameters for DSS and RSA auth
