@@ -37,6 +37,8 @@ case "$host" in
 	else
 		AC_MSG_RESULT(no)
 	fi
+	AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
+	AC_CHECK_LIB(nsl, yp_match, LIBS="$LIBS -lnsl")
 	;;
 
 *-*-aix*)
@@ -69,8 +71,6 @@ AC_CHECK_DECL(__linux__,
 
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
-AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
-AC_CHECK_LIB(nsl, yp_match, LIBS="$LIBS -lnsl")
 
 # Check if zlib is needed
 AC_ARG_WITH(zlib,
