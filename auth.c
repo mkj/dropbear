@@ -193,9 +193,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 			/* the username needs resetting */
 			if (ses.authstate.username != NULL) {
 				dropbear_log(LOG_WARNING,
-					"client trying multiple usernames: '%s' and '%s' from %s",
-					ses.authstate.printableuser, newprintableuser,
-					ses.addrstring);
+					"client trying multiple usernames: '%s' and '%s'",
+					ses.authstate.printableuser, newprintableuser);
 				m_free(ses.authstate.username);
 				m_free(ses.authstate.printableuser);
 			}
@@ -207,10 +206,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	/* check that user exists */
 	if (ses.authstate.pw == NULL) {
-		TRACE(("leave checkusername: user doesn't exist"));
+		TRACE(("leave checkusername: user '%s' doesn't exist", username));
 		dropbear_log(LOG_WARNING,
-				"login attempt for nonexistant user '%s' from %s",
-				username, ses.addrstring);
+				"login attempt for nonexistent user");
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -218,7 +216,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* check for non-root if desired */
 	if (ses.opts->norootlogin && ses.authstate.pw->pw_uid == 0) {
 		TRACE(("leave checkusername: root login disabled"));
-		dropbear_log(LOG_WARNING, "root login denied");
+		dropbear_log(LOG_WARNING, "root login rejected");
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -226,7 +224,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* check for an empty password */
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
-		dropbear_log(LOG_WARNING, "empty password login denied");
+		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
+				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -247,7 +246,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* no matching shell */
 	endusershell();
 	TRACE(("no matching shell"));
-	dropbear_log(LOG_WARNING, "invalid shell login denied");
+	dropbear_log(LOG_WARNING, "user '%s' has invalid shell, rejected",
+				ses.authstate.printableuser);
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	

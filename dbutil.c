@@ -101,19 +101,17 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
-				"exit after auth (%s) from %s: %s", 
-				ses.authstate.printableuser, ses.addrstring, format);
+				"exit after auth (%s): %s", 
+				ses.authstate.printableuser, format);
 	} else if (ses.authstate.username) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth (user '%s', %d fails) from %s: %s",
-				ses.authstate.username, ses.authstate.failcount,
-				ses.addrstring, format);
+				"exit before auth (user '%s', %d fails): %s",
+				ses.authstate.username, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth from %s: %s",
-				ses.addrstring, format);
+				"exit before auth: %s", format);
 	}
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
@@ -173,16 +171,27 @@ void dropbear_trace(const char* format, ...) {
 #endif /* DEBUG_TRACE */
 
 /* Return a string representation of the socket address passed. The return
- * value is allocated with strdup() */
+ * value is allocated with malloc() */
 unsigned char * getaddrstring(struct sockaddr * addr) {
+
+	char *retstring;
+
+	/* space for "255.255.255.255:65535\0" = 22 */
+	retstring = m_malloc(22);
 
 	switch (addr->sa_family) {
 		case PF_INET: 
-			return strdup(inet_ntoa(((struct sockaddr_in *)addr)->sin_addr));
-	}
+			snprintf(retstring, 22, "%s:%hu",
+					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr),
+					((struct sockaddr_in *)addr)->sin_port);
+			break;
 
-	/* Need to extend for IP6 */
-	return NULL;
+		default:
+			/* XXX ipv6 */
+			strcpy(retstring, "Bad protocol");
+
+	}
+	return retstring;
 
 }
 

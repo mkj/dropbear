@@ -74,7 +74,6 @@ struct sshsession {
 	long connecttime; /* time of initial connection */
 
 	struct sockaddr *remoteaddr; /* the host and port of the client */
-	unsigned char *addrstring; /* the text version of remoteaddr */
 	unsigned char *hostname; /* the remote hostname */
 
 	int maxfd; /* the maximum file descriptor to check with select() */

@@ -214,10 +214,16 @@ int main(int argc, char ** argv)
 			if ((childpid = fork()) == 0) {
 
 				/* child */
+				char * addrstring = NULL;
 #ifdef DEBUG_FORKGPROF
 				extern void _start(void), etext(void);
 				monstartup((u_long)&_start, (u_long)&etext);
 #endif /* DEBUG_FORKGPROF */
+
+				addrstring = getaddrstring(&remoteaddr);
+				dropbear_log(LOG_INFO, "Child connection for %s", addrstring);
+				m_free(addrstring);
+
 				if (setsid() < 0) {
 					dropbear_exit("setsid: %s", strerror(errno));
 				}
