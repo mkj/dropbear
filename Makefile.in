@@ -114,7 +114,7 @@ all: $(TARGETS)
 strip: $(TARGETS)
 	$(STRIP) $(addsuffix $(EXEEXT), $(addprefix $(SPREFIX), $(TARGETS)))
 
-install: $(addprefix inst, $(TARGETS))
+install: $(addprefix inst_, $(TARGETS))
 
 installdropbearmulti: insdbmulti $(addprefix insmulti, $(PROGRAMS)) 
 
@@ -133,13 +133,13 @@ insmulti%: dropbearmulti
 	-ln -s $(DESTDIR)$(bindir)/$(SPREFIX)dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT) 
 
 # dropbear should go in sbin, so it needs a seperate rule
-instdropbear: dropbear
+inst_dropbear: dropbear
 	$(INSTALL) -d -m 755 $(DESTDIR)$(sbindir)
 	$(INSTALL) -m 755 $(SPREFIX)dropbear$(EXEEXT) $(DESTDIR)$(sbindir)
 	-chown root $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
 	-chgrp 0 $(DESTDIR)$(sbindir)/$(SPREFIX)dropbear$(EXEEXT)
 
-inst%: $*
+inst_%: $*
 	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	$(INSTALL) -m 755 $(SPREFIX)$*$(EXEEXT) $(DESTDIR)$(bindir)
 	-chown root $(DESTDIR)$(bindir)/$(SPREFIX)$*$(EXEEXT)
