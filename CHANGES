@@ -1,3 +1,14 @@
+0.31 - Fri May 9 2003 17:57:16 +0800
+
+- Improved syslog messages - IP logging etc
+- Strip control characters from log messages (specified username currently)
+- Login recording (utmp/wtmp) support, so last/w/who work - taken from OpenSSH
+- Shell is started as a proper login shell, so /etc/profile etc is sourced
+- Ptys work on Solaris (2.8 x86 tested) now
+- Fixed bug in specifying the rsa hostkey
+- Fixed bug in compression code, could trigger if compression resulted in
+  larger output than input (uncommon but possible).
+
 0.30 - Thu Apr 17 2003 18:46:15 +0800
 
 - SECURITY: buffer.c had bad checking for buffer increment length - fixed
