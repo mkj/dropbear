@@ -40,7 +40,4 @@ void encrypt_packet();
 
 #define INIT_READBUF 200
 
-#define CHECKCLEARTOWRITE() assert(ses.writepayload->len == 0 \
-								&& ses.writepayload->pos == 0)
-
 #endif /* _PACKET_H_ */
