@@ -31,7 +31,6 @@
 #include "gendss.h"
 #include "dss.h"
 
-#define PSIZE 128 /* 1024 bit*/
 #define QSIZE 20 /* 160 bit */
 
 #ifdef DROPBEAR_DSS
