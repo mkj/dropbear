@@ -17,7 +17,8 @@ Basic build instructions:
 - Edit options.h to choose features to include
 - Edit debug.h if you want any debug options
 
-./configure      (optionally with --disable-zlib)
+./configure      (optionally with --disable-zlib or --disable-syslog,
+                  or --help for other options)
 make
 make install     (installs to /usr/local/sbin, /usr/local/bin by default)
 
@@ -38,7 +39,8 @@ pty, and you cannot login as any user other than that running the daemon
 (obviously). Shadow passwords will also be unusable as non-root.
 
 You can use scp with dropbear, you'll just need to put scp from OpenSSH (or
-equivalent) in your path (/usr/bin/scp etc).
+equivalent) in your path (/usr/bin/scp etc). In a future release Dropbear
+will include a scp program.
 
 ============================================================================
 

@@ -39,9 +39,9 @@
 /*#define DISABLE_X11FWD*/
 
 /* Disable TCP Fowarding */
-/* NOTE: TCP forwarding is still in-progress, -L forwarding should work,
+/* NOTE: TCP forwarding is still work-in-progress, -L forwarding should work,
  * enable TCP forwarding at your own risk. */
-#define DISABLE_TCPFWD
+/* #define DISABLE_TCPFWD*/
 
 /* Disable Authentication Agent Forwarding */
 /*#define DISABLE_AGENTFWD*/
@@ -114,7 +114,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.33-cvs"
+#define DROPBEAR_VERSION "0.34"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 

@@ -9,13 +9,14 @@ Things which need doing:
   feedback.
 - improve channel window adjustment algorithm
 
+- inetd
+- IP6 (binding to :: takes over ipv4 as well, sigh. If anyone wants to suggest
+  a clean way (ie no V4MAPPED or setsockopt things) please let me know :)
+- TCP forwarding (-L is done)
+
 Features to add:
 
-- TCP forwarding
-- IP6
 - PAM
 - possible RSA blinding? need to check whether this is vuln to timing attacks
 - CTR mode, SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly
-- inetd/forking
-- disable syslog/stderr
