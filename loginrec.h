@@ -40,7 +40,7 @@
 #include <netinet/in.h>
 #include <sys/socket.h>
 
-/* RCSID("$Id: loginrec.h,v 1.2 2003/05/07 10:57:49 matt Exp $"); */
+/* RCSID("$Id: loginrec.h,v 1.3 2003/05/09 07:29:26 matt Exp $"); */
 
 /* The following #defines are from OpenSSH's defines.h, required for loginrec */
 
@@ -114,7 +114,9 @@
 union login_netinfo {
 	struct sockaddr sa;
 	struct sockaddr_in sa_in;
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE
 	struct sockaddr_storage sa_storage;
+#endif
 };
 
 /*
