@@ -47,6 +47,9 @@
  * cleanest, but works OK */
 int sessinitdone = 0;
 
+/* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
+int exitflag = 0;
+
 static void session_init(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remoteaddr);
 static void session_identification();
@@ -95,6 +98,11 @@ void child_session(int sock, runopts *opts, int childpipe,
 		}
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
 		TRACE(("select val = %d", val));
+
+		if (exitflag) {
+			dropbear_exit("Terminated by signal");
+		}
+		
 		if (val < 0) {
 			if (errno == EINTR) {
 				continue;

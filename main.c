@@ -48,8 +48,6 @@ static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
 
-static int exitflag = 0;
-
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
 int main(int argc, char ** argv) {
@@ -153,7 +151,8 @@ int main(int argc, char ** argv) {
 		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
 
 		if (exitflag) {
-			dropbear_exit("Exiting from signal");
+			unlink(DROPBEAR_PIDFILE);
+			dropbear_exit("Terminated by signal");
 		}
 		
 		if (val == 0) {

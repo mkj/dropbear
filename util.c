@@ -115,28 +115,21 @@ void dropbear_exit(const char* format, ...) {
 /* failure exit - format must be <= 100 chars */
 static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 
-#define EXIT_MESSAGE "exited "
-#define EXIT_MESSAGE_LEN 7
-#define MAX_INFOSTR 100
+	char fmtbuf[200];
 
-	char fmtbuf[MAX_FMT + EXIT_MESSAGE_LEN + MAX_INFOSTR + 1];
-	char infostr[MAX_INFOSTR + 1];
-
-	strcpy(fmtbuf, EXIT_MESSAGE);
-
-	/* include the username if possible */
-	if (sessinitdone && ses.authstate.authdone) {
+	if (!sessinitdone) {
+		/* before session init */
+		snprintf(fmtbuf, sizeof(fmtbuf), "exited: %s", format);
+	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
-		assert(ses.authstate.username);
-		snprintf(infostr, sizeof(infostr), "post-userauth (%s) from %s: ", 
-				ses.authstate.printableuser, ses.addrstring);
+		snprintf(fmtbuf, sizeof(fmtbuf),
+				"exited after userauth (%s) from %s: %s", 
+				ses.authstate.printableuser, ses.addrstring, format);
 	} else {
 		/* before userauth */
-		snprintf(infostr, sizeof(infostr), "before userauth: ");
+		snprintf(fmtbuf, sizeof(fmtbuf), "exited before userauth: %s",
+				format);
 	}
-	strncat(fmtbuf, infostr, MAX_FMT);
-	
-	strncat(fmtbuf, format, MAX_FMT);
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 

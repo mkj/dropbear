@@ -40,6 +40,7 @@
 #include "runopts.h"
 
 extern int sessinitdone;
+extern int exitflag;
 
 void session_cleanup();
 void child_session(int sock, runopts *opts, int childpipe,
