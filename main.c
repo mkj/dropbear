@@ -62,8 +62,11 @@ int main(int argc, char ** argv)
 
 	struct sigaction sa_chld;
 
+	_dropbear_exit = svr_dropbear_exit;
+	_dropbear_log = svr_dropbear_log;
+
 	/* get commandline options */
-	opts = getrunopts(argc, argv);
+	opts = svr_getopts(argc, argv);
 
 	/* fork */
 	if (opts->forkbg) {
@@ -239,7 +242,7 @@ int main(int argc, char ** argv)
 					dropbear_exit("Couldn't close socket");
 				}
 				/* start the session */
-				child_session(childsock, opts, childpipe[1], &remoteaddr);
+				svr_session(childsock, opts, childpipe[1], &remoteaddr);
 				/* don't return */
 				assert(0);
 			}

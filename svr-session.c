@@ -37,8 +37,6 @@
 #include "atomicio.h"
 
 static void svr_remoteclosed();
-static void svr_dropbear_exit(int exitcode, const char* format, va_list param);
-static void svr_dropbear_log(int priority, const char* format, va_list param);
 
 struct serversession svr_ses;
 
@@ -68,8 +66,6 @@ void svr_session(int sock, runopts *opts, int childpipe,
 
 	/* set up messages etc */
 	session_remoteclosed = svr_remoteclosed;
-	_dropbear_exit = svr_dropbear_exit;
-	_dropbear_log = svr_dropbear_log;
 
 	/* We're ready to go now */
 	sessinitdone = 1;
@@ -153,19 +149,8 @@ void svr_session(int sock, runopts *opts, int childpipe,
 	} /* for(;;) */
 }
 
-
-
-/* called when the remote side closes the connection */
-static void svr_remoteclosed() {
-
-	close(ses.sock);
-	ses.sock = -1;
-	dropbear_close("Exited normally");
-
-}
-
 /* failure exit - format must be <= 100 chars */
-static void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
+void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	char fmtbuf[300];
 
@@ -205,7 +190,7 @@ static void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 }
 
 /* priority is priority as with syslog() */
-static void svr_dropbear_log(int priority, const char* format, va_list param) {
+void svr_dropbear_log(int priority, const char* format, va_list param) {
 
 	char printbuf[1024];
 	char datestr[20];
@@ -236,3 +221,13 @@ static void svr_dropbear_log(int priority, const char* format, va_list param) {
 		fprintf(stderr, "[%d] %s %s\n", getpid(), datestr, printbuf);
 	}
 }
+
+/* called when the remote side closes the connection */
+static void svr_remoteclosed() {
+
+	close(ses.sock);
+	ses.sock = -1;
+	dropbear_close("Exited normally");
+
+}
+

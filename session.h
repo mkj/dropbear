@@ -48,6 +48,9 @@ extern void(*session_remoteclosed)();
 /* Server */
 void svr_session(int sock, runopts *opts, int childpipe,
 		struct sockaddr *remoteaddr);
+void svr_dropbear_exit(int exitcode, const char* format, va_list param);
+void svr_dropbear_log(int priority, const char* format, va_list param);
+
 
 struct key_context {
 
