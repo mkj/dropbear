@@ -75,8 +75,11 @@ static void printhelp(char * progname) {
 #endif
 					"-f filename	Use filename for the secret key\n"
 					"-s bits	Key size in bits, should be a multiple of 8 (optional)\n"
-					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n",
-					progname);
+					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n"
+#ifdef DEBUG_TRACE
+					"-v		verbose\n"
+#endif
+					,progname);
 }
 
 #if defined(DBMULTI_dropbearkey) || !defined(DROPBEAR_MULTI)
@@ -127,6 +130,11 @@ int main(int argc, char ** argv) {
 					printhelp(argv[0]);
 					exit(EXIT_SUCCESS);
 					break;
+#ifdef DEBUG_TRACE
+				case 'v':
+					debug_trace = 1;
+					break;
+#endif
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);

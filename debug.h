@@ -33,9 +33,11 @@
  * etc. Don't use this normally, it might cause problems */
 /* #define DEBUG_VALGRIND */
 
-/* Define this to print trace statements - very verbose */
-/* Caution: Don't use this in an unfriendly environment (ie unfirewalled),
- * since the printing does not sanitise strings etc */
+/* Define this to compile in trace debugging printf()s. You'll need to 
+ * run programs with "-v" to turn this on.
+ * Caution: Don't use this in an unfriendly environment (ie unfirewalled),
+ * since the printing may not sanitise strings etc. This will add a reasonable
+ * amount to your executable size. */
 /* #define DEBUG_TRACE */
 
 /* All functions writing to the cleartext payload buffer call

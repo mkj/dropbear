@@ -62,6 +62,11 @@ int main(int argc, char ** argv) {
 	const char* infile;
 	const char* outfile;
 
+#ifdef DEBUG_TRACE
+	/* It's hard for it to get in the way _too_ much */
+	debug_trace = 1;
+#endif
+
 	/* get the commandline options */
 	if (argc != 5) {
 		fprintf(stderr, "All arguments must be specified\n");

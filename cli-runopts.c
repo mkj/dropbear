@@ -59,6 +59,9 @@ static void printhelp() {
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
 					"-l <username>\n"
+#ifdef DEBUG_TRACE
+					"-v    verbose\n"
+#endif
 					,DROPBEAR_VERSION, cli_opts.progname);
 }
 
@@ -178,6 +181,11 @@ void cli_getopts(int argc, char ** argv) {
 					printhelp();
 					exit(EXIT_SUCCESS);
 					break;
+#ifdef DEBUG_TRACE
+				case 'v':
+					debug_trace = 1;
+					break;
+#endif
 				case 'F':
 				case 'e':
 				case 'c':

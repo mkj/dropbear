@@ -76,6 +76,9 @@ static void printhelp(const char * progname) {
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif
+#ifdef DEBUG_TRACE
+					"-v		verbose\n"
+#endif
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS
 					DSS_PRIV_FILENAME,
@@ -193,6 +196,11 @@ void svr_getopts(int argc, char ** argv) {
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);
 					break;
+#ifdef DEBUG_TRACE
+				case 'v':
+					debug_trace = 1;
+					break;
+#endif
 					/*
 				case '4':
 					svr_opts.ipv4 = 0;
