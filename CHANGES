@@ -1,5 +1,8 @@
 0.37 - Wed Sept 24 2003 19:42:12 +0800
 
+- Various portability fixes, fixes for Solaris 9, Tru64 5.1, Mac OS X 10.2,
+  AIX, BSDs
+
 - Updated LibTomMath to 0.27 and LibTomCrypt to 0.90
 
 - Renamed util.{c,h} to dbutil.{c,h} to avoid conflicts with system util.h
