@@ -59,6 +59,7 @@ static void printhelp(const char * progname) {
 #ifdef DO_MOTD
 					"-m                Don't display the motd on login\n"
 #endif
+					"-w                Disallow root logins\n"
 					"-p port           Listen on specified tcp port, up to %d can be specified\n"
 					"                  (default %d if none specified)\n"
 /*					"-4/-6             Disable listening on ipv4/ipv6 respectively\n"*/
@@ -91,6 +92,7 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->bannerfile = NULL;
 	opts->banner = NULL;
 	opts->forkbg = 1;
+	opts->norootlogin = 0;
 	/* not yet
 	opts->ipv4 = 1;
 	opts->ipv6 = 1;
@@ -148,7 +150,9 @@ runopts * getrunopts(int argc, char ** argv) {
 					opts->domotd = 0;
 					break;
 #endif
-
+				case 'w':
+					opts->norootlogin = 1;
+					break;
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);

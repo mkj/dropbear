@@ -50,6 +50,8 @@ struct RunOpts {
 	/* whether to print the MOTD */
 	int domotd;
 #endif
+
+	int norootlogin;
 	
 	sign_key *hostkey;
 	buffer * banner;

@@ -215,19 +215,24 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 		return DROPBEAR_FAILURE;
 	}
 
+	/* check for non-root if desired */
+	if (ses.opts->norootlogin && ses.authstate.pw->pw_uid == 0) {
+		TRACE(("leave checkusername: root login disabled"));
+		dropbear_log(LOG_WARNING, "root login denied");
+		send_msg_userauth_failure(0, 1);
+		return DROPBEAR_FAILURE;
+	}
+
 	/* check for an empty password */
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
-		dropbear_log(LOG_WARNING,
-				"disallowing login for '%s' from %s - empty password",
-				username, ses.addrstring);
+		dropbear_log(LOG_WARNING, "empty password login denied");
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
 
 	TRACE(("shell is %s", ses.authstate.pw->pw_shell));
 	/* check that the shell is valid */
-	/* XXX - todo check this is correct: empty shell is ok */
 	if (ses.authstate.pw->pw_shell[0] == '\0') {
 		goto goodshell;
 	}
@@ -242,9 +247,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* no matching shell */
 	endusershell();
 	TRACE(("no matching shell"));
-	dropbear_log(LOG_WARNING,
-			"disallowing login for '%s' from %s - invalid shell",
-			username, ses.addrstring);
+	dropbear_log(LOG_WARNING, "invalid shell login denied");
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	
