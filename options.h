@@ -161,7 +161,7 @@
  * "make clean; make dropbearmulti". You'll need to install the binary
  * manually, see MULTI for details */
 
-/*#define DROPBEAR_MULTI*/
+/* #define DROPBEAR_MULTI */
 
 /* The three multi binaries: dropbear, dropbearkey, dropbearconvert
  * Comment out these if you don't want some of them */
@@ -175,22 +175,53 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.39pre"
+#define DROPBEAR_VERSION "0.39"
 #endif
+
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
-/* Time to wait before sending reply on fail */
-#define FAIL_SLEEP_TIME 2
+/* Spec recommends after one hour or 1 gigabyte of data. One hour
+ * is a bit too verbose, so we try 8 hours */
+#ifndef KEX_REKEY_TIMEOUT
+#define KEX_REKEY_TIMEOUT (3600 * 8)
+#endif
+#ifndef KEX_REKEY_DATA
+#define KEX_REKEY_DATA (1<<30) /* 2^30 == 1GB, this value must be < INT_MAX */
+#endif
+/* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
+#ifndef AUTH_TIMEOUT
+#define AUTH_TIMEOUT 300 /* we choose 5 minutes */
+#endif
+
+/* Minimum key sizes for DSS and RSA */
+#ifndef MIN_DSS_KEYLEN
+#define MIN_DSS_KEYLEN 512
+#endif
+#ifndef MIN_RSA_KEYLEN
+#define MIN_RSA_KEYLEN 512
+#endif
+
+#define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
+
+#define DEV_URANDOM "/dev/urandom"
+
+/* the number of NAME=VALUE pairs to malloc for environ, if we don't have
+ * the clearenv() function */
+#define ENV_SIZE 100
+
+#define MAX_CMD_LEN 1024 /* max length of a command */
+#define MAX_TERM_LEN 200 /* max length of TERM name */
+
+#define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
+
+#define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
+								 ipv4 and ipv6 don't count twice */
+
+#define _PATH_TTY "/dev/tty"
 
 /* Timeouts in seconds */
 #define SELECT_TIMEOUT 20
-/* Spec recommends after one hour or 1 gigabyte of data. One hour
- * is a bit too verbose, so we try 8 hours */
-#define KEX_REKEY_TIMEOUT (3600 * 8)
-#define KEX_REKEY_DATA (1<<30) /* 2^30 == 1GB, this value must be < INT_MAX */
-/* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
-#define AUTH_TIMEOUT 300 /* we choose 5 minutes */
 
 /* success/failure defines */
 #define DROPBEAR_SUCCESS 0
@@ -210,10 +241,6 @@
 #ifdef DROPBEAR_PUBKEY_AUTH
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
-
-/* Minimum key sizes for DSS and RSA */
-#define MIN_DSS_KEYLEN 512
-#define MIN_RSA_KEYLEN 512
 
 /* SHA1 is 20 bytes == 160 bits */
 #define SHA1_HASH_SIZE 20
@@ -250,26 +277,8 @@
 #define MAX_TRANS_WINDOW 500000000 /* 500MB is sufficient, stopping overflow */
 #define MAX_TRANS_WIN_INCR 500000000 /* overflow prevention */
 
-#define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
-
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
-
-#define DEV_URANDOM "/dev/urandom"
-
-/* the number of NAME=VALUE pairs to malloc for environ, if we don't have
- * the clearenv() function */
-#define ENV_SIZE 100
-
-#define MAX_CMD_LEN 1024 /* max length of a command */
-#define MAX_TERM_LEN 200 /* max length of TERM name */
-
-#define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
-
-#define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
-								 ipv4 and ipv6 don't count twice */
-
-#define _PATH_TTY "/dev/tty"
 
 /* some quick hacks to reduce the double-negatives above */
 #ifndef ENABLE_TCPFWD
