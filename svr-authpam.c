@@ -114,8 +114,6 @@ pamConvFunc(int num_msg,
 			resp = (struct pam_response*) m_malloc(sizeof(struct pam_response));
 			memset(resp, 0, sizeof(struct pam_response));
 
-			/* Safe to just use the direct pointer (no strdup) since
-			 * it shouldn't be getting munged at all */
 			resp->resp = m_strdup(userDatap->user);
 			TRACE(("userDatap->user='%s'", userDatap->user))
 			(*respp) = resp;
