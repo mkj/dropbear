@@ -50,6 +50,8 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 	key->n = m_malloc(sizeof(mp_int));
 	m_mp_init(key->n);
 	key->d = NULL;
+	key->p = NULL;
+	key->q = NULL;
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_RSA_LEN); /* int + "ssh-rsa" */
 
