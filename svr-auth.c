@@ -32,8 +32,6 @@
 #include "ssh.h"
 #include "packet.h"
 #include "auth.h"
-#include "authpasswd.h"
-#include "authpubkey.h"
 #include "runopts.h"
 
 static void authclear();
@@ -54,10 +52,10 @@ void svr_authinitialise() {
 static void authclear() {
 	
 	memset(&ses.authstate, 0, sizeof(ses.authstate));
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_SVR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
@@ -143,7 +141,7 @@ void recv_msg_userauth_request() {
 		goto out;
 	}
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass &&
 			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
 		/* user wants to try password auth */
@@ -156,7 +154,7 @@ void recv_msg_userauth_request() {
 	}
 #endif
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_SVR_PUBKEY_AUTH
 	/* user wants to try pubkey auth */
 	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,

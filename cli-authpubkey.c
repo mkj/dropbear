@@ -6,6 +6,7 @@
 #include "runopts.h"
 #include "auth.h"
 
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign);
 
 /* Called when we receive a SSH_MSG_USERAUTH_FAILURE for a pubkey request.
@@ -158,3 +159,4 @@ int cli_auth_pubkey() {
 		return 0;
 	}
 }
+#endif /* Pubkey auth */

@@ -37,7 +37,7 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	{SSH_MSG_USERAUTH_PK_OK, recv_msg_userauth_pk_ok}, /* client */
 #endif
 	{0, 0} /* End */

@@ -114,11 +114,11 @@
 
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
-#define DROPBEAR_SVR_PASSWORD_AUTH
-#define DROPBEAR_SVR_PUBKEY_AUTH
+#define ENABLE_SVR_PASSWORD_AUTH
+#define ENABLE_SVR_PUBKEY_AUTH
 
-#define DROPBEAR_CLI_PASSWORD_AUTH
-#define DROPBEAR_CLI_PUBKEY_AUTH
+#define ENABLE_CLI_PASSWORD_AUTH
+#define ENABLE_CLI_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
  * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
@@ -241,7 +241,7 @@
 #define DROPBEAR_COMP_ZLIB 1
 
 /* Required for pubkey auth */
-#if defined(DROPBEAR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
+#if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
 
@@ -320,7 +320,7 @@
 #define USING_LISTENERS
 #endif
 
-#if defined(DROPBEAR_CLIENT) || defined(DROPBEAR_PUBKEY_AUTH)
+#if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
 #endif
 

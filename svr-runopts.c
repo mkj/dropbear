@@ -61,7 +61,7 @@ static void printhelp(const char * progname) {
 					"-m		Don't display the motd on login\n"
 #endif
 					"-w		Disallow root logins\n"
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
 #endif
@@ -174,7 +174,7 @@ void svr_getopts(int argc, char ** argv) {
 				case 'w':
 					svr_opts.norootlogin = 1;
 					break;
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 				case 's':
 					svr_opts.noauthpass = 1;
 					break;

@@ -29,9 +29,8 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "auth.h"
-#include "authpasswd.h"
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 
 /* Process a password auth request, sending success or failure messages as
  * appropriate */
@@ -105,4 +104,4 @@ void svr_auth_password() {
 
 }
 
-#endif /* DROPBEAR_PASSWORD_AUTH */
+#endif

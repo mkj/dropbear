@@ -34,7 +34,7 @@ cli_runopts cli_opts; /* GLOBAL */
 
 static void printhelp();
 static void parsehostname(char* userhostarg);
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
 #endif
 #ifdef ENABLE_CLI_ANYTCPFWD
@@ -49,7 +49,7 @@ static void printhelp() {
 					"-p <remoteport>\n"
 					"-t    Allocate a pty\n"
 					"-T    Don't allocate a pty\n"
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
@@ -67,7 +67,7 @@ void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
 	char ** next = 0;
 	unsigned int cmdlen;
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	int nextiskey = 0; /* A flag if the next argument is a keyfile */
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
@@ -85,7 +85,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.pubkeys = NULL;
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
@@ -103,7 +103,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 		if (nextiskey) {
 			/* Load a hostkey since the previous argument was "-i" */
 			loadidentityfile(argv[i]);
@@ -150,7 +150,7 @@ void cli_getopts(int argc, char ** argv) {
 				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
 					break;
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
 					nextiskey = 1;
 					break;
@@ -255,7 +255,7 @@ void cli_getopts(int argc, char ** argv) {
 	}
 }
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename) {
 
 	struct PubkeyList * nextkey;

@@ -92,7 +92,7 @@ void recv_msg_userauth_failure() {
 		return;
 	}
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	/* If it was a pubkey auth request, we should cross that key 
 	 * off the list. */
 	if (cli_ses.lastauthtype == AUTH_TYPE_PUBKEY) {
@@ -126,13 +126,13 @@ void recv_msg_userauth_failure() {
 	for (i = 0; i <= methlen; i++) {
 		if (methods[i] == '\0') {
 			TRACE(("auth method '%s'", tok));
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 			if (strncmp(AUTH_METHOD_PUBKEY, tok,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 			}
 #endif
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_CLI_PASSWORD_AUTH
 			if (strncmp(AUTH_METHOD_PASSWORD, tok,
 				AUTH_METHOD_PASSWORD_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
@@ -163,14 +163,14 @@ void cli_auth_try() {
 	CHECKCLEARTOWRITE();
 	
 	/* XXX We hardcode that we try a pubkey first */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		finished = cli_auth_pubkey();
 		cli_ses.lastauthtype = AUTH_TYPE_PUBKEY;
 	}
 #endif
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_CLI_PASSWORD_AUTH
 	if (!finished && ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 		finished = cli_auth_password();
 		cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;

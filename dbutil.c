@@ -442,7 +442,7 @@ int buf_readfile(buffer* buf, const char* filename) {
  * authkeys file.
  * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
 /* Only used for ~/.ssh/known_hosts and ~/.ssh/authorized_keys */
-#if defined(DROPBEAR_CLIENT) || defined(DROPBEAR_PUBKEY_AUTH)
+#if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
 int buf_getline(buffer * line, FILE * authfile) {
 
 	int c = EOF;

@@ -43,9 +43,9 @@ CONVERTOBJS=dropbearconvert.o keyimport.o
 SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o
 
 HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
-		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
+		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h \
 		debug.h channel.h chansession.h config.h queue.h sshpty.h \
-		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
+		termcodes.h gendss.h genrsa.h runopts.h includes.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
 		listener.h fake-rfc2553.h
 

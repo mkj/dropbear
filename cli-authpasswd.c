@@ -5,6 +5,7 @@
 #include "ssh.h"
 #include "runopts.h"
 
+#ifdef ENABLE_CLI_PASSWORD_AUTH
 int cli_auth_password() {
 
 	char* password = NULL;
@@ -35,3 +36,4 @@ int cli_auth_password() {
 	return 1; /* Password auth can always be tried */
 
 }
+#endif
