@@ -153,7 +153,7 @@ static void _dropbear_log(int priority, const char* format, va_list param) {
 
 #ifndef DISABLE_SYSLOG
 	if (usingsyslog) {
-		syslog(priority, printbuf);
+		syslog(priority, "%s", printbuf);
 	} else 
 #endif
 	{
