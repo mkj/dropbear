@@ -46,9 +46,13 @@ strip:
 	-strip dropbearconvert
 
 install: all
-	install -o root -g root dropbear $(sbindir)
-	install -o root -g root dropbearkey $(bindir)
-	install -o root -g root dropbearconvert $(bindir)
+	install -m 755 dropbear $(DESTDIR)$(sbindir)
+	install -m 755 dropbearkey $(DESTDIR)$(bindir)
+	install -m 755 dropbearconvert $(DESTDIR)$(bindir)
+	-chown root.root $(DESTDIR)$(sbindir)/dropbear
+	-chown root.root $(DESTDIR)$(bindir)/dropbearkey
+	-chown root.root $(DESTDIR)$(bindir)/dropbearconvert
+
 
 static: dropbear-static dropbearkey-static dropbearconvert-static
 
