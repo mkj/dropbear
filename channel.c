@@ -257,10 +257,8 @@ static void writechannel(struct Channel* channel) {
 
 	TRACE(("enter writechannel"));
 
-	assert(!channel->sentclosed);
-
-	if (channel->recveof) {
-		TRACE(("leave writechannel: already recveof"));
+	if (channel->recveof || channel->sentclosed) {
+		TRACE(("leave writechannel: already recveof or sentclosed"));
 		return;
 	}
 
