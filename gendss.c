@@ -22,14 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/types.h>
-#include <sys/stat.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "signkey.h"
 #include "bignum.h"
@@ -37,7 +30,6 @@
 #include "buffer.h"
 #include "gendss.h"
 #include "dss.h"
-#include "libtomcrypt/mycrypt.h"
 
 #define PSIZE 128 /* 1024 bit*/
 #define QSIZE 20 /* 160 bit */
@@ -81,28 +73,23 @@ dss_key * gen_dss_priv_key(unsigned int size) {
 
 static void getq(dss_key *key) {
 
-	int result;
 	char buf[QSIZE];
 
 	/* 160 bit prime */
-	result = 0;
-	do {
-		genrandom(buf, QSIZE);
-		buf[0] |= 0x01; /* top bit high */
-		buf[QSIZE-1] |= 0x80; /* bottom bit high */
+	genrandom(buf, QSIZE);
+	buf[0] |= 0x80; /* top bit high */
+	buf[QSIZE-1] |= 0x01; /* bottom bit high */
 
-		if (mp_read_unsigned_bin(key->q, buf, QSIZE) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
-			exit(1);
-		}
+	if (mp_read_unsigned_bin(key->q, buf, QSIZE) != MP_OKAY) {
+		fprintf(stderr, "dss key generation failed\n");
+		exit(1);
+	}
 
-		/* check for prime */
-		if (is_prime(key->q, &result) != CRYPT_OK) {
-			fprintf(stderr, "dss key generation failed\n");
-			exit(1);
-		}
-
-	} while (!result);
+	/* 18 rounds are required according to HAC */
+	if (mp_prime_next_prime(key->q, 18) != MP_OKAY) {
+		fprintf(stderr, "dss key generation failed\n");
+		exit(1);
+	}
 }
 
 static void getp(dss_key *key, unsigned int size) {
@@ -132,8 +119,7 @@ static void getp(dss_key *key, unsigned int size) {
 	do {
 		
 		genrandom(buf, size);
-		buf[0] |= 0x01; /* set the bottom bit low */
-		buf[size-1] |= 0x80; /*set top bit high */
+		buf[0] |= 0x80; /* set the top bit high */
 
 		/* X is a random mp_int */
 		if (mp_read_unsigned_bin(&tempX, buf, size) != MP_OKAY) {
@@ -158,9 +144,9 @@ static void getp(dss_key *key, unsigned int size) {
 			exit(1);
 		}
 
-		/* now check for prime */
+		/* now check for prime, 5 rounds is enough according to HAC */
 		/* result == 1  =>  p is prime */
-		if (is_prime(key->p, &result) != CRYPT_OK) {
+		if (mp_prime_is_prime(key->p, 5, &result) != MP_OKAY) {
 			fprintf(stderr, "dss key generation failed\n");
 			exit(1);
 		}
@@ -184,7 +170,7 @@ static void getg(dss_key * key) {
 	m_mp_init(&val);
 	m_mp_init(&dummy);
 
-	/* get (p-1)/q */
+	/* get div=(p-1)/q */
 	if (mp_sub_d(key->p, 1, &val) != MP_OKAY) {
 		fprintf(stderr, "dss key generation failed\n");
 		exit(1);
@@ -194,9 +180,14 @@ static void getg(dss_key * key) {
 		exit(1);
 	}
 
+	/* check that (p-1) was divisible by q for sanity */
+	if (mp_cmp_d(&dummy, 0) != MP_EQ) {
+		fprintf(stderr, "dss key generation failed\n");
+		exit(1);
+	}
+
 	/* initialise h=1 */
 	mp_set(&h, 1);
-
 	do {
 		/* now keep going with g=h^div mod p, until g > 1 */
 		if (mp_exptmod(&h, &div, key->p, key->g) != MP_OKAY) {
@@ -210,7 +201,7 @@ static void getg(dss_key * key) {
 		}
 		mp_exch(&h, &dummy);
 	
-	} while (mp_cmp_d(key->g, 1) <= 0);
+	} while (mp_cmp_d(key->g, 1) != MP_GT);
 
 	mp_toradix(key->g, printbuf, 10);
 
@@ -233,7 +224,7 @@ static void getx(dss_key *key) {
 		if (mp_read_unsigned_bin(&val, buf, QSIZE) != MP_OKAY) {
 			fprintf(stderr, "dss key generation failed\n");
 		}
-	} while ((mp_cmp_d(&val, 1) > 1) && (mp_cmp(&val, key->q) < 1));
+	} while ((mp_cmp_d(&val, 1) == MP_GT) && (mp_cmp(&val, key->q) == MP_LT));
 
 	mp_copy(&val, key->x);
 	mp_clear(&val);
