@@ -138,9 +138,6 @@ void main_noinetd() {
 
 	commonsetup();
 
-	/* Now we can setup the hostkeys - needs to be after logging is on,
-	 * otherwise we might end up blatting error messages to the socket */
-	loadhostkeys();
 
 	/* should be done after syslog is working */
 	if (svr_opts.forkbg) {
@@ -355,6 +352,10 @@ static void commonsetup() {
 	if (signal(SIGSEGV, sigsegv_handler) == SIG_ERR) {
 		dropbear_exit("signal() error");
 	}
+
+	/* Now we can setup the hostkeys - needs to be after logging is on,
+	 * otherwise we might end up blatting error messages to the socket */
+	loadhostkeys();
 }
 
 /* Set up listening sockets for all the requested ports */
