@@ -56,10 +56,6 @@
 #endif
 
 #define HMAC
-#define OMAC
-#define PMAC
-#define EAX_MODE
-#define OCB_MODE
 #define BASE64
 
 #include <mycrypt.h>
