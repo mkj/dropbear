@@ -127,34 +127,13 @@ void agentcleanup(struct ChanSess * chansess) {
 
 static int send_msg_channel_open_agent(int fd) {
 
-	struct Channel* chan;
-
-	chan = newchannel(-1, CHANNEL_ID_AGENT, -1, -1, 1);
-	if (!chan) {
+	if (send_msg_channel_open_init(fd, "auth-agent@openssh.com") 
+			== DROPBEAR_SUCCESS) {
+		encrypt_packet();
+		return DROPBEAR_SUCCESS;
+	} else {
 		return DROPBEAR_FAILURE;
 	}
-
-	/* now open the channel connection */
-	CHECKCLEARTOWRITE();
-
-	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
-	buf_putstring(ses.writepayload, "auth-agent@openssh.com", 22);
-	buf_putint(ses.writepayload, chan->index);
-	buf_putint(ses.writepayload, RECV_MAXWINDOW);
-	buf_putint(ses.writepayload, RECV_MAXPACKET);
-
-	encrypt_packet();
-
-	/* set fd non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		return DROPBEAR_FAILURE;
-	}
-
-	chan->infd = chan->outfd = fd;
-
-	ses.maxfd = MAX(ses.maxfd, fd);
-
-	return DROPBEAR_SUCCESS;
 }
 
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */

@@ -81,11 +81,11 @@ void chancleanup() {
 }
 
 /* create a new channel entry, send a reply confirm or failure */
-/* This can be used to create new outgoing connections (where the remotechan,
- * transwindow, transmaxpacket etc aren't known) by setting 'outgoing' to
- * 1. This will ignore remotechan, transwindow and transmaxpacket */
+/* If remotechan, transwindow and transmaxpacket are not know (for a new
+ * outgoing connection, with them to be filled on confirmation), they should
+ * all be set to 0 */
 struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
-		unsigned int transwindow, unsigned int transmaxpacket, int outgoing) {
+		unsigned int transwindow, unsigned int transmaxpacket) {
 
 	struct Channel * newchan;
 	int i, j;
@@ -125,15 +125,9 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	newchan->sentclosed = 0;
 	newchan->recveof = newchan->transeof = newchan->erreof = 0;
 
-	if (outgoing == 0) {
-		newchan->remotechan = remotechan;
-		newchan->transwindow = transwindow;
-		newchan->transmaxpacket = transmaxpacket;
-	} else {
-		/* undefined */
-		newchan->remotechan = newchan->transwindow = 
-			newchan->transmaxpacket = 0;
-	}
+	newchan->remotechan = remotechan;
+	newchan->transwindow = transwindow;
+	newchan->transmaxpacket = transmaxpacket;
 	
 	newchan->typedata = NULL;
 	newchan->infd = -1;
@@ -685,7 +679,7 @@ void recv_msg_channel_open() {
 	}
 
 	/* create the channel */
-	channel = newchannel(remotechan, typeval, transwindow, transmaxpacket, 0);
+	channel = newchannel(remotechan, typeval, transwindow, transmaxpacket);
 
 	if (channel == NULL) {
 		errtype = SSH_OPEN_RESOURCE_SHORTAGE;
@@ -769,6 +763,39 @@ static void send_msg_channel_open_confirmation(struct Channel* channel,
 }
 
 #ifdef USE_LISTENERS
+/* Create a new channel, and start the open request. This is intended
+ * for X11, agent, tcp forwarding, and should be filled with channel-specific
+ * options, with the calling function calling encrypt_packet() after
+ * completion. It is mandatory for the caller to encrypt_packet() if
+ * DROPBEAR_SUCCESS is returned */
+int send_msg_channel_open_init(int fd, const char * typestring) {
+
+	struct Channel* chan;
+
+	chan = newchannel(0, CHANNEL_ID_AGENT, 0, 0);
+	if (!chan) {
+		return DROPBEAR_FAILURE;
+	}
+
+	/* set fd non-blocking */
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+		return DROPBEAR_FAILURE;
+	}
+
+	chan->infd = chan->outfd = fd;
+	ses.maxfd = MAX(ses.maxfd, fd);
+
+	/* now open the channel connection */
+	CHECKCLEARTOWRITE();
+
+	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
+	buf_putstring(ses.writepayload, typestring, strlen(typestring));
+	buf_putint(ses.writepayload, chan->index);
+	buf_putint(ses.writepayload, RECV_MAXWINDOW);
+	buf_putint(ses.writepayload, RECV_MAXPACKET);
+
+	return DROPBEAR_SUCCESS;
+}
 
 /* channel establishment is only required if we have listeners (for x11 etc)*/
 void recv_msg_channel_open_confirmation() {

@@ -81,7 +81,7 @@ void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
 struct Channel* newchannel(unsigned int remotechan, unsigned char type, 
-		unsigned int transwindow, unsigned int transmaxpacket, int outgoing);
+		unsigned int transwindow, unsigned int transmaxpacket);
 
 void recv_msg_channel_open();
 void recv_msg_channel_request();
@@ -93,6 +93,7 @@ void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
 #ifdef USE_LISTENERS
+int send_msg_channel_open_init(int fd, const char * typestring);
 void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();
 #endif

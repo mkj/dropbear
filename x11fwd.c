@@ -144,39 +144,19 @@ void x11cleanup(struct ChanSess * chansess) {
 
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
-	struct Channel* chan;
 	char* ipstring;
 
-	chan = newchannel(-1, CHANNEL_ID_X11, -1, -1, 1);
-	if (!chan) {
+	if (send_msg_channel_open_init(fd, "x11") == DROPBEAR_SUCCESS) {
+		ipstring = inet_ntoa(addr->sin_addr);
+		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
+		buf_putint(ses.writepayload, addr->sin_port);
+
+		encrypt_packet();
+		return DROPBEAR_SUCCESS;
+	} else {
 		return DROPBEAR_FAILURE;
 	}
 
-	ipstring = inet_ntoa(addr->sin_addr);
-
-	/* now open the channel connection */
-	CHECKCLEARTOWRITE();
-
-	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
-	buf_putstring(ses.writepayload, "x11", 3);
-	buf_putint(ses.writepayload, chan->index);
-	buf_putint(ses.writepayload, RECV_MAXWINDOW);
-	buf_putint(ses.writepayload, RECV_MAXPACKET);
-	buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
-	buf_putint(ses.writepayload, addr->sin_port);
-
-	encrypt_packet();
-
-	/* set fd non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		return DROPBEAR_FAILURE;
-	}
-
-	chan->infd = chan->outfd = fd;
-
-	ses.maxfd = MAX(ses.maxfd, fd);
-
-	return DROPBEAR_SUCCESS;
 }
 
 /* returns the port bound to, or -1 on failure.
