@@ -110,9 +110,6 @@ endif
 
 all: $(TARGETS)
 
-test:
-	 @echo Z$(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))Z
-
 strip: $(TARGETS)
 	$(STRIP) $(addsuffix $(EXEEXT), $(addprefix $(SPREFIX), $(TARGETS)))
 
@@ -157,9 +154,6 @@ ifeq ($(MULTI),1)
 	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))
 	CFLAGS+=$(addprefix -DDBMULTI_, $(PROGRAMS)) -DDROPBEAR_MULTI
 endif
-
-testfoo:
-	echo $(MULTIOBJS)
 
 dropbearmulti: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o $(SPREFIX)$@$(EXEEXT) $(MULTIOBJS) $(LIBS)
