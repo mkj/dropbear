@@ -37,6 +37,9 @@ If the server is run as non-root, you most likely won't be able to allocate a
 pty, and you cannot login as any user other than that running the daemon
 (obviously).
 
+You can use scp with dropbear, you'll just need to put scp from OpenSSH (or
+equivalent) in your path (/usr/bin/scp etc).
+
 =====
 
 Compiling with uclibc:
