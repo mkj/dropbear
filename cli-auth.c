@@ -169,6 +169,8 @@ void recv_msg_userauth_failure() {
 		}
 	}
 
+	m_free(methods);
+
 	cli_ses.state = USERAUTH_FAIL_RCVD;
 		
 	TRACE(("leave recv_msg_userauth_failure"));
