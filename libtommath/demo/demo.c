@@ -1,5 +1,12 @@
 #include <time.h>
 
+#ifdef IOWNANATHLON
+#include <unistd.h>
+#define SLEEP sleep(4)
+#else
+#define SLEEP
+#endif
+
 #include "tommath.h"
 
 #ifdef TIMER
@@ -46,7 +53,7 @@ int main(void)
 {
    mp_int a, b, c, d, e, f;
    unsigned long expt_n, add_n, sub_n, mul_n, div_n, sqr_n, mul2d_n, div2d_n, gcd_n, lcm_n, inv_n,
-                 div2_n, mul2_n;
+                 div2_n, mul2_n, add_d_n, sub_d_n;
    unsigned rr;
    int cnt, ix, old_kara_m, old_kara_s;
 
@@ -61,23 +68,61 @@ int main(void)
    mp_init(&c);
    mp_init(&d);
    mp_init(&e);
-   mp_init(&f);   
-   
+   mp_init(&f);
+
    srand(time(NULL));
+
+#if 0
+   for (;;) {
+      fgets(buf, sizeof(buf), stdin);
+      mp_read_radix(&a, buf, 10);
+      mp_prime_next_prime(&a, 5, 1);
+      mp_toradix(&a, buf, 10);
+      printf("%s, %lu\n", buf, a.dp[0] & 3);
+   }
+#endif
+
+#if 0
+{
+   mp_word aa, bb;
+
+   for (;;) {
+       aa = abs(rand()) & MP_MASK;
+       bb = abs(rand()) & MP_MASK;
+      if (MULT(aa,bb) != (aa*bb)) {
+             printf("%llu * %llu == %llu or %llu?\n", aa, bb, (ulong64)MULT(aa,bb), (ulong64)(aa*bb));
+             return 0;
+          }
+   }
+}
+#endif
+
+#if 0
+   /* test mp_cnt_lsb */
+   mp_set(&a, 1);
+   for (ix = 0; ix < 128; ix++) {
+       if (mp_cnt_lsb(&a) != ix) {
+          printf("Failed at %d\n", ix);
+          return 0;
+       }
+       mp_mul_2(&a, &a);
+   }
+#endif
+
 /* test mp_reduce_2k */
 #if 0
-   for (cnt = 3; cnt <= 4096; ++cnt) {
+   for (cnt = 3; cnt <= 256; ++cnt) {
        mp_digit tmp;
        mp_2expt(&a, cnt);
        mp_sub_d(&a, 1, &a);  /* a = 2**cnt - 1 */
-       
-       
+
+
        printf("\nTesting %4d bits", cnt);
        printf("(%d)", mp_reduce_is_2k(&a));
        mp_reduce_2k_setup(&a, &tmp);
        printf("(%d)", tmp);
-       for (ix = 0; ix < 100000; ix++) {
-           if (!(ix & 1023)) {printf("."); fflush(stdout); }
+       for (ix = 0; ix < 10000; ix++) {
+           if (!(ix & 127)) {printf("."); fflush(stdout); }
            mp_rand(&b, (cnt/DIGIT_BIT  + 1) * 2);
            mp_copy(&c, &b);
            mp_mod(&c, &a, &c);
@@ -90,26 +135,26 @@ int main(void)
     }
 #endif
 
-           
+
 /* test mp_div_3  */
 #if 0
-   for (cnt = 0; cnt < 1000000; ) {
+   for (cnt = 0; cnt < 10000; ) {
       mp_digit r1, r2;
-      
+
       if (!(++cnt & 127)) printf("%9d\r", cnt);
       mp_rand(&a, abs(rand()) % 32 + 1);
       mp_div_d(&a, 3, &b, &r1);
       mp_div_3(&a, &c, &r2);
-      
+
       if (mp_cmp(&b, &c) || r1 != r2) {
-         printf("Failure\n");
+         printf("\n\nmp_div_3 => Failure\n");
       }
    }
-#endif     
+   printf("\n\nPassed div_3 testing\n");
+#endif
 
 /* test the DR reduction */
 #if 0
-
    for (cnt = 2; cnt < 32; cnt++) {
        printf("%d digit modulus\n", cnt);
        mp_grow(&a, cnt);
@@ -118,7 +163,7 @@ int main(void)
            a.dp[ix] = MP_MASK;
        }
        a.used = cnt;
-       mp_prime_next_prime(&a, 3);
+       mp_prime_next_prime(&a, 3, 0);
 
        mp_rand(&b, cnt - 1);
        mp_copy(&b, &c);
@@ -134,9 +179,9 @@ int main(void)
 
          if (mp_cmp(&b, &c) != MP_EQ) {
             printf("Failed on trial %lu\n", rr); exit(-1);
-                       
+
          }
-      } while (++rr < 1000000);
+      } while (++rr < 10000);
       printf("Passed DR test for %d digits\n", cnt);
    }
 #endif
@@ -144,16 +189,16 @@ int main(void)
 #ifdef TIMER
       /* temp. turn off TOOM */
       TOOM_MUL_CUTOFF = TOOM_SQR_CUTOFF = 100000;
-          
       printf("CLOCKS_PER_SEC == %lu\n", CLOCKS_PER_SEC);
 
       log = fopen("logs/add.log", "w");
       for (cnt = 8; cnt <= 128; cnt += 8) {
+         SLEEP;
          mp_rand(&a, cnt);
          mp_rand(&b, cnt);
          reset();
          rr = 0;
-         do { 
+         do {
             DO(mp_add(&a,&b,&c));
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
@@ -162,16 +207,15 @@ int main(void)
          fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
-      
-      return 0;
 
       log = fopen("logs/sub.log", "w");
       for (cnt = 8; cnt <= 128; cnt += 8) {
+         SLEEP;
          mp_rand(&a, cnt);
          mp_rand(&b, cnt);
          reset();
          rr = 0;
-         do { 
+         do {
             DO(mp_sub(&a,&b,&c));
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
@@ -190,23 +234,9 @@ int main(void)
       KARATSUBA_MUL_CUTOFF = (ix==0)?9999:old_kara_m;
       KARATSUBA_SQR_CUTOFF = (ix==0)?9999:old_kara_s;
 
-      log = fopen((ix==0)?"logs/sqr.log":"logs/sqr_kara.log", "w");
-      for (cnt = 32; cnt <= 288; cnt += 16) {
-         mp_rand(&a, cnt);
-         reset();
-         rr = 0;
-         do {
-            DO(mp_sqr(&a, &b));
-            rr += 16;
-         } while (rdtsc() < (CLOCKS_PER_SEC * 2));
-         tt = rdtsc();
-         printf("Squaring\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
-      }
-      fclose(log);
-
       log = fopen((ix==0)?"logs/mult.log":"logs/mult_kara.log", "w");
       for (cnt = 32; cnt <= 288; cnt += 16) {
+         SLEEP;
          mp_rand(&a, cnt);
          mp_rand(&b, cnt);
          reset();
@@ -220,6 +250,23 @@ int main(void)
          fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
+
+      log = fopen((ix==0)?"logs/sqr.log":"logs/sqr_kara.log", "w");
+      for (cnt = 32; cnt <= 288; cnt += 16) {
+         SLEEP;
+         mp_rand(&a, cnt);
+         reset();
+         rr = 0;
+         do {
+            DO(mp_sqr(&a, &b));
+            rr += 16;
+         } while (rdtsc() < (CLOCKS_PER_SEC * 2));
+         tt = rdtsc();
+         printf("Squaring\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
+         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+      }
+      fclose(log);
+
    }
   {
       char *primes[] = {
@@ -230,7 +277,7 @@ int main(void)
          "1475979915214180235084898622737381736312066145333169775147771216478570297878078949377407337049389289382748507531496480477281264838760259191814463365330269540496961201113430156902396093989090226259326935025281409614983499388222831448598601834318536230923772641390209490231836446899608210795482963763094236630945410832793769905399982457186322944729636418890623372171723742105636440368218459649632948538696905872650486914434637457507280441823676813517852099348660847172579408422316678097670224011990280170474894487426924742108823536808485072502240519452587542875349976558572670229633962575212637477897785501552646522609988869914013540483809865681250419497686697771007",
          "259117086013202627776246767922441530941818887553125427303974923161874019266586362086201209516800483406550695241733194177441689509238807017410377709597512042313066624082916353517952311186154862265604547691127595848775610568757931191017711408826252153849035830401185072116424747461823031471398340229288074545677907941037288235820705892351068433882986888616658650280927692080339605869308790500409503709875902119018371991620994002568935113136548829739112656797303241986517250116412703509705427773477972349821676443446668383119322540099648994051790241624056519054483690809616061625743042361721863339415852426431208737266591962061753535748892894599629195183082621860853400937932839420261866586142503251450773096274235376822938649407127700846077124211823080804139298087057504713825264571448379371125032081826126566649084251699453951887789613650248405739378594599444335231188280123660406262468609212150349937584782292237144339628858485938215738821232393687046160677362909315071",
          "190797007524439073807468042969529173669356994749940177394741882673528979787005053706368049835514900244303495954950709725762186311224148828811920216904542206960744666169364221195289538436845390250168663932838805192055137154390912666527533007309292687539092257043362517857366624699975402375462954490293259233303137330643531556539739921926201438606439020075174723029056838272505051571967594608350063404495977660656269020823960825567012344189908927956646011998057988548630107637380993519826582389781888135705408653045219655801758081251164080554609057468028203308718724654081055323215860189611391296030471108443146745671967766308925858547271507311563765171008318248647110097614890313562856541784154881743146033909602737947385055355960331855614540900081456378659068370317267696980001187750995491090350108417050917991562167972281070161305972518044872048331306383715094854938415738549894606070722584737978176686422134354526989443028353644037187375385397838259511833166416134323695660367676897722287918773420968982326089026150031515424165462111337527431154890666327374921446276833564519776797633875503548665093914556482031482248883127023777039667707976559857333357013727342079099064400455741830654320379350833236245819348824064783585692924881021978332974949906122664421376034687815350484991",
-         
+
          /* DR moduli */
          "14059105607947488696282932836518693308967803494693489478439861164411992439598399594747002144074658928593502845729752797260025831423419686528151609940203368612079",
          "101745825697019260773923519755878567461315282017759829107608914364075275235254395622580447400994175578963163918967182013639660669771108475957692810857098847138903161308502419410142185759152435680068435915159402496058513611411688900243039",
@@ -254,6 +301,7 @@ int main(void)
    logb = fopen("logs/expt_dr.log", "w");
    logc = fopen("logs/expt_2k.log", "w");
    for (n = 0; primes[n]; n++) {
+      SLEEP;
       mp_read_radix(&a, primes[n], 10);
       mp_zero(&b);
       for (rr = 0; rr < mp_count_bits(&a); rr++) {
@@ -290,6 +338,7 @@ int main(void)
 
    log = fopen("logs/invmod.log", "w");
    for (cnt = 4; cnt <= 128; cnt += 4) {
+      SLEEP;
       mp_rand(&a, cnt);
       mp_rand(&b, cnt);
 
@@ -320,13 +369,11 @@ int main(void)
 #endif
 
    div2_n = mul2_n = inv_n = expt_n = lcm_n = gcd_n = add_n =
-   sub_n = mul_n = div_n = sqr_n = mul2d_n = div2d_n = cnt = 0;
-   
+   sub_n = mul_n = div_n = sqr_n = mul2d_n = div2d_n = cnt = add_d_n = sub_d_n= 0;
+
    /* force KARA and TOOM to enable despite cutoffs */
    KARATSUBA_SQR_CUTOFF = KARATSUBA_MUL_CUTOFF = 110;
    TOOM_SQR_CUTOFF      = TOOM_MUL_CUTOFF      = 150;
-   
-   
 
    for (;;) {
        /* randomly clear and re-init one variable, this has the affect of triming the alloc space */
@@ -341,7 +388,7 @@ int main(void)
        }
 
 
-       printf("%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu/%7lu ", add_n, sub_n, mul_n, div_n, sqr_n, mul2d_n, div2d_n, gcd_n, lcm_n, expt_n, inv_n, div2_n, mul2_n);
+       printf("%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu/%4lu ", add_n, sub_n, mul_n, div_n, sqr_n, mul2d_n, div2d_n, gcd_n, lcm_n, expt_n, inv_n, div2_n, mul2_n, add_d_n, sub_d_n);
        fgets(cmd, 4095, stdin);
        cmd[strlen(cmd)-1] = 0;
        printf("%s  ]\r",cmd); fflush(stdout);
@@ -526,8 +573,33 @@ draw(&a);draw(&b);draw(&c);draw(&d);
                  draw(&c);
                  return 0;
              }
+       } else if (!strcmp(cmd, "add_d")) { ++add_d_n;
+              fgets(buf, 4095, stdin); mp_read_radix(&a, buf, 64);
+              fgets(buf, 4095, stdin); sscanf(buf, "%d", &ix);
+              fgets(buf, 4095, stdin); mp_read_radix(&b, buf, 64);
+              mp_add_d(&a, ix, &c);
+              if (mp_cmp(&b, &c) != MP_EQ) {
+                 printf("add_d %lu failure\n", add_d_n);
+                 draw(&a);
+                 draw(&b);
+                 draw(&c);
+                 printf("d == %d\n", ix);
+                 return 0;
+              }
+       } else if (!strcmp(cmd, "sub_d")) { ++sub_d_n;
+              fgets(buf, 4095, stdin); mp_read_radix(&a, buf, 64);
+              fgets(buf, 4095, stdin); sscanf(buf, "%d", &ix);
+              fgets(buf, 4095, stdin); mp_read_radix(&b, buf, 64);
+              mp_sub_d(&a, ix, &c);
+              if (mp_cmp(&b, &c) != MP_EQ) {
+                 printf("sub_d %lu failure\n", sub_d_n);
+                 draw(&a);
+                 draw(&b);
+                 draw(&c);
+                 printf("d == %d\n", ix);
+                 return 0;
+              }
        }
-
    }
    return 0;
 }

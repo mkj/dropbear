@@ -1,7 +1,7 @@
 \documentclass[]{article}
 \begin{document}
 
-\title{LibTomMath v0.21 \\ A Free Multiple Precision Integer Library \\ http://math.libtomcrypt.org }
+\title{LibTomMath v0.27 \\ A Free Multiple Precision Integer Library \\ http://math.libtomcrypt.org }
 \author{Tom St Denis \\ tomstdenis@iahu.ca}
 \maketitle
 \newpage
@@ -389,7 +389,7 @@ int mp_prime_is_prime(mp_int *a, int t, int *result);
 /* finds the next prime after the number "a" using "t" trials
  * of Miller-Rabin.
  */
-int mp_prime_next_prime(mp_int *a, int t);
+int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
 \end{verbatim}
 
 \subsection{Radix Conversions}
@@ -832,9 +832,11 @@ primes and then $t$ rounds of Miller-Rabin using the first $t$ primes as bases. 
 function will always set $result$ to $1$.  If $a$ is composite then it will almost always set $result$
 to $0$.  The probability of error is given in figure two.
 
-\subsubsection{mp\_prime\_next\_prime(mp\_int *a, int t)}
+\subsubsection{mp\_prime\_next\_prime(mp\_int *a, int t, int bbs\_style)}
 This function will find the next prime \textbf{after} $a$ by using trial division and $t$ trials of 
-Miller-Rabin.  
+Miller-Rabin.  If $bbs\_style$ is set to one than $a$ will be the next prime such that $a \equiv 3 \mbox{ (mod }4\mbox{)}$ 
+which is useful for certain algorithms.  Otherwise, $a$ will be the next prime greater than the initial input
+value and may be $\lbrace 1, 3 \rbrace \equiv a \mbox{ (mod }4\mbox{)}$.  
 
 \section{Timing Analysis}
 

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -30,6 +30,11 @@ mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
   /* default */
   *result = 0;
 
+  /* ensure b > 1 */
+  if (mp_cmp_d(b, 1) != MP_GT) {
+     return MP_VAL;
+  }     
+
   /* get n1 = a - 1 */
   if ((err = mp_init_copy (&n1, a)) != MP_OKAY) {
     return err;
@@ -38,19 +43,22 @@ mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
     goto __N1;
   }
 
-  /* set 2^s * r = n1 */
+  /* set 2**s * r = n1 */
   if ((err = mp_init_copy (&r, &n1)) != MP_OKAY) {
     goto __N1;
   }
-  s = 0;
-  while (mp_iseven (&r) == 1) {
-    ++s;
-    if ((err = mp_div_2 (&r, &r)) != MP_OKAY) {
-      goto __R;
-    }
+
+  /* count the number of least significant bits
+   * which are zero
+   */
+  s = mp_cnt_lsb(&r);
+
+  /* now divide n - 1 by 2**s */
+  if ((err = mp_div_2d (&r, s, &r, NULL)) != MP_OKAY) {
+    goto __R;
   }
 
-  /* compute y = b^r mod a */
+  /* compute y = b**r mod a */
   if ((err = mp_init (&y)) != MP_OKAY) {
     goto __R;
   }
@@ -64,12 +72,12 @@ mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
     /* while j <= s-1 and y != n1 */
     while ((j <= (s - 1)) && mp_cmp (&y, &n1) != MP_EQ) {
       if ((err = mp_sqrmod (&y, a, &y)) != MP_OKAY) {
-	goto __Y;
+         goto __Y;
       }
 
       /* if y == 1 then composite */
       if (mp_cmp_d (&y, 1) == MP_EQ) {
-	goto __Y;
+         goto __Y;
       }
 
       ++j;

@@ -1,6 +1,12 @@
-CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
+#Makefile for GCC
+#
+#Tom St Denis
+CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -funroll-loops
 
-VERSION=0.21
+#x86 optimizations [should be valid for any GCC install though]
+CFLAGS  += -fomit-frame-pointer 
+
+VERSION=0.27
 
 default: libtommath.a
 
@@ -29,25 +35,26 @@ bn_mp_mulmod.o bn_mp_sqrmod.o bn_mp_gcd.o bn_mp_lcm.o bn_fast_mp_invmod.o bn_mp_
 bn_mp_reduce.o bn_mp_montgomery_setup.o bn_fast_mp_montgomery_reduce.o bn_mp_montgomery_reduce.o \
 bn_mp_exptmod_fast.o bn_mp_exptmod.o bn_mp_2expt.o bn_mp_n_root.o bn_mp_jacobi.o bn_reverse.o \
 bn_mp_count_bits.o bn_mp_read_unsigned_bin.o bn_mp_read_signed_bin.o bn_mp_to_unsigned_bin.o \
-bn_mp_to_signed_bin.o bn_mp_unsigned_bin_size.o bn_mp_signed_bin_size.o bn_radix.o \
+bn_mp_to_signed_bin.o bn_mp_unsigned_bin_size.o bn_mp_signed_bin_size.o  \
 bn_mp_xor.o bn_mp_and.o bn_mp_or.o bn_mp_rand.o bn_mp_montgomery_calc_normalization.o \
 bn_mp_prime_is_divisible.o bn_prime_tab.o bn_mp_prime_fermat.o bn_mp_prime_miller_rabin.o \
-bn_mp_prime_is_prime.o bn_mp_prime_next_prime.o bn_mp_dr_reduce.o bn_mp_multi.o \
+bn_mp_prime_is_prime.o bn_mp_prime_next_prime.o bn_mp_dr_reduce.o \
 bn_mp_dr_is_modulus.o bn_mp_dr_setup.o bn_mp_reduce_setup.o \
 bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
-bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o
+bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
+bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
+bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
+bn_mp_init_multi.o bn_mp_clear_multi.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
 	ranlib libtommath.a
 
-install: libtommath.a docs
+install: libtommath.a
 	install -d -g root -o root $(DESTDIR)$(LIBPATH)
 	install -d -g root -o root $(DESTDIR)$(INCPATH)
-	install -d -g root -o root $(DESTDIR)$(DATAPATH)
 	install -g root -o root $(LIBNAME) $(DESTDIR)$(LIBPATH)
 	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
-	install -g root -o root bn.pdf $(DESTDIR)$(DATAPATH)
 
 test: libtommath.a demo/demo.o
 	$(CC) demo/demo.o libtommath.a -o test
@@ -69,16 +76,10 @@ docdvi: tommath.src
 poster: poster.tex
 	pdflatex poster
 	rm -f poster.aux poster.log 
-	
+
 # makes the LTM book PS/PDF file, requires tetex, cleans up the LaTeX temp files
 docs:	
 	cd pics ; make pdfes
-	echo "hello" > tommath.ind
-	perl booker.pl
-	latex tommath > /dev/null
-	makeindex tommath
-	latex tommath > /dev/null
-	dvips -tB5 -D600 tommath
 	echo "hello" > tommath.ind
 	perl booker.pl PDF
 	latex tommath > /dev/null
@@ -91,10 +92,10 @@ docs:
 manual:	
 	latex bn
 	pdflatex bn
-	rm -f bn.aux bn.dvi bn.log 	
+	rm -f bn.aux bn.dvi bn.log
 	
 clean:
-	rm -f *.pdf *.o *.a *.obj *.lib *.exe etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
+	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
         tommath.idx tommath.toc tommath.log tommath.aux tommath.dvi tommath.lof tommath.ind tommath.ilg *.ps *.pdf *.log *.s mpi.c \
         poster.aux poster.dvi poster.log
 	cd etc ; make clean
@@ -103,6 +104,6 @@ clean:
 zipup: clean manual poster
 	perl gen.pl ; mv mpi.c pre_gen/ ; \
 	cd .. ; rm -rf ltm* libtommath-$(VERSION) ; mkdir libtommath-$(VERSION) ; \
-	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; cp tdcal.pdf ./libtommath-$(VERSION)/ ; cd ./libtommath-$(VERSION) ; rm -f tommath.src tommath.tex tommath.out ; cd pics ; rm -f * ; cd .. ; cd .. ; ls ; \
+	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; cd ./libtommath-$(VERSION) ; rm -f tommath.src tommath.tex tommath.out ; cd pics ; rm -f *.tif *.ps *.pdf ; cd .. ; cd .. ; ls ; \
 	tar -c libtommath-$(VERSION)/* > ltm-$(VERSION).tar ; \
 	bzip2 -9vv ltm-$(VERSION).tar ; zip -9 -r ltm-$(VERSION).zip libtommath-$(VERSION)/*

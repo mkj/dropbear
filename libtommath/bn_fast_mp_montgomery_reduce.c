@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -38,11 +38,17 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     }
   }
 
+  /* first we have to get the digits of the input into
+   * an array of double precision words W[...]
+   */
   {
     register mp_word *_W;
     register mp_digit *tmpx;
 
-    _W = W;
+    /* alias for the W[] array */
+    _W   = W;
+
+    /* alias for the digits of  x*/
     tmpx = x->dp;
 
     /* copy the digits of a into W[0..a->used-1] */
@@ -56,6 +62,9 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     }
   }
 
+  /* now we proceed to zero successive digits
+   * from the least significant upwards
+   */
   for (ix = 0; ix < n->used; ix++) {
     /* mu = ai * m' mod b
      *
@@ -64,7 +73,7 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
      * that W[ix-1] have  the carry cleared (see after the inner loop)
      */
     register mp_digit mu;
-    mu = (((mp_digit) (W[ix] & MP_MASK)) * rho) & MP_MASK;
+    mu = ((W[ix] & MP_MASK) * rho) & MP_MASK;
 
     /* a = a + mu * m * b**i
      *
@@ -93,7 +102,7 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 
       /* inner loop */
       for (iy = 0; iy < n->used; iy++) {
-          *_W++ += ((mp_word) mu) * ((mp_word) * tmpn++);
+          *_W++ += ((mp_word)mu) * ((mp_word)*tmpn++);
       }
     }
 
@@ -101,13 +110,20 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     W[ix + 1] += W[ix] >> ((mp_word) DIGIT_BIT);
   }
 
-
+  /* now we have to propagate the carries and
+   * shift the words downward [all those least
+   * significant digits we zeroed].
+   */
   {
     register mp_digit *tmpx;
     register mp_word *_W, *_W1;
 
     /* nox fix rest of carries */
+
+    /* alias for current word */
     _W1 = W + ix;
+
+    /* alias for next word, where the carry goes */
     _W = W + ++ix;
 
     for (; ix <= n->used * 2 + 1; ix++) {
@@ -120,7 +136,11 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
      * array of mp_word to mp_digit than calling mp_rshd 
      * we just copy them in the right order
      */
+
+    /* alias for destination word */
     tmpx = x->dp;
+
+    /* alias for shifted double precision result */
     _W = W + n->used;
 
     for (ix = 0; ix < n->used + 1; ix++) {
@@ -128,7 +148,8 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     }
 
     /* zero oldused digits, if the input a was larger than
-     * m->used+1 we'll have to clear the digits */
+     * m->used+1 we'll have to clear the digits
+     */
     for (; ix < olduse; ix++) {
       *tmpx++ = 0;
     }

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -26,8 +26,10 @@ mp_copy (mp_int * a, mp_int * b)
   }
 
   /* grow dest */
-  if ((res = mp_grow (b, a->used)) != MP_OKAY) {
-    return res;
+  if (b->alloc < a->used) {
+     if ((res = mp_grow (b, a->used)) != MP_OKAY) {
+        return res;
+     }
   }
 
   /* zero b and copy the parameters over */
@@ -35,7 +37,11 @@ mp_copy (mp_int * a, mp_int * b)
     register mp_digit *tmpa, *tmpb;
 
     /* pointer aliases */
+
+    /* source */
     tmpa = a->dp;
+
+    /* destination */
     tmpb = b->dp;
 
     /* copy all the digits */
@@ -48,6 +54,8 @@ mp_copy (mp_int * a, mp_int * b)
       *tmpb++ = 0;
     }
   }
+
+  /* copy used count and sign */
   b->used = a->used;
   b->sign = a->sign;
   return MP_OKAY;

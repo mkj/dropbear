@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -82,17 +82,19 @@ extern "C" {
    typedef ulong64            mp_word;
 
 #ifdef MP_31BIT   
+   /* this is an extension that uses 31-bit digits */
    #define DIGIT_BIT          31
 #else
+   /* default case is 28-bit digits, defines MP_28BIT as a handy macro to test */
    #define DIGIT_BIT          28
+   #define MP_28BIT
 #endif   
 #endif
 
 /* otherwise the bits per digit is calculated automatically from the size of a mp_digit */
 #ifndef DIGIT_BIT
-   #define DIGIT_BIT     ((CHAR_BIT * sizeof(mp_digit) - 1))  /* bits per digit */
+   #define DIGIT_BIT     ((int)((CHAR_BIT * sizeof(mp_digit) - 1)))  /* bits per digit */
 #endif
-
 
 #define MP_DIGIT_BIT     DIGIT_BIT
 #define MP_MASK          ((((mp_digit)1)<<((mp_digit)DIGIT_BIT))-((mp_digit)1))
@@ -120,7 +122,7 @@ extern int KARATSUBA_MUL_CUTOFF,
            TOOM_SQR_CUTOFF;
 
 /* various build options */
-#define MP_PREC                 64      /* default digits of precision (must be power of two) */
+#define MP_PREC                 64     /* default digits of precision */
 
 /* define this to use lower memory usage routines (exptmods mostly) */
 /* #define MP_LOW_MEM */
@@ -134,11 +136,13 @@ typedef struct  {
 } mp_int;
 
 #define USED(m)    ((m)->used)
-#define DIGIT(m,k) ((m)->dp[k])
+#define DIGIT(m,k) ((m)->dp[(k)])
 #define SIGN(m)    ((m)->sign)
 
-/* ---> init and deinit bignum functions <--- */
+/* error code to char* string */
+char *mp_error_to_string(int code);
 
+/* ---> init and deinit bignum functions <--- */
 /* init a bignum */
 int mp_init(mp_int *a);
 
@@ -164,9 +168,8 @@ int mp_grow(mp_int *a, int size);
 int mp_init_size(mp_int *a, int size);
 
 /* ---> Basic Manipulations <--- */
-
 #define mp_iszero(a) (((a)->used == 0) ? 1 : 0)
-#define mp_iseven(a) (((a)->used == 0 || (((a)->dp[0] & 1) == 0)) ? 1 : 0)
+#define mp_iseven(a) (((a)->used > 0 && (((a)->dp[0] & 1) == 0)) ? 1 : 0)
 #define mp_isodd(a)  (((a)->used > 0 && (((a)->dp[0] & 1) == 1)) ? 1 : 0)
 
 /* set to zero */
@@ -212,6 +215,9 @@ int mp_mod_2d(mp_int *a, int b, mp_int *c);
 
 /* computes a = 2**b */
 int mp_2expt(mp_int *a, int b);
+
+/* Counts the number of lsbs which are zero before the first zero bit */
+int mp_cnt_lsb(mp_int *a);
 
 /* makes a pseudo-random int of a given size */
 int mp_rand(mp_int *a, int digits);
@@ -397,9 +403,10 @@ int mp_prime_is_prime(mp_int *a, int t, int *result);
 
 /* finds the next prime after the number "a" using "t" trials
  * of Miller-Rabin.
+ *
+ * bbs_style = 1 means the prime must be congruent to 3 mod 4
  */
-int mp_prime_next_prime(mp_int *a, int t);
-
+int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
 
 /* ---> radix conversion <--- */
 int mp_count_bits(mp_int *a);
@@ -450,6 +457,8 @@ int fast_mp_montgomery_reduce(mp_int *a, mp_int *m, mp_digit mp);
 int mp_exptmod_fast(mp_int *G, mp_int *X, mp_int *P, mp_int *Y, int mode);
 int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);
 void bn_reverse(unsigned char *s, int len);
+
+extern const char *mp_s_rmap;
 
 #ifdef __cplusplus
    }

@@ -1,3 +1,73 @@
+Sept 19th, 2003
+v0.27  -- Removed changes.txt~ which was made by accident since "kate" decided it was
+          a good time to re-enable backups... [kde is fun!]
+       -- In mp_grow() "a->dp" is not overwritten by realloc call [re: memory leak]
+          Now if mp_grow() fails the mp_int is still valid and can be cleared via
+          mp_clear() to reclaim the memory.
+       -- Henrik Goldman found a buffer overflow bug in mp_add_d().  Fixed.
+       -- Cleaned up mp_mul_d() to be much easier to read and follow.
+
+Aug 29th, 2003
+v0.26  -- Fixed typo that caused warning with GCC 3.2
+       -- Martin Marcel noticed a bug in mp_neg() that allowed negative zeroes.  
+          Also, Martin is the fellow who noted the bugs in mp_gcd() of 0.24/0.25.
+       -- Martin Marcel noticed an optimization [and slight bug] in mp_lcm().
+       -- Added fix to mp_read_unsigned_bin to prevent a buffer overflow.
+       -- Beefed up the comments in the baseline multipliers [and montgomery]
+       -- Added "mont" demo to the makefile.msvc in etc/
+       -- Optimized sign compares in mp_cmp from 4 to 2 cases.
+
+Aug 4th, 2003
+v0.25  -- Fix to mp_gcd again... oops (0,-a) == (-a, 0) == a
+       -- Fix to mp_clear which didn't reset the sign  [Greg Rose]
+       -- Added mp_error_to_string() to convert return codes to strings.  [Greg Rose]
+       -- Optimized fast_mp_invmod() to do the test for invalid inputs [both even]
+          first so temps don't have to be initialized if it's going to fail.
+       -- Optimized mp_gcd() by removing mp_div_2d calls for when one of the inputs
+          is odd.
+       -- Tons of new comments, some indentation fixups, etc.
+       -- mp_jacobi() returns MP_VAL if the modulus is less than or equal to zero.
+       -- fixed two typos in the header of each file :-)
+       -- LibTomMath is officially Public Domain [see LICENSE]
+
+July 15th, 2003
+v0.24  -- Optimized mp_add_d and mp_sub_d to not allocate temporary variables
+       -- Fixed mp_gcd() so the gcd of 0,0 is 0.  Allows the gcd operation to be chained
+          e.g. (0,0,a) == a [instead of 1]
+       -- Should be one of the last release for a while.  Working on LibTomMath book now.
+       -- optimized the pprime demo [/etc/pprime.c] to first make a huge table of single
+          digit primes then it reads them randomly instead of randomly choosing/testing single
+          digit primes.
+
+July 12th, 2003
+v0.23  -- Optimized mp_prime_next_prime() to not use mp_mod [via is_divisible()] in each
+          iteration.  Instead now a smaller table is kept of the residues which can be updated
+          without division.
+       -- Fixed a bug in next_prime() where an input of zero would be treated as odd and
+          have two added to it [to move to the next odd].
+       -- fixed a bug in prime_fermat() and prime_miller_rabin() which allowed the base
+          to be negative, zero or one.  Normally the test is only valid if the base is
+          greater than one.
+       -- changed the next_prime() prototype to accept a new parameter "bbs_style" which
+          will find the next prime congruent to 3 mod 4.  The default [bbs_style==0] will
+          make primes which are either congruent to 1 or 3 mod 4.
+       -- fixed mp_read_unsigned_bin() so that it doesn't include both code for
+          the case DIGIT_BIT < 8 and >= 8
+       -- optimized div_d() to easy out on division by 1 [or if a == 0] and use
+          logical shifts if the divisor is a power of two.
+       -- the default DIGIT_BIT type was not int for non-default builds.  Fixed.
+
+July 2nd, 2003
+v0.22  -- Fixed up mp_invmod so the result is properly in range now [was always congruent to the inverse...]
+       -- Fixed up s_mp_exptmod and mp_exptmod_fast so the lower half of the pre-computed table isn't allocated
+          which makes the algorithm use half as much ram.
+       -- Fixed the install script not to make the book :-) [which isn't included anyways]
+       -- added mp_cnt_lsb() which counts how many of the lsbs are zero
+       -- optimized mp_gcd() to use the new mp_cnt_lsb() to replace multiple divisions by two by a single division.
+       -- applied similar optimization to mp_prime_miller_rabin().
+       -- Fixed a bug in both mp_invmod() and fast_mp_invmod() which tested for odd
+          via "mp_iseven() == 0" which is not valid [since zero is not even either].
+
 June 19th, 2003
 v0.21  -- Fixed bug in mp_mul_d which would not handle sign correctly [would not always forward it]
        -- Removed the #line lines from gen.pl [was in violation of ISO C]       

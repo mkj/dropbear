@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -20,13 +20,14 @@ mp_mul (mp_int * a, mp_int * b, mp_int * c)
 {
   int     res, neg;
   neg = (a->sign == b->sign) ? MP_ZPOS : MP_NEG;
-  
+
+  /* use Toom-Cook? */
   if (MIN (a->used, b->used) >= TOOM_MUL_CUTOFF) {
     res = mp_toom_mul(a, b, c);
+  /* use Karatsuba? */
   } else if (MIN (a->used, b->used) >= KARATSUBA_MUL_CUTOFF) {
     res = mp_karatsuba_mul (a, b, c);
   } else {
-
     /* can we use the fast multiplier?
      *
      * The fast multiplier can be used if the output will 

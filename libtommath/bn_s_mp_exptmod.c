@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -14,10 +14,16 @@
  */
 #include <tommath.h>
 
+#ifdef MP_LOW_MEM
+   #define TAB_SIZE 32
+#else
+   #define TAB_SIZE 256
+#endif
+
 int
 s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 {
-  mp_int  M[256], res, mu;
+  mp_int  M[TAB_SIZE], res, mu;
   mp_digit buf;
   int     err, bitbuf, bitcpy, bitcnt, mode, digidx, x, y, winsize;
 
@@ -46,11 +52,18 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 #endif
 
   /* init M array */
-  for (x = 0; x < (1 << winsize); x++) {
-    if ((err = mp_init_size (&M[x], 1)) != MP_OKAY) {
-      for (y = 0; y < x; y++) {
+  /* init first cell */
+  if ((err = mp_init(&M[1])) != MP_OKAY) {
+     return err; 
+  }
+
+  /* now init the second half of the array */
+  for (x = 1<<(winsize-1); x < (1 << winsize); x++) {
+    if ((err = mp_init(&M[x])) != MP_OKAY) {
+      for (y = 1<<(winsize-1); y < x; y++) {
         mp_clear (&M[y]);
       }
+      mp_clear(&M[1]);
       return err;
     }
   }
@@ -92,7 +105,9 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
     }
   }
 
-  /* create upper table */
+  /* create upper table, that is M[x] = M[x-1] * M[1] (mod P)
+   * for x = (2**(winsize - 1) + 1) to (2**winsize - 1)
+   */
   for (x = (1 << (winsize - 1)) + 1; x < (1 << winsize); x++) {
     if ((err = mp_mul (&M[x - 1], &M[1], &M[x])) != MP_OKAY) {
       goto __MU;
@@ -119,15 +134,17 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
   for (;;) {
     /* grab next digit as required */
     if (--bitcnt == 0) {
+      /* if digidx == -1 we are out of digits */
       if (digidx == -1) {
         break;
       }
-      buf = X->dp[digidx--];
+      /* read next digit and reset the bitcnt */
+      buf    = X->dp[digidx--];
       bitcnt = (int) DIGIT_BIT;
     }
 
     /* grab the next msb from the exponent */
-    y = (buf >> (mp_digit)(DIGIT_BIT - 1)) & 1;
+    y     = (buf >> (mp_digit)(DIGIT_BIT - 1)) & 1;
     buf <<= (mp_digit)1;
 
     /* if the bit is zero and mode == 0 then we ignore it
@@ -135,8 +152,9 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
      * in the exponent.  Technically this opt is not required but it
      * does lower the # of trivial squaring/reductions used
      */
-    if (mode == 0 && y == 0)
+    if (mode == 0 && y == 0) {
       continue;
+    }
 
     /* if the bit is zero and mode == 1 then we square */
     if (mode == 1 && y == 0) {
@@ -151,7 +169,7 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 
     /* else we add it to the window */
     bitbuf |= (y << (winsize - ++bitcpy));
-    mode = 2;
+    mode    = 2;
 
     if (bitcpy == winsize) {
       /* ok window is filled so square as required and multiply  */
@@ -176,7 +194,7 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
       /* empty window and reset */
       bitcpy = 0;
       bitbuf = 0;
-      mode = 1;
+      mode   = 1;
     }
   }
 
@@ -209,7 +227,8 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 __RES:mp_clear (&res);
 __MU:mp_clear (&mu);
 __M:
-  for (x = 0; x < (1 << winsize); x++) {
+  mp_clear(&M[1]);
+  for (x = 1<<(winsize-1); x < (1 << winsize); x++) {
     mp_clear (&M[x]);
   }
   return err;

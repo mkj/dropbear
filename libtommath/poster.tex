@@ -24,7 +24,7 @@ Is Even? & {\tt mp\_iseven(\&a)} & $d = a^b \mod c$ & {\tt mp\_exptmod(\&a, \&b,
 Is Odd ? & {\tt mp\_isodd(\&a)} \\
 &\\
 $\vert \vert a \vert \vert$ & {\tt mp\_unsigned\_bin\_size(\&a)} & $res$ = 1 if $a$ prime to $t$ rounds? & {\tt mp\_prime\_is\_prime(\&a, t, \&res)} \\
-$buf \leftarrow a$          & {\tt mp\_to\_unsigned\_bin(\&a, buf)} & Next prime after $a$ to $t$ rounds. & {\tt mp\_prime\_next\_prime(\&a, t)} \\
+$buf \leftarrow a$          & {\tt mp\_to\_unsigned\_bin(\&a, buf)} & Next prime after $a$ to $t$ rounds. & {\tt mp\_prime\_next\_prime(\&a, t, bbs\_style)} \\
 $a \leftarrow buf[0..len-1]$          & {\tt mp\_read\_unsigned\_bin(\&a, buf, len)} \\
 &\\
 $b = \sqrt{a}$ & {\tt mp\_sqrt(\&a, \&b)}  & $c = \mbox{gcd}(a, b)$ & {\tt mp\_gcd(\&a, \&b, \&c)} \\

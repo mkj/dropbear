@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -14,7 +14,8 @@
  */
 #include <tommath.h>
 
-/* determines if an integers is divisible by one of the first 256 primes or not
+/* determines if an integers is divisible by one 
+ * of the first PRIME_SIZE primes or not
  *
  * sets result to 0 if not, 1 if yes
  */
@@ -28,12 +29,6 @@ mp_prime_is_divisible (mp_int * a, int *result)
   *result = 0;
 
   for (ix = 0; ix < PRIME_SIZE; ix++) {
-    /* is it equal to the prime? */
-    if (mp_cmp_d (a, __prime_tab[ix]) == MP_EQ) {
-      *result = 1;
-      return MP_OKAY;
-    }
-
     /* what is a mod __prime_tab[ix] */
     if ((err = mp_mod_d (a, __prime_tab[ix], &res)) != MP_OKAY) {
       return err;

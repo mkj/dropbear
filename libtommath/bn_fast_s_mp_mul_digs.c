@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -81,7 +81,7 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
       pb = MIN (b->used, digs - ix);
 
       for (iy = 0; iy < pb; iy++) {
-        *_W++ += ((mp_word) tmpx) * ((mp_word) * tmpy++);
+        *_W++ += ((mp_word)tmpx) * ((mp_word)*tmpy++);
       }
     }
 
@@ -104,20 +104,27 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
      * from N*(N+N*c)==N**2 + c*N**2 to N**2 + N*c where c is the 
      * cost of the shifting.  On very small numbers this is slower 
      * but on most cryptographic size numbers it is faster.
+     *
+     * In this particular implementation we feed the carries from
+     * behind which means when the loop terminates we still have one
+     * last digit to copy
      */
     tmpc = c->dp;
     for (ix = 1; ix < digs; ix++) {
+      /* forward the carry from the previous temp */
       W[ix] += (W[ix - 1] >> ((mp_word) DIGIT_BIT));
+
+      /* now extract the previous digit [below the carry] */
       *tmpc++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
     }
+    /* fetch the last digit */
     *tmpc++ = (mp_digit) (W[digs - 1] & ((mp_word) MP_MASK));
 
-    /* clear unused */
+    /* clear unused digits [that existed in the old copy of c] */
     for (; ix < olduse; ix++) {
       *tmpc++ = 0;
     }
   }
-
   mp_clamp (c);
   return MP_OKAY;
 }

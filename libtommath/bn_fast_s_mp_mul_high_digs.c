@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -12,7 +12,7 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
+ #include <tommath.h>
 
 /* this is a modified version of fast_s_mp_mul_digs that only produces
  * output digits *above* digs.  See the comments for fast_s_mp_mul_digs
@@ -71,7 +71,7 @@ fast_s_mp_mul_high_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 
       /* compute column products for digits above the minimum */
       for (; iy < pb; iy++) {
-    *_W++ += ((mp_word) tmpx) * ((mp_word) * tmpy++);
+         *_W++ += ((mp_word) tmpx) * ((mp_word)*tmpy++);
       }
     }
   }
@@ -80,12 +80,15 @@ fast_s_mp_mul_high_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
   oldused = c->used;
   c->used = newused;
 
-  /* now convert the array W downto what we need */
+  /* now convert the array W downto what we need
+   *
+   * See comments in bn_fast_s_mp_mul_digs.c
+   */
   for (ix = digs + 1; ix < newused; ix++) {
     W[ix] += (W[ix - 1] >> ((mp_word) DIGIT_BIT));
     c->dp[ix - 1] = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
   }
-  c->dp[(pa + pb + 1) - 1] = (mp_digit) (W[(pa + pb + 1) - 1] & ((mp_word) MP_MASK));
+  c->dp[newused - 1] = (mp_digit) (W[newused - 1] & ((mp_word) MP_MASK));
 
   for (; ix < oldused; ix++) {
     c->dp[ix] = 0;

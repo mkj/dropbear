@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -61,15 +61,15 @@ s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
     /* compute the columns of the output and propagate the carry */
     for (iy = 0; iy < pb; iy++) {
       /* compute the column as a mp_word */
-      r = ((mp_word) *tmpt) + 
-          ((mp_word) tmpx) * ((mp_word) * tmpy++) + 
-          ((mp_word) u);
+      r       = ((mp_word)*tmpt) +
+                ((mp_word)tmpx) * ((mp_word)*tmpy++) +
+                ((mp_word) u);
 
       /* the new column is the lower part of the result */
       *tmpt++ = (mp_digit) (r & ((mp_word) MP_MASK));
 
       /* get the carry word from the result */
-      u = (mp_digit) (r >> ((mp_word) DIGIT_BIT));
+      u       = (mp_digit) (r >> ((mp_word) DIGIT_BIT));
     }
     /* set carry if it is placed below digs */
     if (ix + iy < digs) {

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -14,23 +14,30 @@
  */
 #include <tommath.h>
 
-/* computes Y == G^X mod P, HAC pp.616, Algorithm 14.85
+/* computes Y == G**X mod P, HAC pp.616, Algorithm 14.85
  *
  * Uses a left-to-right k-ary sliding window to compute the modular exponentiation.
  * The value of k changes based on the size of the exponent.
  *
  * Uses Montgomery or Diminished Radix reduction [whichever appropriate]
  */
+
+#ifdef MP_LOW_MEM
+   #define TAB_SIZE 32
+#else
+   #define TAB_SIZE 256
+#endif
+
 int
 mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
 {
-  mp_int  M[256], res;
+  mp_int  M[TAB_SIZE], res;
   mp_digit buf, mp;
   int     err, bitbuf, bitcpy, bitcnt, mode, digidx, x, y, winsize;
-  
+
   /* use a pointer to the reduction algorithm.  This allows us to use
    * one of many reduction algorithms without modding the guts of
-   * the code with if statements everywhere.  
+   * the code with if statements everywhere.
    */
   int     (*redux)(mp_int*,mp_int*,mp_digit);
 
@@ -58,13 +65,19 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   }
 #endif
 
+  /* init M array */
+  /* init first cell */
+  if ((err = mp_init(&M[1])) != MP_OKAY) {
+     return err;
+  }
 
-  /* init G array */
-  for (x = 0; x < (1 << winsize); x++) {
-    if ((err = mp_init (&M[x])) != MP_OKAY) {
-      for (y = 0; y < x; y++) {
+  /* now init the second half of the array */
+  for (x = 1<<(winsize-1); x < (1 << winsize); x++) {
+    if ((err = mp_init(&M[x])) != MP_OKAY) {
+      for (y = 1<<(winsize-1); y < x; y++) {
         mp_clear (&M[y]);
       }
+      mp_clear(&M[1]);
       return err;
     }
   }
@@ -75,21 +88,21 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
      if ((err = mp_montgomery_setup (P, &mp)) != MP_OKAY) {
         goto __M;
      }
-     
+
      /* automatically pick the comba one if available (saves quite a few calls/ifs) */
      if (((P->used * 2 + 1) < MP_WARRAY) &&
           P->used < (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
         redux = fast_mp_montgomery_reduce;
      } else {
-        /* use slower baselien method */
+        /* use slower baseline Montgomery method */
         redux = mp_montgomery_reduce;
      }
   } else if (redmode == 1) {
-     /* setup DR reduction */
+     /* setup DR reduction for moduli of the form B**k - b */
      mp_dr_setup(P, &mp);
      redux = mp_dr_reduce;
   } else {
-     /* setup 2k reduction */
+     /* setup DR reduction for moduli of the form 2**k - b */
      if ((err = mp_reduce_2k_setup(P, &mp)) != MP_OKAY) {
         goto __M;
      }
@@ -98,7 +111,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
 
   /* setup result */
   if ((err = mp_init (&res)) != MP_OKAY) {
-    goto __RES;
+    goto __M;
   }
 
   /* create M table
@@ -160,15 +173,17 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   for (;;) {
     /* grab next digit as required */
     if (--bitcnt == 0) {
+      /* if digidx == -1 we are out of digits so break */
       if (digidx == -1) {
         break;
       }
-      buf = X->dp[digidx--];
-      bitcnt = (int) DIGIT_BIT;
+      /* read next digit and reset bitcnt */
+      buf    = X->dp[digidx--];
+      bitcnt = (int)DIGIT_BIT;
     }
 
     /* grab the next msb from the exponent */
-    y = (mp_digit)(buf >> (DIGIT_BIT - 1)) & 1;
+    y     = (mp_digit)(buf >> (DIGIT_BIT - 1)) & 1;
     buf <<= (mp_digit)1;
 
     /* if the bit is zero and mode == 0 then we ignore it
@@ -193,7 +208,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
 
     /* else we add it to the window */
     bitbuf |= (y << (winsize - ++bitcpy));
-    mode = 2;
+    mode    = 2;
 
     if (bitcpy == winsize) {
       /* ok window is filled so square as required and multiply  */
@@ -218,7 +233,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
       /* empty window and reset */
       bitcpy = 0;
       bitbuf = 0;
-      mode = 1;
+      mode   = 1;
     }
   }
 
@@ -233,6 +248,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
         goto __RES;
       }
 
+      /* get next bit of the window */
       bitbuf <<= 1;
       if ((bitbuf & (1 << winsize)) != 0) {
         /* then multiply */
@@ -247,17 +263,24 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   }
 
   if (redmode == 0) {
-     /* fixup result if Montgomery reduction is used */
+     /* fixup result if Montgomery reduction is used
+      * recall that any value in a Montgomery system is
+      * actually multiplied by R mod n.  So we have
+      * to reduce one more time to cancel out the factor
+      * of R.
+      */
      if ((err = mp_montgomery_reduce (&res, P, mp)) != MP_OKAY) {
        goto __RES;
      }
   }
 
+  /* swap res with Y */
   mp_exch (&res, Y);
   err = MP_OKAY;
 __RES:mp_clear (&res);
 __M:
-  for (x = 0; x < (1 << winsize); x++) {
+  mp_clear(&M[1]);
+  for (x = 1<<(winsize-1); x < (1 << winsize); x++) {
     mp_clear (&M[x]);
   }
   return err;

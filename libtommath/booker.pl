@@ -75,7 +75,7 @@ while (<IN>) {
       $line = 0;
       $tmp = $m[1];
       $tmp =~ s/_/"\\_"/ge;
-      print OUT "\\index{$tmp}\n\\vspace{+3mm}\\begin{small}\n\\hspace{-5.1mm}{\\bf File}: $tmp\n\\vspace{-3mm}\n\\begin{alltt}\n";
+      print OUT "\\vspace{+3mm}\\begin{small}\n\\hspace{-5.1mm}{\\bf File}: $tmp\n\\vspace{-3mm}\n\\begin{alltt}\n";
       $wroteline += 5;
       
       if ($skipheader == 1) {
@@ -248,7 +248,7 @@ while (<IN>) {
       chomp($_);
       @m = split(",", $_);
       print OUT "\\begin{center}\n\\begin{figure}[here]\n\\includegraphics{pics/$m[1]$graph}\n";
-      print OUT "\\caption{$m[2]}\n\\end{figure}\n\\end{center}\n";
+      print OUT "\\caption{$m[2]}\n\\label{pic:$m[1]}\n\\end{figure}\n\\end{center}\n";
       $wroteline += 4;
    } else {
       print OUT $_;

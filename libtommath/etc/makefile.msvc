@@ -12,6 +12,9 @@ mersenne: mersenne.obj
 	
 tune: tune.obj
 	cl tune.obj ../tommath.lib
+
+mont: mont.obj
+	cl mont.obj ../tommath.lib
 	
 drprime: drprime.obj
 	cl drprime.obj ../tommath.lib

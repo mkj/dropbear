@@ -7,6 +7,9 @@
 #include <time.h>
 #include "tommath.h"
 
+int   n_prime;
+FILE *primes;
+
 /* fast square root */
 static  mp_digit
 i_sqrt (mp_word x)
@@ -28,30 +31,34 @@ i_sqrt (mp_word x)
 
 
 /* generates a prime digit */
-static  mp_digit
-prime_digit ()
+static void gen_prime (void)
 {
   mp_digit r, x, y, next;
+  FILE *out;
 
-  /* make a DIGIT_BIT-bit random number */
-  for (r = x = 0; x < DIGIT_BIT; x++) {
-    r = (r << 1) | (rand () & 1);
-  }
+  out = fopen("pprime.dat", "wb");
 
-  /* now force it odd */
-  r |= 1;
-
-  /* force it to be >30 */
-  if (r < 30) {
-    r += 30;
-  }
+  /* write first set of primes */
+  r = 3; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 5; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 7; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 11; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 13; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 17; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 19; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 23; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 29; fwrite(&r, 1, sizeof(mp_digit), out);
+  r = 31; fwrite(&r, 1, sizeof(mp_digit), out);
 
   /* get square root, since if 'r' is composite its factors must be < than this */
   y = i_sqrt (r);
   next = (y + 1) * (y + 1);
 
+  for (;;) {
   do {
     r += 2;			/* next candidate */
+    r &= MP_MASK;
+    if (r < 31) break;
 
     /* update sqrt ? */
     if (next <= r) {
@@ -133,9 +140,35 @@ prime_digit ()
       }
     }
   } while (x == 0);
+  if (r > 31) { fwrite(&r, 1, sizeof(mp_digit), out); printf("%9d\r", r); fflush(stdout); }
+  if (r < 31) break;
+  }
 
-  return r;
+  fclose(out);
 }
+
+void load_tab(void)
+{
+   primes = fopen("pprime.dat", "rb");
+   if (primes == NULL) {
+      gen_prime();
+      primes = fopen("pprime.dat", "rb");
+   }
+   fseek(primes, 0, SEEK_END);
+   n_prime = ftell(primes) / sizeof(mp_digit);
+}
+
+mp_digit prime_digit(void)
+{
+   int n;
+   mp_digit d;
+
+   n = abs(rand()) % n_prime;
+   fseek(primes, n * sizeof(mp_digit), SEEK_SET);
+   fread(&d, 1, sizeof(mp_digit), primes);
+   return d;
+}
+
 
 /* makes a prime of at least k bits */
 int
@@ -292,7 +325,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 /*
 {
    char buf[4096];
-   
+
    mp_toradix(&n, buf, 10);
    printf("Certificate of primality for:\n%s\n\n", buf);
    mp_toradix(&a, buf, 10);
@@ -300,8 +333,9 @@ pprime (int k, int li, mp_int * p, mp_int * q)
    mp_toradix(&b, buf, 10);
    printf("B == \n%s\n", buf);
    printf("----------------------------------------------------------------\n");
-}   
+}
 */
+
     /* a = n */
     mp_copy (&n, &a);
   }
@@ -335,6 +369,7 @@ main (void)
   clock_t t1;
 
   srand (time (NULL));
+  load_tab();
 
   printf ("Enter # of bits: \n");
   fgets (buf, sizeof (buf), stdin);

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -14,6 +14,7 @@
  */
 #include <tommath.h>
 
+/* hac 14.61, pp608 */
 int
 mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 {
@@ -21,17 +22,18 @@ mp_invmod (mp_int * a, mp_int * b, mp_int * c)
   int     res;
 
   /* b cannot be negative */
-  if (b->sign == MP_NEG) {
+  if (b->sign == MP_NEG || mp_iszero(b) == 1) {
     return MP_VAL;
   }
 
   /* if the modulus is odd we can use a faster routine instead */
-  if (mp_iseven (b) == 0) {
+  if (mp_isodd (b) == 1) {
     return fast_mp_invmod (a, b, c);
   }
   
   /* init temps */
-  if ((res = mp_init_multi(&x, &y, &u, &v, &A, &B, &C, &D, NULL)) != MP_OKAY) {
+  if ((res = mp_init_multi(&x, &y, &u, &v, 
+                           &A, &B, &C, &D, NULL)) != MP_OKAY) {
      return res;
   }
 
@@ -40,10 +42,6 @@ mp_invmod (mp_int * a, mp_int * b, mp_int * c)
     goto __ERR;
   }
   if ((res = mp_copy (b, &y)) != MP_OKAY) {
-    goto __ERR;
-  }
-
-  if ((res = mp_abs (&x, &x)) != MP_OKAY) {
     goto __ERR;
   }
 
@@ -63,7 +61,6 @@ mp_invmod (mp_int * a, mp_int * b, mp_int * c)
   mp_set (&A, 1);
   mp_set (&D, 1);
 
-
 top:
   /* 4.  while u is even do */
   while (mp_iseven (&u) == 1) {
@@ -72,13 +69,13 @@ top:
       goto __ERR;
     }
     /* 4.2 if A or B is odd then */
-    if (mp_iseven (&A) == 0 || mp_iseven (&B) == 0) {
+    if (mp_isodd (&A) == 1 || mp_isodd (&B) == 1) {
       /* A = (A+y)/2, B = (B-x)/2 */
       if ((res = mp_add (&A, &y, &A)) != MP_OKAY) {
-	goto __ERR;
+         goto __ERR;
       }
       if ((res = mp_sub (&B, &x, &B)) != MP_OKAY) {
-	goto __ERR;
+         goto __ERR;
       }
     }
     /* A = A/2, B = B/2 */
@@ -90,21 +87,20 @@ top:
     }
   }
 
-
   /* 5.  while v is even do */
   while (mp_iseven (&v) == 1) {
     /* 5.1 v = v/2 */
     if ((res = mp_div_2 (&v, &v)) != MP_OKAY) {
       goto __ERR;
     }
-    /* 5.2 if C,D are even then */
-    if (mp_iseven (&C) == 0 || mp_iseven (&D) == 0) {
+    /* 5.2 if C or D is odd then */
+    if (mp_isodd (&C) == 1 || mp_isodd (&D) == 1) {
       /* C = (C+y)/2, D = (D-x)/2 */
       if ((res = mp_add (&C, &y, &C)) != MP_OKAY) {
-	goto __ERR;
+         goto __ERR;
       }
       if ((res = mp_sub (&D, &x, &D)) != MP_OKAY) {
-	goto __ERR;
+         goto __ERR;
       }
     }
     /* C = C/2, D = D/2 */
@@ -157,10 +153,23 @@ top:
     goto __ERR;
   }
 
-  /* a is now the inverse */
+  /* if its too low */
+  while (mp_cmp_d(&C, 0) == MP_LT) {
+      if ((res = mp_add(&C, b, &C)) != MP_OKAY) {
+         goto __ERR;
+      }
+  }
+  
+  /* too big */
+  while (mp_cmp_mag(&C, b) != MP_LT) {
+      if ((res = mp_sub(&C, b, &C)) != MP_OKAY) {
+         goto __ERR;
+      }
+  }
+  
+  /* C is now the inverse */
   mp_exch (&C, c);
   res = MP_OKAY;
-
 __ERR:mp_clear_multi (&x, &y, &u, &v, &A, &B, &C, &D, NULL);
   return res;
 }

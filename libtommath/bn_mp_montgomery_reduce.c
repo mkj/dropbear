@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -43,8 +43,15 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
   x->used = digs;
 
   for (ix = 0; ix < n->used; ix++) {
-    /* mu = ai * m' mod b */
-    mu = (x->dp[ix] * rho) & MP_MASK;
+    /* mu = ai * rho mod b
+     *
+     * The value of rho must be precalculated via
+     * bn_mp_montgomery_setup() such that
+     * it equals -1/n0 mod b this allows the
+     * following inner loop to reduce the
+     * input one digit at a time
+     */
+    mu = ((mp_word)x->dp[ix]) * ((mp_word)rho) & MP_MASK;
 
     /* a = a + mu * m * b**i */
     {
@@ -52,8 +59,10 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
       register mp_digit *tmpn, *tmpx, u;
       register mp_word r;
 
-      /* aliases */
+      /* alias for digits of the modulus */
       tmpn = n->dp;
+
+      /* alias for the digits of x [the input] */
       tmpx = x->dp + ix;
 
       /* set the carry to zero */
@@ -61,12 +70,20 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
       
       /* Multiply and add in place */
       for (iy = 0; iy < n->used; iy++) {
-        r       = ((mp_word) mu) * ((mp_word) * tmpn++) + 
+        /* compute product and sum */
+        r       = ((mp_word)mu) * ((mp_word)*tmpn++) +
                   ((mp_word) u) + ((mp_word) * tmpx);
+
+        /* get carry */
         u       = (mp_digit)(r >> ((mp_word) DIGIT_BIT));
+
+        /* fix digit */
         *tmpx++ = (mp_digit)(r & ((mp_word) MP_MASK));
       }
-      /* propagate carries */
+      /* At this point the ix'th digit of x should be zero */
+
+
+      /* propagate carries upwards as required*/
       while (u) {
         *tmpx   += u;
         u        = *tmpx >> DIGIT_BIT;
@@ -75,11 +92,18 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     }
   }
 
+  /* at this point the n.used'th least
+   * significant digits of x are all zero
+   * which means we can shift x to the
+   * right by n.used digits and the
+   * residue is unchanged.
+   */
+
   /* x = x/b**n.used */
   mp_clamp(x);
   mp_rshd (x, n->used);
 
-  /* if A >= m then A = A - m */
+  /* if x >= n then x = x - n */
   if (mp_cmp_mag (x, n) != MP_LT) {
     return s_mp_sub (x, n, x);
   }

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -14,29 +14,42 @@
  */
 #include <tommath.h>
 
-/* computes least common multiple as a*b/(a, b) */
+/* computes least common multiple as |a*b|/(a, b) */
 int
 mp_lcm (mp_int * a, mp_int * b, mp_int * c)
 {
   int     res;
-  mp_int  t;
+  mp_int  t1, t2;
 
 
-  if ((res = mp_init (&t)) != MP_OKAY) {
+  if ((res = mp_init_multi (&t1, &t2, NULL)) != MP_OKAY) {
     return res;
   }
 
-  if ((res = mp_mul (a, b, &t)) != MP_OKAY) {
-    mp_clear (&t);
-    return res;
+  /* t1 = get the GCD of the two inputs */
+  if ((res = mp_gcd (a, b, &t1)) != MP_OKAY) {
+    goto __T;
   }
 
-  if ((res = mp_gcd (a, b, c)) != MP_OKAY) {
-    mp_clear (&t);
-    return res;
+  /* divide the smallest by the GCD */
+  if (mp_cmp_mag(a, b) == MP_LT) {
+     /* store quotient in t2 such that t2 * b is the LCM */
+     if ((res = mp_div(a, &t1, &t2, NULL)) != MP_OKAY) {
+        goto __T;
+     }
+     res = mp_mul(b, &t2, c);
+  } else {
+     /* store quotient in t2 such that t2 * a is the LCM */
+     if ((res = mp_div(b, &t1, &t2, NULL)) != MP_OKAY) {
+        goto __T;
+     }
+     res = mp_mul(a, &t2, c);
   }
 
-  res = mp_div (&t, c, c, NULL);
-  mp_clear (&t);
+  /* fix the sign to positive */
+  c->sign = MP_ZPOS;
+
+__T:
+  mp_clear_multi (&t1, &t2, NULL);
   return res;
 }

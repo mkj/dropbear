@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -17,7 +17,7 @@
 /* performs a variable number of rounds of Miller-Rabin
  *
  * Probability of error after t rounds is no more than
- * (1/4)^t when 1 <= t <= 256
+ * (1/4)^t when 1 <= t <= PRIME_SIZE
  *
  * Sets result to 1 if probably prime, 0 otherwise
  */
@@ -31,7 +31,7 @@ mp_prime_is_prime (mp_int * a, int t, int *result)
   *result = 0;
 
   /* valid value of t? */
-  if (t < 1 || t > PRIME_SIZE) {
+  if (t <= 0 || t > PRIME_SIZE) {
     return MP_VAL;
   }
 
@@ -47,6 +47,8 @@ mp_prime_is_prime (mp_int * a, int t, int *result)
   if ((err = mp_prime_is_divisible (a, &res)) != MP_OKAY) {
     return err;
   }
+
+  /* return if it was trivially divisible */
   if (res == 1) {
     return MP_OKAY;
   }

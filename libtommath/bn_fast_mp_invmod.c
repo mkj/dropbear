@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -26,6 +26,14 @@ fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
   mp_int  x, y, u, v, B, D;
   int     res, neg;
 
+  /* 2. [modified] if a,b are both even then return an error!
+   *
+   * That is if gcd(a,b) = 2**k * q then obviously there is no inverse.
+   */
+  if (mp_iseven (a) == 1 && mp_iseven (b) == 1) {
+    return MP_VAL;
+  }
+
   /* init all our temps */
   if ((res = mp_init_multi(&x, &y, &u, &v, &B, &D, NULL)) != MP_OKAY) {
      return res;
@@ -38,15 +46,6 @@ fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 
   /* we need y = |a| */
   if ((res = mp_abs (a, &y)) != MP_OKAY) {
-    goto __ERR;
-  }
-
-  /* 2. [modified] if x,y are both even then return an error! 
-   * 
-   * That is if gcd(x,y) = 2 * k then obviously there is no inverse.
-   */
-  if (mp_iseven (&x) == 1 && mp_iseven (&y) == 1) {
-    res = MP_VAL;
     goto __ERR;
   }
 
@@ -66,8 +65,8 @@ top:
     if ((res = mp_div_2 (&u, &u)) != MP_OKAY) {
       goto __ERR;
     }
-    /* 4.2 if A or B is odd then */
-    if (mp_iseven (&B) == 0) {
+    /* 4.2 if B is odd then */
+    if (mp_isodd (&B) == 1) {
       if ((res = mp_sub (&B, &x, &B)) != MP_OKAY) {
         goto __ERR;
       }
@@ -84,8 +83,8 @@ top:
     if ((res = mp_div_2 (&v, &v)) != MP_OKAY) {
       goto __ERR;
     }
-    /* 5.2 if C,D are even then */
-    if (mp_iseven (&D) == 0) {
+    /* 5.2 if D is odd then */
+    if (mp_isodd (&D) == 1) {
       /* D = (D-x)/2 */
       if ((res = mp_sub (&D, &x, &D)) != MP_OKAY) {
         goto __ERR;

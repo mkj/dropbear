@@ -28,6 +28,12 @@ mulmod
 
  */
 
+#ifdef MP_8BIT
+#define THE_MASK 127
+#else
+#define THE_MASK 32767
+#endif
+
 #include <stdio.h>
 #include <stdlib.h>
 #include <time.h>
@@ -63,7 +69,7 @@ void rand_num2(mp_int *a)
 
 int main(void)
 {
-   int n;
+   int n, tmp;
    mp_int a, b, c, d, e;
    clock_t t1;
    char buf[4096];
@@ -107,8 +113,8 @@ int main(void)
          sleep(1);
          t1 = clock();
       }
-   
-       n = fgetc(rng) % 13;
+
+       n = fgetc(rng) % 15;
 
    if (n == 0) {
        /* add tests */
@@ -270,6 +276,24 @@ int main(void)
       printf("mul2\n");
       mp_to64(&a, buf);
       printf("%s\n", buf);
+      mp_to64(&b, buf);
+      printf("%s\n", buf);
+   } else if (n == 13) {
+      rand_num2(&a);
+      tmp = abs(rand()) & THE_MASK;
+      mp_add_d(&a, tmp, &b);
+      printf("add_d\n");
+      mp_to64(&a, buf);
+      printf("%s\n%d\n", buf, tmp);
+      mp_to64(&b, buf);
+      printf("%s\n", buf);
+   } else if (n == 14) {
+      rand_num2(&a);
+      tmp = abs(rand()) & THE_MASK;
+      mp_sub_d(&a, tmp, &b);
+      printf("sub_d\n");
+      mp_to64(&a, buf);
+      printf("%s\n%d\n", buf, tmp);
       mp_to64(&b, buf);
       printf("%s\n", buf);
    }

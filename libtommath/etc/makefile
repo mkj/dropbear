@@ -41,4 +41,4 @@ mont: mont.o
 
         
 clean:
-	rm -f *.log *.o *.obj *.exe pprime tune mersenne drprime tune86 tune86l mont 2kprime
+	rm -f *.log *.o *.obj *.exe pprime tune mersenne drprime tune86 tune86l mont 2kprime pprime.dat
