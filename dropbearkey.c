@@ -19,8 +19,13 @@ static void printhelp(char * progname) {
 
 	fprintf(stderr, "Usage: %s -t <type> -f <filename> [-s bits]\n"
 					"Options are:\n"
-					"-t type           Type of key to generate. "
-					"Valid types are 'rsa' and 'dss'\n"
+					"-t type           Type of key to generate. One of:\n"
+#ifdef DROPBEAR_RSA
+					"                  rsa\n"
+#endif
+#ifdef DROPBEAR_DSS
+					"                  dss\n"
+#endif
 					"-f filename       Use filename for the secret key\n"
 					"-s bits           Key size in bits, should be "
 					"multiple of 8 (optional)\n",
@@ -36,7 +41,7 @@ int main(int argc, char ** argv) {
 	char * filename = NULL;
 	int keytype = -1;
 	char * typetext = NULL;
-	char * sizetext;
+	char * sizetext = NULL;
 	unsigned int bits;
 	unsigned int keysize;
 
@@ -77,19 +82,31 @@ int main(int argc, char ** argv) {
 
 	/* check/parse args */
 	if (!typetext) {
-		fprintf(stderr, "Must specify file type, either 'rsa' or 'dss'\n");
+		fprintf(stderr, "Must specify file type, one of:\n"
+#ifdef DROPBEAR_RSA
+				"rsa\n"
+#endif
+#ifdef DROPBEAR_DSS
+				"dss\n"
+#endif
+			   );
 		printhelp(argv[0]);
 		exit(EXIT_FAILURE);
 	}
 
 	if (strlen(typetext) == 3) {
+#ifdef DROPBEAR_RSA
 		if (strncmp(typetext, "rsa", 3) == 0) {
 			keytype = DROPBEAR_SIGNKEY_RSA;
 			TRACE(("type is rsa"));
-		} else if (strncmp(typetext, "dss", 3) == 0) {
+		}
+#endif
+#ifdef DROPBEAR_DSS
+		if (strncmp(typetext, "dss", 3) == 0) {
 			keytype = DROPBEAR_SIGNKEY_DSS;
 			TRACE(("type is dss"));
 		}
+#endif
 	}
 	if (keytype == -1) {
 		fprintf(stderr, "Unknown key type '%s'\n", typetext);
@@ -134,12 +151,16 @@ int main(int argc, char ** argv) {
 	
 	fprintf(stderr, "Generating key, this may take a while...\n");
 	switch(keytype) {
+#ifdef DROPBEAR_RSA
 		case DROPBEAR_SIGNKEY_RSA:
 			key->rsakey = gen_rsa_priv_key(keysize); /* 128 bytes = 1024 bit */
 			break;
+#endif
+#ifdef DROPBEAR_DSS
 		case DROPBEAR_SIGNKEY_DSS:
 			key->dsskey = gen_dss_priv_key(keysize); /* 128 bytes = 1024 bit */
 			break;
+#endif
 		default:
 			fprintf(stderr, "Internal error, bad key type\n");
 			exit(EXIT_FAILURE);
