@@ -340,6 +340,8 @@ void send_msg_userauth_success() {
 	encrypt_packet();
 
 	ses.authstate.authdone = 1;
+	ses.connecttimeout = 0;
+
 
 	if (ses.authstate.pw->pw_uid == 0) {
 		ses.allowprivport = 1;
