@@ -696,9 +696,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 }
 
-
-
-
+/* Clean up, drop to user privileges, set up the environment and execute
+ * the command/shell. This function does not return. */
 static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
@@ -709,7 +708,7 @@ static void execchild(struct ChanSess *chansess) {
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
 
-	/* clear the state of the prng */
+	/* overwrite the prng state */
 	seedrandom();
 
 	/* close file descriptors except stdin/stdout/stderr
