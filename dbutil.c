@@ -415,7 +415,6 @@ void * m_malloc(size_t size) {
 void __m_free(void* ptr) {
 	if (ptr != NULL) {
 		free(ptr);
-		ptr = NULL;
 	}
 }
 
