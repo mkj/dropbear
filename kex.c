@@ -52,6 +52,7 @@ const unsigned int dh_g_val = 2;
 
 static void read_kex();
 static void gen_new_keys();
+static void gen_new_zstreams();
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, unsigned const char X);
@@ -203,7 +204,7 @@ static void hashkeys(unsigned char *out, int outlen,
  * key exchange, as specified in section 5.2 of the IETF secsh-transport
  * draft. This occurs after the DH key-exchange.
  *
- * ses.newkeys is the key set of keys which are generated, these are only
+ * ses.newkeys is the new set of keys which are generated, these are only
  * taken into use after both sides have sent a newkeys message */
 static void gen_new_keys() {
 
@@ -254,15 +255,27 @@ static void gen_new_keys() {
 	keysize = ses.newkeys->trans_algo_mac->keysize;
 	hashkeys(ses.newkeys->transmackey, keysize, &hs, 'F');
 
-	/* compression */
 #ifndef DISABLE_ZLIB
-	/* create new zstreams */
-	TRACE(("enter ZLIB section of genkeys"));
+	gen_new_zstreams();
+#endif
+	
+	/* Switch over to the new keys */
+	m_burn(ses.keys, sizeof(struct key_context));
+	m_free(ses.keys);
+	ses.keys = ses.newkeys;
+	ses.newkeys = NULL;
 
+	TRACE(("leave gen_new_keys"));
+}
+
+#ifndef DISABLE_ZLIB
+/* Set up new zlib compression streams, close the old ones. Only
+ * called from gen_new_keys() */
+static void gen_new_zstreams() {
+
+	/* create new zstreams */
 	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
 		ses.newkeys->recv_zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->recv_zstream->next_in = Z_NULL;
-		ses.newkeys->recv_zstream->avail_in = 0;
 		ses.newkeys->recv_zstream->zalloc = Z_NULL;
 		ses.newkeys->recv_zstream->zfree = Z_NULL;
 		
@@ -272,12 +285,9 @@ static void gen_new_keys() {
 	} else {
 		ses.newkeys->recv_zstream = NULL;
 	}
-	TRACE(("past inflateInit"));
 
 	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
 		ses.newkeys->trans_zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->trans_zstream->next_in = Z_NULL;
-		ses.newkeys->trans_zstream->avail_in = 0;
 		ses.newkeys->trans_zstream->zalloc = Z_NULL;
 		ses.newkeys->trans_zstream->zfree = Z_NULL;
 	
@@ -288,40 +298,24 @@ static void gen_new_keys() {
 	} else {
 		ses.newkeys->trans_zstream = NULL;
 	}
-	TRACE(("past deflateInit"));
-
 	
 	/* clean up old keys */
 	if (ses.keys->recv_zstream != NULL) {
-		int ret;
-		ret = inflateEnd(ses.keys->recv_zstream);
-		if (ret == Z_STREAM_ERROR) {
+		if (inflateEnd(ses.keys->recv_zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
 			dropbear_exit("crypto error");
 		}
 		m_free(ses.keys->recv_zstream);
 	}
 	if (ses.keys->trans_zstream != NULL) {
-		int ret;
-		ret = deflateEnd(ses.keys->trans_zstream);
-		/* Z_DATA_ERROR is ok, just means that stream isn't ended */
-		if (ret == Z_STREAM_ERROR) {
+		if (deflateEnd(ses.keys->trans_zstream) == Z_STREAM_ERROR) {
+			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
 			dropbear_exit("crypto error");
 		}
 		m_free(ses.keys->trans_zstream);
 	}
-	TRACE(("leave ZLIB section of genkeys"));
-#endif
-
-	
-	/* change the keys */
-	m_burn((void*)ses.keys, sizeof(struct key_context));
-	m_free(ses.keys);
-	ses.keys = ses.newkeys;
-	ses.newkeys = NULL;
-
-	TRACE(("leave gen_new_keys"));
 }
+#endif
 
 /* Handle a diffie-hellman key exchange initialisation. This involves
  * calculating a session key reply value, and corresponding hash. These
@@ -439,7 +433,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	ses.kexhashbuf = NULL;
 	
 	/* first time around, we set the session_id to H */
-	if (!ses.session_id) {
+	if (ses.session_id == NULL) {
 		/* create the session_id, this never needs freeing */
 		ses.session_id = (unsigned char*)m_malloc(SHA1_HASH_SIZE);
 		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
