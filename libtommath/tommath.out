@@ -1,0 +1,139 @@
+\BOOKMARK [0][-]{chapter.1}{Introduction}{}
+\BOOKMARK [1][-]{section.1.1}{Multiple Precision Arithmetic}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.1.1}{The Need for Multiple Precision Arithmetic}{section.1.1}
+\BOOKMARK [2][-]{subsection.1.1.2}{What is Multiple Precision Arithmetic?}{section.1.1}
+\BOOKMARK [2][-]{subsection.1.1.3}{Benefits of Multiple Precision Arithmetic}{section.1.1}
+\BOOKMARK [1][-]{section.1.2}{Purpose of This Text}{chapter.1}
+\BOOKMARK [1][-]{section.1.3}{Discussion and Notation}{chapter.1}
+\BOOKMARK [2][-]{subsection.1.3.1}{Notation}{section.1.3}
+\BOOKMARK [2][-]{subsection.1.3.2}{Precision Notation}{section.1.3}
+\BOOKMARK [2][-]{subsection.1.3.3}{Algorithm Inputs and Outputs}{section.1.3}
+\BOOKMARK [2][-]{subsection.1.3.4}{Mathematical Expressions}{section.1.3}
+\BOOKMARK [2][-]{subsection.1.3.5}{Work Effort}{section.1.3}
+\BOOKMARK [1][-]{section.1.4}{Exercises}{chapter.1}
+\BOOKMARK [0][-]{chapter.2}{Introduction to LibTomMath}{}
+\BOOKMARK [1][-]{section.2.1}{What is LibTomMath?}{chapter.2}
+\BOOKMARK [1][-]{section.2.2}{Goals of LibTomMath}{chapter.2}
+\BOOKMARK [1][-]{section.2.3}{Choice of LibTomMath}{chapter.2}
+\BOOKMARK [2][-]{subsection.2.3.1}{Code Base}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.2}{API Simplicity}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.3}{Optimizations}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.4}{Portability and Stability}{section.2.3}
+\BOOKMARK [2][-]{subsection.2.3.5}{Choice}{section.2.3}
+\BOOKMARK [0][-]{chapter.3}{Getting Started}{}
+\BOOKMARK [1][-]{section.3.1}{Library Basics}{chapter.3}
+\BOOKMARK [1][-]{section.3.2}{What is a Multiple Precision Integer?}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.2.1}{The mp\137int Structure}{section.3.2}
+\BOOKMARK [1][-]{section.3.3}{Argument Passing}{chapter.3}
+\BOOKMARK [1][-]{section.3.4}{Return Values}{chapter.3}
+\BOOKMARK [1][-]{section.3.5}{Initialization and Clearing}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.5.1}{Initializing an mp\137int}{section.3.5}
+\BOOKMARK [2][-]{subsection.3.5.2}{Clearing an mp\137int}{section.3.5}
+\BOOKMARK [1][-]{section.3.6}{Maintenance Algorithms}{chapter.3}
+\BOOKMARK [2][-]{subsection.3.6.1}{Augmenting an mp\137int's Precision}{section.3.6}
+\BOOKMARK [2][-]{subsection.3.6.2}{Initializing Variable Precision mp\137ints}{section.3.6}
+\BOOKMARK [2][-]{subsection.3.6.3}{Multiple Integer Initializations and Clearings}{section.3.6}
+\BOOKMARK [2][-]{subsection.3.6.4}{Clamping Excess Digits}{section.3.6}
+\BOOKMARK [0][-]{chapter.4}{Basic Operations}{}
+\BOOKMARK [1][-]{section.4.1}{Introduction}{chapter.4}
+\BOOKMARK [1][-]{section.4.2}{Assigning Values to mp\137int Structures}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.2.1}{Copying an mp\137int}{section.4.2}
+\BOOKMARK [2][-]{subsection.4.2.2}{Creating a Clone}{section.4.2}
+\BOOKMARK [1][-]{section.4.3}{Zeroing an Integer}{chapter.4}
+\BOOKMARK [1][-]{section.4.4}{Sign Manipulation}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.4.1}{Absolute Value}{section.4.4}
+\BOOKMARK [2][-]{subsection.4.4.2}{Integer Negation}{section.4.4}
+\BOOKMARK [1][-]{section.4.5}{Small Constants}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.5.1}{Setting Small Constants}{section.4.5}
+\BOOKMARK [2][-]{subsection.4.5.2}{Setting Large Constants}{section.4.5}
+\BOOKMARK [1][-]{section.4.6}{Comparisons}{chapter.4}
+\BOOKMARK [2][-]{subsection.4.6.1}{Unsigned Comparisions}{section.4.6}
+\BOOKMARK [2][-]{subsection.4.6.2}{Signed Comparisons}{section.4.6}
+\BOOKMARK [0][-]{chapter.5}{Basic Arithmetic}{}
+\BOOKMARK [1][-]{section.5.1}{Introduction}{chapter.5}
+\BOOKMARK [1][-]{section.5.2}{Addition and Subtraction}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.2.1}{Low Level Addition}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.2}{Low Level Subtraction}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.3}{High Level Addition}{section.5.2}
+\BOOKMARK [2][-]{subsection.5.2.4}{High Level Subtraction}{section.5.2}
+\BOOKMARK [1][-]{section.5.3}{Bit and Digit Shifting}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.3.1}{Multiplication by Two}{section.5.3}
+\BOOKMARK [2][-]{subsection.5.3.2}{Division by Two}{section.5.3}
+\BOOKMARK [1][-]{section.5.4}{Polynomial Basis Operations}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.4.1}{Multiplication by x}{section.5.4}
+\BOOKMARK [2][-]{subsection.5.4.2}{Division by x}{section.5.4}
+\BOOKMARK [1][-]{section.5.5}{Powers of Two}{chapter.5}
+\BOOKMARK [2][-]{subsection.5.5.1}{Multiplication by Power of Two}{section.5.5}
+\BOOKMARK [2][-]{subsection.5.5.2}{Division by Power of Two}{section.5.5}
+\BOOKMARK [2][-]{subsection.5.5.3}{Remainder of Division by Power of Two}{section.5.5}
+\BOOKMARK [0][-]{chapter.6}{Multiplication and Squaring}{}
+\BOOKMARK [1][-]{section.6.1}{The Multipliers}{chapter.6}
+\BOOKMARK [1][-]{section.6.2}{Multiplication}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.2.1}{The Baseline Multiplication}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.2}{Faster Multiplication by the ``Comba'' Method}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.3}{Polynomial Basis Multiplication}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.4}{Karatsuba Multiplication}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.5}{Toom-Cook 3-Way Multiplication}{section.6.2}
+\BOOKMARK [2][-]{subsection.6.2.6}{Signed Multiplication}{section.6.2}
+\BOOKMARK [1][-]{section.6.3}{Squaring}{chapter.6}
+\BOOKMARK [2][-]{subsection.6.3.1}{The Baseline Squaring Algorithm}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.2}{Faster Squaring by the ``Comba'' Method}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.3}{Polynomial Basis Squaring}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.4}{Karatsuba Squaring}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.5}{Toom-Cook Squaring}{section.6.3}
+\BOOKMARK [2][-]{subsection.6.3.6}{High Level Squaring}{section.6.3}
+\BOOKMARK [0][-]{chapter.7}{Modular Reduction}{}
+\BOOKMARK [1][-]{section.7.1}{Basics of Modular Reduction}{chapter.7}
+\BOOKMARK [1][-]{section.7.2}{The Barrett Reduction}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.2.1}{Fixed Point Arithmetic}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.2}{Choosing a Radix Point}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.3}{Trimming the Quotient}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.4}{Trimming the Residue}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.5}{The Barrett Algorithm}{section.7.2}
+\BOOKMARK [2][-]{subsection.7.2.6}{The Barrett Setup Algorithm}{section.7.2}
+\BOOKMARK [1][-]{section.7.3}{The Montgomery Reduction}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.3.1}{Digit Based Montgomery Reduction}{section.7.3}
+\BOOKMARK [2][-]{subsection.7.3.2}{Baseline Montgomery Reduction}{section.7.3}
+\BOOKMARK [2][-]{subsection.7.3.3}{Faster ``Comba'' Montgomery Reduction}{section.7.3}
+\BOOKMARK [2][-]{subsection.7.3.4}{Montgomery Setup}{section.7.3}
+\BOOKMARK [1][-]{section.7.4}{The Diminished Radix Algorithm}{chapter.7}
+\BOOKMARK [2][-]{subsection.7.4.1}{Choice of Moduli}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.2}{Choice of k}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.3}{Restricted Diminished Radix Reduction}{section.7.4}
+\BOOKMARK [2][-]{subsection.7.4.4}{Unrestricted Diminished Radix Reduction}{section.7.4}
+\BOOKMARK [1][-]{section.7.5}{Algorithm Comparison}{chapter.7}
+\BOOKMARK [0][-]{chapter.8}{Exponentiation}{}
+\BOOKMARK [1][-]{section.8.1}{Exponentiation Basics}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.1.1}{Single Digit Exponentiation}{section.8.1}
+\BOOKMARK [1][-]{section.8.2}{k-ary Exponentiation}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.2.1}{Optimal Values of k}{section.8.2}
+\BOOKMARK [2][-]{subsection.8.2.2}{Sliding-Window Exponentiation}{section.8.2}
+\BOOKMARK [1][-]{section.8.3}{Modular Exponentiation}{chapter.8}
+\BOOKMARK [2][-]{subsection.8.3.1}{Barrett Modular Exponentiation}{section.8.3}
+\BOOKMARK [1][-]{section.8.4}{Quick Power of Two}{chapter.8}
+\BOOKMARK [0][-]{chapter.9}{Higher Level Algorithms}{}
+\BOOKMARK [1][-]{section.9.1}{Integer Division with Remainder}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.1.1}{Quotient Estimation}{section.9.1}
+\BOOKMARK [2][-]{subsection.9.1.2}{Normalized Integers}{section.9.1}
+\BOOKMARK [2][-]{subsection.9.1.3}{Radix- Division with Remainder}{section.9.1}
+\BOOKMARK [1][-]{section.9.2}{Single Digit Helpers}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.2.1}{Single Digit Addition and Subtraction}{section.9.2}
+\BOOKMARK [2][-]{subsection.9.2.2}{Single Digit Multiplication}{section.9.2}
+\BOOKMARK [2][-]{subsection.9.2.3}{Single Digit Division}{section.9.2}
+\BOOKMARK [2][-]{subsection.9.2.4}{Single Digit Root Extraction}{section.9.2}
+\BOOKMARK [1][-]{section.9.3}{Random Number Generation}{chapter.9}
+\BOOKMARK [1][-]{section.9.4}{Formatted Representations}{chapter.9}
+\BOOKMARK [2][-]{subsection.9.4.1}{Reading Radix-n Input}{section.9.4}
+\BOOKMARK [2][-]{subsection.9.4.2}{Generating Radix-n Output}{section.9.4}
+\BOOKMARK [0][-]{chapter.10}{Number Theoretic Algorithms}{}
+\BOOKMARK [1][-]{section.10.1}{Greatest Common Divisor}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.1.1}{Complete Greatest Common Divisor}{section.10.1}
+\BOOKMARK [1][-]{section.10.2}{Least Common Multiple}{chapter.10}
+\BOOKMARK [1][-]{section.10.3}{Jacobi Symbol Computation}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.3.1}{Jacobi Symbol}{section.10.3}
+\BOOKMARK [1][-]{section.10.4}{Modular Inverse}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.4.1}{General Case}{section.10.4}
+\BOOKMARK [1][-]{section.10.5}{Primality Tests}{chapter.10}
+\BOOKMARK [2][-]{subsection.10.5.1}{Trial Division}{section.10.5}
+\BOOKMARK [2][-]{subsection.10.5.2}{The Fermat Test}{section.10.5}
+\BOOKMARK [2][-]{subsection.10.5.3}{The Miller-Rabin Test}{section.10.5}
