@@ -10,7 +10,7 @@
  * parts are to allow for commandline -DDROPBEAR_XXX options etc.
  ******************************************************************/
 
-#ifndef DROPBEAR_PORT
+#ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"
 #endif
 
