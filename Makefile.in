@@ -27,7 +27,7 @@ sbindir=${exec_prefix}/sbin
 
 CC=@CC@
 LD=@CC@
-CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
+CFLAGS=-Wall -W -Ilibtomcrypt @CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
 
