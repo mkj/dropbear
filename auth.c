@@ -252,7 +252,7 @@ goodshell:
 	endusershell();
 	TRACE(("matching shell"));
 
-	TRACE(("uid = %d\n", ses.authstate.pw->pw_uid));
+	TRACE(("uid = %d", ses.authstate.pw->pw_uid));
 	TRACE(("leave checkusername"));
 	return DROPBEAR_SUCCESS;
 
