@@ -86,4 +86,8 @@ typedef unsigned short u_int16_t;
 typedef u_int16_t uint16_t;
 #endif /* HAVE_UINT16_T */
 
+#ifndef LOG_AUTHPRIV
+#define LOG_AUTHPRIV LOG_AUTH
+#endif
+
 #endif /* _INCLUDES_H_ */
