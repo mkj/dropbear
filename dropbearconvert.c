@@ -43,12 +43,12 @@ static void printhelp(char * progname) {
 					"untrusted input files -- don't run this as root on random luser's files :)\n"
 					"All parameters must be specified in order.\n"
 					"\n"
-					"Input types:\n"
-					"-d   Dropbear keyfile as input\n"
-					"-o   OpenSSH keyfile as input\n"
-					"Output types:\n"
-					"-D   Dropbear keyfile as output\n"
-					"-O   OpenSSH keyfile as output\n"
+					"The input and output types are one of:\n"
+					"openssh\n"
+					"dropbear\n"
+					"\n"
+					"Example:\n"
+					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n"
 					"\n"
 					"The inputfile and output file can be '-' to specify"
 					"standard input or standard output.", progname);
@@ -62,17 +62,14 @@ int main(int argc, char ** argv) {
 
 	/* get the commandline options */
 	if (argc != 5) {
+		fprintf(stderr, "All arguments must be specified\n");
 		goto usage;
 	}
 
 	/* input type */
-	if (strlen(argv[1]) != 2 || argv[1][0] != '-') {
-		fprintf(stderr, "All arguments must be specified\n");
-		goto usage;
-	}
-	if (argv[1][1] == 'd') {
+	if (argv[1][0] == 'd') {
 		intype = KEYFILE_DROPBEAR;
-	} else if (argv[1][1] == 'o') {
+	} else if (argv[1][0] == 'o') {
 		intype = KEYFILE_OPENSSH;
 	} else {
 		fprintf(stderr, "Invalid input key type\n");
@@ -80,17 +77,17 @@ int main(int argc, char ** argv) {
 	}
 
 	/* output type */
-	if (strlen(argv[2]) != 2 || argv[2][0] != '-') {
-		goto usage;
-	}
-	if (argv[2][1] == 'D') {
+	if (argv[2][0] == 'd') {
 		outtype = KEYFILE_DROPBEAR;
-	} else if (argv[2][1] == 'O') {
+	} else if (argv[2][0] == 'o') {
 		outtype = KEYFILE_OPENSSH;
 	} else {
 		fprintf(stderr, "Invalid output key type\n");
 		goto usage;
 	}
+
+	/* we don't want output readable by others */
+	umask(077);
 
 	infile = argv[3];
 	outfile = argv[4];

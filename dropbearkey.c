@@ -192,6 +192,9 @@ int main(int argc, char ** argv) {
 	fprintf(stderr, "Will output %d bit %s secret key to '%s'\n", keysize*8,
 			typetext, filename);
 
+	/* don't want the file readable by others */
+	umask(077);
+
 	/* now we can generate the key */
 	key = new_sign_key();
 	
