@@ -247,7 +247,7 @@ void main_noinetd() {
 			}
 
 			if (pipe(childpipe) < 0) {
-				TRACE(("error creating child pipe"));
+				TRACE(("error creating child pipe"))
 				close(childsock);
 				continue;
 			}
@@ -369,11 +369,11 @@ static int listensockets(int *sock, int sockcount, int *maxfd) {
 	unsigned int sockpos = 0;
 	int nsock;
 
-	TRACE(("listensockets: %d to try\n", svr_opts.portcount));
+	TRACE(("listensockets: %d to try\n", svr_opts.portcount))
 
 	for (i = 0; i < svr_opts.portcount; i++) {
 
-		TRACE(("listening on '%s'", svr_opts.ports[i]));
+		TRACE(("listening on '%s'", svr_opts.ports[i]))
 
 		nsock = dropbear_listen(NULL, svr_opts.ports[i], &sock[sockpos], 
 				sockcount - sockpos,

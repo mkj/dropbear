@@ -139,7 +139,7 @@ static void cli_session_init() {
  * service, userauth and channel requests */
 static void cli_sessionloop() {
 
-	TRACE(("enter cli_sessionloop"));
+	TRACE(("enter cli_sessionloop"))
 
 	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
 		cli_ses.kex_state = KEXINIT_RCVD;
@@ -151,7 +151,7 @@ static void cli_sessionloop() {
 		 * negotiation would have failed. */
 		send_msg_kexdh_init();
 		cli_ses.kex_state = KEXDH_INIT_SENT;
-		TRACE(("leave cli_sessionloop: done with KEXINIT_RCVD"));
+		TRACE(("leave cli_sessionloop: done with KEXINIT_RCVD"))
 		return;
 	}
 
@@ -163,14 +163,14 @@ static void cli_sessionloop() {
 
 	/* We shouldn't do anything else if a KEX is in progress */
 	if (cli_ses.kex_state != KEX_NOTHING) {
-		TRACE(("leave cli_sessionloop: kex_state != KEX_NOTHING"));
+		TRACE(("leave cli_sessionloop: kex_state != KEX_NOTHING"))
 		return;
 	}
 
 	/* We should exit if we haven't donefirstkex: we shouldn't reach here
 	 * in normal operation */
 	if (ses.kexstate.donefirstkex == 0) {
-		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"));
+		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"))
 		return;
 	}
 
@@ -181,32 +181,32 @@ static void cli_sessionloop() {
 			 * userauth */
 			send_msg_service_request(SSH_SERVICE_USERAUTH);
 			cli_ses.state = SERVICE_AUTH_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent userauth service req"));
+			TRACE(("leave cli_sessionloop: sent userauth service req"))
 			return;
 
 		/* userauth code */
 		case SERVICE_AUTH_ACCEPT_RCVD:
 			cli_auth_getmethods();
 			cli_ses.state = USERAUTH_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent userauth methods req"));
+			TRACE(("leave cli_sessionloop: sent userauth methods req"))
 			return;
 			
 		case USERAUTH_FAIL_RCVD:
 			cli_auth_try();
 			cli_ses.state = USERAUTH_REQ_SENT;
-			TRACE(("leave cli_sessionloop: cli_auth_try"));
+			TRACE(("leave cli_sessionloop: cli_auth_try"))
 			return;
 
 			/*
 		case USERAUTH_SUCCESS_RCVD:
 			send_msg_service_request(SSH_SERVICE_CONNECTION);
 			cli_ses.state = SERVICE_CONN_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent ssh-connection service req"));
+			TRACE(("leave cli_sessionloop: sent ssh-connection service req"))
 			return;
 
 		case SERVICE_CONN_ACCEPT_RCVD:
 			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
+			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
 			*/
@@ -219,7 +219,7 @@ static void cli_sessionloop() {
 			setup_remotetcp();
 #endif
 			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
+			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
 
@@ -240,7 +240,7 @@ static void cli_sessionloop() {
 		break;
 	}
 
-	TRACE(("leave cli_sessionloop: fell out"));
+	TRACE(("leave cli_sessionloop: fell out"))
 
 }
 

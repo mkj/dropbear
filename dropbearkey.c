@@ -166,13 +166,13 @@ int main(int argc, char ** argv) {
 #ifdef DROPBEAR_RSA
 		if (strncmp(typetext, "rsa", 3) == 0) {
 			keytype = DROPBEAR_SIGNKEY_RSA;
-			TRACE(("type is rsa"));
+			TRACE(("type is rsa"))
 		}
 #endif
 #ifdef DROPBEAR_DSS
 		if (strncmp(typetext, "dss", 3) == 0) {
 			keytype = DROPBEAR_SIGNKEY_DSS;
-			TRACE(("type is dss"));
+			TRACE(("type is dss"))
 		}
 #endif
 	}

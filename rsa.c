@@ -47,7 +47,7 @@ static mp_int * rsa_pad_em(rsa_key * key,
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
-	TRACE(("enter buf_get_rsa_pub_key"));
+	TRACE(("enter buf_get_rsa_pub_key"))
 	assert(key != NULL);
 	key->e = m_malloc(sizeof(mp_int));
 	key->n = m_malloc(sizeof(mp_int));
@@ -60,7 +60,7 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	if (buf_getmpint(buf, key->e) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->n) == DROPBEAR_FAILURE) {
-		TRACE(("leave buf_get_rsa_pub_key: failure"));
+		TRACE(("leave buf_get_rsa_pub_key: failure"))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -69,7 +69,7 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("leave buf_get_rsa_pub_key: success"));
+	TRACE(("leave buf_get_rsa_pub_key: success"))
 	return DROPBEAR_SUCCESS;
 
 }
@@ -81,17 +81,17 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
 	assert(key != NULL);
 
-	TRACE(("enter buf_get_rsa_priv_key"));
+	TRACE(("enter buf_get_rsa_priv_key"))
 
 	if (buf_get_rsa_pub_key(buf, key) == DROPBEAR_FAILURE) {
-		TRACE(("leave buf_get_rsa_priv_key: pub: ret == DROPBEAR_FAILURE"));
+		TRACE(("leave buf_get_rsa_priv_key: pub: ret == DROPBEAR_FAILURE"))
 		return DROPBEAR_FAILURE;
 	}
 
 	key->d = m_malloc(sizeof(mp_int));
 	m_mp_init(key->d);
 	if (buf_getmpint(buf, key->d) == DROPBEAR_FAILURE) {
-		TRACE(("leave buf_get_rsa_priv_key: d: ret == DROPBEAR_FAILURE"));
+		TRACE(("leave buf_get_rsa_priv_key: d: ret == DROPBEAR_FAILURE"))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -105,17 +105,17 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 		m_mp_init_multi(key->p, key->q, NULL);
 
 		if (buf_getmpint(buf, key->p) == DROPBEAR_FAILURE) {
-			TRACE(("leave buf_get_rsa_priv_key: p: ret == DROPBEAR_FAILURE"));
+			TRACE(("leave buf_get_rsa_priv_key: p: ret == DROPBEAR_FAILURE"))
 			return DROPBEAR_FAILURE;
 		}
 
 		if (buf_getmpint(buf, key->q) == DROPBEAR_FAILURE) {
-			TRACE(("leave buf_get_rsa_priv_key: q: ret == DROPBEAR_FAILURE"));
+			TRACE(("leave buf_get_rsa_priv_key: q: ret == DROPBEAR_FAILURE"))
 			return DROPBEAR_FAILURE;
 		}
 	}
 
-	TRACE(("leave buf_get_rsa_priv_key"));
+	TRACE(("leave buf_get_rsa_priv_key"))
 	return DROPBEAR_SUCCESS;
 }
 	
@@ -123,10 +123,10 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 /* Clear and free the memory used by a public or private key */
 void rsa_key_free(rsa_key *key) {
 
-	TRACE(("enter rsa_key_free"));
+	TRACE(("enter rsa_key_free"))
 
 	if (key == NULL) {
-		TRACE(("leave rsa_key_free: key == NULL"));
+		TRACE(("leave rsa_key_free: key == NULL"))
 		return;
 	}
 	if (key->d) {
@@ -150,7 +150,7 @@ void rsa_key_free(rsa_key *key) {
 		m_free(key->q);
 	}
 	m_free(key);
-	TRACE(("leave rsa_key_free"));
+	TRACE(("leave rsa_key_free"))
 }
 
 /* Put the public rsa key into the buffer in the required format:
@@ -161,21 +161,21 @@ void rsa_key_free(rsa_key *key) {
  */
 void buf_put_rsa_pub_key(buffer* buf, rsa_key *key) {
 
-	TRACE(("enter buf_put_rsa_pub_key"));
+	TRACE(("enter buf_put_rsa_pub_key"))
 	assert(key != NULL);
 
 	buf_putstring(buf, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
 	buf_putmpint(buf, key->e);
 	buf_putmpint(buf, key->n);
 
-	TRACE(("leave buf_put_rsa_pub_key"));
+	TRACE(("leave buf_put_rsa_pub_key"))
 
 }
 
 /* Same as buf_put_rsa_pub_key, but with the private "x" key appended */
 void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 
-	TRACE(("enter buf_put_rsa_priv_key"));
+	TRACE(("enter buf_put_rsa_priv_key"))
 
 	assert(key != NULL);
 	buf_put_rsa_pub_key(buf, key);
@@ -190,7 +190,7 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 	}
 
 
-	TRACE(("leave buf_put_rsa_priv_key"));
+	TRACE(("leave buf_put_rsa_priv_key"))
 
 }
 
@@ -206,7 +206,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	mp_int *rsa_em = NULL;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter buf_rsa_verify"));
+	TRACE(("enter buf_rsa_verify"))
 
 	assert(key != NULL);
 
@@ -214,19 +214,19 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	slen = buf_getint(buf);
 	if (slen != (unsigned int)mp_unsigned_bin_size(key->n)) {
-		TRACE(("bad size"));
+		TRACE(("bad size"))
 		goto out;
 	}
 
 	if (mp_read_unsigned_bin(&rsa_s, buf_getptr(buf, buf->len - buf->pos),
 				buf->len - buf->pos) != MP_OKAY) {
-		TRACE(("failed reading rsa_s"));
+		TRACE(("failed reading rsa_s"))
 		goto out;
 	}
 
 	/* check that s <= n-1 */
 	if (mp_cmp(&rsa_s, key->n) != MP_LT) {
-		TRACE(("s > n-1"));
+		TRACE(("s > n-1"))
 		goto out;
 	}
 
@@ -234,13 +234,13 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	rsa_em = rsa_pad_em(key, data, len);
 
 	if (mp_exptmod(&rsa_s, key->e, key->n, &rsa_mdash) != MP_OKAY) {
-		TRACE(("failed exptmod rsa_s"));
+		TRACE(("failed exptmod rsa_s"))
 		goto out;
 	}
 
 	if (mp_cmp(rsa_em, &rsa_mdash) == MP_EQ) {
 		/* signature is valid */
-		TRACE(("success!"));
+		TRACE(("success!"))
 		ret = DROPBEAR_SUCCESS;
 	}
 
@@ -250,7 +250,7 @@ out:
 		m_free(rsa_em);
 	}
 	mp_clear_multi(&rsa_mdash, &rsa_s, NULL);
-	TRACE(("leave buf_rsa_verify: ret %d", ret));
+	TRACE(("leave buf_rsa_verify: ret %d", ret))
 	return ret;
 
 }
@@ -266,7 +266,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	DEF_MP_INT(rsa_s);
 	mp_int *rsa_em = NULL;
 	
-	TRACE(("enter buf_put_rsa_sign"));
+	TRACE(("enter buf_put_rsa_sign"))
 	assert(key != NULL);
 
 	rsa_em = rsa_pad_em(key, data, len);
@@ -306,7 +306,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 #endif
 	
 
-	TRACE(("leave buf_put_rsa_sign"));
+	TRACE(("leave buf_put_rsa_sign"))
 }
 
 /* Creates the message value as expected by PKCS, see rfc2437 etc */

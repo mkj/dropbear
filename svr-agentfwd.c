@@ -101,7 +101,7 @@ static void agentaccept(struct Listener *UNUSED(listener), int sock) {
 
 	fd = accept(sock, NULL, NULL);
 	if (fd < 0) {
-		TRACE(("accept failed"));
+		TRACE(("accept failed"))
 		return;
 	}
 

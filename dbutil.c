@@ -164,17 +164,17 @@ int dropbear_listen(const char* address, const char* port,
 	int val;
 	int sock;
 
-	TRACE(("enter dropbear_listen"));
+	TRACE(("enter dropbear_listen"))
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
 	if (address && address[0] == '\0') {
-		TRACE(("dropbear_listen: local loopback"));
+		TRACE(("dropbear_listen: local loopback"))
 		address = NULL;
 	} else {
-		TRACE(("dropbear_listen: not local loopback"));
+		TRACE(("dropbear_listen: not local loopback"))
 		hints.ai_flags = AI_PASSIVE;
 	}
 	err = getaddrinfo(address, port, &hints, &res0);
@@ -186,7 +186,7 @@ int dropbear_listen(const char* address, const char* port,
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
 		}
-		TRACE(("leave dropbear_listen: failed resolving"));
+		TRACE(("leave dropbear_listen: failed resolving"))
 		return -1;
 	}
 
@@ -203,7 +203,7 @@ int dropbear_listen(const char* address, const char* port,
 
 		if (sock < 0) {
 			err = errno;
-			TRACE(("socket() failed"));
+			TRACE(("socket() failed"))
 			continue;
 		}
 
@@ -221,14 +221,14 @@ int dropbear_listen(const char* address, const char* port,
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			err = errno;
 			close(sock);
-			TRACE(("bind(%s) failed", port));
+			TRACE(("bind(%s) failed", port))
 			continue;
 		}
 
 		if (listen(sock, 20) < 0) {
 			err = errno;
 			close(sock);
-			TRACE(("listen() failed"));
+			TRACE(("listen() failed"))
 			continue;
 		}
 
@@ -243,12 +243,12 @@ int dropbear_listen(const char* address, const char* port,
 			len = 20 + strlen(strerror(err));
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error listening: %s", strerror(err));
-			TRACE(("leave dropbear_listen: failure, %s", strerror(err)));
+			TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
 			return -1;
 		}
 	}
 
-	TRACE(("leave dropbear_listen: success, %d socks bound", nsock));
+	TRACE(("leave dropbear_listen: success, %d socks bound", nsock))
 	return nsock;
 }
 
@@ -264,7 +264,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 	int sock;
 	int err;
 
-	TRACE(("enter connect_remote"));
+	TRACE(("enter connect_remote"))
 
 	if (errstring != NULL) {
 		*errstring = NULL;
@@ -282,7 +282,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
 		}
-		TRACE(("Error resolving: %s", gai_strerror(err)));
+		TRACE(("Error resolving: %s", gai_strerror(err)))
 		return -1;
 	}
 
@@ -303,14 +303,14 @@ int connect_remote(const char* remotehost, const char* remoteport,
 				if (errstring != NULL && *errstring == NULL) {
 					*errstring = m_strdup("Failed non-blocking");
 				}
-				TRACE(("Failed non-blocking: %s", strerror(errno)));
+				TRACE(("Failed non-blocking: %s", strerror(errno)))
 				continue;
 			}
 		}
 
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			if (errno == EINPROGRESS && nonblocking) {
-				TRACE(("Connect in progress"));
+				TRACE(("Connect in progress"))
 				break;
 			} else {
 				err = errno;
@@ -331,7 +331,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
 		}
-		TRACE(("Error connecting: %s", strerror(err)));
+		TRACE(("Error connecting: %s", strerror(err)))
 	} else {
 		/* Success */
 		/* (err is used as a dummy var here) */
@@ -343,7 +343,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		m_free(*errstring);
 	}
 
-	TRACE(("leave connect_remote: sock %d\n", sock));
+	TRACE(("leave connect_remote: sock %d\n", sock))
 	return sock;
 }
 
@@ -503,7 +503,7 @@ int buf_getline(buffer * line, FILE * authfile) {
 
 	int c = EOF;
 
-	TRACE(("enter buf_getline"));
+	TRACE(("enter buf_getline"))
 
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
@@ -518,7 +518,7 @@ int buf_getline(buffer * line, FILE * authfile) {
 		buf_putbyte(line, (unsigned char)c);
 	}
 
-	TRACE(("leave getauthline: line too long"));
+	TRACE(("leave getauthline: line too long"))
 	/* We return success, but the line length will be zeroed - ie we just
 	 * ignore that line */
 	buf_setlen(line, 0);
@@ -528,10 +528,10 @@ out:
 
 	/* if we didn't read anything before EOF or error, exit */
 	if (c == EOF && line->pos == 0) {
-		TRACE(("leave buf_getline: failure"));
+		TRACE(("leave buf_getline: failure"))
 		return DROPBEAR_FAILURE;
 	} else {
-		TRACE(("leave buf_getline: success"));
+		TRACE(("leave buf_getline: success"))
 		buf_setpos(line, 0);
 		return DROPBEAR_SUCCESS;
 	}
@@ -618,10 +618,10 @@ void m_burn(void *data, unsigned int len) {
 
 void setnonblocking(int fd) {
 
-	TRACE(("setnonblocking: %d", fd));
+	TRACE(("setnonblocking: %d", fd))
 
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		dropbear_exit("Couldn't set nonblocking");
 	}
-	TRACE(("leave setnonblocking"));
+	TRACE(("leave setnonblocking"))
 }

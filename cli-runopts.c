@@ -116,7 +116,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 		if (nextisremote) {
-			TRACE(("nextisremote true"));
+			TRACE(("nextisremote true"))
 			addforward(argv[i], &cli_opts.remotefwds);
 			nextisremote = 0;
 			continue;
@@ -124,7 +124,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 		if (nextislocal) {
-			TRACE(("nextislocal true"));
+			TRACE(("nextislocal true"))
 			addforward(argv[i], &cli_opts.localfwds);
 			nextislocal = 0;
 			continue;
@@ -214,7 +214,7 @@ void cli_getopts(int argc, char ** argv) {
 			continue; /* next argument */
 
 		} else {
-			TRACE(("non-flag arg: '%s'", argv[i]));
+			TRACE(("non-flag arg: '%s'", argv[i]))
 
 			/* Either the hostname or commands */
 
@@ -343,7 +343,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 	struct TCPFwdList* newfwd = NULL;
 	char * str = NULL;
 
-	TRACE(("enter addforward"));
+	TRACE(("enter addforward"))
 
 	/* We probably don't want to be editing argvs */
 	str = m_strdup(origstr);
@@ -352,7 +352,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	connectaddr = strchr(str, ':');
 	if (connectaddr == NULL) {
-		TRACE(("connectaddr == NULL"));
+		TRACE(("connectaddr == NULL"))
 		goto fail;
 	}
 
@@ -361,7 +361,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	connectport = strchr(connectaddr, ':');
 	if (connectport == NULL) {
-		TRACE(("connectport == NULL"));
+		TRACE(("connectport == NULL"))
 		goto fail;
 	}
 
@@ -374,32 +374,32 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 	 * the check later only checks for >= MAX_PORT */
 	newfwd->listenport = strtol(listenport, NULL, 10);
 	if (errno != 0) {
-		TRACE(("bad listenport strtol"));
+		TRACE(("bad listenport strtol"))
 		goto fail;
 	}
 
 	newfwd->connectport = strtol(connectport, NULL, 10);
 	if (errno != 0) {
-		TRACE(("bad connectport strtol"));
+		TRACE(("bad connectport strtol"))
 		goto fail;
 	}
 
 	newfwd->connectaddr = connectaddr;
 
 	if (newfwd->listenport > 65535) {
-		TRACE(("listenport > 65535"));
+		TRACE(("listenport > 65535"))
 		goto badport;
 	}
 		
 	if (newfwd->connectport > 65535) {
-		TRACE(("connectport > 65535"));
+		TRACE(("connectport > 65535"))
 		goto badport;
 	}
 
 	newfwd->next = *fwdlist;
 	*fwdlist = newfwd;
 
-	TRACE(("leave addforward: done"));
+	TRACE(("leave addforward: done"))
 	return;
 
 fail:

@@ -70,7 +70,7 @@ unsigned int cbuf_readlen(circbuffer *cbuf) {
 	assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
 
 	if (cbuf->used == 0) {
-		TRACE(("cbuf_readlen: unused buffer"));
+		TRACE(("cbuf_readlen: unused buffer"))
 		return 0;
 	}
 
@@ -88,7 +88,7 @@ unsigned int cbuf_writelen(circbuffer *cbuf) {
 	assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
 
 	if (cbuf->used == cbuf->size) {
-		TRACE(("cbuf_writelen: full buffer"));
+		TRACE(("cbuf_writelen: full buffer"))
 		return 0; /* full */
 	}
 	

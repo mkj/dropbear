@@ -46,7 +46,7 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
-	TRACE(("cli_buf_match_algo: %s", algolist));
+	TRACE(("cli_buf_match_algo: %s", algolist))
 	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
 		goto out; /* just a sanity check, no other use */
 	}

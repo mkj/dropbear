@@ -258,7 +258,7 @@ void buf_putbytes(buffer *buf, const unsigned char *bytes, unsigned int len) {
 void buf_putmpint(buffer* buf, mp_int * mp) {
 
 	unsigned int len, pad = 0;
-	TRACE(("enter buf_putmpint"));
+	TRACE(("enter buf_putmpint"))
 
 	assert(mp != NULL);
 
@@ -294,7 +294,7 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 		buf_incrwritepos(buf, len-pad);
 	}
 
-	TRACE(("leave buf_putmpint"));
+	TRACE(("leave buf_putmpint"))
 }
 
 /* Retrieve an mp_int from the buffer.

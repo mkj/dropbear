@@ -93,7 +93,7 @@ struct Listener* new_listener(int socks[], unsigned int nsocks,
 	/* or create a new one */
 	if (i == ses.listensize) {
 		if (ses.listensize > MAX_LISTENERS) {
-			TRACE(("leave newlistener: too many already"));
+			TRACE(("leave newlistener: too many already"))
 			for (j = 0; j < nsocks; j++) {
 				close(socks[i]);
 			}
@@ -115,7 +115,7 @@ struct Listener* new_listener(int socks[], unsigned int nsocks,
 		ses.maxfd = MAX(ses.maxfd, socks[j]);
 	}
 
-	TRACE(("new listener num %d ", i));
+	TRACE(("new listener num %d ", i))
 
 	newlisten = (struct Listener*)m_malloc(sizeof(struct Listener));
 	newlisten->index = i;

@@ -45,7 +45,7 @@
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 
-	TRACE(("enter buf_get_dss_pub_key"));
+	TRACE(("enter buf_get_dss_pub_key"))
 	assert(key != NULL);
 	key->p = m_malloc(sizeof(mp_int));
 	key->q = m_malloc(sizeof(mp_int));
@@ -59,17 +59,17 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	 || buf_getmpint(buf, key->q) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->g) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->y) == DROPBEAR_FAILURE) {
-		TRACE(("leave buf_get_dss_pub_key: failed reading mpints"));
+		TRACE(("leave buf_get_dss_pub_key: failed reading mpints"))
 		return DROPBEAR_FAILURE;
 	}
 
 	if (mp_count_bits(key->p) < MIN_DSS_KEYLEN) {
 		dropbear_log(LOG_WARNING, "DSS key too short");
-		TRACE(("leave buf_get_dss_pub_key: short key"));
+		TRACE(("leave buf_get_dss_pub_key: short key"))
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("leave buf_get_dss_pub_key: success"));
+	TRACE(("leave buf_get_dss_pub_key: success"))
 	return DROPBEAR_SUCCESS;
 }
 
@@ -98,9 +98,9 @@ int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 /* Clear and free the memory used by a public or private key */
 void dss_key_free(dss_key *key) {
 
-	TRACE(("enter dsa_key_free"));
+	TRACE(("enter dsa_key_free"))
 	if (key == NULL) {
-		TRACE(("enter dsa_key_free: key == NULL"));
+		TRACE(("enter dsa_key_free: key == NULL"))
 		return;
 	}
 	if (key->p) {
@@ -124,7 +124,7 @@ void dss_key_free(dss_key *key) {
 		m_free(key->x);
 	}
 	m_free(key);
-	TRACE(("leave dsa_key_free"));
+	TRACE(("leave dsa_key_free"))
 }
 
 /* put the dss public key into the buffer in the required format:
@@ -171,7 +171,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	char * string = NULL;
 	int stringlen;
 
-	TRACE(("enter buf_dss_verify"));
+	TRACE(("enter buf_dss_verify"))
 	assert(key != NULL);
 
 	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
@@ -195,7 +195,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 		goto out;
 	}
 	if (mp_cmp(&val1, key->q) != MP_LT) {
-		TRACE(("verify failed, s' >= q"));
+		TRACE(("verify failed, s' >= q"))
 		goto out;
 	}
 	/* let val2 = w = (s')^-1 mod q*/
@@ -220,7 +220,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 		goto out;
 	}
 	if (mp_cmp(&val1, key->q) != MP_LT) {
-		TRACE(("verify failed, r' >= q"));
+		TRACE(("verify failed, r' >= q"))
 		goto out;
 	}
 	/* let val4 = u2 = ((r')w) mod q */
@@ -315,7 +315,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	DEF_MP_INT(dss_s);
 	hash_state hs;
 	
-	TRACE(("enter buf_put_dss_sign"));
+	TRACE(("enter buf_put_dss_sign"))
 	assert(key != NULL);
 	
 	/* hash the data */
@@ -422,7 +422,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	
 	/* create the signature to return */
 
-	TRACE(("leave buf_put_dss_sign"));
+	TRACE(("leave buf_put_dss_sign"))
 }
 
 #endif /* DROPBEAR_DSS */

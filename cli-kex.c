@@ -65,14 +65,14 @@ void recv_msg_kexdh_reply() {
 	unsigned char* keyblob = NULL;
 
 
-	TRACE(("enter recv_msg_kexdh_reply"));
+	TRACE(("enter recv_msg_kexdh_reply"))
 
 	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
 		dropbear_exit("Received out-of-order kexdhreply");
 	}
 	m_mp_init(&dh_f);
 	type = ses.newkeys->algo_hostkey;
-	TRACE(("type is %d", type));
+	TRACE(("type is %d", type))
 
 	hostkey = new_sign_key();
 	keybloblen = buf_getint(ses.payload);
@@ -84,12 +84,12 @@ void recv_msg_kexdh_reply() {
 	}
 
 	if (buf_get_pub_key(ses.payload, hostkey, &type) != DROPBEAR_SUCCESS) {
-		TRACE(("failed getting pubkey"));
+		TRACE(("failed getting pubkey"))
 		dropbear_exit("Bad KEX packet");
 	}
 
 	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
-		TRACE(("failed getting mpint"));
+		TRACE(("failed getting mpint"))
 		dropbear_exit("Bad KEX packet");
 	}
 
@@ -109,7 +109,7 @@ void recv_msg_kexdh_reply() {
 
 	send_msg_newkeys();
 	ses.requirenext = SSH_MSG_NEWKEYS;
-	TRACE(("leave recv_msg_kexdh_init"));
+	TRACE(("leave recv_msg_kexdh_init"))
 }
 
 static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
@@ -156,7 +156,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		if (errno != EEXIST) {
 			dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
 					strerror(errno));
-			TRACE(("mkdir didn't work: %s", strerror(errno)));
+			TRACE(("mkdir didn't work: %s", strerror(errno)))
 			ask_to_confirm(keyblob, keybloblen);
 			goto out; /* only get here on success */
 		}
@@ -170,14 +170,14 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	} else {
 		/* We mightn't have been able to open it if it was read-only */
 		if (errno == EACCES || errno == EROFS) {
-				TRACE(("trying readonly: %s", strerror(errno)));
+				TRACE(("trying readonly: %s", strerror(errno)))
 				readonly = 1;
 				hostsfile = fopen(filename, "r");
 		}
 	}
 
 	if (hostsfile == NULL) {
-		TRACE(("hostsfile didn't open: %s", strerror(errno)));
+		TRACE(("hostsfile didn't open: %s", strerror(errno)))
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}
@@ -188,7 +188,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	do {
 		if (buf_getline(line, hostsfile) == DROPBEAR_FAILURE) {
-			TRACE(("failed reading line: prob EOF"));
+			TRACE(("failed reading line: prob EOF"))
 			break;
 		}
 
@@ -197,32 +197,32 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		 * buf_getfoo() past the end and die horribly - the base64 parsing
 		 * code is what tiptoes up to the end nicely */
 		if (line->len < (hostlen+30) ) {
-			TRACE(("line is too short to be sensible"));
+			TRACE(("line is too short to be sensible"))
 			continue;
 		}
 
 		/* Compare hostnames */
 		if (strncmp(cli_opts.remotehost, buf_getptr(line, hostlen),
 					hostlen) != 0) {
-			TRACE(("hosts don't match"));
+			TRACE(("hosts don't match"))
 			continue;
 		}
 
 		buf_incrpos(line, hostlen);
 		if (buf_getbyte(line) != ' ') {
 			/* there wasn't a space after the hostname, something dodgy */
-			TRACE(("missing space afte matching hostname"));
+			TRACE(("missing space afte matching hostname"))
 			continue;
 		}
 
 		if ( strncmp(buf_getptr(line, algolen), algoname, algolen) != 0) {
-			TRACE(("algo doesn't match"));
+			TRACE(("algo doesn't match"))
 			continue;
 		}
 
 		buf_incrpos(line, algolen);
 		if (buf_getbyte(line) != ' ') {
-			TRACE(("missing space after algo"));
+			TRACE(("missing space after algo"))
 			continue;
 		}
 
@@ -231,7 +231,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 		if (ret == DROPBEAR_SUCCESS) {
 			/* Good matching key */
-			TRACE(("good matching key"));
+			TRACE(("good matching key"))
 			goto out;
 		}
 
@@ -244,7 +244,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	/* If we get here, they said yes */
 
 	if (readonly) {
-		TRACE(("readonly"));
+		TRACE(("readonly"))
 		goto out;
 	}
 
@@ -257,7 +257,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	buf_putbytes(line, algoname, algolen);
 	buf_putbyte(line, ' ');
 	len = line->size - line->pos;
-	TRACE(("keybloblen %d, len %d", keybloblen, len));
+	TRACE(("keybloblen %d, len %d", keybloblen, len))
 	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
 	 * will die horribly in the case anyway */
 	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);

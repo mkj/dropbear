@@ -45,10 +45,10 @@ void process_packet() {
 	unsigned char type;
 	unsigned int i;
 
-	TRACE(("enter process_packet"));
+	TRACE(("enter process_packet"))
 
 	type = buf_getbyte(ses.payload);
-	TRACE(("process_packet: packet type = %d", type));
+	TRACE(("process_packet: packet type = %d", type))
 
 	ses.lastpacket = type;
 
@@ -57,12 +57,12 @@ void process_packet() {
 
 		case SSH_MSG_IGNORE:
 		case SSH_MSG_DEBUG:
-			TRACE(("received SSH_MSG_IGNORE or SSH_MSG_DEBUG"));
+			TRACE(("received SSH_MSG_IGNORE or SSH_MSG_DEBUG"))
 			goto out;
 
 		case SSH_MSG_UNIMPLEMENTED:
 			/* debugging XXX */
-			TRACE(("SSH_MSG_UNIMPLEMENTED"));
+			TRACE(("SSH_MSG_UNIMPLEMENTED"))
 			dropbear_exit("received SSH_MSG_UNIMPLEMENTED");
 			
 		case SSH_MSG_DISCONNECT:
@@ -87,7 +87,7 @@ void process_packet() {
 	/* Check if we should ignore this packet. Used currently only for
 	 * KEX code, with first_kex_packet_follows */
 	if (ses.ignorenext) {
-		TRACE(("Ignoring packet, type = %d", type));
+		TRACE(("Ignoring packet, type = %d", type))
 		ses.ignorenext = 0;
 		goto out;
 	}
@@ -115,7 +115,7 @@ void process_packet() {
 
 	
 	/* TODO do something more here? */
-	TRACE(("preauth unknown packet"));
+	TRACE(("preauth unknown packet"))
 	recv_unimplemented();
 
 out:
@@ -123,7 +123,7 @@ out:
 	buf_free(ses.payload);
 	ses.payload = NULL;
 
-	TRACE(("leave process_packet"));
+	TRACE(("leave process_packet"))
 }
 
 

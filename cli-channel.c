@@ -37,7 +37,7 @@ void recv_msg_channel_extended_data() {
 	struct Channel *channel;
 	unsigned int datatype;
 
-	TRACE(("enter recv_msg_channel_extended_data"));
+	TRACE(("enter recv_msg_channel_extended_data"))
 
 	chan = buf_getint(ses.payload);
 	channel = getchannel(chan);
@@ -47,7 +47,7 @@ void recv_msg_channel_extended_data() {
 	}
 
 	if (channel->type != &clichansess) {
-		TRACE(("leave recv_msg_channel_extended_data: chantype is wrong"));
+		TRACE(("leave recv_msg_channel_extended_data: chantype is wrong"))
 		return; /* we just ignore it */
 	}
 
@@ -55,11 +55,11 @@ void recv_msg_channel_extended_data() {
 	
 	if (datatype != SSH_EXTENDED_DATA_STDERR) {
 		TRACE(("leave recv_msg_channel_extended_data: wrong datatype: %d",
-					datatype));
+					datatype))
 		return;	
 	}
 
 	common_recv_msg_channel_data(channel, channel->errfd, channel->extrabuf);
 
-	TRACE(("leave recv_msg_channel_extended_data"));
+	TRACE(("leave recv_msg_channel_extended_data"))
 }

@@ -57,7 +57,7 @@ pamConvFunc(int num_msg,
 
 	const char* message = (*msg)->msg;
 
-	TRACE(("enter pamConvFunc"));
+	TRACE(("enter pamConvFunc"))
 
 	if (num_msg != 1) {
 		/* If you're getting here - Dropbear probably can't support your pam
@@ -67,11 +67,11 @@ pamConvFunc(int num_msg,
 		return PAM_CONV_ERR;
 	}
 	
-	TRACE(("msg_style is %d", (*msg)->msg_style));
+	TRACE(("msg_style is %d", (*msg)->msg_style))
 	if (message) {
-		TRACE(("message is '%s'", message));
+		TRACE(("message is '%s'", message))
 	} else {
-		TRACE(("null message"));
+		TRACE(("null message"))
 	}
 
 	switch((*msg)->msg_style) {
@@ -79,7 +79,7 @@ pamConvFunc(int num_msg,
 		case PAM_PROMPT_ECHO_OFF:
 
 			if (strcmp(message, "Password:") != 0) {
-					TRACE(("PAM_PROMPT_ECHO_OFF: unrecognized prompt"));
+					TRACE(("PAM_PROMPT_ECHO_OFF: unrecognized prompt"))
 					rc = PAM_CONV_ERR;
 					break;
 			}
@@ -102,7 +102,7 @@ pamConvFunc(int num_msg,
 			if ((strcmp(message, "login: " ) != 0) 
 					&& (strcmp(message, "login:" ) != 0)
 					&& (strcmp(message, "Please enter username: " ) != 0)) {
-				TRACE(("PAM_PROMPT_ECHO_ON: unrecognized prompt"));
+				TRACE(("PAM_PROMPT_ECHO_ON: unrecognized prompt"))
 				rc = PAM_CONV_ERR;
 				break;
 			}
@@ -117,17 +117,17 @@ pamConvFunc(int num_msg,
 			/* Safe to just use the direct pointer (no strdup) since
 			 * it shouldn't be getting munged at all */
 			resp->resp = m_strdup(userDatap->user);
-			TRACE(("userDatap->user='%s'", userDatap->user));
+			TRACE(("userDatap->user='%s'", userDatap->user))
 			(*respp) = resp;
 			break;
 
 		default:
-			TRACE(("Unknown message type"));
+			TRACE(("Unknown message type"))
 			rc = PAM_CONV_ERR;
 			break;      
 	}
 
-	TRACE(("leave pamConvFunc, rc %d", rc));
+	TRACE(("leave pamConvFunc, rc %d", rc))
 
 	return rc;
 }
@@ -224,7 +224,7 @@ cleanup:
 		m_free(password);
 	}
 	if (pamHandlep != NULL) {
-		TRACE(("pam_end"));
+		TRACE(("pam_end"))
 		(void) pam_end(pamHandlep, 0 /* pam_status */);
 	}
 }

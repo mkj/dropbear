@@ -50,7 +50,7 @@ int main(int argc, char ** argv) {
 	cli_getopts(argc, argv);
 
 	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,
-				cli_opts.remotehost, cli_opts.remoteport));
+				cli_opts.remotehost, cli_opts.remoteport))
 
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		dropbear_exit("signal() error");

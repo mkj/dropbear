@@ -114,8 +114,8 @@ void send_msg_kexinit() {
 	encrypt_packet();
 	ses.dataallowed = 0; /* don't send other packets during kex */
 
-	TRACE(("DATAALLOWED=0"));
-	TRACE(("-> KEXINIT"));
+	TRACE(("DATAALLOWED=0"))
+	TRACE(("-> KEXINIT"))
 	ses.kexstate.sentkexinit = 1;
 }
 
@@ -128,7 +128,7 @@ void send_msg_kexinit() {
 /* Bring new keys into use after a key exchange, and let the client know*/
 void send_msg_newkeys() {
 
-	TRACE(("enter send_msg_newkeys"));
+	TRACE(("enter send_msg_newkeys"))
 
 	/* generate the kexinit request */
 	CHECKCLEARTOWRITE();
@@ -138,42 +138,42 @@ void send_msg_newkeys() {
 
 	/* set up our state */
 	if (ses.kexstate.recvnewkeys) {
-		TRACE(("while RECVNEWKEYS=1"));
+		TRACE(("while RECVNEWKEYS=1"))
 		gen_new_keys();
 		kexinitialise(); /* we've finished with this kex */
-		TRACE((" -> DATAALLOWED=1"));
+		TRACE((" -> DATAALLOWED=1"))
 		ses.dataallowed = 1; /* we can send other packets again now */
 		ses.kexstate.donefirstkex = 1;
 	} else {
 		ses.kexstate.sentnewkeys = 1;
-		TRACE(("SENTNEWKEYS=1"));
+		TRACE(("SENTNEWKEYS=1"))
 	}
 
-	TRACE(("-> MSG_NEWKEYS"));
-	TRACE(("leave send_msg_newkeys"));
+	TRACE(("-> MSG_NEWKEYS"))
+	TRACE(("leave send_msg_newkeys"))
 }
 
 /* Bring the new keys into use after a key exchange */
 void recv_msg_newkeys() {
 
-	TRACE(("<- MSG_NEWKEYS"));
-	TRACE(("enter recv_msg_newkeys"));
+	TRACE(("<- MSG_NEWKEYS"))
+	TRACE(("enter recv_msg_newkeys"))
 
 	/* simply check if we've sent SSH_MSG_NEWKEYS, and if so,
 	 * switch to the new keys */
 	if (ses.kexstate.sentnewkeys) {
-		TRACE(("while SENTNEWKEYS=1"));
+		TRACE(("while SENTNEWKEYS=1"))
 		gen_new_keys();
 		kexinitialise(); /* we've finished with this kex */
-	    TRACE((" -> DATAALLOWED=1"));
+	    TRACE((" -> DATAALLOWED=1"))
 	    ses.dataallowed = 1; /* we can send other packets again now */
 		ses.kexstate.donefirstkex = 1;
 	} else {
-		TRACE(("RECVNEWKEYS=1"));
+		TRACE(("RECVNEWKEYS=1"))
 		ses.kexstate.recvnewkeys = 1;
 	}
 	
-	TRACE(("leave recv_msg_newkeys"));
+	TRACE(("leave recv_msg_newkeys"))
 }
 
 
@@ -189,7 +189,7 @@ static void kexinitialise() {
 
 	struct timeval tv;
 
-	TRACE(("kexinitialise()"));
+	TRACE(("kexinitialise()"))
 
 	/* sent/recv'd MSG_KEXINIT */
 	ses.kexstate.sentkexinit = 0;
@@ -262,7 +262,7 @@ void gen_new_keys() {
 	unsigned int C2S_keysize, S2C_keysize;
 	char mactransletter, macrecvletter; /* Client or server specific */
 
-	TRACE(("enter gen_new_keys"));
+	TRACE(("enter gen_new_keys"))
 	/* the dh_K and hash are the start of all hashes, we make use of that */
 
 	sha1_init(&hs);
@@ -329,7 +329,7 @@ void gen_new_keys() {
 	ses.keys = ses.newkeys;
 	ses.newkeys = NULL;
 
-	TRACE(("leave gen_new_keys"));
+	TRACE(("leave gen_new_keys"))
 }
 
 #ifndef DISABLE_ZLIB
@@ -393,8 +393,8 @@ static void gen_new_zstreams() {
 /* Belongs in common_kex.c where it should be moved after review */
 void recv_msg_kexinit() {
 	
-	TRACE(("<- KEXINIT"));
-	TRACE(("enter recv_msg_kexinit"));
+	TRACE(("<- KEXINIT"))
+	TRACE(("enter recv_msg_kexinit"))
 	
 	/* start the kex hash */
 	ses.kexhashbuf = buf_new(MAX_KEXHASHBUF);
@@ -402,7 +402,7 @@ void recv_msg_kexinit() {
 	if (!ses.kexstate.sentkexinit) {
 		/* we need to send a kex packet */
 		send_msg_kexinit();
-		TRACE(("continue recv_msg_kexinit: sent kexinit"));
+		TRACE(("continue recv_msg_kexinit: sent kexinit"))
 	}
 
 
@@ -459,7 +459,7 @@ void recv_msg_kexinit() {
 	ses.kexstate.recvkexinit = 1;
 //	ses.expecting = 0; // client matt
 
-	TRACE(("leave recv_msg_kexinit"));
+	TRACE(("leave recv_msg_kexinit"))
 }
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
@@ -473,7 +473,7 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 	unsigned char randbuf[DH_P_LEN];
 	int dh_q_len;
 
-	TRACE(("enter send_msg_kexdh_reply"));
+	TRACE(("enter send_msg_kexdh_reply"))
 	
 	m_mp_init_multi(&dh_g, &dh_p, &dh_q, NULL);
 
@@ -619,7 +619,7 @@ static void read_kex_algos() {
 		erralgo = "kex";
 		goto error;
 	}
-	TRACE(("kex algo %s", algo->name));
+	TRACE(("kex algo %s", algo->name))
 	ses.newkeys->algo_kex = algo->val;
 
 	/* server_host_key_algorithms */
@@ -629,7 +629,7 @@ static void read_kex_algos() {
 		erralgo = "hostkey";
 		goto error;
 	}
-	TRACE(("hostkey algo %s", algo->name));
+	TRACE(("hostkey algo %s", algo->name))
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
@@ -638,7 +638,7 @@ static void read_kex_algos() {
 		erralgo = "enc c->s";
 		goto error;
 	}
-	TRACE(("c2s is  %s", c2s_cipher_algo->name));
+	TRACE(("c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
@@ -646,7 +646,7 @@ static void read_kex_algos() {
 		erralgo = "enc s->c";
 		goto error;
 	}
-	TRACE(("s2c is  %s", s2c_cipher_algo->name));
+	TRACE(("s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -717,12 +717,12 @@ static void read_kex_algos() {
 		ses.newkeys->trans_algo_comp = s2c_comp_algo->val;
 	}
 
-	TRACE(("enc algo recv %s", algo->name));
-	TRACE(("enc algo trans %s", algo->name));
-	TRACE(("mac algo recv %s", algo->name));
-	TRACE(("mac algo trans %s", algo->name));
-	TRACE(("comp algo recv %s", algo->name));
-	TRACE(("comp algo trans %s", algo->name));
+	TRACE(("enc algo recv %s", algo->name))
+	TRACE(("enc algo trans %s", algo->name))
+	TRACE(("mac algo recv %s", algo->name))
+	TRACE(("mac algo trans %s", algo->name))
+	TRACE(("comp algo recv %s", algo->name))
+	TRACE(("comp algo trans %s", algo->name))
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);

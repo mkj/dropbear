@@ -67,9 +67,9 @@ static void authclear() {
  * ignore this, but possibly serves as a legal "no trespassing" sign */
 static void send_msg_userauth_banner() {
 
-	TRACE(("enter send_msg_userauth_banner"));
+	TRACE(("enter send_msg_userauth_banner"))
 	if (svr_opts.banner == NULL) {
-		TRACE(("leave send_msg_userauth_banner: banner is NULL"));
+		TRACE(("leave send_msg_userauth_banner: banner is NULL"))
 		return;
 	}
 
@@ -84,7 +84,7 @@ static void send_msg_userauth_banner() {
 	buf_free(svr_opts.banner);
 	svr_opts.banner = NULL;
 
-	TRACE(("leave send_msg_userauth_banner"));
+	TRACE(("leave send_msg_userauth_banner"))
 }
 
 /* handle a userauth request, check validity, pass to password or pubkey
@@ -94,11 +94,11 @@ void recv_msg_userauth_request() {
 	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL;
 	unsigned int userlen, servicelen, methodlen;
 
-	TRACE(("enter recv_msg_userauth_request"));
+	TRACE(("enter recv_msg_userauth_request"))
 
 	/* ignore packets if auth is already done */
 	if (ses.authstate.authdone == 1) {
-		TRACE(("leave recv_msg_userauth_request: authdone already"));
+		TRACE(("leave recv_msg_userauth_request: authdone already"))
 		return;
 	}
 
@@ -128,7 +128,7 @@ void recv_msg_userauth_request() {
 	if (methodlen == AUTH_METHOD_NONE_LEN &&
 			strncmp(methodname, AUTH_METHOD_NONE,
 				AUTH_METHOD_NONE_LEN) == 0) {
-		TRACE(("recv_msg_userauth_request: 'none' request"));
+		TRACE(("recv_msg_userauth_request: 'none' request"))
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -136,7 +136,7 @@ void recv_msg_userauth_request() {
 	/* check username is good before continuing */
 	if (checkusername(username, userlen) == DROPBEAR_FAILURE) {
 		/* username is invalid/no shell/etc - send failure */
-		TRACE(("sending checkusername failure"));
+		TRACE(("sending checkusername failure"))
 		send_msg_userauth_failure(0, 1);
 		goto out;
 	}
@@ -195,7 +195,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	char* listshell = NULL;
 	char* usershell = NULL;
 	
-	TRACE(("enter checkusername"));
+	TRACE(("enter checkusername"))
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;
 	}
@@ -217,7 +217,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	/* check that user exists */
 	if (ses.authstate.pw == NULL) {
-		TRACE(("leave checkusername: user '%s' doesn't exist", username));
+		TRACE(("leave checkusername: user '%s' doesn't exist", username))
 		dropbear_log(LOG_WARNING,
 				"login attempt for nonexistent user from %s",
 				svr_ses.addrstring);
@@ -230,7 +230,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	/* check for non-root if desired */
 	if (svr_opts.norootlogin && ses.authstate.pw->pw_uid == 0) {
-		TRACE(("leave checkusername: root login disabled"));
+		TRACE(("leave checkusername: root login disabled"))
 		dropbear_log(LOG_WARNING, "root login rejected");
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
@@ -238,14 +238,14 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	/* check for an empty password */
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
-		TRACE(("leave checkusername: empty pword"));
+		TRACE(("leave checkusername: empty pword"))
 		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
 				ses.authstate.printableuser);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("shell is %s", ses.authstate.pw->pw_shell));
+	TRACE(("shell is %s", ses.authstate.pw->pw_shell))
 
 	/* check that the shell is set */
 	usershell = ses.authstate.pw->pw_shell;
@@ -259,7 +259,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	 * is platform-specific) */
 	setusershell();
 	while ((listshell = getusershell()) != NULL) {
-		TRACE(("test shell is '%s'", listshell));
+		TRACE(("test shell is '%s'", listshell))
 		if (strcmp(listshell, usershell) == 0) {
 			/* have a match */
 			goto goodshell;
@@ -267,7 +267,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 	/* no matching shell */
 	endusershell();
-	TRACE(("no matching shell"));
+	TRACE(("no matching shell"))
 	dropbear_log(LOG_WARNING, "user '%s' has invalid shell, rejected",
 				ses.authstate.printableuser);
 	send_msg_userauth_failure(0, 1);
@@ -275,10 +275,10 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	
 goodshell:
 	endusershell();
-	TRACE(("matching shell"));
+	TRACE(("matching shell"))
 
-	TRACE(("uid = %d", ses.authstate.pw->pw_uid));
-	TRACE(("leave checkusername"));
+	TRACE(("uid = %d", ses.authstate.pw->pw_uid))
+	TRACE(("leave checkusername"))
 	return DROPBEAR_SUCCESS;
 
 }
@@ -292,7 +292,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 
 	buffer *typebuf = NULL;
 
-	TRACE(("enter send_msg_userauth_failure"));
+	TRACE(("enter send_msg_userauth_failure"))
 
 	CHECKCLEARTOWRITE();
 	
@@ -331,7 +331,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	if (ses.authstate.failcount >= MAX_AUTH_TRIES) {
 		char * userstr;
 		/* XXX - send disconnect ? */
-		TRACE(("Max auth tries reached, exiting"));
+		TRACE(("Max auth tries reached, exiting"))
 
 		if (ses.authstate.printableuser == NULL) {
 			userstr = "is invalid";
@@ -342,13 +342,13 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 				userstr, svr_ses.addrstring);
 	}
 	
-	TRACE(("leave send_msg_userauth_failure"));
+	TRACE(("leave send_msg_userauth_failure"))
 }
 
 /* Send a success message to the user, and set the "authdone" flag */
 void send_msg_userauth_success() {
 
-	TRACE(("enter send_msg_userauth_success"));
+	TRACE(("enter send_msg_userauth_success"))
 
 	CHECKCLEARTOWRITE();
 
@@ -368,6 +368,6 @@ void send_msg_userauth_success() {
 	 * logins - a nasty situation. */							
 	m_close(svr_ses.childpipe);
 
-	TRACE(("leave send_msg_userauth_success"));
+	TRACE(("leave send_msg_userauth_success"))
 
 }

@@ -87,7 +87,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	int nsocks;
 	char* errstring = NULL;
 
-	TRACE(("enter listen_tcpfwd"));
+	TRACE(("enter listen_tcpfwd"))
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->listenport);
@@ -100,7 +100,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	if (nsocks < 0) {
 		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);
 		m_free(errstring);
-		TRACE(("leave listen_tcpfwd: dropbear_listen failed"));
+		TRACE(("leave listen_tcpfwd: dropbear_listen failed"))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -109,11 +109,11 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 
 	if (listener == NULL) {
 		m_free(tcpinfo);
-		TRACE(("leave listen_tcpfwd: listener failed"));
+		TRACE(("leave listen_tcpfwd: listener failed"))
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("leave listen_tcpfwd: success"));
+	TRACE(("leave listen_tcpfwd: success"))
 	return DROPBEAR_SUCCESS;
 }
 

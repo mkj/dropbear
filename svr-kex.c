@@ -46,7 +46,7 @@ void recv_msg_kexdh_init() {
 
 	DEF_MP_INT(dh_e);
 
-	TRACE(("enter recv_msg_kexdh_init"));
+	TRACE(("enter recv_msg_kexdh_init"))
 	if (!ses.kexstate.recvkexinit) {
 		dropbear_exit("Premature kexdh_init message received");
 	}
@@ -60,7 +60,7 @@ void recv_msg_kexdh_init() {
 
 	send_msg_newkeys();
 	ses.requirenext = SSH_MSG_NEWKEYS;
-	TRACE(("leave recv_msg_kexdh_init"));
+	TRACE(("leave recv_msg_kexdh_init"))
 }
 	
 /* Generate our side of the diffie-hellman key exchange value (dh_f), and
@@ -74,7 +74,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	DEF_MP_INT(dh_y);
 	DEF_MP_INT(dh_f);
 
-	TRACE(("enter send_msg_kexdh_reply"));
+	TRACE(("enter send_msg_kexdh_reply"))
 	m_mp_init_multi(&dh_y, &dh_f, NULL);
 	
 	gen_kexdh_vals(&dh_f, &dh_y);
@@ -99,6 +99,6 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	/* the SSH_MSG_KEXDH_REPLY is done */
 	encrypt_packet();
 
-	TRACE(("leave send_msg_kexdh_reply"));
+	TRACE(("leave send_msg_kexdh_reply"))
 }
 

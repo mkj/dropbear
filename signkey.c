@@ -94,7 +94,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	int keytype;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter buf_get_pub_key"));
+	TRACE(("enter buf_get_pub_key"))
 
 	ident = buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
@@ -130,7 +130,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 
-	TRACE(("leave buf_get_pub_key"));
+	TRACE(("leave buf_get_pub_key"))
 
 	return ret;
 	
@@ -146,14 +146,14 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	int keytype;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter buf_get_priv_key"));
+	TRACE(("enter buf_get_priv_key"))
 
 	ident = buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
 	m_free(ident);
 
 	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
-		TRACE(("wrong key type: %d %d", *type, keytype));
+		TRACE(("wrong key type: %d %d", *type, keytype))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -183,7 +183,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 
-	TRACE(("leave buf_get_priv_key"));
+	TRACE(("leave buf_get_priv_key"))
 
 	return ret;
 	
@@ -194,7 +194,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 
 	buffer *pubkeys;
 
-	TRACE(("enter buf_put_pub_key"));
+	TRACE(("enter buf_put_pub_key"))
 	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	
 #ifdef DROPBEAR_DSS
@@ -216,26 +216,26 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 			pubkeys->len);
 	
 	buf_free(pubkeys);
-	TRACE(("leave buf_put_pub_key"));
+	TRACE(("leave buf_put_pub_key"))
 }
 
 /* type is either DROPBEAR_SIGNKEY_DSS or DROPBEAR_SIGNKEY_RSA */
 void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 
-	TRACE(("enter buf_put_priv_key"));
-	TRACE(("type is %d", type));
+	TRACE(("enter buf_put_priv_key"))
+	TRACE(("type is %d", type))
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
 		buf_put_dss_priv_key(buf, key->dsskey);
-	TRACE(("leave buf_put_priv_key: dss done"));
+	TRACE(("leave buf_put_priv_key: dss done"))
 	return;
 	}
 #endif
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
 		buf_put_rsa_priv_key(buf, key->rsakey);
-	TRACE(("leave buf_put_priv_key: rsa done"));
+	TRACE(("leave buf_put_priv_key: rsa done"))
 	return;
 	}
 #endif
@@ -244,7 +244,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 
 void sign_key_free(sign_key *key) {
 
-	TRACE(("enter sign_key_free"));
+	TRACE(("enter sign_key_free"))
 
 #ifdef DROPBEAR_DSS
 	dss_key_free(key->dsskey);
@@ -256,7 +256,7 @@ void sign_key_free(sign_key *key) {
 #endif
 
 	m_free(key);
-	TRACE(("leave sign_key_free"));
+	TRACE(("leave sign_key_free"))
 }
 
 static char hexdig(unsigned char x) {
@@ -393,7 +393,7 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 	unsigned char * ident = NULL;
 	unsigned int identlen = 0;
 
-	TRACE(("enter buf_verify"));
+	TRACE(("enter buf_verify"))
 
 	bloblen = buf_getint(buf);
 	ident = buf_getstring(buf, &identlen);
@@ -442,17 +442,17 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 	if (base64_decode(buf_getptr(line, len), len,
 				buf_getwriteptr(decodekey, decodekey->size),
 				&decodekeylen) != CRYPT_OK) {
-		TRACE(("checkpubkey: base64 decode failed"));
+		TRACE(("checkpubkey: base64 decode failed"))
 		goto out;
 	}
-	TRACE(("checkpubkey: base64_decode success"));
+	TRACE(("checkpubkey: base64_decode success"))
 	buf_incrlen(decodekey, decodekeylen);
 	
 	/* compare the keys */
 	if ( ( decodekeylen != keybloblen )
 			|| memcmp( buf_getptr(decodekey, decodekey->len),
 						keyblob, decodekey->len) != 0) {
-		TRACE(("checkpubkey: compare failed"));
+		TRACE(("checkpubkey: compare failed"))
 		goto out;
 	}
 
@@ -461,7 +461,7 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 	filealgolen = buf_getint(decodekey);
 	filealgo = buf_getptr(decodekey, filealgolen);
 	if (filealgolen != algolen || memcmp(filealgo, algoname, algolen) != 0) {
-		TRACE(("checkpubkey: algo match failed")); 
+		TRACE(("checkpubkey: algo match failed")) 
 		goto out;
 	}
 

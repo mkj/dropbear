@@ -41,7 +41,7 @@ void cli_pubkeyfail() {
 	struct PubkeyList *keyitem;
 	struct PubkeyList **previtem;
 
-	TRACE(("enter cli_pubkeyfail"));
+	TRACE(("enter cli_pubkeyfail"))
 	previtem = &cli_opts.pubkeys;
 
 	/* Find the key we failed with, and remove it */
@@ -55,7 +55,7 @@ void cli_pubkeyfail() {
 	sign_key_free(cli_ses.lastpubkey->key); /* It won't be used again */
 	m_free(cli_ses.lastpubkey);
 
-	TRACE(("leave cli_pubkeyfail"));
+	TRACE(("leave cli_pubkeyfail"))
 }
 
 void recv_msg_userauth_pk_ok() {
@@ -67,11 +67,11 @@ void recv_msg_userauth_pk_ok() {
 	int keytype;
 	unsigned int remotelen;
 
-	TRACE(("enter recv_msg_userauth_pk_ok"));
+	TRACE(("enter recv_msg_userauth_pk_ok"))
 
 	algotype = buf_getstring(ses.payload, &algolen);
 	keytype = signkey_type_from_name(algotype, algolen);
-	TRACE(("recv_msg_userauth_pk_ok: type %d", keytype));
+	TRACE(("recv_msg_userauth_pk_ok: type %d", keytype))
 	m_free(algotype);
 
 	keybuf = buf_new(MAX_PUBKEY_SIZE);
@@ -84,7 +84,7 @@ void recv_msg_userauth_pk_ok() {
 
 		if (keyitem->type != keytype) {
 			/* Types differed */
-			TRACE(("types differed"));
+			TRACE(("types differed"))
 			continue;
 		}
 
@@ -98,14 +98,14 @@ void recv_msg_userauth_pk_ok() {
 
 
 		if (keybuf->len-4 != remotelen) {
-			TRACE(("lengths differed: localh %d remote %d", keybuf->len, remotelen));
+			TRACE(("lengths differed: localh %d remote %d", keybuf->len, remotelen))
 			/* Lengths differed */
 			continue;
 		}
 		if (memcmp(buf_getptr(keybuf, remotelen),
 					buf_getptr(ses.payload, remotelen), remotelen) != 0) {
 			/* Data didn't match this key */
-			TRACE(("data differed"));
+			TRACE(("data differed"))
 			continue;
 		}
 
@@ -114,15 +114,15 @@ void recv_msg_userauth_pk_ok() {
 	}
 
 	if (keyitem != NULL) {
-		TRACE(("matching key"));
+		TRACE(("matching key"))
 		/* XXX TODO: if it's an encrypted key, here we ask for their
 		 * password */
 		send_msg_userauth_pubkey(keyitem->key, keytype, 1);
 	} else {
-		TRACE(("That was whacky. We got told that a key was valid, but it didn't match our list. Sounds like dodgy code on Dropbear's part"));
+		TRACE(("That was whacky. We got told that a key was valid, but it didn't match our list. Sounds like dodgy code on Dropbear's part"))
 	}
 
-	TRACE(("leave recv_msg_userauth_pk_ok"));
+	TRACE(("leave recv_msg_userauth_pk_ok"))
 }
 
 /* TODO: make it take an agent reference to use as well */
@@ -132,7 +132,7 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 	int algolen;
 	buffer* sigbuf = NULL;
 
-	TRACE(("enter send_msg_userauth_pubkey"));
+	TRACE(("enter send_msg_userauth_pubkey"))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
@@ -154,7 +154,7 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 	buf_put_pub_key(ses.writepayload, key, type);
 
 	if (realsign) {
-		TRACE(("realsign"));
+		TRACE(("realsign"))
 		/* We put the signature as well - this contains string(session id), then
 		 * the contents of the write payload to this point */
 		sigbuf = buf_new(4 + SHA1_HASH_SIZE + ses.writepayload->len);
@@ -165,22 +165,22 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 	}
 
 	encrypt_packet();
-	TRACE(("leave send_msg_userauth_pubkey"));
+	TRACE(("leave send_msg_userauth_pubkey"))
 }
 
 int cli_auth_pubkey() {
 
-	TRACE(("enter cli_auth_pubkey"));
+	TRACE(("enter cli_auth_pubkey"))
 
 	if (cli_opts.pubkeys != NULL) {
 		/* Send a trial request */
 		send_msg_userauth_pubkey(cli_opts.pubkeys->key,
 				cli_opts.pubkeys->type, 0);
 		cli_ses.lastpubkey = cli_opts.pubkeys;
-		TRACE(("leave cli_auth_pubkey-success"));
+		TRACE(("leave cli_auth_pubkey-success"))
 		return 1;
 	} else {
-		TRACE(("leave cli_auth_pubkey-failure"));
+		TRACE(("leave cli_auth_pubkey-failure"))
 		return 0;
 	}
 }

@@ -39,7 +39,7 @@ void recv_msg_service_request() {
 	unsigned char * name;
 	unsigned int len;
 
-	TRACE(("enter recv_msg_service_request"));
+	TRACE(("enter recv_msg_service_request"))
 
 	name = buf_getstring(ses.payload, &len);
 
@@ -49,7 +49,7 @@ void recv_msg_service_request() {
 
 		send_msg_service_accept(name, len);
 		m_free(name);
-		TRACE(("leave recv_msg_service_request: done ssh-userauth"));
+		TRACE(("leave recv_msg_service_request: done ssh-userauth"))
 		return;
 	}
 
@@ -62,7 +62,7 @@ void recv_msg_service_request() {
 
 		send_msg_service_accept(name, len);
 		m_free(name);
-		TRACE(("leave recv_msg_service_request: done ssh-connection"));
+		TRACE(("leave recv_msg_service_request: done ssh-connection"))
 		return;
 	}
 
@@ -75,7 +75,7 @@ void recv_msg_service_request() {
 
 static void send_msg_service_accept(unsigned char *name, int len) {
 
-	TRACE(("accepting service %s", name));
+	TRACE(("accepting service %s", name))
 
 	CHECKCLEARTOWRITE();
 

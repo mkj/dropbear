@@ -33,7 +33,7 @@
 
 void send_msg_service_request(char* servicename) {
 
-	TRACE(("enter send_msg_service_request: servicename='%s'", servicename));
+	TRACE(("enter send_msg_service_request: servicename='%s'", servicename))
 
 	CHECKCLEARTOWRITE();
 
@@ -41,7 +41,7 @@ void send_msg_service_request(char* servicename) {
 	buf_putstring(ses.writepayload, servicename, strlen(servicename));
 
 	encrypt_packet();
-	TRACE(("leave send_msg_service_request"));
+	TRACE(("leave send_msg_service_request"))
 }
 
 /* This just sets up the state variables right for the main client session loop
@@ -51,7 +51,7 @@ void recv_msg_service_accept() {
 	unsigned char* servicename;
 	unsigned int len;
 
-	TRACE(("enter recv_msg_service_accept"));
+	TRACE(("enter recv_msg_service_accept"))
 
 	servicename = buf_getstring(ses.payload, &len);
 
@@ -62,7 +62,7 @@ void recv_msg_service_accept() {
 
 		cli_ses.state = SERVICE_AUTH_ACCEPT_RCVD;
 		m_free(servicename);
-		TRACE(("leave recv_msg_service_accept: done ssh-userauth"));
+		TRACE(("leave recv_msg_service_accept: done ssh-userauth"))
 		return;
 	}
 
@@ -77,7 +77,7 @@ void recv_msg_service_accept() {
 
 		cli_ses.state = SERVICE_CONN_ACCEPT_RCVD;
 		m_free(servicename);
-		TRACE(("leave recv_msg_service_accept: done ssh-connection"));
+		TRACE(("leave recv_msg_service_accept: done ssh-connection"))
 		return;
 	}
 

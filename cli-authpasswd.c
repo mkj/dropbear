@@ -33,7 +33,7 @@
 int cli_auth_password() {
 
 	char* password = NULL;
-	TRACE(("enter cli_auth_password"));
+	TRACE(("enter cli_auth_password"))
 
 	CHECKCLEARTOWRITE();
 	password = getpass("Password: ");
@@ -56,7 +56,7 @@ int cli_auth_password() {
 	encrypt_packet();
 	m_burn(password, strlen(password));
 
-	TRACE(("leave cli_auth_password"));
+	TRACE(("leave cli_auth_password"))
 	return 1; /* Password auth can always be tried */
 
 }

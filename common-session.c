@@ -52,7 +52,7 @@ int exitflag = 0; /* GLOBAL */
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock, char* remotehost) {
 
-	TRACE(("enter session_init"));
+	TRACE(("enter session_init"))
 
 	ses.remotehost = remotehost;
 
@@ -110,7 +110,7 @@ void common_session_init(int sock, char* remotehost) {
 	ses.allowprivport = 0;
 
 
-	TRACE(("leave session_init"));
+	TRACE(("leave session_init"))
 }
 
 void session_loop(void(*loophandler)()) {
@@ -162,7 +162,7 @@ void session_loop(void(*loophandler)()) {
 		
 		if (val == 0) {
 			/* timeout */
-			TRACE(("select timeout"));
+			TRACE(("select timeout"))
 			continue;
 		}
 
@@ -201,11 +201,11 @@ void session_loop(void(*loophandler)()) {
 /* clean up a session on exit */
 void common_session_cleanup() {
 	
-	TRACE(("enter session_cleanup"));
+	TRACE(("enter session_cleanup"))
 	
 	/* we can't cleanup if we don't know the session state */
 	if (!sessinitdone) {
-		TRACE(("leave session_cleanup: !sessinitdone"));
+		TRACE(("leave session_cleanup: !sessinitdone"))
 		return;
 	}
 	
@@ -215,7 +215,7 @@ void common_session_cleanup() {
 
 	chancleanup();
 
-	TRACE(("leave session_cleanup"));
+	TRACE(("leave session_cleanup"))
 }
 
 
@@ -252,7 +252,7 @@ void session_identification() {
 	}
 
 	if (!done) {
-		TRACE(("err: %s for '%s'\n", strerror(errno), linebuf));
+		TRACE(("err: %s for '%s'\n", strerror(errno), linebuf))
 		dropbear_exit("Failed to get remote version");
 	} else {
 		/* linebuf is already null terminated */
@@ -260,7 +260,7 @@ void session_identification() {
 		memcpy(ses.remoteident, linebuf, len);
 	}
 
-	TRACE(("remoteident: %s", ses.remoteident));
+	TRACE(("remoteident: %s", ses.remoteident))
 
 }
 
@@ -274,7 +274,7 @@ static int ident_readln(int fd, char* buf, int count) {
 	fd_set fds;
 	struct timeval timeout;
 
-	TRACE(("enter ident_readln"));
+	TRACE(("enter ident_readln"))
 
 	if (count < 1) {
 		return -1;
@@ -295,7 +295,7 @@ static int ident_readln(int fd, char* buf, int count) {
 			if (errno == EINTR) {
 				continue;
 			}
-			TRACE(("leave ident_readln: select error"));
+			TRACE(("leave ident_readln: select error"))
 			return -1;
 		}
 
@@ -313,12 +313,12 @@ static int ident_readln(int fd, char* buf, int count) {
 				if (errno == EINTR) {
 					continue; /* not a real error */
 				}
-				TRACE(("leave ident_readln: read error"));
+				TRACE(("leave ident_readln: read error"))
 				return -1;
 			}
 			if (num == 0) {
 				/* EOF */
-				TRACE(("leave ident_readln: EOF"));
+				TRACE(("leave ident_readln: EOF"))
 				return -1;
 			}
 			if (in == '\n') {
@@ -334,7 +334,7 @@ static int ident_readln(int fd, char* buf, int count) {
 	}
 
 	buf[pos] = '\0';
-	TRACE(("leave ident_readln: return %d", pos+1));
+	TRACE(("leave ident_readln: return %d", pos+1))
 	return pos+1;
 }
 
@@ -363,7 +363,7 @@ static void checktimeouts() {
 	if (!ses.kexstate.sentkexinit
 			&& (secs - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
 			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)){
-		TRACE(("rekeying after timeout or max data reached"));
+		TRACE(("rekeying after timeout or max data reached"))
 		send_msg_kexinit();
 	}
 }

@@ -42,7 +42,7 @@ void cli_authinitialise() {
 /* Send a "none" auth request to get available methods */
 void cli_auth_getmethods() {
 
-	TRACE(("enter cli_auth_getmethods"));
+	TRACE(("enter cli_auth_getmethods"))
 
 	CHECKCLEARTOWRITE();
 
@@ -54,7 +54,7 @@ void cli_auth_getmethods() {
 	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
 
 	encrypt_packet();
-	TRACE(("leave cli_auth_getmethods"));
+	TRACE(("leave cli_auth_getmethods"))
 
 }
 
@@ -64,9 +64,9 @@ void recv_msg_userauth_banner() {
 	unsigned int bannerlen;
 	unsigned int i, linecount;
 
-	TRACE(("enter recv_msg_userauth_banner"));
+	TRACE(("enter recv_msg_userauth_banner"))
 	if (ses.authstate.authdone) {
-		TRACE(("leave recv_msg_userauth_banner: banner after auth done"));
+		TRACE(("leave recv_msg_userauth_banner: banner after auth done"))
 		return;
 	}
 
@@ -74,7 +74,7 @@ void recv_msg_userauth_banner() {
 	buf_eatstring(ses.payload); /* The language string */
 
 	if (bannerlen > MAX_BANNER_SIZE) {
-		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen));
+		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
 		goto out;
 	}
 
@@ -96,7 +96,7 @@ void recv_msg_userauth_banner() {
 
 out:
 	m_free(banner);
-	TRACE(("leave recv_msg_userauth_banner"));
+	TRACE(("leave recv_msg_userauth_banner"))
 }
 
 
@@ -108,12 +108,12 @@ void recv_msg_userauth_failure() {
 	unsigned int partial = 0;
 	unsigned int i = 0;
 
-	TRACE(("<- MSG_USERAUTH_FAILURE"));
-	TRACE(("enter recv_msg_userauth_failure"));
+	TRACE(("<- MSG_USERAUTH_FAILURE"))
+	TRACE(("enter recv_msg_userauth_failure"))
 
 	if (cli_ses.state != USERAUTH_REQ_SENT) {
 		/* Perhaps we should be more fatal? */
-		TRACE(("But we didn't send a userauth request!!!!!!"));
+		TRACE(("But we didn't send a userauth request!!!!!!"))
 		return;
 	}
 
@@ -135,7 +135,7 @@ void recv_msg_userauth_failure() {
 		ses.authstate.failcount++;
 	}
 
-	TRACE(("Methods (len %d): '%s'", methlen, methods));
+	TRACE(("Methods (len %d): '%s'", methlen, methods))
 
 	ses.authstate.authdone=0;
 	ses.authstate.authtypes=0;
@@ -150,7 +150,7 @@ void recv_msg_userauth_failure() {
 	tok = methods; /* tok stores the next method we'll compare */
 	for (i = 0; i <= methlen; i++) {
 		if (methods[i] == '\0') {
-			TRACE(("auth method '%s'", tok));
+			TRACE(("auth method '%s'", tok))
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 			if (strncmp(AUTH_METHOD_PUBKEY, tok,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
@@ -173,18 +173,18 @@ void recv_msg_userauth_failure() {
 
 	cli_ses.state = USERAUTH_FAIL_RCVD;
 		
-	TRACE(("leave recv_msg_userauth_failure"));
+	TRACE(("leave recv_msg_userauth_failure"))
 }
 
 void recv_msg_userauth_success() {
-	TRACE(("received msg_userauth_success"));
+	TRACE(("received msg_userauth_success"))
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;
 }
 
 void cli_auth_try() {
 
-	TRACE(("enter cli_auth_try"));
+	TRACE(("enter cli_auth_try"))
 	int finished = 0;
 
 	CHECKCLEARTOWRITE();
@@ -208,5 +208,5 @@ void cli_auth_try() {
 		dropbear_exit("No auth methods could be used.");
 	}
 
-	TRACE(("leave cli_auth_try"));
+	TRACE(("leave cli_auth_try"))
 }

@@ -87,7 +87,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 	struct sigaction sa_chld;
 	struct exitinfo *exit = NULL;
 
-	TRACE(("enter sigchld handler"));
+	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
@@ -126,7 +126,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	sigaction(SIGCHLD, &sa_chld, NULL);
-	TRACE(("leave sigchld handler"));
+	TRACE(("leave sigchld handler"))
 }
 
 /* send the exit status or the signal causing termination for a session */
@@ -248,9 +248,9 @@ static void closechansess(struct Channel *channel) {
 
 	send_exitsignalstatus(channel);
 
-	TRACE(("enter closechansess"));
+	TRACE(("enter closechansess"))
 	if (chansess == NULL) {
-		TRACE(("leave closechansess: chansess == NULL"));
+		TRACE(("leave closechansess: chansess == NULL"))
 		return;
 	}
 
@@ -280,8 +280,8 @@ static void closechansess(struct Channel *channel) {
 	for (i = 0; i < svr_ses.childpidsize; i++) {
 		if (svr_ses.childpids[i].chansess == chansess) {
 			assert(svr_ses.childpids[i].pid > 0);
-			TRACE(("closing pid %d", svr_ses.childpids[i].pid));
-			TRACE(("exitpid = %d", chansess->exit.exitpid));
+			TRACE(("closing pid %d", svr_ses.childpids[i].pid))
+			TRACE(("exitpid = %d", chansess->exit.exitpid))
 			svr_ses.childpids[i].pid = -1;
 			svr_ses.childpids[i].chansess = NULL;
 		}
@@ -289,7 +289,7 @@ static void closechansess(struct Channel *channel) {
 				
 	m_free(chansess);
 
-	TRACE(("leave closechansess"));
+	TRACE(("leave closechansess"))
 }
 
 /* Handle requests for a channel. These can be execution requests,
@@ -302,19 +302,19 @@ static void chansessionrequest(struct Channel *channel) {
 	int ret = 1;
 	struct ChanSess *chansess;
 
-	TRACE(("enter chansessionrequest"));
+	TRACE(("enter chansessionrequest"))
 
 	type = buf_getstring(ses.payload, &typelen);
 	wantreply = buf_getbyte(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
-		TRACE(("leave chansessionrequest: type too long")); /* XXX send error?*/
+		TRACE(("leave chansessionrequest: type too long")) /* XXX send error?*/
 		goto out;
 	}
 
 	chansess = (struct ChanSess*)channel->typedata;
 	assert(chansess != NULL);
-	TRACE(("type is %s", type));
+	TRACE(("type is %s", type))
 
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
@@ -351,7 +351,7 @@ out:
 	}
 
 	m_free(type);
-	TRACE(("leave chansessionrequest"));
+	TRACE(("leave chansessionrequest"))
 }
 
 
@@ -421,7 +421,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 	const struct TermCode * termcode;
 	unsigned int len;
 
-	TRACE(("enter get_termmodes"));
+	TRACE(("enter get_termmodes"))
 
 	/* Term modes */
 	/* We'll ignore errors and continue if we can't set modes.
@@ -438,7 +438,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 	}
 
 	if (len == 0) {
-		TRACE(("leave get_termmodes: empty terminal modes string"));
+		TRACE(("leave get_termmodes: empty terminal modes string"))
 	}
 
 	while (((opcode = buf_getbyte(ses.payload)) != 0x00) && opcode <= 159) {
@@ -500,7 +500,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 	if (tcsetattr(chansess->master, TCSANOW, &termio) < 0) {
 		dropbear_log(LOG_INFO, "error setting terminal attributes");
 	}
-	TRACE(("leave get_termmodes"));
+	TRACE(("leave get_termmodes"))
 }
 
 /* Set up a session pty which will be used to execute the shell or program.
@@ -511,11 +511,11 @@ static int sessionpty(struct ChanSess * chansess) {
 	unsigned int termlen;
 	unsigned char namebuf[65];
 
-	TRACE(("enter sessionpty"));
+	TRACE(("enter sessionpty"))
 	chansess->term = buf_getstring(ses.payload, &termlen);
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
-		TRACE(("leave sessionpty: term len too long"));
+		TRACE(("leave sessionpty: term len too long"))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -524,7 +524,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		dropbear_exit("multiple pty requests");
 	}
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
-		TRACE(("leave sessionpty: failed to allocate pty"));
+		TRACE(("leave sessionpty: failed to allocate pty"))
 		return DROPBEAR_FAILURE;
 	}
 	
@@ -541,7 +541,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	/* Read the terminal modes */
 	get_termmodes(chansess);
 
-	TRACE(("leave sessionpty"));
+	TRACE(("leave sessionpty"))
 	return DROPBEAR_SUCCESS;
 }
 
@@ -555,7 +555,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	unsigned int cmdlen;
 	int ret;
 
-	TRACE(("enter sessioncommand"));
+	TRACE(("enter sessioncommand"))
 
 	if (chansess->cmd != NULL) {
 		/* Note that only one command can _succeed_. The client might try
@@ -612,7 +612,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	pid_t pid;
 	unsigned int i;
 
-	TRACE(("enter noptycommand"));
+	TRACE(("enter noptycommand"))
 
 	/* redirect stdin/stdout/stderr */
 	if (pipe(infds) != 0)
@@ -635,7 +635,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
 			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
-			TRACE(("leave noptycommand: error redirecting FDs"));
+			TRACE(("leave noptycommand: error redirecting FDs"))
 			return DROPBEAR_FAILURE;
 		}
 
@@ -651,7 +651,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	} else {
 		/* parent */
-		TRACE(("continue noptycommand: parent"));
+		TRACE(("continue noptycommand: parent"))
 		chansess->pid = pid;
 
 		addchildpid(chansess, pid);
@@ -687,7 +687,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 #undef FDIN
 #undef FDOUT
 
-	TRACE(("leave noptycommand"));
+	TRACE(("leave noptycommand"))
 	return DROPBEAR_SUCCESS;
 }
 
@@ -705,7 +705,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	char *hushpath = NULL;
 #endif
 
-	TRACE(("enter ptycommand"));
+	TRACE(("enter ptycommand"))
 
 	/* we need to have a pty allocated */
 	if (chansess->master == -1 || chansess->tty == NULL) {
@@ -728,7 +728,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if ((dup2(chansess->slave, STDIN_FILENO) < 0) ||
 			(dup2(chansess->slave, STDERR_FILENO) < 0) ||
 			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
-			TRACE(("leave ptycommand: error redirecting filedesc"));
+			TRACE(("leave ptycommand: error redirecting filedesc"))
 			return DROPBEAR_FAILURE;
 		}
 
@@ -776,7 +776,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	} else {
 		/* parent */
-		TRACE(("continue ptycommand: parent"));
+		TRACE(("continue ptycommand: parent"))
 		chansess->pid = pid;
 
 		/* add a child pid */
@@ -792,7 +792,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	}
 
-	TRACE(("leave ptycommand"));
+	TRACE(("leave ptycommand"))
 	return DROPBEAR_SUCCESS;
 }
 

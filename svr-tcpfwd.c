@@ -70,10 +70,10 @@ void recv_msg_global_request_remotetcp() {
 	unsigned int wantreply = 0;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter recv_msg_global_request_remotetcp"));
+	TRACE(("enter recv_msg_global_request_remotetcp"))
 
 	if (opts.noremotetcp) {
-		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"));
+		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"))
 		goto out;
 	}
 
@@ -81,7 +81,7 @@ void recv_msg_global_request_remotetcp() {
 	wantreply = buf_getbyte(ses.payload);
 
 	if (namelen > MAXNAMLEN) {
-		TRACE(("name len is wrong: %d", namelen));
+		TRACE(("name len is wrong: %d", namelen))
 		goto out;
 	}
 
@@ -90,7 +90,7 @@ void recv_msg_global_request_remotetcp() {
 	} else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
 		ret = svr_cancelremotetcp();
 	} else {
-		TRACE(("reqname isn't tcpip-forward: '%s'", reqname));
+		TRACE(("reqname isn't tcpip-forward: '%s'", reqname))
 	}
 
 out:
@@ -104,7 +104,7 @@ out:
 
 	m_free(reqname);
 
-	TRACE(("leave recv_msg_global_request"));
+	TRACE(("leave recv_msg_global_request"))
 }
 
 
@@ -143,11 +143,11 @@ static int svr_cancelremotetcp() {
 	struct Listener * listener = NULL;
 	struct TCPListener tcpinfo;
 
-	TRACE(("enter cancelremotetcp"));
+	TRACE(("enter cancelremotetcp"))
 
 	bindaddr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
-		TRACE(("addr len too long: %d", addrlen));
+		TRACE(("addr len too long: %d", addrlen))
 		goto out;
 	}
 
@@ -163,7 +163,7 @@ static int svr_cancelremotetcp() {
 
 out:
 	m_free(bindaddr);
-	TRACE(("leave cancelremotetcp"));
+	TRACE(("leave cancelremotetcp"))
 	return ret;
 }
 
@@ -175,12 +175,12 @@ static int svr_remotetcpreq() {
 	struct TCPListener *tcpinfo = NULL;
 	unsigned int port;
 
-	TRACE(("enter remotetcpreq"));
+	TRACE(("enter remotetcpreq"))
 
 	/* NOTE: at this stage, we ignore bindaddr. see below and listen_tcpfwd */
 	bindaddr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
-		TRACE(("addr len too long: %d", addrlen));
+		TRACE(("addr len too long: %d", addrlen))
 		goto out;
 	}
 
@@ -192,12 +192,12 @@ static int svr_remotetcpreq() {
 	}
 
 	if (port < 1 || port > 65535) {
-		TRACE(("invalid port: %d", port));
+		TRACE(("invalid port: %d", port))
 		goto out;
 	}
 
 	if (!ses.allowprivport && port < IPPORT_RESERVED) {
-		TRACE(("can't assign port < 1024 for non-root"));
+		TRACE(("can't assign port < 1024 for non-root"))
 		goto out;
 	}
 
@@ -218,7 +218,7 @@ out:
 		m_free(tcpinfo->sendaddr);
 		m_free(tcpinfo);
 	}
-	TRACE(("leave remotetcpreq"));
+	TRACE(("leave remotetcpreq"))
 	return ret;
 }
 
@@ -236,13 +236,13 @@ static int newtcpdirect(struct Channel * channel) {
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	if (opts.nolocaltcp) {
-		TRACE(("leave newtcpdirect: local tcp forwarding disabled"));
+		TRACE(("leave newtcpdirect: local tcp forwarding disabled"))
 		goto out;
 	}
 
 	desthost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
-		TRACE(("leave newtcpdirect: desthost too long"));
+		TRACE(("leave newtcpdirect: desthost too long"))
 		goto out;
 	}
 
@@ -250,7 +250,7 @@ static int newtcpdirect(struct Channel * channel) {
 	
 	orighost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
-		TRACE(("leave newtcpdirect: orighost too long"));
+		TRACE(("leave newtcpdirect: orighost too long"))
 		goto out;
 	}
 
@@ -258,7 +258,7 @@ static int newtcpdirect(struct Channel * channel) {
 
 	/* best be sure */
 	if (origport > 65535 || destport > 65535) {
-		TRACE(("leave newtcpdirect: port > 65535"));
+		TRACE(("leave newtcpdirect: port > 65535"))
 		goto out;
 	}
 
@@ -266,7 +266,7 @@ static int newtcpdirect(struct Channel * channel) {
 	sock = connect_remote(desthost, portstring, 1, NULL);
 	if (sock < 0) {
 		err = SSH_OPEN_CONNECT_FAILED;
-		TRACE(("leave newtcpdirect: sock failed"));
+		TRACE(("leave newtcpdirect: sock failed"))
 		goto out;
 	}
 
@@ -284,7 +284,7 @@ static int newtcpdirect(struct Channel * channel) {
 out:
 	m_free(desthost);
 	m_free(orighost);
-	TRACE(("leave newtcpdirect: err %d", err));
+	TRACE(("leave newtcpdirect: err %d", err))
 	return err;
 }
 

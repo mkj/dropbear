@@ -59,20 +59,20 @@ static void cli_chansessreq(struct Channel *channel) {
 	unsigned char* type = NULL;
 	int wantreply;
 
-	TRACE(("enter cli_chansessreq"));
+	TRACE(("enter cli_chansessreq"))
 
 	type = buf_getstring(ses.payload, NULL);
 	wantreply = buf_getbyte(ses.payload);
 
 	if (strcmp(type, "exit-status") != 0) {
-		TRACE(("unknown request '%s'", type));
+		TRACE(("unknown request '%s'", type))
 		send_msg_channel_failure(channel);
 		goto out;
 	}
 		
 	/* We'll just trust what they tell us */
 	cli_ses.retval = buf_getint(ses.payload);
-	TRACE(("got exit-status of '%d'", cli_ses.retval));
+	TRACE(("got exit-status of '%d'", cli_ses.retval))
 
 out:
 	m_free(type);
@@ -108,10 +108,10 @@ static void cli_tty_setup() {
 
 	struct termios tio;
 
-	TRACE(("enter cli_pty_setup"));
+	TRACE(("enter cli_pty_setup"))
 
 	if (cli_ses.tty_raw_mode == 1) {
-		TRACE(("leave cli_tty_setup: already in raw mode!"));
+		TRACE(("leave cli_tty_setup: already in raw mode!"))
 		return;
 	}
 
@@ -139,15 +139,15 @@ static void cli_tty_setup() {
 	}
 
 	cli_ses.tty_raw_mode = 1;
-	TRACE(("leave cli_tty_setup"));
+	TRACE(("leave cli_tty_setup"))
 }
 
 void cli_tty_cleanup() {
 
-	TRACE(("enter cli_tty_cleanup"));
+	TRACE(("enter cli_tty_cleanup"))
 
 	if (cli_ses.tty_raw_mode == 0) {
-		TRACE(("leave cli_tty_cleanup: not in raw mode"));
+		TRACE(("leave cli_tty_cleanup: not in raw mode"))
 		return;
 	}
 
@@ -157,12 +157,12 @@ void cli_tty_cleanup() {
 		cli_ses.tty_raw_mode = 0; 
 	}
 
-	TRACE(("leave cli_tty_cleanup"));
+	TRACE(("leave cli_tty_cleanup"))
 }
 
 static void put_termcodes() {
 
-	TRACE(("enter put_termcodes"));
+	TRACE(("enter put_termcodes"))
 
 	struct termios tio;
 	unsigned int sshcode;
@@ -232,7 +232,7 @@ static void put_termcodes() {
 	buf_putint(ses.writepayload, bufpos2 - bufpos1 - 4); /* len(termcodes) */
 	buf_setpos(ses.writepayload, bufpos2); /* Back where we were */
 
-	TRACE(("leave put_termcodes"));
+	TRACE(("leave put_termcodes"))
 }
 
 static void put_winsize() {
@@ -284,7 +284,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 
 	unsigned char* term = NULL;
 
-	TRACE(("enter send_chansess_pty_req"));
+	TRACE(("enter send_chansess_pty_req"))
 
 	start_channel_request(channel, "pty-req");
 
@@ -310,14 +310,14 @@ static void send_chansess_pty_req(struct Channel *channel) {
 	if (signal(SIGWINCH, sigwinch_handler) == SIG_ERR) {
 		dropbear_exit("signal error");
 	}
-	TRACE(("leave send_chansess_pty_req"));
+	TRACE(("leave send_chansess_pty_req"))
 }
 
 static void send_chansess_shell_req(struct Channel *channel) {
 
 	unsigned char* reqtype = NULL;
 
-	TRACE(("enter send_chansess_shell_req"));
+	TRACE(("enter send_chansess_shell_req"))
 
 	if (cli_opts.cmd) {
 		reqtype = "exec";
@@ -334,7 +334,7 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	}
 
 	encrypt_packet();
-	TRACE(("leave send_chansess_shell_req"));
+	TRACE(("leave send_chansess_shell_req"))
 }
 
 static int cli_initchansess(struct Channel *channel) {
@@ -367,7 +367,7 @@ static int cli_initchansess(struct Channel *channel) {
 
 void cli_send_chansess_request() {
 
-	TRACE(("enter cli_send_chansess_request"));
+	TRACE(("enter cli_send_chansess_request"))
 	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess) 
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
@@ -375,6 +375,6 @@ void cli_send_chansess_request() {
 
 	/* No special channel request data */
 	encrypt_packet();
-	TRACE(("leave cli_send_chansess_request"));
+	TRACE(("leave cli_send_chansess_request"))
 
 }

@@ -270,7 +270,7 @@ void loadhostkeys() {
 	int ret;
 	int type;
 
-	TRACE(("enter loadhostkeys"));
+	TRACE(("enter loadhostkeys"))
 
 	svr_opts.hostkey = new_sign_key();
 
@@ -300,5 +300,5 @@ void loadhostkeys() {
 		dropbear_exit("No hostkeys available");
 	}
 
-	TRACE(("leave loadhostkeys"));
+	TRACE(("leave loadhostkeys"))
 }

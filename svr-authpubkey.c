@@ -60,7 +60,7 @@ void svr_auth_pubkey() {
 	char* fp = NULL;
 	int type = -1;
 
-	TRACE(("enter pubkeyauth"));
+	TRACE(("enter pubkeyauth"))
 
 	/* 0 indicates user just wants to check if key can be used, 1 is an
 	 * actual attempt*/
@@ -127,7 +127,7 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
-	TRACE(("leave pubkeyauth"));
+	TRACE(("leave pubkeyauth"))
 }
 
 /* Reply that the key is valid for auth, this is sent when the user sends
@@ -136,7 +136,7 @@ out:
 static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
-	TRACE(("enter send_msg_userauth_pk_ok"));
+	TRACE(("enter send_msg_userauth_pk_ok"))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_PK_OK);
@@ -144,7 +144,7 @@ static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 	buf_putstring(ses.writepayload, keyblob, keybloblen);
 
 	encrypt_packet();
-	TRACE(("leave send_msg_userauth_pk_ok"));
+	TRACE(("leave send_msg_userauth_pk_ok"))
 
 }
 
@@ -160,7 +160,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	buffer * line = NULL;
 	unsigned int len, pos;
 	
-	TRACE(("enter checkpubkey"));
+	TRACE(("enter checkpubkey"))
 
 	/* check that we can use the algo */
 	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
@@ -172,7 +172,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 	/* check file permissions, also whether file exists */
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
-		TRACE(("bad authorized_keys permissions, or file doesn't exist"));
+		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
 		goto out;
 	}
 
@@ -190,7 +190,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	if (authfile == NULL) {
 		goto out;
 	}
-	TRACE(("checkpubkey: opened authorized_keys OK"));
+	TRACE(("checkpubkey: opened authorized_keys OK"))
 
 	line = buf_new(MAX_AUTHKEYS_LINE);
 
@@ -199,12 +199,12 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
-			TRACE(("checkpubkey: authorized_keys EOF reached"));
+			TRACE(("checkpubkey: authorized_keys EOF reached"))
 			break;
 		}
 
 		if (line->len < MIN_AUTHKEYS_LINE) {
-			TRACE(("checkpubkey: line too short"));
+			TRACE(("checkpubkey: line too short"))
 			continue; /* line is too short for it to be a valid key */
 		}
 
@@ -217,7 +217,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		
 		/* check for space (' ') character */
 		if (buf_getbyte(line) != ' ') {
-			TRACE(("checkpubkey: space character expected, isn't there"));
+			TRACE(("checkpubkey: space character expected, isn't there"))
 			continue;
 		}
 
@@ -229,7 +229,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		buf_setpos(line, pos);
 		buf_setlen(line, line->pos + len);
 
-		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len));
+		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
 
 		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line);
 		if (ret == DROPBEAR_SUCCESS) {
@@ -248,7 +248,7 @@ out:
 		buf_free(line);
 	}
 	m_free(filename);
-	TRACE(("leave checkpubkey: ret=%d", ret));
+	TRACE(("leave checkpubkey: ret=%d", ret))
 	return ret;
 }
 
@@ -264,7 +264,7 @@ static int checkpubkeyperms() {
 	int ret = DROPBEAR_FAILURE;
 	unsigned int len;
 
-	TRACE(("enter checkpubkeyperms"));
+	TRACE(("enter checkpubkeyperms"))
 
 	assert(ses.authstate.pw);
 	if (ses.authstate.pw->pw_dir == NULL) {
@@ -303,7 +303,7 @@ static int checkpubkeyperms() {
 out:
 	m_free(filename);
 
-	TRACE(("leave checkpubkeyperms"));
+	TRACE(("leave checkpubkeyperms"))
 	return ret;
 }
 
@@ -313,24 +313,24 @@ out:
 static int checkfileperm(char * filename) {
 	struct stat filestat;
 
-	TRACE(("enter checkfileperm(%s)", filename));
+	TRACE(("enter checkfileperm(%s)", filename))
 
 	if (stat(filename, &filestat) != 0) {
-		TRACE(("leave checkfileperm: stat() != 0"));
+		TRACE(("leave checkfileperm: stat() != 0"))
 		return DROPBEAR_FAILURE;
 	}
 	/* check ownership - user or root only*/
 	if (filestat.st_uid != ses.authstate.pw->pw_uid
 			&& filestat.st_uid != 0) {
-		TRACE(("leave checkfileperm: wrong ownership"));
+		TRACE(("leave checkfileperm: wrong ownership"))
 		return DROPBEAR_FAILURE;
 	}
 	/* check permissions - don't want group or others +w */
 	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
-		TRACE(("leave checkfileperm: wrong perms"));
+		TRACE(("leave checkfileperm: wrong perms"))
 		return DROPBEAR_FAILURE;
 	}
-	TRACE(("leave checkfileperm: success"));
+	TRACE(("leave checkfileperm: success"))
 	return DROPBEAR_SUCCESS;
 }
 

@@ -52,7 +52,7 @@ void write_packet() {
 	int len, written;
 	buffer * writebuf = NULL;
 	
-	TRACE(("enter write_packet"));
+	TRACE(("enter write_packet"))
 	assert(!isempty(&ses.writequeue));
 
 	/* Get the next buffer in the queue of encrypted packets to write*/
@@ -65,7 +65,7 @@ void write_packet() {
 
 	if (written < 0) {
 		if (errno == EINTR) {
-			TRACE(("leave writepacket: EINTR"));
+			TRACE(("leave writepacket: EINTR"))
 			return;
 		} else {
 			dropbear_exit("error writing");
@@ -86,7 +86,7 @@ void write_packet() {
 		buf_incrpos(writebuf, written);
 	}
 
-	TRACE(("leave write_packet"));
+	TRACE(("leave write_packet"))
 }
 
 /* Non-blocking function reading available portion of a packet into the
@@ -98,7 +98,7 @@ void read_packet() {
 	unsigned int maxlen;
 	unsigned char blocksize;
 
-	TRACE(("enter read_packet"));
+	TRACE(("enter read_packet"))
 	blocksize = ses.keys->recv_algo_crypt->blocksize;
 	
 	if (ses.readbuf == NULL || ses.readbuf->len < blocksize) {
@@ -111,7 +111,7 @@ void read_packet() {
 		/* If we don't have the length of decryptreadbuf, we didn't read
 		 * a whole blocksize and should exit */
 		if (ses.decryptreadbuf->len == 0) {
-			TRACE(("leave read_packet: packetinit done"));
+			TRACE(("leave read_packet: packetinit done"))
 			return;
 		}
 	}
@@ -128,7 +128,7 @@ void read_packet() {
 
 	if (len < 0) {
 		if (errno == EINTR || errno == EAGAIN) {
-			TRACE(("leave read_packet: EINTR or EAGAIN"));
+			TRACE(("leave read_packet: EINTR or EAGAIN"))
 			return;
 		} else {
 			dropbear_exit("error reading: %s", strerror(errno));
@@ -143,7 +143,7 @@ void read_packet() {
 		/* The main select() loop process_packet() to
 		 * handle the packet contents... */
 	}
-	TRACE(("leave read_packet"));
+	TRACE(("leave read_packet"))
 }
 
 /* Function used to read the initial portion of a packet, and determine the
@@ -176,7 +176,7 @@ static void read_packet_init() {
 	}
 	if (len < 0) {
 		if (errno == EINTR) {
-			TRACE(("leave read_packet_init: EINTR"));
+			TRACE(("leave read_packet_init: EINTR"))
 			return;
 		}
 		dropbear_exit("error reading: %s", strerror(errno));
@@ -230,7 +230,7 @@ void decrypt_packet() {
 	unsigned int padlen;
 	unsigned int len;
 
-	TRACE(("enter decrypt_packet"));
+	TRACE(("enter decrypt_packet"))
 	blocksize = ses.keys->recv_algo_crypt->blocksize;
 	macsize = ses.keys->recv_algo_mac->hashsize;
 
@@ -305,7 +305,7 @@ void decrypt_packet() {
 
 	ses.recvseq++;
 
-	TRACE(("leave decrypt_packet"));
+	TRACE(("leave decrypt_packet"))
 }
 
 /* Checks the mac in hashbuf, for the data in readbuf.
@@ -413,8 +413,8 @@ void encrypt_packet() {
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
 	
-	TRACE(("enter encrypt_packet()"));
-	TRACE(("encrypt_packet type is %d", ses.writepayload->data[0]));
+	TRACE(("enter encrypt_packet()"))
+	TRACE(("encrypt_packet type is %d", ses.writepayload->data[0]))
 	blocksize = ses.keys->trans_algo_crypt->blocksize;
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
@@ -514,7 +514,7 @@ void encrypt_packet() {
 	ses.kexstate.datatrans += writebuf->len;
 	ses.transseq++;
 
-	TRACE(("leave encrypt_packet()"));
+	TRACE(("leave encrypt_packet()"))
 }
 
 
@@ -526,7 +526,7 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 	unsigned long hashsize;
 	hmac_state hmac;
 
-	TRACE(("enter writemac"));
+	TRACE(("enter writemac"))
 
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
@@ -561,7 +561,7 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 		}
 		buf_incrwritepos(outputbuffer, macsize);
 	}
-	TRACE(("leave writemac"));
+	TRACE(("leave writemac"))
 }
 
 #ifndef DISABLE_ZLIB
@@ -572,7 +572,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 	unsigned int endpos = src->pos + len;
 	int result;
 
-	TRACE(("enter buf_compress"));
+	TRACE(("enter buf_compress"))
 
 	while (1) {
 
@@ -606,6 +606,6 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 		buf_resize(dest, dest->size + ZLIB_COMPRESS_INCR);
 
 	}
-	TRACE(("leave buf_compress"));
+	TRACE(("leave buf_compress"))
 }
 #endif

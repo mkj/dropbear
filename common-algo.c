@@ -202,6 +202,6 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	}
 	str[pos]=0;
 	/* Debug this */
-	TRACE(("buf_put_algolist: %s", str));
+	TRACE(("buf_put_algolist: %s", str))
 	buf_putstring(buf, str, pos);
 }
