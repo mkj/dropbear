@@ -353,7 +353,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	if (fd >= 0) {
 		TRACE(("pty_make_controlling_tty: Failed to disconnect from"
 				" controlling tty.\n"));
-		TRACE((stderr, "file is %s\n", _PATH_TTY));
+		TRACE(("file is %s\n", _PATH_TTY));
 		perror("ptymakething");
 		close(fd);
 	}
