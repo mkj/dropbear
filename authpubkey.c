@@ -67,7 +67,7 @@ void pubkeyauth() {
 
 	TRACE(("enter pubkeyauth"));
 
-	/* 0 indicates we just want to check if key can be used, 1 is an
+	/* 0 indicates user just wants to check if key can be used, 1 is an
 	 * actual attempt*/
 	testkey = (buf_getbyte(ses.payload) == 0);
 
@@ -76,7 +76,7 @@ void pubkeyauth() {
 	keyblob = buf_getptr(ses.payload, keybloblen);
 
 	/* check if the key is valid */
-	if (!checkpubkey(algo, algolen, keyblob, keybloblen)) {
+	if (checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -91,7 +91,8 @@ void pubkeyauth() {
 	
 	/* get the key */
 	key = new_sign_key();
-	if (buf_get_pub_key(ses.payload, key, DROPBEAR_SIGNKEY_ANY) != 0) {
+	if (buf_get_pub_key(ses.payload, key, DROPBEAR_SIGNKEY_ANY) 
+			== DROPBEAR_FAILURE) {
 		send_msg_userauth_failure(0, 1);
 		goto out;
 	}
@@ -110,16 +111,18 @@ void pubkeyauth() {
 	buf_setpos(signbuf, 0);
 	/* ... and finally verify the signature */
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
-				signbuf->len) == 1) {
-		send_msg_userauth_success();
-		assert(ses.authstate.username);
+				signbuf->len) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
 				"pubkey auth succeeded for '%s'", ses.authstate.username);
+		send_msg_userauth_success();
 	} else {
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+				"pubkey auth failure for '%s'", ses.authstate.username);
 		send_msg_userauth_failure(0, 1);
 	}
 
 out:
+	/* cleanup stuff */
 	if (signbuf) {
 		buf_free(signbuf);
 	}
@@ -149,13 +152,13 @@ static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 
 }
 
-/* Returns 1 if key is ok for auth, 0 otherwise */
+/* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
 static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
 	char * filename = NULL;
-	int ret = 0;
+	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
 	buffer * decodekey = NULL;
 	unsigned long decodekeylen;
@@ -166,13 +169,19 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	TRACE(("enter checkpubkey"));
 
 	/* check that we can use the algo */
-	if (have_algo(algo, algolen, sshhostkey) != 0) {
+	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+				"pubkey auth attempt with unknown algo '%s' for '%s'",
+				algo, ses.authstate.username);
 		goto out;
 	}
 
 	/* check file permissions */
-	if (!checkpubkeyperms()) {
+	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
 		TRACE(("perms failed"));
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+				"bad authorized_keys permissions for '%s'",
+				ses.authstate.username);
 		goto out;
 	}
 
@@ -206,7 +215,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		}
 
 		if (line->len < MIN_AUTHKEYS_LINE) {
-			continue;
+			continue; /* line is too short for it to be a valid key */
 		}
 
 		/* check the key type */
@@ -246,7 +255,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		}
 
 		/* now we know this key is good */
-		ret = 1;
+		ret = DROPBEAR_SUCCESS;
 		break;
 		
 	} while (1);
@@ -296,13 +305,15 @@ static int getauthline(buffer * line, FILE * authfile) {
 	}
 }	
 
-/* Returns 1 if file permissions for pubkeys are ok, 0 otherwise */
-/* Checks that the user's homedir, ~/.ssh, and ~/.ssh/authorized_keys
- * are all owned by either root or the user, and are g-w, o-w */
+/* Returns DROPBEAR_SUCCESS if file permissions for pubkeys are ok,
+ * DROPBEAR_FAILURE otherwise.
+ * Checks that the user's homedir, ~/.ssh, and
+ * ~/.ssh/authorized_keys are all owned by either root or the user, and are
+ * g-w, o-w */
 static int checkpubkeyperms() {
 
 	char* filename = NULL; 
-	int ret = 0;
+	int ret = DROPBEAR_FAILURE;
 	unsigned int len;
 
 	TRACE(("enter checkpubkeyperms"));
@@ -338,8 +349,8 @@ static int checkpubkeyperms() {
 		goto out;
 	}
 
-	/* file looks ok, return 1 */
-	ret = 1;
+	/* file looks ok, return success */
+	ret = DROPBEAR_SUCCESS;
 	
 out:
 	m_free(filename);

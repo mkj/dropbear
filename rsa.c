@@ -39,7 +39,8 @@ static mp_int * rsa_pad_em(rsa_key * key,
 
 /* Load a rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
- * These should be freed with rsa_key_free */
+ * These should be freed with rsa_key_free.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	TRACE(("enter buf_get_rsa_pub_key"));
@@ -52,18 +53,19 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_RSA_LEN); /* int + "ssh-rsa" */
 
-	if (buf_getmpint(buf, key->e) != 0
-	 || buf_getmpint(buf, key->n) != 0) {
+	if (buf_getmpint(buf, key->e) == DROPBEAR_FAILURE
+	 || buf_getmpint(buf, key->n) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_rsa_pub_key: failure"));
-		return -1;
+		return DROPBEAR_FAILURE;
 	}
 	TRACE(("leave buf_get_rsa_pub_key: success"));
-	return 0;
+	return DROPBEAR_SUCCESS;
 
 }
 
 /* same as buf_get_rsa_pub_key, but reads a private "x" key at the end.
- * Loads a private rsa key from a buffer */
+ * Loads a private rsa key from a buffer
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
 	int ret;
@@ -72,9 +74,9 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 	TRACE(("enter buf_get_rsa_priv_key"));
 
 	ret = buf_get_rsa_pub_key(buf, key);
-	if (ret != 0) {
-		TRACE(("leave buf_get_rsa_priv_key: ret != 0"));
-		return ret;
+	if (ret == DROPBEAR_FAILURE) {
+		TRACE(("leave buf_get_rsa_priv_key: ret == DROPBEAR_FAILURE"));
+		return DROPBEAR_FAILURE;
 	}
 
 	key->d = m_malloc(sizeof(mp_int));
@@ -144,13 +146,14 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 }
 
 #ifdef DROPBEAR_SIGNKEY_VERIFY
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned int slen;
 	mp_int rsa_s, rsa_mdash;
 	mp_int *rsa_em = NULL;
-	int ret = 0;
+	int ret = DROPBEAR_FAILURE;
 
 	assert(key != NULL);
 
@@ -177,7 +180,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	if (mp_cmp(rsa_em, &rsa_mdash) == 0) {
 		/* signature is valid */
-		ret = 1;
+		ret = DROPBEAR_SUCCESS;
 	}
 
 out:

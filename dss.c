@@ -37,7 +37,7 @@
 /* Load a dss key from a buffer, initialising the values.
  * The key will have the same format as buf_put_dss_key.
  * These should be freed with dss_key_free.
- * Returns 0 on fail, -1 on success */
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 
 	assert(key != NULL);
@@ -52,27 +52,28 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 	key->x = NULL;
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_DSS_LEN); /* int + "ssh-dss" */
-	if (buf_getmpint(buf, key->p) != 0
-	 || buf_getmpint(buf, key->q) != 0
-	 || buf_getmpint(buf, key->g) != 0
-	 || buf_getmpint(buf, key->y) != 0) {
-		return -1;
+	if (buf_getmpint(buf, key->p) == DROPBEAR_FAILURE
+	 || buf_getmpint(buf, key->q) == DROPBEAR_FAILURE
+	 || buf_getmpint(buf, key->g) == DROPBEAR_FAILURE
+	 || buf_getmpint(buf, key->y) == DROPBEAR_FAILURE) {
+		return DROPBEAR_FAILURE;
 	}
 
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
 /* same as buf_get_dss_pub_key, but reads a private "x" key at the end.
- * Loads a private dss key from a buffer */
+ * Loads a private dss key from a buffer
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 
-	int ret = 0;
+	int ret = DROPBEAR_FAILURE;
 
 	assert(key != NULL);
 
 	ret = buf_get_dss_pub_key(buf, key);
-	if (ret != 0) {
-		return ret;
+	if (ret == DROPBEAR_FAILURE) {
+		return DROPBEAR_FAILURE;
 	}
 
 	key->x = m_malloc(sizeof(mp_int));
@@ -144,13 +145,13 @@ void buf_put_dss_priv_key(buffer* buf, dss_key *key) {
 }
 
 #ifdef DROPBEAR_SIGNKEY_VERIFY
-/* returns 1 if the signature verifies, 0 otherwise */
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned char msghash[SHA1_HASH_SIZE];
 	hash_state hs;
-	int ret = 0;
+	int ret = DROPBEAR_FAILURE;
 	mp_int val1, val2, val3, val4;
 	char * string = NULL;
 	int stringlen;
@@ -228,7 +229,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	/* check whether signatures verify */
 	if (mp_cmp(&val2, &val1) == 0) {
 		/* good sig */
-		ret = 1;
+		ret = DROPBEAR_SUCCESS;
 	}
 
 out:

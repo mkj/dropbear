@@ -47,28 +47,34 @@ void passwordauth() {
 #ifdef HAVE_SHADOW_H
 	struct spwd *spasswd;
 #endif
-	char * usercrypt;
+	char * passwdcrypt; /* the crypt from /etc/passwd or /etc/shadow */
+	char * testcrypt; /* crypt generated from the user's password sent */
 	unsigned char * password;
 	unsigned int passwordlen;
-	char * cryptpw;
+
 	unsigned char changepw;
 
-	usercrypt = ses.authstate.pw->pw_passwd;
+	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
 	spasswd = getspnam(ses.authstate.pw->pw_name);
 	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
-		usercrypt = spasswd->sp_pwdp;
+		passwdcrypt = spasswd->sp_pwdp;
 	}
 #endif
 
-#ifdef HACKCRYPT
+#ifdef DEBUG_HACKCRYPT
 	/* debugging crypt for non-root testing with shadows */
-	usercrypt = HACKCRYPT;
+	passwdcrypt = DEBUG_HACKCRYPT;
 #endif
 
-	/* check for empty password */
-	if (usercrypt[0] == '\0') {
+	/* check for empty password - need to do this again here
+	 * since the shadow password may differ to that tested
+	 * in auth.c */
+	if (passwdcrypt[0] == '\0') {
+		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
+				"disallowed login with empty password for '%s'",
+				ses.authstate.username);
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
@@ -87,16 +93,19 @@ void passwordauth() {
 	buf_incrpos(ses.payload, -passwordlen - 4);
 	m_burn(buf_getptr(ses.payload, passwordlen + 4), passwordlen + 4);
 
-	cryptpw = crypt((char*)password, usercrypt);
+	/* the first bytes of passwdcrypt are the salt */
+	testcrypt = crypt((char*)password, passwdcrypt);
 
-	if (strcmp(cryptpw, usercrypt) == 0) {
+	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
-		send_msg_userauth_success();
-		assert(ses.authstate.username);
 		dropbear_log(LOG_AUTHPRIV | LOG_INFO, 
 				"password auth succeeded for '%s'",
 				ses.authstate.username);
+		send_msg_userauth_success();
 	} else {
+		dropbear_log(LOG_AUTHPRIV | LOG_INFO,
+				"bad password attempt for '%s'",
+				ses.authstate.username);
 		send_msg_userauth_failure(0, 1);
 	}
 

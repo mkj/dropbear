@@ -164,19 +164,20 @@ void crypto_init() {
 
 }
 
-/* returns 0 if we have a match for algo, -1 otherwise */
+/* returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
+ * otherwise */
 int have_algo(char* algo, int algolen, algo_type algos[]) {
 
 	int i = 0;
 	while (algos[i].name != NULL) {
 		if (strlen(algos[i].name) == algolen
 				&& (strncmp(algos[i].name, algo, algolen) == 0)) {
-			return 0;
+			return DROPBEAR_SUCCESS;
 		}
 		i++;
 	}
 
-	return -1;
+	return DROPBEAR_FAILURE;
 }
 
 

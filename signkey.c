@@ -47,7 +47,7 @@ sign_key * new_sign_key() {
 
 }
 
-/* returns 0 on success, -1 on fail */
+/* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail */
 int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 
 	unsigned char* ident;
@@ -78,7 +78,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 
 	m_free(ident);
 
-	return -1;
+	return DROPBEAR_FAILURE;
 	
 }
 
@@ -222,8 +222,9 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 }
 
 #ifdef DROPBEAR_SIGNKEY_VERIFY
-/* Return 1 if good signature, 0 otherwise. If 0 is returned, the position of
- * buf is undefined. If 1 is returned, buf will be positioned after the
+/* Return DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
+ * If FAILURE is returned, the position of
+ * buf is undefined. If SUCCESS is returned, buf will be positioned after the
  * signature blob */
 int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		unsigned int len) {
@@ -234,6 +235,7 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 
 	bloblen = buf_getint(buf);
 	ident = buf_getstring(buf, &identlen);
+
 #ifdef DROPBEAR_DSS
 	if (bloblen == DSS_SIGNATURE_SIZE &&
 			memcmp(ident, SSH_SIGNKEY_DSS, identlen) == 0) {
@@ -241,14 +243,16 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		return buf_dss_verify(buf, key->dsskey, data, len);
 	}
 #endif
+
 #ifdef DROPBEAR_RSA
 	if (memcmp(ident, SSH_SIGNKEY_RSA, identlen) == 0) {
 		m_free(ident);
 		return buf_rsa_verify(buf, key->rsakey, data, len);
 	}
 #endif
+
 	m_free(ident);
 	dropbear_exit("non-matching signing type");
-	return 0;
+	return DROPBEAR_FAILURE;
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */

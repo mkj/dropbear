@@ -277,7 +277,7 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 
 /* retrieve an mp_int from the buffer. This will only handle +ve or 0 values, 
  * will fail for -ve since they shouldn't be required here.
- * Returns 0 on success, -1 on failure */
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_getmpint(buffer* buf, mp_int* mp) {
 
 	unsigned int len;
@@ -285,18 +285,18 @@ int buf_getmpint(buffer* buf, mp_int* mp) {
 	
 	if (len == 0) {
 		mp_zero(mp);
-		return 0;
+		return DROPBEAR_SUCCESS;
 	}
 
 	/* check for negative */
 	if (*buf_getptr(buf, 1) & (1 << (CHAR_BIT-1))) {
-		return -1;
+		return DROPBEAR_FAILURE;
 	}
 
 	if (mp_read_unsigned_bin(mp, buf_getptr(buf, len), len) != MP_OKAY) {
-		return -1;
+		return DROPBEAR_FAILURE;
 	}
 
 	buf_incrpos(buf, len);
-	return 0;
+	return DROPBEAR_SUCCESS;
 }

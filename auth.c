@@ -179,7 +179,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 			/* the username needs resetting */
 			if (ses.authstate.username != NULL) {
 				dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-						"client trying multiple usernames: %s and %s",
+						"client trying multiple usernames: '%s' and '%s'",
 						ses.authstate.username, username);
 				m_free(ses.authstate.username);
 			}
@@ -192,7 +192,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	if (ses.authstate.pw == NULL) {
 		TRACE(("leave checkusername: user doesn't exist"));
 		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"login attempt for nonexistant user %s", username);
+				"login attempt for nonexistant user '%s'", username);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -201,7 +201,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
 		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"disallowing login for %s - empty password", username);
+				"disallowing login for '%s' - empty password", username);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -224,7 +224,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	endusershell();
 	TRACE(("no matching shell"));
 	dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-			"disallowing login for %s - no invalid shell", username);
+			"disallowing login for '%s' - invalid shell", username);
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	

@@ -715,7 +715,7 @@ static void execchild(struct ChanSess *chansess) {
 	if (setgid(ses.authstate.pw->pw_gid) < 0) {
 		dropbear_exit("error changing user");
 	}
-#ifndef HACKCRYPT
+#ifndef DEBUG_HACKCRYPT
 	if (initgroups(ses.authstate.pw->pw_name,
 				ses.authstate.pw->pw_gid) < 0) {
 		dropbear_exit("error changing user");
