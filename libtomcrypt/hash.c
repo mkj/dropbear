@@ -27,7 +27,7 @@ int hash_memory(int hash, const unsigned char *data, unsigned long len, unsigned
 int hash_filehandle(int hash, FILE *in, unsigned char *dst, unsigned long *outlen)
 {
 #ifdef NO_FILE
-    return CRYPT_ERROR;
+    return CRYPT_NOP;
 #else
     hash_state md;
     unsigned char buf[512];
@@ -64,7 +64,7 @@ int hash_filehandle(int hash, FILE *in, unsigned char *dst, unsigned long *outle
 int hash_file(int hash, const char *fname, unsigned char *dst, unsigned long *outlen)
 {
 #ifdef NO_FILE
-    return CRYPT_ERROR;
+    return CRYPT_NOP;
 #else
     FILE *in;
     int err;

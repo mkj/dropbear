@@ -11,118 +11,118 @@ static const struct {
 {
    96,
    "DH-768",
-   "2",
-   "1tH+dRFGpEYyVLe4ydZcYyGDpeAxnChz0yk+pNCtkEXwUsOORyguBtx8spUD"
-   "FAjEDS8PutUBTEu2q4USqu19dUbCLj9D2jY7y3871RnSccurMBsMm35ILcyQ"
-    "rpN0MQKc/"
+   "4",
+   "F///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "//////m3wvV"
 },
 #endif
 #ifdef DH1024
 {
    128,
    "DH-1024",
-   "2",
-   "Uypu+t9nfUnCj7xD+xokM+Cd6mASW4ofg1jpC2BpQasC5edtA1dJC+RjbOBZ"
-   "z+5mvq5VYT8Wfjmlpjm9tQxHOYB0+3Myl7gbCQ5SRljWT2oBLukLNvgFjiU4"
-   "wiWkmu41Ern/j6uxwKb740C+VIgDAdeUY4fA5hyfr3/+DWYb14/"
+   "4",
+   "F///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////m3C47"
 },
 #endif
 #ifdef DH1280
 {
    160,
    "DH-1280",
-   "2",
-   "520QV4Tsq4NwK9Mt5CGR9xk4slvaikgi/ax3OPky5GERKTsoqEXOlFyMzURP"
-   "P8jYzCVz1izKd2zTDxbFfLxrJry0ceaQ5YZa5N4teByCPVlQh4v6iQl+944+"
-   "/NDlKzvWpx7HG7k8cGKhva7aFF8bP/CvLpaQhrfXlOX+X9pcmML9QH63tUjq"
-   "B80l8Yx9KN0dC3iNnsTV3DnqnEvFQkoqql"
+   "4",
+   "F///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "//////////////////////////////m4kSN"
 },
 #endif
 #ifdef DH1536
 {
    192,
    "DH-1536",
-   "3",
-   "1FTWXrPcY1w74oZ0ouIzSN8uZcRiOf6U11fx0ka6+7fqIAezPhd3Ab43QnDf"
-   "KFg+or/fFRGEWAxF8WIE2jx8iTOu010yNEQyH14CK0RAyy2zY4gRs2MpnU5r"
-   "/feWf60OkLtnPzN34+Xnlg5xf7Jl00wkHRCeJG17L3SklOidAPxWnE+Wm4BS"
-   "SOzdQBgiZOjlhrYS1+TIU3NP5H7BrtKFcf+ZwBULibf29L7LkDOgQbie1+43"
-   "lU+8SHAyBwAeGYMfZ"
+   "4",
+   "F///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////m5uqd"
 },
 #endif
 #ifdef DH1792
 {
    224,
    "DH-1792",
-   "2",
-   "IPo3wjvfS7vBYnFHwJHmesA51od9fnR8Aenezif4qLE2HX+YCv1tpvHA8yLH"
-   "yYbKe9QfSHHtOgVjK8AYEyPirpXxlmdykGuj+dX7EiWMRGYc+v1kKkqmCn0o"
-   "5tU416O/1HXTpQ2Hps0buchUD+HlCMrSgnIqRxK6Fjr0ZfiCS4XgAD6sLgi0"
-   "BxKFMxDsVzpGMNwF5Lj2R/cJiTi0cNDDY3gn4lK/PRUsJtRKU+9sxy0q5Yof"
-   "aG5VO8VcHkZJVwUKhDFHkZYWMHV808TGHXM2RQ9kRa2QvS2mXxMrDSCloQ/"
+   "4",
+   "F///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "//////////////////////////////////////////////////////mT/sd"
 },
 #endif
 #ifdef DH2048
 {
    256,
    "DH-2048",
-   "2",
-   "5sR1VmdsQQzzjN0iridVVyveug6sAC3+/jTIHSgEoimPOREXQ05r2WJZJAF2"
-   "CRu8kuusiPw2ivRli+fdLr63v1uZG5nQa28uLwNxZEsu4gu6TrGjepXeXm4Z"
-   "CVOC1HMmi660fLZ2ruHLa4v2NWex2Zx91/y4ygPlZM+K//iy+Gft9Ma9Ayn0"
-   "eYwofZeUL9vJSfutPVp2ZrIEUQDBKMvMm0SRSLiUjDtzXqrH+b/wuwIFG1K4"
-   "var3ucsT45mDzD9qb3tBdksSPZbr6yrELV8h+qmjiBr15oHKEglS0XwSvCap"
-   "abUn5XPPVoaKv13+tOnG9mGgzQ8JeClVXN63Q+GGEF"
+   "4",
+   "3///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "/////////////////////////////////////////m8MPh"
 },
 #endif
 #ifdef DH2560
 {
    320,
    "DH-2560",
-   "3",
-   "G7UVKk+N6LfpGkdBP6XLB4QJ3wzee5YH/3o6tBDMwr4FS8YjCmeP6l4gu0hX"
-   "dzY2Rive4TYOu4Akm4naZuv32d71/2lQeNcO23BNYOEPxtn9BU8uYfaHP9Mo"
-   "M+m76oUCiI5uqpag5RH3BO34FyE4BiKkzjEXq9xxc8ERacG8Mo8DNiXu79p9"
-   "Q/0wsRz+W/lIN4gYw3w4iLMooAGnDrhcj5cZb0HysHWYfqmFo+jTBP6Egi0g"
-   "cmVO2qWQh2cZIQMfppaf1Ffq0XGIJpgDFyOHPl3NVxDabVK1tkVct+hathxJ"
-   "UTdqZmR2VFwMASXjfgj4VFdvFCUxV8Xr8JcwXkwlMjOJbAl0LoCa4M7hpYvz"
-   "G/0XviGCpv7qQaONKtsiQ6mHhMcyo9hBCRZXtNPkfPMZkPeV05akvaDs6Ek7"
-   "DZ62oKR"
+   "4",
+   "3///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "/////mKFpF"
 },
 #endif
 #ifdef DH3072
 {
    384,
    "DH-3072",
-   "2",
-   "1zsV6XgY57R/hu2RR4H/BjwRqmQL9h+Dc5rgoWOcqiTS8qpVTWafi1KFV77V"
-   "rUcjcer1EDgCV0tpzlemtyrC2pHpw7hr3EEl2evfWOvg05FRI6mKc2UPNv2c"
-   "2Bjww4LD/tdsLleX7AHHXCXFSSyd6C3qWq7BqABZriSpQeaEtXbWfeC6ytFe"
-   "2i3VeQsLa40XQ21UxwhPAjamjSOfYzkW7xi0fwI1e+4OQiFcWOfOuvswoaEf"
-   "MIICyAmVp67vjGo66dk81dMemyplipgXAWPdl7ppnDd6cEjyN4N90D7kQiNg"
-   "lVmJlKLecldOUtdIqMnbJCbiN/t/3/AEFaokGO9om5ckc6M9gG5PG0T7Oh1N"
-   "dSx/PstGdxwvs9DOwjyo5wl5C9QSLtUYJl2+GZYMj6WfsgCrb6jjRJJJQe2C"
-   "y7wUcBILbRsP3lYT8s14zm4xFBrfMUoLN287j3wQ1TNUXjYSCi4ZLKT1XDai"
-   "93345OiutLOqGGikFg6ypnymJK3yeHuul"
+   "4",
+   "3///////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "/////////////////////////////m32nN"
 },
 #endif
 #ifdef DH4096
 {
    512,
    "DH-4096",
-   "3",
-   "Id8ukxZdao3hS0NGTKAXdt3c8PpiyigIyBY8lwOHjM2cqkaZgwvr1pA6OowS"
-   "32kJkeOqKB8gNTZZZVqOFkPXgvC4WveUgA5a7rhTj28pDidNROmMO70CCcSw"
-   "aHI3GLFuEMz3JJyvQKGaGwpV3C9gS70dFWTxEfNRzdYEdvIic8/SXI79VgNP"
-   "LGR68nzd4qxCgaLpVBnWsanRp7mfEj52S/7Kxjs14lrbAOMjCuHgN4F6THWh"
-   "PNhG0VXfFFIwAMW2unrfpdo+gQHNclqCf2N1FALpABzvUesgs3wIP+QTMqms"
-   "os/AkuulG7MusbeFl3SoCtaoW12CF038ZbqW+e+DKI1zObhtsLanvaiZm/N4"
-   "BsJirW7avcWNQYm1oYjZ2bR/jYqfoJ0CLXLO/vqHb8J9a5VE9nz7cqMD3/MH"
-   "k/g7BapsOtKuol6ipbUvxQPtf4KCwqQQ40JeqgS6amivI/aLu05S7bAxKOwE"
-   "Yu8YxjN6lXm3co5Wy+BmNSuRlzKhxICyHEqMfKwUtm48XHzHuPaGQzHgkn6H"
-   "3A+FQjQGLHewADYlbfdTF3sHYyc5k9h/9cYVkbmv7bQze53CJGr3T1hZYbN6"
-   "+fuz0SPnfjiKu+bWD+8RYtZpLs2+f32huMz3OqoryGfULxC2aEjL2rdBn+ZR"
-   "PT0+ZAUyLSAVHbsul++cawh"
+   "4",
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "////////////////////////////////////////////////////////////"
+   "/////////////////////m8pOF"
 },
 #endif
 {
@@ -155,8 +155,8 @@ int dh_test(void)
 #if 0
         printf("dh_test():testing size %d-bits\n", sets[x].size * 8);
 #endif
-        if (mp_read_radix(&g,(unsigned char *)sets[x].base, 64) != MP_OKAY)   { goto error; }
-        if (mp_read_radix(&p,(unsigned char *)sets[x].prime, 64) != MP_OKAY)  { goto error; }
+        if (mp_read_radix(&g,(char *)sets[x].base, 64) != MP_OKAY)   { goto error; }
+        if (mp_read_radix(&p,(char *)sets[x].prime, 64) != MP_OKAY)  { goto error; }
 
         /* ensure p is prime */
         if ((res = is_prime(&p, &primality)) != CRYPT_OK)             { goto done; }
@@ -464,8 +464,8 @@ int dh_shared_secret(dh_key *private_key, dh_key *public_key,
       return CRYPT_MEM;
    }
 
-   if (mp_read_radix(&p, (unsigned char *)sets[private_key->idx].prime, 64) != MP_OKAY)     { goto error; }
-   if (mp_exptmod(&public_key->y, &private_key->x, &p, &tmp) != MP_OKAY)                    { goto error; }
+   if (mp_read_radix(&p, (char *)sets[private_key->idx].prime, 64) != MP_OKAY)     { goto error; }
+   if (mp_exptmod(&public_key->y, &private_key->x, &p, &tmp) != MP_OKAY)           { goto error; }
 
    /* enough space for output? */
    x = (unsigned long)mp_unsigned_bin_size(&tmp);
@@ -473,7 +473,7 @@ int dh_shared_secret(dh_key *private_key, dh_key *public_key,
       res = CRYPT_BUFFER_OVERFLOW;
       goto done;
    }
-   if (mp_to_unsigned_bin(&tmp, out) != MP_OKAY)                                            { goto error; }
+   if (mp_to_unsigned_bin(&tmp, out) != MP_OKAY)                                   { goto error; }
    *outlen = x;
    res = CRYPT_OK;
    goto done;

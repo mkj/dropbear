@@ -95,6 +95,7 @@ static void sha512_compress(hash_state * md)
     }        
 
     /* Compress */
+#ifdef SMALL_CODE
     for (i = 0; i < 80; i++) {
         t0 = S[7] + Sigma1(S[4]) + Ch(S[4], S[5], S[6]) + K[i] + W[i];
         t1 = Sigma0(S[0]) + Maj(S[0], S[1], S[2]);
@@ -107,6 +108,25 @@ static void sha512_compress(hash_state * md)
         S[1] = S[0];
         S[0] = t0 + t1;
     }
+#else
+#define RND(a,b,c,d,e,f,g,h,i)                    \
+     t0 = h + Sigma1(e) + Ch(e, f, g) + K[i] + W[i];   \
+     t1 = Sigma0(a) + Maj(a, b, c);                  \
+     d += t0;                                        \
+     h  = t0 + t1;
+
+     for (i = 0; i < 80; i += 8) {
+         RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i+0);
+         RND(S[7],S[0],S[1],S[2],S[3],S[4],S[5],S[6],i+1);
+         RND(S[6],S[7],S[0],S[1],S[2],S[3],S[4],S[5],i+2);
+         RND(S[5],S[6],S[7],S[0],S[1],S[2],S[3],S[4],i+3);
+         RND(S[4],S[5],S[6],S[7],S[0],S[1],S[2],S[3],i+4);
+         RND(S[3],S[4],S[5],S[6],S[7],S[0],S[1],S[2],i+5);
+         RND(S[2],S[3],S[4],S[5],S[6],S[7],S[0],S[1],i+6);
+         RND(S[1],S[2],S[3],S[4],S[5],S[6],S[7],S[0],i+7);
+     }
+#endif     
+
 
     /* feedback */
     for (i = 0; i < 8; i++) {

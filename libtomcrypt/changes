@@ -1,3 +1,54 @@
+Sept 7th, 2003
+v0.90  -- new ROL/ROR for x86 GCC
+       -- Jochen Katz submitted a patch to the makefile to prevent "make" from making the .a library
+          when not required.
+       == By default the KR code is not enabled [it's only a demo anyways!]
+       -- changed the "buf" in ecc_make_key from 4KB to 128 bytes [since the largest key is 65 bytes]
+       -- hmac_done() now requires you pass it the size of the destination buffer to prevent
+          buffer overflows.  (API CHANGE)
+       -- hmac/hash filebased routines now return CRYPT_NOP if NO_FILE is defined.
+       -- I've removed the primes from dh.c and replaced them with DR safe primes suitable for the default
+          configuration of LibTomMath.  Check out these comparisons on a 1.3Ghz Athlon XP, optimized for size,
+
+768-bit,     4 vs.  10
+1024-bit,    8 vs.  18
+1280-bit,   12 vs.  34
+1536-bit,   20 vs.  56
+1792-bit    28 vs.  88
+2048-bit,   40 vs. 124
+2560-bit,   71 vs. 234
+3072-bit,  113 vs. 386
+4096-bit,  283 vs. 916
+
+          Times are all in milliseconds for key generation.  New primes times on the left.  This makes the code binary
+          incompatible with previous releases.  However, this addition is long overdue as LibTomMath has supported DR
+          reductions for quite some time.
+       -- Added RIPE-MD 128 and 160 to the list of supported hashes [10 in total].
+       -- The project has been released as public domain.  TDCAL no longer applies.
+
+July 15th, 2003
+v0.89  -- Fix a bug in bits.c which would prevent it from building with msvc
+       -- Merged in LibTomMath v0.24 [and I used the alloc/free macros this time!]
+       -- Removed the LTC version of next_prime() and replaced it with a call to the
+          mp_prime_next_prime() from LibTomMath
+       -- reverted bits.c to the 0.86 copy since the new one doesn't build in MSVC
+          or cygwin.
+
+Jul 10th, 2003
+v0.88  -- Sped up CAST5 key schedule for MSVC
+       -- added "ulong32" which allows people on 64-bit platforms to force the 32-bit tables in
+          ciphers like blowfish and AES to be 32-bits.  E.g. when unsigned long is 64-bits.
+       -- Optimized the SAFER-SK64, SAFER-SK128, SAFER+, RC5 and RC6 key schedule [big time!]
+       -- Optimized SHA-1 and SHA-256 quite a bit too.
+       -- Fixed up the makefile to use -fomit-frame-pointer more liberally
+       -- Added tv_gen program which makes test vectors for ciphers/hashes
+       -- Merged in LibTomMath v0.22
+       
+Jun 19th, 2003
+v0.87  -- Many MSVC optimizations to the code base
+       -- Improved the AES and Twofish key schedule [faster, more constant time]
+       -- Tons of optimizations here and there.  
+       
 Jun 15th, 2003
 v0.86  -- Fixed up AES to workaround MSVC optimizer bug
        -- Merged in fresh LTM base [based on v0.20] so there are no warnings with MSVC

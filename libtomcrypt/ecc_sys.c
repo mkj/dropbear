@@ -238,7 +238,7 @@ int ecc_sign_hash(const unsigned char *in,  unsigned long inlen,
       ecc_free(&pubkey);
       return CRYPT_MEM;
    }
-   if (mp_read_radix(&p, (unsigned char *)sets[key->idx].order, 64) != MP_OKAY)     { goto error; }
+   if (mp_read_radix(&p, (char *)sets[key->idx].order, 64) != MP_OKAY)     { goto error; }
    if (mp_read_unsigned_bin(&b, (unsigned char *)in, (int)inlen) != MP_OKAY)        { goto error; }
 
    /* find b = (m - x)/k */
@@ -389,7 +389,7 @@ int ecc_verify_hash(const unsigned char *sig, unsigned long siglen,
    if (mp_read_unsigned_bin(&m, (unsigned char *)hash, (int)inlen) != MP_OKAY)     { goto error; }
    
    /* load prime */
-   if (mp_read_radix(&p, (unsigned char *)sets[key->idx].prime, 64) != MP_OKAY)    { goto error; }
+   if (mp_read_radix(&p, (char *)sets[key->idx].prime, 64) != MP_OKAY)    { goto error; }
    
    /* calculate barrett stuff */
    mp_set(&mu, 1); 
@@ -406,8 +406,8 @@ int ecc_verify_hash(const unsigned char *sig, unsigned long siglen,
    if (add_point(&pubkey.pubkey, &key->pubkey, &pubkey.pubkey, &p, &mu) != CRYPT_OK)    { goto error; }
 
    /* get mG */
-   if (mp_read_radix(&mG->x, (unsigned char *)sets[key->idx].Gx, 64) != MP_OKAY)   { goto error; }
-   if (mp_read_radix(&mG->y, (unsigned char *)sets[key->idx].Gy, 64) != MP_OKAY)   { goto error; }
+   if (mp_read_radix(&mG->x, (char *)sets[key->idx].Gx, 64) != MP_OKAY)   { goto error; }
+   if (mp_read_radix(&mG->y, (char *)sets[key->idx].Gy, 64) != MP_OKAY)   { goto error; }
    if (ecc_mulmod(&m, mG, mG, &p) != CRYPT_OK)                                     { goto error; }
 
    /* compare mG to bA + Y */

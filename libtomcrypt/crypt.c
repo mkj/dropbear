@@ -369,6 +369,9 @@ const char *crypt_build_settings =
 #if defined(MD2)
    "   MD2\n"
 #endif
+#if defined(RIPEMD128)
+   "   RIPEMD128\n"
+#endif
 
     "\nBlock Chaining Modes:\n"
 #if defined(CFB)
@@ -445,9 +448,9 @@ const char *crypt_build_settings =
 #if defined(TRY_UNRANDOM_FIRST)
     " TRY_UNRANDOM_FIRST "
 #endif
-#if defined(SMALL_PRIME_TAB)
-    " SMALL_PRIME_TAB "
-#endif
+#if defined(LTC_TEST)
+    " LTC_TEST "
+#endif    
     "\n"
 
     "\n\n\n"

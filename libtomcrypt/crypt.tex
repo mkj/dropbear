@@ -47,7 +47,7 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.86}
+\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.90}
 \author{Tom St Denis \\
 Algonquin College \\
 \\
@@ -158,25 +158,20 @@ can make use of the cipher right away.
 \section{License}
 
 All of the source code except for the following files have been written by the author or donated to the project
-under the TDCAL license:
+under a public domain license:
 
 \begin{enumerate}
    \item rc2.c
    \item safer.c
 \end{enumerate}
 
-`mpi.c'' was originally written 
-by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with my LibTomMath library.  
-``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c'' 
+`mpi.c'' was originally written by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with my LibTomMath
+library.
+
+``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c''
 was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and is public domain.
 
-The rest of the code was written either by Tom St Denis or contributed to the project under the ``Tom Doesn't Care
-About Licenses'' (TDCAL) license.  Essentially this license grants the user unlimited distribution and usage (including
-commercial usage).  This means that you can use the package, you can re-distribute the package and even branch it.  I 
-still retain ownership over the name of the package.  If you want to branch the project you can use the code as a base
-but you must change the name.  The package is also royalty free which means you can use it in commercial products 
-without compensation towards the author.  I assume no risk from usage of the code nor do I guarantee it works as 
-desired or stated.  
+The project is hereby released as public domain.
 
 \section{Patent Disclosure}
 
@@ -364,7 +359,7 @@ have the same prototype and store their keys as  naturally as possible.  All cip
 are (given that XXX is the name of the cipher):
 \index{Cipher Setup}
 \begin{verbatim}
-int XXX_setup(const unsigned char *key, int keylen, int rounds, 
+int XXX_setup(const unsigned char *key, int keylen, int rounds,
               symmetric_key *skey);
 \end{verbatim}
 
@@ -973,6 +968,8 @@ The following hashes are provided as of this release:
       \hline SHA-256 & sha256\_desc & 32 \\
       \hline TIGER-192 & tiger\_desc & 24 \\
       \hline SHA-1 & sha1\_desc & 20 \\
+      \hline RIPEMD-160 & rmd160\_desc & 20 \\
+      \hline RIPEMD-128 & rmd128\_desc & 16 \\
       \hline MD5 & md5\_desc & 16 \\
       \hline MD4 & md4\_desc & 16 \\
       \hline MD2 & md2\_desc & 16 \\
@@ -1019,10 +1016,12 @@ int hmac_process(hmac_state *hmac, const unsigned char *buf,
 number of octets to process.  Like the hash process routines you can send the data in arbitrarly sized chunks. When you 
 are finished with the HMAC process you must call the following function to get the HMAC code:
 \begin{verbatim}
-int  hmac_done(hmac_state *hmac, unsigned char *hash);
+int hmac_done(hmac_state *hmac, unsigned char *hashOut,
+              unsigned long *outlen);
 \end{verbatim}
-``hmac'' is the HMAC state you are working with.  ``hash'' is the array of octets where the HMAC code should be stored.  You
-must ensure that your destination array is the right size (or just make it of size MAXBLOCKSIZE to be sure).  
+``hmac'' is the HMAC state you are working with.  ``hashOut'' is the array of octets where the HMAC code should be stored.  You must
+set ``outlen'' to the size of the destination buffer before calling this function.  It is updated with the length of the HMAC code
+produced (depending on which hash was picked)
 
 There are two  utility functions provided to make using HMACs easier todo.  They accept the key and information about the
 message (file pointer, address in memory) and produce the HMAC result in one shot.  These are useful if you want to avoid
@@ -1061,6 +1060,7 @@ int main(void)
    int idx, errno;
    hmac_state hmac;
    unsigned char key[16], dst[MAXBLOCKSIZE];
+   unsigned long dstlen;
 
    /* register SHA-1 */
    if (register_hash(&sha1_desc) == -1) {
@@ -1086,10 +1086,12 @@ int main(void)
    }
 
    /* get result (presumably to use it somehow...) */
-   if ((errno = hmac_done(&hmac, dst)) != CRYPT_OK) {
+   dstlen = sizeof(dst);
+   if ((errno = hmac_done(&hmac, dst, &dstlen)) != CRYPT_OK) {
       printf("Error finishing hmac: %s\n", error_to_string(errno));
       return -1;
    }
+   printf("The hmac is %lu bytes long\n", dstlen);
   
    /* return */
    return 0;

@@ -54,6 +54,22 @@ struct md2_state {
 };
 #endif
 
+#ifdef RIPEMD128
+struct rmd128_state {
+    ulong64 length;
+    unsigned char buf[64];
+    unsigned long curlen, state[4];
+};
+#endif
+
+#ifdef RIPEMD160
+struct rmd160_state {
+    ulong64 length;
+    unsigned char buf[64];
+    unsigned long curlen, state[5];
+};
+#endif
+
 typedef union Hash_state {
 #ifdef SHA512
     struct sha512_state sha512;
@@ -75,6 +91,12 @@ typedef union Hash_state {
 #endif
 #ifdef TIGER
     struct tiger_state  tiger;
+#endif
+#ifdef RIPEMD128
+    struct rmd128_state rmd128;
+#endif
+#ifdef RIPEMD160
+    struct rmd160_state rmd160;
 #endif
 } hash_state;
 
@@ -153,6 +175,23 @@ extern int  tiger_test(void);
 extern const struct _hash_descriptor tiger_desc;
 #endif
 
+#ifdef RIPEMD128
+extern void rmd128_init(hash_state * md);
+extern void rmd128_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern void rmd128_done(hash_state * md, unsigned char *hash);
+extern int  rmd128_test(void);
+extern const struct _hash_descriptor rmd128_desc;
+#endif
+
+#ifdef RIPEMD160
+extern void rmd160_init(hash_state * md);
+extern void rmd160_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern void rmd160_done(hash_state * md, unsigned char *hash);
+extern int  rmd160_test(void);
+extern const struct _hash_descriptor rmd160_desc;
+#endif
+
+
 extern int find_hash(const char *name);
 extern int find_hash_id(unsigned char ID);
 extern int register_hash(const struct _hash_descriptor *hash);
@@ -174,7 +213,7 @@ typedef struct Hmac_state {
 
 extern int hmac_init(hmac_state *hmac, int hash, const unsigned char *key, unsigned long keylen);
 extern int hmac_process(hmac_state *hmac, const unsigned char *buf, unsigned long len);
-extern int hmac_done(hmac_state *hmac, unsigned char *hash);
+extern int hmac_done(hmac_state *hmac, unsigned char *hashOut, unsigned long *outlen);
 extern int hmac_test(void);
 extern int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
                        const unsigned char *data, unsigned long len, 

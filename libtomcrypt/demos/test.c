@@ -89,7 +89,7 @@ store_tests (void)
   L = 0;
   LOAD32H (L, &buf[0]);
   if (L != 0x12345678UL) {
-    printf ("LOAD/STORE32 High don't work\n");
+    printf ("LOAD/STORE32 High don't work, %08lx\n", L);
     exit (-1);
   }
   LL = CONST64 (0x01020304050607);
@@ -839,7 +839,12 @@ dh_tests (void)
   dh_key  usera, userb;
   clock_t t1;
 
-/*  if ((errnum = dh_test()) != CRYPT_OK) printf("DH Error: %s\n", error_to_string(errnum));  */
+  printf("Testing builting DH parameters...."); fflush(stdout);
+  if ((errnum = dh_test()) != CRYPT_OK) {
+     printf("DH Error: %s\n", error_to_string(errnum));
+     exit(-1);
+  }
+  printf("Passed.\n");
 
   dh_sizes (&low, &high);
   printf ("DH Keys from %d to %d supported.\n", low * 8, high * 8);
@@ -916,13 +921,13 @@ dh_tests (void)
 
     for (ii = 0; ii < (int) (sizeof (sizes) / sizeof (sizes[0])); ii++) {
       t1 = XCLOCK ();
-      for (tt = 0; tt < 5; tt++) {
+      for (tt = 0; tt < 25; tt++) {
     dh_make_key (&prng, find_prng ("yarrow"), sizes[ii], &usera);
     dh_free (&usera);
       }
       t1 = XCLOCK () - t1;
       printf ("Make dh-%d key took %f msec\n", sizes[ii] * 8,
-          1000.0 * (((double) t1 / 5.0) / (double) XCLOCKS_PER_SEC));
+          1000.0 * (((double) t1 / 25.0) / (double) XCLOCKS_PER_SEC));
     }
   }
 
@@ -1261,7 +1266,7 @@ gf_tests (void)
 void
 test_prime (void)
 {
-  unsigned char buf[1024];
+  char buf[1024];
   mp_int  a;
   int     x;
 
@@ -1358,6 +1363,12 @@ register_all_algs (void)
 #endif
 #ifdef SHA512
   register_hash (&sha512_desc);
+#endif
+#ifdef RIPEMD128
+  register_hash (&rmd128_desc);
+#endif
+#ifdef RIPEMD160
+  register_hash (&rmd160_desc);
 #endif
 
 #ifdef YARROW
@@ -1713,7 +1724,7 @@ main (void)
   if ((errnum = yarrow_start (&prng)) != CRYPT_OK) {
     printf ("yarrow_start: %s\n", error_to_string (errnum));
   }
-  if ((errnum = yarrow_add_entropy ("hello", 5, &prng)) != CRYPT_OK) {
+  if ((errnum = yarrow_add_entropy ((unsigned char *)"hello", 5, &prng)) != CRYPT_OK) {
     printf ("yarrow_add_entropy: %s\n", error_to_string (errnum));
   }
   if ((errnum = yarrow_ready (&prng)) != CRYPT_OK) {
@@ -1742,7 +1753,7 @@ main (void)
 
 #ifdef KR
   kr_test ();
-#endif  
+#endif
   rsa_test ();
   pad_test ();
   ecc_tests ();

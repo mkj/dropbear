@@ -9,7 +9,7 @@
 # a build. This is easy to remedy though, for those that have problems.
 
 # The version
-VERSION=0.86
+VERSION=0.90
 
 #ch1-01-1
 # Compiler and Linker Names
@@ -30,9 +30,8 @@ CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wno-unused -Wshadow -Werror
 # optimize for SPEED
 #CFLAGS += -O3 -funroll-loops
 
-#add -fomit-frame-pointer.  v3.2 is buggy for certain platforms so this is used for files it is known to work for
-#default is off but you may enable this to get further performance [make sure you run the test suite!]
-#EXT_CFLAGS = -fomit-frame-pointer
+#add -fomit-frame-pointer.  v3.2 is buggy for certain platforms!
+#CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
 #CFLAGS += -Os
@@ -50,6 +49,7 @@ HASH=hashsum
 CRYPT=encrypt
 SMALL=small
 PROF=x86_prof
+TV=tv_gen
 
 #LIBPATH-The directory for libtomcrypt to be installed to.
 #INCPATH-The directory to install the header files for libtomcrypt.
@@ -60,17 +60,22 @@ INCPATH=/usr/include
 DATAPATH=/usr/share/doc/libtomcrypt/pdf
 
 #List of objects to compile.
+
+#Leave MPI built-in or force developer to link against libtommath?
+MPIOBJECT=mpi.o
+
 OBJECTS=keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o \
 bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o \
 md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o \
 safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o \
-ampi.o prime.o twofish.o packet.o hmac.o strings.o
+prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o
 
 TESTOBJECTS=demos/test.o
 HASHOBJECTS=demos/hashsum.o
 CRYPTOBJECTS=demos/encrypt.o
 SMALLOBJECTS=demos/small.o
 PROFS=demos/x86_prof.o
+TVS=demos/tv_gen.o
 
 #Files left over from making the crypt.pdf.
 LEFTOVERS=*.dvi *.log *.aux *.toc *.idx *.ilg *.ind
@@ -93,47 +98,11 @@ dh.o: dh.c dh_sys.c
 aes.o: aes.c aes_tab.c
 sha512.o: sha512.c sha384.c
 
-#These are objects that are known to build with -fomit-frame-pointer successfully
-aes.o: aes.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c aes.c
-
-blowfish.o: blowfish.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c blowfish.c
-	
-cast5.o: cast5.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c cast5.c
-	
-des.o: des.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c des.c
-	
-twofish.o: twofish.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c twofish.c
-	
-md2.o: md2.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c md2.c
-
-md4.o: md4.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c md4.c
-	
-md5.o: md5.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c md5.c
-
-sha1.o: sha1.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c sha1.c
-	
-sha256.o: sha256.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c sha256.c
-
-sha512.o: sha512.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c sha512.c
-	
-tiger.o: tiger.c
-	$(CC) $(CFLAGS) $(EXT_CFLAGS) -c tiger.c
-
 #This rule makes the libtomcrypt library.
-library: $(OBJECTS) 
-	$(AR) $(ARFLAGS) $(LIBNAME) $(OBJECTS)
-	ranlib $(LIBNAME)
+library: $(LIBNAME)
+
+$(LIBNAME): $(OBJECTS)
+	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
 
 #This rule makes the test program included with libtomcrypt
 test: library $(TESTOBJECTS)
@@ -152,13 +121,10 @@ small: library $(SMALLOBJECTS)
 	$(CC) $(SMALLOBJECTS) $(LIBNAME) -o $(SMALL) $(WARN)
 	
 x86_prof: library $(PROFS)
-	nasm -f coff demos/timer.asm
-	$(CC) demos/x86_prof.o demos/timer.o $(LIBNAME) -o $(PROF)
+	$(CC) $(PROFS) $(LIBNAME) -o $(PROF)
 
-#for linux
-x86_profl: library $(PROFS)
-	nasm -f elf -DUSE_ELF demos/timer.asm
-	$(CC) demos/x86_prof.o demos/timer.o $(LIBNAME) -o $(PROF)
+tv_gen: library $(TVS)
+	$(CC) $(TVS) $(LIBNAME) -o $(TV)
 
 #This rule installs the library and the header files. This must be run
 #as root in order to have a high enough permission to write to the correct
@@ -175,8 +141,8 @@ install: library docs
 #documentation.
 clean:
 	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
-	rm -f $(TEST) $(HASH) $(COMPRESSED)
-	rm -f *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat
+	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
+	rm -f *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat hash_tv.txt cipher_tv.txt
 
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the
@@ -189,6 +155,12 @@ docs: crypt.tex
 	pdflatex crypt > /dev/null
 	rm -f $(LEFTOVERS)
        
+#beta
+beta: clean
+	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION)-beta ; mkdir libtomcrypt-$(VERSION)-beta ; \
+	cp -R ./libtomcrypt/* ./libtomcrypt-$(VERSION)-beta/ ; tar -c libtomcrypt-$(VERSION)-beta/* > crypt-$(VERSION)-beta.tar ; \
+	bzip2 -9vv crypt-$(VERSION)-beta.tar ; zip -9 -r crypt-$(VERSION)-beta.zip libtomcrypt-$(VERSION)-beta/*
+
 #zipup the project (take that!)
 zipup: clean docs
 	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION) ; mkdir libtomcrypt-$(VERSION) ; \

@@ -533,17 +533,28 @@ static const ulong64 table[4*256] = {
     CONST64(0xCD56D9430EA8280E) /* 1020 */, CONST64(0xC12591D7535F5065) /* 1021 */,
     CONST64(0xC83223F1720AEF96) /* 1022 */, CONST64(0xC3A0396F7363A51F) /* 1023 */};
 
+#ifdef _MSC_VER
+   #define INLINE __inline
+#else
+   #define INLINE 
+#endif   
+
 /* one round of the hash function */
-static void round(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 x, ulong64 mul)
+INLINE static void round(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 x, int mul)
 {
-    *c ^= x;                                                                            
-    *a -= t1[(*c)&255] ^ t2[((*c)>>16)&255] ^ t3[((*c)>>32)&255] ^ t4[((*c)>>48)&255];      
-    *b += t4[((*c)>>8)&255] ^ t3[((*c)>>24)&255] ^ t2[((*c)>>40)&255] ^ t1[((*c)>>56)&255]; 
-    *b *= mul;
+    ulong64 tmp;
+    tmp = (*c ^= x); 
+           *a -= t1[byte(tmp, 0)] ^ t2[byte(tmp, 2)] ^ t3[byte(tmp, 4)] ^ t4[byte(tmp, 6)];      
+    tmp = (*b += t4[byte(tmp, 1)] ^ t3[byte(tmp, 3)] ^ t2[byte(tmp,5)] ^ t1[byte(tmp,7)]); 
+    switch (mul) {
+        case 5:  *b = (tmp << 2) + tmp; break;
+        case 7:  *b = (tmp << 3) - tmp; break;
+        case 9:  *b = (tmp << 3) + tmp; break;
+    }
 }
 
 /* one complete pass */
-static void pass(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 *x, ulong64 mul)
+static void pass(ulong64 *a, ulong64 *b, ulong64 *c, ulong64 *x, int mul)
 {
    round(a,b,c,x[0],mul); 
    round(b,c,a,x[1],mul); 

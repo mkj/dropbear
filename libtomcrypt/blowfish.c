@@ -14,7 +14,7 @@ const struct _cipher_descriptor blowfish_desc =
     &blowfish_keysize
 };
 
-static const unsigned long ORIG_P[16 + 2] = {
+static const ulong32 ORIG_P[16 + 2] = {
         0x243F6A88UL, 0x85A308D3UL, 0x13198A2EUL, 0x03707344UL,
         0xA4093822UL, 0x299F31D0UL, 0x082EFA98UL, 0xEC4E6C89UL,
         0x452821E6UL, 0x38D01377UL, 0xBE5466CFUL, 0x34E90C6CUL,
@@ -22,7 +22,7 @@ static const unsigned long ORIG_P[16 + 2] = {
         0x9216D5D9UL, 0x8979FB1BUL
 };
 
-static const unsigned long ORIG_S[4][256] = {
+static const ulong32 ORIG_S[4][256] = {
     {   0xD1310BA6UL, 0x98DFB5ACUL, 0x2FFD72DBUL, 0xD01ADFB7UL,
         0xB8E1AFEDUL, 0x6A267E96UL, 0xBA7C9045UL, 0xF12C7F99UL,
         0x24A19947UL, 0xB3916CF7UL, 0x0801F2E2UL, 0x858EFC16UL,
@@ -284,7 +284,7 @@ static const unsigned long ORIG_S[4][256] = {
 int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
                    symmetric_key *skey)
 {
-   unsigned long x, y, z, A;
+   ulong32 x, y, z, A;
    unsigned char B[8];
 
    _ARGCHK(key != NULL);
@@ -304,7 +304,7 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    for (x = y = 0; x < 18; x++) {
        A = 0;
        for (z = 0; z < 4; z++) {
-           A = (A << 8) | ((unsigned long)key[y++ % keylen]);
+           A = (A << 8) | ((ulong32)key[y++ % keylen]);
        }
        skey->blowfish.K[x] = ORIG_P[x] ^ A;
    }
@@ -347,7 +347,14 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    return CRYPT_OK;
 }
 
-#define F(x) ((((key->blowfish.S[0][((x)>>24)&255] + key->blowfish.S[1][((x)>>16)&255]) ^ key->blowfish.S[2][((x)>>8)&255]) + key->blowfish.S[3][((x)>>0)&255]))
+#if defined(__GNUC__)
+   #define S1 key->blowfish.S[0]
+   #define S2 key->blowfish.S[1]
+   #define S3 key->blowfish.S[2]
+   #define S4 key->blowfish.S[3]
+#endif   
+
+#define F(x) ((S1[byte(x,3)] + S2[byte(x,2)]) ^ S3[byte(x,1)]) + S4[byte(x,0)]
 
 #ifdef CLEAN_STACK
 static void _blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
@@ -355,12 +362,22 @@ static void _blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, sy
 void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 #endif
 {
-   unsigned long L, R;
+   ulong32 L, R;
    int r;
+#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+    ulong32 *S1, *S2, *S3, *S4;
+#endif    
 
-   _ARGCHK(pt != NULL);
-   _ARGCHK(ct != NULL);
-   _ARGCHK(key != NULL);
+    _ARGCHK(pt != NULL);
+    _ARGCHK(ct != NULL);
+    _ARGCHK(key != NULL);
+    
+#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+    S1 = key->blowfish.S[0];
+    S2 = key->blowfish.S[1];
+    S3 = key->blowfish.S[2];
+    S4 = key->blowfish.S[3];
+#endif    
 
    /* load it */
    LOAD32H(L, &pt[0]);
@@ -387,7 +404,7 @@ void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
 void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
     _blowfish_ecb_encrypt(pt, ct, key);
-    burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
+    burn_stack(sizeof(ulong32) * 2 + sizeof(int));
 }
 #endif
 
@@ -397,12 +414,22 @@ static void _blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, sy
 void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 #endif
 {
-   unsigned long L, R;
+   ulong32 L, R;
    int r;
-   
-   _ARGCHK(pt != NULL);
-   _ARGCHK(ct != NULL);
-   _ARGCHK(key != NULL);
+#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+    ulong32 *S1, *S2, *S3, *S4;
+#endif    
+
+    _ARGCHK(pt != NULL);
+    _ARGCHK(ct != NULL);
+    _ARGCHK(key != NULL);
+    
+#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+    S1 = key->blowfish.S[0];
+    S2 = key->blowfish.S[1];
+    S3 = key->blowfish.S[2];
+    S4 = key->blowfish.S[3];
+#endif  
 
    /* load it */
    LOAD32H(R, &ct[0]);
@@ -429,7 +456,7 @@ void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
 void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 {
     _blowfish_ecb_decrypt(ct, pt, key);
-    burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
+    burn_stack(sizeof(ulong32) * 2 + sizeof(int));
 }
 #endif
 

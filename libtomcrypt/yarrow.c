@@ -123,7 +123,11 @@ int yarrow_ready(prng_state *prng)
       return err;
    }
 
-   if ((err = ctr_start(prng->yarrow.cipher, prng->yarrow.pool, prng->yarrow.pool, ks, 0, &prng->yarrow.ctr)) != CRYPT_OK) {
+   if ((err = ctr_start(prng->yarrow.cipher,     /* what cipher to use */
+                        prng->yarrow.pool,       /* IV */
+                        prng->yarrow.pool, ks,   /* KEY and key size */
+                        0,                       /* number of rounds */
+                        &prng->yarrow.ctr)) != CRYPT_OK) {
       return err;
    }
    return CRYPT_OK;

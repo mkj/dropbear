@@ -9,7 +9,7 @@
 #include "../options.h"
 
 #ifdef CRYPT
-    #error mycrypt_custom.h should be included before mycrypt.h
+	#error mycrypt_custom.h should be included before mycrypt.h
 #endif
 
 #define XMALLOC malloc
@@ -32,6 +32,8 @@
 
 #ifdef DROPBEAR_TWOFISH128_CBC
 #define TWOFISH
+#define TWOFISH_SMALL
+//#define TWOFISH_TABLES
 #endif
 
 #ifdef DROPBEAR_3DES_CBC
