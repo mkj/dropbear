@@ -73,8 +73,9 @@ static void printhelp(const char * progname) {
 #endif
 					"-p port	Listen on specified tcp port, up to %d can be specified\n"
 					"		(default %d if none specified)\n"
-/*					"-4/-6		Disable listening on ipv4/ipv6 respectively\n"*/
-
+#ifdef INETD_MODE
+					"-i		Start for inetd\n"
+#endif
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS
 					DSS_PRIV_FILENAME,
@@ -102,6 +103,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.norootlogin = 0;
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
+	svr_opts.inetdmode = 0;
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
 	/* not yet
@@ -156,6 +158,11 @@ void svr_getopts(int argc, char ** argv) {
 #ifndef DISABLE_REMOTETCPFWD
 				case 'k':
 					opts.noremotetcp = 1;
+					break;
+#endif
+#ifdef INETD_MODE
+				case 'i':
+					svr_opts.inetdmode = 1;
 					break;
 #endif
 				case 'p':

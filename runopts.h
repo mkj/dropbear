@@ -55,6 +55,8 @@ typedef struct svr_runopts {
 	uint16_t *ports;
 	unsigned int portcount;
 
+	int inetdmode;
+
 	/* Flags indicating whether to use ipv4 and ipv6 */
 	/* not used yet
 	int ipv4;
