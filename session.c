@@ -166,11 +166,17 @@ void checktimeouts() {
 void session_cleanup() {
 	
 	TRACE(("enter session_cleanup"));
-	chancleanup();
-
+	
 	m_free(ses.session_id);
-	sign_key_free(ses.opts->hostkey);
+	if (ses.opts->hostkey) {
+		sign_key_free(ses.opts->hostkey);
+	}
 	m_free(ses.keys);
+
+	if (!sessinitdone) {
+		return;
+	}
+	chancleanup();
 
 	TRACE(("leave session_cleanup"));
 }
