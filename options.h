@@ -1,10 +1,11 @@
+#include "libtomcrypt/mycrypt_custom.h"
+
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
 #include "includes.h"
 #include "config.h"
 #include "debug.h"
-#include "libtomcrypt/mycrypt_custom.h"
 
 /******************************************************************
  * Define compile-time options below.
@@ -18,21 +19,24 @@
 
 /* Encryption - at least one required.
  * SSH2 RFC Draft requires 3DES and recommends blowfish, aes128 & twofish128 */
-#define DROPBEAR_AES128_CBC
+/*#define DROPBEAR_AES128_CBC
 #define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH128_CBC
+#define DROPBEAR_TWOFISH128_CBC*/
 #define DROPBEAR_3DES_CBC
 
 /* Integrity - at least one required.
  * SSH2 RFC Draft requires sha1-hmac, recommends md5-hmac */
+/* Note: there's no point disabling sha1 to save space, since it's used in the
+ * pubkey stuff anyway. Disabling it here will just stop it from being
+ * used as the integrity portion of the ssh protoco l*/
 #define DROPBEAR_SHA1_HMAC
-#define DROPBEAR_MD5_HMAC
+/*#define DROPBEAR_MD5_HMAC*/
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
-#define DROPBEAR_DSS
+/*#define DROPBEAR_DSS*/
 
 /* Define DSS_PROTOK to use Putty's method of generating the value k for dss,
  * rather than just from the random byte source.
@@ -69,6 +73,7 @@
 
 #define DROPBEAR_VERSION "0.255"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
+#define PROGNAME "dropbear"
 
 /* Time to wait before sending reply on fail */
 #define FAIL_SLEEP_TIME 2
@@ -128,7 +133,7 @@
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
 
-#define DEV_RANDOM "/dev/random"
+#define DEV_RANDOM "/dev/urandom"
 
 /* the number of NAME=VALUE pairs to malloc for environ, if we don't have
  * the clearenv() function */
