@@ -687,10 +687,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if (ses.opts->domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
 
-			hushpath = m_malloc(strlen(ses.authstate.pw->pw_dir)
-					+ 11 /* 11 == strlen("/hushlogin\0") */ );
-			strcpy(hushpath, ses.authstate.pw->pw_dir);
-			strcat(hushpath, "/hushlogin");
+			/* 11 == strlen("/hushlogin\0") */
+			len = strlen(ses.authstate.pw->pw_dir) + 11; 
+
+			hushpath = m_malloc(len);
+			snprintf(hushpath, len, "%s/hushlogin", ses.authstate.pw->pw_dir);
 
 			if (stat(hushpath, &sb) < 0) {
 				/* more than a screenful is stupid IMHO */
@@ -855,9 +856,9 @@ static void execchild(struct ChanSess *chansess) {
 		argv[0] = baseshell;
 	} else {
 		/* a login shell should be "-bash" for "/bin/bash" etc */
-		argv[0] = (char*)m_malloc(strlen(baseshell) + 2); /* 2 for "-" */
-		strcpy(argv[0], "-");
-		strcat(argv[0], baseshell);
+		int len = strlen(baseshell) + 2; /* 2 for "-" */
+		argv[0] = (char*)m_malloc(len);
+		snprintf(argv[0], len, "-%s", baseshell);
 	}
 
 	if (chansess->cmd != NULL) {

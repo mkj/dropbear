@@ -107,23 +107,29 @@ int agentaccept(struct ChanSess * chansess) {
  * just before command/shell execution, after dropping priveleges */
 void agentset(struct ChanSess * chansess) {
 
-	char path[MAXPATHLEN];
+	char *path = NULL;
+	int len;
 
 	if (chansess->agentfd == -1) {
 		return;
 	}
 
-	snprintf(path, sizeof(path), "%s/%s", chansess->agentdir,
-			chansess->agentfile);
+	/* 2 for "/" and "\0" */
+	len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
+
+	path = m_malloc(len);
+	snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
 	addnewvar("SSH_AUTH_SOCK", path);
+	m_free(path);
 }
 
 /* close the socket, remove the socket-file */
 void agentcleanup(struct ChanSess * chansess) {
 
-	char path[MAXPATHLEN];
+	char *path = NULL;
 	uid_t uid;
 	gid_t gid;
+	int len;
 
 	if (chansess->agentfd == -1) {
 		return;
@@ -140,10 +146,14 @@ void agentcleanup(struct ChanSess * chansess) {
 		dropbear_exit("failed to set euid");
 	}
 
-	snprintf(path, sizeof(path),
-			"%s/%s", chansess->agentdir, chansess->agentfile);
+	/* 2 for "/" and "\0" */
+	len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
 
+	path = m_malloc(len);
+	snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
 	unlink(path);
+	m_free(path);
+
 	rmdir(chansess->agentdir);
 
 	if ((seteuid(uid)) < 0 ||
