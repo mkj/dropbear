@@ -84,7 +84,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	do {
 		readlen = read(readfd, &buf[readpos], buflen - readpos);
 		if (readlen <= 0) {
-			if (errno == EINTR) {
+			if (readlen < 0 && errno == EINTR) {
 				continue;
 			}
 			dropbear_exit("error reading random source");

@@ -357,8 +357,7 @@ static void writechannel(struct Channel* channel) {
 
 	len = write(channel->infd, buf_getptr(buf, maxlen), maxlen);
 	if (len <= 0) {
-		if (errno != EINTR) {
-
+		if (len < 0 && errno != EINTR) {
 			/* no more to write */
 			closeinfd(channel);
 		}
@@ -610,8 +609,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	buf = buf_new(maxlen);
 	len = read(fd, buf_getwriteptr(buf, maxlen), maxlen);
 	if (len <= 0) {
-		/* on error etc, send eof */
-		if (errno != EINTR) {
+		/* on error/eof, send eof */
+		if (len == 0 || errno != EINTR) {
 			closeoutfd(channel, fd);
 			TRACE(("leave send_msg_channel_data: read err"));
 		}
