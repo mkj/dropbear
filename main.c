@@ -290,7 +290,7 @@ static void listensocket(int *sock, uint16_t port) {
 
 	val = 1;
 	/* should really use getprotbyname, but we'd need to change "tcp" anyway */
-	setsockopt(listensock, 6, TCP_NODELAY, (void*)&val, sizeof(val));
+	setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 
 	/* bind all ip4 addresses */
 	listen_addr.sin_family = AF_INET;
