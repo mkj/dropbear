@@ -683,6 +683,7 @@ static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
 	int i, len;
+	char * usershell;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
@@ -697,7 +698,6 @@ static void execchild(struct ChanSess *chansess) {
 			dropbear_exit("Error closing file desc");
 		}
 	}
-
 
 	/* clear environment */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
@@ -750,21 +750,38 @@ static void execchild(struct ChanSess *chansess) {
 		dropbear_exit("error changing directory");
 	}
 
+	/* an empty shell should be interpreted as "/bin/sh" */
+	if (ses.authstate.pw->pw_shell[0] == '\0') {
+		usershell = "/bin/sh";
+	} else {
+		usershell = ses.authstate.pw->pw_shell;
+	}
+
 	/* set up execution */
-	/* shell commandname - the filename portion only */
-	len = strlen(ses.authstate.pw->pw_shell);
-	for (i = len-1; i > 0; i--) {
-		if (ses.authstate.pw->pw_shell[i] == '/') {
-			i++;
+	/* shell commandname - the filename portion only ie 'sh' from '/bin/sh' */
+	len = strlen(usershell);
+	for (i = len-1; i >= 0; i--) {
+		if (usershell[i] == '/') {
 			break;
 		}
 	}
-	argv[0] = &ses.authstate.pw->pw_shell[i];
+	i++;
+
+	if (chansess->cmd != NULL) {
+		argv[0] = &usershell[i];
+	} else {
+		/* a login shell should be "-bash" for "/bin/bash" etc */
+		argv[0] = (char*)m_malloc(strlen(&usershell[i]) + 2); /* 2 for "-" */
+		strcpy(argv[0], "-");
+		strcat(argv[0], &usershell[i]);
+	}
+
 	if (chansess->cmd != NULL) {
 		argv[1] = "-c";
 		argv[2] = chansess->cmd;
 		argv[3] = NULL;
 	} else {
+		/* construct a shell of the form "-bash" etc */
 		argv[1] = NULL;
 	}
 
