@@ -8,9 +8,11 @@ See TODO for a few of the things I know need looking at.
 
 matt@ucc.asn.au
 
+=====
+
 Basic build instructions:
 
-First time after checkout, or after chaning autoconf stuff, do
+First time after checkout, or after changing autoconf stuff, do
 autoconf; autoheader
 
 edit options.h to choose ciphers/hashes/other options
@@ -20,12 +22,13 @@ cd libtomcrypt; make
 cd ..; make
 
 You need to generate server keys, this is one-off:
-make genkey
-./gendss dropbear_dss_host_key
-./genrsa dropbear_rsa_host_key
+./dropbearkey -t rsa -f dropbear_rsa_host_key
+./dropbearkey -t dss -f dropbear_dss_host_key
 
 And you can now run the server
 ./dropbear
 
-ssh to port 2244, you need to run dropbear as root if you want to get a
+or './dropbear -h' to get options.
+
+Now ssh to port 2244, you need to run dropbear as root if you want to get a
 pseudo-tty
