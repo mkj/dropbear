@@ -83,7 +83,7 @@
  * These are also used for key fingerprints in logs (when pubkey auth is used),
  * MD5 fingerprints are printed by default, however SHA1 fingerprints will be
  * generated otherwise. This isn't exactly optimal, although sha1 fingerprints
- * are not too hard go create from pubkeys if required. */
+ * are not too hard to create from pubkeys if required. */
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_MD5_HMAC
 
