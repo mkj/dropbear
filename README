@@ -1,25 +1,25 @@
-This is dropbear, a smallish and friendly ssh2 daemon.
+This is Dropbear, a smallish SSH 2 server.
 
-It is currently usable though betaish, requiring work in certain areas before
-use in a production environment. If you need a small sshd to run on a 4 meg
-laptop, then sure, use it now. But test it thoroughly before using it somewhere
-important :)
+It is fairly stable, though hasn't had extensive testing, so if you want to use
+it somewhere important, test it first. I'd appreciate if you let me know about
+any bugs you find.
 
 See TODO for a few of the things I know need looking at.
 
 matt@ucc.asn.au
 
-=====
+============================================================================
 
 Basic build instructions:
 
 (if you're using it from CVS, you need to automake; autoconf)
 
-- Edit options.h to choose ciphers/hashes/other options
+- Edit options.h to choose features to include
 - Edit debug.h if you want any debug options
 
 ./configure      (optionally with --disable-zlib)
 make
+make install     (installs to /usr/local/sbin, /usr/local/bin by default)
 
 You need to generate server keys, this is one-off:
 ./dropbearkey -t rsa -f dropbear_rsa_host_key
@@ -30,7 +30,6 @@ And you can now run the server.
 
 or './dropbear -h' to get options.
 
-The default listening port is currently 2244 (defined in options.h).
 If the server is run as non-root, you most likely won't be able to allocate a
 pty, and you cannot login as any user other than that running the daemon
 (obviously). Shadow passwords will also be unusable as non-root.
@@ -38,7 +37,7 @@ pty, and you cannot login as any user other than that running the daemon
 You can use scp with dropbear, you'll just need to put scp from OpenSSH (or
 equivalent) in your path (/usr/bin/scp etc).
 
-=====
+============================================================================
 
 Compiling with uclibc:
 
@@ -59,7 +58,9 @@ binaries, and it is advisable to strip the binaries too. If you're looking
 to make a small binary, you should remove unneeded ciphers and md5, by 
 editing options.h
 
-It is possible to compile zlib in, by copying zlib.h and zconf.h into a subdirectory (ie zlibincludes), and 
+It is possible to compile zlib in, by copying zlib.h and zconf.h into a
+subdirectory (ie zlibincludes), and 
+
 export CFLAGS="-Izlibincludes -I../zlibincludes"
 export LDFLAGS=/usr/lib/libz.a
 
@@ -69,11 +70,10 @@ If you disable zlib, you must explicitly disable compression for the client -
 OpenSSH is possibly buggy in this regard, it seems you need to disable it
 globally in ~/.ssh/config, not just in the host entry in that file.
 
-Note that in uClibc, login() and logout() support may be disabled even
-if the functions exist (they do nothing, you should get a compile warning).
-If this is the case, ./configure with --disable-libutil
+You may want to manually disable lastlog recording when using uClibc, configure
+with --disable-lastlog
 
-=====
+============================================================================
 
 Public key auth:
 
