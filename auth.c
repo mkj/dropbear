@@ -75,11 +75,12 @@ static void send_msg_userauth_banner() {
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
 	buf_putstring(ses.writepayload, buf_getptr(ses.opts->banner,
-				ses.opts->banner->len), ses.opts->banner->size);
+				ses.opts->banner->len), ses.opts->banner->len);
 	buf_putstring(ses.writepayload, "en", 2);
 
 	encrypt_packet();
 	buf_free(ses.opts->banner);
+	ses.opts->banner = NULL;
 
 	TRACE(("leave send_msg_userauth_banner"));
 }

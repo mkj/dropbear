@@ -96,6 +96,7 @@ void recv_msg_kexinit() {
 			buf_getptr(ses.transkexinit, ses.transkexinit->len),
 			ses.transkexinit->len);
 	buf_free(ses.transkexinit);
+	ses.transkexinit = NULL;
 	/* the rest of ses.kexhashbuf will be done after DH exchange */
 
 	ses.kexstate.recvkexinit = 1;
@@ -436,6 +437,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	}
 #endif /* DEBUG_KEXHASH */
 	buf_free(ses.kexhashbuf);
+	ses.kexhashbuf = NULL;
 	
 	/* first time around, we set the session_id to H */
 	if (!ses.session_id) {
