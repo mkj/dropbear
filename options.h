@@ -19,9 +19,9 @@
 
 /* Encryption - at least one required.
  * SSH2 RFC Draft requires 3DES and recommends blowfish, aes128 & twofish128 */
-/*#define DROPBEAR_AES128_CBC
+#define DROPBEAR_AES128_CBC
 #define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH128_CBC*/
+#define DROPBEAR_TWOFISH128_CBC
 #define DROPBEAR_3DES_CBC
 
 /* Integrity - at least one required.
@@ -30,13 +30,13 @@
  * pubkey stuff anyway. Disabling it here will just stop it from being
  * used as the integrity portion of the ssh protoco l*/
 #define DROPBEAR_SHA1_HMAC
-/*#define DROPBEAR_MD5_HMAC*/
+#define DROPBEAR_MD5_HMAC
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
-/*#define DROPBEAR_DSS*/
+#define DROPBEAR_DSS
 
 /* Define DSS_PROTOK to use Putty's method of generating the value k for dss,
  * rather than just from the random byte source.
@@ -71,7 +71,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.255"
+#define DROPBEAR_VERSION "0.27"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
