@@ -137,7 +137,7 @@ void agentcleanup(struct ChanSess * chansess) {
 
 	close(chansess->agentfd);
 
-	if ( chansess->agentdir != NULL && chansess->agentfile == NULL ) {
+	if ( chansess->agentdir != NULL && chansess->agentfile != NULL ) {
 		/* We have something to clean up, otherwise ignore it */
 
 		/* Remove the dir as the user. That way they can't cause problems
