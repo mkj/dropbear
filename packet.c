@@ -701,7 +701,11 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 		}
 
 		assert(ses.keys->trans_zstream->avail_out == 0);
-		buf_resize(dest, ZLIB_COMPRESS_INCR);
+
+		/* the buffer has been filled, we must extend. This only happens in
+		 * unusual circumstances where the data grows in size after deflate(),
+		 * but it is possible */
+		buf_resize(dest, dest->size + ZLIB_COMPRESS_INCR);
 
 	}
 	TRACE(("leave buf_compress"));
