@@ -357,6 +357,16 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 	unsigned int len;
 
 	len = sizeof(struct sockaddr_storage);
+	/* Some platforms such as Solaris 8 require that len is the length
+	 * of the specific structure. */
+	if (addr->ss_family == AF_INET) {
+		len = sizeof(struct sockaddr_in);
+	}
+#ifdef AF_INET6
+	if (addr->ss_family == AF_INET6) {
+		len = sizeof(struct sockaddr_in6);
+	}
+#endif
 
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf), 
 			sbuf, sizeof(sbuf), NI_NUMERICSERV | NI_NUMERICHOST);
@@ -389,6 +399,16 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	unsigned int len;
 
 	len = sizeof(struct sockaddr_storage);
+	/* Some platforms such as Solaris 8 require that len is the length
+	 * of the specific structure. */
+	if (addr->ss_family == AF_INET) {
+		len = sizeof(struct sockaddr_in);
+	}
+#ifdef AF_INET6
+	if (addr->ss_family == AF_INET6) {
+		len = sizeof(struct sockaddr_in6);
+	}
+#endif
 
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf),
 			sbuf, sizeof(sbuf), NI_NUMERICSERV);
