@@ -29,7 +29,7 @@
 #include "signkey.h"
 #include "runopts.h"
 
-static void listensocket(int *sock, uint16_t port);
+static int listensockets(int *sock, runopts * opts, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
@@ -83,12 +83,6 @@ int main(int argc, char ** argv) {
 		}
 		dropbear_log(LOG_INFO, "Running in background");
 	}
-	
-	/* setup the sockets - we're allowing for multiple listening sockets
-	 * so we can do ip6 etc in future */
-	listensocket(&listensocks[0], opts->port);
-	listensockcount = 1;
-	maxsock = listensocks[listensockcount-1];
 
 	/* create a PID file so that we can be killed easily */
 	pidfile = fopen(DROPBEAR_PIDFILE, "w");
@@ -117,6 +111,10 @@ int main(int argc, char ** argv) {
 	for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
 		childpipes[i] = -1;
 	}
+	
+	/* Set up the listening sockets */
+	/* XXX XXX ports */
+	listensockcount = listensockets(listensocks, opts, &maxsock);
 
 	/* incoming connection select loop */
 	for(;;) {
@@ -267,51 +265,90 @@ static void sigintterm_handler(int fish) {
 	exitflag = 1;
 }
 
-static void listensocket(int *sock, uint16_t port) {
+/* Set up listening sockets for all the requested ports */
+static int listensockets(int *sock, runopts * opts, int *maxfd) {
 	
 	int listensock; /* listening fd */
 	struct sockaddr_in listen_addr;
+	struct addrinfo hints, *res;
 	struct linger linger;
+	unsigned int i;
 	int val;
+	int sockcount = 0;
+	char servicename[6]; /* max 65535 */
 
-	/* open a socket */
-	listensock = socket(PF_INET, SOCK_STREAM, 0);
-	if (listensock < 0) {
-		dropbear_exit("Failed to create socket");
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_flags = AI_PASSIVE;
+	hints.ai_socktype = SOCK_STREAM;
+
+	if (!opts->ipv6) {
+		hints.ai_family = PF_INET;
+	} else if (!opts->ipv4) {
+		hints.ai_family = PF_INET6;
+	} else {
+		hints.ai_family = PF_UNSPEC;
 	}
 
-	/* set to reuse, quick timeout */
-	setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR,
-			(void*) &val, sizeof(val));
-	linger.l_onoff = 1;
-	linger.l_linger = 5;
-	setsockopt(listensock, SOL_SOCKET, SO_LINGER,
-			(void*)&linger, sizeof(linger));
+	for (i = 0; i < opts->portcount; i++) {
+		res = NULL;
 
-	val = 1;
-	/* should really use getprotbyname, but we'd need to change "tcp" anyway */
-	setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+		snprintf(servicename, sizeof(servicename), "%5ud", opts->ports[i]);
+		
+		if (getaddrinfo(NULL, servicename, &hints, &res) == 0) {
+		while (res) {
 
-	/* bind all ip4 addresses */
-	listen_addr.sin_family = AF_INET;
-	listen_addr.sin_port = htons(port);
-	listen_addr.sin_addr.s_addr = htonl(INADDR_ANY);
-	memset(&(listen_addr.sin_zero), '\0', 8); /* XXX neccesary? */
+			/* TODO check for ipv6/ipv4 */
 
-	if (bind(listensock, (struct sockaddr *)&listen_addr, 
-				sizeof(struct sockaddr)) < 0) {
-		dropbear_exit("Bind failed");
+			if (sockcount >= MAX_LISTEN_ADDR) {
+				dropbear_exit("Max listen sockets reached, increase MAX_LISTEN_ADDR");
+				break;
+			}
+
+			/* iterate through all the sockets to listen on */
+			listensock = socket(res->ai_family, res->ai_socktype, 
+					res->ai_protocol);
+			if (listensock < 0) {
+				dropbear_exit("Failed to create socket");
+			}
+
+			/* set to reuse, quick timeout */
+			setsockopt(listensock, SOL_SOCKET, SO_REUSEADDR,
+					(void*) &val, sizeof(val));
+			linger.l_onoff = 1;
+			linger.l_linger = 5;
+			setsockopt(listensock, SOL_SOCKET, SO_LINGER,
+					(void*)&linger, sizeof(linger));
+
+			/* disable nagle, ie don't collate data (delaying them) */
+			val = 1;
+			setsockopt(listensock, IPPROTO_TCP, TCP_NODELAY,
+					(void*)&val, sizeof(val));
+
+			if (bind(listensock, res->ai_addr, res->ai_addrlen) < 0) {
+				dropbear_exit("Bind failed port %d", opts->ports[i]);
+			}
+
+			/* listen */
+			if (listen(listensock, 20) < 0) { /* TODO set listen count */
+				dropbear_exit("Listen failed");
+			}
+
+			/* nonblock */
+			if (fcntl(listensock, F_SETFL, O_NONBLOCK) < 0) {
+				dropbear_exit("Failed to set non-blocking");
+			}
+
+			sock[i] = listensock;
+			*maxfd = MAX(listensock, *maxfd);
+			sockcount++;
+			res = res->ai_next;
+			
+		} }
+
+		if (res) {
+			freeaddrinfo(res);
+			res = NULL;
+		}
 	}
-
-	/* listen */
-	if (listen(listensock, 20) < 0) { /* TODO set listen count */
-		dropbear_exit("Listen failed");
-	}
-
-	/* nonblock */
-	if (fcntl(listensock, F_SETFL, O_NONBLOCK) < 0) {
-		dropbear_exit("Failed to set non-blocking");
-	}
-
-	*sock = listensock;
+	return sockcount;
 }

@@ -36,7 +36,13 @@ struct RunOpts {
 	char * bannerfile;
 	int forkbg;
 
-	uint16_t port;
+	/* ports is an array of the portcount listening ports */
+	uint16_t *ports;
+	unsigned int portcount;
+
+	/* Flags indicating whether to use ipv4 and ipv6 */
+	int ipv4;
+	int ipv6;
 	
 	sign_key *hostkey;
 	buffer * banner;
@@ -46,5 +52,6 @@ struct RunOpts {
 typedef struct RunOpts runopts;
 
 runopts * getrunopts(int argc, char ** argv);
+void freerunopts(runopts* opts);
 
 #endif /* _RUNOPTS_H_ */

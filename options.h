@@ -192,6 +192,9 @@
 
 #define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
 
+#define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
+								 ipv4 and ipv6 don't count twice */
+
 #define _PATH_TTY "/dev/tty"
 
 #endif /* _OPTIONS_H_ */

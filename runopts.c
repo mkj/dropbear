@@ -52,21 +52,24 @@ static void printhelp(const char * progname) {
 #else
 					"-E                Log to stderr rather than syslog\n"
 #endif
-					"-p port           Listen on specified tcp port\n"
-					"                  (default %d)\n",
+					"-p port           Listen on specified tcp port, up to %d can be specified\n"
+					"                  (default %d if none specified)\n"
+					"-4/-6             Disable listening on ipv4/ipv6 respectively\n",
+
 					DROPBEAR_VERSION,
 					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME,
-					DROPBEAR_PORT);
+					DROPBEAR_MAX_PORTS, DROPBEAR_PORT);
 }
 
 /* returns NULL on failure, or a pointer to a freshly allocated
  * runopts structure */
 runopts * getrunopts(int argc, char ** argv) {
 
-	int i;
+	unsigned int i;
 	char ** next = 0;
 	runopts * opts;
-	char * portstring = NULL;
+	unsigned int portnum = 0;
+	char *portstring[DROPBEAR_MAX_PORTS];
 	unsigned int longport;
 
 	/* see printhelp() for options */
@@ -76,6 +79,8 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->bannerfile = NULL;
 	opts->banner = NULL;
 	opts->forkbg = 1;
+	opts->ipv4 = 1;
+	opts->ipv6 = 1;
 #ifndef DISABLE_SYSLOG
 	usingsyslog = 1;
 #endif
@@ -110,11 +115,21 @@ runopts * getrunopts(int argc, char ** argv) {
 					break;
 #endif
 				case 'p':
-					next = &portstring;
+					if (portnum < DROPBEAR_MAX_PORTS) {
+						portstring[portnum] = NULL;
+						next = &portstring[portnum];
+						portnum++;
+					}
 					break;
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);
+					break;
+				case '4':
+					opts->ipv4 = 0;
+					break;
+				case '6':
+					opts->ipv6 = 0;
 					break;
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
@@ -153,17 +168,48 @@ runopts * getrunopts(int argc, char ** argv) {
 		buf_setpos(opts->banner, 0);
 	}
 
-	if (portstring) {
-		longport = atoi(portstring);
-		if (longport > 65534 || longport < 1) {
-			dropbear_exit("Bad port %s", portstring);
-		}
-		opts->port = (uint16_t)longport;
+	if (!(opts->ipv4 || opts->ipv6)) {
+		fprintf(stderr, "You can't disable ipv4 and ipv6.\n");
+		exit(1);
+	}
+
+	/* create the array of listening ports */
+	if (portnum == 0) {
+		/* non specified */
+		opts->portcount = 1;
+		opts->ports = m_malloc(sizeof(uint16_t));
+		opts->ports[0] = DROPBEAR_PORT;
 	} else {
-		opts->port = DROPBEAR_PORT;
+		opts->portcount = portnum;
+		opts->ports = (uint16_t*)m_malloc(sizeof(uint16_t)*portnum);
+		for (i = 0; i < portnum; i++) {
+			if (portstring[i]) {
+				longport = atoi(portstring[i]);
+					if (longport <= 65535 && longport > 0) {
+						opts->ports[i] = (uint16_t)longport;
+						continue;
+					}
+			}
+			fprintf(stderr, "Bad port '%s'\n",
+					portstring[i] ? portstring[i] : "null");
+		}
 	}
 
 	return opts;
+}
+
+void freerunopts(runopts* opts) {
+
+	if (!opts) {
+		return;
+	}
+
+	if (opts->hostkey) {
+		sign_key_free(opts->hostkey);
+	}
+
+	m_free(opts->ports);
+	m_free(opts);
 }
 
 /* returns success or failure */

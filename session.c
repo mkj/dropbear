@@ -173,9 +173,7 @@ void session_cleanup() {
 	}
 	
 	m_free(ses.session_id);
-	if (ses.opts->hostkey) {
-		sign_key_free(ses.opts->hostkey);
-	}
+	freerunopts(ses.opts);
 	m_free(ses.keys);
 
 	chancleanup();
