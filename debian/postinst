@@ -26,12 +26,22 @@ set -e
 case "$1" in
     configure)
         if [ ! -e /etc/dropbear/dropbear_rsa_host_key ]; then
-            echo "Generating dropbear RSA key. Please wait."
-            /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+            if [ -f /etc/ssh/ssh_host_rsa_key ]; then
+                echo "Converting existing OpenSSH RSA host key to dropbear format."
+                /usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear/dropbear_rsa_host_key
+            else
+                echo "Generating dropbear RSA key. Please wait."
+                /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
+            fi
         fi
         if [ ! -e /etc/dropbear/dropbear_dss_host_key ]; then
-            echo "Generating dropbear DSS key. Please wait."
-            /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+            if [ -f /etc/ssh/ssh_host_dsa_key ]; then
+                echo "Converting existing OpenSSH RSA host key to dropbear format."
+                /usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key /etc/dropbear/dropbear_dss_host_key
+            else
+                echo "Generating dropbear DSS key. Please wait."
+                /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
+            fi
         fi
         if [ ! -s /etc/default/dropbear ]; then 
             # check whether OpenSSH seems to be installed.
@@ -41,11 +51,10 @@ case "$1" in
                 echo "this behaviour."
                 echo "# disabled because openssh is installed, change to NO_START=0 to enable dropbear" > /etc/default/dropbear
                 echo "NO_START=1" >> /etc/default/dropbear
-                
             fi
             echo "# the TCP port that dropbear listens on" >> /etc/default/dropbear
             echo "DROPBEAR_PORT=22" >> /etc/default/dropbear
-            echo "# any additional arguments for dropbear" >> /etc/default/dropbear
+            echo "# any additional arguments for dropbear (try -6 to enable IPv6 support)" >> /etc/default/dropbear
             echo "DROPBEAR_EXTRA_ARGS=" >> /etc/default/dropbear
         fi
         if [ -e /etc/init.d/dropbear ]; then

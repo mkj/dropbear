@@ -90,6 +90,7 @@ install-arch:
 	# debian/tmp.
 	cp dropbear $(CURDIR)/debian/dropbear/usr/sbin
 	cp dropbearkey $(CURDIR)/debian/dropbear/usr/bin
+	cp dropbearconvert $(CURDIR)/debian/dropbear/usr/bin
 #	$(MAKE) install prefix=$(CURDIR)/debian/dropbear/usr
 
 	dh_install -a
@@ -97,6 +98,7 @@ install-arch:
 # binary-arch/binary-multi
 # in another 'make' thread.
 binary-common:
+	cat $(CURDIR)/debian/copyright.in $(CURDIR)/LICENSE > $(CURDIR)/debian/copyright
 	dh_testdir
 	dh_testroot
 	dh_installchangelogs CHANGES

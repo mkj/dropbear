@@ -4,9 +4,26 @@ dropbear for Debian
 This package will attempt to listen on port 22. If a running 
 OpenSSH sshd is detected, the file /etc/default/dropbear will 
 contain the line:
-  NO_START=0
-Change this to NO_START=1 after configuring things so that 
-port 22 is available, or dropbear listens on a different port.
+  NO_START=1
+Change this to NO_START=0 after configuring things so that 
+port 22 is available, or so that dropbear listens on a different 
+port.
+
+Replacing OpenSSH "sshd" with Dropbear
+--------------------------------------
+
+You will still want to have the "ssh" package installed, as it 
+provides the "ssh" and "scp" binaries. When you install this 
+package, it checks for existing OpenSSH host keys and if found, 
+converts them to the dropbear format. If this appears to have 
+worked, you should be able to change overy by:
+
+  /etc/init.d/ssh stop
+  editor /etc/default/dropbear
+  (change NO_START to 0 and ensure DROPBEAR_PORT is set to 22)
+  /etc/init.d/dropbear start
+  (ensure dropbear is working)
+  update-rc.d -f ssh remove
 
 See the dropbear homepage for more information:
   http://matt.ucc.asn.au/dropbear/

@@ -1,5 +1,12 @@
 dropbear (0.32cvs-1) unstable; urgency=medium
 
+  * now maintained in UCC CVS
+  * debian/copyright.in file added, generated from LICENSE
+
+ -- Grahame Bowland <grahame@angrygoats.net>  Tue, 21 Jun 2003 17:57:02 +0800
+
+dropbear (0.32cvs-1) unstable; urgency=medium
+
   * sync with CVS
   * fixes X crash bug
 
