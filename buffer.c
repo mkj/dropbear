@@ -28,14 +28,34 @@
 #include "util.h"
 #include "buffer.h"
 
+/* Prevent integer overflows when incrementing buffer position/length.
+ * Calling functions should check arguments first, but this provides a
+ * backstop */
+#define BUF_MAX_INCR 1000000000
+#define BUF_MAX_SIZE 1000000000
+
 /* Create (malloc) a new buffer of size */
 buffer* buf_new(unsigned int size) {
 
-	buffer* ret;
+	buffer* buf;
 	
-	ret = (buffer*)m_malloc(sizeof(buffer));
-	buf_init(ret, size);
-	return ret;
+	if (size > BUF_MAX_SIZE) {
+		dropbear_exit("buf->size too big");
+	}
+
+	buf = (buffer*)m_malloc(sizeof(buffer));
+
+	if (size > 0) {
+		buf->data = (unsigned char*)m_malloc(size);
+	} else {
+		buf->data = NULL;
+	}
+
+	buf->size = size;
+	buf->pos = 0;
+	buf->len = 0;
+
+	return buf;
 
 }
 
@@ -53,23 +73,12 @@ void buf_burn(buffer* buf) {
 
 }
 
-/* initialise an already allocated buffer. The data won't be freed before
- * malloc */
-void buf_init(buffer* buf, unsigned int size) {
-
-	if (size > 0) {
-		buf->data = (unsigned char*)m_malloc(size);
-	} else {
-		buf->data = NULL;
-	}
-
-	buf->size = size;
-	buf->pos = 0;
-	buf->len = 0;
-}
-
 /* resize a buffer, pos and len will be repositioned if required */
 void buf_resize(buffer *buf, unsigned int newsize) {
+
+	if (newsize > BUF_MAX_SIZE) {
+		dropbear_exit("buf->size too big");
+	}
 
 	buf->data = m_realloc(buf->data, newsize);
 	buf->size = newsize;
@@ -78,11 +87,8 @@ void buf_resize(buffer *buf, unsigned int newsize) {
 
 }
 
-/* create a copy of buf, allocating required memory etc */
-/* the new buffer is sized the same as the length of the source buffer */
-/* lenonly is a boolean flag specifying whether to set the size of the new
- * buffer to be just the len of the source buffer (1), or the size of the
- * source buffer (0) */
+/* Create a copy of buf, allocating required memory etc. */
+/* The new buffer is sized the same as the length of the source buffer. */
 buffer* buf_newcopy(buffer* buf) {
 	
 	buffer* ret;
@@ -103,7 +109,7 @@ void buf_setlen(buffer* buf, unsigned int len) {
 
 /* Increment the length of the buffer */
 void buf_incrlen(buffer* buf, unsigned int incr) {
-	if (buf->len + incr > buf->size) {
+	if (incr > BUF_MAX_INCR || buf->len + incr > buf->size) {
 		dropbear_exit("bad buf_incrlen");
 	}
 	buf->len += incr;
@@ -119,7 +125,7 @@ void buf_setpos(buffer* buf, unsigned int pos) {
 
 /* increment the postion by incr, increasing the buffer length if required */
 void buf_incrwritepos(buffer* buf, unsigned int incr) {
-	if (buf->pos + incr > buf->size) {
+	if (incr > BUF_MAX_INCR || buf->pos + incr > buf->size) {
 		dropbear_exit("bad buf_incrwritepos");
 	}
 	buf->pos += incr;
@@ -131,7 +137,8 @@ void buf_incrwritepos(buffer* buf, unsigned int incr) {
 /* increment the position by incr, negative values are allowed, to
  * decrement the pos*/
 void buf_incrpos(buffer* buf,  int incr) {
-	if ((unsigned int)((int)buf->pos + incr) > buf->len 
+	if (incr > BUF_MAX_INCR ||
+			(unsigned int)((int)buf->pos + incr) > buf->len 
 			|| ((int)buf->pos + incr) < 0) {
 		dropbear_exit("bad buf_incrpos");
 	}
@@ -157,7 +164,8 @@ void buf_putbyte(buffer* buf, unsigned char val) {
 	buf->pos++;
 }
 
-/* returns an in-place pointer to the buffer, for boundschecking */
+/* returns an in-place pointer to the buffer, checking that
+ * the next len bytes from that position can be used */
 unsigned char* buf_getptr(buffer* buf, unsigned int len) {
 
 	if (buf->pos + len > buf->len) {
@@ -176,7 +184,7 @@ unsigned char* buf_getwriteptr(buffer* buf, unsigned int len) {
 	return &buf->data[buf->pos];
 }
 
-/* return a null-terminated string, it is malloced, so must be free()ed
+/* Return a null-terminated string, it is malloced, so must be free()ed
  * Note that the string isn't checked for null bytes, hence the retlen
  * may be longer than what is returned by strlen */
 unsigned char* buf_getstring(buffer* buf, unsigned int *retlen) {

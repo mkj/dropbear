@@ -40,7 +40,6 @@ struct buf {
 typedef struct buf buffer;
 
 buffer * buf_new(unsigned int size);
-void buf_init(buffer* buf, unsigned int size);
 void buf_resize(buffer *buf, unsigned int newsize);
 void buf_free(buffer* buf);
 void buf_burn(buffer* buf);
