@@ -43,10 +43,10 @@ static void printhelp() {
 					"Usage: %s [options] user@host\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
-					"-t    Allocate a pty"
-					"-T    Don't allocate a pty"
+					"-t    Allocate a pty\n"
+					"-T    Don't allocate a pty\n"
 #ifdef DROPBEAR_PUBKEY_AUTH
-					"-i <identityfile>   (multiple allowed)"
+					"-i <identityfile>   (multiple allowed)\n"
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname);
 }
