@@ -46,14 +46,13 @@ static void svr_remoteclosed();
 struct serversession svr_ses; /* GLOBAL */
 
 static const packettype svr_packettypes[] = {
-	/* TYPE, AUTHREQUIRED, FUNCTION */
-	{SSH_MSG_SERVICE_REQUEST, recv_msg_service_request}, // server
-	{SSH_MSG_USERAUTH_REQUEST, recv_msg_userauth_request}, //server
-	{SSH_MSG_KEXINIT, recv_msg_kexinit},
-	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init}, // server
-	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
+	{SSH_MSG_USERAUTH_REQUEST, recv_msg_userauth_request}, /* server */
+	{SSH_MSG_SERVICE_REQUEST, recv_msg_service_request}, /* server */
+	{SSH_MSG_KEXINIT, recv_msg_kexinit},
+	{SSH_MSG_KEXDH_INIT, recv_msg_kexdh_init}, /* server */
+	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
 	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
 	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
 	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},

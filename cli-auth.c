@@ -7,7 +7,6 @@
 #include "packet.h"
 #include "runopts.h"
 
-#undef DROPBEAR_PUBKEY_AUTH
 
 void cli_authinitialise() {
 
@@ -30,7 +29,6 @@ void cli_auth_getmethods() {
 	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
 
 	encrypt_packet();
-	cli_ses.state = USERAUTH_METHODS_SENT;
 	TRACE(("leave cli_auth_getmethods"));
 
 }
@@ -87,6 +85,20 @@ void recv_msg_userauth_failure() {
 
 	TRACE(("<- MSG_USERAUTH_FAILURE"));
 	TRACE(("enter recv_msg_userauth_failure"));
+
+	if (cli_ses.state != USERAUTH_REQ_SENT) {
+		/* Perhaps we should be more fatal? */
+		TRACE(("But we didn't send a userauth request!!!!!!"));
+		return;
+	}
+
+#ifdef DROPBEAR_PUBKEY_AUTH
+	/* If it was a pubkey auth request, we should cross that key 
+	 * off the list. */
+	if (cli_ses.lastauthtype == AUTH_TYPE_PUBKEY) {
+		cli_pubkeyfail();
+	}
+#endif
 
 	methods = buf_getstring(ses.payload, &methlen);
 
@@ -154,12 +166,14 @@ void cli_auth_try() {
 #ifdef DROPBEAR_PUBKEY_AUTH
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		finished = cli_auth_pubkey();
+		cli_ses.lastauthtype = AUTH_TYPE_PUBKEY;
 	}
 #endif
 
 #ifdef DROPBEAR_PASSWORD_AUTH
 	if (!finished && ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 		finished = cli_auth_password();
+		cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;
 	}
 #endif
 
@@ -167,6 +181,5 @@ void cli_auth_try() {
 		dropbear_exit("No auth methods could be used.");
 	}
 
-	cli_ses.state = USERAUTH_REQ_SENT;
 	TRACE(("leave cli_auth_try"));
 }

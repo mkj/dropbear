@@ -30,24 +30,24 @@
 void svr_authinitialise();
 void cli_authinitialise();
 
-void svr_auth_password();
-void svr_auth_pubkey();
-
-int cli_auth_password();
-int cli_auth_pubkey();
-
 /* Server functions */
 void recv_msg_userauth_request();
 void send_msg_userauth_failure(int partial, int incrfail);
 void send_msg_userauth_success();
+void svr_auth_password();
+void svr_auth_pubkey();
 
 /* Client functions */
 void recv_msg_userauth_failure();
 void recv_msg_userauth_success();
+void recv_msg_userauth_pk_ok();
 void cli_get_user();
 void cli_auth_getmethods();
 void cli_auth_try();
 void recv_msg_userauth_banner();
+void cli_pubkeyfail();
+int cli_auth_password();
+int cli_auth_pubkey();
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
@@ -62,6 +62,9 @@ void recv_msg_userauth_banner();
 #define AUTH_METHOD_PUBKEY_LEN 9
 #define AUTH_METHOD_PASSWORD "password"
 #define AUTH_METHOD_PASSWORD_LEN 8
+
+/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
+#define MAX_PUBKEY_SIZE 1600
 
 /* This structure is shared between server and client - it contains
  * relatively little extraneous bits when used for the client rather than the
@@ -80,6 +83,18 @@ struct AuthState {
 	/* These are only used for the server */
 	char *printableuser; /* stripped of control chars, used for logs etc */
 	struct passwd * pw;
+
+};
+
+struct PubkeyList;
+/* A singly linked list of pubkeys */
+struct PubkeyList {
+
+	sign_key *key;
+	int type; /* The type of key */
+	struct PubkeyList *next;
+	/* filename? or the buffer? for encrypted keys, so we can later get
+	 * the private key portion */
 
 };
 

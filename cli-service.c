@@ -31,7 +31,7 @@ void recv_msg_service_accept() {
 	servicename = buf_getstring(ses.payload, &len);
 
 	/* ssh-userauth */
-	if (cli_ses.state = SERVICE_AUTH_REQ_SENT
+	if (cli_ses.state == SERVICE_AUTH_REQ_SENT
 			&& len == SSH_SERVICE_USERAUTH_LEN
 			&& strncmp(SSH_SERVICE_USERAUTH, servicename, len) == 0) {
 
@@ -42,7 +42,7 @@ void recv_msg_service_accept() {
 	}
 
 	/* ssh-connection */
-	if (cli_ses.state = SERVICE_CONN_REQ_SENT
+	if (cli_ses.state == SERVICE_CONN_REQ_SENT
 			&& len == SSH_SERVICE_CONNECTION_LEN 
 			&& strncmp(SSH_SERVICE_CONNECTION, servicename, len) == 0) {
 

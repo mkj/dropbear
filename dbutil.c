@@ -103,7 +103,6 @@ void dropbear_log(int priority, const char* format, ...) {
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...) {
 
-#if 0
 	va_list param;
 
 	va_start(param, format);
@@ -111,7 +110,6 @@ void dropbear_trace(const char* format, ...) {
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
-#endif
 }
 #endif /* DEBUG_TRACE */
 

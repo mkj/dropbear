@@ -194,7 +194,6 @@ typedef enum {
 	SERVICE_AUTH_ACCEPT_RCVD,
 	SERVICE_CONN_REQ_SENT,
 	SERVICE_CONN_ACCEPT_RCVD,
-	USERAUTH_METHODS_SENT,
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
@@ -214,6 +213,15 @@ struct clientsession {
 	struct termios saved_tio;
 
 	int winchange; /* Set to 1 when a windowchange signal happens */
+
+	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
+	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
+						 for the last type of auth we tried */
+	struct PubkeyList *lastpubkey;
+#if 0
+	TODO
+	struct AgentkeyList *agentkeys; /* Keys to use for public-key auth */
+#endif
 
 };
 

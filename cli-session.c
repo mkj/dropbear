@@ -19,14 +19,18 @@ static void cli_finished();
 
 struct clientsession cli_ses; /* GLOBAL */
 
+/* Sorted in decreasing frequency will be more efficient - data and window
+ * should be first */
 static const packettype cli_packettypes[] = {
 	/* TYPE, AUTHREQUIRED, FUNCTION */
-	{SSH_MSG_KEXINIT, recv_msg_kexinit},
-	{SSH_MSG_KEXDH_REPLY, recv_msg_kexdh_reply}, // client
-	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
-	{SSH_MSG_SERVICE_ACCEPT, recv_msg_service_accept}, // client
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
+	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, /* client */
+	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, /* client */
+	{SSH_MSG_KEXINIT, recv_msg_kexinit},
+	{SSH_MSG_KEXDH_REPLY, recv_msg_kexdh_reply}, /* client */
+	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
+	{SSH_MSG_SERVICE_ACCEPT, recv_msg_service_accept}, /* client */
 	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
 	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
 	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},
@@ -34,9 +38,10 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_CLOSE, recv_msg_channel_close},
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
-	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, // client
-	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, // client
-	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, // client
+	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
+#ifdef DROPBEAR_PUBKEY_AUTH
+	{SSH_MSG_USERAUTH_PK_OK, recv_msg_userauth_pk_ok}, /* client */
+#endif
 	{0, 0} /* End */
 };
 
@@ -145,28 +150,35 @@ static void cli_sessionloop() {
 		/* userauth code */
 		case SERVICE_AUTH_ACCEPT_RCVD:
 			cli_auth_getmethods();
-			cli_ses.state = USERAUTH_METHODS_SENT;
+			cli_ses.state = USERAUTH_REQ_SENT;
 			TRACE(("leave cli_sessionloop: sent userauth methods req"));
 			return;
 			
 		case USERAUTH_FAIL_RCVD:
 			cli_auth_try();
+			cli_ses.state = USERAUTH_REQ_SENT;
 			TRACE(("leave cli_sessionloop: cli_auth_try"));
 			return;
 
-			/*
 		case USERAUTH_SUCCESS_RCVD:
 			send_msg_service_request(SSH_SERVICE_CONNECTION);
 			cli_ses.state = SERVICE_CONN_REQ_SENT;
 			TRACE(("leave cli_sessionloop: sent ssh-connection service req"));
 			return;
-			*/
 
+		case SERVICE_CONN_ACCEPT_RCVD:
+			cli_send_chansess_request();
+			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
+			cli_ses.state = SESSION_RUNNING;
+			return;
+
+			/*
 		case USERAUTH_SUCCESS_RCVD:
 			cli_send_chansess_request();
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
 			cli_ses.state = SESSION_RUNNING;
 			return;
+			*/
 
 		case SESSION_RUNNING:
 			if (ses.chancount < 1) {
