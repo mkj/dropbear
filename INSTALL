@@ -5,7 +5,8 @@ Basic Dropbear build instructions:
 
 - Edit debug.h if you want any debug options
 
-- Now configure Dropbear's host-specific options:
+- Now configure Dropbear's host-specific options
+  (if you are using a cvs copy, "autoconf; autoheader" first)
 
 ./configure      (optionally with --disable-zlib or --disable-syslog,
                   or --help for other options)
