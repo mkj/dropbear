@@ -1,15 +1,34 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
+
+/* RSA Code by Tom St Denis */
 #include "mycrypt.h"
+
+/* Min and Max RSA key sizes (in bits) */
+#define MIN_RSA_SIZE 1024
+#define MAX_RSA_SIZE 4096
+
+/* Stack required for temps (plus padding) */
+#define RSA_STACK    (8 + (MAX_RSA_SIZE/8))
 
 #ifdef MRSA
 
 int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
 {
    mp_int p, q, tmp1, tmp2, tmp3;
-   int res, err;
+   int err;
 
    _ARGCHK(key != NULL);
 
-   if ((size < (1024/8)) || (size > (4096/8))) {
+   if ((size < (MIN_RSA_SIZE/8)) || (size > (MAX_RSA_SIZE/8))) {
       return CRYPT_INVALID_KEYSIZE;
    }
 
@@ -21,81 +40,81 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
       return err;
    }
 
-   if (mp_init_multi(&p, &q, &tmp1, &tmp2, &tmp3, NULL) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((err = mp_init_multi(&p, &q, &tmp1, &tmp2, &tmp3, NULL)) != MP_OKAY) {
+      return mpi_to_ltc_error(err);
    }
 
    /* make primes p and q (optimization provided by Wayne Scott) */
-   if (mp_set_int(&tmp3, e) != MP_OKAY) { goto error; }            /* tmp3 = e */
+   if ((err = mp_set_int(&tmp3, e)) != MP_OKAY) { goto error; }            /* tmp3 = e */
 
    /* make prime "p" */
    do {
-       if (rand_prime(&p, size/2, prng, wprng) != CRYPT_OK) { res = CRYPT_ERROR; goto done; }
-       if (mp_sub_d(&p, 1, &tmp1) != MP_OKAY)              { goto error; }  /* tmp1 = p-1 */
-       if (mp_gcd(&tmp1, &tmp3, &tmp2) != MP_OKAY)         { goto error; }  /* tmp2 = gcd(p-1, e) */
-   } while (mp_cmp_d(&tmp2, 1) != 0);                                       /* while e divides p-1 */
+       if ((err = rand_prime(&p, size/2, prng, wprng)) != CRYPT_OK) { goto done; }
+       if ((err = mp_sub_d(&p, 1, &tmp1)) != MP_OKAY)               { goto error; }  /* tmp1 = p-1 */
+       if ((err = mp_gcd(&tmp1, &tmp3, &tmp2)) != MP_OKAY)          { goto error; }  /* tmp2 = gcd(p-1, e) */
+   } while (mp_cmp_d(&tmp2, 1) != 0);                                                /* while e divides p-1 */
 
    /* make prime "q" */
    do {
-       if (rand_prime(&q, size/2, prng, wprng) != CRYPT_OK) { res = CRYPT_ERROR; goto done; }
-       if (mp_sub_d(&q, 1, &tmp1) != MP_OKAY)              { goto error; } /* tmp1 = q-1 */
-       if (mp_gcd(&tmp1, &tmp3, &tmp2) != MP_OKAY)         { goto error; } /* tmp2 = gcd(q-1, e) */
-   } while (mp_cmp_d(&tmp2, 1) != 0);                                      /* while e divides q-1 */
+       if ((err = rand_prime(&q, size/2, prng, wprng)) != CRYPT_OK) { goto done; }
+       if ((err = mp_sub_d(&q, 1, &tmp1)) != MP_OKAY)               { goto error; } /* tmp1 = q-1 */
+       if ((err = mp_gcd(&tmp1, &tmp3, &tmp2)) != MP_OKAY)          { goto error; } /* tmp2 = gcd(q-1, e) */
+   } while (mp_cmp_d(&tmp2, 1) != 0);                                               /* while e divides q-1 */
 
    /* tmp1 = lcm(p-1, q-1) */
-   if (mp_sub_d(&p, 1, &tmp2) != MP_OKAY)                  { goto error; } /* tmp2 = p-1 */
-                                                                           /* tmp1 = q-1 (previous do/while loop) */
-   if (mp_lcm(&tmp1, &tmp2, &tmp1) != MP_OKAY)             { goto error; } /* tmp1 = lcm(p-1, q-1) */
+   if ((err = mp_sub_d(&p, 1, &tmp2)) != MP_OKAY)                  { goto error; } /* tmp2 = p-1 */
+                                                                   /* tmp1 = q-1 (previous do/while loop) */
+   if ((err = mp_lcm(&tmp1, &tmp2, &tmp1)) != MP_OKAY)             { goto error; } /* tmp1 = lcm(p-1, q-1) */
 
    /* make key */
-   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP,
-                     &key->qP, &key->pQ, &key->p, &key->q, NULL) != MP_OKAY) {
+   if ((err = mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP,
+                     &key->qP, &key->pQ, &key->p, &key->q, NULL)) != MP_OKAY) {
       goto error;
    }
 
-   if (mp_set_int(&key->e, e) != MP_OKAY)                  { goto error2; } /* key->e =  e */
-   if (mp_invmod(&key->e, &tmp1, &key->d) != MP_OKAY)      { goto error2; } /* key->d = 1/e mod lcm(p-1,q-1) */
-   if (mp_mul(&p, &q, &key->N) != MP_OKAY)                 { goto error2; } /* key->N = pq */
+   if ((err = mp_set_int(&key->e, e)) != MP_OKAY)                  { goto error2; } /* key->e =  e */
+   if ((err = mp_invmod(&key->e, &tmp1, &key->d)) != MP_OKAY)      { goto error2; } /* key->d = 1/e mod lcm(p-1,q-1) */
+   if ((err = mp_mul(&p, &q, &key->N)) != MP_OKAY)                 { goto error2; } /* key->N = pq */
 
 /* optimize for CRT now */
    /* find d mod q-1 and d mod p-1 */
-   if (mp_sub_d(&p, 1, &tmp1) != MP_OKAY)                  { goto error2; } /* tmp1 = q-1 */
-   if (mp_sub_d(&q, 1, &tmp2) != MP_OKAY)                  { goto error2; } /* tmp2 = p-1 */
+   if ((err = mp_sub_d(&p, 1, &tmp1)) != MP_OKAY)                  { goto error2; } /* tmp1 = q-1 */
+   if ((err = mp_sub_d(&q, 1, &tmp2)) != MP_OKAY)                  { goto error2; } /* tmp2 = p-1 */
 
-   if (mp_mod(&key->d, &tmp1, &key->dP) != MP_OKAY)        { goto error2; } /* dP = d mod p-1 */
-   if (mp_mod(&key->d, &tmp2, &key->dQ) != MP_OKAY)        { goto error2; } /* dQ = d mod q-1 */
+   if ((err = mp_mod(&key->d, &tmp1, &key->dP)) != MP_OKAY)        { goto error2; } /* dP = d mod p-1 */
+   if ((err = mp_mod(&key->d, &tmp2, &key->dQ)) != MP_OKAY)        { goto error2; } /* dQ = d mod q-1 */
 
-   if (mp_invmod(&q, &p, &key->qP) != MP_OKAY)             { goto error2; } /* qP = 1/q mod p */
-   if (mp_mulmod(&key->qP, &q, &key->N, &key->qP))         { goto error2; } /* qP = q * (1/q mod p) mod N */
+   if ((err = mp_invmod(&q, &p, &key->qP)) != MP_OKAY)             { goto error2; } /* qP = 1/q mod p */
+   if ((err = mp_mulmod(&key->qP, &q, &key->N, &key->qP)) != MP_OKAY)         { goto error2; } /* qP = q * (1/q mod p) mod N */
 
-   if (mp_invmod(&p, &q, &key->pQ) != MP_OKAY)             { goto error2; } /* pQ = 1/p mod q */
-   if (mp_mulmod(&key->pQ, &p, &key->N, &key->pQ))         { goto error2; } /* pQ = p * (1/p mod q) mod N */
+   if ((err = mp_invmod(&p, &q, &key->pQ)) != MP_OKAY)             { goto error2; } /* pQ = 1/p mod q */
+   if ((err = mp_mulmod(&key->pQ, &p, &key->N, &key->pQ)) != MP_OKAY)         { goto error2; } /* pQ = p * (1/p mod q) mod N */
 
-   if (mp_copy(&p, &key->p) != MP_OKAY)                    { goto error2; }
-   if (mp_copy(&q, &key->q) != MP_OKAY)                    { goto error2; }
+   if ((err = mp_copy(&p, &key->p)) != MP_OKAY)                    { goto error2; }
+   if ((err = mp_copy(&q, &key->q)) != MP_OKAY)                    { goto error2; }
 
    /* shrink ram required  */
-   if (mp_shrink(&key->e) != MP_OKAY)                      { goto error2; }
-   if (mp_shrink(&key->d) != MP_OKAY)                      { goto error2; }
-   if (mp_shrink(&key->N) != MP_OKAY)                      { goto error2; }
-   if (mp_shrink(&key->dQ) != MP_OKAY)                     { goto error2; }
-   if (mp_shrink(&key->dP) != MP_OKAY)                     { goto error2; }
-   if (mp_shrink(&key->qP) != MP_OKAY)                     { goto error2; }
-   if (mp_shrink(&key->pQ) != MP_OKAY)                     { goto error2; }
-   if (mp_shrink(&key->p) != MP_OKAY)                      { goto error2; }
-   if (mp_shrink(&key->q) != MP_OKAY)                      { goto error2; }
+   if ((err = mp_shrink(&key->e)) != MP_OKAY)                      { goto error2; }
+   if ((err = mp_shrink(&key->d)) != MP_OKAY)                      { goto error2; }
+   if ((err = mp_shrink(&key->N)) != MP_OKAY)                      { goto error2; }
+   if ((err = mp_shrink(&key->dQ)) != MP_OKAY)                     { goto error2; }
+   if ((err = mp_shrink(&key->dP)) != MP_OKAY)                     { goto error2; }
+   if ((err = mp_shrink(&key->qP)) != MP_OKAY)                     { goto error2; }
+   if ((err = mp_shrink(&key->pQ)) != MP_OKAY)                     { goto error2; }
+   if ((err = mp_shrink(&key->p)) != MP_OKAY)                      { goto error2; }
+   if ((err = mp_shrink(&key->q)) != MP_OKAY)                      { goto error2; }
 
-   res = CRYPT_OK;
+   err = CRYPT_OK;
    key->type = PK_PRIVATE_OPTIMIZED;
    goto done;
 error2:
    mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
                   &key->qP, &key->pQ, &key->p, &key->q, NULL);
 error:
-   res = CRYPT_MEM;
+   err = mpi_to_ltc_error(err);
 done:
    mp_clear_multi(&tmp3, &tmp2, &tmp1, &p, &q, NULL);
-   return res;
+   return err;
 }
 
 void rsa_free(rsa_key *key)
@@ -111,12 +130,12 @@ int rsa_exptmod(const unsigned char *in,  unsigned long inlen,
 {
    mp_int tmp, tmpa, tmpb;
    unsigned long x;
-   int res;
+   int err;
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
-   _ARGCHK(key != NULL);
+   _ARGCHK(key    != NULL);
 
    if (which == PK_PRIVATE && (key->type != PK_PRIVATE && key->type != PK_PRIVATE_OPTIMIZED)) {
       return CRYPT_PK_NOT_PRIVATE;
@@ -128,51 +147,51 @@ int rsa_exptmod(const unsigned char *in,  unsigned long inlen,
    }
 
    /* init and copy into tmp */
-   if (mp_init_multi(&tmp, &tmpa, &tmpb, NULL) != MP_OKAY)                          { goto error; }
-   if (mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen) != MP_OKAY)      { goto error; }
+   if ((err = mp_init_multi(&tmp, &tmpa, &tmpb, NULL)) != MP_OKAY)                     { goto error; }
+   if ((err = mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen)) != MP_OKAY) { goto error; }
 
    /* sanity check on the input */
    if (mp_cmp(&key->N, &tmp) == MP_LT) {
-      res = CRYPT_PK_INVALID_SIZE;
+      err = CRYPT_PK_INVALID_SIZE;
       goto done;
    }
 
    /* are we using the private exponent and is the key optimized? */
    if (which == PK_PRIVATE && key->type == PK_PRIVATE_OPTIMIZED) {
       /* tmpa = tmp^dP mod p */
-      if (mp_exptmod(&tmp, &key->dP, &key->p, &tmpa) != MP_OKAY)    { goto error; }
+      if ((err = mp_exptmod(&tmp, &key->dP, &key->p, &tmpa)) != MP_OKAY)    { goto error; }
 
       /* tmpb = tmp^dQ mod q */
-      if (mp_exptmod(&tmp, &key->dQ, &key->q, &tmpb) != MP_OKAY)    { goto error; }
+      if ((err = mp_exptmod(&tmp, &key->dQ, &key->q, &tmpb)) != MP_OKAY)    { goto error; }
 
       /* tmp = tmpa*qP + tmpb*pQ mod N */
-      if (mp_mul(&tmpa, &key->qP, &tmpa) != MP_OKAY)                { goto error; }
-      if (mp_mul(&tmpb, &key->pQ, &tmpb) != MP_OKAY)                { goto error; }
-      if (mp_addmod(&tmpa, &tmpb, &key->N, &tmp) != MP_OKAY)        { goto error; }
+      if ((err = mp_mul(&tmpa, &key->qP, &tmpa)) != MP_OKAY)                { goto error; }
+      if ((err = mp_mul(&tmpb, &key->pQ, &tmpb)) != MP_OKAY)                { goto error; }
+      if ((err = mp_addmod(&tmpa, &tmpb, &key->N, &tmp)) != MP_OKAY)        { goto error; }
    } else {
       /* exptmod it */
-      if (mp_exptmod(&tmp, which==PK_PRIVATE?&key->d:&key->e, &key->N, &tmp) != MP_OKAY) { goto error; }
+      if ((err = mp_exptmod(&tmp, which==PK_PRIVATE?&key->d:&key->e, &key->N, &tmp)) != MP_OKAY) { goto error; }
    }
 
    /* read it back */
    x = (unsigned long)mp_unsigned_bin_size(&tmp);
    if (x > *outlen) {
-      res = CRYPT_BUFFER_OVERFLOW;
+      err = CRYPT_BUFFER_OVERFLOW;
       goto done;
    }
    *outlen = x;
 
    /* convert it */
-   if (mp_to_unsigned_bin(&tmp, out) != MP_OKAY)                    { goto error; }
+   if ((err = mp_to_unsigned_bin(&tmp, out)) != MP_OKAY)                    { goto error; }
 
    /* clean up and return */
-   res = CRYPT_OK;
+   err = CRYPT_OK;
    goto done;
 error:
-   res = CRYPT_MEM;
+   err = mpi_to_ltc_error(err);
 done:
    mp_clear_multi(&tmp, &tmpa, &tmpb, NULL);
-   return res;
+   return err;
 }
 
 int rsa_signpad(const unsigned char *in,  unsigned long inlen,
@@ -180,8 +199,8 @@ int rsa_signpad(const unsigned char *in,  unsigned long inlen,
 {
    unsigned long x, y;
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
    if (*outlen < (3 * inlen)) {
@@ -207,12 +226,12 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
                   unsigned char *out, unsigned long *outlen,
                   int wprng, prng_state *prng)
 {
-   unsigned char buf[1536];
+   unsigned char buf[3*(MAX_RSA_SIZE/8)];
    unsigned long x;
    int err;
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
    /* is output big enough? */
@@ -226,7 +245,7 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
    }
 
    /* check inlen */
-   if (inlen > 512) {
+   if (inlen > (MAX_RSA_SIZE/8)) {
       return CRYPT_PK_INVALID_SIZE;
    }
 
@@ -264,12 +283,12 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
 }
 
 int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
-                    unsigned char *out, unsigned long *outlen)
+                        unsigned char *out, unsigned long *outlen)
 {
    unsigned long x;
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
    if (*outlen < inlen/3) {
@@ -294,8 +313,8 @@ int rsa_depad(const unsigned char *in,  unsigned long inlen,
 {
    unsigned long x;
 
-   _ARGCHK(in != NULL);
-   _ARGCHK(out != NULL);
+   _ARGCHK(in     != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
 
    if (*outlen < inlen/3) {
@@ -308,53 +327,19 @@ int rsa_depad(const unsigned char *in,  unsigned long inlen,
    return CRYPT_OK;
 }
 
-#define OUTPUT_BIGNUM(num, buf2, y, z)         \
-{                                              \
-      z = (unsigned long)mp_unsigned_bin_size(num);  \
-      STORE32L(z, buf2+y);                     \
-      y += 4;                                  \
-      if (mp_to_unsigned_bin(num, buf2+y) != MP_OKAY) { return CRYPT_MEM; }    \
-      y += z;                                  \
-}
-
-
-#define INPUT_BIGNUM(num, in, x, y)                              \
-{                                                                \
-     /* load value */                                            \
-     if (y + 4 > inlen) {                                        \
-         err = CRYPT_INVALID_PACKET;                           \
-         goto error2;                                            \
-     }                                                           \
-     LOAD32L(x, in+y);                                           \
-     y += 4;                                                     \
-                                                                 \
-     /* sanity check... */                                       \
-     if (y+x > inlen) {                                          \
-        err = CRYPT_INVALID_PACKET;                            \
-        goto error2;                                             \
-     }                                                           \
-                                                                 \
-     /* load it */                                               \
-     if (mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x) != MP_OKAY) {\
-        err = CRYPT_MEM;                                       \
-        goto error2;                                             \
-     }                                                           \
-     y += x;                                                     \
-                                                                 \
-     if (mp_shrink(num) != MP_OKAY) {                            \
-        err = CRYPT_MEM;                                       \
-        goto error2;                                             \
-     }                                                           \
-}
-
 int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key)
 {
-   unsigned char buf2[5120];
-   unsigned long y, z;
+   unsigned long y, z; 
+   int err;
 
-   _ARGCHK(out != NULL);
+   _ARGCHK(out    != NULL);
    _ARGCHK(outlen != NULL);
-   _ARGCHK(key != NULL);
+   _ARGCHK(key    != NULL);
+   
+   /* can we store the static header?  */
+   if (*outlen < (PACKET_SIZE + 1)) {
+      return CRYPT_BUFFER_OVERFLOW;
+   }   
 
    /* type valid? */
    if (!(key->type == PK_PRIVATE || key->type == PK_PRIVATE_OPTIMIZED) &&
@@ -366,43 +351,34 @@ int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key
    y = PACKET_SIZE;
 
    /* output key type */
-   buf2[y++] = type;
+   out[y++] = type;
 
    /* output modulus */
-   OUTPUT_BIGNUM(&key->N, buf2, y, z);
+   OUTPUT_BIGNUM(&key->N, out, y, z);
 
    /* output public key */
-   OUTPUT_BIGNUM(&key->e, buf2, y, z);
+   OUTPUT_BIGNUM(&key->e, out, y, z);
 
    if (type == PK_PRIVATE || type == PK_PRIVATE_OPTIMIZED) {
-      OUTPUT_BIGNUM(&key->d, buf2, y, z);
+      OUTPUT_BIGNUM(&key->d, out, y, z);
    }
 
    if (type == PK_PRIVATE_OPTIMIZED) {
-      OUTPUT_BIGNUM(&key->dQ, buf2, y, z);
-      OUTPUT_BIGNUM(&key->dP, buf2, y, z);
-      OUTPUT_BIGNUM(&key->pQ, buf2, y, z);
-      OUTPUT_BIGNUM(&key->qP, buf2, y, z);
-      OUTPUT_BIGNUM(&key->p, buf2, y, z);
-      OUTPUT_BIGNUM(&key->q, buf2, y, z);
-   }
-
-   /* check size */
-   if (*outlen < y) {
-      return CRYPT_BUFFER_OVERFLOW;
+      OUTPUT_BIGNUM(&key->dQ, out, y, z);
+      OUTPUT_BIGNUM(&key->dP, out, y, z);
+      OUTPUT_BIGNUM(&key->pQ, out, y, z);
+      OUTPUT_BIGNUM(&key->qP, out, y, z);
+      OUTPUT_BIGNUM(&key->p, out, y, z);
+      OUTPUT_BIGNUM(&key->q, out, y, z);
    }
 
    /* store packet header */
-   packet_store_header(buf2, PACKET_SECT_RSA, PACKET_SUB_KEY);
+   packet_store_header(out, PACKET_SECT_RSA, PACKET_SUB_KEY);
 
    /* copy to the user buffer */
-   memcpy(out, buf2, (size_t)y);
    *outlen = y;
 
    /* clear stack and return */
-#ifdef CLEAN_STACK
-   zeromem(buf2, sizeof(buf2));
-#endif
    return CRYPT_OK;
 }
 
@@ -411,11 +387,11 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
    unsigned long x, y;
    int err;
 
-   _ARGCHK(in != NULL);
+   _ARGCHK(in  != NULL);
    _ARGCHK(key != NULL);
 
    /* check length */
-   if (inlen < 1+PACKET_SIZE) {
+   if (inlen < (1+PACKET_SIZE)) {
       return CRYPT_INVALID_PACKET;
    }
 
@@ -425,9 +401,9 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
    }
 
    /* init key */
-   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP,
-                     &key->pQ, &key->p, &key->q, NULL) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((err = mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP,
+                     &key->pQ, &key->p, &key->q, NULL)) != MP_OKAY) {
+      return mpi_to_ltc_error(err);
    }
 
    /* get key type */
@@ -464,7 +440,7 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
    }
 
    return CRYPT_OK;
-error2:
+error:
    mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
                   &key->pQ, &key->qP, &key->p, &key->q, NULL);
    return err;

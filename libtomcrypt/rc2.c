@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 /**********************************************************************\
 * To commemorate the 1996 RSA Data Security Conference, the following  *
 * code is released into the public domain by its author.  Prost!       *
@@ -116,12 +126,14 @@ void rc2_ecb_encrypt( const unsigned char *plain,
                             symmetric_key *skey)
 #endif
 {
-    unsigned *xkey = skey->rc2.xkey;
+    unsigned *xkey;
     unsigned x76, x54, x32, x10, i;
 
     _ARGCHK(plain != NULL);
     _ARGCHK(cipher != NULL);
     _ARGCHK(skey != NULL);
+
+    xkey = skey->rc2.xkey;
 
     x76 = ((unsigned)plain[7] << 8) + (unsigned)plain[6];
     x54 = ((unsigned)plain[5] << 8) + (unsigned)plain[4];
@@ -184,12 +196,14 @@ void rc2_ecb_decrypt( const unsigned char *cipher,
 #endif
 {
     unsigned x76, x54, x32, x10;
-    unsigned *xkey = skey->rc2.xkey;
+    unsigned *xkey;
     int i;
 
     _ARGCHK(plain != NULL);
     _ARGCHK(cipher != NULL);
     _ARGCHK(skey != NULL);
+
+    xkey = skey->rc2.xkey;
 
     x76 = ((unsigned)cipher[7] << 8) + (unsigned)cipher[6];
     x54 = ((unsigned)cipher[5] << 8) + (unsigned)cipher[4];

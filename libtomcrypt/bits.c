@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 /* portable way to get secure random bits to feed a PRNG */
 #include "mycrypt.h"
 
@@ -35,45 +45,8 @@ static unsigned long rng_nix(unsigned char *buf, unsigned long len,
 
 #endif /* DEVRANDOM */
 
-#ifdef SONY_PS2
-#include <eetypes.h>
-#include <eeregs.h>
-#define min(a,b) ((a) < (b) ? (a) : (b))
-// Very simple/stupid MD5-based RNG that samples "entropy" from various PS2 control registers
-static unsigned long rng_ps2(unsigned char *buf, unsigned long len, 
-                             void (*callback)(void))
-{
-  static unsigned long lastx[2] = { 0xaab7cb4b2fd3b2b9, 0xcec58aff72afe49f }; // md5sum of bits.c
-  unsigned long j;
-  unsigned int samples[10];  // number of sample data sources
-  int l;
-  hash_state md;
-
-  for (j = 0; j < len; j += sizeof(lastx)) {
-    md5_init(&md);
-    samples[0] = *T2_COUNT;
-    samples[1] = *T3_COUNT;
-    samples[2] = *IPU_TOP;
-    samples[3] = *GIF_TAG0;
-    samples[4] = *GIF_TAG1;
-    samples[5] = *GIF_TAG2;
-    samples[6] = *VIF1_CODE;
-    samples[7] = *VIF0_CODE;
-    samples[8] = *D0_MADR;
-    samples[9] = *D1_MADR;
-    md5_process(&md, (unsigned char *)(&samples[0]), sizeof(samples));
-    // include previous round
-    md5_process(&md, (unsigned char *)(&lastx[0]), sizeof(lastx));
-    md5_done(&md, (unsigned char *)(&lastx[0]));
-    l = min(sizeof(lastx), len-j);
-    memcpy(buf+j, &lastx[0], l); //min(sizeof(lastx), len-j));
-  }
-  return len;
-}
-#endif /* SONY_PS2 */
-
 /* on ANSI C platforms with 100 < CLOCKS_PER_SEC < 10000 */
-#if !defined(SONY_PS2) && defined(CLOCKS_PER_SEC)
+#if defined(CLOCKS_PER_SEC)
 
 #define ANSI_RNG
 
@@ -143,9 +116,7 @@ unsigned long rng_get_bytes(unsigned char *buf, unsigned long len,
 
    _ARGCHK(buf != NULL);
 
-#ifdef SONY_PS2
-   x = rng_ps2(buf, len, callback);   if (x != 0) { return x; }
-#elif defined(DEVRANDOM)
+#if defined(DEVRANDOM)
    x = rng_nix(buf, len, callback);   if (x != 0) { return x; }
 #endif
 #ifdef WIN32

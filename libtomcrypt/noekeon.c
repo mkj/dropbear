@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 /* Implementation of the Noekeon block cipher by Tom St Denis */
 #include "mycrypt.h"
 
@@ -65,15 +75,15 @@ int noekeon_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
       return CRYPT_INVALID_ROUNDS;
    }
    
-   LOAD32L(skey->noekeon.K[0],&key[0]);
-   LOAD32L(skey->noekeon.K[1],&key[4]);
-   LOAD32L(skey->noekeon.K[2],&key[8]);
-   LOAD32L(skey->noekeon.K[3],&key[12]);
+   LOAD32H(skey->noekeon.K[0],&key[0]);
+   LOAD32H(skey->noekeon.K[1],&key[4]);
+   LOAD32H(skey->noekeon.K[2],&key[8]);
+   LOAD32H(skey->noekeon.K[3],&key[12]);
    
-   LOAD32L(skey->noekeon.dK[0],&key[0]);
-   LOAD32L(skey->noekeon.dK[1],&key[4]);
-   LOAD32L(skey->noekeon.dK[2],&key[8]);
-   LOAD32L(skey->noekeon.dK[3],&key[12]);
+   LOAD32H(skey->noekeon.dK[0],&key[0]);
+   LOAD32H(skey->noekeon.dK[1],&key[4]);
+   LOAD32H(skey->noekeon.dK[2],&key[8]);
+   LOAD32H(skey->noekeon.dK[3],&key[12]);
 
    kTHETA(skey->noekeon.dK[0], skey->noekeon.dK[1], skey->noekeon.dK[2], skey->noekeon.dK[3]);
 
@@ -95,23 +105,9 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
    _ARGCHK(pt != NULL);
    _ARGCHK(ct != NULL);
    
-   LOAD32L(a,&pt[0]); LOAD32L(b,&pt[4]);
-   LOAD32L(c,&pt[8]); LOAD32L(d,&pt[12]);
+   LOAD32H(a,&pt[0]); LOAD32H(b,&pt[4]);
+   LOAD32H(c,&pt[8]); LOAD32H(d,&pt[12]);
    
-
-#ifdef SMALL_CODE
-#define ROUND \
-       a ^= RC[r]; \
-       THETA(key->noekeon.K, a,b,c,d); \
-       PI1(a,b,c,d); \
-       GAMMA(a,b,c,d); \
-       PI2(a,b,c,d);
-
-   for (r = 0; r < 16; ++r) {
-       ROUND;
-   }
-#else 
-
 #define ROUND(i) \
        a ^= RC[i]; \
        THETA(key->noekeon.K, a,b,c,d); \
@@ -119,6 +115,11 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d);
 
+#ifdef SMALL_CODE
+   for (r = 0; r < 16; ++r) {
+       ROUND(r);
+   }
+#else 
    ROUND( 0); ROUND( 1); ROUND( 2); ROUND( 3);
    ROUND( 4); ROUND( 5); ROUND( 6); ROUND( 7);
    ROUND( 8); ROUND( 9); ROUND(10); ROUND(11);
@@ -130,8 +131,8 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
    a ^= RC[16];
    THETA(key->noekeon.K, a, b, c, d);
    
-   STORE32L(a,&ct[0]); STORE32L(b,&ct[4]);
-   STORE32L(c,&ct[8]); STORE32L(d,&ct[12]);
+   STORE32H(a,&ct[0]); STORE32H(b,&ct[4]);
+   STORE32H(c,&ct[8]); STORE32H(d,&ct[12]);
 }
 
 #ifdef CLEAN_STACK
@@ -157,24 +158,9 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
    _ARGCHK(pt != NULL);
    _ARGCHK(ct != NULL);
    
-   LOAD32L(a,&ct[0]); LOAD32L(b,&ct[4]);
-   LOAD32L(c,&ct[8]); LOAD32L(d,&ct[12]);
+   LOAD32H(a,&ct[0]); LOAD32H(b,&ct[4]);
+   LOAD32H(c,&ct[8]); LOAD32H(d,&ct[12]);
    
-
-#ifdef SMALL_CODE
-
-#define ROUND \
-       THETA(key->noekeon.dK, a,b,c,d); \
-       a ^= RC[r]; \
-       PI1(a,b,c,d); \
-       GAMMA(a,b,c,d); \
-       PI2(a,b,c,d); 
-
-   for (r = 16; r > 0; --r) {
-       ROUND;
-   }
-
-#else
 
 #define ROUND(i) \
        THETA(key->noekeon.dK, a,b,c,d); \
@@ -183,19 +169,23 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d); 
 
+#ifdef SMALL_CODE
+   for (r = 16; r > 0; --r) {
+       ROUND(r);
+   }
+#else
    ROUND(16); ROUND(15); ROUND(14); ROUND(13);
    ROUND(12); ROUND(11); ROUND(10); ROUND( 9);
    ROUND( 8); ROUND( 7); ROUND( 6); ROUND( 5);
    ROUND( 4); ROUND( 3); ROUND( 2); ROUND( 1);
-
 #endif
    
 #undef ROUND
 
    THETA(key->noekeon.dK, a,b,c,d);
    a ^= RC[0];
-   STORE32L(a,&pt[0]); STORE32L(b, &pt[4]);
-   STORE32L(c,&pt[8]); STORE32L(d, &pt[12]);
+   STORE32H(a,&pt[0]); STORE32H(b, &pt[4]);
+   STORE32H(c,&pt[8]); STORE32H(d, &pt[12]);
 }
 
 #ifdef CLEAN_STACK
@@ -219,8 +209,8 @@ int noekeon_test(void)
       16,
       { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
       { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
-      { 0x57, 0x9a, 0x6c, 0xe8, 0x91, 0x16, 0x52, 0x53,
-               0x32, 0x00, 0xca, 0x0a, 0x17, 0x5d, 0x28, 0x0e }
+      { 0x18, 0xa6, 0xec, 0xe5, 0x28, 0xaa, 0x79, 0x73,
+        0x28, 0xb2, 0xc0, 0x91, 0xa0, 0x2f, 0x54, 0xc5}
    }
  };
  symmetric_key key;

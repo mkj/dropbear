@@ -198,18 +198,18 @@ typedef unsigned long ulong32;
 
 static inline unsigned long ROL(unsigned long word, int i)
 {
-	__asm__("roll %%cl,%0"
-		:"=r" (word)
-		:"0" (word),"c" (i));
-	return word;
+   __asm__("roll %%cl,%0"
+      :"=r" (word)
+      :"0" (word),"c" (i));
+   return word;
 }
 
 static inline unsigned long ROR(unsigned long word, int i)
 {
-	__asm__("rorl %%cl,%0"
-		:"=r" (word)
-		:"0" (word),"c" (i));
-	return word;
+   __asm__("rorl %%cl,%0"
+      :"=r" (word)
+      :"0" (word),"c" (i));
+   return word;
 }
 
 #else

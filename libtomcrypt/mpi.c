@@ -1902,7 +1902,7 @@ mp_div_3 (mp_int * a, mp_int *c, mp_digit * d)
         t = (w * ((mp_word)b)) >> ((mp_word)DIGIT_BIT);
 
         /* now subtract 3 * [w/3] from w, to get the remainder */
-        w -= (t << ((mp_word)1)) + t;
+        w -= t+t+t;
 
         /* fixup the remainder as required since
          * the optimization is not exact.
@@ -1966,8 +1966,7 @@ static int s_is_power_of_two(mp_digit b, int *p)
 }
 
 /* single digit division (based on routine from MPI) */
-int
-mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
+int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
 {
   mp_int  q;
   mp_word w;
@@ -2665,6 +2664,79 @@ __M:
 
 /* End: bn_mp_exptmod_fast.c */
 
+/* Start: bn_mp_exteuclid.c */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis
+ *
+ * LibTomMath is a library that provides multiple-precision
+ * integer arithmetic as well as number theoretic functionality.
+ *
+ * The library was designed directly after the MPI library by
+ * Michael Fromberger but has been written from scratch with
+ * additional optimizations in place.
+ *
+ * The library is free for all purposes without any express
+ * guarantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ */
+#include <tommath.h>
+
+/* Extended euclidean algorithm of (a, b) produces 
+   a*u1 + b*u2 = u3
+ */
+int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3)
+{
+   mp_int u1,u2,u3,v1,v2,v3,t1,t2,t3,q,tmp;
+   int err;
+
+   if ((err = mp_init_multi(&u1, &u2, &u3, &v1, &v2, &v3, &t1, &t2, &t3, &q, &tmp, NULL)) != MP_OKAY) {
+      return err;
+   }
+
+   /* initialize, (u1,u2,u3) = (1,0,a) */
+   mp_set(&u1, 1);
+   if ((err = mp_copy(a, &u3)) != MP_OKAY)                                        { goto _ERR; }
+
+   /* initialize, (v1,v2,v3) = (0,1,b) */
+   mp_set(&v2, 1);
+   if ((err = mp_copy(b, &v3)) != MP_OKAY)                                        { goto _ERR; }
+
+   /* loop while v3 != 0 */
+   while (mp_iszero(&v3) == MP_NO) {
+       /* q = u3/v3 */
+       if ((err = mp_div(&u3, &v3, &q, NULL)) != MP_OKAY)                         { goto _ERR; }
+
+       /* (t1,t2,t3) = (u1,u2,u3) - (v1,v2,v3)q */
+       if ((err = mp_mul(&v1, &q, &tmp)) != MP_OKAY)                              { goto _ERR; }
+       if ((err = mp_sub(&u1, &tmp, &t1)) != MP_OKAY)                             { goto _ERR; }
+       if ((err = mp_mul(&v2, &q, &tmp)) != MP_OKAY)                              { goto _ERR; }
+       if ((err = mp_sub(&u2, &tmp, &t2)) != MP_OKAY)                             { goto _ERR; }
+       if ((err = mp_mul(&v3, &q, &tmp)) != MP_OKAY)                              { goto _ERR; }
+       if ((err = mp_sub(&u3, &tmp, &t3)) != MP_OKAY)                             { goto _ERR; }
+
+       /* (u1,u2,u3) = (v1,v2,v3) */
+       if ((err = mp_copy(&v1, &u1)) != MP_OKAY)                                  { goto _ERR; }
+       if ((err = mp_copy(&v2, &u2)) != MP_OKAY)                                  { goto _ERR; }
+       if ((err = mp_copy(&v3, &u3)) != MP_OKAY)                                  { goto _ERR; }
+
+       /* (v1,v2,v3) = (t1,t2,t3) */
+       if ((err = mp_copy(&t1, &v1)) != MP_OKAY)                                  { goto _ERR; }
+       if ((err = mp_copy(&t2, &v2)) != MP_OKAY)                                  { goto _ERR; }
+       if ((err = mp_copy(&t3, &v3)) != MP_OKAY)                                  { goto _ERR; }
+   }
+
+   /* copy result out */
+   if (U1 != NULL) { mp_exch(U1, &u1); }
+   if (U2 != NULL) { mp_exch(U2, &u2); }
+   if (U3 != NULL) { mp_exch(U3, &u3); }
+
+   err = MP_OKAY;
+_ERR: mp_clear_multi(&u1, &u2, &u3, &v1, &v2, &v3, &t1, &t2, &t3, &q, &tmp, NULL);
+   return err;
+}
+
+/* End: bn_mp_exteuclid.c */
+
 /* Start: bn_mp_fread.c */
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -2752,11 +2824,10 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream)
    char *buf;
    int err, len, x;
    
-   len = mp_radix_size(a, radix);
-   if (len == 0) {
-      return MP_VAL;
+   if ((err = mp_radix_size(a, radix, &len)) != MP_OKAY) {
+      return err;
    }
-   
+
    buf = XMALLOC (len);
    if (buf == NULL) {
       return MP_MEM;
@@ -4201,7 +4272,6 @@ int mp_mul (mp_int * a, mp_int * b, mp_int * c)
     } else {
       res = s_mp_mul (a, b, c);
     }
-
   }
   c->sign = neg;
   return res;
@@ -5251,26 +5321,28 @@ error:
 #include <tommath.h>
 
 /* returns size of ASCII reprensentation */
-int
-mp_radix_size (mp_int * a, int radix)
+int mp_radix_size (mp_int * a, int radix, int *size)
 {
   int     res, digs;
   mp_int  t;
   mp_digit d;
 
+  *size = 0;
+
   /* special case for binary */
   if (radix == 2) {
-    return mp_count_bits (a) + (a->sign == MP_NEG ? 1 : 0) + 1;
+    *size = mp_count_bits (a) + (a->sign == MP_NEG ? 1 : 0) + 1;
+    return MP_OKAY;
   }
 
   /* make sure the radix is in range */
   if (radix < 2 || radix > 64) {
-    return 0;
+    return MP_VAL;
   }
 
   /* init a copy of the input */
   if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
-    return 0;
+    return res;
   }
 
   /* digs is the digit count */
@@ -5293,7 +5365,8 @@ mp_radix_size (mp_int * a, int radix)
   mp_clear (&t);
 
   /* return digs + 1, the 1 is for the NULL byte that would be required. */
-  return digs + 1;
+  *size = digs + 1;
+  return MP_OKAY;
 }
 
 
@@ -5392,8 +5465,7 @@ mp_rand (mp_int * a, int digits)
 #include <tommath.h>
 
 /* read a string [ASCII] in a given radix */
-int
-mp_read_radix (mp_int * a, char *str, int radix)
+int mp_read_radix (mp_int * a, char *str, int radix)
 {
   int     y, res, neg;
   char    ch;
@@ -5989,7 +6061,7 @@ int mp_set_int (mp_int * a, unsigned long b)
 int mp_shrink (mp_int * a)
 {
   mp_digit *tmp;
-  if (a->alloc != a->used) {
+  if (a->alloc != a->used && a->used > 0) {
     if ((tmp = OPT_CAST XREALLOC (a->dp, sizeof (mp_digit) * a->used)) == NULL) {
       return MP_MEM;
     }
@@ -6019,8 +6091,7 @@ int mp_shrink (mp_int * a)
 #include <tommath.h>
 
 /* get the size for an signed equivalent */
-int
-mp_signed_bin_size (mp_int * a)
+int mp_signed_bin_size (mp_int * a)
 {
   return 1 + mp_unsigned_bin_size (a);
 }
@@ -6049,6 +6120,7 @@ int
 mp_sqr (mp_int * a, mp_int * b)
 {
   int     res;
+
   /* use Toom-Cook? */
   if (a->used >= TOOM_SQR_CUTOFF) {
     res = mp_toom_sqr(a, b);
@@ -6892,8 +6964,7 @@ ERR:
 #include <tommath.h>
 
 /* stores a bignum as a ASCII string in a given radix (2..64) */
-int
-mp_toradix (mp_int * a, char *str, int radix)
+int mp_toradix (mp_int * a, char *str, int radix)
 {
   int     res, digs;
   mp_int  t;
@@ -7086,25 +7157,7 @@ static const struct {
 {  1408,     3 },
 {  1536,     3 },
 {  1664,     3 },
-{  1792,     2 },
-{  1920,     2 },
-{  2048,     2 },
-{  2176,     2 },
-{  2304,     2 },
-{  2432,     2 },
-{  2560,     2 },
-{  2688,     2 },
-{  2816,     2 },
-{  2944,     2 },
-{  3072,     2 },
-{  3200,     2 },
-{  3328,     2 },
-{  3456,     2 },
-{  3584,     2 },
-{  3712,     2 },
-{  3840,     1 },
-{  3968,     1 },
-{  4096,     1 } };
+{  1792,     2 } };
 
 /* returns # of RM trials required for a given bit size */
 int mp_prime_rabin_miller_trials(int size)
@@ -7351,8 +7404,7 @@ s_mp_add (mp_int * a, mp_int * b, mp_int * c)
    #define TAB_SIZE 256
 #endif
 
-int
-s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
+int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 {
   mp_int  M[TAB_SIZE], res, mu;
   mp_digit buf;
@@ -7516,10 +7568,10 @@ s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 
       /* then multiply */
       if ((err = mp_mul (&res, &M[bitbuf], &res)) != MP_OKAY) {
-        goto __MU;
+        goto __RES;
       }
       if ((err = mp_reduce (&res, P, &mu)) != MP_OKAY) {
-        goto __MU;
+        goto __RES;
       }
 
       /* empty window and reset */

@@ -1,3 +1,13 @@
+/* LibTomCrypt, modular cryptographic library -- Tom St Denis
+ *
+ * LibTomCrypt is a library that provides various cryptographic
+ * algorithms in a highly modular and flexible manner.
+ *
+ * The library is free for all purposes without any express
+ * gurantee it works.
+ *
+ * Tom St Denis, tomstdenis@iahu.ca, http://libtomcrypt.org
+ */
 #include "mycrypt.h"
 
 int hash_memory(int hash, const unsigned char *data, unsigned long len, unsigned char *dst, unsigned long *outlen)
@@ -5,8 +15,8 @@ int hash_memory(int hash, const unsigned char *data, unsigned long len, unsigned
     hash_state md;
     int err;
 
-    _ARGCHK(data != NULL);
-    _ARGCHK(dst != NULL);
+    _ARGCHK(data   != NULL);
+    _ARGCHK(dst    != NULL);
     _ARGCHK(outlen != NULL);
 
     if ((err = hash_is_valid(hash)) != CRYPT_OK) {
@@ -34,9 +44,9 @@ int hash_filehandle(int hash, FILE *in, unsigned char *dst, unsigned long *outle
     size_t x;
     int err;
 
-    _ARGCHK(dst != NULL);
+    _ARGCHK(dst    != NULL);
     _ARGCHK(outlen != NULL);
-    _ARGCHK(in != NULL);
+    _ARGCHK(in     != NULL);
 
     if ((err = hash_is_valid(hash)) != CRYPT_OK) {
         return err;
@@ -68,8 +78,8 @@ int hash_file(int hash, const char *fname, unsigned char *dst, unsigned long *ou
 #else
     FILE *in;
     int err;
-    _ARGCHK(fname != NULL);
-    _ARGCHK(dst != NULL);
+    _ARGCHK(fname  != NULL);
+    _ARGCHK(dst    != NULL);
     _ARGCHK(outlen != NULL);
 
     if ((err = hash_is_valid(hash)) != CRYPT_OK) {

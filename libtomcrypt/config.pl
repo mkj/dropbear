@@ -31,7 +31,7 @@
    "RC5,Include RC5 block cipher,y",
    "RC6,Include RC6 block cipher,y",
    "SAFERP,Include Safer+ block cipher,y",
-   "SAFER,Include Safer-64 block ciphers,y",
+   "SAFER,Include Safer-64 block ciphers,n",
    "RIJNDAEL,Include Rijndael (AES) block cipher,y",
    "XTEA,Include XTEA block cipher,y",
    "TWOFISH,Include Twofish block cipher (default: fast),y",
@@ -49,6 +49,7 @@
    "CBC,Include CBC block mode of operation,y",
    "CTR,Include CTR block mode of operation,y",
 
+   "WHIRLPOOL,Include WHIRLPOOL 512-bit one-way hash,y",
    "SHA512,Include SHA512 one-way hash,y",
    "SHA384,Include SHA384 one-way hash (requires SHA512),y",
    "SHA256,Include SHA256 one-way hash,y",
@@ -62,6 +63,9 @@
    "RIPEMD160,Include RIPEMD-160 one-way hash,y",
    "HMAC,Include Hash based Message Authentication Support,y",
    "OMAC,Include OMAC1 Message Authentication Support,y",
+   "PMAC,Include PMAC Message Authentication Support,y",
+   "EAX_MODE,Include EAX Encrypt-and-Authenticate Support,y",
+   "OCB_MODE,Include OCB Encrypt-and-Authenticate Support,y",
 
    "BASE64,Include Base64 encoding support,y",
 
@@ -151,7 +155,7 @@ for (@settings) {
 
 # output objects
 print OUT "\ndefault: library\n\n";
-print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o mpi.o prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o skipjack.o omac.o dsa.o\n\n";
+print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o safer_tab.o safer.o saferp.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o mpi.o prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o skipjack.o omac.o dsa.o eax.o ocb.o pmac.o whirl.o\n\n";
 
 # some depends
 print OUT "rsa.o: rsa_sys.c\ndh.o: dh_sys.c\necc.o: ecc_sys.c\naes.o: aes.c aes_tab.c\ntwofish.o: twofish.c twofish_tab.c\nsha512.o: sha384.c sha512.c\nsha256.o: sha256.c sha224.c\n\n";

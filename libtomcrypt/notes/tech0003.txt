@@ -25,11 +25,11 @@ Blowfish    | 4,168                         |
 SAFER+      | 532                           |
 Serpent     | 528                           |
 Rijndael    | 516                           |
-RC5         | 204                           |
 XTEA        | 256                           |
 RC2         | 256                           |
 DES         | 256                           |
 SAFER [#]   | 217                           |
+RC5         | 204                           |
 Twofish [*] | 193                           |
 RC6         | 176                           |
 CAST5       | 132                           |

@@ -66,15 +66,41 @@ int main(int argc, char **argv)
 
 void register_algs(void)
 {
-   register_hash(&sha512_desc);
-   register_hash(&sha384_desc);
-   register_hash(&sha256_desc);
-   register_hash(&sha1_desc);
-   register_hash(&md5_desc);
-   register_hash(&md4_desc);
-   register_hash(&tiger_desc);
-   register_hash(&md2_desc);
-   register_hash(&rmd128_desc);
-   register_hash(&rmd160_desc);
-   register_hash(&sha224_desc);
+#ifdef TIGER
+  register_hash (&tiger_desc);
+#endif
+#ifdef MD2
+  register_hash (&md2_desc);
+#endif
+#ifdef MD4
+  register_hash (&md4_desc);
+#endif
+#ifdef MD5
+  register_hash (&md5_desc);
+#endif
+#ifdef SHA1
+  register_hash (&sha1_desc);
+#endif
+#ifdef SHA224
+  register_hash (&sha224_desc);
+#endif
+#ifdef SHA256
+  register_hash (&sha256_desc);
+#endif
+#ifdef SHA384
+  register_hash (&sha384_desc);
+#endif
+#ifdef SHA512
+  register_hash (&sha512_desc);
+#endif
+#ifdef RIPEMD128
+  register_hash (&rmd128_desc);
+#endif
+#ifdef RIPEMD160
+  register_hash (&rmd160_desc);
+#endif
+#ifdef WHIRLPOOL
+  register_hash (&whirlpool_desc);
+#endif
+
 }
