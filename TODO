@@ -8,6 +8,7 @@ Things which need doing:
 - improved checking in DSS/RSA routines for valid sized keys etc
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
+- cleanup code
 
 Features to add:
 
