@@ -46,6 +46,9 @@
 static void listensocket(int *sock, uint16_t port);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
+static void sigintterm_handler(int fish);
+
+static int exitflag = 0;
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
@@ -98,6 +101,7 @@ int main(int argc, char ** argv) {
 	listensockcount = 1;
 	maxsock = listensocks[listensockcount-1];
 
+
 	/* create a PID file so that we can be killed easily */
 	pidfile = fopen(DROPBEAR_PIDFILE, "w");
 	if (pidfile) {
@@ -105,9 +109,13 @@ int main(int argc, char ** argv) {
 		fclose(pidfile);
 	}
 
+	/* set up cleanup handler */
+	if (signal(SIGINT, sigintterm_handler) == SIG_ERR || 
+		signal(SIGTERM, sigintterm_handler) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
 
 	/* catch and reap zombie children */
-	
 	sa_chld.sa_handler = sigchld_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
@@ -143,6 +151,11 @@ int main(int argc, char ** argv) {
 		}
 
 		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
+
+		if (exitflag) {
+			dropbear_exit("Exiting from signal");
+		}
+		
 		if (val == 0) {
 			/* timeout reached */
 			continue;
@@ -255,6 +268,12 @@ static void sigsegv_handler(int fish) {
 	fprintf(stderr, "Aiee, segfault! You should probably report "
 			"this as a bug to the developer\n");
 	exit(EXIT_FAILURE);
+}
+
+/* catch ctrl-c or kill */
+static void sigintterm_handler(int fish) {
+
+	exitflag = 1;
 }
 
 static void listensocket(int *sock, uint16_t port) {
