@@ -38,45 +38,52 @@
 #include "packet.h"
 #include "buffer.h"
 #include "random.h"
+#include "listener.h"
 
 #define AGENTDIRPREFIX "/tmp/dropbear-"
 
 static int send_msg_channel_open_agent(int fd);
-static int bindagent(struct ChanSess * chansess);
+static int bindagent(int fd, struct ChanSess * chansess);
+static void agentaccept(struct Listener * listener);
 
 /* Handles client requests to start agent forwarding, sets up listening socket.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int agentreq(struct ChanSess * chansess) {
 
-	if (chansess->agentfd != -1) {
+	int fd;
+
+	if (chansess->agentlistener != NULL) {
 		return DROPBEAR_FAILURE;
 	}
 
 	/* create listening socket */
-	chansess->agentfd = socket(PF_UNIX, SOCK_STREAM, 0);
-	if (chansess->agentfd < 0) {
+	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (fd < 0) {
 		goto fail;
 	}
 
 	/* create the unix socket dir and file */
-	if (bindagent(chansess) == DROPBEAR_FAILURE) {
+	if (bindagent(fd, chansess) == DROPBEAR_FAILURE) {
 		return DROPBEAR_FAILURE;
 	}
 
 	/* listen */
-	if (listen(chansess->agentfd, 20) < 0) {
+	if (listen(fd, 20) < 0) {
 		goto fail;
 	}
 
 	/* set non-blocking */
-	if (fcntl(chansess->agentfd, F_SETFL, O_NONBLOCK) < 0) {
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		goto fail;
 	}
 
-	/* channel.c's channel fd code will handle the socket now */
+	/* pass if off to listener */
+	chansess->agentlistener = new_listener( fd, 0, chansess, 
+								agentaccept, NULL);
 
-	/* set the maxfd so that select() loop will notice it */
-	ses.maxfd = MAX(ses.maxfd, chansess->agentfd);
+	if (chansess->agentlistener == NULL) {
+		goto fail;
+	}
 
 	return DROPBEAR_SUCCESS;
 
@@ -90,16 +97,18 @@ fail:
 /* accepts a connection on the forwarded socket and opens a new channel for it
  * back to the client */
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int agentaccept(struct ChanSess * chansess) {
+static void agentaccept(struct Listener * listener) {
 
 	int fd;
 
-	fd = accept(chansess->agentfd, NULL, NULL);
+	fd = accept(listener->sock, NULL, NULL);
 	if (fd < 0) {
-		return DROPBEAR_FAILURE;
+		return;
 	}
 
-	return send_msg_channel_open_agent(fd);
+	if (send_msg_channel_open_agent(listener->sock) != DROPBEAR_SUCCESS) {
+		close(fd);
+	}
 
 }
 
@@ -110,7 +119,7 @@ void agentset(struct ChanSess * chansess) {
 	char *path = NULL;
 	int len;
 
-	if (chansess->agentfd == -1) {
+	if (chansess->agentlistener == NULL) {
 		return;
 	}
 
@@ -131,46 +140,57 @@ void agentcleanup(struct ChanSess * chansess) {
 	gid_t gid;
 	int len;
 
-	if (chansess->agentfd == -1) {
-		return;
+	if (chansess->agentlistener != NULL) {
+		remove_listener(chansess->agentlistener);
+		chansess->agentlistener = NULL;
 	}
 
-	close(chansess->agentfd);
+	if (chansess->agentfile && chansess->agentdir) {
 
-	/* Remove the dir as the user. That way they can't cause problems except
-	 * for themselves */
-	uid = getuid();
-	gid = getgid();
-	if ((setegid(svr_ses.authstate.pw->pw_gid)) < 0 ||
-		(seteuid(svr_ses.authstate.pw->pw_uid)) < 0) {
-		dropbear_exit("failed to set euid");
+		/* Remove the dir as the user. That way they can't cause problems except
+		 * for themselves */
+		uid = getuid();
+		gid = getgid();
+		if ((setegid(svr_ses.authstate.pw->pw_gid)) < 0 ||
+			(seteuid(svr_ses.authstate.pw->pw_uid)) < 0) {
+			dropbear_exit("failed to set euid");
+		}
+
+		/* 2 for "/" and "\0" */
+		len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
+
+		path = m_malloc(len);
+		snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
+		unlink(path);
+		m_free(path);
+
+		rmdir(chansess->agentdir);
+
+		if ((seteuid(uid)) < 0 ||
+			(setegid(gid)) < 0) {
+			dropbear_exit("failed to revert euid");
+		}
+
+		m_free(chansess->agentfile);
+		m_free(chansess->agentdir);
 	}
-
-	/* 2 for "/" and "\0" */
-	len = strlen(chansess->agentdir) + strlen(chansess->agentfile) + 2;
-
-	path = m_malloc(len);
-	snprintf(path, len, "%s/%s", chansess->agentdir, chansess->agentfile);
-	unlink(path);
-	m_free(path);
-
-	rmdir(chansess->agentdir);
-
-	if ((seteuid(uid)) < 0 ||
-		(setegid(gid)) < 0) {
-		dropbear_exit("failed to revert euid");
-	}
-
-	m_free(chansess->agentfile);
-	m_free(chansess->agentdir);
 
 }
+
+static const struct ChanType chan_agent = {
+	0, /* sepfds */
+	"auth-agent@openssh.com",
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
 
 /* helper for accepting an agent request */
 static int send_msg_channel_open_agent(int fd) {
 
-	if (send_msg_channel_open_init(fd, CHANNEL_ID_AGENT,
-				"auth-agent@openssh.com") == DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, &chan_agent) == DROPBEAR_SUCCESS) {
 		encrypt_packet();
 		return DROPBEAR_SUCCESS;
 	} else {
@@ -180,7 +200,7 @@ static int send_msg_channel_open_agent(int fd) {
 
 /* helper for creating the agent socket-file
    returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-static int bindagent(struct ChanSess * chansess) {
+static int bindagent(int fd, struct ChanSess * chansess) {
 
 	struct sockaddr_un addr;
 	unsigned int prefix;
@@ -225,13 +245,13 @@ bindsocket:
 	 * between subsequent user processes reusing socket fds (odds are now
 	 * 1/(2^64) */
 	genrandom((unsigned char*)&prefix, sizeof(prefix));
-	snprintf(sockfile, sizeof(sockfile), "auth-%.8x-%d", prefix,
-			chansess->agentfd);
+	snprintf(sockfile, sizeof(sockfile), "auth-%.8x-%d", prefix, fd);
+			
 	snprintf(addr.sun_path, sizeof(addr.sun_path), "%s/%s", path, sockfile);
 
-	if (bind(chansess->agentfd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
-		chansess->agentdir = strdup(path);
-		chansess->agentfile = strdup(sockfile);
+	if (bind(fd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
+		chansess->agentdir = m_strdup(path);
+		chansess->agentfile = m_strdup(sockfile);
 		ret = DROPBEAR_SUCCESS;
 	}
 

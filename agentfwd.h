@@ -30,9 +30,8 @@
 #include "channel.h"
 
 int agentreq(struct ChanSess * chansess);
-int agentaccept(struct ChanSess * chansess);
-void agentcleanup(struct ChanSess * chansess);
 void agentsetauth(struct ChanSess *chansess);
+void agentcleanup(struct ChanSess * chansess);
 void agentset(struct ChanSess *chansess);
 
 #ifdef __hpux

@@ -38,7 +38,6 @@
 #define X11BINDBASE 6010
 
 static void x11accept(struct Listener* listener);
-static void x11cleanup(struct Listener *listener);
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 
@@ -167,7 +166,7 @@ void x11setauth(struct ChanSess *chansess) {
 	}
 }
 
-static void x11cleanup(struct Listener *listener) {
+void x11cleanup(struct Listener *listener) {
 
 	struct ChanSess *chansess = (struct ChanSess*)listener->typedata;
 

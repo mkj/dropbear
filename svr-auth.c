@@ -151,7 +151,7 @@ void recv_msg_userauth_request() {
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
-			passwordauth(username, userlen);
+			passwordauth();
 			goto out;
 		}
 	}
@@ -162,7 +162,7 @@ void recv_msg_userauth_request() {
 	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
-		pubkeyauth(username, userlen);
+		pubkeyauth();
 		goto out;
 	}
 #endif
@@ -200,7 +200,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 			}
 			authclear();
 			svr_ses.authstate.pw = getpwnam((char*)username);
-			svr_ses.authstate.username = strdup(username);
+			svr_ses.authstate.username = m_strdup(username);
 			m_free(svr_ses.authstate.printableuser);
 	}
 
@@ -214,7 +214,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* We can set it once we know its a real user */
-	svr_ses.authstate.printableuser = strdup(svr_ses.authstate.pw->pw_name);
+	svr_ses.authstate.printableuser = m_strdup(svr_ses.authstate.pw->pw_name);
 
 	/* check for non-root if desired */
 	if (ses.opts->norootlogin && svr_ses.authstate.pw->pw_uid == 0) {

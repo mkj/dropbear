@@ -9,7 +9,7 @@ static int newtcpdirect(struct Channel * channel);
 static int newtcp(const char * host, int port);
 
 const struct ChanType chan_tcpdirect = {
-	0, /* sepfds */
+	1, /* sepfds */
 	"direct-tcpip",
 	newtcpdirect, /* init */
 	NULL, /* checkclose */

@@ -158,7 +158,7 @@ char* getaddrhostname(struct sockaddr * addr) {
 		retstring = host->h_name;
 	}
 
-	return strdup(retstring);
+	return m_strdup(retstring);
 }
 #ifdef DEBUG_TRACE
 void printhex(unsigned char* buf, int len) {
@@ -261,6 +261,16 @@ void * m_malloc(size_t size) {
 	}
 	return ret;
 
+}
+
+void * m_strdup(const char * str) {
+	char* ret;
+
+	ret = strdup(str);
+	if (ret == NULL) {
+		dropbear_exit("m_strdup failed");
+	}
+	return ret;
 }
 
 void __m_free(void* ptr) {

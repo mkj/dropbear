@@ -71,7 +71,7 @@ out:
 }
 
 static const struct ChanType chan_tcpremote = {
-	0, /* sepfds */
+	1, /* sepfds */
 	"forwarded-tcpip",
 	NULL,
 	NULL,

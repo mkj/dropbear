@@ -419,7 +419,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
-	chansess->tty = (char*)strdup(namebuf);
+	chansess->tty = (char*)m_strdup(namebuf);
 	if (!chansess->tty) {
 		dropbear_exit("out of memory"); /* TODO disconnect */
 	}
@@ -541,7 +541,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 #ifdef SFTPSERVER_PATH
 			if ((cmdlen == 4) && strncmp(chansess->cmd, "sftp", 4) == 0) {
 				m_free(chansess->cmd);
-				chansess->cmd = strdup(SFTPSERVER_PATH);
+				chansess->cmd = m_strdup(SFTPSERVER_PATH);
 			} else 
 #endif
 			{

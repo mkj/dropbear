@@ -51,6 +51,7 @@ int buf_readfile(buffer* buf, const char* filename);
 
 int m_close(int fd);
 void * m_malloc(size_t size);
+void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);
 #define m_free(X) __m_free(X); (X) = NULL;
 void __m_free(void* ptr);
