@@ -93,7 +93,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 				}
 				if (WIFSIGNALED(status)) {
 					chansess->exitsignal = WTERMSIG(status);
-#ifndef AIX
+#if !defined(AIX) && defined(WCOREDUMP)
 					chansess->exitcore = WCOREDUMP(status);
 #else
 					chansess->exitcore = 0;
