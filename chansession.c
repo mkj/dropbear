@@ -682,8 +682,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
-	int i, len;
 	char * usershell;
+	char * baseshell;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
@@ -757,23 +757,15 @@ static void execchild(struct ChanSess *chansess) {
 		usershell = ses.authstate.pw->pw_shell;
 	}
 
-	/* set up execution */
-	/* shell commandname - the filename portion only ie 'sh' from '/bin/sh' */
-	len = strlen(usershell);
-	for (i = len-1; i >= 0; i--) {
-		if (usershell[i] == '/') {
-			break;
-		}
-	}
-	i++;
+	baseshell = basename(usershell);
 
 	if (chansess->cmd != NULL) {
-		argv[0] = &usershell[i];
+		argv[0] = baseshell;
 	} else {
 		/* a login shell should be "-bash" for "/bin/bash" etc */
-		argv[0] = (char*)m_malloc(strlen(&usershell[i]) + 2); /* 2 for "-" */
+		argv[0] = (char*)m_malloc(strlen(baseshell) + 2); /* 2 for "-" */
 		strcpy(argv[0], "-");
-		strcat(argv[0], &usershell[i]);
+		strcat(argv[0], baseshell);
 	}
 
 	if (chansess->cmd != NULL) {
