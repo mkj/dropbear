@@ -4,6 +4,8 @@
 #include <errno.h>
 #include <sys/time.h>
 #include <sys/types.h>
+#include <sys/socket.h>
+#include <netinet/in.h>
 
 #include "options.h"
 #include "session.h"
@@ -18,25 +20,27 @@
 #include "channel.h"
 
 
-static void session_init(int sock, runopts *opts, int childpipe);
+static void session_init(int sock, runopts *opts, int childpipe,
+		struct sockaddr *remote_addr);
 static void session_identification();
 static void checktimeouts();
 
 struct sshsession ses;
 
-void child_session(int sock, runopts *opts, int childpipe) {
+void child_session(int sock, runopts *opts, int childpipe,
+		struct sockaddr *remote_addr) {
 
 	fd_set readfd, writefd;
 	struct timeval timeout;
 	int val;
 	
 	crypto_init();
-	session_init(sock, opts, childpipe);
+	session_init(sock, opts, childpipe, remote_addr);
 
 	/* exchange identification, version etc */
 	session_identification();
 
-	initrandom();
+	seedrandom();
 
 	/* start off with key exchange */
 	send_msg_kexinit();
@@ -155,10 +159,13 @@ void session_cleanup() {
 #endif
 
 /* called only at the start of a session, set up initial state */
-static void session_init(int sock, runopts *opts, int childpipe) {
+static void session_init(int sock, runopts *opts, int childpipe,
+		struct sockaddr *remote_addr) {
 
 	struct timeval tv;
 	TRACE(("enter session_init"));
+
+	ses.remote_addr = remote_addr;
 
 	ses.sock = sock;
 	ses.maxfd = sock;

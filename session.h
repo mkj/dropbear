@@ -15,7 +15,8 @@
 #include "queue.h"
 #include "runopts.h"
 
-void child_session(int sock, runopts *opts, int childpipe);
+void child_session(int sock, runopts *opts, int childpipe,
+		struct sockaddr *remote_addr);
 #ifdef DOCLEANUP
 void session_cleanup();
 #endif
@@ -50,6 +51,9 @@ struct sshsession {
 	int sock;
 	int childpipe; /* kept open until we successfully authenticate */
 	long connecttime; /* time of initial connection */
+
+	struct sockaddr *remote_addr;
+
 	unsigned int maxfd; /* the maximum file descriptor to check with select() */
 	unsigned char *remoteident;
 
@@ -61,8 +65,6 @@ struct sshsession {
 
 	unsigned char expecting; /* byte indicating what packet we expect next, 
 								or 0x00 for any */
-
-
 	
 	/* unencrypted write payload */
 	buffer *writepayload; /* this will actually refer to within clearwritebuf */
