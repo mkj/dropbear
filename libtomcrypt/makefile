@@ -13,7 +13,6 @@ VERSION=0.82
 
 #ch1-01-1
 # Compiler and Linker Names
-CC=gcc
 LD=ld
 
 # Archiver [makes .a files]
