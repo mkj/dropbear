@@ -223,9 +223,9 @@ static sign_key * loadhostkeys(const char * dsskeyfile,
 		&& hostkey->dsskey == NULL
 #endif
 #ifdef DROPBEAR_RSA
-		&& hostkey->rsakey == NULL)
+		&& hostkey->rsakey == NULL
 #endif
-		{
+		) {
 		dropbear_exit("No hostkeys available");
 	}
 
