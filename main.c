@@ -221,7 +221,7 @@ int main(int argc, char ** argv)
 #endif /* DEBUG_FORKGPROF */
 
 				addrstring = getaddrstring(&remoteaddr);
-				dropbear_log(LOG_INFO, "Child connection for %s", addrstring);
+				dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
 				m_free(addrstring);
 
 				if (setsid() < 0) {
