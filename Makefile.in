@@ -3,7 +3,7 @@ LTC=libtomcrypt/libtomcrypt.a
 OBJS=util.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
 		chansession.o queue.o sshpty.o termcodes.o authpubkey.o runopts.o \
-		loginrec.o
+		loginrec.o atomicio.h
 
 DROPBEAROBJS=main.o
 
@@ -13,7 +13,7 @@ HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
-		loginrec.h
+		loginrec.h atomicio.h
 
 ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 
