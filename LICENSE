@@ -23,9 +23,8 @@ SOFTWARE.
 
 =====
 
-LibTomCrypt and LibTomMath are (c) Tom St Denis, under TDCAL (Tom Doesn't Care
-About Licenses) some files are from public domain sources, see
-libtomcrypt/legal.txt
+LibTomCrypt and LibTomMath are written by Tom St Denis, and are Public Domain.
+Some files are from other public domain sources, see libtomcrypt/legal.txt
 
 =====
 
