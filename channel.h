@@ -43,7 +43,7 @@
 #define MAX_CHANNELS 400 /* arbitrary, includes each tcp/x11 connection */
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
-#define RECV_MAXWINDOW 20000 /* tweak */
+#define RECV_MAXWINDOW 6000 /* tweak */
 #define RECV_MAXPACKET 1400 /* tweak */
 #define RECV_MINWINDOW 19000 /* when we get below this, we send a windowadjust */
 
