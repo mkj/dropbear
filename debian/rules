@@ -25,7 +25,8 @@ DIR=`pwd`/debian/dropbear
 
 patch: deb-checkdir patch-stamp
 patch-stamp:
-	for i in debian/diff/*.diff; do patch -p0 <$$i || exit 1; done
+#	no patches for now
+#	for i in debian/diff/*.diff; do patch -p0 <$$i || exit 1; done
 	touch patch-stamp
 
 config.status: patch-stamp configure
