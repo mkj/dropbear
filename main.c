@@ -78,7 +78,6 @@ static void main_inetd(runopts * opts) {
 	/* Set up handlers, syslog */
 	commonsetup();
 
-
 	remoteaddrlen = sizeof(remoteaddr);
 	if (getpeername(0, &remoteaddr, &remoteaddrlen) < 0) {
 		dropbear_exit("Unable to getpeername: %s", strerror(errno));
@@ -93,8 +92,6 @@ static void main_inetd(runopts * opts) {
 	 * already done setsid() after forking (xinetd on Darwin appears to do
 	 * this */
 	setsid();
-
-	syslog(0, "hello!");
 
 	/* Start service program 
 	 * -1 is a dummy childpipe, just something we can close() without 
