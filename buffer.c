@@ -34,6 +34,9 @@
 #define BUF_MAX_INCR 1000000000
 #define BUF_MAX_SIZE 1000000000
 
+/* avoid excessively large numbers, > 5000 bit */
+#define BUF_MAX_MPINT (5000 / 8)
+
 /* Create (malloc) a new buffer of size */
 buffer* buf_new(unsigned int size) {
 
@@ -295,6 +298,10 @@ int buf_getmpint(buffer* buf, mp_int* mp) {
 	if (len == 0) {
 		mp_zero(mp);
 		return DROPBEAR_SUCCESS;
+	}
+
+	if (len > BUF_MAX_MPINT) {
+		return DROPBEAR_FAILURE;
 	}
 
 	/* check for negative */
