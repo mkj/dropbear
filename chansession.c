@@ -775,8 +775,10 @@ static void execchild(struct ChanSess *chansess) {
 #ifdef HAVE_CLEARENV
 	clearenv();
 #else /* don't HAVE_CLEARENV */
-	environ = (char**)m_malloc(ENV_SIZE * sizeof(char*));
-	environ[0] = NULL;
+	/* Yay for posix. */
+	if (environ) {
+		environ[0] = NULL;
+	}
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_KEEP_ENV */
 
