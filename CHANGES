@@ -1,3 +1,133 @@
+0.44test3 - Fri Aug 27 22:20:54 +0800
+
+- Fixed a bunch of warnings.
+
+- scp works correctly when passed a username (fix for the dbclient program
+  itself as well, "-lmatt" works as well as "-l matt").
+
+- Remove unrequired debian files
+
+- Exit with the remote process's return code for dbclient
+
+- Display stderr messages from the server in the client
+
+- Add circular buffering to the channel code. This should dramatically reduce
+  the amount of backtraffic sent in response to traffic incoming to the
+  Dropbear end - improves high-latency performance (ie dialup).
+
+- Various other related channel-handling fixups.
+
+- Allow leading lines in the banner when connecting to servers
+
+- Fixed printing out errors onto the network socket with stderr (for inetd
+  mode when using xinetd)
+
+- Remove obselete documentation
+
+- Fix a null-pointer exception when trying to free non-existant listeners
+  at cleanup.
+
+- DEBUG_TRACE now only works if you add "-v" to the program commandline
+
+- Don't leave stdin non-blocking on exit - this caused the parent shell
+  of dbclient to close when dbclient exited, for some shells in BusyBox
+
+- Server connections no longer timeout after 5 minutes
+
+- Fixed stupid DSS hostkey typo (server couldn't load host keys)
+
+0.44test2 - Tues Aug 17 2004 17:43:54 +0800
+
+- Fix up dropbearmulti targets in the Makefile - symlinks are now created
+
+- Compile fake-rfc2553 even with dropbearconvert/dropbearkey - this 
+  allows them to work on platforms without a native getaddrinfo()
+
+- Create ~/.ssh/known_hosts properly if it doesn't exist
+
+- Fix basename() function prototype
+
+- Backport some local changes (more #ifdefs for termcodes.c, a fix for missing
+  defines on AIX).
+
+- Let dbclient be run as "ssh"
+
+- Initialise mp_ints by default
+
+0.44test1 - Sun Aug 16 2005 17:43:54 +0800
+
+- TESTING RELEASE - this is the first public release of the client codebase,
+  so there are sure to be bugs to be found. In addition, if you're just using
+  the server portion, the final binary size probably will increase - I'll
+  be trying to get it back down in future releases.
+
+- Dropbear client added - lots of changes to the server code as well to 
+  generalise things
+
+- IPv6 support added for client, server, and forwarding
+
+- New makefile with more generic support for multiple-program binaries
+
+0.43 - Fri Jul 16 2004 17:44:54 +0800
+
+- SECURITY: Don't try to free() uninitialised variables in DSS verification
+  code. Thanks to Arne Bernin for pointing out this bug. This is possibly
+  exploitable, all users with DSS and pubkey-auth compiled in are advised to
+  upgrade.
+
+- Clean up agent forwarding socket files correctly, patch from Gerrit Pape.
+
+- Don't go into an infinite loop when portforwarding to servers which don't
+  send any initial data/banner. Patch from Nikola Vladov
+
+- Fix for network vs. host byte order in logging remote TCP ports, also
+  from Gerrit Pape.
+
+- Initialise many pointers to NULL, for general safety. Also checked cleanup
+  code for mp_ints (related to security issues above).
+
+0.42 - Wed Jun 16 2004 12:44:54 +0800
+
+- Updated to Gerrit Pape's official Debian subdirectory
+
+- Fixed bad check when opening /dev/urandom - thanks to Danny Sung.
+
+- Added -i inetd mode flag, and associated options in options.h . Dropbear
+  can be compiled with either normal mode, inetd, or both modes. Thanks
+  to Gerrit Pape for basic patch and motivation.
+
+- Use <dirent.h> rather than <sys/dir.h> for POSIX compliance. Thanks to Bill
+  Sommerfield.
+
+- Fixed a TCP forwarding (client-local, -L style) bug which caused the whole
+  session to close if the TCP connection failed. Thanks to Andrew Braund for
+  reporting it and helping track it down.
+
+- Re-enable sigpipe for child processes. Thanks to Gerrit Pape for some
+  suggestions, and BSD manpages for a clearer explanation of the behaviour.
+
+- Added manpages, thanks to Gerrit Pape.
+
+- Changed license text for LibTomCrypt and LibTomMath.
+
+- Added strip-static target
+
+- Fixed a bug in agent-forwarding cleanup handler - would segfault
+  (dereferencing a null pointer) if agent forwarding had failed.
+
+- Fix behaviour of authorized_keys parsing, so larger (>1024 bit) DSA keys will
+  work. Thanks to Dr. Markus Waldeck for the report. 
+
+- Fixed local port forwarding code so that the "-j" option will make forwarding
+  attempts fail more gracefully.
+
+- Allow repeated requests in a single session if previous ones fail - this fixes  PuTTY and some other SCP clients, which try SFTP, then fall-back to SCP if it
+  isn't available. Thanks to Stirling Westrup for the report.
+
+- Updated to LibTomCrypt 0.96 and LibTomMath 0.30. The AES code now uses
+  smaller non-precomputed tables if DROPBEAR_SMALL_CODE is defined in
+  options.h, leading to a significant reduction in the binary size.
+
 0.41 - Mon Jan 19 2004 22:40:19 +0800
 
 - Fix in configure so that cross-compiling works, thanks to numerous people for

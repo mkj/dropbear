@@ -1,7 +1,7 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2004 Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -22,12 +22,44 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _PUBKEY_AUTH_
-#define _PUBKEY_AUTH_
+#include "includes.h"
+#include "channel.h"
+#include "buffer.h"
+#include "circbuffer.h"
+#include "dbutil.h"
+#include "session.h"
+#include "ssh.h"
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+/* We receive channel data - only used by the client chansession code*/
+void recv_msg_channel_extended_data() {
 
-void pubkeyauth();
+	unsigned int chan;
+	struct Channel *channel;
+	unsigned int datatype;
 
-#endif /* DROPBEAR_PUBKEY_AUTH */
-#endif /* _PUBKEY_AUTH_ */
+	TRACE(("enter recv_msg_channel_extended_data"));
+
+	chan = buf_getint(ses.payload);
+	channel = getchannel(chan);
+
+	if (channel == NULL) {
+		dropbear_exit("Unknown channel");
+	}
+
+	if (channel->type != &clichansess) {
+		TRACE(("leave recv_msg_channel_extended_data: chantype is wrong"));
+		return; /* we just ignore it */
+	}
+
+	datatype = buf_getint(ses.payload);
+	
+	if (datatype != SSH_EXTENDED_DATA_STDERR) {
+		TRACE(("leave recv_msg_channel_extended_data: wrong datatype: %d",
+					datatype));
+		return;	
+	}
+
+	common_recv_msg_channel_data(channel, channel->errfd, channel->extrabuf);
+
+	TRACE(("leave recv_msg_channel_extended_data"));
+}

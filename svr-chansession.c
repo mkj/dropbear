@@ -55,6 +55,10 @@ static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
 
 static void send_exitsignalstatus(struct Channel *channel);
+static void send_msg_chansess_exitstatus(struct Channel * channel,
+		struct ChanSess * chansess);
+static void send_msg_chansess_exitsignal(struct Channel * channel,
+		struct ChanSess * chansess);
 static int sesscheckclose(struct Channel *channel);
 static void get_termmodes(struct ChanSess *chansess);
 
@@ -68,7 +72,7 @@ static int sesscheckclose(struct Channel *channel) {
 }
 
 /* handler for childs exiting, store the state for return to the client */
-static void sesssigchild_handler(int dummy) {
+static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	int status;
 	pid_t pid;
@@ -78,7 +82,6 @@ static void sesssigchild_handler(int dummy) {
 
 	TRACE(("enter sigchld handler"));
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -90,8 +93,10 @@ static void sesssigchild_handler(int dummy) {
 				}
 				if (WIFSIGNALED(status)) {
 					chansess->exitsignal = WTERMSIG(status);
-#ifndef AIX
+#if !defined(AIX) && defined(WCOREDUMP)
 					chansess->exitcore = WCOREDUMP(status);
+#else
+					chansess->exitcore = 0;
 #endif
 				} else {
 					/* we use this to determine how pid exited */
@@ -273,7 +278,7 @@ static void closechansess(struct Channel *channel) {
  * or x11/authagent forwarding. These are passed to appropriate handlers */
 static void chansessionrequest(struct Channel *channel) {
 
-	unsigned char * type;
+	unsigned char * type = NULL;
 	unsigned int typelen;
 	unsigned char wantreply;
 	int ret = 1;
@@ -320,7 +325,7 @@ static void chansessionrequest(struct Channel *channel) {
 out:
 
 	if (wantreply) {
-		if (ret == 0) {
+		if (ret == DROPBEAR_SUCCESS) {
 			send_msg_channel_success(channel);
 		} else {
 			send_msg_channel_failure(channel);
@@ -336,7 +341,7 @@ out:
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
-	unsigned char* signame;
+	unsigned char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
@@ -408,6 +413,8 @@ static void get_termmodes(struct ChanSess *chansess) {
 	}
 
 	len = buf_getint(ses.payload);
+	TRACE(("term mode str %d p->l %d p->p %d", 
+				len, ses.payload->len , ses.payload->pos));
 	if (len != ses.payload->len - ses.payload->pos) {
 		dropbear_exit("bad term mode string");
 	}
@@ -495,7 +502,9 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 
 	/* allocate the pty */
-	assert(chansess->master == -1); /* haven't already got one */
+	if (chansess->master != -1) {
+		dropbear_exit("multiple pty requests");
+	}
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"));
 		return DROPBEAR_FAILURE;
@@ -526,11 +535,14 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
+	int ret;
 
 	TRACE(("enter sessioncommand"));
 
 	if (chansess->cmd != NULL) {
-		/* TODO - send error - multiple commands? */
+		/* Note that only one command can _succeed_. The client might try
+		 * one command (which fails), then try another. Ie fallback
+		 * from sftp to scp */
 		return DROPBEAR_FAILURE;
 	}
 
@@ -539,6 +551,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		chansess->cmd = buf_getstring(ses.payload, &cmdlen);
 
 		if (cmdlen > MAX_CMD_LEN) {
+			m_free(chansess->cmd);
 			/* TODO - send error - too long ? */
 			return DROPBEAR_FAILURE;
 		}
@@ -550,6 +563,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			} else 
 #endif
 			{
+				m_free(chansess->cmd);
 				return DROPBEAR_FAILURE;
 			}
 		}
@@ -557,11 +571,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	if (chansess->term == NULL) {
 		/* no pty */
-		return noptycommand(channel, chansess);
+		ret = noptycommand(channel, chansess);
 	} else {
 		/* want pty */
-		 return ptycommand(channel, chansess);
+		ret = ptycommand(channel, chansess);
 	}
+
+	if (ret == DROPBEAR_FAILURE) {
+		m_free(chansess->cmd);
+	}
+	return ret;
 }
 
 /* Execute a command and set up redirection of stdin/stdout/stderr without a
@@ -616,7 +635,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		TRACE(("continue noptycommand: parent"));
 		chansess->pid = pid;
 
-		/* add a child pid */
+		/* add a child pid - Beware: there's a race between this, and the
+		 * exec() called from the child. If the child finishes before we've
+		 * done this (ie if it was a shell builtin and fast), we won't return a
+		 * proper return code. For now, we ignore this case. */
 		addchildpid(chansess, pid);
 
 		close(infds[FDIN]);
@@ -629,11 +651,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		ses.maxfd = MAX(ses.maxfd, channel->outfd);
 		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-		if ((fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) ||
-			(fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) ||
-			(fcntl(channel->errfd, F_SETFL, O_NONBLOCK) < 0)) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
+		setnonblocking(channel->outfd);
+		setnonblocking(channel->infd);
+		setnonblocking(channel->errfd);
+
 	}
 #undef FDIN
 #undef FDOUT
@@ -648,7 +669,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
-	struct logininfo *li;
+	struct logininfo *li = NULL;
 #ifdef DO_MOTD
 	buffer * motdbuf = NULL;
 	int len;
@@ -739,9 +760,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
 
-		if (fcntl(chansess->master, F_SETFL, O_NONBLOCK) < 0) {
-			dropbear_exit("Couldn't set nonblocking");
-		}
+		setnonblocking(chansess->master);
 
 	}
 
@@ -776,8 +795,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
-	char * usershell;
-	char * baseshell;
+	char * usershell = NULL;
+	char * baseshell = NULL;
 	unsigned int i;
 
 	/* wipe the hostkey */
@@ -861,6 +880,11 @@ static void execchild(struct ChanSess *chansess) {
 	agentset(chansess);
 #endif
 
+	/* Re-enable SIGPIPE for the executed process */
+	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
 	baseshell = basename(usershell);
 
 	if (chansess->cmd != NULL) {
@@ -919,7 +943,7 @@ void svr_chansessinitialise() {
 /* add a new environment variable, allocating space for the entry */
 void addnewvar(const char* param, const char* var) {
 
-	char* newvar;
+	char* newvar = NULL;
 	int plen, vlen;
 
 	plen = strlen(param);

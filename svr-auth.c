@@ -32,8 +32,6 @@
 #include "ssh.h"
 #include "packet.h"
 #include "auth.h"
-#include "authpasswd.h"
-#include "authpubkey.h"
 #include "runopts.h"
 
 static void authclear();
@@ -54,10 +52,11 @@ void svr_authinitialise() {
 static void authclear() {
 	
 	memset(&ses.authstate, 0, sizeof(ses.authstate));
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_SVR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
 #if defined(DROPBEAR_PASSWORD_AUTH) || defined(DROPBEAR_PAM_AUTH)
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass) {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
@@ -93,7 +92,7 @@ static void send_msg_userauth_banner() {
  * checking, and handle success or failure */
 void recv_msg_userauth_request() {
 
-	unsigned char *username, *servicename, *methodname;
+	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL;
 	unsigned int userlen, servicelen, methodlen;
 
 	TRACE(("enter recv_msg_userauth_request"));
@@ -143,7 +142,7 @@ void recv_msg_userauth_request() {
 		goto out;
 	}
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass &&
 			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
 		/* user wants to try password auth */
@@ -169,7 +168,7 @@ void recv_msg_userauth_request() {
 	}
 #endif
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_SVR_PUBKEY_AUTH
 	/* user wants to try pubkey auth */
 	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,
@@ -290,7 +289,7 @@ goodshell:
  * failures */
 void send_msg_userauth_failure(int partial, int incrfail) {
 
-	buffer *typebuf;
+	buffer *typebuf = NULL;
 
 	TRACE(("enter send_msg_userauth_failure"));
 
@@ -355,6 +354,8 @@ void send_msg_userauth_success() {
 	encrypt_packet();
 
 	ses.authstate.authdone = 1;
+	ses.connecttimeout = 0;
+
 
 	if (ses.authstate.pw->pw_uid == 0) {
 		ses.allowprivport = 1;

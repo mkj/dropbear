@@ -1,3 +1,27 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 
 /* definitions are cleanest if we just put them here */
@@ -20,7 +44,8 @@ int main(int argc, char ** argv) {
 		}
 #endif
 #ifdef DBMULTI_dbclient
-		if (strcmp(progname, "dbclient") == 0) {
+		if (strcmp(progname, "dbclient") == 0
+				|| strcmp(progname, "ssh") == 0) {
 			return cli_main(argc, argv);
 		}
 #endif
@@ -47,7 +72,7 @@ int main(int argc, char ** argv) {
 			"'dropbear' - the Dropbear server\n"
 #endif
 #ifdef DBMULTI_dbclient
-			"'dbclient' - the Dropbear client\n"
+			"'dbclient' or 'ssh' - the Dropbear client\n"
 #endif
 #ifdef DBMULTI_dropbearkey
 			"'dropbearkey' - the key generator\n"

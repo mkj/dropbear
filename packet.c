@@ -50,7 +50,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 void write_packet() {
 
 	int len, written;
-	buffer * writebuf;
+	buffer * writebuf = NULL;
 	
 	TRACE(("enter write_packet"));
 	assert(!isempty(&ses.writequeue));
@@ -80,6 +80,7 @@ void write_packet() {
 		/* We've finished with the packet, free it */
 		dequeue(&ses.writequeue);
 		buf_free(writebuf);
+		writebuf = NULL;
 	} else {
 		/* More packet left to write, leave it in the queue for later */
 		buf_incrpos(writebuf, written);
@@ -503,6 +504,7 @@ void encrypt_packet() {
 
 	/* clearwritebuf is finished with */
 	buf_free(clearwritebuf);
+	clearwritebuf = NULL;
 
 	/* enqueue the packet for sending */
 	buf_setpos(writebuf, 0);

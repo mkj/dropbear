@@ -1,3 +1,28 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 #include "session.h"
 #include "auth.h"
@@ -92,7 +117,7 @@ void recv_msg_userauth_failure() {
 		return;
 	}
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	/* If it was a pubkey auth request, we should cross that key 
 	 * off the list. */
 	if (cli_ses.lastauthtype == AUTH_TYPE_PUBKEY) {
@@ -126,13 +151,13 @@ void recv_msg_userauth_failure() {
 	for (i = 0; i <= methlen; i++) {
 		if (methods[i] == '\0') {
 			TRACE(("auth method '%s'", tok));
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 			if (strncmp(AUTH_METHOD_PUBKEY, tok,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 			}
 #endif
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_CLI_PASSWORD_AUTH
 			if (strncmp(AUTH_METHOD_PASSWORD, tok,
 				AUTH_METHOD_PASSWORD_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
@@ -143,6 +168,8 @@ void recv_msg_userauth_failure() {
 									undefined */
 		}
 	}
+
+	m_free(methods);
 
 	cli_ses.state = USERAUTH_FAIL_RCVD;
 		
@@ -163,14 +190,14 @@ void cli_auth_try() {
 	CHECKCLEARTOWRITE();
 	
 	/* XXX We hardcode that we try a pubkey first */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		finished = cli_auth_pubkey();
 		cli_ses.lastauthtype = AUTH_TYPE_PUBKEY;
 	}
 #endif
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_CLI_PASSWORD_AUTH
 	if (!finished && ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 		finished = cli_auth_password();
 		cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;

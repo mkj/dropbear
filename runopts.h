@@ -29,6 +29,7 @@
 #include "signkey.h"
 #include "buffer.h"
 #include "auth.h"
+#include "tcpfwd.h"
 
 typedef struct runopts {
 
@@ -51,8 +52,10 @@ typedef struct svr_runopts {
 	int usingsyslog;
 
 	/* ports is an array of the portcount listening ports */
-	uint16_t *ports;
+	char *ports[DROPBEAR_MAX_PORTS];
 	unsigned int portcount;
+
+	int inetdmode;
 
 	/* Flags indicating whether to use ipv4 and ipv6 */
 	/* not used yet
@@ -78,6 +81,7 @@ typedef struct svr_runopts {
 extern svr_runopts svr_opts;
 
 void svr_getopts(int argc, char ** argv);
+void loadhostkeys();
 
 /* Uncompleted XXX matt */
 typedef struct cli_runopts {
@@ -90,8 +94,14 @@ typedef struct cli_runopts {
 
 	char *cmd;
 	int wantpty;
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+	struct TCPFwdList * remotefwds;
+#endif
+#ifdef ENABLE_CLI_LOCALTCPFWD
+	struct TCPFwdList * localfwds;
 #endif
 	/* XXX TODO */
 

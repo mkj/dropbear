@@ -35,10 +35,9 @@
 #include "channel.h"
 #include "chansession.h"
 #include "atomicio.h"
-#include "tcpfwd-direct.h"
+#include "tcpfwd.h"
 #include "service.h"
 #include "auth.h"
-#include "tcpfwd-remote.h"
 #include "runopts.h"
 
 static void svr_remoteclosed();
@@ -65,7 +64,7 @@ static const packettype svr_packettypes[] = {
 
 static const struct ChanType *svr_chantypes[] = {
 	&svrchansess,
-	&chan_tcpdirect,
+	&svr_chan_tcpdirect,
 	NULL /* Null termination is mandatory. */
 };
 
@@ -169,7 +168,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 	/* if we are using DEBUG_TRACE, we want to print to stderr even if
 	 * syslog is used, so it is included in error reports */
 #ifdef DEBUG_TRACE
-	havetrace = 1;
+	havetrace = debug_trace;
 #endif
 
 	if (!svr_opts.usingsyslog || havetrace)

@@ -1,3 +1,28 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 #include "buffer.h"
 #include "dbutil.h"
@@ -6,6 +31,7 @@
 #include "runopts.h"
 #include "auth.h"
 
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign);
 
 /* Called when we receive a SSH_MSG_USERAUTH_FAILURE for a pubkey request.
@@ -13,17 +39,22 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign);
 void cli_pubkeyfail() {
 
 	struct PubkeyList *keyitem;
+	struct PubkeyList **previtem;
 
 	TRACE(("enter cli_pubkeyfail"));
+	previtem = &cli_opts.pubkeys;
+
 	/* Find the key we failed with, and remove it */
 	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
-		if (keyitem->next == cli_ses.lastpubkey) {
-			keyitem->next = cli_ses.lastpubkey->next;
+		if (keyitem == cli_ses.lastpubkey) {
+			*previtem = keyitem->next;
 		}
+		previtem = &keyitem;
 	}
 
 	sign_key_free(cli_ses.lastpubkey->key); /* It won't be used again */
 	m_free(cli_ses.lastpubkey);
+
 	TRACE(("leave cli_pubkeyfail"));
 }
 
@@ -145,6 +176,7 @@ int cli_auth_pubkey() {
 		/* Send a trial request */
 		send_msg_userauth_pubkey(cli_opts.pubkeys->key,
 				cli_opts.pubkeys->type, 0);
+		cli_ses.lastpubkey = cli_opts.pubkeys;
 		TRACE(("leave cli_auth_pubkey-success"));
 		return 1;
 	} else {
@@ -152,3 +184,4 @@ int cli_auth_pubkey() {
 		return 0;
 	}
 }
+#endif /* Pubkey auth */

@@ -60,7 +60,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 
 #ifdef DROPBEAR_DEV_URANDOM
 	readfd = open(DEV_URANDOM, O_RDONLY);
-	if (!readfd) {
+	if (readfd < 0) {
 		dropbear_exit("couldn't open random device");
 	}
 #endif
@@ -71,7 +71,8 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	strlcpy(egdsock.sun_path, DROPBEAR_EGD_SOCKET,
 			sizeof(egdsock.sun_path));
 
-	if ((readfd = socket(PF_UNIX, SOCK_STREAM, 0)) < 0) {
+	readfd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (readfd < 0) {
 		dropbear_exit("couldn't open random device");
 	}
 	/* todo - try various common locations */

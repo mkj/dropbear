@@ -21,13 +21,50 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
+#ifndef _TCPFWD_H
+#define _TCPFWD_H
 
-#ifndef _AUTH_PASSWD_
-#define _AUTH_PASSWD_
+#include "channel.h"
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+struct TCPListener {
 
-void passwordauth();
+	/* sendaddr/sendport are what we send in the channel init request. For a 
+	 * forwarded-tcpip request, it's the addr/port we were binding to.
+	 * For a direct-tcpip request, it's the addr/port we want the other
+	 * end to connect to */
+	
+	unsigned char *sendaddr;
+	unsigned int sendport;
 
-#endif /* DROPBEAR_PASSWORD_AUTH */
-#endif /* _AUTH_PASSWD_ */
+	/* This is for direct-tcpip (ie the client listening), and specifies the
+	 * port to listen on. Is unspecified for the server */
+	unsigned int listenport;
+
+	const struct ChanType *chantype;
+
+};
+
+/* A link in a list of forwards */
+struct TCPFwdList {
+
+	const unsigned char* connectaddr;
+	unsigned int connectport;
+	unsigned int listenport;
+	struct TCPFwdList * next;
+
+};
+
+/* Server */
+void recv_msg_global_request_remotetcp();
+extern const struct ChanType svr_chan_tcpdirect;
+
+/* Client */
+void setup_localtcp();
+void setup_remotetcp();
+extern const struct ChanType cli_chan_tcpremote;
+
+/* Common */
+int listen_tcpfwd(struct TCPListener* tcpinfo);
+
+
+#endif

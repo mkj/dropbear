@@ -1,3 +1,74 @@
+dropbear (0.44test3-1) unstable; urgency=medium
+
+  * New upstream beta, various useful fixes.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Fri, 27 August 2004 22:20:00 +0800
+
+dropbear (0.44test2-1) unstable; urgency=low
+
+  * New upstream beta, various minor fixes.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Tues, 17 August 2004 19:00:00 +0800
+
+dropbear (0.44test1-1) unstable; urgency=low
+
+  * Upstream beta 0.44test1
+  * Huge changes to allow client functionality
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sat, 14 August 2004 23:00:00 +0800
+
+dropbear (0.43-1) unstable; urgency=high
+
+  * New upstream release 0.43
+  * SECURITY: Don't attempt to free uninitialised buffers in DSS verification
+    code
+  * Handle portforwarding to servers which don't send any initial data
+    (Closes: #258426)
+
+ -- Matt Johnston <matt@ucc.asn.au>  Fri, 16 July 2004 17:44:54 +0800
+
+dropbear (0.42-1) unstable; urgency=low
+
+  * New upstream release 0.42
+
+ -- Matt Johnston <matt@ucc.asn.au>  Wed, 16 June 2004 12:44:54 +0800
+
+dropbear (0.41-3) unstable; urgency=low
+
+  * 1st upload to the Debian archive (closes: #216553).
+  * debian/diff/cvs-20040520.diff: new; stable cvs snapshot.
+  * debian/rules: new target patch: apply diffs in debian/diff/, reverse
+    apply in target clean; install man pages.
+  * debian/control: Priority: optional.
+
+ -- Gerrit Pape <pape@smarden.org>  Sun, 23 May 2004 08:32:37 +0000
+
+dropbear (0.41-2) unstable; urgency=low
+
+  * new maintainer.
+  * debian/control: no longer Build-Depends: debhelper; Build-Depends:
+    libz-dev; Standards-Version: 3.6.1.0; Suggests: runit; update
+    descriptions.
+  * debian/rules: stop using debhelper, use implicit rules; cleanup;
+    install dropbearconvert into /usr/lib/dropbear/.
+  * debian/impicit: new; implicit rules.
+  * debian/copyright.in: adapt.
+  * debian/dropbear.init: minor adaptions; test for dropbear service
+    directory.
+  * debian/README.runit: new; how to use dropbear with runit.
+  * debian/README.Debian, debian/docs: rename to debian/dropbear.*.
+  * debian/dropbear.docs: add debian/README.runit
+  * debian/conffiles: rename to debian/dropbear.conffiles; add init
+    script, and run scripts.
+  * debian/postinst: rename to debian/dropbear.postinst; adapt; use
+    invloke-rc.d dropbear start.
+  * debian/dropbear.prerm: new; invoke-rc.d dropbear stop.
+  * debian/postrm: rename to debian/dropbear.postrm; adapt; clean up
+    service directories.
+  * debian/compat, debian/dirs, dropbear.default: remove; obsolete.
+
+ -- Gerrit Pape <pape@smarden.org>  Sun, 16 May 2004 16:50:55 +0000
+
 dropbear (0.41-1) unstable; urgency=low
 
   * Updated to 0.41 release.

@@ -1,7 +1,7 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2004 Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -21,14 +21,30 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
-#ifndef _TCPFWD_DIRECT_H_
-#define _TCPFWD_DIRECT_H_
-#ifndef DISABLE_TCFWD_DIRECT
 
-#include "includes.h"
-#include "channel.h"
+#ifndef _CIRCBUFFER_H_
+#define _CIRCBUFFER_H_
+struct circbuf {
 
-extern const struct ChanType chan_tcpdirect;
+	unsigned int size;
+	unsigned int readpos;
+	unsigned int writepos;
+	unsigned int used;
+	unsigned char* data;
+};
 
-#endif
+typedef struct circbuf circbuffer;
+
+circbuffer * cbuf_new(unsigned int size);
+void cbuf_free(circbuffer * cbuf);
+
+unsigned int cbuf_getused(circbuffer * cbuf); /* how much data stored */
+unsigned int cbuf_getavail(circbuffer * cbuf); /* how much we can write */
+unsigned int cbuf_readlen(circbuffer *cbuf); /* max linear read len */
+unsigned int cbuf_writelen(circbuffer *cbuf); /* max linear write len */
+
+unsigned char* cbuf_readptr(circbuffer *cbuf, unsigned int len);
+unsigned char* cbuf_writeptr(circbuffer *cbuf, unsigned int len);
+void cbuf_incrwrite(circbuffer *cbuf, unsigned int len);
+void cbuf_incrread(circbuffer *cbuf, unsigned int len);
 #endif

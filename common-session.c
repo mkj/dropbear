@@ -35,6 +35,8 @@
 #include "channel.h"
 #include "atomicio.h"
 
+static void checktimeouts();
+static int ident_readln(int fd, char* buf, int count);
 
 struct sshsession ses; /* GLOBAL */
 
@@ -46,8 +48,6 @@ int sessinitdone = 0; /* GLOBAL */
 int exitflag = 0; /* GLOBAL */
 
 
-static void checktimeouts();
-static int ident_readln(int fd, char* buf, int count);
 
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock, char* remotehost) {
@@ -223,6 +223,7 @@ void session_identification() {
 	char linebuf[256];
 	int len = 0;
 	char done = 0;
+	int i;
 
 	/* write our version string, this blocks */
 	if (atomicio(write, ses.sock, LOCAL_IDENT "\r\n",
@@ -230,14 +231,27 @@ void session_identification() {
 		dropbear_exit("Error writing ident string");
 	}
 
-	len = ident_readln(ses.sock, linebuf, 256);
-	if (len >= 4 && memcmp(linebuf, "SSH-", 4) == 0) {
-		/* start of line matches */
-		done = 1;
+	/* We allow up to 9 lines before the actual version string, to
+	 * account for wrappers/cruft etc. According to the spec only the client
+	 * needs to handle this, but no harm in letting the server handle it too */
+	for (i = 0; i < 10; i++) {
+		len = ident_readln(ses.sock, linebuf, sizeof(linebuf));
+
+		if (len < 0 && errno != EINTR) {
+			/* It failed */
+			break;
+		}
+
+		if (len >= 4 && memcmp(linebuf, "SSH-", 4) == 0) {
+			/* start of line matches */
+			done = 1;
+			break;
+		}
 	}
 
 	if (!done) {
-		dropbear_exit("Failed to get client version");
+		TRACE(("err: %s for '%s'\n", strerror(errno), linebuf));
+		dropbear_exit("Failed to get remote version");
 	} else {
 		/* linebuf is already null terminated */
 		ses.remoteident = m_malloc(len);

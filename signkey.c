@@ -153,6 +153,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	m_free(ident);
 
 	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
+		TRACE(("wrong key type: %d %d", *type, keytype));
 		return DROPBEAR_FAILURE;
 	}
 
@@ -194,7 +195,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 	buffer *pubkeys;
 
 	TRACE(("enter buf_put_pub_key"));
-	pubkeys = buf_new(1000);
+	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
@@ -356,7 +357,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 
 	buffer *sigblob;
 
-	sigblob = buf_new(1000);
+	sigblob = buf_new(MAX_PUBKEY_SIZE);
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {

@@ -37,7 +37,7 @@
 #define X11BASEPORT 6000
 #define X11BINDBASE 6010
 
-static void x11accept(struct Listener* listener);
+static void x11accept(struct Listener* listener, int sock);
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 
@@ -75,14 +75,12 @@ int x11req(struct ChanSess * chansess) {
 	}
 
 	/* set non-blocking */
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		goto fail;
-	}
+	setnonblocking(fd);
 
 	/* listener code will handle the socket now.
 	 * No cleanup handler needed, since listener_remove only happens
 	 * from our cleanup anyway */
-	chansess->x11listener = new_listener( fd, 0, chansess, x11accept, NULL);
+	chansess->x11listener = new_listener( &fd, 1, 0, chansess, x11accept, NULL);
 	if (chansess->x11listener == NULL) {
 		goto fail;
 	}
@@ -100,7 +98,7 @@ fail:
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-static void x11accept(struct Listener* listener) {
+static void x11accept(struct Listener* listener, int sock) {
 
 	int fd;
 	struct sockaddr_in addr;
@@ -110,7 +108,7 @@ static void x11accept(struct Listener* listener) {
 
 	len = sizeof(addr);
 
-	fd = accept(listener->sock, (struct sockaddr*)&addr, &len);
+	fd = accept(sock, (struct sockaddr*)&addr, &len);
 	if (fd < 0) {
 		return;
 	}
@@ -131,7 +129,7 @@ static void x11accept(struct Listener* listener) {
 void x11setauth(struct ChanSess *chansess) {
 
 	char display[20]; /* space for "localhost:12345.123" */
-	FILE * authprog;
+	FILE * authprog = NULL;
 	int val;
 
 	if (chansess->x11listener == NULL) {
@@ -171,8 +169,12 @@ void x11cleanup(struct ChanSess *chansess) {
 
 	m_free(chansess->x11authprot);
 	m_free(chansess->x11authcookie);
-	remove_listener(chansess->x11listener);
-	chansess->x11listener = NULL;
+
+	TRACE(("chansess %s", chansess));
+	if (chansess->x11listener != NULL) {
+		remove_listener(chansess->x11listener);
+		chansess->x11listener = NULL;
+	}
 }
 
 static const struct ChanType chan_x11 = {
@@ -187,7 +189,7 @@ static const struct ChanType chan_x11 = {
 
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
-	char* ipstring;
+	char* ipstring = NULL;
 
 	if (send_msg_channel_open_init(fd, &chan_x11) == DROPBEAR_SUCCESS) {
 		ipstring = inet_ntoa(addr->sin_addr);

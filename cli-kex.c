@@ -1,7 +1,8 @@
 /*
  * Dropbear - a SSH2 server
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2004 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -44,8 +45,8 @@ void send_msg_kexdh_init() {
 
 	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
 	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
-
 	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+
 	gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
 
 	CHECKCLEARTOWRITE();
@@ -58,13 +59,18 @@ void send_msg_kexdh_init() {
 /* Handle a diffie-hellman key exchange reply. */
 void recv_msg_kexdh_reply() {
 
-	mp_int dh_f;
+	DEF_MP_INT(dh_f);
 	sign_key *hostkey = NULL;
 	unsigned int type, keybloblen;
 	unsigned char* keyblob = NULL;
 
 
 	TRACE(("enter recv_msg_kexdh_reply"));
+
+	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
+		dropbear_exit("Received out-of-order kexdhreply");
+	}
+	m_mp_init(&dh_f);
 	type = ses.newkeys->algo_hostkey;
 	TRACE(("type is %d", type));
 
@@ -82,7 +88,6 @@ void recv_msg_kexdh_reply() {
 		dropbear_exit("Bad KEX packet");
 	}
 
-	m_mp_init(&dh_f);
 	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
 		TRACE(("failed getting mpint"));
 		dropbear_exit("Bad KEX packet");
@@ -90,6 +95,9 @@ void recv_msg_kexdh_reply() {
 
 	kexdh_comb_key(cli_ses.dh_e, cli_ses.dh_x, &dh_f, hostkey);
 	mp_clear(&dh_f);
+	mp_clear_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+	m_free(cli_ses.dh_e);
+	m_free(cli_ses.dh_x);
 
 	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
 			!= DROPBEAR_SUCCESS) {
@@ -125,8 +133,10 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	char * filename = NULL;
 	FILE *hostsfile = NULL;
+	int readonly = 0;
 	struct passwd *pw = NULL;
-	unsigned int len, hostlen;
+	unsigned int hostlen, algolen;
+	unsigned long len;
 	const char *algoname = NULL;
 	buffer * line = NULL;
 	int ret;
@@ -144,20 +154,37 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	/* Check that ~/.ssh exists - easiest way is just to mkdir */
 	if (mkdir(filename, S_IRWXU) != 0) {
 		if (errno != EEXIST) {
+			dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
+					strerror(errno));
+			TRACE(("mkdir didn't work: %s", strerror(errno)));
 			ask_to_confirm(keyblob, keybloblen);
 			goto out; /* only get here on success */
 		}
 	}
 
 	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
-	hostsfile = fopen(filename, "r+");
+	hostsfile = fopen(filename, "a+");
+	
+	if (hostsfile != NULL) {
+		fseek(hostsfile, 0, SEEK_SET);
+	} else {
+		/* We mightn't have been able to open it if it was read-only */
+		if (errno == EACCES || errno == EROFS) {
+				TRACE(("trying readonly: %s", strerror(errno)));
+				readonly = 1;
+				hostsfile = fopen(filename, "r");
+		}
+	}
+
 	if (hostsfile == NULL) {
+		TRACE(("hostsfile didn't open: %s", strerror(errno)));
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}
 
 	line = buf_new(MAX_KNOWNHOSTS_LINE);
 	hostlen = strlen(cli_opts.remotehost);
+	algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &algolen);
 
 	do {
 		if (buf_getline(line, hostsfile) == DROPBEAR_FAILURE) {
@@ -188,20 +215,19 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 			continue;
 		}
 
-		algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &len);
-		if ( strncmp(buf_getptr(line, len), algoname, len) != 0) {
+		if ( strncmp(buf_getptr(line, algolen), algoname, algolen) != 0) {
 			TRACE(("algo doesn't match"));
 			continue;
 		}
 
-		buf_incrpos(line, len);
+		buf_incrpos(line, algolen);
 		if (buf_getbyte(line) != ' ') {
 			TRACE(("missing space after algo"));
 			continue;
 		}
 
 		/* Now we're at the interesting hostkey */
-		ret = cmp_base64_key(keyblob, keybloblen, algoname, len, line);
+		ret = cmp_base64_key(keyblob, keybloblen, algoname, algolen, line);
 
 		if (ret == DROPBEAR_SUCCESS) {
 			/* Good matching key */
@@ -214,12 +240,39 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	/* Key doesn't exist yet */
 	ask_to_confirm(keyblob, keybloblen);
+
 	/* If we get here, they said yes */
+
+	if (readonly) {
+		TRACE(("readonly"));
+		goto out;
+	}
+
+	/* put the new entry in the file */
+	fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
+	buf_setpos(line, 0);
+	buf_setlen(line, 0);
+	buf_putbytes(line, ses.remotehost, hostlen);
+	buf_putbyte(line, ' ');
+	buf_putbytes(line, algoname, algolen);
+	buf_putbyte(line, ' ');
+	len = line->size - line->pos;
+	TRACE(("keybloblen %d, len %d", keybloblen, len));
+	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
+	 * will die horribly in the case anyway */
+	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
+	buf_incrwritepos(line, len);
+	buf_putbyte(line, '\n');
+	buf_setpos(line, 0);
+	fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
+	/* We ignore errors, since there's not much we can do about them */
 
 out:
 	if (hostsfile != NULL) {
 		fclose(hostsfile);
 	}
 	m_free(filename);
-	buf_free(line);
+	if (line != NULL) {
+		buf_free(line);
+	}
 }

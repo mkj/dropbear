@@ -29,23 +29,22 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "auth.h"
-#include "authpasswd.h"
 
-#ifdef DROPBEAR_PASSWORD_AUTH
+#ifdef ENABLE_SVR_PASSWORD_AUTH
 
 /* Process a password auth request, sending success or failure messages as
  * appropriate */
 void svr_auth_password() {
 	
 #ifdef HAVE_SHADOW_H
-	struct spwd *spasswd;
+	struct spwd *spasswd = NULL;
 #endif
-	char * passwdcrypt; /* the crypt from /etc/passwd or /etc/shadow */
-	char * testcrypt; /* crypt generated from the user's password sent */
+	char * passwdcrypt = NULL; /* the crypt from /etc/passwd or /etc/shadow */
+	char * testcrypt = NULL; /* crypt generated from the user's password sent */
 	unsigned char * password;
 	unsigned int passwordlen;
 
-	unsigned char changepw;
+	unsigned int changepw;
 
 	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
@@ -105,4 +104,4 @@ void svr_auth_password() {
 
 }
 
-#endif /* DROPBEAR_PASSWORD_AUTH */
+#endif

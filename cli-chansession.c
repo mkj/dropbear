@@ -1,3 +1,28 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 #include "packet.h"
 #include "buffer.h"
@@ -7,9 +32,11 @@
 #include "ssh.h"
 #include "runopts.h"
 #include "termcodes.h"
+#include "chansession.h"
 
 static void cli_closechansess(struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
+static void cli_chansessreq(struct Channel *channel);
 
 static void start_channel_request(struct Channel *channel, unsigned char *type);
 
@@ -17,19 +44,43 @@ static void send_chansess_pty_req(struct Channel *channel);
 static void send_chansess_shell_req(struct Channel *channel);
 
 static void cli_tty_setup();
-void cli_tty_cleanup();
 
-static const struct ChanType clichansess = {
+const struct ChanType clichansess = {
 	0, /* sepfds */
 	"session", /* name */
 	cli_initchansess, /* inithandler */
 	NULL, /* checkclosehandler */
-	NULL, /* reqhandler */
+	cli_chansessreq, /* reqhandler */
 	cli_closechansess, /* closehandler */
 };
 
+static void cli_chansessreq(struct Channel *channel) {
+
+	unsigned char* type = NULL;
+	int wantreply;
+
+	TRACE(("enter cli_chansessreq"));
+
+	type = buf_getstring(ses.payload, NULL);
+	wantreply = buf_getbyte(ses.payload);
+
+	if (strcmp(type, "exit-status") != 0) {
+		TRACE(("unknown request '%s'", type));
+		send_msg_channel_failure(channel);
+		goto out;
+	}
+		
+	/* We'll just trust what they tell us */
+	cli_ses.retval = buf_getint(ses.payload);
+	TRACE(("got exit-status of '%d'", cli_ses.retval));
+
+out:
+	m_free(type);
+}
+	
+
 /* If the main session goes, we close it up */
-static void cli_closechansess(struct Channel *channel) {
+static void cli_closechansess(struct Channel *UNUSED(channel)) {
 
 	/* This channel hasn't gone yet, so we have > 1 */
 	if (ses.chancount > 1) {
@@ -178,7 +229,7 @@ static void put_termcodes() {
 	bufpos2 = ses.writepayload->pos;
 
 	buf_setpos(ses.writepayload, bufpos1); /* Jump back */
-	buf_putint(ses.writepayload, bufpos2 - bufpos1); /* len(termcodes) */
+	buf_putint(ses.writepayload, bufpos2 - bufpos1 - 4); /* len(termcodes) */
 	buf_setpos(ses.writepayload, bufpos2); /* Back where we were */
 
 	TRACE(("leave put_termcodes"));
@@ -203,7 +254,7 @@ static void put_winsize() {
 
 }
 
-static void sigwinch_handler(int dummy) {
+static void sigwinch_handler(int UNUSED(unused)) {
 
 	cli_ses.winchange = 1;
 
@@ -288,9 +339,17 @@ static void send_chansess_shell_req(struct Channel *channel) {
 
 static int cli_initchansess(struct Channel *channel) {
 
+
 	channel->infd = STDOUT_FILENO;
-	//channel->outfd = STDIN_FILENO;
-	//channel->errfd = STDERR_FILENO;
+	setnonblocking(STDOUT_FILENO);
+
+	channel->outfd = STDIN_FILENO;
+	setnonblocking(STDIN_FILENO);
+
+	channel->errfd = STDERR_FILENO;
+	setnonblocking(STDERR_FILENO);
+
+	channel->extrabuf = cbuf_new(RECV_MAXWINDOW);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);

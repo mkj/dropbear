@@ -35,6 +35,7 @@
 #include "queue.h"
 #include "listener.h"
 #include "packet.h"
+#include "tcpfwd.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
@@ -42,7 +43,6 @@ extern int exitflag;
 void common_session_init(int sock, char* remotehost);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
-void checktimeouts();
 void session_identification();
 
 
@@ -53,8 +53,6 @@ void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
 void cli_session(int sock, char *remotehost);
-void cli_dropbear_exit(int exitcode, const char* format, va_list param);
-void cli_dropbear_log(int priority, const char* format, va_list param);
 void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
@@ -211,12 +209,16 @@ struct clientsession {
 
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
 	struct termios saved_tio;
+	int stdincopy;
+	int stdinflags;
 
 	int winchange; /* Set to 1 when a windowchange signal happens */
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
 	struct PubkeyList *lastpubkey;
+
+	int retval; /* What the command exit status was - we emulate it */
 #if 0
 	TODO
 	struct AgentkeyList *agentkeys; /* Keys to use for public-key auth */

@@ -1,11 +1,35 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 #include "session.h"
 #include "dbutil.h"
 #include "kex.h"
 #include "ssh.h"
 #include "packet.h"
-#include "tcpfwd-direct.h"
-#include "tcpfwd-remote.h"
+#include "tcpfwd.h"
 #include "channel.h"
 #include "random.h"
 #include "service.h"
@@ -22,8 +46,9 @@ struct clientsession cli_ses; /* GLOBAL */
 /* Sorted in decreasing frequency will be more efficient - data and window
  * should be first */
 static const packettype cli_packettypes[] = {
-	/* TYPE, AUTHREQUIRED, FUNCTION */
+	/* TYPE, FUNCTION */
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
+	{SSH_MSG_CHANNEL_EXTENDED_DATA, recv_msg_channel_extended_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
 	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, /* client */
 	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, /* client */
@@ -31,7 +56,6 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_KEXDH_REPLY, recv_msg_kexdh_reply}, /* client */
 	{SSH_MSG_NEWKEYS, recv_msg_newkeys},
 	{SSH_MSG_SERVICE_ACCEPT, recv_msg_service_accept}, /* client */
-	{SSH_MSG_GLOBAL_REQUEST, recv_msg_global_request_remotetcp},
 	{SSH_MSG_CHANNEL_REQUEST, recv_msg_channel_request},
 	{SSH_MSG_CHANNEL_OPEN, recv_msg_channel_open},
 	{SSH_MSG_CHANNEL_EOF, recv_msg_channel_eof},
@@ -39,15 +63,16 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	{SSH_MSG_USERAUTH_PK_OK, recv_msg_userauth_pk_ok}, /* client */
 #endif
 	{0, 0} /* End */
 };
 
 static const struct ChanType *cli_chantypes[] = {
-	/* &chan_tcpdirect etc, though need to only allow if we've requested
-	 * that forwarding */
+#ifdef ENABLE_CLI_REMOTETCPFWD
+	&cli_chan_tcpremote,
+#endif
 	NULL /* Null termination */
 };
 
@@ -87,6 +112,14 @@ static void cli_session_init() {
 
 	cli_ses.tty_raw_mode = 0;
 	cli_ses.winchange = 0;
+
+	/* We store stdin's flags, so we can set them back on exit (otherwise
+	 * busybox's ash isn't happy */
+	cli_ses.stdincopy = dup(STDIN_FILENO);
+	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
+
+	cli_ses.retval = EXIT_SUCCESS; /* Assume it's clean if we don't get a
+									  specific exit status */
 
 	/* Auth */
 	cli_ses.lastpubkey = NULL;
@@ -179,6 +212,12 @@ static void cli_sessionloop() {
 			*/
 
 		case USERAUTH_SUCCESS_RCVD:
+#ifdef ENABLE_CLI_LOCALTCPFWD
+			setup_localtcp();
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+			setup_remotetcp();
+#endif
 			cli_send_chansess_request();
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
 			cli_ses.state = SESSION_RUNNING;
@@ -210,6 +249,11 @@ void cli_session_cleanup() {
 	if (!sessinitdone) {
 		return;
 	}
+
+	/* Set stdin back to non-blocking - busybox ash dies nastily
+	 * if we don't revert the flags */
+	fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+
 	cli_tty_cleanup();
 
 }
@@ -220,9 +264,8 @@ static void cli_finished() {
 	common_session_cleanup();
 	fprintf(stderr, "Connection to %s@%s:%s closed.\n", cli_opts.username,
 			cli_opts.remotehost, cli_opts.remoteport);
-	exit(EXIT_SUCCESS);
+	exit(cli_ses.retval);
 }
-
 
 
 /* called when the remote side closes the connection */

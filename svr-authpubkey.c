@@ -30,12 +30,11 @@
 #include "buffer.h"
 #include "signkey.h"
 #include "auth.h"
-#include "authpubkey.h"
 #include "ssh.h"
 #include "packet.h"
 #include "algo.h"
 
-#ifdef DROPBEAR_PUBKEY_AUTH
+#ifdef ENABLE_SVR_PUBKEY_AUTH
 
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
@@ -54,7 +53,7 @@ void svr_auth_pubkey() {
 	unsigned char testkey; /* whether we're just checking if a key is usable */
 	unsigned char* algo = NULL; /* pubkey algo */
 	unsigned int algolen;
-	unsigned char* keyblob;
+	unsigned char* keyblob = NULL;
 	unsigned int keybloblen;
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;
@@ -336,4 +335,4 @@ static int checkfileperm(char * filename) {
 }
 
 
-#endif /* DROPBEAR_PUBKEY_AUTH */
+#endif 

@@ -1,5 +1,5 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
@@ -34,8 +34,8 @@
 #define BUF_MAX_INCR 1000000000
 #define BUF_MAX_SIZE 1000000000
 
-/* avoid excessively large numbers, > 5000 bit */
-#define BUF_MAX_MPINT (5000 / 8)
+/* avoid excessively large numbers, > ~8192 bits */
+#define BUF_MAX_MPINT (8240 / 8)
 
 /* Create (malloc) a new buffer of size */
 buffer* buf_new(unsigned int size) {
@@ -76,7 +76,8 @@ void buf_burn(buffer* buf) {
 
 }
 
-/* resize a buffer, pos and len will be repositioned if required */
+/* resize a buffer, pos and len will be repositioned if required when
+ * downsizing */
 void buf_resize(buffer *buf, unsigned int newsize) {
 
 	if (newsize > BUF_MAX_SIZE) {
@@ -151,6 +152,8 @@ void buf_incrpos(buffer* buf,  int incr) {
 /* Get a byte from the buffer and increment the pos */
 unsigned char buf_getbyte(buffer* buf) {
 
+	/* This check is really just ==, but the >= allows us to check for the
+	 * assert()able case of pos > len, which should _never_ happen. */
 	if (buf->pos >= buf->len) {
 		dropbear_exit("bad buf_getbyte");
 	}

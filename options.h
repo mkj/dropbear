@@ -1,26 +1,6 @@
-/*
- * Dropbear - a SSH2 server
- * 
+/* Dropbear SSH
  * Copyright (c) 2002,2003 Matt Johnston
- * All rights reserved.
- * 
- * Permission is hereby granted, free of charge, to any person obtaining a copy
- * of this software and associated documentation files (the "Software"), to deal
- * in the Software without restriction, including without limitation the rights
- * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
- * copies of the Software, and to permit persons to whom the Software is
- * furnished to do so, subject to the following conditions:
- * 
- * The above copyright notice and this permission notice shall be included in
- * all copies or substantial portions of the Software.
- * 
- * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
- * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
- * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
- * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
- * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
- * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE. */
+ * All rights reserved. See LICENSE for the license. */
 
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
@@ -30,8 +10,8 @@
  * parts are to allow for commandline -DDROPBEAR_XXX options etc.
  ******************************************************************/
 
-#ifndef DROPBEAR_PORT
-#define DROPBEAR_PORT 22
+#ifndef DROPBEAR_DEFPORT
+#define DROPBEAR_DEFPORT "22"
 #endif
 
 /* Default hostkey paths - these can be specified on the command line */
@@ -42,21 +22,43 @@
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
 #endif
 
+/* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
+ * on chosen ports and keeps accepting connections. This is the default.
+ *
+ * Set INETD_MODE if you want to be able to run Dropbear with inetd (or
+ * similar), where it will use stdin/stdout for connections, and each process
+ * lasts for a single connection. Dropbear should be invoked with the -i flag
+ * for inetd, and can only accept IPv4 connections.
+ *
+ * Both of these flags can be defined at once, don't compile without at least
+ * one of them. */
+#define NON_INETD_MODE
+#define INETD_MODE
+
 /* Setting this disables the fast exptmod bignum code. It saves ~5kB, but is
  * perhaps 20% slower for pubkey operations (it is probably worth experimenting
  * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
 
-/* Enable X11 Forwarding */
+/* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
+several kB in binary size, however will make the symmetrical ciphers (AES, DES
+etc) slower (perhaps by 50%). Recommended for most small systems. */
+#define DROPBEAR_SMALL_CODE
+
+/* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
 
 /* Enable TCP Fowarding */
-/* OpenSSH's "-L" style forwarding (client port forwarded via server) */
-#define ENABLE_LOCALTCPFWD
-/* OpenSSH's "-R" style forwarding (server port forwarded via client) */
-#define ENABLE_REMOTETCPFWD
+/* 'Local' is "-L" style (client listening port forwarded via server)
+ * 'Remote' is "-R" style (server listening port forwarded via client) */
 
-/* Enable Authentication Agent Forwarding */
+#define ENABLE_CLI_LOCALTCPFWD
+#define ENABLE_CLI_REMOTETCPFWD
+
+#define ENABLE_SVR_LOCALTCPFWD
+#define ENABLE_SVR_REMOTETCPFWD
+
+/* Enable Authentication Agent Forwarding - server only for now */
 #define ENABLE_AGENTFWD
 
 /* Encryption - at least one required.
@@ -115,9 +117,14 @@
  * to make sure PAM libraries etc are installed */
 #define DROPBEAR_PAM_AUTH
 #define DROPBEAR_PUBKEY_AUTH
+#define ENABLE_SVR_PASSWORD_AUTH
+#define ENABLE_SVR_PUBKEY_AUTH
+
+#define ENABLE_CLI_PASSWORD_AUTH
+#define ENABLE_CLI_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
- * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
+ * DEV_URANDOM is recommended on hosts with a good /dev/urandom, otherwise use
  * PRNGD and run prngd, specifying the socket. This device must be able to
  * produce a large amount of random data, so using /dev/random or Entropy
  * Gathering Daemon (egd) may result in halting, as it waits for more random
@@ -136,7 +143,7 @@
 #define MAX_UNAUTH_CLIENTS 30
 #endif
 
-/* Maximum number of failed authentication tries */
+/* Maximum number of failed authentication tries (server option) */
 #ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
 #endif
@@ -159,8 +166,9 @@
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 #endif
 
-/* This is used by the scp binary when used as a client binary */
-#define _PATH_SSH_PROGRAM "/usr/bin/ssh"
+/* This is used by the scp binary when used as a client binary. If you're
+ * not using the Dropbear client, you'll need to change it */
+#define _PATH_SSH_PROGRAM "/usr/bin/dbclient"
 
 /* Multi-purpose binary configuration has now moved. Look at the top
  * of the Makefile for instructions, or INSTALL */
@@ -170,7 +178,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.41-and-client"
+#define DROPBEAR_VERSION "0.44test3"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -236,7 +244,7 @@
 #define DROPBEAR_COMP_ZLIB 1
 
 /* Required for pubkey auth */
-#if defined(DROPBEAR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
+#if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
 
@@ -283,6 +291,9 @@
 /* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
 #define MAX_PRIVKEY_SIZE 1600
 
+#define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
+								in a few years time.... */
+
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD
 #endif
@@ -299,12 +310,20 @@
 #define DISABLE_REMOTETCPFWD
 #endif
 
+#if defined(ENABLE_CLI_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
+#define ENABLE_CLI_ANYTCPFWD 
+#endif
+
+#if defined(ENABLE_CLI_LOCALTCPFWD) || defined(ENABLE_SVR_REMOTETCPFWD)
+#define DROPBEAR_TCP_ACCEPT
+#endif
+
 #if defined(ENABLE_REMOTETCPFWD) || defined(ENABLE_LOCALTCPFWD) || \
 	defined(ENABLE_AGENTFWD) || defined(ENABLE_X11FWD)
 #define USING_LISTENERS
 #endif
 
-#if defined(DROPBEAR_CLIENT) || defined(DROPBEAR_PUBKEY_AUTH)
+#if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
 #endif
 

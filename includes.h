@@ -38,7 +38,6 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <sys/dir.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -56,6 +55,7 @@
 #include <netdb.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <dirent.h>
 
 #include <arpa/inet.h>
 
@@ -111,14 +111,11 @@
 #include <libgen.h>
 #endif
 
-#ifdef HAVE_SYS_DIRENT_H
-#include <sys/dirent.h>
-#endif
-
 #include "libtomcrypt/mycrypt_custom.h"
 #include "libtommath/tommath.h"
 
 #include "compat.h"
+#include "fake-rfc2553.h"
 
 #ifndef HAVE_UINT16_T
 #ifndef HAVE_U_INT16_T
@@ -129,6 +126,16 @@ typedef u_int16_t uint16_t;
 
 #ifndef LOG_AUTHPRIV
 #define LOG_AUTHPRIV LOG_AUTH
+#endif
+
+/* so we can avoid warnings about unused params (ie in signal handlers etc) */
+#ifdef UNUSED 
+#elif defined(__GNUC__) 
+# define UNUSED(x) UNUSED_ ## x __attribute__((unused)) 
+#elif defined(__LCLINT__) 
+# define UNUSED(x) /*@unused@*/ x 
+#else 
+# define UNUSED(x) x 
 #endif
 
 #endif /* _INCLUDES_H_ */

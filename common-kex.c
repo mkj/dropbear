@@ -1,9 +1,5 @@
 /*
- * Dropbear - a SSH2 server
- * SSH client implementation
- *
- * This code is copied from the larger file "kex.c" 
- * some functions are verbatim, others are generalized --mihnea
+ * Dropbear SSH
  * 
  * Copyright (c) 2002-2004 Matt Johnston
  * Portions Copyright (c) 2004 by Mihnea Stoenescu
@@ -468,15 +464,18 @@ void recv_msg_kexinit() {
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
  * See the ietf-secsh-transport draft, section 6, for details */
+/* dh_pub and dh_priv MUST be already initialised */
 void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 
-	mp_int dh_p, dh_q, dh_g;
+	DEF_MP_INT(dh_p);
+	DEF_MP_INT(dh_q);
+	DEF_MP_INT(dh_g);
 	unsigned char randbuf[DH_P_LEN];
 	int dh_q_len;
 
 	TRACE(("enter send_msg_kexdh_reply"));
 	
-	m_mp_init_multi(&dh_g, &dh_p, &dh_q, dh_priv, dh_pub, NULL);
+	m_mp_init_multi(&dh_g, &dh_p, &dh_q, NULL);
 
 	/* read the prime and generator*/
 	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
@@ -635,42 +634,44 @@ static void read_kex_algos() {
 
 	/* encryption_algorithms_client_to_server */
 	c2s_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
-	if (algo == NULL) {
+	if (c2s_cipher_algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
 	}
+	TRACE(("c2s is  %s", c2s_cipher_algo->name));
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
-	if (algo == NULL) {
+	if (s2c_cipher_algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
 	}
+	TRACE(("s2c is  %s", s2c_cipher_algo->name));
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
-	if (algo == NULL) {
+	if (c2s_hash_algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
 	}
 
 	/* mac_algorithms_server_to_client */
 	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
-	if (algo == NULL) {
+	if (s2c_hash_algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
 	}
 
 	/* compression_algorithms_client_to_server */
 	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
-	if (algo == NULL) {
+	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
 	}
 
 	/* compression_algorithms_server_to_client */
 	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
-	if (algo == NULL) {
+	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
 	}

@@ -31,8 +31,9 @@
 #include "gendss.h"
 #include "dss.h"
 
-#define PSIZE 128 /* 1024 bit*/
 #define QSIZE 20 /* 160 bit */
+
+/* This is just a test */
 
 #ifdef DROPBEAR_DSS
 
@@ -90,7 +91,10 @@ static void getq(dss_key *key) {
 
 static void getp(dss_key *key, unsigned int size) {
 
-	mp_int tempX, tempC, tempP, temp2q;
+	DEF_MP_INT(tempX);
+	DEF_MP_INT(tempC);
+	DEF_MP_INT(tempP);
+	DEF_MP_INT(temp2q);
 	int result;
 	unsigned char *buf;
 
@@ -148,8 +152,9 @@ static void getp(dss_key *key, unsigned int size) {
 
 static void getg(dss_key * key) {
 
-	char printbuf[1000];
-	mp_int div, h, val;
+	DEF_MP_INT(div);
+	DEF_MP_INT(h);
+	DEF_MP_INT(val);
 
 	m_mp_init_multi(&div, &h, &val, NULL);
 
@@ -179,14 +184,12 @@ static void getg(dss_key * key) {
 	
 	} while (mp_cmp_d(key->g, 1) != MP_GT);
 
-	mp_toradix(key->g, printbuf, 10);
-
 	mp_clear_multi(&div, &h, &val, NULL);
 }
 
 static void getx(dss_key *key) {
 
-	mp_int val;
+	DEF_MP_INT(val);
 	char buf[QSIZE];
 	
 	m_mp_init(&val);

@@ -131,7 +131,11 @@ const struct TermCode termcodes[MAX_TERMCODE+1] = {
 		{IEXTEN, TERMCODE_LOCAL},
 		{ECHOCTL, TERMCODE_LOCAL},
 		{ECHOKE, TERMCODE_LOCAL},
+#ifdef PENDIN
 		{PENDIN, TERMCODE_LOCAL},
+#else
+		{0, 0},
+#endif
 		{0, 0}, /* 63 */
 		{0, 0},
 		{0, 0},

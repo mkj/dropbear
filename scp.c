@@ -178,8 +178,10 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 		close(pout[1]);
 
 		args.list[0] = ssh_program;
-		if (remuser != NULL)
-			addargs(&args, "-l%s", remuser);
+		if (remuser != NULL) {
+			addargs(&args, "-l");
+			addargs(&args, "%s", remuser);
+		}
 		addargs(&args, "%s", host);
 		addargs(&args, "%s", cmd);
 

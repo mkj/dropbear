@@ -1,3 +1,27 @@
+/*
+ * Dropbear SSH
+ * 
+ * Copyright (c) 2002,2003 Matt Johnston
+ * All rights reserved.
+ * 
+ * Permission is hereby granted, free of charge, to any person obtaining a copy
+ * of this software and associated documentation files (the "Software"), to deal
+ * in the Software without restriction, including without limitation the rights
+ * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+ * copies of the Software, and to permit persons to whom the Software is
+ * furnished to do so, subject to the following conditions:
+ * 
+ * The above copyright notice and this permission notice shall be included in
+ * all copies or substantial portions of the Software.
+ * 
+ * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+ * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+ * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+ * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+ * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+ * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+ * SOFTWARE. */
+
 #include "includes.h"
 #include "listener.h"
 #include "session.h"
@@ -14,15 +38,16 @@ void listeners_initialise() {
 
 void set_listener_fds(fd_set * readfds) {
 
-	unsigned int i;
+	unsigned int i, j;
 	struct Listener *listener;
 
 	/* check each in turn */
 	for (i = 0; i < ses.listensize; i++) {
 		listener = ses.listeners[i];
 		if (listener != NULL) {
-			TRACE(("set listener fd %d", listener->sock));
-			FD_SET(listener->sock, readfds);
+			for (j = 0; j < listener->nsocks; j++) {
+				FD_SET(listener->socks[j], readfds);
+			}
 		}
 	}
 }
@@ -30,26 +55,30 @@ void set_listener_fds(fd_set * readfds) {
 
 void handle_listeners(fd_set * readfds) {
 
-	unsigned int i;
+	unsigned int i, j;
 	struct Listener *listener;
+	int sock;
 
 	/* check each in turn */
 	for (i = 0; i < ses.listensize; i++) {
 		listener = ses.listeners[i];
 		if (listener != NULL) {
-		TRACE(("handle listener num %d fd %d", i, listener->sock));
-			if (FD_ISSET(listener->sock, readfds)) {
-				listener->accepter(listener);
+			for (j = 0; j < listener->nsocks; j++) {
+				sock = listener->socks[j];
+				if (FD_ISSET(sock, readfds)) {
+					listener->acceptor(listener, sock);
+				}
 			}
 		}
 	}
-}
+} /* Woo brace matching */
 
 
-/* accepter(int fd, void* typedata) is a function to accept connections, 
+/* acceptor(int fd, void* typedata) is a function to accept connections, 
  * cleanup(void* typedata) happens when cleaning up */
-struct Listener* new_listener(int sock, int type, void* typedata, 
-		void (*accepter)(struct Listener*), 
+struct Listener* new_listener(int socks[], unsigned int nsocks,
+		int type, void* typedata, 
+		void (*acceptor)(struct Listener* listener, int sock), 
 		void (*cleanup)(struct Listener*)) {
 
 	unsigned int i, j;
@@ -65,7 +94,9 @@ struct Listener* new_listener(int sock, int type, void* typedata,
 	if (i == ses.listensize) {
 		if (ses.listensize > MAX_LISTENERS) {
 			TRACE(("leave newlistener: too many already"));
-			close(sock);
+			for (j = 0; j < nsocks; j++) {
+				close(socks[i]);
+			}
 			return NULL;
 		}
 		
@@ -80,16 +111,19 @@ struct Listener* new_listener(int sock, int type, void* typedata,
 		}
 	}
 
-	ses.maxfd = MAX(ses.maxfd, sock);
+	for (j = 0; j < nsocks; j++) {
+		ses.maxfd = MAX(ses.maxfd, socks[j]);
+	}
 
-	TRACE(("new listener num %d fd %d", i, sock));
+	TRACE(("new listener num %d ", i));
 
 	newlisten = (struct Listener*)m_malloc(sizeof(struct Listener));
 	newlisten->index = i;
 	newlisten->type = type;
 	newlisten->typedata = typedata;
-	newlisten->sock = sock;
-	newlisten->accepter = accepter;
+	newlisten->nsocks = nsocks;
+	memcpy(newlisten->socks, socks, nsocks * sizeof(int));
+	newlisten->acceptor = acceptor;
 	newlisten->cleanup = cleanup;
 
 	ses.listeners[i] = newlisten;
@@ -116,11 +150,15 @@ struct Listener * get_listener(int type, void* typedata,
 
 void remove_listener(struct Listener* listener) {
 
+	unsigned int j;
+
 	if (listener->cleanup) {
 		listener->cleanup(listener);
 	}
 
-	close(listener->sock);
+	for (j = 0; j < listener->nsocks; j++) {
+		close(listener->socks[j]);
+	}
 	ses.listeners[listener->index] = NULL;
 	m_free(listener);
 

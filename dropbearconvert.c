@@ -47,10 +47,8 @@ static void printhelp(char * progname) {
 					"dropbear\n"
 					"\n"
 					"Example:\n"
-					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n"
-					"\n"
-					"The inputfile and output file can be '-' to specify\n"
-					"standard input or standard output.\n", progname);
+					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n",
+					progname);
 }
 
 #if defined(DBMULTI_dropbearconvert) || !defined(DROPBEAR_MULTI)
@@ -63,6 +61,11 @@ int main(int argc, char ** argv) {
 	int intype, outtype;
 	const char* infile;
 	const char* outfile;
+
+#ifdef DEBUG_TRACE
+	/* It's hard for it to get in the way _too_ much */
+	debug_trace = 1;
+#endif
 
 	/* get the commandline options */
 	if (argc != 5) {
