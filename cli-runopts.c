@@ -46,11 +46,13 @@ static void printhelp(const char * progname) {
 
 void cli_getopts(int argc, char ** argv) {
 
-	unsigned int i;
+	unsigned int i, j;
 	char ** next = 0;
+	unsigned int cmdlen;
+	int nextiskey = 0; /* A flag if the next argument is a keyfile */
 
 	uid_t uid;
-	struct passwd *pw; 
+	struct passwd *pw = NULL; 
 
 	char* userhostarg = NULL;
 
@@ -73,131 +75,95 @@ void cli_getopts(int argc, char ** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	/* We'll be editing it, should probably make a copy */
-	userhostarg = m_strdup(argv[1]);
-
-	cli_opts.remotehost = strchr(userhostarg, '@');
-	if (cli_opts.remotehost == NULL) {
-		/* no username portion, the cli-auth.c code can figure the local
-		 * user's name */
-		cli_opts.remotehost = userhostarg;
-	} else {
-		cli_opts.remotehost[0] = '\0'; /* Split the user/host */
-		cli_opts.remotehost++;
-		cli_opts.username = userhostarg;
-	}
-
-	if (cli_opts.username == NULL) {
-		uid = getuid();
-		
-		pw = getpwuid(uid);
-		if (pw == NULL || pw->pw_name == NULL) {
-			dropbear_exit("Couldn't find username for current user");
-		}
-
-		cli_opts.username = m_strdup(pw->pw_name);
-	}
-
-	if (cli_opts.remotehost[0] == '\0') {
-		dropbear_exit("Bad hostname argument");
-	}
-
-	cli_opts.remoteport = strchr(cli_opts.remotehost, ':');
-	if (cli_opts.remoteport == NULL) {
-		cli_opts.remoteport = "22";
-	} else {
-		cli_opts.remoteport[0] = '\0';
-		cli_opts.remoteport++;
-	}
-
-#if 0
 	for (i = 1; i < (unsigned int)argc; i++) {
+		if (nextiskey) {
+			/* XXX do stuff */
+			break;
+		}
 		if (next) {
 			*next = argv[i];
 			if (*next == NULL) {
 				dropbear_exit("Invalid null argument");
 			}
-			next = 0x00;
+			next = NULL;
 			continue;
 		}
 
 		if (argv[i][0] == '-') {
+
+			/* A flag *waves* */
 			switch (argv[i][1]) {
-				case 'b':
-					next = &svr_opts.bannerfile;
-					break;
-#ifdef DROPBEAR_DSS
-				case 'd':
-					next = &svr_opts.dsskeyfile;
-					break;
-#endif
-#ifdef DROPBEAR_RSA
-				case 'r':
-					next = &svr_opts.rsakeyfile;
-					break;
-#endif
-				case 'F':
-					svr_opts.forkbg = 0;
-					break;
-#ifndef DISABLE_SYSLOG
-				case 'E':
-					svr_opts.usingsyslog = 0;
-					break;
-#endif
-#ifndef DISABLE_LOCALTCPFWD
-				case 'j':
-					opts.nolocaltcp = 1;
-					break;
-#endif
-#ifndef DISABLE_REMOTETCPFWD
-				case 'k':
-					opts.noremotetcp = 1;
-					break;
-#endif
 				case 'p':
-					if (portnum < DROPBEAR_MAX_PORTS) {
-						portstring[portnum] = NULL;
-						next = &portstring[portnum];
-						portnum++;
-					}
+					next = &cli_opts.remoteport;
 					break;
-#ifdef DO_MOTD
-				/* motd is displayed by default, -m turns it off */
-				case 'm':
-					svr_opts.domotd = 0;
+#ifdef DROPBEAR_PUBKEY_AUTH
+				case 'i':
+					nextiskey = 1;
 					break;
 #endif
-				case 'w':
-					svr_opts.norootlogin = 1;
-					break;
-#ifdef DROPBEAR_PASSWORD_AUTH
-				case 's':
-					svr_opts.noauthpass = 1;
-					break;
-				case 'g':
-					svr_opts.norootpass = 1;
-					break;
-#endif
-				case 'h':
-					printhelp(argv[0]);
-					exit(EXIT_FAILURE);
-					break;
-					/*
-				case '4':
-					svr_opts.ipv4 = 0;
-					break;
-				case '6':
-					svr_opts.ipv6 = 0;
-					break;
-					*/
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);
 					break;
+			} /* Switch */
+
+		} else {
+
+			/* Either the hostname or commands */
+			/* Hostname is first up, must be set before we get the cmds */
+
+			if (cli_opts.remotehost == NULL) {
+				/* We'll be editing it, should probably make a copy */
+				userhostarg = m_strdup(argv[1]);
+
+				cli_opts.remotehost = strchr(userhostarg, '@');
+				if (cli_opts.remotehost == NULL) {
+					/* no username portion, the cli-auth.c code can figure the
+					 * local user's name */
+					cli_opts.remotehost = userhostarg;
+				} else {
+					cli_opts.remotehost[0] = '\0'; /* Split the user/host */
+					cli_opts.remotehost++;
+					cli_opts.username = userhostarg;
+				}
+
+				if (cli_opts.username == NULL) {
+					uid = getuid();
+					
+					pw = getpwuid(uid);
+					if (pw == NULL || pw->pw_name == NULL) {
+						dropbear_exit("I don't know my own [user]name");
+					}
+
+					cli_opts.username = m_strdup(pw->pw_name);
+				}
+
+				if (cli_opts.remotehost[0] == '\0') {
+					dropbear_exit("Bad hostname");
+				}
+			} else {
+				/* this is part of the commands to send - after this we
+				 * don't parse any more options, and flags are sent as the
+				 * command */
+				cmdlen = 0;
+				for (j = i; j < (unsigned int)argc; j++) {
+					cmdlen += strlen(argv[j]) + 1; /* +1 for spaces */
+				}
+				/* Allocate the space */
+				cli_opts.cmd = (char*)m_malloc(cmdlen);
+				cli_opts.cmd[0] = '\0';
+
+				/* Append all the bits */
+				for (j = i; j < (unsigned int)argc; j++) {
+					strlcat(cli_opts.cmd, argv[j], cmdlen);
+					strlcat(cli_opts.cmd, " ", cmdlen);
+				}
+				/* It'll be null-terminated here */
+
+				/* We've eaten all the options and flags */
+				break;
 			}
 		}
 	}
-#endif
-
 }
