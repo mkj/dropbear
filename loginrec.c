@@ -155,7 +155,7 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.3 2003/05/08 06:22:24 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.4 2003/05/09 07:31:39 matt Exp $");*/
 
 #include "options.h"
 #include "loginrec.h"
@@ -1155,7 +1155,7 @@ wtmp_get_entry(struct logininfo *li)
 #  endif
 # endif
 			line_fullname(li->line, ut.ut_line,
-				      MIN_SIZEOF(li->line, ut.ut_line));*/
+				      MIN_SIZEOF(li->line, ut.ut_line));
 # ifdef HAVE_STRUCT_UTMP_UT_HOST
 			strlcpy(li->hostname, ut.ut_host,
 				MIN_SIZEOF(li->hostname, ut.ut_host));
