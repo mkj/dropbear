@@ -302,7 +302,7 @@ static sign_key * loadhostkeys(const char * dsskeyfile,
 	}
 #endif
 #ifdef DROPBEAR_DSS
-	type = DROPBEAR_SIGNKEY_RSA;
+	type = DROPBEAR_SIGNKEY_DSS;
 	ret = readhostkey(dsskeyfile, hostkey, &type);
 	if (ret == DROPBEAR_FAILURE) {
 		disablekey(DROPBEAR_SIGNKEY_DSS, dsskeyfile);
