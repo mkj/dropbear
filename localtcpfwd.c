@@ -18,6 +18,11 @@ int newtcpdirect(struct Channel * channel) {
 	int len;
 	int ret = DROPBEAR_FAILURE;
 
+	if (ses.opts->nolocaltcp) {
+		TRACE(("leave newtcpdirect: local tcp forwarding disabled"));
+		goto out;
+	}
+
 	desthost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: desthost too long"));
@@ -70,7 +75,7 @@ out:
  * Returns -1 on failure */
 static int newtcp(const char * host, int port) {
 
-	int sock;
+	int sock = -1;
 	char portstring[6];
 	struct addrinfo *res = NULL, *ai;
 	int val;
@@ -93,8 +98,6 @@ static int newtcp(const char * host, int port) {
 		return -1;
 	}
 
-	ai = res;
-	
 	/* Use the first socket that works */
 	for (ai = res; ai != NULL; ai = ai->ai_next) {
 		
@@ -109,6 +112,7 @@ static int newtcp(const char * host, int port) {
 		}
 
 		if (fcntl(sock, F_SETFL, O_NONBLOCK) < 0) {
+			close(sock);
 			TRACE(("TCP non-blocking failed"));
 			continue;
 		}
