@@ -118,7 +118,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
-//#define ENABLE_SVR_PAM_AUTH
+/*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
