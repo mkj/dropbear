@@ -44,7 +44,7 @@ static void send_chansess_shell_req(struct Channel *channel);
 static void cli_tty_setup();
 void cli_tty_cleanup();
 
-static const struct ChanType clichansess = {
+const struct ChanType clichansess = {
 	0, /* sepfds */
 	"session", /* name */
 	cli_initchansess, /* inithandler */
@@ -316,7 +316,8 @@ static int cli_initchansess(struct Channel *channel) {
 
 	channel->infd = STDOUT_FILENO;
 	channel->outfd = STDIN_FILENO;
-	//channel->errfd = STDERR_FILENO;
+	channel->errfd = STDERR_FILENO;
+	channel->extrabuf = buf_new(RECV_MAXWINDOW);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);

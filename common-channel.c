@@ -1,7 +1,7 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2004 Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -29,6 +29,7 @@
 #include "packet.h"
 #include "ssh.h"
 #include "buffer.h"
+#include "circbuffer.h"
 #include "dbutil.h"
 #include "channel.h"
 #include "ssh.h"
@@ -147,7 +148,8 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->errfd = FD_CLOSED; /* this isn't always set to start with */
 	newchan->initconn = 0;
 
-	newchan->writebuf = buf_new(RECV_MAXWINDOW);
+	newchan->writebuf = cbuf_new(RECV_MAXWINDOW);
+	newchan->extrabuf = NULL; /* The user code can set it up */
 	newchan->recvwindow = RECV_MAXWINDOW;
 	newchan->recvmaxpacket = RECV_MAXPACKET;
 
@@ -160,7 +162,7 @@ struct Channel* newchannel(unsigned int remotechan,
 }
 
 /* Get the channel structure corresponding to a channel number */
-static struct Channel* getchannel(unsigned int chan) {
+struct Channel* getchannel(unsigned int chan) {
 	if (chan >= ses.chansize || ses.channels[chan] == NULL) {
 		return NULL;
 	}
@@ -345,21 +347,23 @@ static void send_msg_channel_eof(struct Channel *channel) {
 	TRACE(("leave send_msg_channel_eof"));
 }
 
-/* Called to write data out to the server side of a channel (eg a shell or a
- * program.
+/* Called to write data out to the local side of the channel. 
  * Only called when we know we can write to a channel, writes as much as
  * possible */
 static void writechannel(struct Channel* channel) {
 
 	int len, maxlen;
-	buffer *buf;
+	circbuffer *cbuf;
 
 	TRACE(("enter writechannel"));
 
-	buf = channel->writebuf;
-	maxlen = buf->len - buf->pos;
+	cbuf = channel->writebuf;
+	maxlen = cbuf_readlen(cbuf);
 
-	len = write(channel->infd, buf_getptr(buf, maxlen), maxlen);
+	TRACE(("maxlen = %d", maxlen));
+
+	/* Write the data out */
+	len = write(channel->infd, cbuf_readptr(cbuf, maxlen), maxlen);
 	if (len <= 0) {
 		if (len < 0 && errno != EINTR) {
 			/* no more to write */
@@ -368,26 +372,27 @@ static void writechannel(struct Channel* channel) {
 		TRACE(("leave writechannel: len <= 0"));
 		return;
 	}
-	
-	if (len == maxlen) {
-		buf_setpos(buf, 0);
-		buf_setlen(buf, 0);
 
-		if (channel->recveof) {
-			/* we're closing up */
-			closeinfd(channel);
-			return;
-			TRACE(("leave writechannel: recveof set"));
-		}
+	TRACE(("len = %d", len));
+	cbuf_incrread(cbuf, len);
 
-		/* extend the window if we're at the end*/
-		/* TODO - this is inefficient */
-		send_msg_channel_window_adjust(channel, buf->size
-				- channel->recvwindow);
-		channel->recvwindow = buf->size;
-	} else {
-		buf_incrpos(buf, len);
+	if (len == maxlen && channel->recveof) { 
+		/* Check if we're closing up */
+		closeinfd(channel);
+		return;
+		TRACE(("leave writechannel: recveof set"));
+
 	}
+
+	/* Window adjust handling */
+	if (channel->recvwindow < (RECV_MAXWINDOW - RECV_WINDOWEXTEND)) {
+		/* Set it back to max window */
+		send_msg_channel_window_adjust(channel, RECV_MAXWINDOW -
+				channel->recvwindow);
+		channel->recvwindow = RECV_MAXWINDOW;
+	}
+	
+	
 	TRACE(("leave writechannel"));
 }
 
@@ -405,31 +410,37 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 			continue;
 		}
 
-		/* stdout and stderr */
+		/* Stuff to put over the wire */
 		if (channel->transwindow > 0) {
 
-			/* stdout */
 			if (channel->outfd >= 0) {
-				/* there's space to read more from the program */
 				FD_SET(channel->outfd, readfd);
 			}
-			/* stderr */
-			if (channel->errfd >= 0) {
+			
+			if (channel->extrabuf == NULL && channel->errfd >= 0) {
 					FD_SET(channel->errfd, readfd);
 			}
 		}
 
+		/* For checking FD status (ie closure etc) - we don't actually
+		 * read data from infd */
 		if (channel->infd >= 0 && channel->infd != channel->outfd) {
 			FD_SET(channel->infd, readfd);
 		}
 
-		/* stdin */
-		if (channel->infd >= 0 &&
-				(channel->writebuf->pos < channel->writebuf->len ||
-				 channel->initconn)) {
-			/* there's space to write more to the program */
-			FD_SET(channel->infd, writefd);
+		/* Stuff from the wire, to local program/shell/user etc */
+		if ((channel->infd >= 0 && cbuf_getused(channel->writebuf) > 0 )
+				|| channel->initconn) {
+
+				FD_SET(channel->infd, writefd);
 		}
+
+		/*
+		if (channel->extrabuf != NULL && channel->errfd >= 0 
+				&& cbuf_getavail(channel->extrabuf) > 0 ) {
+				FD_SET(channel->errfd, writefd);
+		}
+		*/
 
 	} /* foreach channel */
 
@@ -457,7 +468,7 @@ void recv_msg_channel_eof() {
 	}
 
 	channel->recveof = 1;
-	if (channel->writebuf->len == 0) {
+	if (cbuf_getused(channel->writebuf) == 0) {
 		closeinfd(channel);
 	}
 
@@ -499,8 +510,14 @@ static void removechannel(struct Channel * channel) {
 	TRACE(("enter removechannel"));
 	TRACE(("channel index is %d", channel->index));
 
-	buf_free(channel->writebuf);
+	cbuf_free(channel->writebuf);
 	channel->writebuf = NULL;
+
+	if (channel->extrabuf) {
+		cbuf_free(channel->extrabuf);
+		channel->extrabuf = NULL;
+	}
+
 
 	/* close the FDs in case they haven't been done
 	 * yet (ie they were shutdown etc */
@@ -623,59 +640,74 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	TRACE(("leave send_msg_channel_data"));
 }
 
-
-/* when we receive channel data, put it in a buffer for writing to the program/
- * shell etc */
+/* We receive channel data */
 void recv_msg_channel_data() {
 
 	unsigned int chan;
-	struct Channel * channel;
-	unsigned int datalen;
-	unsigned int pos;
-	unsigned int maxdata;
+	struct Channel *channel;
 
-	TRACE(("enter recv_msg_channel_data"));
-	
 	chan = buf_getint(ses.payload);
 	channel = getchannel(chan);
+
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
+
+	common_recv_msg_channel_data(channel, channel->infd, channel->writebuf);
+}
+
+/* Shared for data and stderr data - when we receive data, put it in a buffer
+ * for writing to the local file descriptor */
+void common_recv_msg_channel_data(struct Channel *channel, int fd, 
+		circbuffer * cbuf) {
+
+	unsigned int datalen;
+	unsigned int maxdata;
+	unsigned int buflen;
+	unsigned int len;
+
+	TRACE(("enter recv_msg_channel_data"));
 
 	if (channel->recveof) {
 		dropbear_exit("received data after eof");
 	}
 
- 	if (channel->infd < 0) {
+ 	if (fd < 0) {
 		dropbear_exit("received data with bad infd");
 	}
 
 	datalen = buf_getint(ses.payload);
 
+	TRACE(("datalen = %d", datalen));
+
 	/* if the client is going to send us more data than we've allocated, then 
 	 * it has ignored the windowsize, so we "MAY ignore all extra data" */
-	maxdata = channel->writebuf->size - channel->writebuf->pos;
+	maxdata = cbuf_getavail(cbuf);
+	TRACE(("maxdata = %d", maxdata));
 	if (datalen > maxdata) {
 		TRACE(("Warning: recv_msg_channel_data: extra data past window"));
 		datalen = maxdata;
 	}
 
-	/* write to the buffer - we always append to the end of the buffer */
-	pos = channel->writebuf->pos;
-	buf_setpos(channel->writebuf, channel->writebuf->len);
-	memcpy(buf_getwriteptr(channel->writebuf, datalen), 
-			buf_getptr(ses.payload, datalen), datalen);
-	buf_incrwritepos(channel->writebuf, datalen);
-	buf_setpos(channel->writebuf, pos); /* revert pos */
+
+	/* We may have to run throught twice, if the buffer wraps around. Can't
+	 * just "leave it for next time" like with writechannel, since this
+	 * is payload data */
+	len = datalen;
+	while (len > 0) {
+		buflen = cbuf_writelen(cbuf);
+		TRACE(("buflen = %d", buflen));
+		buflen = MIN(buflen, len);
+		TRACE(("buflenmin = %d", buflen));
+
+		memcpy(cbuf_writeptr(cbuf, buflen), 
+				buf_getptr(ses.payload, buflen), buflen);
+		cbuf_incrwrite(cbuf, buflen);
+		len -= buflen;
+		TRACE(("len = %d", buflen));
+	}
 
 	channel->recvwindow -= datalen;
-
-	/* matt - this might be for later */
-/*	if (channel->recvwindow < RECV_MINWINDOW) {
-		send_msg_channel_window_adjust(channel, 
-				RECV_MAXWINDOW - channel->recvwindow);
-		channel->recvwindow = RECV_MAXWINDOW;
-	}*/
 
 	TRACE(("leave recv_msg_channel_data"));
 }

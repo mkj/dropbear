@@ -48,6 +48,7 @@ struct clientsession cli_ses; /* GLOBAL */
 static const packettype cli_packettypes[] = {
 	/* TYPE, FUNCTION */
 	{SSH_MSG_CHANNEL_DATA, recv_msg_channel_data},
+	{SSH_MSG_CHANNEL_EXTENDED_DATA, recv_msg_channel_extended_data},
 	{SSH_MSG_CHANNEL_WINDOW_ADJUST, recv_msg_channel_window_adjust},
 	{SSH_MSG_USERAUTH_FAILURE, recv_msg_userauth_failure}, /* client */
 	{SSH_MSG_USERAUTH_SUCCESS, recv_msg_userauth_success}, /* client */

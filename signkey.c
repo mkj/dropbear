@@ -153,6 +153,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	m_free(ident);
 
 	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
+		TRACE(("wrong key type: %d %d", *type, keytype));
 		return DROPBEAR_FAILURE;
 	}
 

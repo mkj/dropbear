@@ -27,6 +27,7 @@
 
 #include "includes.h"
 #include "buffer.h"
+#include "circbuffer.h"
 
 /* channel->type values */
 #define CHANNEL_ID_NONE 0
@@ -50,6 +51,8 @@
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
 #define RECV_MAXWINDOW 6000 /* tweak */
+#define RECV_WINDOWEXTEND (RECV_MAXWINDOW/2) /* We send a "window extend" every
+												RECV_WINDOWEXTEND bytes */
 #define RECV_MAXPACKET 1400 /* tweak */
 #define RECV_MINWINDOW 19000 /* when we get below this, we send a windowadjust */
 
@@ -62,13 +65,13 @@ struct Channel {
 	unsigned int recvwindow, transwindow;
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
-	int infd; /* stdin for the program, we write to this */
-	int outfd; /* stdout for the program, we read from this */
-	int errfd; /* stdout for a program. This doesn't really fit here,
-				  but makes the code a lot tidyer without being too bad. This
-				  is -1 for channels which don't requre it. Currently only
-				  a 'session' without a pty will use it */
-	buffer *writebuf; /* data for the program */
+	int infd; /* data to send over the wire */
+	int outfd; /* data for consumption, what was in writebuf */
+	int errfd; /* used like infd or errfd, depending if it's client or server.
+				  Doesn't exactly belong here, but is cleaner here */
+	circbuffer *writebuf; /* data from the wire, for local consumption */
+	circbuffer *extrabuf; /* extended-data for the program - used like writebuf
+					     but for stderr */
 
 	int sentclosed, recvclosed;
 
@@ -97,6 +100,7 @@ void chaninitialise();
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
+struct Channel* getchannel(unsigned int chan);
 struct Channel* newchannel(unsigned int remotechan, 
 		const struct ChanType *type, 
 		unsigned int transwindow, unsigned int transmaxpacket);
@@ -106,9 +110,15 @@ void recv_msg_channel_request();
 void send_msg_channel_failure(struct Channel *channel);
 void send_msg_channel_success(struct Channel *channel);
 void recv_msg_channel_data();
+void recv_msg_channel_extended_data();
 void recv_msg_channel_window_adjust();
 void recv_msg_channel_close();
 void recv_msg_channel_eof();
+
+void common_recv_msg_channel_data(struct Channel *channel, int fd, 
+		circbuffer * buf);
+
+const struct ChanType clichansess;
 
 #ifdef USING_LISTENERS
 int send_msg_channel_open_init(int fd, const struct ChanType *type);

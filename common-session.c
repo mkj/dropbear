@@ -235,7 +235,7 @@ void session_identification() {
 	 * account for wrappers/cruft etc. According to the spec only the client
 	 * needs to handle this, but no harm in letting the server handle it too */
 	for (i = 0; i < 10; i++) {
-		len = ident_readln(ses.sock, linebuf, sizzeof(linebuf));
+		len = ident_readln(ses.sock, linebuf, sizeof(linebuf));
 
 		if (len < 0 && errno != EINTR) {
 			/* It failed */
