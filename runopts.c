@@ -33,7 +33,8 @@ static void printhelp(char * progname);
 
 static void printhelp(char * progname) {
 
-	fprintf(stderr, "Usage: %s [options]\n"
+	fprintf(stderr, "Dropbear v%s\n"
+					"Usage: %s [options]\n"
 					"Options are:\n"
 					"-b bannerfile     Display the contents of bannerfile"
 					" before user login\n"
@@ -45,6 +46,7 @@ static void printhelp(char * progname) {
 					"-F                Don't fork into background\n"
 					"-p port           Listen on specified tcp port\n"
 					"                  (default %d)\n",
+					DROPBEAR_VERSION,
 					progname, DSS_PRIV_FILENAME, RSA_PRIV_FILENAME,
 					DROPBEAR_PORT);
 }
