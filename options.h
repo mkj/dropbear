@@ -139,7 +139,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
- * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
+ * DEV_URANDOM is recommended on hosts with a good /dev/urandom, otherwise use
  * PRNGD and run prngd, specifying the socket. This device must be able to
  * produce a large amount of random data, so using /dev/random or Entropy
  * Gathering Daemon (egd) may result in halting, as it waits for more random

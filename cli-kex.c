@@ -45,8 +45,8 @@ void send_msg_kexdh_init() {
 
 	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
 	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
-
 	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+
 	gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
 
 	CHECKCLEARTOWRITE();
@@ -59,13 +59,18 @@ void send_msg_kexdh_init() {
 /* Handle a diffie-hellman key exchange reply. */
 void recv_msg_kexdh_reply() {
 
-	mp_int dh_f;
+	DEF_MP_INT(dh_f);
 	sign_key *hostkey = NULL;
 	unsigned int type, keybloblen;
 	unsigned char* keyblob = NULL;
 
 
 	TRACE(("enter recv_msg_kexdh_reply"));
+
+	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
+		dropbear_exit("Received out-of-order kexdhreply");
+	}
+	m_mp_init(&dh_f);
 	type = ses.newkeys->algo_hostkey;
 	TRACE(("type is %d", type));
 
@@ -83,7 +88,6 @@ void recv_msg_kexdh_reply() {
 		dropbear_exit("Bad KEX packet");
 	}
 
-	m_mp_init(&dh_f);
 	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
 		TRACE(("failed getting mpint"));
 		dropbear_exit("Bad KEX packet");
@@ -91,6 +95,9 @@ void recv_msg_kexdh_reply() {
 
 	kexdh_comb_key(cli_ses.dh_e, cli_ses.dh_x, &dh_f, hostkey);
 	mp_clear(&dh_f);
+	mp_clear_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+	m_free(cli_ses.dh_e);
+	m_free(cli_ses.dh_x);
 
 	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
 			!= DROPBEAR_SUCCESS) {

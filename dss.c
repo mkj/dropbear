@@ -164,7 +164,10 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	unsigned char msghash[SHA1_HASH_SIZE];
 	hash_state hs;
 	int ret = DROPBEAR_FAILURE;
-	mp_int val1, val2, val3, val4;
+	DEF_MP_INT(val1);
+	DEF_MP_INT(val2);
+	DEF_MP_INT(val3);
+	DEF_MP_INT(val4);
 	char * string = NULL;
 	int stringlen;
 
@@ -281,13 +284,16 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	unsigned char privkeyhash[SHA512_HASH_SIZE];
 	unsigned char *privkeytmp;
 	unsigned char proto_k[SHA512_HASH_SIZE];
-	mp_int dss_protok;
+	DEF_MP_INT(dss_protok);
 #else
 	unsigned char kbuf[SHA1_HASH_SIZE];
 #endif
-	mp_int dss_k, dss_m;
-	mp_int dss_temp1, dss_temp2;
-	mp_int dss_r, dss_s;
+	DEF_MP_INT(dss_k);
+	DEF_MP_INT(dss_m);
+	DEF_MP_INT(dss_temp1);
+	DEF_MP_INT(dss_temp2);
+	DEF_MP_INT(dss_r);
+	DEF_MP_INT(dss_s);
 	hash_state hs;
 	
 	TRACE(("enter buf_put_dss_sign"));

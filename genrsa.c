@@ -40,7 +40,9 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 rsa_key * gen_rsa_priv_key(unsigned int size) {
 
 	rsa_key * key;
-	mp_int pminus, qminus, lcm;
+	DEF_MP_INT(pminus);
+	DEF_MP_INT(qminus);
+	DEF_MP_INT(lcm);
 
 	key = (rsa_key*)m_malloc(sizeof(rsa_key));
 
@@ -95,7 +97,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		mp_int* rsa_e, unsigned int size) {
 
 	unsigned char *buf;
-	mp_int temp_gcd;
+	DEF_MP_INT(temp_gcd);
 
 	buf = (unsigned char*)m_malloc(size+1);
 

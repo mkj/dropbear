@@ -201,7 +201,8 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned int slen;
-	mp_int rsa_s, rsa_mdash;
+	DEF_MP_INT(rsa_s);
+	DEF_MP_INT(rsa_mdash);
 	mp_int *rsa_em = NULL;
 	int ret = DROPBEAR_FAILURE;
 
@@ -262,7 +263,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 
 	unsigned int nsize, ssize;
 	unsigned int i;
-	mp_int rsa_s;
+	DEF_MP_INT(rsa_s);
 	mp_int *rsa_em = NULL;
 	
 	TRACE(("enter buf_put_rsa_sign"));

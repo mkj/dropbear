@@ -464,17 +464,18 @@ void recv_msg_kexinit() {
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
  * See the ietf-secsh-transport draft, section 6, for details */
-/* dh_pub and dh_priv will be initialised by this function, and should be
- * mp_clear()ed after finished */
+/* dh_pub and dh_priv MUST be already initialised */
 void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 
-	mp_int dh_p, dh_q, dh_g;
+	DEF_MP_INT(dh_p);
+	DEF_MP_INT(dh_q);
+	DEF_MP_INT(dh_g);
 	unsigned char randbuf[DH_P_LEN];
 	int dh_q_len;
 
 	TRACE(("enter send_msg_kexdh_reply"));
 	
-	m_mp_init_multi(&dh_g, &dh_p, &dh_q, dh_priv, dh_pub, NULL);
+	m_mp_init_multi(&dh_g, &dh_p, &dh_q, NULL);
 
 	/* read the prime and generator*/
 	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
