@@ -45,7 +45,7 @@ void buf_init(buffer* buf, unsigned int size);
 void buf_resize(buffer *buf, unsigned int newsize);
 void buf_free(buffer* buf);
 void buf_burn(buffer* buf);
-buffer* buf_newcopy(buffer* buf, int lenonly);
+buffer* buf_newcopy(buffer* buf);
 void buf_setlen(buffer* buf, unsigned int len);
 void buf_incrlen(buffer* buf, unsigned int incr);
 void buf_setpos(buffer* buf, unsigned int pos);

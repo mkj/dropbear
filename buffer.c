@@ -77,16 +77,15 @@ void buf_resize(buffer *buf, unsigned int newsize) {
 }
 
 /* create a copy of buf, allocating required memory etc */
+/* the new buffer is sized the same as the length of the source buffer */
 /* lenonly is a boolean flag specifying whether to set the size of the new
  * buffer to be just the len of the source buffer (1), or the size of the
  * source buffer (0) */
-buffer* buf_newcopy(buffer* buf, int lenonly) {
+buffer* buf_newcopy(buffer* buf) {
 	
 	buffer* ret;
-	unsigned int newsize;
 
-	newsize = lenonly ? buf->len : buf->size;
-	ret = buf_new(newsize);
+	ret = buf_new(buf->len);
 	ret->len = buf->len;
 	memcpy(ret->data, buf->data, buf->len);
 	return ret;

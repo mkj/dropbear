@@ -609,7 +609,7 @@ void send_msg_kexinit() {
 
 	/* set up transmitted kex packet buffer for hashing. 
 	 * This is freed after the end of the kex */
-	ses.transkexinit = buf_newcopy(ses.writepayload, 1);
+	ses.transkexinit = buf_newcopy(ses.writepayload);
 
 	encrypt_packet();
 	ses.dataallowed = 0; /* don't send other packets during kex */
