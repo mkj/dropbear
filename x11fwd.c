@@ -72,7 +72,7 @@ int x11accept(struct ChanSess * chansess) {
 
 	int fd;
 	struct sockaddr_in addr;
-	socklen_t len;
+	int len;
 
 	len = sizeof(addr);
 
