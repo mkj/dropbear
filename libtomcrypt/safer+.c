@@ -1,3 +1,4 @@
+/* SAFER+ Implementation by Tom St Denis */
 #include "mycrypt.h"
 
 #ifdef SAFERP
@@ -450,21 +451,27 @@ int saferp_test(void)
        }
     };       
 
-   unsigned char buf[2][16];
+   unsigned char tmp[2][16];
    symmetric_key skey;
-   int err, i;
+   int err, i, y;
 
    for (i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {
       if ((err = saferp_setup(tests[i].key, tests[i].keylen, 0, &skey)) != CRYPT_OK)  {
          return err;
       }
-      saferp_ecb_encrypt(tests[i].pt, buf[0], &skey);
-      saferp_ecb_decrypt(buf[0], buf[1], &skey);
+      saferp_ecb_encrypt(tests[i].pt, tmp[0], &skey);
+      saferp_ecb_decrypt(tmp[0], tmp[1], &skey);
 
       /* compare */
-      if (memcmp(buf[0], tests[i].ct, 16) || memcmp(buf[1], tests[i].pt, 16)) { 
+      if (memcmp(tmp[0], tests[i].ct, 16) || memcmp(tmp[1], tests[i].pt, 16)) { 
          return CRYPT_FAIL_TESTVECTOR;
       }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 16; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) saferp_ecb_encrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 1000; y++) saferp_ecb_decrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 16; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
    }
 
    return CRYPT_OK;

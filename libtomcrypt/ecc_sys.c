@@ -56,11 +56,6 @@ int ecc_encrypt_key(const unsigned char *inkey, unsigned long keylen,
        return err;
     }
 
-    /* Encrypt the key */
-    for (x = 0; x < keylen; x++) {
-      skey[x] ^= inkey[x];
-    }
-
     /* output header */
     y = PACKET_SIZE;
  
@@ -78,9 +73,9 @@ int ecc_encrypt_key(const unsigned char *inkey, unsigned long keylen,
     STORE32L(keylen, out+y);
     y += 4;
 
-    /* Store the encrypted key */
+    /* Encrypt/Store the encrypted key */
     for (x = 0; x < keylen; x++, y++) {
-      out[y] = skey[x];
+      out[y] = skey[x] ^ inkey[x];
     }
 
     /* store header */
@@ -324,7 +319,7 @@ int ecc_verify_hash(const unsigned char *sig, unsigned long siglen,
 
    _ARGCHK(sig != NULL);
    _ARGCHK(hash != NULL);
-   _ARGCHK(hash != NULL);
+   _ARGCHK(stat != NULL);
    _ARGCHK(key != NULL);
 
    /* default to invalid signature */

@@ -43,12 +43,12 @@ static const unsigned long K[64] = {
 
 /* compress 512-bits */
 #ifdef CLEAN_STACK
-static void _sha256_compress(hash_state * md)
+static void _sha256_compress(hash_state * md, unsigned char *buf)
 #else
-static void sha256_compress(hash_state * md)
+static void sha256_compress(hash_state * md, unsigned char *buf)
 #endif
 {
-    unsigned long S[8], W[64], t0, t1;
+    ulong32 S[8], W[64], t0, t1;
     int i;
 
     _ARGCHK(md != NULL);
@@ -60,7 +60,7 @@ static void sha256_compress(hash_state * md)
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
-        LOAD32H(W[i], md->sha256.buf + (4*i));
+        LOAD32H(W[i], buf + (4*i));
     }
 
     /* fill W[16..63] */
@@ -70,18 +70,22 @@ static void sha256_compress(hash_state * md)
 
     /* Compress */
 #ifdef SMALL_CODE   
-    for (i = 0; i < 64; i++) {
-        t0 = S[7] + Sigma1(S[4]) + Ch(S[4], S[5], S[6]) + K[i] + W[i];
-        t1 = Sigma0(S[0]) + Maj(S[0], S[1], S[2]);
-        S[7] = S[6];
-        S[6] = S[5];
-        S[5] = S[4];
-        S[4] = S[3] + t0;
-        S[3] = S[2];
-        S[2] = S[1];
-        S[1] = S[0];
-        S[0] = t0 + t1;
-    }
+#define RND(a,b,c,d,e,f,g,h,i)                    \
+     t0 = h + Sigma1(e) + Ch(e, f, g) + K[i] + W[i];   \
+     t1 = Sigma0(a) + Maj(a, b, c);                  \
+     d += t0;                                        \
+     h  = t0 + t1;
+
+     for (i = 0; i < 64; i += 8) {
+         RND(S[0],S[1],S[2],S[3],S[4],S[5],S[6],S[7],i+0);
+         RND(S[7],S[0],S[1],S[2],S[3],S[4],S[5],S[6],i+1);
+         RND(S[6],S[7],S[0],S[1],S[2],S[3],S[4],S[5],i+2);
+         RND(S[5],S[6],S[7],S[0],S[1],S[2],S[3],S[4],i+3);
+         RND(S[4],S[5],S[6],S[7],S[0],S[1],S[2],S[3],i+4);
+         RND(S[3],S[4],S[5],S[6],S[7],S[0],S[1],S[2],i+5);
+         RND(S[2],S[3],S[4],S[5],S[6],S[7],S[0],S[1],i+6);
+         RND(S[1],S[2],S[3],S[4],S[5],S[6],S[7],S[0],i+7);
+     }  
 #else 
 #define RND(a,b,c,d,e,f,g,h,i,ki)                    \
      t0 = h + Sigma1(e) + Ch(e, f, g) + ki + W[i];   \
@@ -166,10 +170,10 @@ static void sha256_compress(hash_state * md)
 }
 
 #ifdef CLEAN_STACK
-static void sha256_compress(hash_state * md)
+static void sha256_compress(hash_state * md, unsigned char *buf)
 {
-    _sha256_compress(md);
-    burn_stack(sizeof(unsigned long) * 74);
+    _sha256_compress(md, buf);
+    burn_stack(sizeof(ulong32) * 74);
 }
 #endif
 
@@ -190,34 +194,19 @@ void sha256_init(hash_state * md)
     md->sha256.state[7] = 0x5BE0CD19UL;
 }
 
-void sha256_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
+HASH_PROCESS(sha256_process, sha256_compress, sha256, 64)
 
-    while (len > 0) {
-        n = MIN(len, (64 - md->sha256.curlen));
-        memcpy(md->sha256.buf + md->sha256.curlen, buf, (size_t)n);
-        md->sha256.curlen += n;
-        buf            += n;
-        len            -= n;
-
-        /* is 64 bytes full? */
-        if (md->sha256.curlen == 64) {
-            sha256_compress(md);
-            md->sha256.length += 512;
-            md->sha256.curlen = 0;
-        }
-    }
-}
-
-void sha256_done(hash_state * md, unsigned char *hash)
+int sha256_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->sha256.curlen >= sizeof(md->sha256.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
+
 
     /* increase the length of the message */
     md->sha256.length += md->sha256.curlen * 8;
@@ -233,7 +222,7 @@ void sha256_done(hash_state * md, unsigned char *hash)
         while (md->sha256.curlen < 64) {
             md->sha256.buf[md->sha256.curlen++] = (unsigned char)0;
         }
-        sha256_compress(md);
+        sha256_compress(md, md->sha256.buf);
         md->sha256.curlen = 0;
     }
 
@@ -244,7 +233,7 @@ void sha256_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64H(md->sha256.length, md->sha256.buf+56);
-    sha256_compress(md);
+    sha256_compress(md, md->sha256.buf);
 
     /* copy output */
     for (i = 0; i < 8; i++) {
@@ -253,6 +242,7 @@ void sha256_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+    return CRYPT_OK;
 }
 
 int  sha256_test(void)
@@ -261,7 +251,7 @@ int  sha256_test(void)
     return CRYPT_NOP;
  #else    
   static const struct {
-       char *msg;
+      char *msg;
       unsigned char hash[32];
   } tests[] = {
     { "abc",
@@ -293,6 +283,10 @@ int  sha256_test(void)
   return CRYPT_OK;
  #endif
 }
+
+#ifdef SHA224
+#include "sha224.c"
+#endif
 
 #endif
 

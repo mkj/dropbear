@@ -1,4 +1,4 @@
-\documentclass{book}
+\documentclass[b5paper]{book}
 \usepackage{hyperref}
 \usepackage{makeidx}
 \usepackage{amssymb}
@@ -47,7 +47,7 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.90}
+\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.92}
 \author{Tom St Denis \\
 Algonquin College \\
 \\
@@ -60,6 +60,19 @@ K2L 1C3 \\
 Canada
 }
 \maketitle
+This text and source code library are both hereby placed in the public domain.  This book has been 
+formatted for B5 [176x250] paper using the \LaTeX{} {\em book} macro package.
+
+\vspace{10cm}
+
+\begin{flushright}Open Source.  Open Academia.  Open Minds.
+
+\mbox{ }
+
+Tom St Denis,
+
+Ontario, Canada
+\end{flushright}
 \newpage
 \tableofcontents
 \chapter{Introduction}
@@ -492,7 +505,7 @@ As of this release the current cipher\_descriptors elements are
 \begin{small}
 \begin{center}
 \begin{tabular}{|c|c|c|c|c|c|}
-     \hline Name & Descriptor Name & Block Size (bytes) & Key Range (bytes) & Rounds \\
+     \hline Name & Descriptor Name & Block Size & Key Range & Rounds \\
      \hline Blowfish & blowfish\_desc & 8 & 8 ... 56 & 16 \\
      \hline X-Tea & xtea\_desc & 8 & 16 & 32 \\
      \hline RC2 & rc2\_desc & 8 & 8 .. 128 & 16 \\
@@ -509,6 +522,7 @@ As of this release the current cipher\_descriptors elements are
      \hline 3DES (EDE mode) & des3\_desc & 8 & 21 & 16 \\
      \hline CAST5 (CAST-128) & cast5\_desc & 8 & 5 .. 16 & 12, 16 \\
      \hline Noekeon & noekeon\_desc & 16 & 16 & 16 \\
+     \hline Skipjack & skipjack\_desc & 8 & 10 & 32 \\
      \hline
 \end{tabular}
 \end{center}
@@ -783,7 +797,7 @@ void XXX_init(hash_state *md);
 This simply sets up the hash to the default state governed by the specifications of the hash.  To add data to the 
 message being hashed call:
 \begin{verbatim}
-void XXX_process(hash_state *md, const unsigned char *in, unsigned long len);
+int XXX_process(hash_state *md, const unsigned char *in, unsigned long len);
 \end{verbatim}
 
 Essentially all hash messages are virtually infinitely\footnote{Most hashes are limited to $2^{64}$ bits or 2,305,843,009,213,693,952 bytes.} long message which 
@@ -801,7 +815,7 @@ md5_process(&md, "hello world", 11);
 
 To finally get the message digest (the hash) call:
 \begin{verbatim}
-void XXX_done(hash_state *md, 
+int XXX_done(hash_state *md, 
               unsigned char *out);
 \end{verbatim}
 
@@ -848,8 +862,8 @@ struct _hash_descriptor {
     unsigned long hashsize;    /* digest output size in bytes  */
     unsigned long blocksize;   /* the block size the hash uses */
     void (*init)   (hash_state *);
-    void (*process)(hash_state *, const unsigned char *, unsigned long);
-    void (*done)   (hash_state *, unsigned char *);
+    int  (*process)(hash_state *, const unsigned char *, unsigned long);
+    int  (*done)   (hash_state *, unsigned char *);
     int  (*test)   (void);
 };
 \end{verbatim}
@@ -966,6 +980,7 @@ The following hashes are provided as of this release:
       \hline SHA-512 & sha512\_desc & 64 \\
       \hline SHA-384 & sha384\_desc & 48 \\
       \hline SHA-256 & sha256\_desc & 32 \\
+      \hline SHA-224 & sha224\_desc & 28 \\
       \hline TIGER-192 & tiger\_desc & 24 \\
       \hline SHA-1 & sha1\_desc & 20 \\
       \hline RIPEMD-160 & rmd160\_desc & 20 \\
@@ -1021,7 +1036,8 @@ int hmac_done(hmac_state *hmac, unsigned char *hashOut,
 \end{verbatim}
 ``hmac'' is the HMAC state you are working with.  ``hashOut'' is the array of octets where the HMAC code should be stored.  You must
 set ``outlen'' to the size of the destination buffer before calling this function.  It is updated with the length of the HMAC code
-produced (depending on which hash was picked)
+produced (depending on which hash was picked).  If ``outlen'' is less than the size of the message digest (and ultimately
+the HMAC code) then the HMAC code is truncated as per FIPS-198 specifications (e.g. take the first ``outlen'' bytes).
 
 There are two  utility functions provided to make using HMACs easier todo.  They accept the key and information about the
 message (file pointer, address in memory) and produce the HMAC result in one shot.  These are useful if you want to avoid
@@ -1092,6 +1108,118 @@ int main(void)
       return -1;
    }
    printf("The hmac is %lu bytes long\n", dstlen);
+  
+   /* return */
+   return 0;
+}
+\end{verbatim}
+\end{small}
+
+\section{OMAC Support}
+OMAC\footnote{\url{http://crypt.cis.ibaraki.ac.jp/omac/omac.html}}, which stands for \textit{One-Key CBC MAC} is an 
+algorithm which produces a Message Authentication Code (MAC) using only a block cipher such as AES.  From an API 
+standpoint the OMAC routines work much like the HMAC routines do.  Instead in this case a cipher is used instead of a hash.  
+
+To start an OMAC state you call
+
+\begin{verbatim}
+int omac_init(omac_state *omac, int cipher, 
+              const unsigned char *key, unsigned long keylen);
+\end{verbatim}
+The ``omac'' variable is the state for the OMAC algorithm.  ``cipher'' is the index into the cipher\_descriptor table
+of the cipher\footnote{The cipher must have a 64 or 128 bit block size.  Such as CAST5, Blowfish, DES, AES, Twofish, etc.} you
+wish to use.  ``key'' and ``keylen'' are the keys used to authenticate the data.
+
+To send data through the algorithm call
+\begin{verbatim}
+int omac_process(omac_state *state, 
+                 const unsigned char *buf, unsigned long len);
+\end{verbatim}
+This will send ``len'' bytes from ``buf'' through the active OMAC state ``state''.  Returns \textbf{CRYPT\_OK} if the 
+function succeeds.  When you are done with the message you can call
+
+\begin{verbatim}
+int omac_done(omac_state *state, 
+              unsigned char *out, unsigned long *outlen);
+\end{verbatim}
+Which will terminate the OMAC and output the \textit{tag} (MAC) to ``out''.  Note that unlike the HMAC and other code 
+``outlen'' can be smaller than the default MAC size (for instance AES would make a 16-byte tag).  Part of the OMAC 
+specification states that the output may be truncated.  So if you pass in $outlen = 5$ and use AES as your cipher than
+the output MAC code will only be five bytes long.  If ``outlen'' is larger than the default size it is set to the default
+size to show how many bytes were actually used.
+
+Similar to the HMAC code the file and memory functions are also provided.  To OMAC a buffer of memory in one shot use the 
+following function.
+
+\begin{verbatim}
+int omac_memory(int cipher, 
+                const unsigned char *key, unsigned long keylen,
+                const unsigned char *msg, unsigned long msglen,
+                unsigned char *out, unsigned long *outlen);
+\end{verbatim}
+This will compute the OMAC of ``msglen'' bytes of ``msg'' using the key ``key'' of length ``keylen'' bytes and the cipher
+specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will store the MAC in ``out'' with the same
+rules as omac\_done.
+
+To OMAC a file use
+\begin{verbatim}
+int omac_file(int cipher, 
+              const unsigned char *key, unsigned long keylen,
+              const char *filename, 
+              unsigned char *out, unsigned long *outlen);
+\end{verbatim}
+
+Which will OMAC the entire contents of the file specified by ``filename'' using the key ``key'' of length ``keylen'' bytes
+and the cipher specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will store the MAC in ``out'' with 
+the same rules as omac\_done.
+
+To test if the OMAC code is working there is the following function:
+\begin{verbatim}
+int omac_test(void);
+\end{verbatim}
+Which returns {\bf CRYPT\_OK} if the code passes otherwise it returns an error code.  Some example code for using the 
+OMAC system is given below.
+
+\begin{small}
+\begin{verbatim}
+#include <mycrypt.h>
+int main(void)
+{
+   int idx, errno;
+   omac_state omac;
+   unsigned char key[16], dst[MAXBLOCKSIZE];
+   unsigned long dstlen;
+
+   /* register Rijndael */
+   if (register_cipher(&rijndael_desc) == -1) {
+      printf("Error registering Rijndael\n");
+      return -1;
+   }
+
+   /* get index of Rijndael in cipher descriptor table */
+   idx = find_cipher("rijndael");
+
+   /* we would make up our symmetric key in "key[]" here */
+
+   /* start the OMAC */
+   if ((errno = omac_init(&omac, idx, key, 16)) != CRYPT_OK) {
+      printf("Error setting up omac: %s\n", error_to_string(errno));
+      return -1;
+   }
+
+   /* process a few octets */
+   if((errno = omac_process(&omac, "hello", 5) != CRYPT_OK) {
+      printf("Error processing omac: %s\n", error_to_string(errno));
+      return -1;
+   }
+
+   /* get result (presumably to use it somehow...) */
+   dstlen = sizeof(dst);
+   if ((errno = omac_done(&omac, dst, &dstlen)) != CRYPT_OK) {
+      printf("Error finishing omac: %s\n", error_to_string(errno));
+      return -1;
+   }
+   printf("The omac is %lu bytes long\n", dstlen);
   
    /* return */
    return 0;
@@ -1396,6 +1524,10 @@ int rsa_exptmod(const unsigned char *in, unsigned long inlen,
 This loads the bignum from ``in'' as a big endian word in the format PKCS specifies, raises it to either ``e'' or ``d'' and stores the result
 in ``out'' and the size of the result in ``outlen''. ``which'' is set to {\bf PK\_PUBLIC} to use ``e'' 
 (i.e. for encryption/verifying) and set to {\bf PK\_PRIVATE} to use ``d'' as the exponent (i.e. for decrypting/signing).
+
+Note that this function does not perform padding on the input (as per PKCS).  So if you send in ``0000001'' you will
+get ``01'' back (when you do the opposite operation).  Make sure you pad properly which usually involves setting the msb to
+a non-zero value.
 
 \section{Packet Routines}
 To encrypt or decrypt a symmetric key using RSA the following functions are provided.  The idea is that you make up
@@ -1818,6 +1950,132 @@ you have 160-bits of security (e.g. as if you signed with SHA-1).
 
 The library will not warn you if you make this mistake so it is important to check yourself before using the 
 signatures.
+
+\chapter{Digital Signature Algorithm}
+\section{Introduction}
+The Digital Signature Algorithm (or DSA) is a variant of the ElGamal Signature scheme which has been modified to 
+reduce the bandwidth of a signature.  For example, to have ``80-bits of security'' with ElGamal you need a group of 
+order at least 1024-bits.  With DSA you need a group of order at least 160-bits.  By comparison the ElGamal signature
+would require at least 256 bytes where as the DSA signature would require only at least 40 bytes.  
+
+The API for the DSA is essentially the same as the other PK algorithms.  Except in the case of DSA no encryption or
+decryption routines are provided.  
+
+\section{Key Generation}
+To make a DSA key you must call the following function
+\begin{verbatim}
+int dsa_make_key(prng_state *prng, int wprng, 
+                 int group_size, int modulus_size, 
+                 dsa_key *key);
+\end{verbatim}
+The variable ``prng'' is an active PRNG state and ``wprng'' the index to the descriptor.  ``group\_size'' and 
+``modulus\_size'' control the difficulty of forging a signature.  Both parameters are in bytes.  The larger the
+``group\_size'' the more difficult a forgery becomes upto a limit.  The value of $group\_size$ is limited by 
+$15 < group\_size < 1024$ and $modulus\_size - group\_size < 512$.  Suggested values for the pairs are as follows.
+
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\hline \textbf{Bits of Security} & \textbf{group\_size} & \textbf{modulus\_size} \\
+\hline 80  & 20 & 128 \\
+\hline 120 & 30 & 256 \\
+\hline 140 & 35 & 384 \\
+\hline 160 & 40 & 512 \\
+\hline
+\end{tabular}
+\end{center}
+
+When you are finished with a DSA key you can call the following function to free the memory used.
+\begin{verbatim}
+void dsa_free(dsa_key *key);
+\end{verbatim}
+
+\section{Key Verification}
+Each DSA key is composed of the following variables.
+
+\begin{enumerate}
+  \item $q$ a small prime of magnitude $256^{group\_size}$.  
+  \item $p = qr + 1$ a large prime of magnitude $256^{modulus\_size}$ where $r$ is a random even integer.
+  \item $g = h^r \mbox{ (mod }p\mbox{)}$ a generator of order $q$ modulo $p$.  $h$ can be any non-trivial random 
+        value.  For this library they start at $h = 2$ and step until $g$ is not $1$.
+  \item $x$ a random secret (the secret key) in the range $1 < x < q$ 
+  \item $y = g^x \mbox{ (mod }p\mbox{)}$ the public key.
+\end{enumerate}
+
+A DSA key is considered valid if it passes all of the following tests.
+
+\begin{enumerate}
+   \item $q$ must be prime.
+   \item $p$ must be prime.
+   \item $g$ cannot be one of $\lbrace -1, 0, 1 \rbrace$ (modulo $p$).
+   \item $g$ must be less than $p$.
+   \item $(p-1) \equiv 0 \mbox{ (mod }q\mbox{)}$.
+   \item $g^q \equiv 1 \mbox{ (mod }p\mbox{)}$.
+   \item $1 < y < p - 1$
+   \item $y^q \equiv 1 \mbox{ (mod }p\mbox{)}$.
+\end{enumerate}
+
+Tests one and two ensure that the values will at least form a field which is required for the signatures to  
+function.  Tests three and four ensure that the generator $g$ is not set to a trivial value which would make signature
+forgery easier.  Test five ensures that $q$ divides the order of multiplicative sub-group of $\Z/p\Z$. Test six
+ensures that the generator actually generates a prime order group.  Tests seven and eight ensure that the public key
+is within range and belongs to a group of prime order.  Note that test eight does not prove that $g$ generated $y$ only
+that $y$ belongs to a multiplicative sub-group of order $q$. 
+
+The following function will perform these tests.
+
+\begin{verbatim}
+int dsa_verify_key(dsa_key *key, int *stat);
+\end{verbatim}
+
+This will test ``key'' and store the result in ``stat''.  If the result is $stat = 0$ the DSA key failed one of the tests
+and should not be used at all.  If the result is $stat = 1$ the DSA key is valid (as far as valid mathematics are concerned).
+
+
+
+\section{Signatures}
+To generate a DSA signature call the following function
+
+\begin{verbatim}
+int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
+                        unsigned char *out, unsigned long *outlen,
+                        prng_state *prng, int wprng, dsa_key *key);
+\end{verbatim}
+
+Which will sign the data in ``in'' of length ``inlen'' bytes.  The signature is stored in ``out'' and the size
+of the signature in ``outlen''.  If the signature is longer than the size you initially specify in ``outlen'' nothing
+is stored and the function returns an error code.  The DSA ``key'' must be of the \textbf{PK\_PRIVATE} persuasion.
+
+To verify a hash created with that function use the following function
+
+\begin{verbatim}
+int dsa_verify_hash(const unsigned char *sig, unsigned long siglen,
+                    const unsigned char *hash, unsigned long inlen, 
+                    int *stat, dsa_key *key);
+\end{verbatim}
+Which will verify the data in ``hash'' of length ``inlen'' against the signature stored in ``sig'' of length ``siglen''.  
+It will set ``stat'' to $1$ if the signature is valid, otherwise it sets ``stat'' to $0$.  
+
+\section{Import and Export}
+
+To export a DSA key so that it can be transported use the following function
+\begin{verbatim}
+int dsa_export(unsigned char *out, unsigned long *outlen, 
+               int type, 
+               dsa_key *key);
+\end{verbatim}
+This will export the DSA ``key'' to the buffer ``out'' and set the length in ``outlen'' (which must have been previously
+initialized to the maximum buffer size).  The ``type`` variable may be either \textbf{PK\_PRIVATE} or \textbf{PK\_PUBLIC}
+depending on whether you want to export a private or public copy of the DSA key.
+
+To import an exported DSA key use the following function
+
+\begin{verbatim}
+int dsa_import(const unsigned char *in, unsigned long inlen, 
+               dsa_key *key);
+\end{verbatim}
+
+This will import the DSA key from the buffer ``in'' of length ``inlen'' to the ``key''.  If the process fails the function
+will automatically free all of the heap allocated in the process (you don't have to call dsa\_free()).  
 
 \chapter{Public Keyrings}
 \section{Introduction}

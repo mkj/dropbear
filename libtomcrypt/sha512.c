@@ -70,9 +70,9 @@ CONST64(0x5fcb6fab3ad6faec), CONST64(0x6c44198c4a475817)
 
 /* compress 1024-bits */
 #ifdef CLEAN_STACK
-static void _sha512_compress(hash_state * md)
+static void _sha512_compress(hash_state * md, unsigned char *buf)
 #else
-static void sha512_compress(hash_state * md)
+static void sha512_compress(hash_state * md, unsigned char *buf)
 #endif
 {
     ulong64 S[8], W[80], t0, t1;
@@ -81,12 +81,13 @@ static void sha512_compress(hash_state * md)
     _ARGCHK(md != NULL);
 
     /* copy state into S */
-    for (i = 0; i < 8; i++)
+    for (i = 0; i < 8; i++) {
         S[i] = md->sha512.state[i];
+    }
 
     /* copy the state into 1024-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
-        LOAD64H(W[i], md->sha512.buf + (8*i));
+        LOAD64H(W[i], buf + (8*i));
     }
 
     /* fill W[16..79] */
@@ -136,9 +137,9 @@ static void sha512_compress(hash_state * md)
 
 /* compress 1024-bits */
 #ifdef CLEAN_STACK
-static void sha512_compress(hash_state * md)
+static void sha512_compress(hash_state * md, unsigned char *buf)
 {
-    _sha512_compress(md);
+    _sha512_compress(md, buf);
     burn_stack(sizeof(ulong64) * 90 + sizeof(int));
 }
 #endif
@@ -160,33 +161,18 @@ void sha512_init(hash_state * md)
     md->sha512.state[7] = CONST64(0x5be0cd19137e2179);
 }
 
-void sha512_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
-    while (len > 0) {
-        n = MIN(len, (128 - md->sha512.curlen));
-        memcpy(md->sha512.buf + md->sha512.curlen, buf, (size_t)n);
-        md->sha512.curlen += n;
-        buf               += n;
-        len               -= n;
+HASH_PROCESS(sha512_process, sha512_compress, sha512, 128)
 
-        /* is 128 bytes full? */
-        if (md->sha512.curlen == 128) {
-            sha512_compress(md);
-            md->sha512.length += 1024;
-            md->sha512.curlen = 0;
-        }
-    }
-}
-
-void sha512_done(hash_state * md, unsigned char *hash)
+int sha512_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->sha512.curlen >= sizeof(md->sha512.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
 
     /* increase the length of the message */
     md->sha512.length += md->sha512.curlen * CONST64(8);
@@ -202,7 +188,7 @@ void sha512_done(hash_state * md, unsigned char *hash)
         while (md->sha512.curlen < 128) {
             md->sha512.buf[md->sha512.curlen++] = (unsigned char)0;
         }
-        sha512_compress(md);
+        sha512_compress(md, md->sha512.buf);
         md->sha512.curlen = 0;
     }
 
@@ -216,7 +202,7 @@ void sha512_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64H(md->sha512.length, md->sha512.buf+120);
-    sha512_compress(md);
+    sha512_compress(md, md->sha512.buf);
 
     /* copy output */
     for (i = 0; i < 8; i++) {
@@ -225,6 +211,7 @@ void sha512_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+    return CRYPT_OK;
 }
 
 int  sha512_test(void)

@@ -393,7 +393,7 @@ int safer_sk64_test(void)
 
    symmetric_key skey;
    unsigned char buf[2][8];
-   int err;
+   int err, y;
 
    /* test SK64 */
    if ((err = safer_sk64_setup(sk64_key, 8, 6, &skey)) != CRYPT_OK) {
@@ -406,6 +406,12 @@ int safer_sk64_test(void)
    if (memcmp(buf[0], sk64_ct, 8) != 0 || memcmp(buf[1], sk64_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) buf[0][y] = 0;
+      for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
+      for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
+      for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
 
    return CRYPT_OK;
   #endif
@@ -423,7 +429,7 @@ int safer_sk128_test(void)
 
    symmetric_key skey;
    unsigned char buf[2][8];
-   int err;
+   int err, y;
 
    /* test SK128 */
    if ((err = safer_sk128_setup(sk128_key, 16, 0, &skey)) != CRYPT_OK) {
@@ -435,6 +441,12 @@ int safer_sk128_test(void)
    if (memcmp(buf[0], sk128_ct, 8) != 0 || memcmp(buf[1], sk128_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) buf[0][y] = 0;
+      for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
+      for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
+      for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
   return CRYPT_OK;
  #endif
 }

@@ -224,8 +224,8 @@ int rc6_test(void)
          0x20, 0xad, 0x16, 0xa1, 0x67, 0x4e, 0x5d, 0x48 }
    }
    };
-   unsigned char buf[2][16];
-   int x, err;
+   unsigned char tmp[2][16];
+   int x, y, err;
    symmetric_key key;
 
    for (x  = 0; x < (int)(sizeof(tests) / sizeof(tests[0])); x++) {
@@ -235,13 +235,19 @@ int rc6_test(void)
       }
 
       /* encrypt and decrypt */
-      rc6_ecb_encrypt(tests[x].pt, buf[0], &key);
-      rc6_ecb_decrypt(buf[0], buf[1], &key);
+      rc6_ecb_encrypt(tests[x].pt, tmp[0], &key);
+      rc6_ecb_decrypt(tmp[0], tmp[1], &key);
 
       /* compare */
-      if (memcmp(buf[0], tests[x].ct, 16) || memcmp(buf[1], tests[x].pt, 16)) {
+      if (memcmp(tmp[0], tests[x].ct, 16) || memcmp(tmp[1], tests[x].pt, 16)) {
          return CRYPT_FAIL_TESTVECTOR;
       }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 16; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) rc6_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) rc6_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 16; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
    }
    return CRYPT_OK;
   #endif

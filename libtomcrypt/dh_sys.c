@@ -23,7 +23,7 @@ int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
     }
 
     if (keylen > hash_descriptor[hash].hashsize)  {
-        return CRYPT_INVALID_ARG;
+        return CRYPT_INVALID_HASH;
     }
 
     /* make a random key and export the public copy */
@@ -250,32 +250,32 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    }
 
    /* init bignums */
-   if (mp_init_multi(&a, &b, &k, &m, &p, &g, &p1, &tmp, NULL) != MP_OKAY) { 
-      return CRYPT_MEM;
+   if ((err = mp_init_multi(&a, &b, &k, &m, &p, &g, &p1, &tmp, NULL)) != MP_OKAY) { 
+      return mpi_to_ltc_error(err);
    }
 
    /* load k and m */
-   if (mp_read_unsigned_bin(&m, (unsigned char *)in, inlen) != MP_OKAY)        { goto error; }
+   if ((err = mp_read_unsigned_bin(&m, (unsigned char *)in, inlen)) != MP_OKAY)        { goto error; }
 #ifdef FAST_PK   
-   if (mp_read_unsigned_bin(&k, buf, MIN(32,sets[key->idx].size)) != MP_OKAY)  { goto error; }
+   if ((err = mp_read_unsigned_bin(&k, buf, MIN(32,sets[key->idx].size))) != MP_OKAY)  { goto error; }
 #else   
-   if (mp_read_unsigned_bin(&k, buf, sets[key->idx].size) != MP_OKAY)          { goto error; }
+   if ((err = mp_read_unsigned_bin(&k, buf, sets[key->idx].size)) != MP_OKAY)          { goto error; }
 #endif  
 
    /* load g, p and p1 */
-   if (mp_read_radix(&g, sets[key->idx].base, 64) != MP_OKAY)               { goto error; }
-   if (mp_read_radix(&p, sets[key->idx].prime, 64) != MP_OKAY)              { goto error; }
-   if (mp_sub_d(&p, 1, &p1) != MP_OKAY)                                     { goto error; }
-   if (mp_div_2(&p1, &p1) != MP_OKAY)                                       { goto error; } /* p1 = (p-1)/2 */
+   if ((err = mp_read_radix(&g, sets[key->idx].base, 64)) != MP_OKAY)               { goto error; }
+   if ((err = mp_read_radix(&p, sets[key->idx].prime, 64)) != MP_OKAY)              { goto error; }
+   if ((err = mp_sub_d(&p, 1, &p1)) != MP_OKAY)                                     { goto error; }
+   if ((err = mp_div_2(&p1, &p1)) != MP_OKAY)                                       { goto error; } /* p1 = (p-1)/2 */
 
    /* now get a = g^k mod p */
-   if (mp_exptmod(&g, &k, &p, &a) != MP_OKAY)                               { goto error; }
+   if ((err = mp_exptmod(&g, &k, &p, &a)) != MP_OKAY)                               { goto error; }
 
    /* now find M = xa + kb mod p1 or just b = (M - xa)/k mod p1 */
-   if (mp_invmod(&k, &p1, &k) != MP_OKAY)                                   { goto error; } /* k = 1/k mod p1 */
-   if (mp_mulmod(&a, &key->x, &p1, &tmp) != MP_OKAY)                        { goto error; } /* tmp = xa */
-   if (mp_submod(&m, &tmp, &p1, &tmp) != MP_OKAY)                           { goto error; } /* tmp = M - xa */
-   if (mp_mulmod(&k, &tmp, &p1, &b) != MP_OKAY)                             { goto error; } /* b = (M - xa)/k */
+   if ((err = mp_invmod(&k, &p1, &k)) != MP_OKAY)                                   { goto error; } /* k = 1/k mod p1 */
+   if ((err = mp_mulmod(&a, &key->x, &p1, &tmp)) != MP_OKAY)                        { goto error; } /* tmp = xa */
+   if ((err = mp_submod(&m, &tmp, &p1, &tmp)) != MP_OKAY)                           { goto error; } /* tmp = M - xa */
+   if ((err = mp_mulmod(&k, &tmp, &p1, &b)) != MP_OKAY)                             { goto error; } /* b = (M - xa)/k */
 
    /* store header  */
    y = PACKET_SIZE;
@@ -283,11 +283,13 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    /* now store them both (a,b) */
    x = (unsigned long)mp_unsigned_bin_size(&a);
    STORE32L(x, buf+y);  y += 4;
-   mp_to_unsigned_bin(&a, buf+y); y += x;
+   if ((err = mp_to_unsigned_bin(&a, buf+y)) != MP_OKAY)                            { goto error; }
+   y += x;
 
    x = (unsigned long)mp_unsigned_bin_size(&b);
    STORE32L(x, buf+y);  y += 4;
-   mp_to_unsigned_bin(&b, buf+y); y += x;
+   if ((err = mp_to_unsigned_bin(&b, buf+y)) != MP_OKAY)                            { goto error; }
+   y += x;
 
    /* check if size too big */
    if (*outlen < y) {
@@ -308,7 +310,7 @@ int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
    res = CRYPT_OK;
    goto done;
 error:
-   res = CRYPT_MEM;
+   res = mpi_to_ltc_error(err);
 done:
    mp_clear_multi(&tmp, &p1, &g, &p, &m, &k, &b, &a, NULL);
    return res;
@@ -346,8 +348,8 @@ int dh_verify_hash(const unsigned char *sig, unsigned long siglen,
    y = PACKET_SIZE;
 
    /* init all bignums */
-   if (mp_init_multi(&a, &p, &b, &g, &m, &tmp, NULL) != MP_OKAY) { 
-      return CRYPT_MEM;
+   if ((err = mp_init_multi(&a, &p, &b, &g, &m, &tmp, NULL)) != MP_OKAY) { 
+      return mpi_to_ltc_error(err);
    }
 
    /* load a and b */
@@ -359,7 +361,7 @@ int dh_verify_hash(const unsigned char *sig, unsigned long siglen,
    }
    
    y += 4;
-   if (mp_read_unsigned_bin(&a, (unsigned char *)sig+y, x) != MP_OKAY)    { goto error; }
+   if ((err = mp_read_unsigned_bin(&a, (unsigned char *)sig+y, x)) != MP_OKAY)    { goto error; }
    y += x;
 
    LOAD32L(x, sig+y);
@@ -369,23 +371,23 @@ int dh_verify_hash(const unsigned char *sig, unsigned long siglen,
       siglen -= x;
    }
    y += 4;
-   if (mp_read_unsigned_bin(&b, (unsigned char *)sig+y, x) != MP_OKAY)   { goto error; }
+   if ((err = mp_read_unsigned_bin(&b, (unsigned char *)sig+y, x)) != MP_OKAY)   { goto error; }
    y += x;
 
    /* load p and g */
-   if (mp_read_radix(&p, sets[key->idx].prime, 64) != MP_OKAY)           { goto error; }
-   if (mp_read_radix(&g, sets[key->idx].base, 64) != MP_OKAY)            { goto error; }
+   if ((err = mp_read_radix(&p, sets[key->idx].prime, 64)) != MP_OKAY)           { goto error; }
+   if ((err = mp_read_radix(&g, sets[key->idx].base, 64)) != MP_OKAY)            { goto error; }
 
    /* load m */
-   if (mp_read_unsigned_bin(&m, (unsigned char *)hash, hashlen) != MP_OKAY) { goto error; }
+   if ((err = mp_read_unsigned_bin(&m, (unsigned char *)hash, hashlen)) != MP_OKAY) { goto error; }
 
    /* find g^m mod p */
-   if (mp_exptmod(&g, &m, &p, &m) != MP_OKAY)                            { goto error; } /* m = g^m mod p */
+   if ((err = mp_exptmod(&g, &m, &p, &m)) != MP_OKAY)                            { goto error; } /* m = g^m mod p */
 
    /* find y^a * a^b */
-   if (mp_exptmod(&key->y, &a, &p, &tmp) != MP_OKAY)                     { goto error; } /* tmp = y^a mod p */
-   if (mp_exptmod(&a, &b, &p, &a) != MP_OKAY)                            { goto error; } /* a = a^b mod p */
-   if (mp_mulmod(&a, &tmp, &p, &a) != MP_OKAY)                           { goto error; } /* a = y^a * a^b mod p */
+   if ((err = mp_exptmod(&key->y, &a, &p, &tmp)) != MP_OKAY)                     { goto error; } /* tmp = y^a mod p */
+   if ((err = mp_exptmod(&a, &b, &p, &a)) != MP_OKAY)                            { goto error; } /* a = a^b mod p */
+   if ((err = mp_mulmod(&a, &tmp, &p, &a)) != MP_OKAY)                           { goto error; } /* a = y^a * a^b mod p */
 
    /* y^a * a^b == g^m ??? */
    if (mp_cmp(&a, &m) == 0) {
@@ -396,7 +398,7 @@ int dh_verify_hash(const unsigned char *sig, unsigned long siglen,
    res = CRYPT_OK;
    goto done;
 error:
-   res = CRYPT_MEM;
+   res = mpi_to_ltc_error(err);
 done:
    mp_clear_multi(&tmp, &m, &g, &p, &b, &a, NULL);
    return res;

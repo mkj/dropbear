@@ -149,34 +149,34 @@ int dh_test(void)
     mp_int p, g, tmp;
     int x, res, primality;
 
-    if (mp_init_multi(&p, &g, &tmp, NULL) != MP_OKAY)                 { goto error; }
+    if ((res = mp_init_multi(&p, &g, &tmp, NULL)) != MP_OKAY)                 { goto error; }
 
     for (x = 0; sets[x].size != 0; x++) {
 #if 0
         printf("dh_test():testing size %d-bits\n", sets[x].size * 8);
 #endif
-        if (mp_read_radix(&g,(char *)sets[x].base, 64) != MP_OKAY)   { goto error; }
-        if (mp_read_radix(&p,(char *)sets[x].prime, 64) != MP_OKAY)  { goto error; }
+        if ((res = mp_read_radix(&g,(char *)sets[x].base, 64)) != MP_OKAY)    { goto error; }
+        if ((res = mp_read_radix(&p,(char *)sets[x].prime, 64)) != MP_OKAY)   { goto error; }
 
         /* ensure p is prime */
-        if ((res = is_prime(&p, &primality)) != CRYPT_OK)             { goto done; }
+        if ((res = is_prime(&p, &primality)) != CRYPT_OK)                     { goto done; }
         if (primality == 0) {
            res = CRYPT_FAIL_TESTVECTOR;
            goto done;
         }
 
-        if (mp_sub_d(&p, 1, &tmp) != MP_OKAY)                         { goto error; }
-        if (mp_div_2(&tmp, &tmp) != MP_OKAY)                          { goto error; }
+        if ((res = mp_sub_d(&p, 1, &tmp)) != MP_OKAY)                         { goto error; }
+        if ((res = mp_div_2(&tmp, &tmp)) != MP_OKAY)                          { goto error; }
 
         /* ensure (p-1)/2 is prime */
-        if ((res = is_prime(&tmp, &primality)) != CRYPT_OK)           { goto done; }
+        if ((res = is_prime(&tmp, &primality)) != CRYPT_OK)                   { goto done; }
         if (primality == 0) {
            res = CRYPT_FAIL_TESTVECTOR;
            goto done;
         }
 
         /* now see if g^((p-1)/2) mod p is in fact 1 */
-        if (mp_exptmod(&g, &tmp, &p, &tmp) != MP_OKAY)                { goto error; }
+        if ((res = mp_exptmod(&g, &tmp, &p, &tmp)) != MP_OKAY)                { goto error; }
         if (mp_cmp_d(&tmp, 1)) {
            res = CRYPT_FAIL_TESTVECTOR;
            goto done;
@@ -185,7 +185,7 @@ int dh_test(void)
     res = CRYPT_OK;
     goto done;
 error:
-    res = CRYPT_MEM;
+    res = mpi_to_ltc_error(res);
 done:
     mp_clear_multi(&tmp, &g, &p, NULL);
     return res;
@@ -247,25 +247,25 @@ int dh_make_key(prng_state *prng, int wprng, int keysize, dh_key *key)
    }
 
    /* init parameters */
-   if (mp_init_multi(&g, &p, &key->x, &key->y, NULL) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((res = mp_init_multi(&g, &p, &key->x, &key->y, NULL)) != MP_OKAY) {
+      return mpi_to_ltc_error(res);
    }
-   if (mp_read_radix(&g, sets[key->idx].base, 64) != MP_OKAY)      { goto error; }
-   if (mp_read_radix(&p, sets[key->idx].prime, 64) != MP_OKAY)     { goto error; }
+   if ((res = mp_read_radix(&g, sets[key->idx].base, 64)) != MP_OKAY)      { goto error; }
+   if ((res = mp_read_radix(&p, sets[key->idx].prime, 64)) != MP_OKAY)     { goto error; }
 
    /* load the x value */
-   if (mp_read_unsigned_bin(&key->x, buf, keysize) != MP_OKAY)     { goto error; }
-   if (mp_exptmod(&g, &key->x, &p, &key->y) != MP_OKAY)            { goto error; }
+   if ((res = mp_read_unsigned_bin(&key->x, buf, keysize)) != MP_OKAY)     { goto error; }
+   if ((res = mp_exptmod(&g, &key->x, &p, &key->y)) != MP_OKAY)            { goto error; }
    key->type = PK_PRIVATE;
 
-   if (mp_shrink(&key->x) != MP_OKAY)                              { goto error; }
-   if (mp_shrink(&key->y) != MP_OKAY)                              { goto error; }
+   if ((res = mp_shrink(&key->x)) != MP_OKAY)                              { goto error; }
+   if ((res = mp_shrink(&key->y)) != MP_OKAY)                              { goto error; }
 
    /* free up ram */
    res = CRYPT_OK;
    goto done2;
 error:
-   res = CRYPT_MEM;
+   res = mpi_to_ltc_error(res);
    mp_clear_multi(&key->x, &key->y, NULL);
 done2:
    mp_clear_multi(&p, &g, NULL);
@@ -284,7 +284,7 @@ void dh_free(dh_key *key)
       z = (unsigned long)mp_unsigned_bin_size(num);           \
       STORE32L(z, buf2+y);                     \
       y += 4;                                  \
-      (void)mp_to_unsigned_bin(num, buf2+y);   \
+      if ((err = mp_to_unsigned_bin(num, buf2+y)) != MP_OKAY) { return mpi_to_ltc_error(err); }   \
       y += z;                                  \
 }
 
@@ -306,13 +306,13 @@ void dh_free(dh_key *key)
      }                                                           \
                                                                  \
      /* load it */                                               \
-     if (mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x) != MP_OKAY) {\
-        err =  CRYPT_MEM;                                      \
+     if ((err = mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x)) != MP_OKAY) {\
+        err = mpi_to_ltc_error(err);                                      \
         goto error;                                              \
      }                                                           \
      y += x;                                                     \
-     if (mp_shrink(num) != MP_OKAY) {                            \
-        err = CRYPT_MEM;                                       \
+     if ((err = mp_shrink(num)) != MP_OKAY) {                            \
+        err = mpi_to_ltc_error(err);                                       \
         goto error;                                              \
      }                                                           \
 }
@@ -322,6 +322,7 @@ int dh_export(unsigned char *out, unsigned long *outlen, int type, dh_key *key)
 {
    unsigned char buf2[1536];
    unsigned long y, z;
+   int err;
 
    _ARGCHK(out != NULL);
    _ARGCHK(outlen != NULL);
@@ -387,8 +388,8 @@ int dh_import(const unsigned char *in, unsigned long inlen, dh_key *key)
    }
 
    /* init */
-   if (mp_init_multi(&key->x, &key->y, NULL) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((err = mp_init_multi(&key->x, &key->y, NULL)) != MP_OKAY) {
+      return mpi_to_ltc_error(err);
    }
 
    /* advance past packet header */

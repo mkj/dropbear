@@ -56,6 +56,7 @@
 #endif
 
 #define HMAC
+#define OMAC
 #define BASE64
 
 #include <mycrypt.h>

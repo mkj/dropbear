@@ -7,7 +7,7 @@ const struct _hash_descriptor sha384_desc =
     48,
     128,
     &sha384_init,
-    &sha384_process,
+    &sha512_process,
     &sha384_done,
     &sha384_test
 };
@@ -28,25 +28,23 @@ void sha384_init(hash_state * md)
     md->sha512.state[7] = CONST64(0x47b5481dbefa4fa4);
 }
 
-void sha384_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-   _ARGCHK(md != NULL);
-   _ARGCHK(buf != NULL);
-   sha512_process(md, buf, len);
-}
-
-void sha384_done(hash_state * md, unsigned char *hash)
+int sha384_done(hash_state * md, unsigned char *hash)
 {
    unsigned char buf[64];
 
    _ARGCHK(md != NULL);
    _ARGCHK(hash != NULL);
 
+    if (md->sha512.curlen >= sizeof(md->sha512.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
+
    sha512_done(md, buf);
    memcpy(hash, buf, 48);
 #ifdef CLEAN_STACK
    zeromem(buf, sizeof(buf));
 #endif
+   return CRYPT_OK;
 }
 
 int  sha384_test(void)

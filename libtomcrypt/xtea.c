@@ -119,7 +119,7 @@ int xtea_test(void)
       { 0x75, 0xd7, 0xc5, 0xbf, 0xcf, 0x58, 0xc9, 0x3f };
    unsigned char tmp[2][8];
    symmetric_key skey;
-   int err;
+   int err, y;
 
    if ((err = xtea_setup(key, 16, 0, &skey)) != CRYPT_OK)  {
       return err;
@@ -130,6 +130,12 @@ int xtea_test(void)
    if (memcmp(tmp[0], ct, 8) != 0 || memcmp(tmp[1], pt, 8) != 0) { 
       return CRYPT_FAIL_TESTVECTOR;
    }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) xtea_ecb_encrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 1000; y++) xtea_ecb_decrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 8; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
 
    return CRYPT_OK;
  #endif

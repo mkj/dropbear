@@ -2,74 +2,66 @@
 
 #ifdef MPI
 
+struct rng_data {
+   prng_state *prng;
+   int         wprng;
+};
+
+
 #define UPPER_LIMIT    PRIME_SIZE
 
 /* figures out if a number is prime (MR test) */
 int is_prime(mp_int *N, int *result)
 {
    int err;
-   if ((err = mp_prime_is_prime(N, 8, result)) != MP_OKAY) {
-      return CRYPT_MEM;
+   _ARGCHK(N != NULL);
+   _ARGCHK(result != NULL);
+   if ((err = mp_prime_is_prime(N, mp_prime_rabin_miller_trials(mp_count_bits(N)), result)) != MP_OKAY) {
+      return mpi_to_ltc_error(err);
    }
    return CRYPT_OK;
 }
 
+static int rand_prime_helper(unsigned char *dst, int len, void *dat)
+{
+   return (int)prng_descriptor[((struct rng_data *)dat)->wprng].read(dst, len, ((struct rng_data *)dat)->prng);
+}
+
 int rand_prime(mp_int *N, long len, prng_state *prng, int wprng)
 {
-   unsigned char buf[260];
-   int err, step, ormask;
+   struct rng_data rng;
+   int             type, err;
 
    _ARGCHK(N != NULL);
-
-   /* pass a negative size if you want a prime congruent to 3 mod 4 */
-   if (len < 0) {
-      step = 1;
-      ormask = 3;
-      len = -len;
-   } else {
-      step = 0;
-      ormask = 1;
-   }
 
    /* allow sizes between 2 and 256 bytes for a prime size */
    if (len < 2 || len > 256) { 
       return CRYPT_INVALID_PRIME_SIZE;
    }
    
-   /* valid PRNG? */
+   /* valid PRNG? Better be! */
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
       return err; 
    }
 
-   /* read the prng */
-   if (prng_descriptor[wprng].read(buf+2, (unsigned long)len, prng) != (unsigned long)len) { 
-      return CRYPT_ERROR_READPRNG; 
+   /* setup our callback data, then world domination! */
+   rng.prng  = prng;
+   rng.wprng = wprng;
+
+   /* get type */
+   if (len < 0) {
+      type = 1;
+      len = -len;
+   } else {
+      type = 0;
    }
 
-   /* set sign byte to zero */
-   buf[0] = (unsigned char)0;
-
-   /* Set the top byte to 0x01 which makes the number a len*8 bit number */
-   buf[1] = (unsigned char)0x01;
-
-   /* set the LSB to the desired settings 
-    * (1 for any prime, 3 for primes congruent to 3 mod 4) 
+   /* New prime generation makes the code even more cryptoish-insane.  Do you know what this means!!!
+      -- Gir:  Yeah, oh wait, er, no.
     */
-   buf[len+1] |= (unsigned char)ormask;
-
-   /* read the number in */
-   if (mp_read_raw(N, buf, 2+len) != MP_OKAY) { 
-      return CRYPT_MEM; 
+   if ((err = mp_prime_random(N, mp_prime_rabin_miller_trials(len*8), len, type, rand_prime_helper, &rng)) != MP_OKAY) {
+      return mpi_to_ltc_error(err);
    }
-
-   /* Find the next prime after N */
-   if (mp_prime_next_prime(N, 8, step) != MP_OKAY) {
-      return CRYPT_MEM;
-   }
-
-#ifdef CLEAN_STACK   
-   zeromem(buf, sizeof(buf));
-#endif
 
    return CRYPT_OK;
 }

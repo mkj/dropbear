@@ -32,18 +32,18 @@ const struct _hash_descriptor md5_desc =
     a = (a + I(b,c,d) + M + t); a = ROL(a, s) + b;
 
 #ifdef CLEAN_STACK
-static void _md5_compress(hash_state *md)
+static void _md5_compress(hash_state *md, unsigned char *buf)
 #else
-static void md5_compress(hash_state *md)
+static void md5_compress(hash_state *md, unsigned char *buf)
 #endif
 {
-    unsigned long i, W[16], a, b, c, d;
+    ulong32 i, W[16], a, b, c, d;
 
     _ARGCHK(md != NULL);
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
-        LOAD32L(W[i], md->md5.buf + (4*i));
+        LOAD32L(W[i], buf + (4*i));
     }
  
     /* copy state */
@@ -124,10 +124,10 @@ static void md5_compress(hash_state *md)
 }
 
 #ifdef CLEAN_STACK
-static void md5_compress(hash_state *md)
+static void md5_compress(hash_state *md, unsigned char *buf)
 {
-   _md5_compress(md);
-   burn_stack(sizeof(unsigned long) * 21);
+   _md5_compress(md, buf);
+   burn_stack(sizeof(ulong32) * 21);
 }
 #endif
 
@@ -142,33 +142,19 @@ void md5_init(hash_state * md)
    md->md5.length = 0;
 }
 
-void md5_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
-    while (len > 0) {
-        n = MIN(len, (64 - md->md5.curlen));
-        memcpy(md->md5.buf + md->md5.curlen, buf, (size_t)n);
-        md->md5.curlen += n;
-        buf            += n;
-        len            -= n;
+HASH_PROCESS(md5_process, md5_compress, md5, 64)
 
-        /* is 64 bytes full? */
-        if (md->md5.curlen == 64) {
-            md5_compress(md);
-            md->md5.length += 512;
-            md->md5.curlen = 0;
-        }
-    }
-}
-
-void md5_done(hash_state * md, unsigned char *hash)
+int md5_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->md5.curlen >= sizeof(md->md5.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
+
 
     /* increase the length of the message */
     md->md5.length += md->md5.curlen * 8;
@@ -184,7 +170,7 @@ void md5_done(hash_state * md, unsigned char *hash)
         while (md->md5.curlen < 64) {
             md->md5.buf[md->md5.curlen++] = (unsigned char)0;
         }
-        md5_compress(md);
+        md5_compress(md, md->md5.buf);
         md->md5.curlen = 0;
     }
 
@@ -195,7 +181,7 @@ void md5_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64L(md->md5.length, md->md5.buf+56);
-    md5_compress(md);
+    md5_compress(md, md->md5.buf);
 
     /* copy output */
     for (i = 0; i < 4; i++) {
@@ -204,6 +190,7 @@ void md5_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+    return CRYPT_OK;
 }
 
 int  md5_test(void)

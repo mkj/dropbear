@@ -30,10 +30,10 @@ struct _prng_descriptor prng_descriptor[TAB_SIZE] = {
 void crypt_argchk(char *v, char *s, int d)
 {
 #ifdef SONY_PS2
- printf("_ARGCHK '%s' failure on line %d of file %s\n", 
+ printf("_ARGCHK '%s' failure on line %d of file %s\n",
          v, d, s);
-#else 
- fprintf(stderr, "_ARGCHK '%s' failure on line %d of file %s\n", 
+#else
+ fprintf(stderr, "_ARGCHK '%s' failure on line %d of file %s\n",
          v, d, s);
 #endif
  (void)raise(SIGABRT);
@@ -323,7 +323,7 @@ const char *crypt_build_settings =
    "   Twofish "
    #if defined(TWOFISH_SMALL) && defined(TWOFISH_TABLES)
        "(small, tables)\n"
-   #elif defined(TWOFISH_SMALL) 
+   #elif defined(TWOFISH_SMALL)
        "(small)\n"
    #elif defined(TWOFISH_TABLES)
        "(tables)\n"
@@ -340,6 +340,9 @@ const char *crypt_build_settings =
 #if defined(NOEKEON)
    "   Noekeon\n"
 #endif
+#if defined(SKIPJACK)
+   "   Skipjack\n"
+#endif
 
     "\nHashes built-in:\n"
 #if defined(SHA512)
@@ -350,6 +353,9 @@ const char *crypt_build_settings =
 #endif
 #if defined(SHA256)
    "   SHA-256\n"
+#endif
+#if defined(SHA224)
+   "   SHA-224\n"
 #endif
 #if defined(TIGER)
    "   TIGER\n"
@@ -368,6 +374,9 @@ const char *crypt_build_settings =
 #endif
 #if defined(RIPEMD128)
    "   RIPEMD128\n"
+#endif
+#if defined(RIPEMD160)
+   "   RIPEMD160\n"
 #endif
 
     "\nBlock Chaining Modes:\n"
@@ -447,7 +456,7 @@ const char *crypt_build_settings =
 #endif
 #if defined(LTC_TEST)
     " LTC_TEST "
-#endif    
+#endif
     "\n"
 
     "\n\n\n"

@@ -34,12 +34,14 @@
    "SAFER,Include Safer-64 block ciphers,y",
    "RIJNDAEL,Include Rijndael (AES) block cipher,y",
    "XTEA,Include XTEA block cipher,y",
-   "TWOFISH,Include Twofish block cipher,y",
-   "TWOFISH_SMALL,Include Use a low ram variant of Twofish,n",
-   "TWOFISH_TABLES,Include Use precomputed tables to speed up the low-ram variant,y",
+   "TWOFISH,Include Twofish block cipher (default: fast),y",
+   "TWOFISH_SMALL,Use a low ram variant of Twofish (slow cipher+keyschedule!),n",
+   "TWOFISH_TABLES,Use precomputed tables (fast cipher and faster keychedule but adds ~3.3KB to the size),y",
+   "TWOFISH_ALL_TABLES,Speed up the key schedule a little (adds ~8KB ontop of TWOFISH_TABLES to the size),n",
    "DES,Include DES and 3DES block ciphers,y",
    "CAST5,Include CAST5 (aka CAST-128) block cipher,y",
    "NOEKEON,Include Noekeon block cipher,y",
+   "SKIPJACK,Include Skipjack block cipher,y",
 
    "CFB,Include CFB block mode of operation,y",
    "OFB,Include OFB block mode of operation,y",
@@ -50,6 +52,7 @@
    "SHA512,Include SHA512 one-way hash,y",
    "SHA384,Include SHA384 one-way hash (requires SHA512),y",
    "SHA256,Include SHA256 one-way hash,y",
+   "SHA224,Include SHA224 one-way hash (requires SHA256),y",
    "TIGER,Include TIGER one-way hash,y",
    "SHA1,Include SHA1 one-way hash,y",
    "MD5,Include MD5 one-way hash,y",
@@ -58,6 +61,7 @@
    "RIPEMD128,Include RIPEMD-128 one-way hash,y",
    "RIPEMD160,Include RIPEMD-160 one-way hash,y",
    "HMAC,Include Hash based Message Authentication Support,y",
+   "OMAC,Include OMAC1 Message Authentication Support,y",
 
    "BASE64,Include Base64 encoding support,y",
 
@@ -68,6 +72,7 @@
    "TRY_URANDOM_FIRST,Try /dev/urandom before /dev/random?,n",
 
    "MRSA,Include RSA public key support,y",
+   "MDSA,Include DSA public key support,y",
    "MDH,Include Diffie-Hellman (over Z/pZ) public key support,y",
    "MECC,Include Eliptic Curve public key crypto support,y",
    "KR,Include Keyring support (groups all three PK systems),n",
@@ -146,10 +151,10 @@ for (@settings) {
 
 # output objects
 print OUT "\ndefault: library\n\n";
-print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o mpi.o prime.o twofish.o packet.o hmac.o strings.o \n\n";
+print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o mpi.o prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o skipjack.o omac.o dsa.o\n\n";
 
 # some depends
-print OUT "rsa.o: rsa_sys.c\ndh.o: dh_sys.c\necc.o: ecc_sys.c\n\n";
+print OUT "rsa.o: rsa_sys.c\ndh.o: dh_sys.c\necc.o: ecc_sys.c\naes.o: aes.c aes_tab.c\ntwofish.o: twofish.c twofish_tab.c\nsha512.o: sha384.c sha512.c\nsha256.o: sha256.c sha224.c\n\n";
 
 # targets
 print OUT "library: \$(OBJECTS)\n\t \$(AR) r libtomcrypt.a \$(OBJECTS)\n\t ranlib libtomcrypt.a\n\n";

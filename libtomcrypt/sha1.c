@@ -20,18 +20,18 @@ const struct _hash_descriptor sha1_desc =
 #define F3(x,y,z)  (x ^ y ^ z)
 
 #ifdef CLEAN_STACK
-static void _sha1_compress(hash_state *md)
+static void _sha1_compress(hash_state *md, unsigned char *buf)
 #else
-static void sha1_compress(hash_state *md)
+static void sha1_compress(hash_state *md, unsigned char *buf)
 #endif
 {
-    unsigned long a,b,c,d,e,W[80],i;
+    ulong32 a,b,c,d,e,W[80],i;
 
     _ARGCHK(md != NULL);
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
-        LOAD32H(W[i], md->sha1.buf + (4*i));
+        LOAD32H(W[i], buf + (4*i));
     }
 
     /* copy state */
@@ -62,7 +62,7 @@ static void sha1_compress(hash_state *md)
     }
 
     /* round two */
-    for (i = 20; i < 40; )  { 
+    for (; i < 40; )  { 
        FF1(a,b,c,d,e,i++);
        FF1(e,a,b,c,d,i++);
        FF1(d,e,a,b,c,i++);
@@ -71,7 +71,7 @@ static void sha1_compress(hash_state *md)
     }
 
     /* round three */
-    for (i = 40; i < 60; )  { 
+    for (; i < 60; )  { 
        FF2(a,b,c,d,e,i++);
        FF2(e,a,b,c,d,i++);
        FF2(d,e,a,b,c,i++);
@@ -80,7 +80,7 @@ static void sha1_compress(hash_state *md)
     }
 
     /* round four */
-    for (i = 60; i < 80; )  { 
+    for (; i < 80; )  { 
        FF3(a,b,c,d,e,i++);
        FF3(e,a,b,c,d,i++);
        FF3(d,e,a,b,c,i++);
@@ -102,10 +102,10 @@ static void sha1_compress(hash_state *md)
 }
 
 #ifdef CLEAN_STACK
-static void sha1_compress(hash_state *md)
+static void sha1_compress(hash_state *md, unsigned char *buf)
 {
-   _sha1_compress(md);
-   burn_stack(sizeof(unsigned long) * 87);
+   _sha1_compress(md, buf);
+   burn_stack(sizeof(ulong32) * 87);
 }
 #endif
 
@@ -121,34 +121,18 @@ void sha1_init(hash_state * md)
    md->sha1.length = 0;
 }
 
-void sha1_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
+HASH_PROCESS(sha1_process, sha1_compress, sha1, 64)
 
-    while (len > 0) {
-        n = MIN(len, (64 - md->sha1.curlen));
-        memcpy(md->sha1.buf + md->sha1.curlen, buf, (size_t)n);
-        md->sha1.curlen += n;
-        buf             += n;
-        len             -= n;
-
-        /* is 64 bytes full? */
-        if (md->sha1.curlen == 64) {
-            sha1_compress(md);
-            md->sha1.length += 512;
-            md->sha1.curlen = 0;
-        }
-    }
-}
-
-void sha1_done(hash_state * md, unsigned char *hash)
+int sha1_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->sha1.curlen >= sizeof(md->sha1.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
 
     /* increase the length of the message */
     md->sha1.length += md->sha1.curlen * 8;
@@ -164,7 +148,7 @@ void sha1_done(hash_state * md, unsigned char *hash)
         while (md->sha1.curlen < 64) {
             md->sha1.buf[md->sha1.curlen++] = (unsigned char)0;
         }
-        sha1_compress(md);
+        sha1_compress(md, md->sha1.buf);
         md->sha1.curlen = 0;
     }
 
@@ -175,7 +159,7 @@ void sha1_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64H(md->sha1.length, md->sha1.buf+56);
-    sha1_compress(md);
+    sha1_compress(md, md->sha1.buf);
 
     /* copy output */
     for (i = 0; i < 5; i++) {
@@ -184,6 +168,7 @@ void sha1_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+    return CRYPT_OK;
 }
 
 int  sha1_test(void)

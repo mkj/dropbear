@@ -64,7 +64,7 @@ int main(int argc, char **argv)
    return EXIT_SUCCESS;
 }
 
-void register_algs(void) 
+void register_algs(void)
 {
    register_hash(&sha512_desc);
    register_hash(&sha384_desc);
@@ -74,4 +74,7 @@ void register_algs(void)
    register_hash(&md4_desc);
    register_hash(&tiger_desc);
    register_hash(&md2_desc);
+   register_hash(&rmd128_desc);
+   register_hash(&rmd160_desc);
+   register_hash(&sha224_desc);
 }

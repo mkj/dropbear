@@ -122,9 +122,14 @@ int rsa_exptmod(const unsigned char *in,  unsigned long inlen,
       return CRYPT_PK_NOT_PRIVATE;
    }
 
+   /* must be a private or public operation */
+   if (which != PK_PRIVATE && which != PK_PUBLIC) {
+      return CRYPT_PK_INVALID_TYPE;
+   }
+
    /* init and copy into tmp */
-   if (mp_init_multi(&tmp, &tmpa, &tmpb, NULL) != MP_OKAY)                { goto error; }
-   if (mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen) != MP_OKAY) { goto error; }
+   if (mp_init_multi(&tmp, &tmpa, &tmpb, NULL) != MP_OKAY)                          { goto error; }
+   if (mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen) != MP_OKAY)      { goto error; }
 
    /* sanity check on the input */
    if (mp_cmp(&key->N, &tmp) == MP_LT) {
@@ -277,8 +282,9 @@ int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
           return CRYPT_INVALID_PACKET;
        }
    }
-   for (x = 0; x < inlen/3; x++)
+   for (x = 0; x < inlen/3; x++) {
        out[x] = in[x+(inlen/3)];
+   }
    *outlen = inlen/3;
    return CRYPT_OK;
 }
@@ -295,8 +301,9 @@ int rsa_depad(const unsigned char *in,  unsigned long inlen,
    if (*outlen < inlen/3) {
       return CRYPT_BUFFER_OVERFLOW;
    }
-   for (x = 0; x < inlen/3; x++)
+   for (x = 0; x < inlen/3; x++) {
        out[x] = in[x+(inlen/3)];
+   }
    *outlen = inlen/3;
    return CRYPT_OK;
 }
@@ -306,7 +313,7 @@ int rsa_depad(const unsigned char *in,  unsigned long inlen,
       z = (unsigned long)mp_unsigned_bin_size(num);  \
       STORE32L(z, buf2+y);                     \
       y += 4;                                  \
-      (void)mp_to_unsigned_bin(num, buf2+y);   \
+      if (mp_to_unsigned_bin(num, buf2+y) != MP_OKAY) { return CRYPT_MEM; }    \
       y += z;                                  \
 }
 

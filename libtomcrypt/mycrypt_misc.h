@@ -11,9 +11,8 @@ extern int base64_decode(const unsigned char *in,  unsigned long len,
 extern void zeromem(void *dst, size_t len);
 extern void burn_stack(unsigned long len);
 
-/* ch1-01-1*/
 extern const char *error_to_string(int err);
-/* ch1-01-1*/
+extern int mpi_to_ltc_error(int err);
 
 #if 0
 /* Takes up space we don\'t need for Dropbear */

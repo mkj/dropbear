@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 /* version */
-#define CRYPT   0x0090
-#define SCRYPT  "0.90"
+#define CRYPT   0x0092
+#define SCRYPT  "0.92"
 
 /* max size of either a cipher/hash block or symmetric key [largest of the two] */
 #define MAXBLOCKSIZE           128
@@ -49,6 +49,7 @@ enum {
    CRYPT_PK_NOT_PRIVATE,   /* Requires a private PK key */
 
    CRYPT_INVALID_ARG,      /* Generic invalid argument */
+   CRYPT_FILE_NOTFOUND,    /* File Not Found */
 
    CRYPT_PK_INVALID_TYPE,  /* Invalid type of PK key */
    CRYPT_PK_INVALID_SYSTEM,/* Invalid PK system specified */
