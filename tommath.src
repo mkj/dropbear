@@ -258,7 +258,7 @@ floating point is meant to be implemented in hardware the precision of the manti
 a mantissa of much larger precision than hardware alone can efficiently support.  This approach could be useful where 
 scientific applications must minimize the total output error over long calculations.
 
-Another use for large integers is within arithmetic on polynomials of large characteristic (i.e. $GF(p)[x]$ for large $p$).
+Yet another use for large integers is within arithmetic on polynomials of large characteristic (i.e. $GF(p)[x]$ for large $p$).
 In fact the library discussed within this text has already been used to form a polynomial basis library\footnote{See \url{http://poly.libtomcrypt.org} for more details.}.
 
 \subsection{Benefits of Multiple Precision Arithmetic}
@@ -316,7 +316,7 @@ the reader how the algorithms fit together as well as where to start on various 
 
 \section{Discussion and Notation}
 \subsection{Notation}
-A multiple precision integer of $n$-digits shall be denoted as $x = (x_{n-1} ... x_1 x_0)_{ \beta }$ and represent
+A multiple precision integer of $n$-digits shall be denoted as $x = (x_{n-1}, \ldots, x_1, x_0)_{ \beta }$ and represent
 the integer $x \equiv \sum_{i=0}^{n-1} x_i\beta^i$.  The elements of the array $x$ are said to be the radix $\beta$ digits 
 of the integer.  For example, $x = (1,2,3)_{10}$ would represent the integer 
 $1\cdot 10^2 + 2\cdot10^1 + 3\cdot10^0 = 123$.  
@@ -339,12 +339,11 @@ algorithms will be used to establish the relevant theory which will subsequently
 precision algorithm to solve the same problem.  
 
 \subsection{Precision Notation}
-For the purposes of this text a single precision variable must be able to represent integers in the range 
-$0 \le x < q \beta$ while a double precision variable must be able to represent integers in the range 
-$0 \le x < q \beta^2$.  The variable $\beta$ represents the radix of a single digit of a multiple precision integer and 
-must be of the form $q^p$ for $q, p \in \Z^+$.  The extra radix-$q$ factor allows additions and subtractions to proceed 
-without truncation of the carry.  Since all modern computers are binary, it is assumed that $q$ is two, for all intents 
-and purposes.
+The variable $\beta$ represents the radix of a single digit of a multiple precision integer and 
+must be of the form $q^p$ for $q, p \in \Z^+$.  A single precision variable must be able to represent integers in 
+the range $0 \le x < q \beta$ while a double precision variable must be able to represent integers in the range 
+$0 \le x < q \beta^2$.  The extra radix-$q$ factor allows additions and subtractions to proceed without truncation of the 
+carry.  Since all modern computers are binary, it is assumed that $q$ is two.
 
 \index{mp\_digit} \index{mp\_word}
 Within the source code that will be presented for each algorithm, the data type \textbf{mp\_digit} will represent 
@@ -376,7 +375,7 @@ the $/$ division symbol is used the intention is to perform an integer division 
 $5/2 = 2$ which will often be written as $\lfloor 5/2 \rfloor = 2$ for clarity.  When an expression is written as a 
 fraction a real value division is implied, for example ${5 \over 2} = 2.5$.  
 
-The norm of a multiple precision integer, for example, $\vert \vert x \vert \vert$ will be used to represent the number of digits in the representation
+The norm of a multiple precision integer, for example $\vert \vert x \vert \vert$, will be used to represent the number of digits in the representation
 of the integer.  For example, $\vert \vert 123 \vert \vert = 3$ and $\vert \vert 79452 \vert \vert = 5$.  
 
 \subsection{Work Effort}
@@ -569,7 +568,7 @@ By building outwards from a base foundation instead of using a parallel design m
 highly modular.  Being highly modular is a desirable property of any project as it often means the resulting product
 has a small footprint and updates are easy to perform.  
 
-Usually when I start a project I will begin with the header file.  I define the data types I think I will need and 
+Usually when I start a project I will begin with the header files.  I define the data types I think I will need and 
 prototype the initial functions that are not dependent on other functions (within the library).  After I 
 implement these base functions I prototype more dependent functions and implement them.   The process repeats until
 I implement all of the functions I require.  For example, in the case of LibTomMath I implemented functions such as 
@@ -619,14 +618,26 @@ any such data type but it does provide for making composite data types known as 
 used within LibTomMath.
 
 \index{mp\_int}
-\begin{verbatim}
-typedef struct  {
-    int used, alloc, sign;
-    mp_digit *dp;
-} mp_int;
-\end{verbatim}
+\begin{figure}[here]
+\begin{center}
+\begin{small}
+%\begin{verbatim}
+\begin{tabular}{|l|}
+\hline
+typedef struct \{ \\
+\hspace{3mm}int used, alloc, sign;\\
+\hspace{3mm}mp\_digit *dp;\\
+\} \textbf{mp\_int}; \\
+\hline
+\end{tabular}
+%\end{verbatim}
+\end{small}
+\caption{The mp\_int Structure}
+\label{fig:mpint}
+\end{center}
+\end{figure}
 
-The mp\_int structure can be broken down as follows.
+The mp\_int structure (fig. \ref{fig:mpint}) can be broken down as follows.
 
 \begin{enumerate}
 \item The \textbf{used} parameter denotes how many digits of the array \textbf{dp} contain the digits used to represent
@@ -701,9 +712,10 @@ fault by dereferencing memory not owned by the application.
 In the case of LibTomMath the only errors that are checked for are related to inappropriate inputs (division by zero for 
 instance) and memory allocation errors.  It will not check that the mp\_int passed to any function is valid nor 
 will it check pointers for validity.  Any function that can cause a runtime error will return an error code as an 
-\textbf{int} data type with one of the following values.
+\textbf{int} data type with one of the following values (fig \ref{fig:errcodes}).
 
 \index{MP\_OKAY} \index{MP\_VAL} \index{MP\_MEM}
+\begin{figure}[here]
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline \textbf{Value} & \textbf{Meaning} \\
@@ -713,6 +725,9 @@ will it check pointers for validity.  Any function that can cause a runtime erro
 \hline
 \end{tabular}
 \end{center}
+\caption{LibTomMath Error Codes}
+\label{fig:errcodes}
+\end{figure}
 
 When an error is detected within a function it should free any memory it allocated, often during the initialization of
 temporary mp\_ints, and return as soon as possible.  The goal is to leave the system in the same state it was when the 
@@ -748,6 +763,7 @@ to zero.  The \textbf{used} count set to zero and \textbf{sign} set to \textbf{M
 An mp\_int is said to be initialized if it is set to a valid, preferably default, state such that all of the members of the
 structure are set to valid values.  The mp\_init algorithm will perform such an action.
 
+\index{mp\_init}
 \begin{figure}[here]
 \begin{center}
 \begin{tabular}{l}
@@ -770,17 +786,23 @@ structure are set to valid values.  The mp\_init algorithm will perform such an 
 \end{figure}
 
 \textbf{Algorithm mp\_init.}
-The \textbf{MP\_PREC} name represents a constant\footnote{Defined in the ``tommath.h'' header file within LibTomMath.} 
-used to dictate the minimum precision of allocated mp\_int integers.  Ideally, it is at least equal to $32$ since for most
-purposes that will be more than enough.
+The purpose of this function is to initialize an mp\_int structure so that the rest of the library can properly
+manipulte it.  It is assumed that the input may not have had any of its members previously initialized which is certainly
+a valid assumption if the input resides on the stack.  
 
-Memory for the default number of digits is allocated first.  If the allocation fails the algorithm returns immediately
-with the \textbf{MP\_MEM} error code.  If the allocation succeeds the remaining members of the mp\_int structure
-must be initialized to reflect the default initial state.
+Before any of the members such as \textbf{sign}, \textbf{used} or \textbf{alloc} are initialized the memory for
+the digits is allocated.  If this fails the function returns before setting any of the other members.  The \textbf{MP\_PREC} 
+name represents a constant\footnote{Defined in the ``tommath.h'' header file within LibTomMath.} 
+used to dictate the minimum precision of newly initialized mp\_int integers.  Ideally, it is at least equal to the smallest
+precision number you'll be working with.
 
-The allocated digits are all set to zero (step three) to ensure they are in a known state.  The \textbf{sign}, \textbf{used}
-and \textbf{alloc} are subsequently initialized to represent the zero integer.  By step seven the algorithm returns a success 
-code and the mp\_int $a$ has been successfully initialized to a valid state representing the integer zero.  
+Allocating a block of digits at first instead of a single digit has the benefit of lowering the number of usually slow
+heap operations later functions will have to perform in the future.  If \textbf{MP\_PREC} is set correctly the slack 
+memory and the number of heap operations will be trivial.
+
+Once the allocation has been made the digits have to be set to zero as well as the \textbf{used}, \textbf{sign} and
+\textbf{alloc} members initialized.  This ensures that the mp\_int will always represent the default state of zero regardless
+of the original condition of the input.
 
 \textbf{Remark.}
 This function introduces the idiosyncrasy that all iterative loops, commonly initiated with the ``for'' keyword, iterate incrementally
@@ -796,19 +818,21 @@ One immediate observation of this initializtion function is that it does not ret
 is assumed that the caller has already allocated memory for the mp\_int structure, typically on the application stack.  The 
 call to mp\_init() is used only to initialize the members of the structure to a known default state.  
 
-Before any of the other members of the structure are initialized memory from the application heap is allocated with
-the calloc() function (line @22,calloc@).  The size of the allocated memory is large enough to hold \textbf{MP\_PREC} 
-mp\_digit variables.  The calloc() function is used instead\footnote{calloc() will allocate memory in the same
-manner as malloc() except that it also sets the contents to zero upon successfully allocating the memory.} of malloc() 
-since digits have to be set to zero for the function to finish correctly.  The \textbf{OPT\_CAST} token is a macro 
-definition which will turn into a cast from void * to mp\_digit * for C++ compilers.  It is not required for C compilers.
+Here we see (line @23,XMALLOC@) the memory allocation is performed first.  This allows us to exit cleanly and quickly
+if there is an error.  If the allocation fails the routine will return \textbf{MP\_MEM} to the caller to indicate there
+was a memory error.  The function XMALLOC is what actually allocates the memory.  Technically XMALLOC is not a function
+but a macro defined in ``tommath.h``.  By default, XMALLOC will evaluate to malloc() which is the C library's built--in
+memory allocation routine.
 
-After the memory has been successfully allocated the remainder of the members are initialized 
+In order to assure the mp\_int is in a known state the digits must be set to zero.  On most platforms this could have been
+accomplished by using calloc() instead of malloc().  However,  to correctly initialize a integer type to a given value in a 
+portable fashion you have to actually assign the value.  The for loop (line @28,for@) performs this required
+operation.
+
+After the memory has been successfully initialized the remainder of the members are initialized 
 (lines @29,used@ through @31,sign@) to their respective default states.  At this point the algorithm has succeeded and
-a success code is returned to the calling function.
-
-If this function returns \textbf{MP\_OKAY} it is safe to assume the mp\_int structure has been properly initialized and
-is safe to use with other functions within the library.  
+a success code is returned to the calling function.  If this function returns \textbf{MP\_OKAY} it is safe to assume the 
+mp\_int structure has been properly initialized and is safe to use with other functions within the library.  
 
 \subsection{Clearing an mp\_int}
 When an mp\_int is no longer required by the application, the memory that has been allocated for its digits must be 
@@ -819,7 +843,7 @@ returned to the application's memory pool with the mp\_clear algorithm.
 \begin{tabular}{l}
 \hline Algorithm \textbf{mp\_clear}. \\
 \textbf{Input}.   An mp\_int $a$ \\
-\textbf{Output}.  The memory for $a$ is freed for reuse.  \\
+\textbf{Output}.  The memory for $a$ shall be deallocated.  \\
 \hline \\
 1.  If $a$ has been previously freed then return(\textit{MP\_OKAY}). \\
 2.  for $n$ from 0 to $a.used - 1$ do \\
@@ -836,32 +860,31 @@ returned to the application's memory pool with the mp\_clear algorithm.
 \end{figure}
 
 \textbf{Algorithm mp\_clear.}
-This algorithm releases the memory allocated for an mp\_int back into the memory pool for reuse.  It is designed
-such that a given mp\_int structure can be cleared multiple times between initializations without attempting to 
-free the memory twice\footnote{In ISO C for example, calling free() twice on the same memory block causes undefinied
-behaviour.}.  
+This algorithm accomplishes two goals.  First, it clears the digits and the other mp\_int members.  This ensures that 
+if a developer accidentally re-uses a cleared structure it is less likely to cause problems.  The second goal
+is to free the allocated memory.
 
-The first step determines if the mp\_int structure has been marked as free already.  If it has, the algorithm returns
-success immediately as no further actions are required.  Otherwise, the algorithm will proceed to put the structure 
-in a known empty and otherwise invalid state.  First the digits of the mp\_int are set to zero.  The memory that has been allocated for the 
-digits is then freed.  The \textbf{used} and \textbf{alloc} counts are both set to zero and the \textbf{sign} set to 
-\textbf{MP\_ZPOS}.  This known fixed state for cleared mp\_int structures will make debuging easier for the end 
-developer.  That is, if they spot (via their debugger) an mp\_int they are using that is in this state it will be 
-obvious that they erroneously and prematurely cleared the mp\_int structure.
+The logic behind the algorithm is extended by marking cleared mp\_int structures so that subsequent calls to this
+algorithm will not try to free the memory multiple times.  Cleared mp\_ints are detectable by having a pre-defined invalid 
+digit pointer \textbf{dp} setting.
 
-Note that once an mp\_int has been cleared the mp\_int structure is no longer in a valid state for any other algorithm
+Once an mp\_int has been cleared the mp\_int structure is no longer in a valid state for any other algorithm
 with the exception of algorithms mp\_init, mp\_init\_copy, mp\_init\_size and mp\_clear.
 
 EXAM,bn_mp_clear.c
 
-The ``if'' statement (line @21,a->dp != NULL@) prevents the heap from being corrupted if a user double-frees an 
-mp\_int.  This is because once the memory is freed the pointer is set to \textbf{NULL} (line @30,NULL@).  
+The algorithm only operates on the mp\_int if it hasn't been previously cleared.  The if statement (line @23,a->dp != NULL@)
+checks to see if the \textbf{dp} member is not \textbf{NULL}.  If the mp\_int is a valid mp\_int then \textbf{dp} cannot be
+\textbf{NULL} in which case the if statement will evaluate to true.
 
-Without the check, code that accidentally calls mp\_clear twice for a given mp\_int structure would try to free the memory 
-allocated for the digits twice.  This may cause some C libraries to signal a fault.  By setting the pointer to 
-\textbf{NULL} it helps debug code that may inadvertently free the mp\_int before it is truly not needed, because attempts 
-to reference digits should fail immediately. The allocated digits are set to zero before being freed (line @24,memset@).  
-This is ideal for cryptographic situations where the integer that the mp\_int represents might need to be kept a secret.
+The digits of the mp\_int are cleared by the for loop (line @25,for@) which assigns a zero to every digit.  Similar to mp\_init()
+the digits are assigned zero instead of using block memory operations (such as memset()) since this is more portable.  
+
+The digits are deallocated off the heap via the XFREE macro.  Similar to XMALLOC the XFREE macro actually evaluates to
+a standard C library function.  In this case the free() function.  Since free() only deallocates the memory the pointer
+still has to be reset to \textbf{NULL} manually (line @33,NULL@).  
+
+Now that the digits have been cleared and deallocated the other members are set to their final values (lines @34,= 0@ and @35,ZPOS@).
 
 \section{Maintenance Algorithms}
 
@@ -889,7 +912,7 @@ must be re-sized appropriately to accomodate the result.  The mp\_grow algorithm
 1.  if $a.alloc \ge b$ then return(\textit{MP\_OKAY}) \\
 2.  $u \leftarrow b\mbox{ (mod }MP\_PREC\mbox{)}$ \\
 3.  $v \leftarrow b + 2 \cdot MP\_PREC - u$ \\
-4.  Re-Allocate the array of digits $a$ to size $v$ \\
+4.  Re-allocate the array of digits $a$ to size $v$ \\
 5.  If the allocation failed then return(\textit{MP\_MEM}). \\
 6.  for n from a.alloc to $v - 1$ do  \\
 \hspace{+3mm}6.1  $a_n \leftarrow 0$ \\
@@ -914,15 +937,19 @@ assumed to contain undefined values they are initially set to zero.
 
 EXAM,bn_mp_grow.c
 
-The first step is to see if we actually need to perform a re-allocation at all (line @24,a->alloc < size@).  If a reallocation
-must occur the digit count is padded upwards to help prevent many trivial reallocations (line @28,size@).  Next the reallocation is performed
-and the return of realloc() is stored in a temporary pointer named $tmp$ (line @36,realloc@).  The return is stored in a temporary
-instead of $a.dp$ to prevent the code from losing the original pointer in case the reallocation fails.  Had the return been stored 
-in $a.dp$ instead there would be no way to reclaim the heap originally used.
+A quick optimization is to first determine if a memory re-allocation is required at all.  The if statement (line @23,if@) checks
+if the \textbf{alloc} member of the mp\_int is smaller than the requested digit count.  If the count is not larger than \textbf{alloc}
+the function skips the re-allocation part thus saving time.
 
-If the reallocation fails the function will return \textbf{MP\_MEM} (line @39,return@), otherwise, the value of $tmp$ is assigned
-to the pointer $a.dp$ and the function continues.  A simple for loop from line @48,a->alloc@ to line @50,}@ will zero all digits 
-that were above the old \textbf{alloc} limit to make sure the integer is in a known state.
+When a re-allocation is performed it is turned into an optimal request to save time in the future.  The requested digit count is
+padded upwards to 2nd multiple of \textbf{MP\_PREC} larger than \textbf{alloc} (line @25, size@).  The XREALLOC function is used
+to re-allocate the memory.  As per the other functions XREALLOC is actually a macro which evaluates to realloc by default.  The realloc
+function leaves the base of the allocation intact which means the first \textbf{alloc} digits of the mp\_int are the same as before
+the re-allocation.  All	that is left is to clear the newly allocated digits and return.
+
+Note that the re-allocation result is actually stored in a temporary pointer $tmp$.  This is to allow this function to return
+an error with a valid pointer.  Earlier releases of the library stored the result of XREALLOC into the mp\_int $a$.  That would
+result in a memory leak if XREALLOC ever failed.  
 
 \subsection{Initializing Variable Precision mp\_ints}
 Occasionally the number of digits required will be known in advance of an initialization, based on, for example, the size 
@@ -970,7 +997,7 @@ The number of digits $b$ requested is padded (line @22,MP_PREC@) by first augmen
 mp\_int is placed in a default state representing the integer zero.  Otherwise, the error code \textbf{MP\_MEM} will be 
 returned (line @27,return@).  
 
-The digits are allocated and set to zero at the same time with the calloc() function (line @25,calloc@).  The 
+The digits are allocated and set to zero at the same time with the calloc() function (line @25,XCALLOC@).  The 
 \textbf{used} count is set to zero, the \textbf{alloc} count set to the padded digit count and the \textbf{sign} flag set 
 to \textbf{MP\_ZPOS} to achieve a default valid mp\_int state (lines @29,used@, @30,alloc@ and @31,sign@).  If the function 
 returns succesfully then it is correct to assume that the mp\_int structure is in a valid state for the remainder of the 

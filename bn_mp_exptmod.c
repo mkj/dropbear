@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_EXPTMOD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 
 /* this is a shell function that calls either the normal or Montgomery
@@ -31,6 +32,7 @@ int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 
   /* if exponent X is negative we have to recurse */
   if (X->sign == MP_NEG) {
+#ifdef BN_MP_INVMOD_C
      mp_int tmpG, tmpX;
      int err;
 
@@ -57,22 +59,42 @@ int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
      err = mp_exptmod(&tmpG, &tmpX, P, Y);
      mp_clear_multi(&tmpG, &tmpX, NULL);
      return err;
+#else 
+     /* no invmod */
+     return MP_VAL
+#endif
   }
 
+#ifdef BN_MP_DR_IS_MODULUS_C
   /* is it a DR modulus? */
   dr = mp_dr_is_modulus(P);
+#else
+  dr = 0;
+#endif
 
+#ifdef BN_MP_REDUCE_IS_2K_C
   /* if not, is it a uDR modulus? */
   if (dr == 0) {
      dr = mp_reduce_is_2k(P) << 1;
   }
+#endif
     
   /* if the modulus is odd or dr != 0 use the fast method */
+#ifdef BN_MP_EXPTMOD_FAST_C
   if (mp_isodd (P) == 1 || dr !=  0) {
     return mp_exptmod_fast (G, X, P, Y, dr);
   } else {
+#endif
+#ifdef BN_S_MP_EXPTMOD_C
     /* otherwise use the generic Barrett reduction technique */
     return s_mp_exptmod (G, X, P, Y);
+#else
+    /* no exptmod for evens */
+    return MP_VAL;
+#endif
+#ifdef BN_MP_EXPTMOD_FAST_C
   }
+#endif
 }
 
+#endif

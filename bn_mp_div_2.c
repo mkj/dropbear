@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_DIV_2_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* b = a/2 */
 int mp_div_2(mp_int * a, mp_int * b)
@@ -60,3 +61,4 @@ int mp_div_2(mp_int * a, mp_int * b)
   mp_clamp (b);
   return MP_OKAY;
 }
+#endif

@@ -1,6 +1,6 @@
 set terminal png
 set size 1.75
-set ylabel "Operations per Second"
+set ylabel "Cycles per Operation"
 set xlabel "Operand size (bits)"
 
 set output "addsub.png"

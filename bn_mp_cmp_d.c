@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_CMP_D_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* compare a digit */
 int mp_cmp_d(mp_int * a, mp_digit b)
@@ -36,3 +37,4 @@ int mp_cmp_d(mp_int * a, mp_digit b)
     return MP_EQ;
   }
 }
+#endif

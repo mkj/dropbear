@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_MOD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* c = a mod b, 0 <= c < b */
 int
@@ -40,3 +41,4 @@ mp_mod (mp_int * a, mp_int * b, mp_int * c)
   mp_clear (&t);
   return res;
 }
+#endif

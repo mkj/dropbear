@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_SQRT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* this function is less generic than mp_n_root, simpler and faster */
 int mp_sqrt(mp_int *arg, mp_int *ret) 
@@ -73,3 +74,4 @@ E2: mp_clear(&t1);
   return res;
 }
 
+#endif

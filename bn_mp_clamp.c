@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_CLAMP_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* trim unused digits 
  *
@@ -36,3 +37,4 @@ mp_clamp (mp_int * a)
     a->sign = MP_ZPOS;
   }
 }
+#endif

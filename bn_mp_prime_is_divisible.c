@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_PRIME_IS_DIVISIBLE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* determines if an integers is divisible by one 
  * of the first PRIME_SIZE primes or not
@@ -42,3 +43,4 @@ int mp_prime_is_divisible (mp_int * a, int *result)
 
   return MP_OKAY;
 }
+#endif

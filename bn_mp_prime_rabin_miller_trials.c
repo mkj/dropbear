@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_PRIME_RABIN_MILLER_TRIALS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,9 +14,8 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
-/* this table gives the # of rabin miller trials for a prob of failure lower than 2^-96 */
+
 static const struct {
    int k, t;
 } sizes[] = {
@@ -25,13 +26,8 @@ static const struct {
 {   640,     6 },
 {   768,     5 },
 {   896,     4 },
-{  1024,     4 },
-{  1152,     3 },
-{  1280,     3 },
-{  1408,     3 },
-{  1536,     3 },
-{  1664,     3 },
-{  1792,     2 } };
+{  1024,     4 }
+};
 
 /* returns # of RM trials required for a given bit size */
 int mp_prime_rabin_miller_trials(int size)
@@ -45,7 +41,8 @@ int mp_prime_rabin_miller_trials(int size)
           return (x == 0) ? sizes[0].t : sizes[x - 1].t;
        }
    }
-   return 1;
+   return sizes[x-1].t + 1;
 }
 
 
+#endif

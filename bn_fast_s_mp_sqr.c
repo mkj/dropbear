@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_FAST_S_MP_SQR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* fast squaring
  *
@@ -31,109 +32,98 @@
  * Based on Algorithm 14.16 on pp.597 of HAC.
  *
  */
+/* the jist of squaring...
+
+you do like mult except the offset of the tmpx [one that starts closer to zero]
+can't equal the offset of tmpy.  So basically you set up iy like before then you min it with
+(ty-tx) so that it never happens.  You double all those you add in the inner loop
+
+After that loop you do the squares and add them in.
+
+Remove W2 and don't memset W
+
+*/
+
 int fast_s_mp_sqr (mp_int * a, mp_int * b)
 {
-  int     olduse, newused, res, ix, pa;
-  mp_word W2[MP_WARRAY], W[MP_WARRAY];
+  int       olduse, res, pa, ix, iz;
+  mp_digit   W[MP_WARRAY], *tmpx;
+  mp_word   W1;
 
-  /* calculate size of product and allocate as required */
-  pa = a->used;
-  newused = pa + pa + 1;
-  if (b->alloc < newused) {
-    if ((res = mp_grow (b, newused)) != MP_OKAY) {
+  /* grow the destination as required */
+  pa = a->used + a->used;
+  if (b->alloc < pa) {
+    if ((res = mp_grow (b, pa)) != MP_OKAY) {
       return res;
     }
   }
 
-  /* zero temp buffer (columns)
-   * Note that there are two buffers.  Since squaring requires
-   * a outer and inner product and the inner product requires
-   * computing a product and doubling it (a relatively expensive
-   * op to perform n**2 times if you don't have to) the inner and
-   * outer products are computed in different buffers.  This way
-   * the inner product can be doubled using n doublings instead of
-   * n**2
-   */
-  memset (W,  0, newused * sizeof (mp_word));
-  memset (W2, 0, newused * sizeof (mp_word));
+  /* number of output digits to produce */
+  W1 = 0;
+  for (ix = 0; ix <= pa; ix++) { 
+      int      tx, ty, iy;
+      mp_word  _W;
+      mp_digit *tmpy;
 
-  /* This computes the inner product.  To simplify the inner N**2 loop
-   * the multiplication by two is done afterwards in the N loop.
-   */
-  for (ix = 0; ix < pa; ix++) {
-    /* compute the outer product
-     *
-     * Note that every outer product is computed
-     * for a particular column only once which means that
-     * there is no need todo a double precision addition
-     * into the W2[] array.
-     */
-    W2[ix + ix] = ((mp_word)a->dp[ix]) * ((mp_word)a->dp[ix]);
+      /* clear counter */
+      _W = 0;
 
-    {
-      register mp_digit tmpx, *tmpy;
-      register mp_word *_W;
-      register int iy;
+      /* get offsets into the two bignums */
+      ty = MIN(a->used-1, ix);
+      tx = ix - ty;
 
-      /* copy of left side */
-      tmpx = a->dp[ix];
+      /* setup temp aliases */
+      tmpx = a->dp + tx;
+      tmpy = a->dp + ty;
 
-      /* alias for right side */
-      tmpy = a->dp + (ix + 1);
+      /* this is the number of times the loop will iterrate, essentially its 
+         while (tx++ < a->used && ty-- >= 0) { ... }
+       */
+      iy = MIN(a->used-tx, ty+1);
 
-      /* the column to store the result in */
-      _W = W + (ix + ix + 1);
+      /* now for squaring tx can never equal ty 
+       * we halve the distance since they approach at a rate of 2x
+       * and we have to round because odd cases need to be executed
+       */
+      iy = MIN(iy, (ty-tx+1)>>1);
 
-      /* inner products */
-      for (iy = ix + 1; iy < pa; iy++) {
-          *_W++ += ((mp_word)tmpx) * ((mp_word)*tmpy++);
+      /* execute loop */
+      for (iz = 0; iz < iy; iz++) {
+         _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
       }
-    }
+
+      /* double the inner product and add carry */
+      _W = _W + _W + W1;
+
+      /* even columns have the square term in them */
+      if ((ix&1) == 0) {
+         _W += ((mp_word)a->dp[ix>>1])*((mp_word)a->dp[ix>>1]);
+      }
+
+      /* store it */
+      W[ix] = _W;
+
+      /* make next carry */
+      W1 = _W >> ((mp_word)DIGIT_BIT);
   }
 
   /* setup dest */
   olduse  = b->used;
-  b->used = newused;
+  b->used = a->used+a->used;
 
-  /* now compute digits
-   *
-   * We have to double the inner product sums, add in the
-   * outer product sums, propagate carries and convert
-   * to single precision.
-   */
   {
-    register mp_digit *tmpb;
-
-    /* double first value, since the inner products are
-     * half of what they should be
-     */
-    W[0] += W[0] + W2[0];
-
+    mp_digit *tmpb;
     tmpb = b->dp;
-    for (ix = 1; ix < newused; ix++) {
-      /* double/add next digit */
-      W[ix] += W[ix] + W2[ix];
-
-      /* propagate carry forwards [from the previous digit] */
-      W[ix] = W[ix] + (W[ix - 1] >> ((mp_word) DIGIT_BIT));
-
-      /* store the current digit now that the carry isn't
-       * needed
-       */
-      *tmpb++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
+    for (ix = 0; ix < pa; ix++) {
+      *tmpb++ = W[ix] & MP_MASK;
     }
-    /* set the last value.  Note even if the carry is zero
-     * this is required since the next step will not zero
-     * it if b originally had a value at b->dp[2*a.used]
-     */
-    *tmpb++ = (mp_digit) (W[(newused) - 1] & ((mp_word) MP_MASK));
 
-    /* clear high digits of b if there were any originally */
+    /* clear unused digits [that existed in the old copy of c] */
     for (; ix < olduse; ix++) {
       *tmpb++ = 0;
     }
   }
-
   mp_clamp (b);
   return MP_OKAY;
 }
+#endif

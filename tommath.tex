@@ -258,7 +258,7 @@ floating point is meant to be implemented in hardware the precision of the manti
 a mantissa of much larger precision than hardware alone can efficiently support.  This approach could be useful where 
 scientific applications must minimize the total output error over long calculations.
 
-Another use for large integers is within arithmetic on polynomials of large characteristic (i.e. $GF(p)[x]$ for large $p$).
+Yet another use for large integers is within arithmetic on polynomials of large characteristic (i.e. $GF(p)[x]$ for large $p$).
 In fact the library discussed within this text has already been used to form a polynomial basis library\footnote{See \url{http://poly.libtomcrypt.org} for more details.}.
 
 \subsection{Benefits of Multiple Precision Arithmetic}
@@ -316,7 +316,7 @@ the reader how the algorithms fit together as well as where to start on various 
 
 \section{Discussion and Notation}
 \subsection{Notation}
-A multiple precision integer of $n$-digits shall be denoted as $x = (x_{n-1} ... x_1 x_0)_{ \beta }$ and represent
+A multiple precision integer of $n$-digits shall be denoted as $x = (x_{n-1}, \ldots, x_1, x_0)_{ \beta }$ and represent
 the integer $x \equiv \sum_{i=0}^{n-1} x_i\beta^i$.  The elements of the array $x$ are said to be the radix $\beta$ digits 
 of the integer.  For example, $x = (1,2,3)_{10}$ would represent the integer 
 $1\cdot 10^2 + 2\cdot10^1 + 3\cdot10^0 = 123$.  
@@ -339,12 +339,11 @@ algorithms will be used to establish the relevant theory which will subsequently
 precision algorithm to solve the same problem.  
 
 \subsection{Precision Notation}
-For the purposes of this text a single precision variable must be able to represent integers in the range 
-$0 \le x < q \beta$ while a double precision variable must be able to represent integers in the range 
-$0 \le x < q \beta^2$.  The variable $\beta$ represents the radix of a single digit of a multiple precision integer and 
-must be of the form $q^p$ for $q, p \in \Z^+$.  The extra radix-$q$ factor allows additions and subtractions to proceed 
-without truncation of the carry.  Since all modern computers are binary, it is assumed that $q$ is two, for all intents 
-and purposes.
+The variable $\beta$ represents the radix of a single digit of a multiple precision integer and 
+must be of the form $q^p$ for $q, p \in \Z^+$.  A single precision variable must be able to represent integers in 
+the range $0 \le x < q \beta$ while a double precision variable must be able to represent integers in the range 
+$0 \le x < q \beta^2$.  The extra radix-$q$ factor allows additions and subtractions to proceed without truncation of the 
+carry.  Since all modern computers are binary, it is assumed that $q$ is two.
 
 \index{mp\_digit} \index{mp\_word}
 Within the source code that will be presented for each algorithm, the data type \textbf{mp\_digit} will represent 
@@ -376,7 +375,7 @@ the $/$ division symbol is used the intention is to perform an integer division 
 $5/2 = 2$ which will often be written as $\lfloor 5/2 \rfloor = 2$ for clarity.  When an expression is written as a 
 fraction a real value division is implied, for example ${5 \over 2} = 2.5$.  
 
-The norm of a multiple precision integer, for example, $\vert \vert x \vert \vert$ will be used to represent the number of digits in the representation
+The norm of a multiple precision integer, for example $\vert \vert x \vert \vert$, will be used to represent the number of digits in the representation
 of the integer.  For example, $\vert \vert 123 \vert \vert = 3$ and $\vert \vert 79452 \vert \vert = 5$.  
 
 \subsection{Work Effort}
@@ -569,7 +568,7 @@ By building outwards from a base foundation instead of using a parallel design m
 highly modular.  Being highly modular is a desirable property of any project as it often means the resulting product
 has a small footprint and updates are easy to perform.  
 
-Usually when I start a project I will begin with the header file.  I define the data types I think I will need and 
+Usually when I start a project I will begin with the header files.  I define the data types I think I will need and 
 prototype the initial functions that are not dependent on other functions (within the library).  After I 
 implement these base functions I prototype more dependent functions and implement them.   The process repeats until
 I implement all of the functions I require.  For example, in the case of LibTomMath I implemented functions such as 
@@ -625,14 +624,26 @@ any such data type but it does provide for making composite data types known as 
 used within LibTomMath.
 
 \index{mp\_int}
-\begin{verbatim}
-typedef struct  {
-    int used, alloc, sign;
-    mp_digit *dp;
-} mp_int;
-\end{verbatim}
+\begin{figure}[here]
+\begin{center}
+\begin{small}
+%\begin{verbatim}
+\begin{tabular}{|l|}
+\hline
+typedef struct \{ \\
+\hspace{3mm}int used, alloc, sign;\\
+\hspace{3mm}mp\_digit *dp;\\
+\} \textbf{mp\_int}; \\
+\hline
+\end{tabular}
+%\end{verbatim}
+\end{small}
+\caption{The mp\_int Structure}
+\label{fig:mpint}
+\end{center}
+\end{figure}
 
-The mp\_int structure can be broken down as follows.
+The mp\_int structure (fig. \ref{fig:mpint}) can be broken down as follows.
 
 \begin{enumerate}
 \item The \textbf{used} parameter denotes how many digits of the array \textbf{dp} contain the digits used to represent
@@ -707,9 +718,10 @@ fault by dereferencing memory not owned by the application.
 In the case of LibTomMath the only errors that are checked for are related to inappropriate inputs (division by zero for 
 instance) and memory allocation errors.  It will not check that the mp\_int passed to any function is valid nor 
 will it check pointers for validity.  Any function that can cause a runtime error will return an error code as an 
-\textbf{int} data type with one of the following values.
+\textbf{int} data type with one of the following values (fig \ref{fig:errcodes}).
 
 \index{MP\_OKAY} \index{MP\_VAL} \index{MP\_MEM}
+\begin{figure}[here]
 \begin{center}
 \begin{tabular}{|l|l|}
 \hline \textbf{Value} & \textbf{Meaning} \\
@@ -719,6 +731,9 @@ will it check pointers for validity.  Any function that can cause a runtime erro
 \hline
 \end{tabular}
 \end{center}
+\caption{LibTomMath Error Codes}
+\label{fig:errcodes}
+\end{figure}
 
 When an error is detected within a function it should free any memory it allocated, often during the initialization of
 temporary mp\_ints, and return as soon as possible.  The goal is to leave the system in the same state it was when the 
@@ -754,6 +769,7 @@ to zero.  The \textbf{used} count set to zero and \textbf{sign} set to \textbf{M
 An mp\_int is said to be initialized if it is set to a valid, preferably default, state such that all of the members of the
 structure are set to valid values.  The mp\_init algorithm will perform such an action.
 
+\index{mp\_init}
 \begin{figure}[here]
 \begin{center}
 \begin{tabular}{l}
@@ -776,17 +792,23 @@ structure are set to valid values.  The mp\_init algorithm will perform such an 
 \end{figure}
 
 \textbf{Algorithm mp\_init.}
-The \textbf{MP\_PREC} name represents a constant\footnote{Defined in the ``tommath.h'' header file within LibTomMath.} 
-used to dictate the minimum precision of allocated mp\_int integers.  Ideally, it is at least equal to $32$ since for most
-purposes that will be more than enough.
+The purpose of this function is to initialize an mp\_int structure so that the rest of the library can properly
+manipulte it.  It is assumed that the input may not have had any of its members previously initialized which is certainly
+a valid assumption if the input resides on the stack.  
 
-Memory for the default number of digits is allocated first.  If the allocation fails the algorithm returns immediately
-with the \textbf{MP\_MEM} error code.  If the allocation succeeds the remaining members of the mp\_int structure
-must be initialized to reflect the default initial state.
+Before any of the members such as \textbf{sign}, \textbf{used} or \textbf{alloc} are initialized the memory for
+the digits is allocated.  If this fails the function returns before setting any of the other members.  The \textbf{MP\_PREC} 
+name represents a constant\footnote{Defined in the ``tommath.h'' header file within LibTomMath.} 
+used to dictate the minimum precision of newly initialized mp\_int integers.  Ideally, it is at least equal to the smallest
+precision number you'll be working with.
 
-The allocated digits are all set to zero (step three) to ensure they are in a known state.  The \textbf{sign}, \textbf{used}
-and \textbf{alloc} are subsequently initialized to represent the zero integer.  By step seven the algorithm returns a success 
-code and the mp\_int $a$ has been successfully initialized to a valid state representing the integer zero.  
+Allocating a block of digits at first instead of a single digit has the benefit of lowering the number of usually slow
+heap operations later functions will have to perform in the future.  If \textbf{MP\_PREC} is set correctly the slack 
+memory and the number of heap operations will be trivial.
+
+Once the allocation has been made the digits have to be set to zero as well as the \textbf{used}, \textbf{sign} and
+\textbf{alloc} members initialized.  This ensures that the mp\_int will always represent the default state of zero regardless
+of the original condition of the input.
 
 \textbf{Remark.}
 This function introduces the idiosyncrasy that all iterative loops, commonly initiated with the ``for'' keyword, iterate incrementally
@@ -801,23 +823,31 @@ decrementally.
 \vspace{-3mm}
 \begin{alltt}
 016   
-017   /* init a new bigint */
+017   /* init a new mp_int */
 018   int mp_init (mp_int * a)
 019   \{
-020     /* allocate memory required and clear it */
-021     a->dp = OPT_CAST(mp_digit) XCALLOC (sizeof (mp_digit), MP_PREC);
-022     if (a->dp == NULL) \{
-023       return MP_MEM;
-024     \}
-025   
-026     /* set the used to zero, allocated digits to the default precision
-027      * and sign to positive */
-028     a->used  = 0;
-029     a->alloc = MP_PREC;
-030     a->sign  = MP_ZPOS;
-031   
-032     return MP_OKAY;
-033   \}
+020     int i;
+021   
+022     /* allocate memory required and clear it */
+023     a->dp = OPT_CAST(mp_digit) XMALLOC (sizeof (mp_digit) * MP_PREC);
+024     if (a->dp == NULL) \{
+025       return MP_MEM;
+026     \}
+027   
+028     /* set the digits to zero */
+029     for (i = 0; i < MP_PREC; i++) \{
+030         a->dp[i] = 0;
+031     \}
+032   
+033     /* set the used to zero, allocated digits to the default precision
+034      * and sign to positive */
+035     a->used  = 0;
+036     a->alloc = MP_PREC;
+037     a->sign  = MP_ZPOS;
+038   
+039     return MP_OKAY;
+040   \}
+041   #endif
 \end{alltt}
 \end{small}
 
@@ -825,19 +855,21 @@ One immediate observation of this initializtion function is that it does not ret
 is assumed that the caller has already allocated memory for the mp\_int structure, typically on the application stack.  The 
 call to mp\_init() is used only to initialize the members of the structure to a known default state.  
 
-Before any of the other members of the structure are initialized memory from the application heap is allocated with
-the calloc() function (line @22,calloc@).  The size of the allocated memory is large enough to hold \textbf{MP\_PREC} 
-mp\_digit variables.  The calloc() function is used instead\footnote{calloc() will allocate memory in the same
-manner as malloc() except that it also sets the contents to zero upon successfully allocating the memory.} of malloc() 
-since digits have to be set to zero for the function to finish correctly.  The \textbf{OPT\_CAST} token is a macro 
-definition which will turn into a cast from void * to mp\_digit * for C++ compilers.  It is not required for C compilers.
+Here we see (line 23) the memory allocation is performed first.  This allows us to exit cleanly and quickly
+if there is an error.  If the allocation fails the routine will return \textbf{MP\_MEM} to the caller to indicate there
+was a memory error.  The function XMALLOC is what actually allocates the memory.  Technically XMALLOC is not a function
+but a macro defined in ``tommath.h``.  By default, XMALLOC will evaluate to malloc() which is the C library's built--in
+memory allocation routine.
 
-After the memory has been successfully allocated the remainder of the members are initialized 
-(lines 28 through 30) to their respective default states.  At this point the algorithm has succeeded and
-a success code is returned to the calling function.
+In order to assure the mp\_int is in a known state the digits must be set to zero.  On most platforms this could have been
+accomplished by using calloc() instead of malloc().  However,  to correctly initialize a integer type to a given value in a 
+portable fashion you have to actually assign the value.  The for loop (line 29) performs this required
+operation.
 
-If this function returns \textbf{MP\_OKAY} it is safe to assume the mp\_int structure has been properly initialized and
-is safe to use with other functions within the library.  
+After the memory has been successfully initialized the remainder of the members are initialized 
+(lines 33 through 34) to their respective default states.  At this point the algorithm has succeeded and
+a success code is returned to the calling function.  If this function returns \textbf{MP\_OKAY} it is safe to assume the 
+mp\_int structure has been properly initialized and is safe to use with other functions within the library.  
 
 \subsection{Clearing an mp\_int}
 When an mp\_int is no longer required by the application, the memory that has been allocated for its digits must be 
@@ -848,7 +880,7 @@ returned to the application's memory pool with the mp\_clear algorithm.
 \begin{tabular}{l}
 \hline Algorithm \textbf{mp\_clear}. \\
 \textbf{Input}.   An mp\_int $a$ \\
-\textbf{Output}.  The memory for $a$ is freed for reuse.  \\
+\textbf{Output}.  The memory for $a$ shall be deallocated.  \\
 \hline \\
 1.  If $a$ has been previously freed then return(\textit{MP\_OKAY}). \\
 2.  for $n$ from 0 to $a.used - 1$ do \\
@@ -865,20 +897,15 @@ returned to the application's memory pool with the mp\_clear algorithm.
 \end{figure}
 
 \textbf{Algorithm mp\_clear.}
-This algorithm releases the memory allocated for an mp\_int back into the memory pool for reuse.  It is designed
-such that a given mp\_int structure can be cleared multiple times between initializations without attempting to 
-free the memory twice\footnote{In ISO C for example, calling free() twice on the same memory block causes undefinied
-behaviour.}.  
+This algorithm accomplishes two goals.  First, it clears the digits and the other mp\_int members.  This ensures that 
+if a developer accidentally re-uses a cleared structure it is less likely to cause problems.  The second goal
+is to free the allocated memory.
 
-The first step determines if the mp\_int structure has been marked as free already.  If it has, the algorithm returns
-success immediately as no further actions are required.  Otherwise, the algorithm will proceed to put the structure 
-in a known empty and otherwise invalid state.  First the digits of the mp\_int are set to zero.  The memory that has been allocated for the 
-digits is then freed.  The \textbf{used} and \textbf{alloc} counts are both set to zero and the \textbf{sign} set to 
-\textbf{MP\_ZPOS}.  This known fixed state for cleared mp\_int structures will make debuging easier for the end 
-developer.  That is, if they spot (via their debugger) an mp\_int they are using that is in this state it will be 
-obvious that they erroneously and prematurely cleared the mp\_int structure.
+The logic behind the algorithm is extended by marking cleared mp\_int structures so that subsequent calls to this
+algorithm will not try to free the memory multiple times.  Cleared mp\_ints are detectable by having a pre-defined invalid 
+digit pointer \textbf{dp} setting.
 
-Note that once an mp\_int has been cleared the mp\_int structure is no longer in a valid state for any other algorithm
+Once an mp\_int has been cleared the mp\_int structure is no longer in a valid state for any other algorithm
 with the exception of algorithms mp\_init, mp\_init\_copy, mp\_init\_size and mp\_clear.
 
 \vspace{+3mm}\begin{small}
@@ -890,31 +917,40 @@ with the exception of algorithms mp\_init, mp\_init\_copy, mp\_init\_size and mp
 018   void
 019   mp_clear (mp_int * a)
 020   \{
-021     /* only do anything if a hasn't been freed previously */
-022     if (a->dp != NULL) \{
-023       /* first zero the digits */
-024       memset (a->dp, 0, sizeof (mp_digit) * a->used);
-025   
-026       /* free ram */
-027       XFREE(a->dp);
-028   
-029       /* reset members to make debugging easier */
-030       a->dp    = NULL;
-031       a->alloc = a->used = 0;
-032       a->sign  = MP_ZPOS;
-033     \}
-034   \}
+021     int i;
+022   
+023     /* only do anything if a hasn't been freed previously */
+024     if (a->dp != NULL) \{
+025       /* first zero the digits */
+026       for (i = 0; i < a->used; i++) \{
+027           a->dp[i] = 0;
+028       \}
+029   
+030       /* free ram */
+031       XFREE(a->dp);
+032   
+033       /* reset members to make debugging easier */
+034       a->dp    = NULL;
+035       a->alloc = a->used = 0;
+036       a->sign  = MP_ZPOS;
+037     \}
+038   \}
+039   #endif
 \end{alltt}
 \end{small}
 
-The ``if'' statement (line 22) prevents the heap from being corrupted if a user double-frees an 
-mp\_int.  This is because once the memory is freed the pointer is set to \textbf{NULL} (line 30).  
+The algorithm only operates on the mp\_int if it hasn't been previously cleared.  The if statement (line 24)
+checks to see if the \textbf{dp} member is not \textbf{NULL}.  If the mp\_int is a valid mp\_int then \textbf{dp} cannot be
+\textbf{NULL} in which case the if statement will evaluate to true.
 
-Without the check, code that accidentally calls mp\_clear twice for a given mp\_int structure would try to free the memory 
-allocated for the digits twice.  This may cause some C libraries to signal a fault.  By setting the pointer to 
-\textbf{NULL} it helps debug code that may inadvertently free the mp\_int before it is truly not needed, because attempts 
-to reference digits should fail immediately. The allocated digits are set to zero before being freed (line 24).  
-This is ideal for cryptographic situations where the integer that the mp\_int represents might need to be kept a secret.
+The digits of the mp\_int are cleared by the for loop (line 26) which assigns a zero to every digit.  Similar to mp\_init()
+the digits are assigned zero instead of using block memory operations (such as memset()) since this is more portable.  
+
+The digits are deallocated off the heap via the XFREE macro.  Similar to XMALLOC the XFREE macro actually evaluates to
+a standard C library function.  In this case the free() function.  Since free() only deallocates the memory the pointer
+still has to be reset to \textbf{NULL} manually (line 34).  
+
+Now that the digits have been cleared and deallocated the other members are set to their final values (lines 35 and 36).
 
 \section{Maintenance Algorithms}
 
@@ -942,7 +978,7 @@ must be re-sized appropriately to accomodate the result.  The mp\_grow algorithm
 1.  if $a.alloc \ge b$ then return(\textit{MP\_OKAY}) \\
 2.  $u \leftarrow b\mbox{ (mod }MP\_PREC\mbox{)}$ \\
 3.  $v \leftarrow b + 2 \cdot MP\_PREC - u$ \\
-4.  Re-Allocate the array of digits $a$ to size $v$ \\
+4.  Re-allocate the array of digits $a$ to size $v$ \\
 5.  If the allocation failed then return(\textit{MP\_MEM}). \\
 6.  for n from a.alloc to $v - 1$ do  \\
 \hspace{+3mm}6.1  $a_n \leftarrow 0$ \\
@@ -1005,18 +1041,23 @@ assumed to contain undefined values they are initially set to zero.
 049     \}
 050     return MP_OKAY;
 051   \}
+052   #endif
 \end{alltt}
 \end{small}
 
-The first step is to see if we actually need to perform a re-allocation at all (line 24).  If a reallocation
-must occur the digit count is padded upwards to help prevent many trivial reallocations (line 26).  Next the reallocation is performed
-and the return of realloc() is stored in a temporary pointer named $tmp$ (line 36).  The return is stored in a temporary
-instead of $a.dp$ to prevent the code from losing the original pointer in case the reallocation fails.  Had the return been stored 
-in $a.dp$ instead there would be no way to reclaim the heap originally used.
+A quick optimization is to first determine if a memory re-allocation is required at all.  The if statement (line 23) checks
+if the \textbf{alloc} member of the mp\_int is smaller than the requested digit count.  If the count is not larger than \textbf{alloc}
+the function skips the re-allocation part thus saving time.
 
-If the reallocation fails the function will return \textbf{MP\_MEM} (line 37), otherwise, the value of $tmp$ is assigned
-to the pointer $a.dp$ and the function continues.  A simple for loop from line 46 to line 51 will zero all digits 
-that were above the old \textbf{alloc} limit to make sure the integer is in a known state.
+When a re-allocation is performed it is turned into an optimal request to save time in the future.  The requested digit count is
+padded upwards to 2nd multiple of \textbf{MP\_PREC} larger than \textbf{alloc} (line 26).  The XREALLOC function is used
+to re-allocate the memory.  As per the other functions XREALLOC is actually a macro which evaluates to realloc by default.  The realloc
+function leaves the base of the allocation intact which means the first \textbf{alloc} digits of the mp\_int are the same as before
+the re-allocation.  All	that is left is to clear the newly allocated digits and return.
+
+Note that the re-allocation result is actually stored in a temporary pointer $tmp$.  This is to allow this function to return
+an error with a valid pointer.  Earlier releases of the library stored the result of XREALLOC into the mp\_int $a$.  That would
+result in a memory leak if XREALLOC ever failed.  
 
 \subsection{Initializing Variable Precision mp\_ints}
 Occasionally the number of digits required will be known in advance of an initialization, based on, for example, the size 
@@ -1065,31 +1106,41 @@ correct no further memory re-allocations are required to work with the mp\_int.
 017   /* init an mp_init for a given size */
 018   int mp_init_size (mp_int * a, int size)
 019   \{
-020     /* pad size so there are always extra digits */
-021     size += (MP_PREC * 2) - (size % MP_PREC);    
-022     
-023     /* alloc mem */
-024     a->dp = OPT_CAST(mp_digit) XCALLOC (sizeof (mp_digit), size);
-025     if (a->dp == NULL) \{
-026       return MP_MEM;
-027     \}
-028     a->used  = 0;
-029     a->alloc = size;
-030     a->sign  = MP_ZPOS;
-031   
-032     return MP_OKAY;
-033   \}
+020     int x;
+021   
+022     /* pad size so there are always extra digits */
+023     size += (MP_PREC * 2) - (size % MP_PREC);    
+024     
+025     /* alloc mem */
+026     a->dp = OPT_CAST(mp_digit) XMALLOC (sizeof (mp_digit) * size);
+027     if (a->dp == NULL) \{
+028       return MP_MEM;
+029     \}
+030   
+031     /* set the members */
+032     a->used  = 0;
+033     a->alloc = size;
+034     a->sign  = MP_ZPOS;
+035   
+036     /* zero the digits */
+037     for (x = 0; x < size; x++) \{
+038         a->dp[x] = 0;
+039     \}
+040   
+041     return MP_OKAY;
+042   \}
+043   #endif
 \end{alltt}
 \end{small}
 
-The number of digits $b$ requested is padded (line 21) by first augmenting it to the next multiple of 
+The number of digits $b$ requested is padded (line 23) by first augmenting it to the next multiple of 
 \textbf{MP\_PREC} and then adding \textbf{MP\_PREC} to the result.  If the memory can be successfully allocated the 
 mp\_int is placed in a default state representing the integer zero.  Otherwise, the error code \textbf{MP\_MEM} will be 
-returned (line 26).  
+returned (line 28).  
 
-The digits are allocated and set to zero at the same time with the calloc() function (line @25,calloc@).  The 
+The digits are allocated and set to zero at the same time with the calloc() function (line @25,XCALLOC@).  The 
 \textbf{used} count is set to zero, the \textbf{alloc} count set to the padded digit count and the \textbf{sign} flag set 
-to \textbf{MP\_ZPOS} to achieve a default valid mp\_int state (lines 28, 29 and 30).  If the function 
+to \textbf{MP\_ZPOS} to achieve a default valid mp\_int state (lines 32, 33 and 34).  If the function 
 returns succesfully then it is correct to assume that the mp\_int structure is in a valid state for the remainder of the 
 functions to work with.
 
@@ -1165,6 +1216,7 @@ initialization which allows for quick recovery from runtime errors.
 051       return res;                /* Assumed ok, if error flagged above. */
 052   \}
 053   
+054   #endif
 \end{alltt}
 \end{small}
 
@@ -1249,6 +1301,7 @@ when all of the digits are zero to ensure that the mp\_int is valid at all times
 036       a->sign = MP_ZPOS;
 037     \}
 038   \}
+039   #endif
 \end{alltt}
 \end{small}
 
@@ -1385,6 +1438,7 @@ implement the pseudo-code.
 060     b->sign = a->sign;
 061     return MP_OKAY;
 062   \}
+063   #endif
 \end{alltt}
 \end{small}
 
@@ -1498,6 +1552,7 @@ such this algorithm will perform two operations in one step.
 024     \}
 025     return mp_copy (b, a);
 026   \}
+027   #endif
 \end{alltt}
 \end{small}
 
@@ -1542,6 +1597,7 @@ This algorithm simply resets a mp\_int to the default state.
 022     a->used = 0;
 023     memset (a->dp, 0, sizeof (mp_digit) * a->alloc);
 024   \}
+025   #endif
 \end{alltt}
 \end{small}
 
@@ -1602,6 +1658,7 @@ logic to handle it.
 035   
 036     return MP_OKAY;
 037   \}
+038   #endif
 \end{alltt}
 \end{small}
 
@@ -1653,6 +1710,7 @@ zero as negative.
 026     \}
 027     return MP_OKAY;
 028   \}
+029   #endif
 \end{alltt}
 \end{small}
 
@@ -1695,6 +1753,7 @@ single digit is set (\textit{modulo $\beta$}) and the \textbf{used} count is adj
 021     a->dp[0] = b & MP_MASK;
 022     a->used  = (a->dp[0] != 0) ? 1 : 0;
 023   \}
+024   #endif
 \end{alltt}
 \end{small}
 
@@ -1771,6 +1830,7 @@ Excess zero digits are trimmed in steps 2.1 and 3 by using higher level algorith
 040     mp_clamp (a);
 041     return MP_OKAY;
 042   \}
+043   #endif
 \end{alltt}
 \end{small}
 
@@ -1872,6 +1932,7 @@ the zero'th digit.  If after all of the digits have been compared, no difference
 047     \}
 048     return MP_EQ;
 049   \}
+050   #endif
 \end{alltt}
 \end{small}
 
@@ -1935,6 +1996,7 @@ $\vert a \vert < \vert b \vert$.  Step number four will compare the two when the
 035        return mp_cmp_mag(a, b);
 036     \}
 037   \}
+038   #endif
 \end{alltt}
 \end{small}
 
@@ -2152,6 +2214,7 @@ The final carry is stored in $c_{max}$ and digits above $max$ upto $oldused$ are
 101     mp_clamp (c);
 102     return MP_OKAY;
 103   \}
+104   #endif
 \end{alltt}
 \end{small}
 
@@ -2320,6 +2383,7 @@ If $b$ has a smaller magnitude than $a$ then step 9 will force the carry and cop
 081     return MP_OKAY;
 082   \}
 083   
+084   #endif
 \end{alltt}
 \end{small}
 
@@ -2451,6 +2515,7 @@ within algorithm s\_mp\_add will force $-0$ to become $0$.
 045     return res;
 046   \}
 047   
+048   #endif
 \end{alltt}
 \end{small}
 
@@ -2562,6 +2627,7 @@ algorithm from producing $-a - -a = -0$ as a result.
 051     return res;
 052   \}
 053   
+054   #endif
 \end{alltt}
 \end{small}
 
@@ -2695,6 +2761,7 @@ Step 8 clears any leading digits of $b$ in case it originally had a larger magni
 074     b->sign = a->sign;
 075     return MP_OKAY;
 076   \}
+077   #endif
 \end{alltt}
 \end{small}
 
@@ -2794,6 +2861,7 @@ least significant bit not the most significant bit.
 060     mp_clamp (b);
 061     return MP_OKAY;
 062   \}
+063   #endif
 \end{alltt}
 \end{small}
 
@@ -2913,6 +2981,7 @@ step 8 sets the lower $b$ digits to zero.
 059     \}
 060     return MP_OKAY;
 061   \}
+062   #endif
 \end{alltt}
 \end{small}
 
@@ -3022,6 +3091,7 @@ Once the window copy is complete the upper digits must be zeroed and the \textbf
 064     /* remove excess digits */
 065     a->used -= b;
 066   \}
+067   #endif
 \end{alltt}
 \end{small}
 
@@ -3154,6 +3224,7 @@ complete.  It is possible to optimize this algorithm down to a $O(n)$ algorithm 
 077     mp_clamp (c);
 078     return MP_OKAY;
 079   \}
+080   #endif
 \end{alltt}
 \end{small}
 
@@ -3281,6 +3352,7 @@ by using algorithm mp\_mod\_2d.
 089     mp_clear (&t);
 090     return MP_OKAY;
 091   \}
+092   #endif
 \end{alltt}
 \end{small}
 
@@ -3370,6 +3442,7 @@ is copied to $b$, leading digits are removed and the remaining leading digit is 
 047     mp_clamp (c);
 048     return MP_OKAY;
 049   \}
+050   #endif
 \end{alltt}
 \end{small}
 
@@ -3603,6 +3676,7 @@ exceed the precision requested.
 083     mp_clear (&t);
 084     return MP_OKAY;
 085   \}
+086   #endif
 \end{alltt}
 \end{small}
 
@@ -3806,109 +3880,82 @@ and addition operations in the nested loop in parallel.
 033   int
 034   fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 035   \{
-036     int     olduse, res, pa, ix;
-037     mp_word W[MP_WARRAY];
-038   
-039     /* grow the destination as required */
-040     if (c->alloc < digs) \{
-041       if ((res = mp_grow (c, digs)) != MP_OKAY) \{
-042         return res;
-043       \}
-044     \}
-045   
-046     /* clear temp buf (the columns) */
-047     memset (W, 0, sizeof (mp_word) * digs);
-048   
-049     /* calculate the columns */
-050     pa = a->used;
-051     for (ix = 0; ix < pa; ix++) \{
-052       /* this multiplier has been modified to allow you to 
-053        * control how many digits of output are produced.  
-054        * So at most we want to make upto "digs" digits of output.
-055        *
-056        * this adds products to distinct columns (at ix+iy) of W
-057        * note that each step through the loop is not dependent on
-058        * the previous which means the compiler can easily unroll
-059        * the loop without scheduling problems
-060        */
-061       \{
-062         register mp_digit tmpx, *tmpy;
-063         register mp_word *_W;
-064         register int iy, pb;
-065   
-066         /* alias for the the word on the left e.g. A[ix] * A[iy] */
-067         tmpx = a->dp[ix];
-068   
-069         /* alias for the right side */
-070         tmpy = b->dp;
-071   
-072         /* alias for the columns, each step through the loop adds a new
-073            term to each column
-074          */
-075         _W = W + ix;
-076   
-077         /* the number of digits is limited by their placement.  E.g.
-078            we avoid multiplying digits that will end up above the # of
-079            digits of precision requested
-080          */
-081         pb = MIN (b->used, digs - ix);
-082   
-083         for (iy = 0; iy < pb; iy++) \{
-084           *_W++ += ((mp_word)tmpx) * ((mp_word)*tmpy++);
-085         \}
-086       \}
-087   
-088     \}
-089   
-090     /* setup dest */
-091     olduse = c->used;
-092     c->used = digs;
+036     int     olduse, res, pa, ix, iz;
+037     mp_digit W[MP_WARRAY];
+038     register mp_word  _W;
+039   
+040     /* grow the destination as required */
+041     if (c->alloc < digs) \{
+042       if ((res = mp_grow (c, digs)) != MP_OKAY) \{
+043         return res;
+044       \}
+045     \}
+046   
+047     /* number of output digits to produce */
+048     pa = MIN(digs, a->used + b->used);
+049   
+050     /* clear the carry */
+051     _W = 0;
+052     for (ix = 0; ix <= pa; ix++) \{ 
+053         int      tx, ty;
+054         int      iy;
+055         mp_digit *tmpx, *tmpy;
+056   
+057         /* get offsets into the two bignums */
+058         ty = MIN(b->used-1, ix);
+059         tx = ix - ty;
+060   
+061         /* setup temp aliases */
+062         tmpx = a->dp + tx;
+063         tmpy = b->dp + ty;
+064   
+065         /* this is the number of times the loop will iterrate, essentially its
+       
+066            while (tx++ < a->used && ty-- >= 0) \{ ... \}
+067          */
+068         iy = MIN(a->used-tx, ty+1);
+069   
+070         /* execute loop */
+071         for (iz = 0; iz < iy; ++iz) \{
+072            _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
+073         \}
+074   
+075         /* store term */
+076         W[ix] = ((mp_digit)_W) & MP_MASK;
+077   
+078         /* make next carry */
+079         _W = _W >> ((mp_word)DIGIT_BIT);
+080     \}
+081   
+082     /* setup dest */
+083     olduse  = c->used;
+084     c->used = digs;
+085   
+086     \{
+087       register mp_digit *tmpc;
+088       tmpc = c->dp;
+089       for (ix = 0; ix < digs; ix++) \{
+090         /* now extract the previous digit [below the carry] */
+091         *tmpc++ = W[ix];
+092       \}
 093   
-094     \{
-095       register mp_digit *tmpc;
-096   
-097       /* At this point W[] contains the sums of each column.  To get the
-098        * correct result we must take the extra bits from each column and
-099        * carry them down
-100        *
-101        * Note that while this adds extra code to the multiplier it 
-102        * saves time since the carry propagation is removed from the 
-103        * above nested loop.This has the effect of reducing the work 
-104        * from N*(N+N*c)==N**2 + c*N**2 to N**2 + N*c where c is the 
-105        * cost of the shifting.  On very small numbers this is slower 
-106        * but on most cryptographic size numbers it is faster.
-107        *
-108        * In this particular implementation we feed the carries from
-109        * behind which means when the loop terminates we still have one
-110        * last digit to copy
-111        */
-112       tmpc = c->dp;
-113       for (ix = 1; ix < digs; ix++) \{
-114         /* forward the carry from the previous temp */
-115         W[ix] += (W[ix - 1] >> ((mp_word) DIGIT_BIT));
-116   
-117         /* now extract the previous digit [below the carry] */
-118         *tmpc++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
-119       \}
-120       /* fetch the last digit */
-121       *tmpc++ = (mp_digit) (W[digs - 1] & ((mp_word) MP_MASK));
-122   
-123       /* clear unused digits [that existed in the old copy of c] */
-124       for (; ix < olduse; ix++) \{
-125         *tmpc++ = 0;
-126       \}
-127     \}
-128     mp_clamp (c);
-129     return MP_OKAY;
-130   \}
+094       /* clear unused digits [that existed in the old copy of c] */
+095       for (; ix < olduse; ix++) \{
+096         *tmpc++ = 0;
+097       \}
+098     \}
+099     mp_clamp (c);
+100     return MP_OKAY;
+101   \}
+102   #endif
 \end{alltt}
 \end{small}
 
-The memset on line 47 clears the initial $\hat W$ array to zero in a single step. Like the slower baseline multiplication
-implementation a series of aliases (\textit{lines 67, 70 and 75}) are used to simplify the inner $O(n^2)$ loop.  
+The memset on line @47,memset@ clears the initial $\hat W$ array to zero in a single step. Like the slower baseline multiplication
+implementation a series of aliases (\textit{lines 62, 63 and 76}) are used to simplify the inner $O(n^2)$ loop.  
 In this case a new alias $\_\hat W$ has been added which refers to the double precision columns offset by $ix$ in each pass.  
 
-The inner loop on lines 83, 84 and 85 is where the algorithm will spend the majority of the time, which is why it has been 
+The inner loop on lines 89, 79 and 80 is where the algorithm will spend the majority of the time, which is why it has been 
 stripped to the bones of any extra baggage\footnote{Hence the pointer aliases.}.  On x86 processors the multiplication and additions amount to at the 
 very least five instructions (\textit{two loads, two additions, one multiply}) while on the ARMv4 processors they amount to only three 
 (\textit{one load, one store, one multiply-add}).   For both of the x86 and ARMv4 processors the GCC compiler performs a good job at unrolling the loop 
@@ -4168,92 +4215,90 @@ The remaining steps 13 through 18 compute the Karatsuba polynomial through a var
 076       goto X0Y0;
 077   
 078     /* now shift the digits */
-079     x0.sign = x1.sign = a->sign;
-080     y0.sign = y1.sign = b->sign;
-081   
-082     x0.used = y0.used = B;
-083     x1.used = a->used - B;
-084     y1.used = b->used - B;
-085   
-086     \{
-087       register int x;
-088       register mp_digit *tmpa, *tmpb, *tmpx, *tmpy;
-089   
-090       /* we copy the digits directly instead of using higher level functions
-091        * since we also need to shift the digits
-092        */
-093       tmpa = a->dp;
-094       tmpb = b->dp;
-095   
-096       tmpx = x0.dp;
-097       tmpy = y0.dp;
-098       for (x = 0; x < B; x++) \{
-099         *tmpx++ = *tmpa++;
-100         *tmpy++ = *tmpb++;
-101       \}
-102   
-103       tmpx = x1.dp;
-104       for (x = B; x < a->used; x++) \{
-105         *tmpx++ = *tmpa++;
-106       \}
-107   
-108       tmpy = y1.dp;
-109       for (x = B; x < b->used; x++) \{
-110         *tmpy++ = *tmpb++;
-111       \}
-112     \}
-113   
-114     /* only need to clamp the lower words since by definition the 
-115      * upper words x1/y1 must have a known number of digits
-116      */
-117     mp_clamp (&x0);
-118     mp_clamp (&y0);
-119   
-120     /* now calc the products x0y0 and x1y1 */
-121     /* after this x0 is no longer required, free temp [x0==t2]! */
-122     if (mp_mul (&x0, &y0, &x0y0) != MP_OKAY)  
-123       goto X1Y1;          /* x0y0 = x0*y0 */
-124     if (mp_mul (&x1, &y1, &x1y1) != MP_OKAY)
-125       goto X1Y1;          /* x1y1 = x1*y1 */
-126   
-127     /* now calc x1-x0 and y1-y0 */
-128     if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
-129       goto X1Y1;          /* t1 = x1 - x0 */
-130     if (mp_sub (&y1, &y0, &x0) != MP_OKAY)
-131       goto X1Y1;          /* t2 = y1 - y0 */
-132     if (mp_mul (&t1, &x0, &t1) != MP_OKAY)
-133       goto X1Y1;          /* t1 = (x1 - x0) * (y1 - y0) */
-134   
-135     /* add x0y0 */
-136     if (mp_add (&x0y0, &x1y1, &x0) != MP_OKAY)
-137       goto X1Y1;          /* t2 = x0y0 + x1y1 */
-138     if (mp_sub (&x0, &t1, &t1) != MP_OKAY)
-139       goto X1Y1;          /* t1 = x0y0 + x1y1 - (x1-x0)*(y1-y0) */
-140   
-141     /* shift by B */
-142     if (mp_lshd (&t1, B) != MP_OKAY)
-143       goto X1Y1;          /* t1 = (x0y0 + x1y1 - (x1-x0)*(y1-y0))<<B */
-144     if (mp_lshd (&x1y1, B * 2) != MP_OKAY)
-145       goto X1Y1;          /* x1y1 = x1y1 << 2*B */
-146   
-147     if (mp_add (&x0y0, &t1, &t1) != MP_OKAY)
-148       goto X1Y1;          /* t1 = x0y0 + t1 */
-149     if (mp_add (&t1, &x1y1, c) != MP_OKAY)
-150       goto X1Y1;          /* t1 = x0y0 + t1 + x1y1 */
+079     x0.used = y0.used = B;
+080     x1.used = a->used - B;
+081     y1.used = b->used - B;
+082   
+083     \{
+084       register int x;
+085       register mp_digit *tmpa, *tmpb, *tmpx, *tmpy;
+086   
+087       /* we copy the digits directly instead of using higher level functions
+088        * since we also need to shift the digits
+089        */
+090       tmpa = a->dp;
+091       tmpb = b->dp;
+092   
+093       tmpx = x0.dp;
+094       tmpy = y0.dp;
+095       for (x = 0; x < B; x++) \{
+096         *tmpx++ = *tmpa++;
+097         *tmpy++ = *tmpb++;
+098       \}
+099   
+100       tmpx = x1.dp;
+101       for (x = B; x < a->used; x++) \{
+102         *tmpx++ = *tmpa++;
+103       \}
+104   
+105       tmpy = y1.dp;
+106       for (x = B; x < b->used; x++) \{
+107         *tmpy++ = *tmpb++;
+108       \}
+109     \}
+110   
+111     /* only need to clamp the lower words since by definition the 
+112      * upper words x1/y1 must have a known number of digits
+113      */
+114     mp_clamp (&x0);
+115     mp_clamp (&y0);
+116   
+117     /* now calc the products x0y0 and x1y1 */
+118     /* after this x0 is no longer required, free temp [x0==t2]! */
+119     if (mp_mul (&x0, &y0, &x0y0) != MP_OKAY)  
+120       goto X1Y1;          /* x0y0 = x0*y0 */
+121     if (mp_mul (&x1, &y1, &x1y1) != MP_OKAY)
+122       goto X1Y1;          /* x1y1 = x1*y1 */
+123   
+124     /* now calc x1-x0 and y1-y0 */
+125     if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
+126       goto X1Y1;          /* t1 = x1 - x0 */
+127     if (mp_sub (&y1, &y0, &x0) != MP_OKAY)
+128       goto X1Y1;          /* t2 = y1 - y0 */
+129     if (mp_mul (&t1, &x0, &t1) != MP_OKAY)
+130       goto X1Y1;          /* t1 = (x1 - x0) * (y1 - y0) */
+131   
+132     /* add x0y0 */
+133     if (mp_add (&x0y0, &x1y1, &x0) != MP_OKAY)
+134       goto X1Y1;          /* t2 = x0y0 + x1y1 */
+135     if (mp_sub (&x0, &t1, &t1) != MP_OKAY)
+136       goto X1Y1;          /* t1 = x0y0 + x1y1 - (x1-x0)*(y1-y0) */
+137   
+138     /* shift by B */
+139     if (mp_lshd (&t1, B) != MP_OKAY)
+140       goto X1Y1;          /* t1 = (x0y0 + x1y1 - (x1-x0)*(y1-y0))<<B */
+141     if (mp_lshd (&x1y1, B * 2) != MP_OKAY)
+142       goto X1Y1;          /* x1y1 = x1y1 << 2*B */
+143   
+144     if (mp_add (&x0y0, &t1, &t1) != MP_OKAY)
+145       goto X1Y1;          /* t1 = x0y0 + t1 */
+146     if (mp_add (&t1, &x1y1, c) != MP_OKAY)
+147       goto X1Y1;          /* t1 = x0y0 + t1 + x1y1 */
+148   
+149     /* Algorithm succeeded set the return code to MP_OKAY */
+150     err = MP_OKAY;
 151   
-152     /* Algorithm succeeded set the return code to MP_OKAY */
-153     err = MP_OKAY;
-154   
-155   X1Y1:mp_clear (&x1y1);
-156   X0Y0:mp_clear (&x0y0);
-157   T1:mp_clear (&t1);
-158   Y1:mp_clear (&y1);
-159   Y0:mp_clear (&y0);
-160   X1:mp_clear (&x1);
-161   X0:mp_clear (&x0);
-162   ERR:
-163     return err;
-164   \}
+152   X1Y1:mp_clear (&x1y1);
+153   X0Y0:mp_clear (&x0y0);
+154   T1:mp_clear (&t1);
+155   Y1:mp_clear (&y1);
+156   Y0:mp_clear (&y0);
+157   X1:mp_clear (&x1);
+158   X0:mp_clear (&x0);
+159   ERR:
+160     return err;
+161   \}
+162   #endif
 \end{alltt}
 \end{small}
 
@@ -4269,13 +4314,13 @@ number of digits for the next section of code.
 
 The first algebraic portion of the algorithm is to split the two inputs into their halves.  However, instead of using mp\_mod\_2d and mp\_rshd
 to extract the halves, the respective code has been placed inline within the body of the function.  To initialize the halves, the \textbf{used} and 
-\textbf{sign} members are copied first.  The first for loop on line 98 copies the lower halves.  Since they are both the same magnitude it 
-is simpler to calculate both lower halves in a single loop.  The for loop on lines 104 and 109 calculate the upper halves $x1$ and 
+\textbf{sign} members are copied first.  The first for loop on line 101 copies the lower halves.  Since they are both the same magnitude it 
+is simpler to calculate both lower halves in a single loop.  The for loop on lines 106 and 106 calculate the upper halves $x1$ and 
 $y1$ respectively.
 
 By inlining the calculation of the halves, the Karatsuba multiplier has a slightly lower overhead and can be used for smaller magnitude inputs.
 
-When line 153 is reached, the algorithm has completed succesfully.  The ``error status'' variable $err$ is set to \textbf{MP\_OKAY} so that
+When line 150 is reached, the algorithm has completed succesfully.  The ``error status'' variable $err$ is set to \textbf{MP\_OKAY} so that
 the same code that handles errors can be used to clear the temporary variables and return.  
 
 \subsection{Toom-Cook $3$-Way Multiplication}
@@ -4394,262 +4439,269 @@ result $a \cdot b$ is produced.
 \vspace{-3mm}
 \begin{alltt}
 016   
-017   /* multiplication using the Toom-Cook 3-way algorithm */
-018   int mp_toom_mul(mp_int *a, mp_int *b, mp_int *c)
-019   \{
-020       mp_int w0, w1, w2, w3, w4, tmp1, tmp2, a0, a1, a2, b0, b1, b2;
-021       int res, B;
-022           
-023       /* init temps */
-024       if ((res = mp_init_multi(&w0, &w1, &w2, &w3, &w4, 
-025                                &a0, &a1, &a2, &b0, &b1, 
-026                                &b2, &tmp1, &tmp2, NULL)) != MP_OKAY) \{
-027          return res;
-028       \}
-029       
-030       /* B */
-031       B = MIN(a->used, b->used) / 3;
-032       
-033       /* a = a2 * B**2 + a1 * B + a0 */
-034       if ((res = mp_mod_2d(a, DIGIT_BIT * B, &a0)) != MP_OKAY) \{
-035          goto ERR;
-036       \}
-037   
-038       if ((res = mp_copy(a, &a1)) != MP_OKAY) \{
-039          goto ERR;
-040       \}
-041       mp_rshd(&a1, B);
-042       mp_mod_2d(&a1, DIGIT_BIT * B, &a1);
-043   
-044       if ((res = mp_copy(a, &a2)) != MP_OKAY) \{
-045          goto ERR;
-046       \}
-047       mp_rshd(&a2, B*2);
-048       
-049       /* b = b2 * B**2 + b1 * B + b0 */
-050       if ((res = mp_mod_2d(b, DIGIT_BIT * B, &b0)) != MP_OKAY) \{
-051          goto ERR;
-052       \}
-053   
-054       if ((res = mp_copy(b, &b1)) != MP_OKAY) \{
-055          goto ERR;
-056       \}
-057       mp_rshd(&b1, B);
-058       mp_mod_2d(&b1, DIGIT_BIT * B, &b1);
-059   
-060       if ((res = mp_copy(b, &b2)) != MP_OKAY) \{
-061          goto ERR;
-062       \}
-063       mp_rshd(&b2, B*2);
-064       
-065       /* w0 = a0*b0 */
-066       if ((res = mp_mul(&a0, &b0, &w0)) != MP_OKAY) \{
-067          goto ERR;
-068       \}
+017   /* multiplication using the Toom-Cook 3-way algorithm 
+018    *
+019    * Much more complicated than Karatsuba but has a lower asymptotic running t
+      ime of 
+020    * O(N**1.464).  This algorithm is only particularly useful on VERY large
+021    * inputs (we're talking 1000s of digits here...).
+022   */
+023   int mp_toom_mul(mp_int *a, mp_int *b, mp_int *c)
+024   \{
+025       mp_int w0, w1, w2, w3, w4, tmp1, tmp2, a0, a1, a2, b0, b1, b2;
+026       int res, B;
+027           
+028       /* init temps */
+029       if ((res = mp_init_multi(&w0, &w1, &w2, &w3, &w4, 
+030                                &a0, &a1, &a2, &b0, &b1, 
+031                                &b2, &tmp1, &tmp2, NULL)) != MP_OKAY) \{
+032          return res;
+033       \}
+034       
+035       /* B */
+036       B = MIN(a->used, b->used) / 3;
+037       
+038       /* a = a2 * B**2 + a1 * B + a0 */
+039       if ((res = mp_mod_2d(a, DIGIT_BIT * B, &a0)) != MP_OKAY) \{
+040          goto ERR;
+041       \}
+042   
+043       if ((res = mp_copy(a, &a1)) != MP_OKAY) \{
+044          goto ERR;
+045       \}
+046       mp_rshd(&a1, B);
+047       mp_mod_2d(&a1, DIGIT_BIT * B, &a1);
+048   
+049       if ((res = mp_copy(a, &a2)) != MP_OKAY) \{
+050          goto ERR;
+051       \}
+052       mp_rshd(&a2, B*2);
+053       
+054       /* b = b2 * B**2 + b1 * B + b0 */
+055       if ((res = mp_mod_2d(b, DIGIT_BIT * B, &b0)) != MP_OKAY) \{
+056          goto ERR;
+057       \}
+058   
+059       if ((res = mp_copy(b, &b1)) != MP_OKAY) \{
+060          goto ERR;
+061       \}
+062       mp_rshd(&b1, B);
+063       mp_mod_2d(&b1, DIGIT_BIT * B, &b1);
+064   
+065       if ((res = mp_copy(b, &b2)) != MP_OKAY) \{
+066          goto ERR;
+067       \}
+068       mp_rshd(&b2, B*2);
 069       
-070       /* w4 = a2 * b2 */
-071       if ((res = mp_mul(&a2, &b2, &w4)) != MP_OKAY) \{
+070       /* w0 = a0*b0 */
+071       if ((res = mp_mul(&a0, &b0, &w0)) != MP_OKAY) \{
 072          goto ERR;
 073       \}
 074       
-075       /* w1 = (a2 + 2(a1 + 2a0))(b2 + 2(b1 + 2b0)) */
-076       if ((res = mp_mul_2(&a0, &tmp1)) != MP_OKAY) \{
+075       /* w4 = a2 * b2 */
+076       if ((res = mp_mul(&a2, &b2, &w4)) != MP_OKAY) \{
 077          goto ERR;
 078       \}
-079       if ((res = mp_add(&tmp1, &a1, &tmp1)) != MP_OKAY) \{
-080          goto ERR;
-081       \}
-082       if ((res = mp_mul_2(&tmp1, &tmp1)) != MP_OKAY) \{
-083          goto ERR;
-084       \}
-085       if ((res = mp_add(&tmp1, &a2, &tmp1)) != MP_OKAY) \{
-086          goto ERR;
-087       \}
-088       
-089       if ((res = mp_mul_2(&b0, &tmp2)) != MP_OKAY) \{
-090          goto ERR;
-091       \}
-092       if ((res = mp_add(&tmp2, &b1, &tmp2)) != MP_OKAY) \{
-093          goto ERR;
-094       \}
-095       if ((res = mp_mul_2(&tmp2, &tmp2)) != MP_OKAY) \{
-096          goto ERR;
-097       \}
-098       if ((res = mp_add(&tmp2, &b2, &tmp2)) != MP_OKAY) \{
-099          goto ERR;
-100       \}
-101       
-102       if ((res = mp_mul(&tmp1, &tmp2, &w1)) != MP_OKAY) \{
-103          goto ERR;
-104       \}
-105       
-106       /* w3 = (a0 + 2(a1 + 2a2))(b0 + 2(b1 + 2b2)) */
-107       if ((res = mp_mul_2(&a2, &tmp1)) != MP_OKAY) \{
+079       
+080       /* w1 = (a2 + 2(a1 + 2a0))(b2 + 2(b1 + 2b0)) */
+081       if ((res = mp_mul_2(&a0, &tmp1)) != MP_OKAY) \{
+082          goto ERR;
+083       \}
+084       if ((res = mp_add(&tmp1, &a1, &tmp1)) != MP_OKAY) \{
+085          goto ERR;
+086       \}
+087       if ((res = mp_mul_2(&tmp1, &tmp1)) != MP_OKAY) \{
+088          goto ERR;
+089       \}
+090       if ((res = mp_add(&tmp1, &a2, &tmp1)) != MP_OKAY) \{
+091          goto ERR;
+092       \}
+093       
+094       if ((res = mp_mul_2(&b0, &tmp2)) != MP_OKAY) \{
+095          goto ERR;
+096       \}
+097       if ((res = mp_add(&tmp2, &b1, &tmp2)) != MP_OKAY) \{
+098          goto ERR;
+099       \}
+100       if ((res = mp_mul_2(&tmp2, &tmp2)) != MP_OKAY) \{
+101          goto ERR;
+102       \}
+103       if ((res = mp_add(&tmp2, &b2, &tmp2)) != MP_OKAY) \{
+104          goto ERR;
+105       \}
+106       
+107       if ((res = mp_mul(&tmp1, &tmp2, &w1)) != MP_OKAY) \{
 108          goto ERR;
 109       \}
-110       if ((res = mp_add(&tmp1, &a1, &tmp1)) != MP_OKAY) \{
-111          goto ERR;
-112       \}
-113       if ((res = mp_mul_2(&tmp1, &tmp1)) != MP_OKAY) \{
-114          goto ERR;
-115       \}
-116       if ((res = mp_add(&tmp1, &a0, &tmp1)) != MP_OKAY) \{
-117          goto ERR;
-118       \}
-119       
-120       if ((res = mp_mul_2(&b2, &tmp2)) != MP_OKAY) \{
-121          goto ERR;
-122       \}
-123       if ((res = mp_add(&tmp2, &b1, &tmp2)) != MP_OKAY) \{
-124          goto ERR;
-125       \}
-126       if ((res = mp_mul_2(&tmp2, &tmp2)) != MP_OKAY) \{
-127          goto ERR;
-128       \}
-129       if ((res = mp_add(&tmp2, &b0, &tmp2)) != MP_OKAY) \{
-130          goto ERR;
-131       \}
-132       
-133       if ((res = mp_mul(&tmp1, &tmp2, &w3)) != MP_OKAY) \{
-134          goto ERR;
-135       \}
-136       
-137   
-138       /* w2 = (a2 + a1 + a0)(b2 + b1 + b0) */
-139       if ((res = mp_add(&a2, &a1, &tmp1)) != MP_OKAY) \{
-140          goto ERR;
-141       \}
-142       if ((res = mp_add(&tmp1, &a0, &tmp1)) != MP_OKAY) \{
-143          goto ERR;
-144       \}
-145       if ((res = mp_add(&b2, &b1, &tmp2)) != MP_OKAY) \{
-146          goto ERR;
-147       \}
-148       if ((res = mp_add(&tmp2, &b0, &tmp2)) != MP_OKAY) \{
-149          goto ERR;
-150       \}
-151       if ((res = mp_mul(&tmp1, &tmp2, &w2)) != MP_OKAY) \{
-152          goto ERR;
-153       \}
-154       
-155       /* now solve the matrix 
-156       
-157          0  0  0  0  1
-158          1  2  4  8  16
-159          1  1  1  1  1
-160          16 8  4  2  1
-161          1  0  0  0  0
-162          
-163          using 12 subtractions, 4 shifts, 
-164                 2 small divisions and 1 small multiplication 
-165        */
-166        
-167        /* r1 - r4 */
-168        if ((res = mp_sub(&w1, &w4, &w1)) != MP_OKAY) \{
-169           goto ERR;
-170        \}
-171        /* r3 - r0 */
-172        if ((res = mp_sub(&w3, &w0, &w3)) != MP_OKAY) \{
-173           goto ERR;
-174        \}
-175        /* r1/2 */
-176        if ((res = mp_div_2(&w1, &w1)) != MP_OKAY) \{
-177           goto ERR;
-178        \}
-179        /* r3/2 */
-180        if ((res = mp_div_2(&w3, &w3)) != MP_OKAY) \{
-181           goto ERR;
-182        \}
-183        /* r2 - r0 - r4 */
-184        if ((res = mp_sub(&w2, &w0, &w2)) != MP_OKAY) \{
-185           goto ERR;
-186        \}
-187        if ((res = mp_sub(&w2, &w4, &w2)) != MP_OKAY) \{
-188           goto ERR;
-189        \}
-190        /* r1 - r2 */
-191        if ((res = mp_sub(&w1, &w2, &w1)) != MP_OKAY) \{
-192           goto ERR;
-193        \}
-194        /* r3 - r2 */
-195        if ((res = mp_sub(&w3, &w2, &w3)) != MP_OKAY) \{
-196           goto ERR;
-197        \}
-198        /* r1 - 8r0 */
-199        if ((res = mp_mul_2d(&w0, 3, &tmp1)) != MP_OKAY) \{
-200           goto ERR;
-201        \}
-202        if ((res = mp_sub(&w1, &tmp1, &w1)) != MP_OKAY) \{
-203           goto ERR;
-204        \}
-205        /* r3 - 8r4 */
-206        if ((res = mp_mul_2d(&w4, 3, &tmp1)) != MP_OKAY) \{
-207           goto ERR;
-208        \}
-209        if ((res = mp_sub(&w3, &tmp1, &w3)) != MP_OKAY) \{
-210           goto ERR;
-211        \}
-212        /* 3r2 - r1 - r3 */
-213        if ((res = mp_mul_d(&w2, 3, &w2)) != MP_OKAY) \{
-214           goto ERR;
-215        \}
-216        if ((res = mp_sub(&w2, &w1, &w2)) != MP_OKAY) \{
-217           goto ERR;
-218        \}
-219        if ((res = mp_sub(&w2, &w3, &w2)) != MP_OKAY) \{
-220           goto ERR;
-221        \}
-222        /* r1 - r2 */
-223        if ((res = mp_sub(&w1, &w2, &w1)) != MP_OKAY) \{
-224           goto ERR;
-225        \}
-226        /* r3 - r2 */
-227        if ((res = mp_sub(&w3, &w2, &w3)) != MP_OKAY) \{
-228           goto ERR;
-229        \}
-230        /* r1/3 */
-231        if ((res = mp_div_3(&w1, &w1, NULL)) != MP_OKAY) \{
-232           goto ERR;
-233        \}
-234        /* r3/3 */
-235        if ((res = mp_div_3(&w3, &w3, NULL)) != MP_OKAY) \{
-236           goto ERR;
-237        \}
-238        
-239        /* at this point shift W[n] by B*n */
-240        if ((res = mp_lshd(&w1, 1*B)) != MP_OKAY) \{
+110       
+111       /* w3 = (a0 + 2(a1 + 2a2))(b0 + 2(b1 + 2b2)) */
+112       if ((res = mp_mul_2(&a2, &tmp1)) != MP_OKAY) \{
+113          goto ERR;
+114       \}
+115       if ((res = mp_add(&tmp1, &a1, &tmp1)) != MP_OKAY) \{
+116          goto ERR;
+117       \}
+118       if ((res = mp_mul_2(&tmp1, &tmp1)) != MP_OKAY) \{
+119          goto ERR;
+120       \}
+121       if ((res = mp_add(&tmp1, &a0, &tmp1)) != MP_OKAY) \{
+122          goto ERR;
+123       \}
+124       
+125       if ((res = mp_mul_2(&b2, &tmp2)) != MP_OKAY) \{
+126          goto ERR;
+127       \}
+128       if ((res = mp_add(&tmp2, &b1, &tmp2)) != MP_OKAY) \{
+129          goto ERR;
+130       \}
+131       if ((res = mp_mul_2(&tmp2, &tmp2)) != MP_OKAY) \{
+132          goto ERR;
+133       \}
+134       if ((res = mp_add(&tmp2, &b0, &tmp2)) != MP_OKAY) \{
+135          goto ERR;
+136       \}
+137       
+138       if ((res = mp_mul(&tmp1, &tmp2, &w3)) != MP_OKAY) \{
+139          goto ERR;
+140       \}
+141       
+142   
+143       /* w2 = (a2 + a1 + a0)(b2 + b1 + b0) */
+144       if ((res = mp_add(&a2, &a1, &tmp1)) != MP_OKAY) \{
+145          goto ERR;
+146       \}
+147       if ((res = mp_add(&tmp1, &a0, &tmp1)) != MP_OKAY) \{
+148          goto ERR;
+149       \}
+150       if ((res = mp_add(&b2, &b1, &tmp2)) != MP_OKAY) \{
+151          goto ERR;
+152       \}
+153       if ((res = mp_add(&tmp2, &b0, &tmp2)) != MP_OKAY) \{
+154          goto ERR;
+155       \}
+156       if ((res = mp_mul(&tmp1, &tmp2, &w2)) != MP_OKAY) \{
+157          goto ERR;
+158       \}
+159       
+160       /* now solve the matrix 
+161       
+162          0  0  0  0  1
+163          1  2  4  8  16
+164          1  1  1  1  1
+165          16 8  4  2  1
+166          1  0  0  0  0
+167          
+168          using 12 subtractions, 4 shifts, 
+169                 2 small divisions and 1 small multiplication 
+170        */
+171        
+172        /* r1 - r4 */
+173        if ((res = mp_sub(&w1, &w4, &w1)) != MP_OKAY) \{
+174           goto ERR;
+175        \}
+176        /* r3 - r0 */
+177        if ((res = mp_sub(&w3, &w0, &w3)) != MP_OKAY) \{
+178           goto ERR;
+179        \}
+180        /* r1/2 */
+181        if ((res = mp_div_2(&w1, &w1)) != MP_OKAY) \{
+182           goto ERR;
+183        \}
+184        /* r3/2 */
+185        if ((res = mp_div_2(&w3, &w3)) != MP_OKAY) \{
+186           goto ERR;
+187        \}
+188        /* r2 - r0 - r4 */
+189        if ((res = mp_sub(&w2, &w0, &w2)) != MP_OKAY) \{
+190           goto ERR;
+191        \}
+192        if ((res = mp_sub(&w2, &w4, &w2)) != MP_OKAY) \{
+193           goto ERR;
+194        \}
+195        /* r1 - r2 */
+196        if ((res = mp_sub(&w1, &w2, &w1)) != MP_OKAY) \{
+197           goto ERR;
+198        \}
+199        /* r3 - r2 */
+200        if ((res = mp_sub(&w3, &w2, &w3)) != MP_OKAY) \{
+201           goto ERR;
+202        \}
+203        /* r1 - 8r0 */
+204        if ((res = mp_mul_2d(&w0, 3, &tmp1)) != MP_OKAY) \{
+205           goto ERR;
+206        \}
+207        if ((res = mp_sub(&w1, &tmp1, &w1)) != MP_OKAY) \{
+208           goto ERR;
+209        \}
+210        /* r3 - 8r4 */
+211        if ((res = mp_mul_2d(&w4, 3, &tmp1)) != MP_OKAY) \{
+212           goto ERR;
+213        \}
+214        if ((res = mp_sub(&w3, &tmp1, &w3)) != MP_OKAY) \{
+215           goto ERR;
+216        \}
+217        /* 3r2 - r1 - r3 */
+218        if ((res = mp_mul_d(&w2, 3, &w2)) != MP_OKAY) \{
+219           goto ERR;
+220        \}
+221        if ((res = mp_sub(&w2, &w1, &w2)) != MP_OKAY) \{
+222           goto ERR;
+223        \}
+224        if ((res = mp_sub(&w2, &w3, &w2)) != MP_OKAY) \{
+225           goto ERR;
+226        \}
+227        /* r1 - r2 */
+228        if ((res = mp_sub(&w1, &w2, &w1)) != MP_OKAY) \{
+229           goto ERR;
+230        \}
+231        /* r3 - r2 */
+232        if ((res = mp_sub(&w3, &w2, &w3)) != MP_OKAY) \{
+233           goto ERR;
+234        \}
+235        /* r1/3 */
+236        if ((res = mp_div_3(&w1, &w1, NULL)) != MP_OKAY) \{
+237           goto ERR;
+238        \}
+239        /* r3/3 */
+240        if ((res = mp_div_3(&w3, &w3, NULL)) != MP_OKAY) \{
 241           goto ERR;
 242        \}
-243        if ((res = mp_lshd(&w2, 2*B)) != MP_OKAY) \{
-244           goto ERR;
-245        \}
-246        if ((res = mp_lshd(&w3, 3*B)) != MP_OKAY) \{
-247           goto ERR;
-248        \}
-249        if ((res = mp_lshd(&w4, 4*B)) != MP_OKAY) \{
-250           goto ERR;
-251        \}     
-252        
-253        if ((res = mp_add(&w0, &w1, c)) != MP_OKAY) \{
-254           goto ERR;
-255        \}
-256        if ((res = mp_add(&w2, &w3, &tmp1)) != MP_OKAY) \{
-257           goto ERR;
-258        \}
-259        if ((res = mp_add(&w4, &tmp1, &tmp1)) != MP_OKAY) \{
-260           goto ERR;
-261        \}
-262        if ((res = mp_add(&tmp1, c, c)) != MP_OKAY) \{
-263           goto ERR;
-264        \}     
-265        
-266   ERR:
-267        mp_clear_multi(&w0, &w1, &w2, &w3, &w4, 
-268                       &a0, &a1, &a2, &b0, &b1, 
-269                       &b2, &tmp1, &tmp2, NULL);
-270        return res;
-271   \}     
-272        
+243        
+244        /* at this point shift W[n] by B*n */
+245        if ((res = mp_lshd(&w1, 1*B)) != MP_OKAY) \{
+246           goto ERR;
+247        \}
+248        if ((res = mp_lshd(&w2, 2*B)) != MP_OKAY) \{
+249           goto ERR;
+250        \}
+251        if ((res = mp_lshd(&w3, 3*B)) != MP_OKAY) \{
+252           goto ERR;
+253        \}
+254        if ((res = mp_lshd(&w4, 4*B)) != MP_OKAY) \{
+255           goto ERR;
+256        \}     
+257        
+258        if ((res = mp_add(&w0, &w1, c)) != MP_OKAY) \{
+259           goto ERR;
+260        \}
+261        if ((res = mp_add(&w2, &w3, &tmp1)) != MP_OKAY) \{
+262           goto ERR;
+263        \}
+264        if ((res = mp_add(&w4, &tmp1, &tmp1)) != MP_OKAY) \{
+265           goto ERR;
+266        \}
+267        if ((res = mp_add(&tmp1, c, c)) != MP_OKAY) \{
+268           goto ERR;
+269        \}     
+270        
+271   ERR:
+272        mp_clear_multi(&w0, &w1, &w2, &w3, &w4, 
+273                       &a0, &a1, &a2, &b0, &b1, 
+274                       &b2, &tmp1, &tmp2, NULL);
+275        return res;
+276   \}     
+277        
+278   #endif
 \end{alltt}
 \end{small}
 
@@ -4707,36 +4759,49 @@ s\_mp\_mul\_digs will clear it.
 021     neg = (a->sign == b->sign) ? MP_ZPOS : MP_NEG;
 022   
 023     /* use Toom-Cook? */
-024     if (MIN (a->used, b->used) >= TOOM_MUL_CUTOFF) \{
-025       res = mp_toom_mul(a, b, c);
-026     /* use Karatsuba? */
-027     \} else if (MIN (a->used, b->used) >= KARATSUBA_MUL_CUTOFF) \{
-028       res = mp_karatsuba_mul (a, b, c);
-029     \} else \{
-030       /* can we use the fast multiplier?
-031        *
-032        * The fast multiplier can be used if the output will 
-033        * have less than MP_WARRAY digits and the number of 
-034        * digits won't affect carry propagation
-035        */
-036       int     digs = a->used + b->used + 1;
-037   
-038       if ((digs < MP_WARRAY) &&
-039           MIN(a->used, b->used) <= 
-040           (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) \{
-041         res = fast_s_mp_mul_digs (a, b, c, digs);
-042       \} else \{
-043         res = s_mp_mul (a, b, c);
-044       \}
-045     \}
-046     c->sign = neg;
-047     return res;
-048   \}
+024   #ifdef BN_MP_TOOM_MUL_C
+025     if (MIN (a->used, b->used) >= TOOM_MUL_CUTOFF) \{
+026       res = mp_toom_mul(a, b, c);
+027     \} else 
+028   #endif
+029   #ifdef BN_MP_KARATSUBA_MUL_C
+030     /* use Karatsuba? */
+031     if (MIN (a->used, b->used) >= KARATSUBA_MUL_CUTOFF) \{
+032       res = mp_karatsuba_mul (a, b, c);
+033     \} else 
+034   #endif
+035     \{
+036       /* can we use the fast multiplier?
+037        *
+038        * The fast multiplier can be used if the output will 
+039        * have less than MP_WARRAY digits and the number of 
+040        * digits won't affect carry propagation
+041        */
+042       int     digs = a->used + b->used + 1;
+043   
+044   #ifdef BN_FAST_S_MP_MUL_DIGS_C
+045       if ((digs < MP_WARRAY) &&
+046           MIN(a->used, b->used) <= 
+047           (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) \{
+048         res = fast_s_mp_mul_digs (a, b, c, digs);
+049       \} else 
+050   #endif
+051   #ifdef BN_S_MP_MUL_DIGS_C
+052         res = s_mp_mul (a, b, c); /* uses s_mp_mul_digs */
+053   #else
+054         res = MP_VAL;
+055   #endif
+056   
+057     \}
+058     c->sign = (c->used > 0) ? neg : MP_ZPOS;
+059     return res;
+060   \}
+061   #endif
 \end{alltt}
 \end{small}
 
 The implementation is rather simplistic and is not particularly noteworthy.  Line 23 computes the sign of the result using the ``?'' 
-operator from the C programming language.  Line 40 computes $\delta$ using the fact that $1 << k$ is equal to $2^k$.  
+operator from the C programming language.  Line 47 computes $\delta$ using the fact that $1 << k$ is equal to $2^k$.  
 
 \section{Squaring}
 \label{sec:basesquare}
@@ -4901,6 +4966,7 @@ results calculated so far.  This involves expensive carry propagation which will
 077     mp_clear (&t);
 078     return MP_OKAY;
 079   \}
+080   #endif
 \end{alltt}
 \end{small}
 
@@ -5003,112 +5069,105 @@ squares in place.
 031    * Based on Algorithm 14.16 on pp.597 of HAC.
 032    *
 033    */
-034   int fast_s_mp_sqr (mp_int * a, mp_int * b)
-035   \{
-036     int     olduse, newused, res, ix, pa;
-037     mp_word W2[MP_WARRAY], W[MP_WARRAY];
-038   
-039     /* calculate size of product and allocate as required */
-040     pa = a->used;
-041     newused = pa + pa + 1;
-042     if (b->alloc < newused) \{
-043       if ((res = mp_grow (b, newused)) != MP_OKAY) \{
-044         return res;
-045       \}
-046     \}
-047   
-048     /* zero temp buffer (columns)
-049      * Note that there are two buffers.  Since squaring requires
-050      * a outer and inner product and the inner product requires
-051      * computing a product and doubling it (a relatively expensive
-052      * op to perform n**2 times if you don't have to) the inner and
-053      * outer products are computed in different buffers.  This way
-054      * the inner product can be doubled using n doublings instead of
-055      * n**2
-056      */
-057     memset (W,  0, newused * sizeof (mp_word));
-058     memset (W2, 0, newused * sizeof (mp_word));
+034   /* the jist of squaring...
+035   
+036   you do like mult except the offset of the tmpx [one that starts closer to ze
+      ro]
+037   can't equal the offset of tmpy.  So basically you set up iy like before then
+       you min it with
+038   (ty-tx) so that it never happens.  You double all those you add in the inner
+       loop
+039   
+040   After that loop you do the squares and add them in.
+041   
+042   Remove W2 and don't memset W
+043   
+044   */
+045   
+046   int fast_s_mp_sqr (mp_int * a, mp_int * b)
+047   \{
+048     int       olduse, res, pa, ix, iz;
+049     mp_digit   W[MP_WARRAY], *tmpx;
+050     mp_word   W1;
+051   
+052     /* grow the destination as required */
+053     pa = a->used + a->used;
+054     if (b->alloc < pa) \{
+055       if ((res = mp_grow (b, pa)) != MP_OKAY) \{
+056         return res;
+057       \}
+058     \}
 059   
-060     /* This computes the inner product.  To simplify the inner N**2 loop
-061      * the multiplication by two is done afterwards in the N loop.
-062      */
-063     for (ix = 0; ix < pa; ix++) \{
-064       /* compute the outer product
-065        *
-066        * Note that every outer product is computed
-067        * for a particular column only once which means that
-068        * there is no need todo a double precision addition
-069        * into the W2[] array.
-070        */
-071       W2[ix + ix] = ((mp_word)a->dp[ix]) * ((mp_word)a->dp[ix]);
-072   
-073       \{
-074         register mp_digit tmpx, *tmpy;
-075         register mp_word *_W;
-076         register int iy;
+060     /* number of output digits to produce */
+061     W1 = 0;
+062     for (ix = 0; ix <= pa; ix++) \{ 
+063         int      tx, ty, iy;
+064         mp_word  _W;
+065         mp_digit *tmpy;
+066   
+067         /* clear counter */
+068         _W = 0;
+069   
+070         /* get offsets into the two bignums */
+071         ty = MIN(a->used-1, ix);
+072         tx = ix - ty;
+073   
+074         /* setup temp aliases */
+075         tmpx = a->dp + tx;
+076         tmpy = a->dp + ty;
 077   
-078         /* copy of left side */
-079         tmpx = a->dp[ix];
-080   
-081         /* alias for right side */
-082         tmpy = a->dp + (ix + 1);
-083   
-084         /* the column to store the result in */
-085         _W = W + (ix + ix + 1);
-086   
-087         /* inner products */
-088         for (iy = ix + 1; iy < pa; iy++) \{
-089             *_W++ += ((mp_word)tmpx) * ((mp_word)*tmpy++);
-090         \}
-091       \}
-092     \}
+078         /* this is the number of times the loop will iterrate, essentially its
+       
+079            while (tx++ < a->used && ty-- >= 0) \{ ... \}
+080          */
+081         iy = MIN(a->used-tx, ty+1);
+082   
+083         /* now for squaring tx can never equal ty 
+084          * we halve the distance since they approach at a rate of 2x
+085          * and we have to round because odd cases need to be executed
+086          */
+087         iy = MIN(iy, (ty-tx+1)>>1);
+088   
+089         /* execute loop */
+090         for (iz = 0; iz < iy; iz++) \{
+091            _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
+092         \}
 093   
-094     /* setup dest */
-095     olduse  = b->used;
-096     b->used = newused;
-097   
-098     /* now compute digits
-099      *
-100      * We have to double the inner product sums, add in the
-101      * outer product sums, propagate carries and convert
-102      * to single precision.
-103      */
-104     \{
-105       register mp_digit *tmpb;
-106   
-107       /* double first value, since the inner products are
-108        * half of what they should be
-109        */
-110       W[0] += W[0] + W2[0];
-111   
-112       tmpb = b->dp;
-113       for (ix = 1; ix < newused; ix++) \{
-114         /* double/add next digit */
-115         W[ix] += W[ix] + W2[ix];
-116   
-117         /* propagate carry forwards [from the previous digit] */
-118         W[ix] = W[ix] + (W[ix - 1] >> ((mp_word) DIGIT_BIT));
+094         /* double the inner product and add carry */
+095         _W = _W + _W + W1;
+096   
+097         /* even columns have the square term in them */
+098         if ((ix&1) == 0) \{
+099            _W += ((mp_word)a->dp[ix>>1])*((mp_word)a->dp[ix>>1]);
+100         \}
+101   
+102         /* store it */
+103         W[ix] = _W;
+104   
+105         /* make next carry */
+106         W1 = _W >> ((mp_word)DIGIT_BIT);
+107     \}
+108   
+109     /* setup dest */
+110     olduse  = b->used;
+111     b->used = a->used+a->used;
+112   
+113     \{
+114       mp_digit *tmpb;
+115       tmpb = b->dp;
+116       for (ix = 0; ix < pa; ix++) \{
+117         *tmpb++ = W[ix] & MP_MASK;
+118       \}
 119   
-120         /* store the current digit now that the carry isn't
-121          * needed
-122          */
-123         *tmpb++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
-124       \}
-125       /* set the last value.  Note even if the carry is zero
-126        * this is required since the next step will not zero
-127        * it if b originally had a value at b->dp[2*a.used]
-128        */
-129       *tmpb++ = (mp_digit) (W[(newused) - 1] & ((mp_word) MP_MASK));
-130   
-131       /* clear high digits of b if there were any originally */
-132       for (; ix < olduse; ix++) \{
-133         *tmpb++ = 0;
-134       \}
-135     \}
-136   
-137     mp_clamp (b);
-138     return MP_OKAY;
-139   \}
+120       /* clear unused digits [that existed in the old copy of c] */
+121       for (; ix < olduse; ix++) \{
+122         *tmpb++ = 0;
+123       \}
+124     \}
+125     mp_clamp (b);
+126     return MP_OKAY;
+127   \}
+128   #endif
 \end{alltt}
 \end{small}
 
@@ -5221,7 +5280,7 @@ ratio of 1:7.  } than simpler operations such as addition.
 017   /* Karatsuba squaring, computes b = a*a using three 
 018    * half size squarings
 019    *
-020    * See comments of mp_karatsuba_mul for details.  It 
+020    * See comments of karatsuba_mul for details.  It 
 021    * is essentially the same algorithm but merely 
 022    * tuned to perform recursive squarings.
 023    */
@@ -5317,6 +5376,7 @@ ratio of 1:7.  } than simpler operations such as addition.
 113   ERR:
 114     return err;
 115   \}
+116   #endif
 \end{alltt}
 \end{small}
 
@@ -5383,25 +5443,37 @@ neither of the polynomial basis algorithms should be used then either the Comba 
 020   \{
 021     int     res;
 022   
-023     /* use Toom-Cook? */
-024     if (a->used >= TOOM_SQR_CUTOFF) \{
-025       res = mp_toom_sqr(a, b);
-026     /* Karatsuba? */
-027     \} else if (a->used >= KARATSUBA_SQR_CUTOFF) \{
-028       res = mp_karatsuba_sqr (a, b);
-029     \} else \{
-030       /* can we use the fast comba multiplier? */
-031       if ((a->used * 2 + 1) < MP_WARRAY && 
-032            a->used < 
-033            (1 << (sizeof(mp_word) * CHAR_BIT - 2*DIGIT_BIT - 1))) \{
-034         res = fast_s_mp_sqr (a, b);
-035       \} else \{
-036         res = s_mp_sqr (a, b);
-037       \}
-038     \}
-039     b->sign = MP_ZPOS;
-040     return res;
-041   \}
+023   #ifdef BN_MP_TOOM_SQR_C
+024     /* use Toom-Cook? */
+025     if (a->used >= TOOM_SQR_CUTOFF) \{
+026       res = mp_toom_sqr(a, b);
+027     /* Karatsuba? */
+028     \} else 
+029   #endif
+030   #ifdef BN_MP_KARATSUBA_SQR_C
+031   if (a->used >= KARATSUBA_SQR_CUTOFF) \{
+032       res = mp_karatsuba_sqr (a, b);
+033     \} else 
+034   #endif
+035     \{
+036   #ifdef BN_FAST_S_MP_SQR_C
+037       /* can we use the fast comba multiplier? */
+038       if ((a->used * 2 + 1) < MP_WARRAY && 
+039            a->used < 
+040            (1 << (sizeof(mp_word) * CHAR_BIT - 2*DIGIT_BIT - 1))) \{
+041         res = fast_s_mp_sqr (a, b);
+042       \} else
+043   #endif
+044   #ifdef BN_S_MP_SQR_C
+045         res = s_mp_sqr (a, b);
+046   #else
+047         res = MP_VAL;
+048   #endif
+049     \}
+050     b->sign = MP_ZPOS;
+051     return res;
+052   \}
+053   #endif
 \end{alltt}
 \end{small}
 
@@ -5675,50 +5747,62 @@ performed at most twice, and on average once. However, if $a \ge b^2$ than it wi
 038         goto CLEANUP;
 039       \}
 040     \} else \{
-041       if ((res = s_mp_mul_high_digs (&q, mu, &q, um - 1)) != MP_OKAY) \{
-042         goto CLEANUP;
-043       \}
-044     \}
-045   
-046     /* q3 = q2 / b**(k+1) */
-047     mp_rshd (&q, um + 1);         
-048   
-049     /* x = x mod b**(k+1), quick (no division) */
-050     if ((res = mp_mod_2d (x, DIGIT_BIT * (um + 1), x)) != MP_OKAY) \{
-051       goto CLEANUP;
-052     \}
-053   
-054     /* q = q * m mod b**(k+1), quick (no division) */
-055     if ((res = s_mp_mul_digs (&q, m, &q, um + 1)) != MP_OKAY) \{
-056       goto CLEANUP;
-057     \}
-058   
-059     /* x = x - q */
-060     if ((res = mp_sub (x, &q, x)) != MP_OKAY) \{
-061       goto CLEANUP;
-062     \}
-063   
-064     /* If x < 0, add b**(k+1) to it */
-065     if (mp_cmp_d (x, 0) == MP_LT) \{
-066       mp_set (&q, 1);
-067       if ((res = mp_lshd (&q, um + 1)) != MP_OKAY)
-068         goto CLEANUP;
-069       if ((res = mp_add (x, &q, x)) != MP_OKAY)
-070         goto CLEANUP;
-071     \}
-072   
-073     /* Back off if it's too big */
-074     while (mp_cmp (x, m) != MP_LT) \{
-075       if ((res = s_mp_sub (x, m, x)) != MP_OKAY) \{
-076         goto CLEANUP;
-077       \}
-078     \}
-079     
-080   CLEANUP:
-081     mp_clear (&q);
-082   
-083     return res;
-084   \}
+041   #ifdef BN_S_MP_MUL_HIGH_DIGS_C
+042       if ((res = s_mp_mul_high_digs (&q, mu, &q, um - 1)) != MP_OKAY) \{
+043         goto CLEANUP;
+044       \}
+045   #elif defined(BN_FAST_S_MP_MUL_HIGH_DIGS_C)
+046       if ((res = fast_s_mp_mul_high_digs (&q, mu, &q, um - 1)) != MP_OKAY) \{
+047         goto CLEANUP;
+048       \}
+049   #else 
+050       \{ 
+051         res = MP_VAL;
+052         goto CLEANUP;
+053       \}
+054   #endif
+055     \}
+056   
+057     /* q3 = q2 / b**(k+1) */
+058     mp_rshd (&q, um + 1);         
+059   
+060     /* x = x mod b**(k+1), quick (no division) */
+061     if ((res = mp_mod_2d (x, DIGIT_BIT * (um + 1), x)) != MP_OKAY) \{
+062       goto CLEANUP;
+063     \}
+064   
+065     /* q = q * m mod b**(k+1), quick (no division) */
+066     if ((res = s_mp_mul_digs (&q, m, &q, um + 1)) != MP_OKAY) \{
+067       goto CLEANUP;
+068     \}
+069   
+070     /* x = x - q */
+071     if ((res = mp_sub (x, &q, x)) != MP_OKAY) \{
+072       goto CLEANUP;
+073     \}
+074   
+075     /* If x < 0, add b**(k+1) to it */
+076     if (mp_cmp_d (x, 0) == MP_LT) \{
+077       mp_set (&q, 1);
+078       if ((res = mp_lshd (&q, um + 1)) != MP_OKAY)
+079         goto CLEANUP;
+080       if ((res = mp_add (x, &q, x)) != MP_OKAY)
+081         goto CLEANUP;
+082     \}
+083   
+084     /* Back off if it's too big */
+085     while (mp_cmp (x, m) != MP_LT) \{
+086       if ((res = s_mp_sub (x, m, x)) != MP_OKAY) \{
+087         goto CLEANUP;
+088       \}
+089     \}
+090     
+091   CLEANUP:
+092     mp_clear (&q);
+093   
+094     return res;
+095   \}
+096   #endif
 \end{alltt}
 \end{small}
 
@@ -5761,16 +5845,16 @@ is equivalent and much faster.  The final value is computed by taking the intege
 017   /* pre-calculate the value required for Barrett reduction
 018    * For a given modulus "b" it calulates the value required in "a"
 019    */
-020   int
-021   mp_reduce_setup (mp_int * a, mp_int * b)
-022   \{
-023     int     res;
-024     
-025     if ((res = mp_2expt (a, b->used * 2 * DIGIT_BIT)) != MP_OKAY) \{
-026       return res;
-027     \}
-028     return mp_div (a, b, a, NULL);
-029   \}
+020   int mp_reduce_setup (mp_int * a, mp_int * b)
+021   \{
+022     int     res;
+023     
+024     if ((res = mp_2expt (a, b->used * 2 * DIGIT_BIT)) != MP_OKAY) \{
+025       return res;
+026     \}
+027     return mp_div (a, b, a, NULL);
+028   \}
+029   #endif
 \end{alltt}
 \end{small}
 
@@ -6038,7 +6122,7 @@ multiplications.
 023   
 024     /* can the fast reduction [comba] method be used?
 025      *
-026      * Note that unlike in mp_mul you're safely allowed *less*
+026      * Note that unlike in mul you're safely allowed *less*
 027      * than the available columns [255 per default] since carries
 028      * are fixed up in the inner loop.
 029      */
@@ -6061,7 +6145,7 @@ multiplications.
 046       /* mu = ai * rho mod b
 047        *
 048        * The value of rho must be precalculated via
-049        * bn_mp_montgomery_setup() such that
+049        * montgomery_setup() such that
 050        * it equals -1/n0 mod b this allows the
 051        * following inner loop to reduce the
 052        * input one digit at a time
@@ -6125,6 +6209,7 @@ multiplications.
 110   
 111     return MP_OKAY;
 112   \}
+113   #endif
 \end{alltt}
 \end{small}
 
@@ -6220,7 +6305,7 @@ stored in the destination $x$.
 016   
 017   /* computes xR**-1 == x (mod N) via Montgomery Reduction
 018    *
-019    * This is an optimized implementation of mp_montgomery_reduce
+019    * This is an optimized implementation of montgomery_reduce
 020    * which uses the comba method to quickly calculate the columns of the
 021    * reduction.
 022    *
@@ -6369,6 +6454,7 @@ stored in the destination $x$.
 165     \}
 166     return MP_OKAY;
 167   \}
+168   #endif
 \end{alltt}
 \end{small}
 
@@ -6450,10 +6536,11 @@ to calculate $1/n_0$ when $\beta$ is a power of two.
 047   #endif
 048   
 049     /* rho = -1/m mod b */
-050     *rho = (((mp_digit) 1 << ((mp_digit) DIGIT_BIT)) - x) & MP_MASK;
+050     *rho = (((mp_word)1 << ((mp_word) DIGIT_BIT)) - x) & MP_MASK;
 051   
 052     return MP_OKAY;
 053   \}
+054   #endif
 \end{alltt}
 \end{small}
 
@@ -6719,6 +6806,7 @@ at step 3.
 086     \}
 087     return MP_OKAY;
 088   \}
+089   #endif
 \end{alltt}
 \end{small}
 
@@ -6773,6 +6861,7 @@ completeness.
 024           ((mp_word)a->dp[0]));
 025   \}
 026   
+027   #endif
 \end{alltt}
 \end{small}
 
@@ -6830,6 +6919,7 @@ step 3 then $n$ must be of Diminished Radix form.
 035      return 1;
 036   \}
 037   
+038   #endif
 \end{alltt}
 \end{small}
 
@@ -6914,6 +7004,7 @@ shift which makes the algorithm fairly inexpensive to use.
 054      return res;
 055   \}
 056   
+057   #endif
 \end{alltt}
 \end{small}
 
@@ -6983,6 +7074,7 @@ is sufficient to solve for $k$.  Alternatively if $n$ has more than one digit th
 040      mp_clear(&tmp);
 041      return MP_OKAY;
 042   \}
+043   #endif
 \end{alltt}
 \end{small}
 
@@ -7031,32 +7123,34 @@ This algorithm quickly determines if a modulus is of the form required for algor
 017   /* determines if mp_reduce_2k can be used */
 018   int mp_reduce_is_2k(mp_int *a)
 019   \{
-020      int ix, iy, iz, iw;
-021      
-022      if (a->used == 0) \{
-023         return 0;
-024      \} else if (a->used == 1) \{
-025         return 1;
-026      \} else if (a->used > 1) \{
-027         iy = mp_count_bits(a);
-028         iz = 1;
-029         iw = 1;
-030       
-031         /* Test every bit from the second digit up, must be 1 */
-032         for (ix = DIGIT_BIT; ix < iy; ix++) \{
-033             if ((a->dp[iw] & iz) == 0) \{
-034                return 0;
-035             \}
-036             iz <<= 1;
-037             if (iz > (int)MP_MASK) \{
-038                ++iw;
-039                iz = 1;
-040             \}
-041         \}
-042      \}
-043      return 1;
-044   \}
-045   
+020      int ix, iy, iw;
+021      mp_digit iz;
+022      
+023      if (a->used == 0) \{
+024         return 0;
+025      \} else if (a->used == 1) \{
+026         return 1;
+027      \} else if (a->used > 1) \{
+028         iy = mp_count_bits(a);
+029         iz = 1;
+030         iw = 1;
+031       
+032         /* Test every bit from the second digit up, must be 1 */
+033         for (ix = DIGIT_BIT; ix < iy; ix++) \{
+034             if ((a->dp[iw] & iz) == 0) \{
+035                return 0;
+036             \}
+037             iz <<= 1;
+038             if (iz > (mp_digit)MP_MASK) \{
+039                ++iw;
+040                iz = 1;
+041             \}
+042         \}
+043      \}
+044      return 1;
+045   \}
+046   
+047   #endif
 \end{alltt}
 \end{small}
 
@@ -7265,6 +7359,7 @@ iteration of the loop moves the bits of the exponent $b$ upwards to the most sig
 049     mp_clear (&g);
 050     return MP_OKAY;
 051   \}
+052   #endif
 \end{alltt}
 \end{small}
 
@@ -7470,51 +7565,72 @@ algorithm since their arguments are essentially the same (\textit{two mp\_ints a
 031   
 032     /* if exponent X is negative we have to recurse */
 033     if (X->sign == MP_NEG) \{
-034        mp_int tmpG, tmpX;
-035        int err;
-036   
-037        /* first compute 1/G mod P */
-038        if ((err = mp_init(&tmpG)) != MP_OKAY) \{
-039           return err;
-040        \}
-041        if ((err = mp_invmod(G, P, &tmpG)) != MP_OKAY) \{
-042           mp_clear(&tmpG);
-043           return err;
-044        \}
-045   
-046        /* now get |X| */
-047        if ((err = mp_init(&tmpX)) != MP_OKAY) \{
-048           mp_clear(&tmpG);
-049           return err;
-050        \}
-051        if ((err = mp_abs(X, &tmpX)) != MP_OKAY) \{
-052           mp_clear_multi(&tmpG, &tmpX, NULL);
-053           return err;
-054        \}
-055   
-056        /* and now compute (1/G)**|X| instead of G**X [X < 0] */
-057        err = mp_exptmod(&tmpG, &tmpX, P, Y);
-058        mp_clear_multi(&tmpG, &tmpX, NULL);
-059        return err;
-060     \}
-061   
-062     /* is it a DR modulus? */
-063     dr = mp_dr_is_modulus(P);
-064   
-065     /* if not, is it a uDR modulus? */
-066     if (dr == 0) \{
-067        dr = mp_reduce_is_2k(P) << 1;
-068     \}
-069       
-070     /* if the modulus is odd or dr != 0 use the fast method */
-071     if (mp_isodd (P) == 1 || dr !=  0) \{
-072       return mp_exptmod_fast (G, X, P, Y, dr);
-073     \} else \{
-074       /* otherwise use the generic Barrett reduction technique */
-075       return s_mp_exptmod (G, X, P, Y);
-076     \}
-077   \}
-078   
+034   #ifdef BN_MP_INVMOD_C
+035        mp_int tmpG, tmpX;
+036        int err;
+037   
+038        /* first compute 1/G mod P */
+039        if ((err = mp_init(&tmpG)) != MP_OKAY) \{
+040           return err;
+041        \}
+042        if ((err = mp_invmod(G, P, &tmpG)) != MP_OKAY) \{
+043           mp_clear(&tmpG);
+044           return err;
+045        \}
+046   
+047        /* now get |X| */
+048        if ((err = mp_init(&tmpX)) != MP_OKAY) \{
+049           mp_clear(&tmpG);
+050           return err;
+051        \}
+052        if ((err = mp_abs(X, &tmpX)) != MP_OKAY) \{
+053           mp_clear_multi(&tmpG, &tmpX, NULL);
+054           return err;
+055        \}
+056   
+057        /* and now compute (1/G)**|X| instead of G**X [X < 0] */
+058        err = mp_exptmod(&tmpG, &tmpX, P, Y);
+059        mp_clear_multi(&tmpG, &tmpX, NULL);
+060        return err;
+061   #else 
+062        /* no invmod */
+063        return MP_VAL
+064   #endif
+065     \}
+066   
+067   #ifdef BN_MP_DR_IS_MODULUS_C
+068     /* is it a DR modulus? */
+069     dr = mp_dr_is_modulus(P);
+070   #else
+071     dr = 0;
+072   #endif
+073   
+074   #ifdef BN_MP_REDUCE_IS_2K_C
+075     /* if not, is it a uDR modulus? */
+076     if (dr == 0) \{
+077        dr = mp_reduce_is_2k(P) << 1;
+078     \}
+079   #endif
+080       
+081     /* if the modulus is odd or dr != 0 use the fast method */
+082   #ifdef BN_MP_EXPTMOD_FAST_C
+083     if (mp_isodd (P) == 1 || dr !=  0) \{
+084       return mp_exptmod_fast (G, X, P, Y, dr);
+085     \} else \{
+086   #endif
+087   #ifdef BN_S_MP_EXPTMOD_C
+088       /* otherwise use the generic Barrett reduction technique */
+089       return s_mp_exptmod (G, X, P, Y);
+090   #else
+091       /* no exptmod for evens */
+092       return MP_VAL;
+093   #endif
+094   #ifdef BN_MP_EXPTMOD_FAST_C
+095     \}
+096   #endif
+097   \}
+098   
+099   #endif
 \end{alltt}
 \end{small}
 
@@ -7523,8 +7639,8 @@ negative the algorithm tries to perform a modular exponentiation with the modula
 the modular inverse of $G$ and $tmpX$ is assigned the absolute value of $X$.  The algorithm will recuse with these new values with a positive
 exponent.
 
-If the exponent is positive the algorithm resumes the exponentiation.  Line 63 determines if the modulus is of the restricted Diminished Radix 
-form.  If it is not line 67 attempts to determine if it is of a unrestricted Diminished Radix form.  The integer $dr$ will take on one
+If the exponent is positive the algorithm resumes the exponentiation.  Line 69 determines if the modulus is of the restricted Diminished Radix 
+form.  If it is not line 77 attempts to determine if it is of a unrestricted Diminished Radix form.  The integer $dr$ will take on one
 of three values.
 
 \begin{enumerate}
@@ -7533,7 +7649,7 @@ of three values.
 \item $dr = 2$ means that the modulus is of unrestricted Diminished Radix form.
 \end{enumerate}
 
-Line 70 determines if the fast modular exponentiation algorithm can be used.  It is allowed if $dr \ne 0$ or if the modulus is odd.  Otherwise,
+Line 67 determines if the fast modular exponentiation algorithm can be used.  It is allowed if $dr \ne 0$ or if the modulus is odd.  Otherwise,
 the slower s\_mp\_exptmod algorithm is used which uses Barrett reduction.  
 
 \subsection{Barrett Modular Exponentiation}
@@ -7913,6 +8029,7 @@ a Left-to-Right algorithm is used to process the remaining few bits.
 232     \}
 233     return err;
 234   \}
+235   #endif
 \end{alltt}
 \end{small}
 
@@ -7981,10 +8098,11 @@ equivalent to $m \cdot 2^k$.  By this logic when $m = 1$ a quick power of two ca
 036     a->used = b / DIGIT_BIT + 1;
 037   
 038     /* put the single bit in its place */
-039     a->dp[b / DIGIT_BIT] = 1 << (b % DIGIT_BIT);
+039     a->dp[b / DIGIT_BIT] = ((mp_digit)1) << (b % DIGIT_BIT);
 040   
 041     return MP_OKAY;
 042   \}
+043   #endif
 \end{alltt}
 \end{small}
 
@@ -8234,201 +8352,277 @@ respectively be replaced with a zero.
 \vspace{-3mm}
 \begin{alltt}
 016   
-017   /* integer signed division. 
-018    * c*b + d == a [e.g. a/b, c=quotient, d=remainder]
-019    * HAC pp.598 Algorithm 14.20
-020    *
-021    * Note that the description in HAC is horribly 
-022    * incomplete.  For example, it doesn't consider 
-023    * the case where digits are removed from 'x' in 
-024    * the inner loop.  It also doesn't consider the 
-025    * case that y has fewer than three digits, etc..
-026    *
-027    * The overall algorithm is as described as 
-028    * 14.20 from HAC but fixed to treat these cases.
-029   */
-030   int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
-031   \{
-032     mp_int  q, x, y, t1, t2;
-033     int     res, n, t, i, norm, neg;
-034   
-035     /* is divisor zero ? */
-036     if (mp_iszero (b) == 1) \{
-037       return MP_VAL;
-038     \}
-039   
-040     /* if a < b then q=0, r = a */
-041     if (mp_cmp_mag (a, b) == MP_LT) \{
-042       if (d != NULL) \{
-043         res = mp_copy (a, d);
-044       \} else \{
-045         res = MP_OKAY;
-046       \}
-047       if (c != NULL) \{
-048         mp_zero (c);
-049       \}
-050       return res;
-051     \}
-052   
-053     if ((res = mp_init_size (&q, a->used + 2)) != MP_OKAY) \{
-054       return res;
-055     \}
-056     q.used = a->used + 2;
+017   #ifdef BN_MP_DIV_SMALL
+018   
+019   /* slower bit-bang division... also smaller */
+020   int mp_div(mp_int * a, mp_int * b, mp_int * c, mp_int * d)
+021   \{
+022      mp_int ta, tb, tq, q;
+023      int    res, n, n2;
+024   
+025     /* is divisor zero ? */
+026     if (mp_iszero (b) == 1) \{
+027       return MP_VAL;
+028     \}
+029   
+030     /* if a < b then q=0, r = a */
+031     if (mp_cmp_mag (a, b) == MP_LT) \{
+032       if (d != NULL) \{
+033         res = mp_copy (a, d);
+034       \} else \{
+035         res = MP_OKAY;
+036       \}
+037       if (c != NULL) \{
+038         mp_zero (c);
+039       \}
+040       return res;
+041     \}
+042       
+043     /* init our temps */
+044     if ((res = mp_init_multi(&ta, &tb, &tq, &q, NULL) != MP_OKAY)) \{
+045        return res;
+046     \}
+047   
+048   
+049     mp_set(&tq, 1);
+050     n = mp_count_bits(a) - mp_count_bits(b);
+051     if (((res = mp_copy(a, &ta)) != MP_OKAY) ||
+052         ((res = mp_copy(b, &tb)) != MP_OKAY) || 
+053         ((res = mp_mul_2d(&tb, n, &tb)) != MP_OKAY) ||
+054         ((res = mp_mul_2d(&tq, n, &tq)) != MP_OKAY)) \{
+055         goto __ERR;
+056     \}
 057   
-058     if ((res = mp_init (&t1)) != MP_OKAY) \{
-059       goto __Q;
-060     \}
-061   
-062     if ((res = mp_init (&t2)) != MP_OKAY) \{
-063       goto __T1;
-064     \}
-065   
-066     if ((res = mp_init_copy (&x, a)) != MP_OKAY) \{
-067       goto __T2;
-068     \}
-069   
-070     if ((res = mp_init_copy (&y, b)) != MP_OKAY) \{
-071       goto __X;
-072     \}
-073   
-074     /* fix the sign */
-075     neg = (a->sign == b->sign) ? MP_ZPOS : MP_NEG;
-076     x.sign = y.sign = MP_ZPOS;
-077   
-078     /* normalize both x and y, ensure that y >= b/2, [b == 2**DIGIT_BIT] */
-079     norm = mp_count_bits(&y) % DIGIT_BIT;
-080     if (norm < (int)(DIGIT_BIT-1)) \{
-081        norm = (DIGIT_BIT-1) - norm;
-082        if ((res = mp_mul_2d (&x, norm, &x)) != MP_OKAY) \{
-083          goto __Y;
-084        \}
-085        if ((res = mp_mul_2d (&y, norm, &y)) != MP_OKAY) \{
-086          goto __Y;
-087        \}
-088     \} else \{
-089        norm = 0;
-090     \}
-091   
-092     /* note hac does 0 based, so if used==5 then its 0,1,2,3,4, e.g. use 4 */
-093     n = x.used - 1;
-094     t = y.used - 1;
-095   
-096     /* while (x >= y*b**n-t) do \{ q[n-t] += 1; x -= y*b**\{n-t\} \} */
-097     if ((res = mp_lshd (&y, n - t)) != MP_OKAY) \{ /* y = y*b**\{n-t\} */
-098       goto __Y;
-099     \}
-100   
-101     while (mp_cmp (&x, &y) != MP_LT) \{
-102       ++(q.dp[n - t]);
-103       if ((res = mp_sub (&x, &y, &x)) != MP_OKAY) \{
-104         goto __Y;
-105       \}
-106     \}
-107   
-108     /* reset y by shifting it back down */
-109     mp_rshd (&y, n - t);
-110   
-111     /* step 3. for i from n down to (t + 1) */
-112     for (i = n; i >= (t + 1); i--) \{
-113       if (i > x.used) \{
-114         continue;
-115       \}
-116   
-117       /* step 3.1 if xi == yt then set q\{i-t-1\} to b-1, 
-118        * otherwise set q\{i-t-1\} to (xi*b + x\{i-1\})/yt */
-119       if (x.dp[i] == y.dp[t]) \{
-120         q.dp[i - t - 1] = ((((mp_digit)1) << DIGIT_BIT) - 1);
-121       \} else \{
-122         mp_word tmp;
-123         tmp = ((mp_word) x.dp[i]) << ((mp_word) DIGIT_BIT);
-124         tmp |= ((mp_word) x.dp[i - 1]);
-125         tmp /= ((mp_word) y.dp[t]);
-126         if (tmp > (mp_word) MP_MASK)
-127           tmp = MP_MASK;
-128         q.dp[i - t - 1] = (mp_digit) (tmp & (mp_word) (MP_MASK));
-129       \}
-130   
-131       /* while (q\{i-t-1\} * (yt * b + y\{t-1\})) > 
-132                xi * b**2 + xi-1 * b + xi-2 
-133        
-134          do q\{i-t-1\} -= 1; 
-135       */
-136       q.dp[i - t - 1] = (q.dp[i - t - 1] + 1) & MP_MASK;
-137       do \{
-138         q.dp[i - t - 1] = (q.dp[i - t - 1] - 1) & MP_MASK;
-139   
-140         /* find left hand */
-141         mp_zero (&t1);
-142         t1.dp[0] = (t - 1 < 0) ? 0 : y.dp[t - 1];
-143         t1.dp[1] = y.dp[t];
-144         t1.used = 2;
-145         if ((res = mp_mul_d (&t1, q.dp[i - t - 1], &t1)) != MP_OKAY) \{
-146           goto __Y;
-147         \}
-148   
-149         /* find right hand */
-150         t2.dp[0] = (i - 2 < 0) ? 0 : x.dp[i - 2];
-151         t2.dp[1] = (i - 1 < 0) ? 0 : x.dp[i - 1];
-152         t2.dp[2] = x.dp[i];
-153         t2.used = 3;
-154       \} while (mp_cmp_mag(&t1, &t2) == MP_GT);
-155   
-156       /* step 3.3 x = x - q\{i-t-1\} * y * b**\{i-t-1\} */
-157       if ((res = mp_mul_d (&y, q.dp[i - t - 1], &t1)) != MP_OKAY) \{
-158         goto __Y;
-159       \}
-160   
-161       if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) \{
-162         goto __Y;
-163       \}
-164   
-165       if ((res = mp_sub (&x, &t1, &x)) != MP_OKAY) \{
-166         goto __Y;
-167       \}
-168   
-169       /* if x < 0 then \{ x = x + y*b**\{i-t-1\}; q\{i-t-1\} -= 1; \} */
-170       if (x.sign == MP_NEG) \{
-171         if ((res = mp_copy (&y, &t1)) != MP_OKAY) \{
-172           goto __Y;
-173         \}
-174         if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) \{
-175           goto __Y;
-176         \}
-177         if ((res = mp_add (&x, &t1, &x)) != MP_OKAY) \{
-178           goto __Y;
-179         \}
-180   
-181         q.dp[i - t - 1] = (q.dp[i - t - 1] - 1UL) & MP_MASK;
-182       \}
-183     \}
-184   
-185     /* now q is the quotient and x is the remainder 
-186      * [which we have to normalize] 
-187      */
-188     
-189     /* get sign before writing to c */
-190     x.sign = a->sign;
-191   
-192     if (c != NULL) \{
-193       mp_clamp (&q);
-194       mp_exch (&q, c);
-195       c->sign = neg;
-196     \}
-197   
-198     if (d != NULL) \{
-199       mp_div_2d (&x, norm, &x, NULL);
-200       mp_exch (&x, d);
-201     \}
+058     while (n-- >= 0) \{
+059        if (mp_cmp(&tb, &ta) != MP_GT) \{
+060           if (((res = mp_sub(&ta, &tb, &ta)) != MP_OKAY) ||
+061               ((res = mp_add(&q, &tq, &q)) != MP_OKAY)) \{
+062              goto __ERR;
+063           \}
+064        \}
+065        if (((res = mp_div_2d(&tb, 1, &tb, NULL)) != MP_OKAY) ||
+066            ((res = mp_div_2d(&tq, 1, &tq, NULL)) != MP_OKAY)) \{
+067              goto __ERR;
+068        \}
+069     \}
+070   
+071     /* now q == quotient and ta == remainder */
+072     n  = a->sign;
+073     n2 = (a->sign == b->sign ? MP_ZPOS : MP_NEG);
+074     if (c != NULL) \{
+075        mp_exch(c, &q);
+076        c->sign  = n2;
+077     \}
+078     if (d != NULL) \{
+079        mp_exch(d, &ta);
+080        d->sign = n;
+081     \}
+082   __ERR:
+083      mp_clear_multi(&ta, &tb, &tq, &q, NULL);
+084      return res;
+085   \}
+086   
+087   #else
+088   
+089   /* integer signed division. 
+090    * c*b + d == a [e.g. a/b, c=quotient, d=remainder]
+091    * HAC pp.598 Algorithm 14.20
+092    *
+093    * Note that the description in HAC is horribly 
+094    * incomplete.  For example, it doesn't consider 
+095    * the case where digits are removed from 'x' in 
+096    * the inner loop.  It also doesn't consider the 
+097    * case that y has fewer than three digits, etc..
+098    *
+099    * The overall algorithm is as described as 
+100    * 14.20 from HAC but fixed to treat these cases.
+101   */
+102   int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
+103   \{
+104     mp_int  q, x, y, t1, t2;
+105     int     res, n, t, i, norm, neg;
+106   
+107     /* is divisor zero ? */
+108     if (mp_iszero (b) == 1) \{
+109       return MP_VAL;
+110     \}
+111   
+112     /* if a < b then q=0, r = a */
+113     if (mp_cmp_mag (a, b) == MP_LT) \{
+114       if (d != NULL) \{
+115         res = mp_copy (a, d);
+116       \} else \{
+117         res = MP_OKAY;
+118       \}
+119       if (c != NULL) \{
+120         mp_zero (c);
+121       \}
+122       return res;
+123     \}
+124   
+125     if ((res = mp_init_size (&q, a->used + 2)) != MP_OKAY) \{
+126       return res;
+127     \}
+128     q.used = a->used + 2;
+129   
+130     if ((res = mp_init (&t1)) != MP_OKAY) \{
+131       goto __Q;
+132     \}
+133   
+134     if ((res = mp_init (&t2)) != MP_OKAY) \{
+135       goto __T1;
+136     \}
+137   
+138     if ((res = mp_init_copy (&x, a)) != MP_OKAY) \{
+139       goto __T2;
+140     \}
+141   
+142     if ((res = mp_init_copy (&y, b)) != MP_OKAY) \{
+143       goto __X;
+144     \}
+145   
+146     /* fix the sign */
+147     neg = (a->sign == b->sign) ? MP_ZPOS : MP_NEG;
+148     x.sign = y.sign = MP_ZPOS;
+149   
+150     /* normalize both x and y, ensure that y >= b/2, [b == 2**DIGIT_BIT] */
+151     norm = mp_count_bits(&y) % DIGIT_BIT;
+152     if (norm < (int)(DIGIT_BIT-1)) \{
+153        norm = (DIGIT_BIT-1) - norm;
+154        if ((res = mp_mul_2d (&x, norm, &x)) != MP_OKAY) \{
+155          goto __Y;
+156        \}
+157        if ((res = mp_mul_2d (&y, norm, &y)) != MP_OKAY) \{
+158          goto __Y;
+159        \}
+160     \} else \{
+161        norm = 0;
+162     \}
+163   
+164     /* note hac does 0 based, so if used==5 then its 0,1,2,3,4, e.g. use 4 */
+165     n = x.used - 1;
+166     t = y.used - 1;
+167   
+168     /* while (x >= y*b**n-t) do \{ q[n-t] += 1; x -= y*b**\{n-t\} \} */
+169     if ((res = mp_lshd (&y, n - t)) != MP_OKAY) \{ /* y = y*b**\{n-t\} */
+170       goto __Y;
+171     \}
+172   
+173     while (mp_cmp (&x, &y) != MP_LT) \{
+174       ++(q.dp[n - t]);
+175       if ((res = mp_sub (&x, &y, &x)) != MP_OKAY) \{
+176         goto __Y;
+177       \}
+178     \}
+179   
+180     /* reset y by shifting it back down */
+181     mp_rshd (&y, n - t);
+182   
+183     /* step 3. for i from n down to (t + 1) */
+184     for (i = n; i >= (t + 1); i--) \{
+185       if (i > x.used) \{
+186         continue;
+187       \}
+188   
+189       /* step 3.1 if xi == yt then set q\{i-t-1\} to b-1, 
+190        * otherwise set q\{i-t-1\} to (xi*b + x\{i-1\})/yt */
+191       if (x.dp[i] == y.dp[t]) \{
+192         q.dp[i - t - 1] = ((((mp_digit)1) << DIGIT_BIT) - 1);
+193       \} else \{
+194         mp_word tmp;
+195         tmp = ((mp_word) x.dp[i]) << ((mp_word) DIGIT_BIT);
+196         tmp |= ((mp_word) x.dp[i - 1]);
+197         tmp /= ((mp_word) y.dp[t]);
+198         if (tmp > (mp_word) MP_MASK)
+199           tmp = MP_MASK;
+200         q.dp[i - t - 1] = (mp_digit) (tmp & (mp_word) (MP_MASK));
+201       \}
 202   
-203     res = MP_OKAY;
-204   
-205   __Y:mp_clear (&y);
-206   __X:mp_clear (&x);
-207   __T2:mp_clear (&t2);
-208   __T1:mp_clear (&t1);
-209   __Q:mp_clear (&q);
-210     return res;
-211   \}
+203       /* while (q\{i-t-1\} * (yt * b + y\{t-1\})) > 
+204                xi * b**2 + xi-1 * b + xi-2 
+205        
+206          do q\{i-t-1\} -= 1; 
+207       */
+208       q.dp[i - t - 1] = (q.dp[i - t - 1] + 1) & MP_MASK;
+209       do \{
+210         q.dp[i - t - 1] = (q.dp[i - t - 1] - 1) & MP_MASK;
+211   
+212         /* find left hand */
+213         mp_zero (&t1);
+214         t1.dp[0] = (t - 1 < 0) ? 0 : y.dp[t - 1];
+215         t1.dp[1] = y.dp[t];
+216         t1.used = 2;
+217         if ((res = mp_mul_d (&t1, q.dp[i - t - 1], &t1)) != MP_OKAY) \{
+218           goto __Y;
+219         \}
+220   
+221         /* find right hand */
+222         t2.dp[0] = (i - 2 < 0) ? 0 : x.dp[i - 2];
+223         t2.dp[1] = (i - 1 < 0) ? 0 : x.dp[i - 1];
+224         t2.dp[2] = x.dp[i];
+225         t2.used = 3;
+226       \} while (mp_cmp_mag(&t1, &t2) == MP_GT);
+227   
+228       /* step 3.3 x = x - q\{i-t-1\} * y * b**\{i-t-1\} */
+229       if ((res = mp_mul_d (&y, q.dp[i - t - 1], &t1)) != MP_OKAY) \{
+230         goto __Y;
+231       \}
+232   
+233       if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) \{
+234         goto __Y;
+235       \}
+236   
+237       if ((res = mp_sub (&x, &t1, &x)) != MP_OKAY) \{
+238         goto __Y;
+239       \}
+240   
+241       /* if x < 0 then \{ x = x + y*b**\{i-t-1\}; q\{i-t-1\} -= 1; \} */
+242       if (x.sign == MP_NEG) \{
+243         if ((res = mp_copy (&y, &t1)) != MP_OKAY) \{
+244           goto __Y;
+245         \}
+246         if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) \{
+247           goto __Y;
+248         \}
+249         if ((res = mp_add (&x, &t1, &x)) != MP_OKAY) \{
+250           goto __Y;
+251         \}
+252   
+253         q.dp[i - t - 1] = (q.dp[i - t - 1] - 1UL) & MP_MASK;
+254       \}
+255     \}
+256   
+257     /* now q is the quotient and x is the remainder 
+258      * [which we have to normalize] 
+259      */
+260     
+261     /* get sign before writing to c */
+262     x.sign = x.used == 0 ? MP_ZPOS : a->sign;
+263   
+264     if (c != NULL) \{
+265       mp_clamp (&q);
+266       mp_exch (&q, c);
+267       c->sign = neg;
+268     \}
+269   
+270     if (d != NULL) \{
+271       mp_div_2d (&x, norm, &x, NULL);
+272       mp_exch (&x, d);
+273     \}
+274   
+275     res = MP_OKAY;
+276   
+277   __Y:mp_clear (&y);
+278   __X:mp_clear (&x);
+279   __T2:mp_clear (&t2);
+280   __T1:mp_clear (&t1);
+281   __Q:mp_clear (&q);
+282     return res;
+283   \}
+284   
+285   #endif
+286   
+287   #endif
 \end{alltt}
 \end{small}
 
@@ -8440,23 +8634,23 @@ algorithm with only the quotient is
 mp_div(&a, &b, &c, NULL);  /* c = [a/b] */
 \end{verbatim}
 
-Lines 36 and 42 handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
-respectively.  After the two trivial cases all of the temporary variables are initialized.  Line 75 determines the sign of 
+Lines 37 and 44 handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
+respectively.  After the two trivial cases all of the temporary variables are initialized.  Line 105 determines the sign of 
 the quotient and line 76 ensures that both $x$ and $y$ are positive.  
 
-The number of bits in the leading digit is calculated on line 80.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
+The number of bits in the leading digit is calculated on line 105.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
 of precision which when reduced modulo $lg(\beta)$ produces the value of $k$.  In this case $k$ is the number of bits in the leading digit which is
 exactly what is required.  For the algorithm to operate $k$ must equal $lg(\beta) - 1$ and when it does not the inputs must be normalized by shifting
 them to the left by $lg(\beta) - 1 - k$ bits.
 
 Throughout the variables $n$ and $t$ will represent the highest digit of $x$ and $y$ respectively.  These are first used to produce the 
-leading digit of the quotient.  The loop beginning on line 112 will produce the remainder of the quotient digits.
+leading digit of the quotient.  The loop beginning on line 183 will produce the remainder of the quotient digits.
 
-The conditional ``continue'' on line 113 is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
+The conditional ``continue'' on line 114 is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
 algorithm eliminates multiple non-zero digits in a single iteration.  This ensures that $x_i$ is always non-zero since by definition the digits
 above the $i$'th position $x$ must be zero in order for the quotient to be precise\footnote{Precise as far as integer division is concerned.}.  
 
-Lines 142, 143 and 150 through 152 manually construct the high accuracy estimations by setting the digits of the two mp\_int 
+Lines 130, 130 and 134 through 134 manually construct the high accuracy estimations by setting the digits of the two mp\_int 
 variables directly.  
 
 \section{Single Digit Helpers}
@@ -8582,6 +8776,7 @@ This algorithm initiates a temporary mp\_int with the value of the single digit 
 101     return MP_OKAY;
 102   \}
 103   
+104   #endif
 \end{alltt}
 \end{small}
 
@@ -8689,6 +8884,7 @@ Unlike the full multiplication algorithms this algorithm does not require any si
 070   
 071     return MP_OKAY;
 072   \}
+073   #endif
 \end{alltt}
 \end{small}
 
@@ -8785,7 +8981,7 @@ from chapter seven.
 054     /* power of two ? */
 055     if (s_is_power_of_two(b, &ix) == 1) \{
 056        if (d != NULL) \{
-057           *d = a->dp[0] & ((1<<ix) - 1);
+057           *d = a->dp[0] & ((((mp_digit)1)<<ix) - 1);
 058        \}
 059        if (c != NULL) \{
 060           return mp_div_2d(a, ix, c, NULL);
@@ -8793,44 +8989,47 @@ from chapter seven.
 062        return MP_OKAY;
 063     \}
 064   
-065     /* three? */
-066     if (b == 3) \{
-067        return mp_div_3(a, c, d);
-068     \}
-069   
-070     /* no easy answer [c'est la vie].  Just division */
-071     if ((res = mp_init_size(&q, a->used)) != MP_OKAY) \{
-072        return res;
-073     \}
-074     
-075     q.used = a->used;
-076     q.sign = a->sign;
-077     w = 0;
-078     for (ix = a->used - 1; ix >= 0; ix--) \{
-079        w = (w << ((mp_word)DIGIT_BIT)) | ((mp_word)a->dp[ix]);
-080        
-081        if (w >= b) \{
-082           t = (mp_digit)(w / b);
-083           w -= ((mp_word)t) * ((mp_word)b);
-084         \} else \{
-085           t = 0;
-086         \}
-087         q.dp[ix] = (mp_digit)t;
-088     \}
-089     
-090     if (d != NULL) \{
-091        *d = (mp_digit)w;
-092     \}
-093     
-094     if (c != NULL) \{
-095        mp_clamp(&q);
-096        mp_exch(&q, c);
-097     \}
-098     mp_clear(&q);
-099     
-100     return res;
-101   \}
-102   
+065   #ifdef BN_MP_DIV_3_C
+066     /* three? */
+067     if (b == 3) \{
+068        return mp_div_3(a, c, d);
+069     \}
+070   #endif
+071   
+072     /* no easy answer [c'est la vie].  Just division */
+073     if ((res = mp_init_size(&q, a->used)) != MP_OKAY) \{
+074        return res;
+075     \}
+076     
+077     q.used = a->used;
+078     q.sign = a->sign;
+079     w = 0;
+080     for (ix = a->used - 1; ix >= 0; ix--) \{
+081        w = (w << ((mp_word)DIGIT_BIT)) | ((mp_word)a->dp[ix]);
+082        
+083        if (w >= b) \{
+084           t = (mp_digit)(w / b);
+085           w -= ((mp_word)t) * ((mp_word)b);
+086         \} else \{
+087           t = 0;
+088         \}
+089         q.dp[ix] = (mp_digit)t;
+090     \}
+091     
+092     if (d != NULL) \{
+093        *d = (mp_digit)w;
+094     \}
+095     
+096     if (c != NULL) \{
+097        mp_clamp(&q);
+098        mp_exch(&q, c);
+099     \}
+100     mp_clear(&q);
+101     
+102     return res;
+103   \}
+104   
+105   #endif
 \end{alltt}
 \end{small}
 
@@ -9016,6 +9215,7 @@ root.  Ideally this algorithm is meant to find the $n$'th root of an input where
 124   __T1:mp_clear (&t1);
 125     return res;
 126   \}
+127   #endif
 \end{alltt}
 \end{small}
 
@@ -9091,6 +9291,7 @@ the integers from $0$ to $\beta - 1$.
 047   
 048     return MP_OKAY;
 049   \}
+050   #endif
 \end{alltt}
 \end{small}
 
@@ -9234,6 +9435,7 @@ as part of larger input without any significant problem.
 074     \}
 075     return MP_OKAY;
 076   \}
+077   #endif
 \end{alltt}
 \end{small}
 
@@ -9352,6 +9554,7 @@ are required instead of a series of $n \times k$ divisions.  One design flaw of 
 067     return MP_OKAY;
 068   \}
 069   
+070   #endif
 \end{alltt}
 \end{small}
 
@@ -9631,6 +9834,7 @@ must be adjusted by multiplying by the common factors of two ($2^k$) removed ear
 105   __U:mp_clear (&v);
 106     return res;
 107   \}
+108   #endif
 \end{alltt}
 \end{small}
 
@@ -9725,6 +9929,7 @@ dividing the product of the two inputs by their greatest common divisor.
 052     mp_clear_multi (&t1, &t2, NULL);
 053     return res;
 054   \}
+055   #endif
 \end{alltt}
 \end{small}
 
@@ -9966,6 +10171,7 @@ $\left ( {p' \over a'} \right )$ which is multiplied against the current Jacobi 
 097   __A1:mp_clear (&a1);
 098     return res;
 099   \}
+100   #endif
 \end{alltt}
 \end{small}
 
@@ -10095,161 +10301,25 @@ then only a couple of additions or subtractions will be required to adjust the i
 017   /* hac 14.61, pp608 */
 018   int mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 019   \{
-020     mp_int  x, y, u, v, A, B, C, D;
-021     int     res;
-022   
-023     /* b cannot be negative */
-024     if (b->sign == MP_NEG || mp_iszero(b) == 1) \{
-025       return MP_VAL;
-026     \}
-027   
-028     /* if the modulus is odd we can use a faster routine instead */
-029     if (mp_isodd (b) == 1) \{
-030       return fast_mp_invmod (a, b, c);
-031     \}
-032     
-033     /* init temps */
-034     if ((res = mp_init_multi(&x, &y, &u, &v, 
-035                              &A, &B, &C, &D, NULL)) != MP_OKAY) \{
-036        return res;
-037     \}
-038   
-039     /* x = a, y = b */
-040     if ((res = mp_copy (a, &x)) != MP_OKAY) \{
-041       goto __ERR;
-042     \}
-043     if ((res = mp_copy (b, &y)) != MP_OKAY) \{
-044       goto __ERR;
-045     \}
-046   
-047     /* 2. [modified] if x,y are both even then return an error! */
-048     if (mp_iseven (&x) == 1 && mp_iseven (&y) == 1) \{
-049       res = MP_VAL;
-050       goto __ERR;
-051     \}
-052   
-053     /* 3. u=x, v=y, A=1, B=0, C=0,D=1 */
-054     if ((res = mp_copy (&x, &u)) != MP_OKAY) \{
-055       goto __ERR;
-056     \}
-057     if ((res = mp_copy (&y, &v)) != MP_OKAY) \{
-058       goto __ERR;
-059     \}
-060     mp_set (&A, 1);
-061     mp_set (&D, 1);
-062   
-063   top:
-064     /* 4.  while u is even do */
-065     while (mp_iseven (&u) == 1) \{
-066       /* 4.1 u = u/2 */
-067       if ((res = mp_div_2 (&u, &u)) != MP_OKAY) \{
-068         goto __ERR;
-069       \}
-070       /* 4.2 if A or B is odd then */
-071       if (mp_isodd (&A) == 1 || mp_isodd (&B) == 1) \{
-072         /* A = (A+y)/2, B = (B-x)/2 */
-073         if ((res = mp_add (&A, &y, &A)) != MP_OKAY) \{
-074            goto __ERR;
-075         \}
-076         if ((res = mp_sub (&B, &x, &B)) != MP_OKAY) \{
-077            goto __ERR;
-078         \}
-079       \}
-080       /* A = A/2, B = B/2 */
-081       if ((res = mp_div_2 (&A, &A)) != MP_OKAY) \{
-082         goto __ERR;
-083       \}
-084       if ((res = mp_div_2 (&B, &B)) != MP_OKAY) \{
-085         goto __ERR;
-086       \}
-087     \}
-088   
-089     /* 5.  while v is even do */
-090     while (mp_iseven (&v) == 1) \{
-091       /* 5.1 v = v/2 */
-092       if ((res = mp_div_2 (&v, &v)) != MP_OKAY) \{
-093         goto __ERR;
-094       \}
-095       /* 5.2 if C or D is odd then */
-096       if (mp_isodd (&C) == 1 || mp_isodd (&D) == 1) \{
-097         /* C = (C+y)/2, D = (D-x)/2 */
-098         if ((res = mp_add (&C, &y, &C)) != MP_OKAY) \{
-099            goto __ERR;
-100         \}
-101         if ((res = mp_sub (&D, &x, &D)) != MP_OKAY) \{
-102            goto __ERR;
-103         \}
-104       \}
-105       /* C = C/2, D = D/2 */
-106       if ((res = mp_div_2 (&C, &C)) != MP_OKAY) \{
-107         goto __ERR;
-108       \}
-109       if ((res = mp_div_2 (&D, &D)) != MP_OKAY) \{
-110         goto __ERR;
-111       \}
-112     \}
-113   
-114     /* 6.  if u >= v then */
-115     if (mp_cmp (&u, &v) != MP_LT) \{
-116       /* u = u - v, A = A - C, B = B - D */
-117       if ((res = mp_sub (&u, &v, &u)) != MP_OKAY) \{
-118         goto __ERR;
-119       \}
-120   
-121       if ((res = mp_sub (&A, &C, &A)) != MP_OKAY) \{
-122         goto __ERR;
-123       \}
-124   
-125       if ((res = mp_sub (&B, &D, &B)) != MP_OKAY) \{
-126         goto __ERR;
-127       \}
-128     \} else \{
-129       /* v - v - u, C = C - A, D = D - B */
-130       if ((res = mp_sub (&v, &u, &v)) != MP_OKAY) \{
-131         goto __ERR;
-132       \}
-133   
-134       if ((res = mp_sub (&C, &A, &C)) != MP_OKAY) \{
-135         goto __ERR;
-136       \}
-137   
-138       if ((res = mp_sub (&D, &B, &D)) != MP_OKAY) \{
-139         goto __ERR;
-140       \}
-141     \}
-142   
-143     /* if not zero goto step 4 */
-144     if (mp_iszero (&u) == 0)
-145       goto top;
-146   
-147     /* now a = C, b = D, gcd == g*v */
-148   
-149     /* if v != 1 then there is no inverse */
-150     if (mp_cmp_d (&v, 1) != MP_EQ) \{
-151       res = MP_VAL;
-152       goto __ERR;
-153     \}
-154   
-155     /* if its too low */
-156     while (mp_cmp_d(&C, 0) == MP_LT) \{
-157         if ((res = mp_add(&C, b, &C)) != MP_OKAY) \{
-158            goto __ERR;
-159         \}
-160     \}
-161     
-162     /* too big */
-163     while (mp_cmp_mag(&C, b) != MP_LT) \{
-164         if ((res = mp_sub(&C, b, &C)) != MP_OKAY) \{
-165            goto __ERR;
-166         \}
-167     \}
-168     
-169     /* C is now the inverse */
-170     mp_exch (&C, c);
-171     res = MP_OKAY;
-172   __ERR:mp_clear_multi (&x, &y, &u, &v, &A, &B, &C, &D, NULL);
-173     return res;
-174   \}
+020     /* b cannot be negative */
+021     if (b->sign == MP_NEG || mp_iszero(b) == 1) \{
+022       return MP_VAL;
+023     \}
+024   
+025   #ifdef BN_FAST_MP_INVMOD_C
+026     /* if the modulus is odd we can use a faster routine instead */
+027     if (mp_isodd (b) == 1) \{
+028       return fast_mp_invmod (a, b, c);
+029     \}
+030   #endif
+031   
+032   #ifdef BN_MP_INVMOD_SLOW_C
+033     return mp_invmod_slow(a, b, c);
+034   #endif
+035   
+036     return MP_VAL;
+037   \}
+038   #endif
 \end{alltt}
 \end{small}
 
@@ -10350,6 +10420,7 @@ This algorithm attempts to determine if a candidate integer $n$ is composite by 
 042   
 043     return MP_OKAY;
 044   \}
+045   #endif
 \end{alltt}
 \end{small}
 
@@ -10400,6 +10471,7 @@ mp\_digit.  The table \_\_prime\_tab is defined in the following file.
 053     0x062B, 0x062F, 0x063D, 0x0641, 0x0647, 0x0649, 0x064D, 0x0653
 054   #endif
 055   \};
+056   #endif
 \end{alltt}
 \end{small}
 
@@ -10487,6 +10559,7 @@ determine the result.
 054   __T:mp_clear (&t);
 055     return err;
 056   \}
+057   #endif
 \end{alltt}
 \end{small}
 
@@ -10621,6 +10694,7 @@ composite then it is \textit{probably} prime.
 095   __N1:mp_clear (&n1);
 096     return err;
 097   \}
+098   #endif
 \end{alltt}
 \end{small}
 

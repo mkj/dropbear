@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_GET_INT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* get the lower 32-bits of an mp_int */
 unsigned long mp_get_int(mp_int * a) 
@@ -37,3 +38,4 @@ unsigned long mp_get_int(mp_int * a)
   /* force result to 32-bits always so it is consistent on non 32-bit platforms */
   return res & 0xFFFFFFFFUL;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_XOR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* XOR two ints together */
 int
@@ -36,10 +37,11 @@ mp_xor (mp_int * a, mp_int * b, mp_int * c)
   }
 
   for (ix = 0; ix < px; ix++) {
-    t.dp[ix] ^= x->dp[ix];
+
   }
   mp_clamp (&t);
   mp_exch (c, &t);
   mp_clear (&t);
   return MP_OKAY;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_NEG_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* b = -a */
 int mp_neg (mp_int * a, mp_int * b)
@@ -26,3 +27,4 @@ int mp_neg (mp_int * a, mp_int * b)
   }
   return MP_OKAY;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_FAST_MP_INVMOD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,12 +14,11 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes the modular inverse via binary extended euclidean algorithm, 
  * that is c = 1/a mod b 
  *
- * Based on mp_invmod except this is optimized for the case where b is 
+ * Based on slow invmod except this is optimized for the case where b is 
  * odd as per HAC Note 14.64 on pp. 610
  */
 int
@@ -141,3 +142,4 @@ top:
 __ERR:mp_clear_multi (&x, &y, &u, &v, &B, &D, NULL);
   return res;
 }
+#endif

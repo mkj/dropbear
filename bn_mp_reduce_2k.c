@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_REDUCE_2K_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* reduces a modulo n where n is of the form 2**p - d */
 int
@@ -54,3 +55,4 @@ ERR:
    return res;
 }
 
+#endif

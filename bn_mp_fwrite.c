@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_FWRITE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 int mp_fwrite(mp_int *a, int radix, FILE *stream)
 {
@@ -44,3 +45,4 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream)
    return MP_OKAY;
 }
 
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_MONTGOMERY_REDUCE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes xR**-1 == x (mod N) via Montgomery Reduction */
 int
@@ -23,7 +24,7 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 
   /* can the fast reduction [comba] method be used?
    *
-   * Note that unlike in mp_mul you're safely allowed *less*
+   * Note that unlike in mul you're safely allowed *less*
    * than the available columns [255 per default] since carries
    * are fixed up in the inner loop.
    */
@@ -46,7 +47,7 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     /* mu = ai * rho mod b
      *
      * The value of rho must be precalculated via
-     * bn_mp_montgomery_setup() such that
+     * montgomery_setup() such that
      * it equals -1/n0 mod b this allows the
      * following inner loop to reduce the
      * input one digit at a time
@@ -110,3 +111,4 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 
   return MP_OKAY;
 }
+#endif

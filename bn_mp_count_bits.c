@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_COUNT_BITS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* returns the number of bits in an int */
 int
@@ -37,3 +38,4 @@ mp_count_bits (mp_int * a)
   }
   return r;
 }
+#endif

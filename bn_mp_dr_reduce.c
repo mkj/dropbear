@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_DR_REDUCE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* reduce "x" in place modulo "n" using the Diminished Radix algorithm.
  *
@@ -86,3 +87,4 @@ top:
   }
   return MP_OKAY;
 }
+#endif

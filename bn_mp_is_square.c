@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_IS_SQUARE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* Check if remainders are possible squares - fast exclude non-squares */
 static const char rem_128[128] = {
@@ -69,7 +70,7 @@ int mp_is_square(mp_int *arg,int *ret)
      return MP_OKAY;
   }
 
-  /* product of primes less than 2^31 */
+
   if ((res = mp_init_set_int(&t,11L*13L*17L*19L*23L*29L*31L)) != MP_OKAY) {
      return res;
   }
@@ -101,3 +102,4 @@ int mp_is_square(mp_int *arg,int *ret)
 ERR:mp_clear(&t);
   return res;
 }
+#endif

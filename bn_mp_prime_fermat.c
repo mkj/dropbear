@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_PRIME_FERMAT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* performs one Fermat test.
  * 
@@ -54,3 +55,4 @@ int mp_prime_fermat (mp_int * a, mp_int * b, int *result)
 __T:mp_clear (&t);
   return err;
 }
+#endif

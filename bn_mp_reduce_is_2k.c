@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_REDUCE_IS_2K_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,12 +14,12 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* determines if mp_reduce_2k can be used */
 int mp_reduce_is_2k(mp_int *a)
 {
-   int ix, iy, iz, iw;
+   int ix, iy, iw;
+   mp_digit iz;
    
    if (a->used == 0) {
       return 0;
@@ -34,7 +36,7 @@ int mp_reduce_is_2k(mp_int *a)
              return 0;
           }
           iz <<= 1;
-          if (iz > (int)MP_MASK) {
+          if (iz > (mp_digit)MP_MASK) {
              ++iw;
              iz = 1;
           }
@@ -43,3 +45,4 @@ int mp_reduce_is_2k(mp_int *a)
    return 1;
 }
 
+#endif

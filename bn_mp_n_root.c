@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_N_ROOT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* find the n'th root of an integer 
  *
@@ -124,3 +125,4 @@ __T2:mp_clear (&t2);
 __T1:mp_clear (&t1);
   return res;
 }
+#endif

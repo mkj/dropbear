@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_KARATSUBA_SQR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,12 +14,11 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* Karatsuba squaring, computes b = a*a using three 
  * half size squarings
  *
- * See comments of mp_karatsuba_mul for details.  It 
+ * See comments of karatsuba_mul for details.  It 
  * is essentially the same algorithm but merely 
  * tuned to perform recursive squarings.
  */
@@ -113,3 +114,4 @@ X0:mp_clear (&x0);
 ERR:
   return err;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_PRIME_RANDOM_EX_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* makes a truly random prime of a given size (bits),
  *
@@ -92,6 +93,9 @@ int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback
 
       /* is it prime? */
       if ((err = mp_prime_is_prime(a, t, &res)) != MP_OKAY)           { goto error; }
+      if (res == MP_NO) {  
+         continue;
+      }
 
       if (flags & LTM_PRIME_SAFE) {
          /* see if (a-1)/2 is prime */
@@ -116,3 +120,4 @@ error:
 }
 
 
+#endif

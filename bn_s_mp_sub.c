@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_S_MP_SUB_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* low level subtraction (assumes |a| > |b|), HAC pp.595 Algorithm 14.9 */
 int
@@ -81,3 +82,4 @@ s_mp_sub (mp_int * a, mp_int * b, mp_int * c)
   return MP_OKAY;
 }
 
+#endif

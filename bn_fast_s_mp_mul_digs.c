@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_FAST_S_MP_MUL_DIGS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* Fast (comba) multiplier
  *
@@ -33,8 +34,9 @@
 int
 fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 {
-  int     olduse, res, pa, ix;
-  mp_word W[MP_WARRAY];
+  int     olduse, res, pa, ix, iz;
+  mp_digit W[MP_WARRAY];
+  register mp_word  _W;
 
   /* grow the destination as required */
   if (c->alloc < digs) {
@@ -43,82 +45,52 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
     }
   }
 
-  /* clear temp buf (the columns) */
-  memset (W, 0, sizeof (mp_word) * digs);
+  /* number of output digits to produce */
+  pa = MIN(digs, a->used + b->used);
 
-  /* calculate the columns */
-  pa = a->used;
-  for (ix = 0; ix < pa; ix++) {
-    /* this multiplier has been modified to allow you to 
-     * control how many digits of output are produced.  
-     * So at most we want to make upto "digs" digits of output.
-     *
-     * this adds products to distinct columns (at ix+iy) of W
-     * note that each step through the loop is not dependent on
-     * the previous which means the compiler can easily unroll
-     * the loop without scheduling problems
-     */
-    {
-      register mp_digit tmpx, *tmpy;
-      register mp_word *_W;
-      register int iy, pb;
+  /* clear the carry */
+  _W = 0;
+  for (ix = 0; ix <= pa; ix++) { 
+      int      tx, ty;
+      int      iy;
+      mp_digit *tmpx, *tmpy;
 
-      /* alias for the the word on the left e.g. A[ix] * A[iy] */
-      tmpx = a->dp[ix];
+      /* get offsets into the two bignums */
+      ty = MIN(b->used-1, ix);
+      tx = ix - ty;
 
-      /* alias for the right side */
-      tmpy = b->dp;
+      /* setup temp aliases */
+      tmpx = a->dp + tx;
+      tmpy = b->dp + ty;
 
-      /* alias for the columns, each step through the loop adds a new
-         term to each column
+      /* this is the number of times the loop will iterrate, essentially its 
+         while (tx++ < a->used && ty-- >= 0) { ... }
        */
-      _W = W + ix;
+      iy = MIN(a->used-tx, ty+1);
 
-      /* the number of digits is limited by their placement.  E.g.
-         we avoid multiplying digits that will end up above the # of
-         digits of precision requested
-       */
-      pb = MIN (b->used, digs - ix);
-
-      for (iy = 0; iy < pb; iy++) {
-        *_W++ += ((mp_word)tmpx) * ((mp_word)*tmpy++);
+      /* execute loop */
+      for (iz = 0; iz < iy; ++iz) {
+         _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
       }
-    }
 
+      /* store term */
+      W[ix] = ((mp_digit)_W) & MP_MASK;
+
+      /* make next carry */
+      _W = _W >> ((mp_word)DIGIT_BIT);
   }
 
   /* setup dest */
-  olduse = c->used;
+  olduse  = c->used;
   c->used = digs;
 
   {
     register mp_digit *tmpc;
-
-    /* At this point W[] contains the sums of each column.  To get the
-     * correct result we must take the extra bits from each column and
-     * carry them down
-     *
-     * Note that while this adds extra code to the multiplier it 
-     * saves time since the carry propagation is removed from the 
-     * above nested loop.This has the effect of reducing the work 
-     * from N*(N+N*c)==N**2 + c*N**2 to N**2 + N*c where c is the 
-     * cost of the shifting.  On very small numbers this is slower 
-     * but on most cryptographic size numbers it is faster.
-     *
-     * In this particular implementation we feed the carries from
-     * behind which means when the loop terminates we still have one
-     * last digit to copy
-     */
     tmpc = c->dp;
-    for (ix = 1; ix < digs; ix++) {
-      /* forward the carry from the previous temp */
-      W[ix] += (W[ix - 1] >> ((mp_word) DIGIT_BIT));
-
+    for (ix = 0; ix < digs; ix++) {
       /* now extract the previous digit [below the carry] */
-      *tmpc++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
+      *tmpc++ = W[ix];
     }
-    /* fetch the last digit */
-    *tmpc++ = (mp_digit) (W[digs - 1] & ((mp_word) MP_MASK));
 
     /* clear unused digits [that existed in the old copy of c] */
     for (; ix < olduse; ix++) {
@@ -128,3 +100,4 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
   mp_clamp (c);
   return MP_OKAY;
 }
+#endif

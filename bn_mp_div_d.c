@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_DIV_D_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 static int s_is_power_of_two(mp_digit b, int *p)
 {
@@ -54,7 +55,7 @@ int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
   /* power of two ? */
   if (s_is_power_of_two(b, &ix) == 1) {
      if (d != NULL) {
-        *d = a->dp[0] & ((1<<ix) - 1);
+        *d = a->dp[0] & ((((mp_digit)1)<<ix) - 1);
      }
      if (c != NULL) {
         return mp_div_2d(a, ix, c, NULL);
@@ -62,10 +63,12 @@ int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
      return MP_OKAY;
   }
 
+#ifdef BN_MP_DIV_3_C
   /* three? */
   if (b == 3) {
      return mp_div_3(a, c, d);
   }
+#endif
 
   /* no easy answer [c'est la vie].  Just division */
   if ((res = mp_init_size(&q, a->used)) != MP_OKAY) {
@@ -100,3 +103,4 @@ int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
   return res;
 }
 
+#endif

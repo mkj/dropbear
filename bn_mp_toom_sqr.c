@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_TOOM_SQR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* squaring using Toom-Cook 3-way algorithm */
 int
@@ -218,3 +219,4 @@ ERR:
      return res;
 }
 
+#endif

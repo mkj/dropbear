@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_REDUCE_SETUP_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,13 +14,11 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* pre-calculate the value required for Barrett reduction
  * For a given modulus "b" it calulates the value required in "a"
  */
-int
-mp_reduce_setup (mp_int * a, mp_int * b)
+int mp_reduce_setup (mp_int * a, mp_int * b)
 {
   int     res;
   
@@ -27,3 +27,4 @@ mp_reduce_setup (mp_int * a, mp_int * b)
   }
   return mp_div (a, b, a, NULL);
 }
+#endif

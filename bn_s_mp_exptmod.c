@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_S_MP_EXPTMOD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 #ifdef MP_LOW_MEM
    #define TAB_SIZE 32
@@ -232,3 +233,4 @@ __M:
   }
   return err;
 }
+#endif

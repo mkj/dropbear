@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_READ_RADIX_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* read a string [ASCII] in a given radix */
 int mp_read_radix (mp_int * a, char *str, int radix)
@@ -74,3 +75,4 @@ int mp_read_radix (mp_int * a, char *str, int radix)
   }
   return MP_OKAY;
 }
+#endif

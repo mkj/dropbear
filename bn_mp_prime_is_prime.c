@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_PRIME_IS_PRIME_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,12 +14,11 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* performs a variable number of rounds of Miller-Rabin
  *
  * Probability of error after t rounds is no more than
- * (1/4)^t when 1 <= t <= PRIME_SIZE
+
  *
  * Sets result to 1 if probably prime, 0 otherwise
  */
@@ -75,3 +76,4 @@ int mp_prime_is_prime (mp_int * a, int t, int *result)
 __B:mp_clear (&b);
   return err;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_GCD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* Greatest Common Divisor using the binary method */
 int mp_gcd (mp_int * a, mp_int * b, mp_int * c)
@@ -105,3 +106,4 @@ __V:mp_clear (&u);
 __U:mp_clear (&v);
   return res;
 }
+#endif

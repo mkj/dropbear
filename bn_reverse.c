@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_REVERSE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* reverse an array, used for radix code */
 void
@@ -31,3 +32,4 @@ bn_reverse (unsigned char *s, int len)
     --iy;
   }
 }
+#endif

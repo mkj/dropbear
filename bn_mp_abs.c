@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_ABS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* b = |a| 
  *
@@ -35,3 +36,4 @@ mp_abs (mp_int * a, mp_int * b)
 
   return MP_OKAY;
 }
+#endif

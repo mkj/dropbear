@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_EXPTMOD_FAST_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes Y == G**X mod P, HAC pp.616, Algorithm 14.85
  *
@@ -84,29 +85,52 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
 
   /* determine and setup reduction code */
   if (redmode == 0) {
+#ifdef BN_MP_MONTGOMERY_SETUP_C     
      /* now setup montgomery  */
      if ((err = mp_montgomery_setup (P, &mp)) != MP_OKAY) {
         goto __M;
      }
+#else
+     err = MP_VAL;
+     goto __M;
+#endif
 
      /* automatically pick the comba one if available (saves quite a few calls/ifs) */
+#ifdef BN_FAST_MP_MONTGOMERY_REDUCE_C
      if (((P->used * 2 + 1) < MP_WARRAY) &&
           P->used < (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
         redux = fast_mp_montgomery_reduce;
-     } else {
+     } else 
+#endif
+     {
+#ifdef BN_MP_MONTGOMERY_REDUCE_C
         /* use slower baseline Montgomery method */
         redux = mp_montgomery_reduce;
+#else
+        err = MP_VAL;
+        goto __M;
+#endif
      }
   } else if (redmode == 1) {
+#if defined(BN_MP_DR_SETUP_C) && defined(BN_MP_DR_REDUCE_C)
      /* setup DR reduction for moduli of the form B**k - b */
      mp_dr_setup(P, &mp);
      redux = mp_dr_reduce;
+#else
+     err = MP_VAL;
+     goto __M;
+#endif
   } else {
+#if defined(BN_MP_REDUCE_2K_SETUP_C) && defined(BN_MP_REDUCE_2K_C)
      /* setup DR reduction for moduli of the form 2**k - b */
      if ((err = mp_reduce_2k_setup(P, &mp)) != MP_OKAY) {
         goto __M;
      }
      redux = mp_reduce_2k;
+#else
+     err = MP_VAL;
+     goto __M;
+#endif
   }
 
   /* setup result */
@@ -116,16 +140,21 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
 
   /* create M table
    *
-   * The M table contains powers of the input base, e.g. M[x] = G^x mod P
+
    *
    * The first half of the table is not computed though accept for M[0] and M[1]
    */
 
   if (redmode == 0) {
+#ifdef BN_MP_MONTGOMERY_CALC_NORMALIZATION_C
      /* now we need R mod m */
      if ((err = mp_montgomery_calc_normalization (&res, P)) != MP_OKAY) {
        goto __RES;
      }
+#else 
+     err = MP_VAL;
+     goto __RES;
+#endif
 
      /* now set M[1] to G * R mod m */
      if ((err = mp_mulmod (G, &res, P, &M[1])) != MP_OKAY) {
@@ -269,7 +298,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
       * to reduce one more time to cancel out the factor
       * of R.
       */
-     if ((err = mp_montgomery_reduce (&res, P, mp)) != MP_OKAY) {
+     if ((err = redux(&res, P, mp)) != MP_OKAY) {
        goto __RES;
      }
   }
@@ -285,3 +314,5 @@ __M:
   }
   return err;
 }
+#endif
+

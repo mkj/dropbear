@@ -58,7 +58,7 @@ void rand_num2(mp_int *a)
    int n, size;
    unsigned char buf[2048];
 
-   size = 1 + ((fgetc(rng)<<8) + fgetc(rng)) % 97;
+   size = 10 + ((fgetc(rng)<<8) + fgetc(rng)) % 97;
    buf[0] = (fgetc(rng)&1)?1:0;
    fread(buf+1, 1, size, rng);
    while (buf[1] == 0) buf[1] = fgetc(rng);
@@ -109,11 +109,12 @@ int main(void)
 
    t1 = clock();
    for (;;) {
+#if 0
       if (clock() - t1 > CLOCKS_PER_SEC) {
          sleep(2);
          t1 = clock();
       }
-
+#endif
        n = fgetc(rng) % 15;
 
    if (n == 0) {

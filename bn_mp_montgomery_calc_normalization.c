@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_MONTGOMERY_CALC_NORMALIZATION_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,30 +14,30 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
-/* calculates a = B^n mod b for Montgomery reduction
- * Where B is the base [e.g. 2^DIGIT_BIT].
- * B^n mod b is computed by first computing
- * A = B^(n-1) which doesn't require a reduction but a simple OR.
- * then C = A * B = B^n is computed by performing upto DIGIT_BIT
+/*
  * shifts with subtractions when the result is greater than b.
  *
  * The method is slightly modified to shift B unconditionally upto just under
  * the leading bit of b.  This saves alot of multiple precision shifting.
  */
-int
-mp_montgomery_calc_normalization (mp_int * a, mp_int * b)
+int mp_montgomery_calc_normalization (mp_int * a, mp_int * b)
 {
   int     x, bits, res;
 
   /* how many bits of last digit does b use */
   bits = mp_count_bits (b) % DIGIT_BIT;
 
-  /* compute A = B^(n-1) * 2^(bits-1) */
-  if ((res = mp_2expt (a, (b->used - 1) * DIGIT_BIT + bits - 1)) != MP_OKAY) {
-    return res;
+
+  if (b->used > 1) {
+     if ((res = mp_2expt (a, (b->used - 1) * DIGIT_BIT + bits - 1)) != MP_OKAY) {
+        return res;
+     }
+  } else {
+     mp_set(a, 1);
+     bits = 1;
   }
+
 
   /* now compute C = A * B mod b */
   for (x = bits - 1; x < (int)DIGIT_BIT; x++) {
@@ -51,3 +53,4 @@ mp_montgomery_calc_normalization (mp_int * a, mp_int * b)
 
   return MP_OKAY;
 }
+#endif

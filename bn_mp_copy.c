@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_COPY_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* copy, b = a */
 int
@@ -60,3 +61,4 @@ mp_copy (mp_int * a, mp_int * b)
   b->sign = a->sign;
   return MP_OKAY;
 }
+#endif

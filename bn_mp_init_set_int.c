@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_INIT_SET_INT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* initialize and set a digit */
 int mp_init_set_int (mp_int * a, unsigned long b)
@@ -23,3 +24,4 @@ int mp_init_set_int (mp_int * a, unsigned long b)
   }
   return mp_set_int(a, b);
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_JACOBI_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes the jacobi c = (a | n) (or Legendre if n is prime)
  * HAC pp. 73 Algorithm 2.149
@@ -97,3 +98,4 @@ __P1:mp_clear (&p1);
 __A1:mp_clear (&a1);
   return res;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_DIV_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,78 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
+
+#ifdef BN_MP_DIV_SMALL
+
+/* slower bit-bang division... also smaller */
+int mp_div(mp_int * a, mp_int * b, mp_int * c, mp_int * d)
+{
+   mp_int ta, tb, tq, q;
+   int    res, n, n2;
+
+  /* is divisor zero ? */
+  if (mp_iszero (b) == 1) {
+    return MP_VAL;
+  }
+
+  /* if a < b then q=0, r = a */
+  if (mp_cmp_mag (a, b) == MP_LT) {
+    if (d != NULL) {
+      res = mp_copy (a, d);
+    } else {
+      res = MP_OKAY;
+    }
+    if (c != NULL) {
+      mp_zero (c);
+    }
+    return res;
+  }
+	
+  /* init our temps */
+  if ((res = mp_init_multi(&ta, &tb, &tq, &q, NULL) != MP_OKAY)) {
+     return res;
+  }
+
+
+  mp_set(&tq, 1);
+  n = mp_count_bits(a) - mp_count_bits(b);
+  if (((res = mp_copy(a, &ta)) != MP_OKAY) ||
+      ((res = mp_copy(b, &tb)) != MP_OKAY) || 
+      ((res = mp_mul_2d(&tb, n, &tb)) != MP_OKAY) ||
+      ((res = mp_mul_2d(&tq, n, &tq)) != MP_OKAY)) {
+      goto __ERR;
+  }
+
+  while (n-- >= 0) {
+     if (mp_cmp(&tb, &ta) != MP_GT) {
+        if (((res = mp_sub(&ta, &tb, &ta)) != MP_OKAY) ||
+            ((res = mp_add(&q, &tq, &q)) != MP_OKAY)) {
+           goto __ERR;
+        }
+     }
+     if (((res = mp_div_2d(&tb, 1, &tb, NULL)) != MP_OKAY) ||
+         ((res = mp_div_2d(&tq, 1, &tq, NULL)) != MP_OKAY)) {
+           goto __ERR;
+     }
+  }
+
+  /* now q == quotient and ta == remainder */
+  n  = a->sign;
+  n2 = (a->sign == b->sign ? MP_ZPOS : MP_NEG);
+  if (c != NULL) {
+     mp_exch(c, &q);
+     c->sign  = n2;
+  }
+  if (d != NULL) {
+     mp_exch(d, &ta);
+     d->sign = n;
+  }
+__ERR:
+   mp_clear_multi(&ta, &tb, &tq, &q, NULL);
+   return res;
+}
+
+#else
 
 /* integer signed division. 
  * c*b + d == a [e.g. a/b, c=quotient, d=remainder]
@@ -187,7 +260,7 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
    */
   
   /* get sign before writing to c */
-  x.sign = a->sign;
+  x.sign = x.used == 0 ? MP_ZPOS : a->sign;
 
   if (c != NULL) {
     mp_clamp (&q);
@@ -209,3 +282,7 @@ __T1:mp_clear (&t1);
 __Q:mp_clear (&q);
   return res;
 }
+
+#endif
+
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_TO_UNSIGNED_BIN_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* store in unsigned [big endian] format */
 int
@@ -41,3 +42,4 @@ mp_to_unsigned_bin (mp_int * a, unsigned char *b)
   mp_clear (&t);
   return MP_OKAY;
 }
+#endif

@@ -21,6 +21,8 @@
 #include <ctype.h>
 #include <limits.h>
 
+#include <tommath_class.h>
+
 #undef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))
 #undef MAX
@@ -37,6 +39,14 @@ extern "C" {
 /* C on the other hand doesn't care */
 #define  OPT_CAST(x)
 
+#endif
+
+
+/* detect 64-bit mode if possible */
+#if defined(__x86_64__) 
+   #if !(defined(MP_64BIT) && defined(MP_16BIT) && defined(MP_8BIT))
+      #define MP_64BIT
+   #endif
 #endif
 
 /* some default configurations.
@@ -60,7 +70,7 @@ extern "C" {
    typedef signed long long   long64;
 #endif
 
-   typedef ulong64            mp_digit;
+   typedef unsigned long      mp_digit;
    typedef unsigned long      mp_word __attribute__ ((mode(TI)));
 
    #define DIGIT_BIT          60
@@ -153,7 +163,7 @@ extern int KARATSUBA_MUL_CUTOFF,
 
 /* default precision */
 #ifndef MP_PREC
-   #ifdef MP_LOW_MEM
+   #ifndef MP_LOW_MEM
       #define MP_PREC                 64     /* default digits of precision */
    #else
       #define MP_PREC                 8      /* default digits of precision */
@@ -541,6 +551,7 @@ int mp_toom_mul(mp_int *a, mp_int *b, mp_int *c);
 int mp_karatsuba_sqr(mp_int *a, mp_int *b);
 int mp_toom_sqr(mp_int *a, mp_int *b);
 int fast_mp_invmod(mp_int *a, mp_int *b, mp_int *c);
+int mp_invmod_slow (mp_int * a, mp_int * b, mp_int * c);
 int fast_mp_montgomery_reduce(mp_int *a, mp_int *m, mp_digit mp);
 int mp_exptmod_fast(mp_int *G, mp_int *X, mp_int *P, mp_int *Y, int mode);
 int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);

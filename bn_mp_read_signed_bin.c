@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_READ_SIGNED_BIN_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* read signed bin, big endian, first byte is 0==positive or 1==negative */
 int
@@ -34,3 +35,4 @@ mp_read_signed_bin (mp_int * a, unsigned char *b, int c)
 
   return MP_OKAY;
 }
+#endif

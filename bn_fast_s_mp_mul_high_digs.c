@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_FAST_S_MP_MUL_HIGH_DIGS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,10 +14,9 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
- #include <tommath.h>
 
-/* this is a modified version of fast_s_mp_mul_digs that only produces
- * output digits *above* digs.  See the comments for fast_s_mp_mul_digs
+/* this is a modified version of fast_s_mul_digs that only produces
+ * output digits *above* digs.  See the comments for fast_s_mul_digs
  * to see how it works.
  *
  * This is used in the Barrett reduction since for one of the multiplications
@@ -26,73 +27,69 @@
 int
 fast_s_mp_mul_high_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 {
-  int     oldused, newused, res, pa, pb, ix;
-  mp_word W[MP_WARRAY];
+  int     olduse, res, pa, ix, iz;
+  mp_digit W[MP_WARRAY];
+  mp_word  _W;
 
-  /* calculate size of product and allocate more space if required */
-  newused = a->used + b->used + 1;
-  if (c->alloc < newused) {
-    if ((res = mp_grow (c, newused)) != MP_OKAY) {
+  /* grow the destination as required */
+  pa = a->used + b->used;
+  if (c->alloc < pa) {
+    if ((res = mp_grow (c, pa)) != MP_OKAY) {
       return res;
     }
   }
 
-  /* like the other comba method we compute the columns first */
-  pa = a->used;
-  pb = b->used;
-  memset (W + digs, 0, (pa + pb + 1 - digs) * sizeof (mp_word));
-  for (ix = 0; ix < pa; ix++) {
-    {
-      register mp_digit tmpx, *tmpy;
-      register int iy;
-      register mp_word *_W;
+  /* number of output digits to produce */
+  pa = a->used + b->used;
+  _W = 0;
+  for (ix = digs; ix <= pa; ix++) { 
+      int      tx, ty, iy;
+      mp_digit *tmpx, *tmpy;
 
-      /* work todo, that is we only calculate digits that are at "digs" or above  */
-      iy = digs - ix;
+      /* get offsets into the two bignums */
+      ty = MIN(b->used-1, ix);
+      tx = ix - ty;
 
-      /* copy of word on the left of A[ix] * B[iy] */
-      tmpx = a->dp[ix];
+      /* setup temp aliases */
+      tmpx = a->dp + tx;
+      tmpy = b->dp + ty;
 
-      /* alias for right side */
-      tmpy = b->dp + iy;
-     
-      /* alias for the columns of output.  Offset to be equal to or above the 
-       * smallest digit place requested 
+      /* this is the number of times the loop will iterrate, essentially its 
+         while (tx++ < a->used && ty-- >= 0) { ... }
        */
-      _W = W + digs;     
-      
-      /* skip cases below zero where ix > digs */
-      if (iy < 0) {
-         iy    = abs(iy);
-         tmpy += iy;
-         _W   += iy;
-         iy    = 0;
+      iy = MIN(a->used-tx, ty+1);
+
+      /* execute loop */
+      for (iz = 0; iz < iy; iz++) {
+         _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
       }
 
-      /* compute column products for digits above the minimum */
-      for (; iy < pb; iy++) {
-         *_W++ += ((mp_word) tmpx) * ((mp_word)*tmpy++);
-      }
-    }
+      /* store term */
+      W[ix] = ((mp_digit)_W) & MP_MASK;
+
+      /* make next carry */
+      _W = _W >> ((mp_word)DIGIT_BIT);
   }
 
   /* setup dest */
-  oldused = c->used;
-  c->used = newused;
+  olduse  = c->used;
+  c->used = pa;
 
-  /* now convert the array W downto what we need
-   *
-   * See comments in bn_fast_s_mp_mul_digs.c
-   */
-  for (ix = digs + 1; ix < newused; ix++) {
-    W[ix] += (W[ix - 1] >> ((mp_word) DIGIT_BIT));
-    c->dp[ix - 1] = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
-  }
-  c->dp[newused - 1] = (mp_digit) (W[newused - 1] & ((mp_word) MP_MASK));
+  {
+    register mp_digit *tmpc;
 
-  for (; ix < oldused; ix++) {
-    c->dp[ix] = 0;
+    tmpc = c->dp + digs;
+    for (ix = digs; ix <= pa; ix++) {
+      /* now extract the previous digit [below the carry] */
+      *tmpc++ = W[ix];
+    }
+
+    /* clear unused digits [that existed in the old copy of c] */
+    for (; ix < olduse; ix++) {
+      *tmpc++ = 0;
+    }
   }
   mp_clamp (c);
   return MP_OKAY;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_CNT_LSB_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 static const int lnz[16] = { 
    4, 0, 1, 0, 2, 0, 1, 0, 3, 0, 1, 0, 2, 0, 1, 0
@@ -45,3 +46,4 @@ int mp_cnt_lsb(mp_int *a)
    return x;
 }
 
+#endif

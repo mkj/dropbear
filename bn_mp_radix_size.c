@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_RADIX_SIZE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* returns size of ASCII reprensentation */
 int mp_radix_size (mp_int * a, int radix, int *size)
@@ -63,3 +64,4 @@ int mp_radix_size (mp_int * a, int radix, int *size)
   return MP_OKAY;
 }
 
+#endif

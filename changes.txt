@@ -1,3 +1,27 @@
+October 29th, 2004
+v0.32  -- Added "makefile.shared" for shared object support
+       -- Added more to the build options/configs in the manual
+       -- Started the Depends framework, wrote dep.pl to scan deps and 
+          produce "callgraph.txt" ;-)
+       -- Wrote SC_RSA_1 which will enable close to the minimum required to perform
+          RSA on 32-bit [or 64-bit] platforms with LibTomCrypt
+       -- Merged in the small/slower mp_div replacement.  You can now toggle which
+          you want to use as your mp_div() at build time.  Saves roughly 8KB or so.
+       -- Renamed a few files and changed some comments to make depends system work better.
+          (No changes to function names)
+       -- Merged in new Combas that perform 2 reads per inner loop instead of the older 
+          3reads/2writes per inner loop of the old code.  Really though if you want speed
+          learn to use TomsFastMath ;-)
+
+August 9th, 2004
+v0.31  -- "profiled" builds now :-) new timings for Intel Northwoods
+       -- Added "pretty" build target
+       -- Update mp_init() to actually assign 0's instead of relying on calloc()
+       -- "Wolfgang Ehrhardt" <Wolfgang.Ehrhardt@munich.netsurf.de> found a bug in mp_mul() where if
+          you multiply a negative by zero you get negative zero as the result.  Oops.
+       -- J Harper from PeerSec let me toy with his AMD64 and I got 60-bit digits working properly
+          [this also means that I fixed a bug where if sizeof(int) < sizeof(mp_digit) it would bug]
+
 April 11th, 2004
 v0.30  -- Added "mp_toradix_n" which stores upto "n-1" least significant digits of an mp_int
        -- Johan Lindh sent a patch so MSVC wouldn't whine about redefining malloc [in weird dll modes]

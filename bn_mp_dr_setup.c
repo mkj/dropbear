@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_DR_SETUP_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* determines the setup value */
 void mp_dr_setup(mp_int *a, mp_digit *d)
@@ -24,3 +25,4 @@ void mp_dr_setup(mp_int *a, mp_digit *d)
         ((mp_word)a->dp[0]));
 }
 
+#endif

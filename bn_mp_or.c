@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_OR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* OR two ints together */
 int mp_or (mp_int * a, mp_int * b, mp_int * c)
@@ -42,3 +43,4 @@ int mp_or (mp_int * a, mp_int * b, mp_int * c)
   mp_clear (&t);
   return MP_OKAY;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_S_MP_SQR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* low level squaring, b = a*a, HAC pp.596-597, Algorithm 14.16 */
 int
@@ -77,3 +78,4 @@ s_mp_sqr (mp_int * a, mp_int * b)
   mp_clear (&t);
   return MP_OKAY;
 }
+#endif

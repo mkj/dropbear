@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_S_MP_MUL_DIGS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* multiplies |a| * |b| and only computes upto digs digits of result
  * HAC pp. 595, Algorithm 14.12  Modified so you can control how 
@@ -83,3 +84,4 @@ s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
   mp_clear (&t);
   return MP_OKAY;
 }
+#endif

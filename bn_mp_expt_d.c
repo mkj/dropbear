@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_EXPT_D_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* calculate c = a**b  using a square-multiply algorithm */
 int mp_expt_d (mp_int * a, mp_digit b, mp_int * c)
@@ -49,3 +50,4 @@ int mp_expt_d (mp_int * a, mp_digit b, mp_int * c)
   mp_clear (&g);
   return MP_OKAY;
 }
+#endif

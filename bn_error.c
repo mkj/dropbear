@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_ERROR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 static const struct {
      int code;
@@ -39,3 +40,4 @@ char *mp_error_to_string(int code)
    return "Invalid error code";
 }
 
+#endif

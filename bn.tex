@@ -49,7 +49,7 @@
 \begin{document}
 \frontmatter
 \pagestyle{empty}
-\title{LibTomMath User Manual \\ v0.30}
+\title{LibTomMath User Manual \\ v0.32}
 \author{Tom St Denis \\ tomstdenis@iahu.ca}
 \maketitle
 This text, the library and the accompanying textbook are all hereby placed in the public domain.  This book has been 
@@ -96,27 +96,34 @@ LibTomMath is meant to be very ``GCC friendly'' as it comes with a makefile well
 also build in MSVC, Borland C out of the box.  For any other ISO C compiler a makefile will have to be made by the end
 developer.  
 
-To build the library for GCC simply issue the 
-
+\subsection{Static Libraries}
+To build as a static library for GCC issue the following
 \begin{alltt}
 make
 \end{alltt}
 
-command.  This will build the library and archive the object files in ``libtommath.a''.  Now you simply link against that
-and include ``tommath.h'' within your programs.  
-
-Alternatively to build with MSVC type
-
+command.  This will build the library and archive the object files in ``libtommath.a''.  Now you link against 
+that and include ``tommath.h'' within your programs.  Alternatively to build with MSVC issue the following
 \begin{alltt}
 nmake -f makefile.msvc
 \end{alltt}
 
-This will build the library and archive the object files in ``tommath.lib''.  This has been tested with MSVC version 6.00
-with service pack 5.  
+This will build the library and archive the object files in ``tommath.lib''.  This has been tested with MSVC 
+version 6.00 with service pack 5.  
 
-There is limited support for making a ``DLL'' in windows via the ``makefile.cygwin\_dll'' makefile.  It requires Cygwin
-to work with since it requires the auto-export/import functionality.  The resulting DLL and imprt library ``libtomcrypt.dll.a''
-can be used to link LibTomMath dynamically to any Windows program using Cygwin.
+\subsection{Shared Libraries}
+To build as a shared library for GCC issue the following
+\begin{alltt}
+make -f makefile.shared
+\end{alltt}
+This requires the ``libtool'' package (common on most Linux/BSD systems).  It will build LibTomMath as both shared
+and static then install (by default) into /usr/lib as well as install the header files in /usr/include.  The shared 
+library (resource) will be called ``libtommath.la'' while the static library called ``libtommath.a''.  Generally 
+you use libtool to link your application against the shared object.  
+
+There is limited support for making a ``DLL'' in windows via the ``makefile.cygwin\_dll'' makefile.  It requires 
+Cygwin to work with since it requires the auto-export/import functionality.  The resulting DLL and import library 
+``libtommath.dll.a'' can be used to link LibTomMath dynamically to any Windows program using Cygwin.
 
 \subsection{Testing}
 To build the library and the test harness type
@@ -143,6 +150,96 @@ myprng | mtest/mtest | test
 This will output a row of numbers that are increasing.  Each column is a different test (such as addition, multiplication, etc)
 that is being performed.  The numbers represent how many times the test was invoked.  If an error is detected the program
 will exit with a dump of the relevent numbers it was working with.
+
+\section{Build Configuration}
+LibTomMath can configured at build time in three phases we shall call ``depends'', ``tweaks'' and ``trims''.  
+Each phase changes how the library is built and they are applied one after another respectively.  
+
+To make the system more powerful you can tweak the build process.  Classes are defined in the file
+``tommath\_superclass.h''.  By default, the symbol ``LTM\_ALL'' shall be defined which simply 
+instructs the system to build all of the functions.  This is how LibTomMath used to be packaged.  This will give you 
+access to every function LibTomMath offers.
+
+However, there are cases where such a build is not optional.  For instance, you want to perform RSA operations.  You 
+don't need the vast majority of the library to perform these operations.  Aside from LTM\_ALL there is 
+another pre--defined class ``SC\_RSA\_1'' which works in conjunction with the RSA from LibTomCrypt.  Additional 
+classes can be defined base on the need of the user.
+
+\subsection{Build Depends}
+In the file tommath\_class.h you will see a large list of C ``defines'' followed by a series of ``ifdefs''
+which further define symbols.  All of the symbols (technically they're macros $\ldots$) represent a given C source
+file.  For instance, BN\_MP\_ADD\_C represents the file ``bn\_mp\_add.c''.  When a define has been enabled the
+function in the respective file will be compiled and linked into the library.  Accordingly when the define
+is absent the file will not be compiled and not contribute any size to the library.
+
+You will also note that the header tommath\_class.h is actually recursively included (it includes itself twice).  
+This is to help resolve as many dependencies as possible.  In the last pass the symbol LTM\_LAST will be defined.  
+This is useful for ``trims''.
+
+\subsection{Build Tweaks}
+A tweak is an algorithm ``alternative''.  For example, to provide tradeoffs (usually between size and space).
+They can be enabled at any pass of the configuration phase.
+
+\begin{small}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline \textbf{Define} & \textbf{Purpose} \\
+\hline BN\_MP\_DIV\_SMALL & Enables a slower, smaller and equally \\
+                          & functional mp\_div() function \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsection{Build Trims}
+A trim is a manner of removing functionality from a function that is not required.  For instance, to perform
+RSA cryptography you only require exponentiation with odd moduli so even moduli support can be safely removed.  
+Build trims are meant to be defined on the last pass of the configuration which means they are to be defined
+only if LTM\_LAST has been defined.
+
+\subsubsection{Moduli Related}
+\begin{small}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline \textbf{Restriction} & \textbf{Undefine} \\
+\hline Exponentiation with odd moduli only & BN\_S\_MP\_EXPTMOD\_C \\
+                                           & BN\_MP\_REDUCE\_C \\
+                                           & BN\_MP\_REDUCE\_SETUP\_C \\
+                                           & BN\_S\_MP\_MUL\_HIGH\_DIGS\_C \\
+                                           & BN\_FAST\_S\_MP\_MUL\_HIGH\_DIGS\_C \\
+\hline Exponentiation with random odd moduli & (The above plus the following) \\
+                                           & BN\_MP\_REDUCE\_2K\_C \\
+                                           & BN\_MP\_REDUCE\_2K\_SETUP\_C \\
+                                           & BN\_MP\_REDUCE\_IS\_2K\_C \\
+                                           & BN\_MP\_DR\_IS\_MODULUS\_C \\
+                                           & BN\_MP\_DR\_REDUCE\_C \\
+                                           & BN\_MP\_DR\_SETUP\_C \\
+\hline Modular inverse odd moduli only     & BN\_MP\_INVMOD\_SLOW\_C \\
+\hline Modular inverse (both, smaller/slower) & BN\_FAST\_MP\_INVMOD\_C \\
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+
+\subsubsection{Operand Size Related}
+\begin{small}
+\begin{center}
+\begin{tabular}{|l|l|}
+\hline \textbf{Restriction} & \textbf{Undefine} \\
+\hline Moduli $\le 2560$ bits              & BN\_MP\_MONTGOMERY\_REDUCE\_C \\
+                                           & BN\_S\_MP\_MUL\_DIGS\_C \\
+                                           & BN\_S\_MP\_MUL\_HIGH\_DIGS\_C \\
+                                           & BN\_S\_MP\_SQR\_C \\
+\hline Polynomial Schmolynomial            & BN\_MP\_KARATSUBA\_MUL\_C \\
+                                           & BN\_MP\_KARATSUBA\_SQR\_C \\
+                                           & BN\_MP\_TOOM\_MUL\_C \\ 
+                                           & BN\_MP\_TOOM\_SQR\_C \\
+
+\hline
+\end{tabular}
+\end{center}
+\end{small}
+
 
 \section{Purpose of LibTomMath}
 Unlike  GNU MP (GMP) Library, LIP, OpenSSL or various other commercial kits (Miracl), LibTomMath was not written with 

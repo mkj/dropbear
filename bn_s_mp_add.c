@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_S_MP_ADD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* low level addition, based on HAC pp.594, Algorithm 14.7 */
 int
@@ -101,3 +102,4 @@ s_mp_add (mp_int * a, mp_int * b, mp_int * c)
   mp_clamp (c);
   return MP_OKAY;
 }
+#endif

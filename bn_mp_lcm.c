@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_LCM_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes least common multiple as |a*b|/(a, b) */
 int mp_lcm (mp_int * a, mp_int * b, mp_int * c)
@@ -52,3 +53,4 @@ __T:
   mp_clear_multi (&t1, &t2, NULL);
   return res;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_2EXPT_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* computes a = 2**b 
  *
@@ -36,7 +37,8 @@ mp_2expt (mp_int * a, int b)
   a->used = b / DIGIT_BIT + 1;
 
   /* put the single bit in its place */
-  a->dp[b / DIGIT_BIT] = 1 << (b % DIGIT_BIT);
+  a->dp[b / DIGIT_BIT] = ((mp_digit)1) << (b % DIGIT_BIT);
 
   return MP_OKAY;
 }
+#endif

@@ -1,3 +1,5 @@
+#include <tommath.h>
+#ifdef BN_MP_SET_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -12,7 +14,6 @@
  *
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
-#include <tommath.h>
 
 /* set to a digit */
 void mp_set (mp_int * a, mp_digit b)
@@ -21,3 +22,4 @@ void mp_set (mp_int * a, mp_digit b)
   a->dp[0] = b & MP_MASK;
   a->used  = (a->dp[0] != 0) ? 1 : 0;
 }
+#endif

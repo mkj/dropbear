@@ -12,7 +12,10 @@ CFLAGS += -O3 -funroll-loops
 #x86 optimizations [should be valid for any GCC install though]
 CFLAGS  += -fomit-frame-pointer
 
-VERSION=0.30
+#debug
+#CFLAGS += -g3
+
+VERSION=0.32
 
 default: libtommath.a
 
@@ -20,7 +23,7 @@ default: libtommath.a
 LIBNAME=libtommath.a
 HEADERS=tommath.h
 
-#LIBPATH-The directory for libtomcrypt to be installed to.
+#LIBPATH-The directory for libtommath to be installed to.
 #INCPATH-The directory to install the header files for libtommath.
 #DATAPATH-The directory to install the pdf docs.
 DESTDIR=
@@ -50,13 +53,37 @@ bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
 bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
 bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
 bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
-bn_mp_init_multi.o bn_mp_clear_multi.o bn_prime_sizes_tab.o bn_mp_exteuclid.o bn_mp_toradix_n.o \
+bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_exteuclid.o bn_mp_toradix_n.o \
 bn_mp_prime_random_ex.o bn_mp_get_int.o bn_mp_sqrt.o bn_mp_is_square.o bn_mp_init_set.o \
-bn_mp_init_set_int.o
+bn_mp_init_set_int.o bn_mp_invmod_slow.o bn_mp_prime_rabin_miller_trials.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
 	ranlib libtommath.a
+
+
+#make a profiled library (takes a while!!!)
+#
+# This will build the library with profile generation
+# then run the test demo and rebuild the library.
+# 
+# So far I've seen improvements in the MP math
+profiled:
+	make CFLAGS="$(CFLAGS) -fprofile-arcs -DTESTING" timing
+	./ltmtest
+	rm -f *.a *.o ltmtest
+	make CFLAGS="$(CFLAGS) -fbranch-probabilities"
+
+#make a single object profiled library 
+profiled_single:
+	perl gen.pl
+	$(CC) $(CFLAGS) -fprofile-arcs -DTESTING -c mpi.c -o mpi.o
+	$(CC) $(CFLAGS) -DTESTING -DTIMER demo/timing.c mpi.o -o ltmtest
+	./ltmtest
+	rm -f *.o ltmtest
+	$(CC) $(CFLAGS) -fbranch-probabilities -DTESTING -c mpi.c -o mpi.o
+	$(AR) $(ARFLAGS) libtommath.a mpi.o
+	ranlib libtommath.a	
 
 install: libtommath.a
 	install -d -g root -o root $(DESTDIR)$(LIBPATH)
@@ -71,7 +98,7 @@ mtest: test
 	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest -s
         
 timing: libtommath.a
-	$(CC) $(CFLAGS) -DTIMER demo/demo.c libtommath.a -o ltmtest -s
+	$(CC) $(CFLAGS) -DTIMER demo/timing.c libtommath.a -o ltmtest -s
 
 # makes the LTM book DVI file, requires tetex, perl and makeindex [part of tetex I think]
 docdvi: tommath.src
@@ -106,10 +133,14 @@ mandvi: bn.tex
 manual:	mandvi
 	pdflatex bn >/dev/null
 	rm -f bn.aux bn.dvi bn.log bn.idx bn.lof bn.out bn.toc
-	
+
+pretty: 
+	perl pretty.build
+
 clean:
 	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
-        *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c 
+        *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find -type f | grep [~] | xargs` *.lo *.la
+	rm -rf .libs
 	cd etc ; make clean
 	cd pics ; make clean
 
