@@ -2,7 +2,11 @@
 
 /* ch1-01-1 */
 /* ARGTYPE is defined in mycrypt_cfg.h */
-#if ARGTYPE == 0
+#if ARGTYPE == 2 || defined(NDEBUG)
+
+#define _ARGCHK(x) 
+
+#elif ARGTYPE == 0
 
 #include <signal.h>
 
@@ -14,10 +18,6 @@ extern void crypt_argchk(char *v, char *s, int d);
 
 /* fatal type of error */
 #define _ARGCHK(x) assert((x))
-
-#elif ARGTYPE == 2
-
-#define _ARGCHK(x) 
 
 #endif
 /* ch1-01-1 */

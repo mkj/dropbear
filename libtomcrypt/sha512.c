@@ -209,6 +209,7 @@ void sha512_done(hash_state * md, unsigned char *hash)
 
 int  sha512_test(void)
 {
+#ifdef LTC_DOTESTS
   static const struct {
       char *msg;
       unsigned char hash[64];
@@ -248,6 +249,9 @@ int  sha512_test(void)
       }
   }
   return CRYPT_OK;
+#else
+  return CRYPT_NOP;
+#endif /* LTC_DOTESTS */
 }
 
 #ifdef SHA384

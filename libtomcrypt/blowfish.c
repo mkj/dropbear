@@ -436,6 +436,7 @@ void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
 
 int blowfish_test(void)
 {
+#ifdef LTC_DOTESTS
    int err;
    symmetric_key key;
    static const struct {
@@ -476,6 +477,9 @@ int blowfish_test(void)
       }
    }
    return CRYPT_OK;
+#else
+   return CRYPT_NOP;
+#endif /* LTC_DOTESTS */
 }
 
 int blowfish_keysize(int *desired_keysize)

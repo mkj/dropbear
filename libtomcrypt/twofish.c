@@ -633,6 +633,7 @@ void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
 
 int twofish_test(void)
 {
+#ifdef LTC_DOTESTS
  static const struct { 
      int keylen;
      unsigned char key[32], pt[16], ct[16];
@@ -682,6 +683,9 @@ int twofish_test(void)
     }
  }    
  return CRYPT_OK;
+#else
+ return CRYPT_NOP;
+#endif /* LTC_DOTESTS */
 }
 
 int twofish_keysize(int *desired_keysize)

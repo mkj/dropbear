@@ -231,6 +231,7 @@ Category: Informational                                        R. Glenn
 
 int hmac_test(void)
 {
+#if LTC_DOTESTS
     unsigned char digest[MAXBLOCKSIZE];
     int i;
 
@@ -497,6 +498,9 @@ Key First"
     } else {
         return CRYPT_OK;
     }
+#else
+	return CRYPT_NOP;
+#endif /* LTC_DOTESTS */
 }
 
 #endif
