@@ -1,3 +1,18 @@
+0.33 - Sun June 22 2003 22:24:12 +0800
+
+- Fixed some invalid assertions in the channel code, fixing the server dying
+  when forwarding X11 connections.
+- Add dropbearconvert to convert to/from OpenSSH host keys and Dropbear keys
+- RSA keys now keep p and q parameters for compatibility -- old Dropbear keys
+  still work, but can't be converted to OpenSSH etc.
+- Debian packaging directory added, thanks to Grahame (grahame@angrygoats.net)
+- 'install' target added to the makefile
+- general tidying, improve consistency of functions etc
+- If RSA or DSS hostkeys don't exist, that algorithm won't be used.
+- Improved RSA and DSS key generation, more efficient and fixed some minor bugs
+  (thanks to Tom St Denis for the advice)
+- Merged new versions of LibTomCrypt (0.86) and LibTomMath (0.21)
+
 0.32 - Sat May 24 2003 12:44:11 +0800
 
 - Don't compile unused code from libtomcrypt (test vectors etc)
@@ -8,7 +23,6 @@
 - Fix incorrect buffer freeing when banners are used
 - Hostname resolution works
 - Various minor bugfixes/code size improvements etc
-
 
 0.31 - Fri May 9 2003 17:57:16 +0800
 

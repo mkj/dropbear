@@ -8,7 +8,6 @@ Things which need doing:
 - check that there aren't timing issues with valid/invalid user authentication
   feedback.
 - improve channel window adjustment algorithm
-- init.d script
 
 Features to add:
 
