@@ -24,7 +24,7 @@ static const ulong32 RC[] = {
 };
 
 
-#define kTHETA(a, b, c, d)                               \
+#define kTHETA(a, b, c, d)                                 \
     temp = a^c; temp = temp ^ ROL(temp, 8) ^ ROR(temp, 8); \
     b ^= temp; d ^= temp;                                  \
     temp = b^d; temp = temp ^ ROL(temp, 8) ^ ROR(temp, 8); \
@@ -32,11 +32,9 @@ static const ulong32 RC[] = {
 
 #define THETA(k, a, b, c, d)                               \
     temp = a^c; temp = temp ^ ROL(temp, 8) ^ ROR(temp, 8); \
-    b ^= temp; d ^= temp;                                  \
-    a ^= k[0]; b ^= k[1];                                  \
-    c ^= k[2]; d ^= k[3];                                  \
+    b ^= temp ^ k[1]; d ^= temp ^ k[3];                    \
     temp = b^d; temp = temp ^ ROL(temp, 8) ^ ROR(temp, 8); \
-    a ^= temp; c ^= temp;
+    a ^= temp ^ k[0]; c ^= temp ^ k[2];
     
 #define GAMMA(a, b, c, d)     \
     b ^= ~(d|c);              \
@@ -89,7 +87,9 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
 #endif
 {
    ulong32 a,b,c,d,temp;
+#ifdef SMALL_CODE
    int r;
+#endif
 
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -98,17 +98,32 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
    LOAD32L(a,&pt[0]); LOAD32L(b,&pt[4]);
    LOAD32L(c,&pt[8]); LOAD32L(d,&pt[12]);
    
-#define ROUND(i) \
-       a ^= RC[r+i]; \
+
+#ifdef SMALL_CODE
+#define ROUND \
+       a ^= RC[r]; \
        THETA(key->noekeon.K, a,b,c,d); \
        PI1(a,b,c,d); \
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d);
 
-   for (r = 0; r < 16; r += 2) {
-       ROUND(0);
-       ROUND(1);
+   for (r = 0; r < 16; ++r) {
+       ROUND;
    }
+#else 
+
+#define ROUND(i) \
+       a ^= RC[i]; \
+       THETA(key->noekeon.K, a,b,c,d); \
+       PI1(a,b,c,d); \
+       GAMMA(a,b,c,d); \
+       PI2(a,b,c,d);
+
+   ROUND( 0); ROUND( 1); ROUND( 2); ROUND( 3);
+   ROUND( 4); ROUND( 5); ROUND( 6); ROUND( 7);
+   ROUND( 8); ROUND( 9); ROUND(10); ROUND(11);
+   ROUND(12); ROUND(13); ROUND(14); ROUND(15);
+#endif
 
 #undef ROUND
 
@@ -134,7 +149,9 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
 #endif
 {
    ulong32 a,b,c,d, temp;
+#ifdef SMALL_CODE
    int r;
+#endif
 
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -143,18 +160,35 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
    LOAD32L(a,&ct[0]); LOAD32L(b,&ct[4]);
    LOAD32L(c,&ct[8]); LOAD32L(d,&ct[12]);
    
-#define ROUND(i) \
+
+#ifdef SMALL_CODE
+
+#define ROUND \
        THETA(key->noekeon.dK, a,b,c,d); \
-       a ^= RC[r-i]; \
+       a ^= RC[r]; \
        PI1(a,b,c,d); \
        GAMMA(a,b,c,d); \
        PI2(a,b,c,d); 
-       
 
-   for (r = 16; r > 0; r -= 2) {
-       ROUND(0);
-       ROUND(1);
+   for (r = 16; r > 0; --r) {
+       ROUND;
    }
+
+#else
+
+#define ROUND(i) \
+       THETA(key->noekeon.dK, a,b,c,d); \
+       a ^= RC[i]; \
+       PI1(a,b,c,d); \
+       GAMMA(a,b,c,d); \
+       PI2(a,b,c,d); 
+
+   ROUND(16); ROUND(15); ROUND(14); ROUND(13);
+   ROUND(12); ROUND(11); ROUND(10); ROUND( 9);
+   ROUND( 8); ROUND( 7); ROUND( 6); ROUND( 5);
+   ROUND( 4); ROUND( 3); ROUND( 2); ROUND( 1);
+
+#endif
    
 #undef ROUND
 
@@ -176,31 +210,58 @@ int noekeon_test(void)
 {
  #ifndef LTC_TEST
     return CRYPT_NOP;
- #else    
-   static const unsigned char
-          key[] = 
-             { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
-          pt[] = 
-             { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
-          ct[] = 
-             { 0x57, 0x9a, 0x6c, 0xe8, 0x91, 0x16, 0x52, 0x53,
-               0x32, 0x00, 0xca, 0x0a, 0x17, 0x5d, 0x28, 0x0e };
-   unsigned char tmp[2][16];
-   int err;
-   symmetric_key skey;
-   
-   if ((err = noekeon_setup(key, 16, 0, &skey)) != CRYPT_OK) {
-      return err;
+ #else
+ static const struct {
+     int keylen;
+     unsigned char key[16], pt[16], ct[16];
+ } tests[] = {
+   {
+      16,
+      { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
+      { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15 },
+      { 0x57, 0x9a, 0x6c, 0xe8, 0x91, 0x16, 0x52, 0x53,
+               0x32, 0x00, 0xca, 0x0a, 0x17, 0x5d, 0x28, 0x0e }
    }
-   
-   noekeon_ecb_encrypt(pt, tmp[0], &skey);
-   noekeon_ecb_decrypt(tmp[0], tmp[1], &skey);
-   
-   if (memcmp(tmp[0], ct, 16) != 0 || memcmp(tmp[1], pt, 16) != 0) {
-      return CRYPT_FAIL_TESTVECTOR;
-   }
-   
-   return CRYPT_OK;
+ };
+ symmetric_key key;
+ unsigned char tmp[2][16];
+ int err, i, y;
+ 
+ for (i = 0; i < (int)(sizeof(tests)/sizeof(tests[0])); i++) {
+    zeromem(&key, sizeof(key));
+    if ((err = noekeon_setup(tests[i].key, tests[i].keylen, 0, &key)) != CRYPT_OK) { 
+       return err;
+    }
+  
+    noekeon_ecb_encrypt(tests[i].pt, tmp[0], &key);
+    noekeon_ecb_decrypt(tmp[0], tmp[1], &key);
+    if (memcmp(tmp[0], tests[i].ct, 16) || memcmp(tmp[1], tests[i].pt, 16)) { 
+#if 0
+       printf("\n\nTest %d failed\n", i);
+       if (memcmp(tmp[0], tests[i].ct, 16)) {
+          printf("CT: ");
+          for (i = 0; i < 16; i++) {
+             printf("%02x ", tmp[0][i]);
+          }
+          printf("\n");
+       } else {
+          printf("PT: ");
+          for (i = 0; i < 16; i++) {
+             printf("%02x ", tmp[1][i]);
+          }
+          printf("\n");
+       }
+#endif       
+        return CRYPT_FAIL_TESTVECTOR;
+    }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 16; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) noekeon_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) noekeon_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 16; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
+ }       
+ return CRYPT_OK;
  #endif
 }
 

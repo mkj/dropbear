@@ -1713,8 +1713,8 @@ int des_test(void)
             http://www.ecs.soton.ac.uk/~prw99r/ez438/vectors.txt
         ***/
     };
-    int i;
-    unsigned char out[8];
+    int i, y;
+    unsigned char tmp[8];
     symmetric_key des;
 
     for(i=0; i < (int)(sizeof(cases)/sizeof(cases[0])); i++)
@@ -1723,14 +1723,20 @@ int des_test(void)
            return err;
         }
         if (cases[i].mode != 0) { 
-           des_ecb_encrypt(cases[i].txt, out, &des);
+           des_ecb_encrypt(cases[i].txt, tmp, &des);
         } else {
-           des_ecb_decrypt(cases[i].txt, out, &des);
+           des_ecb_decrypt(cases[i].txt, tmp, &des);
         }
 
-        if (memcmp(cases[i].out, out, sizeof out) != 0) {
+        if (memcmp(cases[i].out, tmp, sizeof(tmp)) != 0) {
            return CRYPT_FAIL_TESTVECTOR;
         }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[y] = 0;
+      for (y = 0; y < 1000; y++) des_ecb_encrypt(tmp, tmp, &des);
+      for (y = 0; y < 1000; y++) des_ecb_decrypt(tmp, tmp, &des);
+      for (y = 0; y < 8; y++) if (tmp[y] != 0) return CRYPT_FAIL_TESTVECTOR;
     }
 
     return CRYPT_OK;

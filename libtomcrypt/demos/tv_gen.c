@@ -42,6 +42,9 @@ void reg_algs(void)
 #ifdef NOEKEON
   register_cipher (&noekeon_desc);
 #endif
+#ifdef SKIPJACK
+  register_cipher (&skipjack_desc);
+#endif
 
 #ifdef TIGER
   register_hash (&tiger_desc);
@@ -58,6 +61,9 @@ void reg_algs(void)
 #ifdef SHA1
   register_hash (&sha1_desc);
 #endif
+#ifdef SHA224
+  register_hash (&sha224_desc);
+#endif
 #ifdef SHA256
   register_hash (&sha256_desc);
 #endif
@@ -66,6 +72,12 @@ void reg_algs(void)
 #endif
 #ifdef SHA512
   register_hash (&sha512_desc);
+#endif
+#ifdef RIPEMD128
+  register_hash (&rmd128_desc);
+#endif
+#ifdef RIPEMD160
+  register_hash (&rmd160_desc);
 #endif
 }
 
@@ -83,7 +95,7 @@ void hash_gen(void)
       
       for (y = 0; y <= (hash_descriptor[x].blocksize * 2); y++) {
          for (z = 0; z < y; z++) {
-            buf[z] = (unsigned char)z;
+            buf[z] = (unsigned char)(z & 255);
          }
          outlen = sizeof(md);
          hash_memory(x, buf, y, md, &outlen);
@@ -108,7 +120,10 @@ void cipher_gen(void)
    
    out = fopen("cipher_tv.txt", "w");
    
-   fprintf(out, "Cipher Test Vectors\n\nThese are test encryptions with key of nn bytes '00 01 02 03 .. (nn-1)' and original PT of the same style.\n\n");
+   fprintf(out, 
+"Cipher Test Vectors\n\nThese are test encryptions with key of nn bytes '00 01 02 03 .. (nn-1)' and original PT of the same style.\n"
+"The output of step N is used as the key and plaintext for step N+1 (key bytes repeated as required to fill the key)\n\n");
+                   
    for (x = 0; cipher_descriptor[x].name != NULL; x++) {
       fprintf(out, "Cipher: %s\n", cipher_descriptor[x].name);
       
@@ -133,13 +148,19 @@ void cipher_gen(void)
          for (z = 0; (int)z < cipher_descriptor[x].block_length; z++) {
             pt[z] = (unsigned char)z;
          }
-         for (w = 0; w < 25; w++) {
+         for (w = 0; w < 50; w++) {
              cipher_descriptor[x].ecb_encrypt(pt, pt, &skey);
              fprintf(out, "%2lu: ", w);
              for (z = 0; (int)z < cipher_descriptor[x].block_length; z++) {
                 fprintf(out, "%02X", pt[z]);
              }
              fprintf(out, "\n");
+
+             /* reschedule a new key */
+             for (z = 0; z < (unsigned long)kl; z++) {
+                 key[z] = pt[z % cipher_descriptor[x].block_length];
+             }
+             cipher_descriptor[x].setup(key, kl, 0, &skey);
          }
          fprintf(out, "\n");
      }
@@ -147,13 +168,114 @@ void cipher_gen(void)
   }
   fclose(out);
 }  
+
+void hmac_gen(void)
+{
+   unsigned char key[MAXBLOCKSIZE], output[MAXBLOCKSIZE], input[MAXBLOCKSIZE*2+2];
+   int x, y, z, kl, err;
+   FILE *out;
+   unsigned long len;
+  
+   out = fopen("hmac_tv.txt", "w");
+
+   fprintf(out, 
+"HMAC Tests.  In these tests messages of N bytes long (00,01,02,...,NN-1) are HMACed.  The initial key is\n"
+"of the same format (the same length as the HASH output size).  The HMAC key in step N+1 is the HMAC output of\n"
+"step N.\n\n");
+
+   for (x = 0; hash_descriptor[x].name != NULL; x++) {
+      fprintf(out, "HMAC-%s\n", hash_descriptor[x].name);
+      
+      /* initial key */
+      for (y = 0; y < (int)hash_descriptor[x].hashsize; y++) {
+          key[y] = (y&255);
+      }
+      
+      for (y = 0; y <= (int)(hash_descriptor[x].blocksize * 2); y++) {
+         for (z = 0; z < y; z++) {
+            input[z] = (unsigned char)(z & 255);
+         }
+         len = sizeof(output);
+         if ((err = hmac_memory(x, key, hash_descriptor[x].hashsize, input, y, output, &len)) != CRYPT_OK) {
+            printf("Error hmacing: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
+         fprintf(out, "%3d: ", y);
+         for (z = 0; z <(int) len; z++) {
+            fprintf(out, "%02X", output[z]);
+         }
+         fprintf(out, "\n");
+
+         /* forward the key */
+         memcpy(key, output, hash_descriptor[x].hashsize);
+      }
+      fprintf(out, "\n");
+   }
+   fclose(out);
+}
    
+void omac_gen(void)
+{
+   unsigned char key[MAXBLOCKSIZE], output[MAXBLOCKSIZE], input[MAXBLOCKSIZE*2+2];
+   int err, x, y, z, kl;
+   FILE *out;
+   unsigned long len;
+  
+   out = fopen("omac_tv.txt", "w");
+
+   fprintf(out, 
+"OMAC Tests.  In these tests messages of N bytes long (00,01,02,...,NN-1) are OMAC'ed.  The initial key is\n"
+"of the same format (length specified per cipher).  The OMAC key in step N+1 is the OMAC output of\n"
+"step N (repeated as required to fill the array).\n\n");
+
+   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
+      kl = cipher_descriptor[x].block_length;
+
+      /* skip ciphers which do not have 64 or 128 bit block sizes */
+      if (kl != 8 && kl != 16) continue;
+
+      if (cipher_descriptor[x].keysize(&kl) != CRYPT_OK) {
+         kl = cipher_descriptor[x].max_key_length;
+      }
+      fprintf(out, "OMAC-%s (%d byte key)\n", cipher_descriptor[x].name, kl);
+      
+      /* initial key/block */
+      for (y = 0; y < kl; y++) {
+          key[y] = (y & 255);
+      }
+      
+      for (y = 0; y <= (int)(cipher_descriptor[x].block_length*2); y++) {
+         for (z = 0; z < y; z++) {
+            input[z] = (unsigned char)(z & 255);
+         }
+         len = sizeof(output);
+         if ((err = omac_memory(x, key, kl, input, y, output, &len)) != CRYPT_OK) {
+            printf("Error omacing: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
+         fprintf(out, "%3d: ", y);
+         for (z = 0; z <(int)len; z++) {
+            fprintf(out, "%02X", output[z]);
+         }
+         fprintf(out, "\n");
+
+         /* forward the key */
+         for (z = 0; z < kl; z++) {
+             key[z] = output[z % len];
+         }
+      }
+      fprintf(out, "\n");
+   }
+   fclose(out);
+}
 
 int main(void)
 {
    reg_algs();
    hash_gen();
    cipher_gen();
+   hmac_gen();
+   omac_gen();
    
    return 0;
 }

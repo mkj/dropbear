@@ -71,7 +71,7 @@ int rc2_setup(const unsigned char *key, int keylen, int rounds, symmetric_key *s
    }
 
    for (i = 0; i < keylen; i++) {
-       tmp[i] = key[i];
+       tmp[i] = key[i] & 255;
    }
 
     /* Phase 1: Expand input key to 128 bytes */
@@ -261,22 +261,28 @@ int rc2_test(void)
      { 0x22, 0x69, 0x55, 0x2a, 0xb0, 0xf8, 0x5c, 0xa6 }
    }
   };
-    int x, err;
+    int x, y, err;
     symmetric_key skey;
-    unsigned char buf[2][8];
+    unsigned char tmp[2][8];
 
     for (x = 0; x < (int)(sizeof(tests) / sizeof(tests[0])); x++) {
-        zeromem(buf, sizeof(buf));
+        zeromem(tmp, sizeof(tmp));
         if ((err = rc2_setup(tests[x].key, tests[x].keylen, 0, &skey)) != CRYPT_OK) {
            return err;
         }
         
-        rc2_ecb_encrypt(tests[x].pt, buf[0], &skey);
-        rc2_ecb_decrypt(buf[0], buf[1], &skey);
+        rc2_ecb_encrypt(tests[x].pt, tmp[0], &skey);
+        rc2_ecb_decrypt(tmp[0], tmp[1], &skey);
         
-        if (memcmp(buf[0], tests[x].ct, 8) != 0 || memcmp(buf[1], tests[x].pt, 8) != 0) {
+        if (memcmp(tmp[0], tests[x].ct, 8) != 0 || memcmp(tmp[1], tests[x].pt, 8) != 0) {
            return CRYPT_FAIL_TESTVECTOR;
         }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) rc2_ecb_encrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 1000; y++) rc2_ecb_decrypt(tmp[0], tmp[0], &skey);
+      for (y = 0; y < 8; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
     }
     return CRYPT_OK;
    #endif

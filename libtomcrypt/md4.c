@@ -53,12 +53,12 @@ const struct _hash_descriptor md4_desc =
   }
 
 #ifdef CLEAN_STACK
-static void _md4_compress(hash_state *md)
+static void _md4_compress(hash_state *md, unsigned char *buf)
 #else
-static void md4_compress(hash_state *md)
+static void md4_compress(hash_state *md, unsigned char *buf)
 #endif
 {
-    unsigned long x[16], a, b, c, d;
+    ulong32 x[16], a, b, c, d;
     int i;
 
     _ARGCHK(md != NULL);
@@ -71,7 +71,7 @@ static void md4_compress(hash_state *md)
 
     /* copy the state into 512-bits into W[0..15] */
     for (i = 0; i < 16; i++) {
-        LOAD32L(x[i], md->md4.buf + (4*i));
+        LOAD32L(x[i], buf + (4*i));
     }
  
     /* Round 1 */ 
@@ -137,10 +137,10 @@ static void md4_compress(hash_state *md)
 }
 
 #ifdef CLEAN_STACK
-static void md4_compress(hash_state *md)
+static void md4_compress(hash_state *md, unsigned char *buf)
 {
-   _md4_compress(md);
-   burn_stack(sizeof(unsigned long) * 20 + sizeof(int));
+   _md4_compress(md, buf);
+   burn_stack(sizeof(ulong32) * 20 + sizeof(int));
 }
 #endif
 
@@ -152,36 +152,21 @@ void md4_init(hash_state * md)
    md->md4.state[2] = 0x98badcfeUL;
    md->md4.state[3] = 0x10325476UL;
    md->md4.length  = 0;
-   md->md4.curlen = 0;
+   md->md4.curlen  = 0;
 }
 
-void md4_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
-    while (len > 0) {
-        n = MIN(len, (64 - md->md4.curlen));
-        memcpy(md->md4.buf + md->md4.curlen, buf, (size_t)n);
-        md->md4.curlen += n;
-        buf            += n;
-        len            -= n;
+HASH_PROCESS(md4_process, md4_compress, md4, 64)
 
-        /* is 64 bytes full? */
-        if (md->md4.curlen == 64) {
-            md4_compress(md);
-            md->md4.length += 512;
-            md->md4.curlen = 0;
-        }
-    }
-}
-
-void md4_done(hash_state * md, unsigned char *hash)
+int md4_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->md4.curlen >= sizeof(md->md4.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
 
     /* increase the length of the message */
     md->md4.length += md->md4.curlen * 8;
@@ -197,7 +182,7 @@ void md4_done(hash_state * md, unsigned char *hash)
         while (md->md4.curlen < 64) {
             md->md4.buf[md->md4.curlen++] = (unsigned char)0;
         }
-        md4_compress(md);
+        md4_compress(md, md->md4.buf);
         md->md4.curlen = 0;
     }
 
@@ -208,7 +193,7 @@ void md4_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64L(md->md4.length, md->md4.buf+56);
-    md4_compress(md);
+    md4_compress(md, md->md4.buf);
 
     /* copy output */
     for (i = 0; i < 4; i++) {
@@ -216,7 +201,8 @@ void md4_done(hash_state * md, unsigned char *hash)
     }
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
-#endif
+#endif 
+    return CRYPT_OK;
 }
 
 int md4_test(void)

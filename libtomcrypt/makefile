@@ -9,16 +9,16 @@
 # a build. This is easy to remedy though, for those that have problems.
 
 # The version
-VERSION=0.90
+VERSION=0.92
 
 #ch1-01-1
 # Compiler and Linker Names
-CC=gcc
-LD=ld
+#CC=gcc
+#LD=ld
 
 # Archiver [makes .a files]
-AR=ar
-ARFLAGS=r
+#AR=ar
+#ARFLAGS=r
 #ch1-01-1
 
 #ch1-01-3
@@ -66,7 +66,7 @@ OBJECTS=keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o \
 bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o \
 md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o \
 safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o \
-prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o $(MPIOBJECT)
+prime.o twofish.o packet.o hmac.o strings.o rmd128.o rmd160.o skipjack.o omac.o dsa.o $(MPIOBJECT)
 
 TESTOBJECTS=demos/test.o
 HASHOBJECTS=demos/hashsum.o
@@ -94,7 +94,9 @@ rsa.o: rsa.c rsa_sys.c
 ecc.o: ecc.c ecc_sys.c
 dh.o: dh.c dh_sys.c
 aes.o: aes.c aes_tab.c
+twofish.o: twofish.c twofish_tab.c
 sha512.o: sha512.c sha384.c
+sha256.o: sha256.c sha224.c
 
 #This rule makes the libtomcrypt library.
 library: $(LIBNAME)
@@ -140,7 +142,7 @@ install: library docs
 clean:
 	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
 	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
-	rm -f *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat hash_tv.txt cipher_tv.txt
+	rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt
 
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the

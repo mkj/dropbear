@@ -170,3 +170,29 @@ extern int ecc_verify_hash(const unsigned char *sig,  unsigned long siglen,
                            const unsigned char *hash, unsigned long hashlen, 
                                  int *stat, ecc_key *key);
 #endif
+
+#ifdef MDSA
+
+typedef struct {
+   int type, qord;
+   mp_int g, q, p, x, y;
+} dsa_key;
+
+extern int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, dsa_key *key);
+extern void dsa_free(dsa_key *key);
+
+extern int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
+                        unsigned char *out, unsigned long *outlen,
+                        prng_state *prng, int wprng, dsa_key *key);
+
+extern int dsa_verify_hash(const unsigned char *sig, unsigned long siglen,
+                           const unsigned char *hash, unsigned long inlen, 
+                           int *stat, dsa_key *key);
+
+extern int dsa_import(const unsigned char *in, unsigned long inlen, dsa_key *key);
+
+extern int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key);
+
+extern int dsa_verify_key(dsa_key *key, int *stat);
+
+#endif

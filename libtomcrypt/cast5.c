@@ -381,7 +381,11 @@ static const ulong32 S8[256] = {
    #define GB(x, i) (((x[(15-i)>>2])>>(unsigned)(8*((15-i)&3)))&255)
 #endif   
 
+#ifdef CLEAN_STACK
+static int _cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
+#else
 int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
+#endif
 {
    ulong32 x[4], z[4];
    unsigned char buf[16];
@@ -431,7 +435,6 @@ int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_
         skey->cast5.K[i++] = S5[GB(x, 0x5)] ^ S6[GB(x, 0x4)] ^ S7[GB(x, 0xa)] ^ S8[GB(x, 0xb)] ^ S8[GB(x, 0x7)];
 
         /* second half */
-
         z[3] = x[3] ^ S5[GB(x, 0xD)] ^ S6[GB(x, 0xF)] ^ S7[GB(x, 0xC)] ^ S8[GB(x, 0xE)] ^ S7[GB(x, 0x8)];
         z[2] = x[1] ^ S5[GB(z, 0x0)] ^ S6[GB(z, 0x2)] ^ S7[GB(z, 0x1)] ^ S8[GB(z, 0x3)] ^ S8[GB(x, 0xA)];
         z[1] = x[0] ^ S5[GB(z, 0x7)] ^ S6[GB(z, 0x6)] ^ S7[GB(z, 0x5)] ^ S8[GB(z, 0x4)] ^ S5[GB(x, 0x9)];
@@ -461,6 +464,16 @@ int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_
 
    return CRYPT_OK;
 }
+
+#ifdef CLEAN_STACK
+int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
+{
+   int z;
+   z = _cast5_setup(key, keylen, num_rounds, skey);
+   burn_stack(sizeof(ulong32)*8 + 16 + sizeof(int)*2);
+   return z;
+}
+#endif
 
 #ifdef _MSC_VER
    #define INLINE __inline
@@ -492,7 +505,11 @@ INLINE static ulong32 FIII(ulong32 R, ulong32 Km, ulong32 Kr)
    return ((S1[byte(I, 3)] + S2[byte(I,2)]) ^ S3[byte(I,1)]) - S4[byte(I,0)];
 }
 
+#ifdef CLEAN_STACK
+static void _cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
+#else
 void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
+#endif
 {
    ulong32 R, L;
 
@@ -502,7 +519,6 @@ void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
 
    LOAD32H(L,&pt[0]); 
    LOAD32H(R,&pt[4]);
-
    L ^= FI(R, key->cast5.K[0], key->cast5.K[16]);
    R ^= FII(L, key->cast5.K[1], key->cast5.K[17]);
    L ^= FIII(R, key->cast5.K[2], key->cast5.K[18]);
@@ -525,7 +541,20 @@ void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
    STORE32H(L,&ct[4]);
 }
 
+
+#ifdef CLEAN_STACK
+void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
+{
+   _cast5_ecb_encrypt(pt,ct,key);
+   burn_stack(sizeof(ulong32)*3);
+}
+#endif
+
+#ifdef CLEAN_STACK
+static void _cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
+#else
 void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
+#endif
 {
    ulong32 R, L;
 
@@ -535,14 +564,12 @@ void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key
 
    LOAD32H(R,&ct[0]); 
    LOAD32H(L,&ct[4]);
-
    if (key->cast5.keylen > 10) {
       R ^= FI(L, key->cast5.K[15], key->cast5.K[31]);
       L ^= FIII(R, key->cast5.K[14], key->cast5.K[30]);
       R ^= FII(L, key->cast5.K[13], key->cast5.K[29]);
       L ^= FI(R, key->cast5.K[12], key->cast5.K[28]);
    }
-
    R ^= FIII(L, key->cast5.K[11], key->cast5.K[27]);
    L ^= FII(R, key->cast5.K[10], key->cast5.K[26]);
    R ^= FI(L, key->cast5.K[9], key->cast5.K[25]);
@@ -555,10 +582,17 @@ void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key
    L ^= FIII(R, key->cast5.K[2], key->cast5.K[18]);
    R ^= FII(L, key->cast5.K[1], key->cast5.K[17]);
    L ^= FI(R, key->cast5.K[0], key->cast5.K[16]);
-
    STORE32H(L,&pt[0]);
    STORE32H(R,&pt[4]);
 }
+
+#ifdef CLEAN_STACK
+void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
+{
+   _cast5_ecb_decrypt(ct,pt,key);
+   burn_stack(sizeof(ulong32)*3);
+}
+#endif
 
 int cast5_test(void)
 {
@@ -587,19 +621,24 @@ int cast5_test(void)
        {0x7A, 0xC8, 0x16, 0xD1, 0x6E, 0x9B, 0x30, 0x2E}
      }
    };
-   int i, err;
+   int i, y, err;
    symmetric_key key;
-   unsigned char buf[8], buf2[8];
+   unsigned char tmp[2][8];
 
    for (i = 0; i < (int)(sizeof(tests) / sizeof(tests[0])); i++) {
        if ((err = cast5_setup(tests[i].key, tests[i].keylen, 0, &key)) != CRYPT_OK) {
           return err;
        }
-       cast5_ecb_encrypt(tests[i].pt, buf, &key);
-       cast5_ecb_decrypt(buf, buf2, &key);
-       if ((memcmp(buf, tests[i].ct, 8) != 0) || (memcmp(buf2, tests[i].pt, 8) != 0)) {
+       cast5_ecb_encrypt(tests[i].pt, tmp[0], &key);
+       cast5_ecb_decrypt(tmp[0], tmp[1], &key);
+       if ((memcmp(tmp[0], tests[i].ct, 8) != 0) || (memcmp(tmp[1], tests[i].pt, 8) != 0)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) cast5_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) cast5_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 8; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
    
    }
    return CRYPT_OK;
@@ -618,4 +657,3 @@ int cast5_keysize(int *desired_keysize)
 } 
 
 #endif
-

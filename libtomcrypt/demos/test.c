@@ -932,7 +932,7 @@ dh_tests (void)
   }
 
 /* test encrypt_key */
-  dh_make_key (&prng, find_prng ("yarrow"), 96, &usera);
+  dh_make_key (&prng, find_prng ("yarrow"), 128, &usera);
   for (x = 0; x < 16; x++)
     buf[0][x] = x;
   y = sizeof (buf[1]);
@@ -1337,7 +1337,9 @@ register_all_algs (void)
 #ifdef NOEKEON
   register_cipher (&noekeon_desc);
 #endif
-
+#ifdef SKIPJACK
+  register_cipher (&skipjack_desc);
+#endif
   register_cipher (&null_desc);
 
 #ifdef TIGER
@@ -1357,6 +1359,9 @@ register_all_algs (void)
 #endif
 #ifdef SHA256
   register_hash (&sha256_desc);
+#endif
+#ifdef SHA224
+  register_hash (&sha224_desc);
 #endif
 #ifdef SHA384
   register_hash (&sha384_desc);
@@ -1700,6 +1705,7 @@ test_errs (void)
   ERR (CRYPT_PK_NOT_PRIVATE);
 
   ERR (CRYPT_INVALID_ARG);
+  ERR (CRYPT_FILE_NOTFOUND);
 
   ERR (CRYPT_PK_INVALID_TYPE);
   ERR (CRYPT_PK_INVALID_SYSTEM);
@@ -1709,6 +1715,97 @@ test_errs (void)
 
   ERR (CRYPT_INVALID_PRIME_SIZE);
 }
+
+
+void dsa_tests(void)
+{
+   unsigned char msg[16], out[1024], out2[1024];
+   unsigned long x, y;
+   int err, stat1, stat2;
+   dsa_key key, key2;
+
+   /* make a random key */
+   if ((err = dsa_make_key(&prng, find_prng("yarrow"), 20, 128, &key)) != CRYPT_OK) {
+      printf("Error making DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("DSA Key Made\n");
+
+   /* verify it */
+   if ((err = dsa_verify_key(&key, &stat1)) != CRYPT_OK) {
+      printf("Error verifying DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("DSA key verification: %s\n", stat1 == 1 ? "passed" : "failed");
+   if (stat1 == 0) exit(-1);     
+
+   /* sign the message */
+   x = sizeof(out);
+   if ((err = dsa_sign_hash(msg, sizeof(msg), out, &x, &prng, find_prng("yarrow"), &key)) != CRYPT_OK) {
+      printf("Error signing with DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("DSA 160/1024 signature is %lu bytes long\n", x);
+
+   /* verify it once */
+   if ((err = dsa_verify_hash(out, x, msg, sizeof(msg), &stat1, &key)) != CRYPT_OK) {
+      printf("Error verifying with DSA key 1: %s\n", error_to_string(err));
+      exit(-1);
+   }
+
+   /* Modify and verify again */
+   msg[0] ^= 1;
+   if ((err = dsa_verify_hash(out, x, msg, sizeof(msg), &stat2, &key)) != CRYPT_OK) {
+      printf("Error verifying with DSA key 2: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   msg[0] ^= 1;
+   printf("DSA Verification: %d, %d, %s\n", stat1, stat2, (stat1 == 1 && stat2 == 0) ? "passed" : "failed");
+   if (!(stat1 == 1 && stat2 == 0)) exit(-1);
+
+   /* test exporting it */
+   x = sizeof(out2);
+   if ((err = dsa_export(out2, &x, PK_PRIVATE, &key)) != CRYPT_OK) {
+      printf("Error export PK_PRIVATE DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("Exported PK_PRIVATE DSA key in %lu bytes\n", x);
+   if ((err = dsa_import(out2, x, &key2)) != CRYPT_OK) {
+      printf("Error importing PK_PRIVATE DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   /* verify a signature with it */
+   if ((err = dsa_verify_hash(out, x, msg, sizeof(msg), &stat1, &key2)) != CRYPT_OK) {
+      printf("Error verifying with DSA key 3: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("PRIVATE Import Test: %s\n", stat1 == 1 ? "passed" : "failed");
+   if (stat1 == 0) exit(-1);
+   dsa_free(&key2);
+
+   /* export as public now */
+   x = sizeof(out2);
+   if ((err = dsa_export(out2, &x, PK_PUBLIC, &key)) != CRYPT_OK) {
+      printf("Error export PK_PUBLIC DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("Exported PK_PUBLIC DSA key in %lu bytes\n", x);
+   if ((err = dsa_import(out2, x, &key2)) != CRYPT_OK) {
+      printf("Error importing PK_PUBLIC DSA key: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   /* verify a signature with it */
+   if ((err = dsa_verify_hash(out, x, msg, sizeof(msg), &stat1, &key2)) != CRYPT_OK) {
+      printf("Error verifying with DSA key 4: %s\n", error_to_string(err));
+      exit(-1);
+   }
+   printf("PUBLIC Import Test: %s\n", stat1 == 1 ? "passed" : "failed");
+   if (stat1 == 0) exit(-1);
+
+   dsa_free(&key2);
+   dsa_free(&key);
+}
+
 
 
 
@@ -1734,8 +1831,15 @@ main (void)
   printf (crypt_build_settings);
   test_errs ();
 
+
 #ifdef HMAC
   printf ("HMAC: %s\n", hmac_test () == CRYPT_OK ? "passed" : "failed");
+  if (hmac_test() != CRYPT_OK) exit(EXIT_FAILURE);
+#endif
+
+#ifdef HMAC
+  printf ("OMAC: %s\n", omac_test () == CRYPT_OK ? "passed" : "failed");
+  if (omac_test() != CRYPT_OK) exit(EXIT_FAILURE);
 #endif
 
   store_tests ();
@@ -1754,10 +1858,12 @@ main (void)
 #ifdef KR
   kr_test ();
 #endif
+  dsa_tests();
   rsa_test ();
   pad_test ();
   ecc_tests ();
   dh_tests ();
+
 
   gf_tests ();
   base64_test ();

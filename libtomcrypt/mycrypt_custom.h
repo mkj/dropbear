@@ -30,6 +30,7 @@
 #define DES
 #define CAST5
 #define NOEKEON
+#define SKIPJACK
 #define CFB
 #define OFB
 #define ECB
@@ -38,6 +39,7 @@
 #define SHA512
 #define SHA384
 #define SHA256
+#define SHA224
 #define TIGER
 #define SHA1
 #define MD5
@@ -46,12 +48,14 @@
 #define RIPEMD128
 #define RIPEMD160
 #define HMAC
+#define OMAC
 #define BASE64
 #define YARROW
 #define SPRNG
 #define RC4
 #define DEVRANDOM
 #define MRSA
+#define MDSA
 #define MDH
 #define MECC
 #define DH768

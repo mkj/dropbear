@@ -48,12 +48,6 @@ extern clock_t XCLOCK(void);
    #define ENDIAN_NEUTRAL
 #endif
 
-#ifdef SHA384
-   #ifndef SHA512
-      #error The SHA384 hash requires SHA512 to be defined!
-   #endif
-#endif
-
 #ifdef YARROW
    #ifndef CTR
       #error YARROW requires CTR chaining mode to be defined!
@@ -71,7 +65,7 @@ extern clock_t XCLOCK(void);
     #define PACKET_SECT_RSA        0
     #define PACKET_SECT_DH         1
     #define PACKET_SECT_ECC        2
-    #define PACKET_SECT_DSA        4
+    #define PACKET_SECT_DSA        3
 
     /* Subsection Tags for the first three sections */
     #define PACKET_SUB_KEY         0

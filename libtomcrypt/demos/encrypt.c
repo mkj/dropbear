@@ -16,14 +16,14 @@ static const struct _cipher_descriptor *ciphers[] = {
    &saferp_desc,     &rijndael_desc,
    &twofish_desc,    &safer_k64_desc,   &safer_sk64_desc,
    &safer_k128_desc, &safer_sk128_desc, &rc2_desc,
-   &des_desc,        &des3_desc,        &cast5_desc, NULL
+   &des_desc,        &des3_desc,        &cast5_desc, &skipjack_desc, NULL
 };
 
-int usage(void) 
+int usage(char *name) 
 {
    int x;
 
-   printf("Usage: ./crypt [-d](ecrypt) cipher infile outfile\nCiphers:\n");
+   printf("Usage: ./%s [-d](ecrypt) cipher infile outfile\nCiphers:\n", name);
    for (x = 0; cipher_descriptor[x].name != NULL; x++) {
       printf("%s\n",cipher_descriptor[x].name);
    }
@@ -73,7 +73,7 @@ int main(int argc, char *argv[])
    register_algs();
 
    if (argc < 4) {
-      return usage();
+      return usage(argv[0]);
    }
 
    if (!strcmp(argv[1], "-d")) {

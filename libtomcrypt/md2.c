@@ -47,7 +47,7 @@ static void md2_update_chksum(hash_state *md)
 /* caution, the RFC says its "C[j] = S[M[i*16+j] xor L]" but the reference source code [and test vectors] say 
    otherwise.
 */
-       L = (md->md2.chksum[j] ^= PI_SUBST[(int)(md->md2.buf[j] ^ L)]);
+       L = (md->md2.chksum[j] ^= PI_SUBST[(int)(md->md2.buf[j] ^ L)] & 255);
    }
 }
 
@@ -67,7 +67,7 @@ static void md2_compress(hash_state *md)
    /* do 18 rounds */
    for (j = 0; j < 18; j++) {
        for (k = 0; k < 48; k++) {
-           t = (md->md2.X[k] ^= PI_SUBST[(int)t]);
+           t = (md->md2.X[k] ^= PI_SUBST[(int)(t & 255)]);
        }
        t = (t + (unsigned char)j) & 255;
    }
@@ -84,11 +84,14 @@ void md2_init(hash_state *md)
    md->md2.curlen = 0;
 }
 
-void md2_process(hash_state *md, const unsigned char *buf, unsigned long len)
+int md2_process(hash_state *md, const unsigned char *buf, unsigned long len)
 {
     unsigned long n;
     _ARGCHK(md != NULL);
     _ARGCHK(buf != NULL);
+    if (md-> md2 .curlen > sizeof(md-> md2 .buf)) {                            
+       return CRYPT_INVALID_ARG;                                                           
+    }                                                                                       
     while (len > 0) {
         n = MIN(len, (16 - md->md2.curlen));
         memcpy(md->md2.buf + md->md2.curlen, buf, (size_t)n);
@@ -103,14 +106,20 @@ void md2_process(hash_state *md, const unsigned char *buf, unsigned long len)
             md->md2.curlen = 0;
         }
     }
+    return CRYPT_OK;
 }
 
-void md2_done(hash_state * md, unsigned char *hash)
+int md2_done(hash_state * md, unsigned char *hash)
 {
     unsigned long i, k;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->md2.curlen >= sizeof(md->md2.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
+
 
     /* pad the message */
     k = 16 - md->md2.curlen;
@@ -132,6 +141,7 @@ void md2_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+    return CRYPT_OK;
 }
 
 int md2_test(void)

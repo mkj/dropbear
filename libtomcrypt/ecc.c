@@ -250,39 +250,39 @@ static int dbl_point(ecc_point *P, ecc_point *R, mp_int *modulus, mp_int *mu)
    mp_int s, tmp, tmpx;
    int res;
 
-   if (mp_init_multi(&s, &tmp, &tmpx, NULL) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((res = mp_init_multi(&s, &tmp, &tmpx, NULL)) != MP_OKAY) {
+      return mpi_to_ltc_error(res);
    }
 
    /* s = (3Xp^2 + a) / (2Yp) */
-   if (mp_mul_2(&P->y, &tmp) != MP_OKAY)                   { goto error; } /* tmp = 2*y */
-   if (mp_invmod(&tmp, modulus, &tmp) != MP_OKAY)          { goto error; } /* tmp = 1/tmp mod modulus */
-   if (mp_sqr(&P->x, &s) != MP_OKAY)                       { goto error; } /* s = x^2  */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)              { goto error; }
-   if (mp_mul_d(&s,(mp_digit)3, &s) != MP_OKAY)            { goto error; } /* s = 3*(x^2) */
-   if (mp_sub_d(&s,(mp_digit)3, &s) != MP_OKAY)            { goto error; } /* s = 3*(x^2) - 3 */
+   if ((res = mp_mul_2(&P->y, &tmp)) != MP_OKAY)                   { goto error; } /* tmp = 2*y */
+   if ((res = mp_invmod(&tmp, modulus, &tmp)) != MP_OKAY)          { goto error; } /* tmp = 1/tmp mod modulus */
+   if ((res = mp_sqr(&P->x, &s)) != MP_OKAY)                       { goto error; } /* s = x^2  */
+   if ((res = mp_reduce(&s, modulus, mu)) != MP_OKAY)              { goto error; }
+   if ((res = mp_mul_d(&s,(mp_digit)3, &s)) != MP_OKAY)            { goto error; } /* s = 3*(x^2) */
+   if ((res = mp_sub_d(&s,(mp_digit)3, &s)) != MP_OKAY)            { goto error; } /* s = 3*(x^2) - 3 */
    if (mp_cmp_d(&s, 0) == MP_LT) {                                         /* if s < 0 add modulus */
-      if (mp_add(&s, modulus, &s) != MP_OKAY)              { goto error; }
+      if ((res = mp_add(&s, modulus, &s)) != MP_OKAY)              { goto error; }
    }
-   if (mp_mul(&s, &tmp, &s) != MP_OKAY)                    { goto error; } /* s = tmp * s mod modulus */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)              { goto error; }
+   if ((res = mp_mul(&s, &tmp, &s)) != MP_OKAY)                    { goto error; } /* s = tmp * s mod modulus */
+   if ((res = mp_reduce(&s, modulus, mu)) != MP_OKAY)              { goto error; }
 
    /* Xr = s^2 - 2Xp */
-   if (mp_sqr(&s,  &tmpx) != MP_OKAY)                      { goto error; } /* tmpx = s^2  */
-   if (mp_reduce(&tmpx, modulus, mu) != MP_OKAY)           { goto error; } /* tmpx = tmpx mod modulus */
-   if (mp_sub(&tmpx, &P->x, &tmpx) != MP_OKAY)             { goto error; } /* tmpx = tmpx - x */
-   if (mp_submod(&tmpx, &P->x, modulus, &tmpx) != MP_OKAY) { goto error; } /* tmpx = tmpx - x mod modulus */
+   if ((res = mp_sqr(&s,  &tmpx)) != MP_OKAY)                      { goto error; } /* tmpx = s^2  */
+   if ((res = mp_reduce(&tmpx, modulus, mu)) != MP_OKAY)           { goto error; } /* tmpx = tmpx mod modulus */
+   if ((res = mp_sub(&tmpx, &P->x, &tmpx)) != MP_OKAY)             { goto error; } /* tmpx = tmpx - x */
+   if ((res = mp_submod(&tmpx, &P->x, modulus, &tmpx)) != MP_OKAY) { goto error; } /* tmpx = tmpx - x mod modulus */
 
    /* Yr = -Yp + s(Xp - Xr)  */
-   if (mp_sub(&P->x, &tmpx, &tmp) != MP_OKAY)              { goto error; } /* tmp = x - tmpx */
-   if (mp_mul(&tmp, &s, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp * s */
-   if (mp_submod(&tmp, &P->y, modulus, &R->y) != MP_OKAY)  { goto error; } /* y = tmp - y mod modulus */
-   if (mp_copy(&tmpx, &R->x) != MP_OKAY)                   { goto error; } /* x = tmpx */
+   if ((res = mp_sub(&P->x, &tmpx, &tmp)) != MP_OKAY)              { goto error; } /* tmp = x - tmpx */
+   if ((res = mp_mul(&tmp, &s, &tmp)) != MP_OKAY)                  { goto error; } /* tmp = tmp * s */
+   if ((res = mp_submod(&tmp, &P->y, modulus, &R->y)) != MP_OKAY)  { goto error; } /* y = tmp - y mod modulus */
+   if ((res = mp_copy(&tmpx, &R->x)) != MP_OKAY)                   { goto error; } /* x = tmpx */
 
    res = CRYPT_OK;
    goto done;
 error:
-   res = CRYPT_MEM;
+   res = mpi_to_ltc_error(res);
 done:
    mp_clear_multi(&tmpx, &tmp, &s, NULL);
    return res;
@@ -294,14 +294,14 @@ static int add_point(ecc_point *P, ecc_point *Q, ecc_point *R, mp_int *modulus, 
    mp_int s, tmp, tmpx;
    int res;
 
-   if (mp_init(&tmp) != MP_OKAY) {
-      return CRYPT_MEM;
+   if ((res = mp_init(&tmp)) != MP_OKAY) {
+      return mpi_to_ltc_error(res);
    }
 
    /* is P==Q or P==-Q? */
-   if (mp_neg(&Q->y, &tmp) != MP_OKAY || mp_mod(&tmp, modulus, &tmp) != MP_OKAY) {
+   if (((res = mp_neg(&Q->y, &tmp)) != MP_OKAY) || ((res = mp_mod(&tmp, modulus, &tmp)) != MP_OKAY)) {
       mp_clear(&tmp);
-      return CRYPT_MEM;
+      return mpi_to_ltc_error(res);
    }
 
    if (mp_cmp(&P->x, &Q->x) == MP_EQ)
@@ -310,40 +310,40 @@ static int add_point(ecc_point *P, ecc_point *Q, ecc_point *R, mp_int *modulus, 
          return dbl_point(P, R, modulus, mu);
       }
 
-   if (mp_init_multi(&tmpx, &s, NULL) != MP_OKAY) {
+   if ((res = mp_init_multi(&tmpx, &s, NULL)) != MP_OKAY) {
       mp_clear(&tmp);
-      return CRYPT_MEM;
+      return mpi_to_ltc_error(res);
    }
 
    /* get s = (Yp - Yq)/(Xp-Xq) mod p */
-   if (mp_sub(&P->x, &Q->x, &tmp) != MP_OKAY)                 { goto error; } /* tmp = Px - Qx mod modulus */
+   if ((res = mp_sub(&P->x, &Q->x, &tmp)) != MP_OKAY)                 { goto error; } /* tmp = Px - Qx mod modulus */
    if (mp_cmp_d(&tmp, 0) == MP_LT) {                                          /* if tmp<0 add modulus */
-      if (mp_add(&tmp, modulus, &tmp) != MP_OKAY)             { goto error; }
+      if ((res = mp_add(&tmp, modulus, &tmp)) != MP_OKAY)             { goto error; }
    }
-   if (mp_invmod(&tmp, modulus, &tmp) != MP_OKAY)             { goto error; } /* tmp = 1/tmp mod modulus */
-   if (mp_sub(&P->y, &Q->y, &s) != MP_OKAY)                   { goto error; } /* s = Py - Qy mod modulus */
+   if ((res = mp_invmod(&tmp, modulus, &tmp)) != MP_OKAY)             { goto error; } /* tmp = 1/tmp mod modulus */
+   if ((res = mp_sub(&P->y, &Q->y, &s)) != MP_OKAY)                   { goto error; } /* s = Py - Qy mod modulus */
    if (mp_cmp_d(&s, 0) == MP_LT) {                                            /* if s<0 add modulus */
-      if (mp_add(&s, modulus, &s) != MP_OKAY)                 { goto error; }
+      if ((res = mp_add(&s, modulus, &s)) != MP_OKAY)                 { goto error; }
    }
-   if (mp_mul(&s, &tmp, &s) != MP_OKAY)                       { goto error; } /* s = s * tmp mod modulus */
-   if (mp_reduce(&s, modulus, mu) != MP_OKAY)                 { goto error; }
+   if ((res = mp_mul(&s, &tmp, &s)) != MP_OKAY)                       { goto error; } /* s = s * tmp mod modulus */
+   if ((res = mp_reduce(&s, modulus, mu)) != MP_OKAY)                 { goto error; }
 
    /* Xr = s^2 - Xp - Xq */
-   if (mp_sqr(&s, &tmp) != MP_OKAY)                           { goto error; } /* tmp = s^2 mod modulus */
-   if (mp_reduce(&tmp, modulus, mu) != MP_OKAY)               { goto error; }
-   if (mp_sub(&tmp, &P->x, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp - Px */
-   if (mp_sub(&tmp, &Q->x, &tmpx) != MP_OKAY)                 { goto error; } /* tmpx = tmp - Qx */
+   if ((res = mp_sqr(&s, &tmp)) != MP_OKAY)                           { goto error; } /* tmp = s^2 mod modulus */
+   if ((res = mp_reduce(&tmp, modulus, mu)) != MP_OKAY)               { goto error; }
+   if ((res = mp_sub(&tmp, &P->x, &tmp)) != MP_OKAY)                  { goto error; } /* tmp = tmp - Px */
+   if ((res = mp_sub(&tmp, &Q->x, &tmpx)) != MP_OKAY)                 { goto error; } /* tmpx = tmp - Qx */
 
    /* Yr = -Yp + s(Xp - Xr) */
-   if (mp_sub(&P->x, &tmpx, &tmp) != MP_OKAY)                 { goto error; } /* tmp = Px - tmpx */
-   if (mp_mul(&tmp, &s, &tmp) != MP_OKAY)                     { goto error; } /* tmp = tmp * s */
-   if (mp_submod(&tmp, &P->y, modulus, &R->y) != MP_OKAY)     { goto error; } /* Ry = tmp - Py mod modulus */
-   if (mp_mod(&tmpx, modulus, &R->x) != MP_OKAY)              { goto error; } /* Rx = tmpx mod modulus */
+   if ((res = mp_sub(&P->x, &tmpx, &tmp)) != MP_OKAY)                 { goto error; } /* tmp = Px - tmpx */
+   if ((res = mp_mul(&tmp, &s, &tmp)) != MP_OKAY)                     { goto error; } /* tmp = tmp * s */
+   if ((res = mp_submod(&tmp, &P->y, modulus, &R->y)) != MP_OKAY)     { goto error; } /* Ry = tmp - Py mod modulus */
+   if ((res = mp_mod(&tmpx, modulus, &R->x)) != MP_OKAY)              { goto error; } /* Rx = tmpx mod modulus */
 
    res = CRYPT_OK;
    goto done;
 error:
-   res = CRYPT_MEM;
+   res = mpi_to_ltc_error(res);
 done:
    mp_clear_multi(&s, &tmpx, &tmp, NULL);
    return res;
@@ -362,12 +362,12 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
    int     first, bitbuf, bitcpy, bitcnt, mode, digidx;
 
   /* init barrett reduction */
-  if (mp_init(&mu) != MP_OKAY) {
-      return CRYPT_MEM;
+  if ((res = mp_init(&mu)) != MP_OKAY) {
+      return mpi_to_ltc_error(res);
   }
-  if (mp_reduce_setup(&mu, modulus) != MP_OKAY) {
+  if ((res = mp_reduce_setup(&mu, modulus)) != MP_OKAY) {
       mp_clear(&mu);
-      return CRYPT_MEM;
+      return mpi_to_ltc_error(res);
   }
 
   /* alloc ram for window temps */
@@ -748,7 +748,7 @@ done:
       z = (unsigned long)mp_unsigned_bin_size(num);  \
       STORE32L(z, buf2+y);                     \
       y += 4;                                  \
-      (void)mp_to_unsigned_bin(num, buf2+y);   \
+      if (mp_to_unsigned_bin(num, buf2+y) != MP_OKAY) { return CRYPT_MEM; }   \
       y += z;                                  \
 }
 
@@ -771,12 +771,12 @@ done:
                                                                  \
      /* load it */                                               \
      if (mp_read_unsigned_bin(num, (unsigned char *)in+y, (int)x) != MP_OKAY) {\
-        err = CRYPT_MEM;                                       \
+        err = CRYPT_MEM;                                         \
         goto error;                                              \
      }                                                           \
      y += x;                                                     \
      if (mp_shrink(num) != MP_OKAY) {                            \
-        err = CRYPT_MEM;                                       \
+        err = CRYPT_MEM;                                         \
         goto error;                                              \
      }                                                           \
 }

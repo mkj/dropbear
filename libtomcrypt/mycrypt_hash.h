@@ -10,7 +10,7 @@ struct sha512_state {
 #ifdef SHA256
 struct sha256_state {
     ulong64 length;
-    unsigned long state[8], curlen;
+    ulong32 state[8], curlen;
     unsigned char buf[64];
 };
 #endif
@@ -18,7 +18,7 @@ struct sha256_state {
 #ifdef SHA1
 struct sha1_state {
     ulong64 length;
-    unsigned long state[5], curlen;
+    ulong32 state[5], curlen;
     unsigned char buf[64];
 };
 #endif
@@ -26,7 +26,7 @@ struct sha1_state {
 #ifdef MD5
 struct md5_state {
     ulong64 length;
-    unsigned long state[4], curlen;
+    ulong32 state[4], curlen;
     unsigned char buf[64];
 };
 #endif
@@ -34,7 +34,7 @@ struct md5_state {
 #ifdef MD4
 struct md4_state {
     ulong64 length;
-    unsigned long state[4], curlen;
+    ulong32 state[4], curlen;
     unsigned char buf[64];
 };
 #endif
@@ -58,7 +58,7 @@ struct md2_state {
 struct rmd128_state {
     ulong64 length;
     unsigned char buf[64];
-    unsigned long curlen, state[4];
+    ulong32 curlen, state[4];
 };
 #endif
 
@@ -66,7 +66,7 @@ struct rmd128_state {
 struct rmd160_state {
     ulong64 length;
     unsigned char buf[64];
-    unsigned long curlen, state[5];
+    ulong32 curlen, state[5];
 };
 #endif
 
@@ -106,87 +106,101 @@ extern struct _hash_descriptor {
     unsigned long hashsize;       /* digest output size in bytes  */
     unsigned long blocksize;      /* the block size the hash uses */
     void (*init)(hash_state *);
-    void (*process)(hash_state *, const unsigned char *, unsigned long);
-    void (*done)(hash_state *, unsigned char *);
+    int (*process)(hash_state *, const unsigned char *, unsigned long);
+    int (*done)(hash_state *, unsigned char *);
     int  (*test)(void);
 } hash_descriptor[];
 
 #ifdef SHA512
 extern void sha512_init(hash_state * md);
-extern void sha512_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void sha512_done(hash_state * md, unsigned char *hash);
+extern int sha512_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int sha512_done(hash_state * md, unsigned char *hash);
 extern int  sha512_test(void);
 extern const struct _hash_descriptor sha512_desc;
 #endif
 
 #ifdef SHA384
+#ifndef SHA512
+   #error SHA512 is required for SHA384
+#endif
 extern void sha384_init(hash_state * md);
-extern void sha384_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void sha384_done(hash_state * md, unsigned char *hash);
+#define sha384_process sha512_process
+extern int sha384_done(hash_state * md, unsigned char *hash);
 extern int  sha384_test(void);
 extern const struct _hash_descriptor sha384_desc;
 #endif
 
 #ifdef SHA256
 extern void sha256_init(hash_state * md);
-extern void sha256_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void sha256_done(hash_state * md, unsigned char *hash);
+extern int sha256_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int sha256_done(hash_state * md, unsigned char *hash);
 extern int  sha256_test(void);
 extern const struct _hash_descriptor sha256_desc;
+
+#ifdef SHA224
+#ifndef SHA256
+   #error SHA256 is required for SHA224
+#endif
+extern void sha224_init(hash_state * md);
+#define sha224_process sha256_process
+extern int sha224_done(hash_state * md, unsigned char *hash);
+extern int  sha224_test(void);
+extern const struct _hash_descriptor sha224_desc;
+#endif
 #endif
 
 #ifdef SHA1
 extern void sha1_init(hash_state * md);
-extern void sha1_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void sha1_done(hash_state * md, unsigned char *hash);
+extern int sha1_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int sha1_done(hash_state * md, unsigned char *hash);
 extern int  sha1_test(void);
 extern const struct _hash_descriptor sha1_desc;
 #endif
 
 #ifdef MD5
 extern void md5_init(hash_state * md);
-extern void md5_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void md5_done(hash_state * md, unsigned char *hash);
+extern int md5_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int md5_done(hash_state * md, unsigned char *hash);
 extern int  md5_test(void);
 extern const struct _hash_descriptor md5_desc;
 #endif
 
 #ifdef MD4
 extern void md4_init(hash_state * md);
-extern void md4_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void md4_done(hash_state * md, unsigned char *hash);
+extern int md4_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int md4_done(hash_state * md, unsigned char *hash);
 extern int  md4_test(void);
 extern const struct _hash_descriptor md4_desc;
 #endif
 
 #ifdef MD2
 extern void md2_init(hash_state * md);
-extern void md2_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void md2_done(hash_state * md, unsigned char *hash);
+extern int md2_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int md2_done(hash_state * md, unsigned char *hash);
 extern int  md2_test(void);
 extern const struct _hash_descriptor md2_desc;
 #endif
 
 #ifdef TIGER
 extern void tiger_init(hash_state * md);
-extern void tiger_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void tiger_done(hash_state * md, unsigned char *hash);
+extern int tiger_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int tiger_done(hash_state * md, unsigned char *hash);
 extern int  tiger_test(void);
 extern const struct _hash_descriptor tiger_desc;
 #endif
 
 #ifdef RIPEMD128
 extern void rmd128_init(hash_state * md);
-extern void rmd128_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void rmd128_done(hash_state * md, unsigned char *hash);
+extern int rmd128_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int rmd128_done(hash_state * md, unsigned char *hash);
 extern int  rmd128_test(void);
 extern const struct _hash_descriptor rmd128_desc;
 #endif
 
 #ifdef RIPEMD160
 extern void rmd160_init(hash_state * md);
-extern void rmd160_process(hash_state * md, const unsigned char *buf, unsigned long len);
-extern void rmd160_done(hash_state * md, unsigned char *hash);
+extern int rmd160_process(hash_state * md, const unsigned char *buf, unsigned long len);
+extern int rmd160_done(hash_state * md, unsigned char *hash);
 extern int  rmd160_test(void);
 extern const struct _hash_descriptor rmd160_desc;
 #endif
@@ -202,13 +216,44 @@ extern int hash_memory(int hash, const unsigned char *data, unsigned long len, u
 extern int hash_filehandle(int hash, FILE *in, unsigned char *dst, unsigned long *outlen);
 extern int hash_file(int hash, const char *fname, unsigned char *dst, unsigned long *outlen);
 
+/* a simple macro for making hash "process" functions */
+#define HASH_PROCESS(func_name, compress_name, state_var, block_size)                       \
+int func_name (hash_state * md, const unsigned char *buf, unsigned long len)               \
+{                                                                                           \
+    unsigned long n;                                                                        \
+    _ARGCHK(md != NULL);                                                                    \
+    _ARGCHK(buf != NULL);                                                                   \
+    if (md-> state_var .curlen > sizeof(md-> state_var .buf)) {                             \
+       return CRYPT_INVALID_ARG;                                                            \
+    }                                                                                       \
+    while (len > 0) {                                                                       \
+        if (md-> state_var .curlen == 0 && len >= block_size) {                             \
+           compress_name (md, (unsigned char *)buf);                                        \
+           md-> state_var .length += block_size * 8;                                        \
+           buf             += block_size;                                                   \
+           len             -= block_size;                                                   \
+        } else {                                                                            \
+           n = MIN(len, (block_size - md-> state_var .curlen));                             \
+           memcpy(md-> state_var .buf + md-> state_var.curlen, buf, (size_t)n);             \
+           md-> state_var .curlen += n;                                                     \
+           buf             += n;                                                            \
+           len             -= n;                                                            \
+           if (md-> state_var .curlen == block_size) {                                      \
+              compress_name (md, md-> state_var .buf);                                      \
+              md-> state_var .length += 8*block_size;                                       \
+              md-> state_var .curlen = 0;                                                   \
+           }                                                                                \
+       }                                                                                    \
+    }                                                                                       \
+    return CRYPT_OK;                                                                        \
+}
+
 #ifdef HMAC
 typedef struct Hmac_state {
-     hash_state md;
-     int hash;
-     unsigned long hashsize; /* here for your reference */
-     hash_state hashstate;
-     unsigned char key[MAXBLOCKSIZE];
+     hash_state     md;
+     int            hash;
+     hash_state     hashstate;
+     unsigned char  key[MAXBLOCKSIZE];
 } hmac_state;
 
 extern int hmac_init(hmac_state *hmac, int hash, const unsigned char *key, unsigned long keylen);
@@ -222,3 +267,27 @@ extern int hmac_file(int hash, const char *fname, const unsigned char *key,
                      unsigned long keylen, 
                      unsigned char *dst, unsigned long *dstlen);
 #endif
+
+#ifdef OMAC
+
+typedef struct {
+   int             cipher_idx, 
+                   buflen,
+                   blklen;
+   unsigned char   block[MAXBLOCKSIZE],
+                   prev[MAXBLOCKSIZE],
+                   Lu[2][MAXBLOCKSIZE];
+   symmetric_key   key;
+} omac_state;
+
+extern int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned long keylen);
+extern int omac_process(omac_state *state, const unsigned char *buf, unsigned long len);
+extern int omac_done(omac_state *state, unsigned char *out, unsigned long *outlen);
+extern int omac_memory(int cipher, const unsigned char *key, unsigned long keylen,
+                const unsigned char *msg, unsigned long msglen,
+                unsigned char *out, unsigned long *outlen);
+extern int omac_file(int cipher, const unsigned char *key, unsigned long keylen,
+              const char *filename, unsigned char *out, unsigned long *outlen);
+extern int omac_test(void);
+#endif
+

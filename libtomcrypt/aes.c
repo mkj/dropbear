@@ -47,7 +47,7 @@ const struct _cipher_descriptor aes_desc =
 
 int rijndael_setup(const unsigned char *key, int keylen, int rounds, symmetric_key *skey)
 {
-    int i = 0, j;
+    int i, j;
     ulong32 temp, *rk, *rrk;
     
     _ARGCHK(key != NULL);
@@ -64,6 +64,7 @@ int rijndael_setup(const unsigned char *key, int keylen, int rounds, symmetric_k
     skey->rijndael.Nr = 10 + ((keylen/8)-2)*2;
         
     /* setup the forward key */
+    i                 = 0;
     rk                = skey->rijndael.eK;
     LOAD32H(rk[0], key     );
     LOAD32H(rk[1], key +  4);
@@ -83,7 +84,7 @@ int rijndael_setup(const unsigned char *key, int keylen, int rounds, symmetric_k
             rk[6] = rk[2] ^ rk[5];
             rk[7] = rk[3] ^ rk[6];
             if (++i == 10) {
-                break;
+               break;
             }
             rk += 4;
         }
@@ -233,7 +234,11 @@ int rijndael_setup(const unsigned char *key, int keylen, int rounds, symmetric_k
     return CRYPT_OK;   
 }
 
-void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
+#ifdef CLEAN_STACK
+static void _rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
+#else
+void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+#endif
 {
     ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
     int Nr, r;
@@ -259,8 +264,6 @@ void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
      */
     r = Nr >> 1;
     for (;;) {
-
-/* Both of these blocks are equivalent except the top is more friendlier for x86 processors */
         t0 =
             Te0[byte(s0, 3)] ^
             Te1[byte(s1, 2)] ^
@@ -350,7 +353,20 @@ void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
     STORE32H(s3, ct+12);
 }
 
-void rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) {
+#ifdef CLEAN_STACK
+void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
+{
+   _rijndael_ecb_encrypt(pt, ct, skey);
+   burn_stack(sizeof(unsigned long)*8 + sizeof(unsigned long*) + sizeof(int)*2);
+}
+#endif
+
+#ifdef CLEAN_STACK
+static void _rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
+#else
+void rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+#endif
+{
     ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
     int Nr, r;
 
@@ -467,6 +483,15 @@ void rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
     STORE32H(s3, pt+12);
 }
 
+
+#ifdef CLEAN_STACK
+void rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
+{
+   _rijndael_ecb_decrypt(ct, pt, skey);
+   burn_stack(sizeof(unsigned long)*8 + sizeof(unsigned long*) + sizeof(int)*2);
+}
+#endif
+
 int rijndael_test(void)
 {
  #ifndef LTC_TEST
@@ -508,7 +533,7 @@ int rijndael_test(void)
  
  symmetric_key key;
  unsigned char tmp[2][16];
- int i;
+ int i, y;
  
  for (i = 0; i < (int)(sizeof(tests)/sizeof(tests[0])); i++) {
     zeromem(&key, sizeof(key));
@@ -537,6 +562,12 @@ int rijndael_test(void)
 #endif       
         return CRYPT_FAIL_TESTVECTOR;
     }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 16; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) rijndael_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) rijndael_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 16; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
  }       
  return CRYPT_OK;
  #endif

@@ -587,9 +587,9 @@ static void key_schedule(ulong64 *x) {
 }    
 
 #ifdef CLEAN_STACK
-static void _tiger_compress(hash_state *md)
+static void _tiger_compress(hash_state *md, unsigned char *buf)
 #else
-static void tiger_compress(hash_state *md)
+static void tiger_compress(hash_state *md, unsigned char *buf)
 #endif
 {
     ulong64 a, b, c, x[8];
@@ -599,7 +599,7 @@ static void tiger_compress(hash_state *md)
 
     /* load words */
     for (i = 0; i < 8; i++) {
-        LOAD64L(x[i],&md->tiger.buf[8*i]);
+        LOAD64L(x[i],&buf[8*i]);
     }
     a = md->tiger.state[0];
     b = md->tiger.state[1];
@@ -618,9 +618,9 @@ static void tiger_compress(hash_state *md)
 }
 
 #ifdef CLEAN_STACK
-static void tiger_compress(hash_state *md)
+static void tiger_compress(hash_state *md, unsigned char *buf)
 {
-   _tiger_compress(md);
+   _tiger_compress(md, buf);
    burn_stack(sizeof(ulong64) * 11 + sizeof(unsigned long));
 }
 #endif
@@ -635,31 +635,16 @@ void tiger_init(hash_state *md)
     md->tiger.length = 0;
 }
 
-void tiger_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
-    while (len > 0) {
-        n = MIN(len, (64 - md->tiger.curlen));
-        memcpy(md->tiger.buf + md->tiger.curlen, buf, (size_t)n);
-        md->tiger.curlen += n;
-        buf            += n;
-        len            -= n;
+HASH_PROCESS(tiger_process, tiger_compress, tiger, 64)
 
-        /* is 64 bytes full? */
-        if (md->tiger.curlen == 64) {
-            tiger_compress(md);
-            md->tiger.length += 512;    /* add the number of bits not bytes */
-            md->tiger.curlen = 0;
-        }
-    }
-}
-
-void tiger_done(hash_state * md, unsigned char *hash)
+int tiger_done(hash_state * md, unsigned char *hash)
 {
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->tiger.curlen >= sizeof(md->tiger.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
 
     /* increase the length of the message */
     md->tiger.length += md->tiger.curlen * 8;
@@ -674,7 +659,7 @@ void tiger_done(hash_state * md, unsigned char *hash)
         while (md->tiger.curlen < 64) {
             md->tiger.buf[md->tiger.curlen++] = (unsigned char)0;
         }
-        tiger_compress(md);
+        tiger_compress(md, md->tiger.buf);
         md->tiger.curlen = 0;
     }
 
@@ -685,7 +670,7 @@ void tiger_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64L(md->tiger.length, md->tiger.buf+56);
-    tiger_compress(md);
+    tiger_compress(md, md->tiger.buf);
 
     /* copy output */
     STORE64L(md->tiger.state[0], &hash[0]);
@@ -694,6 +679,8 @@ void tiger_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+
+    return CRYPT_OK;
 }
 
 int  tiger_test(void)

@@ -91,6 +91,24 @@ extern "C" {
 #endif   
 #endif
 
+/* define heap macros */
+#ifndef CRYPT
+   /* default to libc stuff */
+   #ifndef XMALLOC 
+       #define XMALLOC  malloc
+       #define XFREE    free
+       #define XREALLOC realloc
+       #define XCALLOC  calloc
+   #endif
+
+   /* prototypes for our heap functions */
+   extern void *XMALLOC(size_t n);
+   extern void *REALLOC(void *p, size_t n);
+   extern void *XCALLOC(size_t n, size_t s);
+   extern void XFREE(void *p);
+#endif
+
+
 /* otherwise the bits per digit is calculated automatically from the size of a mp_digit */
 #ifndef DIGIT_BIT
    #define DIGIT_BIT     ((int)((CHAR_BIT * sizeof(mp_digit) - 1)))  /* bits per digit */
@@ -113,6 +131,9 @@ extern "C" {
 #define MP_VAL        -3  /* invalid input */
 #define MP_RANGE      MP_VAL
 
+#define MP_YES        1   /* yes response */
+#define MP_NO         0   /* no response */
+
 typedef int           mp_err;
 
 /* you'll have to tune these... */
@@ -130,10 +151,15 @@ extern int KARATSUBA_MUL_CUTOFF,
 /* size of comba arrays, should be at least 2 * 2**(BITS_PER_WORD - BITS_PER_DIGIT*2) */
 #define MP_WARRAY               (1 << (sizeof(mp_word) * CHAR_BIT - 2 * DIGIT_BIT + 1))
 
+/* the infamous mp_int structure */
 typedef struct  {
     int used, alloc, sign;
     mp_digit *dp;
 } mp_int;
+
+/* callback for mp_prime_random, should fill dst with random bytes and return how many read [upto len] */
+typedef int ltm_prime_callback(unsigned char *dst, int len, void *dat);
+
 
 #define USED(m)    ((m)->used)
 #define DIGIT(m,k) ((m)->dp[(k)])
@@ -168,9 +194,9 @@ int mp_grow(mp_int *a, int size);
 int mp_init_size(mp_int *a, int size);
 
 /* ---> Basic Manipulations <--- */
-#define mp_iszero(a) (((a)->used == 0) ? 1 : 0)
-#define mp_iseven(a) (((a)->used > 0 && (((a)->dp[0] & 1) == 0)) ? 1 : 0)
-#define mp_isodd(a)  (((a)->used > 0 && (((a)->dp[0] & 1) == 1)) ? 1 : 0)
+#define mp_iszero(a) (((a)->used == 0) ? MP_YES : MP_NO)
+#define mp_iseven(a) (((a)->used > 0 && (((a)->dp[0] & 1) == 0)) ? MP_YES : MP_NO)
+#define mp_isodd(a)  (((a)->used > 0 && (((a)->dp[0] & 1) == 1)) ? MP_YES : MP_NO)
 
 /* set to zero */
 void mp_zero(mp_int *a);
@@ -179,7 +205,7 @@ void mp_zero(mp_int *a);
 void mp_set(mp_int *a, mp_digit b);
 
 /* set a 32-bit const */
-int mp_set_int(mp_int *a, unsigned int b);
+int mp_set_int(mp_int *a, unsigned long b);
 
 /* copy, b = a */
 int mp_copy(mp_int *a, mp_int *b);
@@ -218,6 +244,8 @@ int mp_2expt(mp_int *a, int b);
 
 /* Counts the number of lsbs which are zero before the first zero bit */
 int mp_cnt_lsb(mp_int *a);
+
+/* I Love Earth! */
 
 /* makes a pseudo-random int of a given size */
 int mp_rand(mp_int *a, int digits);
@@ -392,6 +420,11 @@ int mp_prime_fermat(mp_int *a, mp_int *b, int *result);
  */
 int mp_prime_miller_rabin(mp_int *a, mp_int *b, int *result);
 
+/* This gives [for a given bit size] the number of trials required
+ * such that Miller-Rabin gives a prob of failure lower than 2^-96 
+ */
+int mp_prime_rabin_miller_trials(int size);
+
 /* performs t rounds of Miller-Rabin on "a" using the first
  * t prime bases.  Also performs an initial sieve of trial
  * division.  Determines if "a" is prime with probability
@@ -407,6 +440,18 @@ int mp_prime_is_prime(mp_int *a, int t, int *result);
  * bbs_style = 1 means the prime must be congruent to 3 mod 4
  */
 int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
+
+/* makes a truly random prime of a given size (bytes),
+ * call with bbs = 1 if you want it to be congruent to 3 mod 4 
+ *
+ * You have to supply a callback which fills in a buffer with random bytes.  "dat" is a parameter you can
+ * have passed to the callback (e.g. a state or something).  This function doesn't use "dat" itself
+ * so it can be NULL
+ *
+ * The prime generated will be larger than 2^(8*size).
+ */
+int mp_prime_random(mp_int *a, int t, int size, int bbs, ltm_prime_callback cb, void *dat);
+
 
 /* ---> radix conversion <--- */
 int mp_count_bits(mp_int *a);
@@ -464,5 +509,5 @@ extern const char *mp_s_rmap;
    }
 #endif
 
-#endif /* ?BN_H_ */
+#endif
 

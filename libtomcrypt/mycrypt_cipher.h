@@ -95,6 +95,12 @@ struct noekeon_key {
 };
 #endif
 
+#ifdef SKIPJACK 
+struct skipjack_key {
+    unsigned char key[10];
+};
+#endif
+
 typedef union Symmetric_key {
 #ifdef DES
    struct des_key des;
@@ -133,6 +139,9 @@ typedef union Symmetric_key {
 #ifdef NOEKEON
    struct noekeon_key  noekeon;
 #endif   
+#ifdef SKIPJACK
+   struct skipjack_key skipjack;
+#endif
 } symmetric_key;
 
 /* A block cipher ECB structure */
@@ -310,6 +319,15 @@ extern void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symm
 extern int noekeon_test(void);
 extern int noekeon_keysize(int *desired_keysize);
 extern const struct _cipher_descriptor noekeon_desc;
+#endif
+
+#ifdef SKIPJACK
+extern int skipjack_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
+extern void skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key);
+extern void skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key);
+extern int skipjack_test(void);
+extern int skipjack_keysize(int *desired_keysize);
+extern const struct _cipher_descriptor skipjack_desc;
 #endif
 
 #ifdef ECB

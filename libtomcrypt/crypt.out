@@ -29,6 +29,7 @@
 \BOOKMARK [1][-]{section.4.2}{Hash Descriptors}{chapter.4}
 \BOOKMARK [2][-]{subsection.4.2.1}{Notice}{section.4.2}
 \BOOKMARK [1][-]{section.4.3}{Hash based Message Authenication Codes}{chapter.4}
+\BOOKMARK [1][-]{section.4.4}{OMAC Support}{chapter.4}
 \BOOKMARK [0][-]{chapter.5}{Pseudo-Random Number Generators}{}
 \BOOKMARK [1][-]{section.5.1}{Core Functions}{chapter.5}
 \BOOKMARK [2][-]{subsection.5.1.1}{Remarks}{section.5.1}
@@ -53,24 +54,30 @@
 \BOOKMARK [1][-]{section.8.2}{Core Functions}{chapter.8}
 \BOOKMARK [1][-]{section.8.3}{ECC Packet}{chapter.8}
 \BOOKMARK [1][-]{section.8.4}{ECC Keysizes}{chapter.8}
-\BOOKMARK [0][-]{chapter.9}{Public Keyrings}{}
+\BOOKMARK [0][-]{chapter.9}{Digital Signature Algorithm}{}
 \BOOKMARK [1][-]{section.9.1}{Introduction}{chapter.9}
-\BOOKMARK [1][-]{section.9.2}{The Keyring API}{chapter.9}
-\BOOKMARK [0][-]{chapter.10}{GF\(2w\) Math Routines}{}
-\BOOKMARK [0][-]{chapter.11}{Miscellaneous}{}
-\BOOKMARK [1][-]{section.11.1}{Base64 Encoding and Decoding}{chapter.11}
-\BOOKMARK [1][-]{section.11.2}{The Multiple Precision Integer Library \(MPI\)}{chapter.11}
-\BOOKMARK [2][-]{subsection.11.2.1}{Binary Forms of ``mp\137int'' Variables}{section.11.2}
-\BOOKMARK [2][-]{subsection.11.2.2}{Primality Testing}{section.11.2}
-\BOOKMARK [0][-]{chapter.12}{Programming Guidelines}{}
-\BOOKMARK [1][-]{section.12.1}{Secure Pseudo Random Number Generators}{chapter.12}
-\BOOKMARK [1][-]{section.12.2}{Preventing Trivial Errors}{chapter.12}
-\BOOKMARK [1][-]{section.12.3}{Registering Your Algorithms}{chapter.12}
-\BOOKMARK [1][-]{section.12.4}{Key Sizes}{chapter.12}
-\BOOKMARK [2][-]{subsection.12.4.1}{Symmetric Ciphers}{section.12.4}
-\BOOKMARK [2][-]{subsection.12.4.2}{Assymetric Ciphers}{section.12.4}
-\BOOKMARK [1][-]{section.12.5}{Thread Safety}{chapter.12}
-\BOOKMARK [0][-]{chapter.13}{Configuring the Library}{}
-\BOOKMARK [1][-]{section.13.1}{Introduction}{chapter.13}
-\BOOKMARK [1][-]{section.13.2}{mycrypt\137cfg.h}{chapter.13}
-\BOOKMARK [1][-]{section.13.3}{The Configure Script}{chapter.13}
+\BOOKMARK [1][-]{section.9.2}{Key Generation}{chapter.9}
+\BOOKMARK [1][-]{section.9.3}{Key Verification}{chapter.9}
+\BOOKMARK [1][-]{section.9.4}{Signatures}{chapter.9}
+\BOOKMARK [1][-]{section.9.5}{Import and Export}{chapter.9}
+\BOOKMARK [0][-]{chapter.10}{Public Keyrings}{}
+\BOOKMARK [1][-]{section.10.1}{Introduction}{chapter.10}
+\BOOKMARK [1][-]{section.10.2}{The Keyring API}{chapter.10}
+\BOOKMARK [0][-]{chapter.11}{GF\(2w\) Math Routines}{}
+\BOOKMARK [0][-]{chapter.12}{Miscellaneous}{}
+\BOOKMARK [1][-]{section.12.1}{Base64 Encoding and Decoding}{chapter.12}
+\BOOKMARK [1][-]{section.12.2}{The Multiple Precision Integer Library \(MPI\)}{chapter.12}
+\BOOKMARK [2][-]{subsection.12.2.1}{Binary Forms of ``mp\137int'' Variables}{section.12.2}
+\BOOKMARK [2][-]{subsection.12.2.2}{Primality Testing}{section.12.2}
+\BOOKMARK [0][-]{chapter.13}{Programming Guidelines}{}
+\BOOKMARK [1][-]{section.13.1}{Secure Pseudo Random Number Generators}{chapter.13}
+\BOOKMARK [1][-]{section.13.2}{Preventing Trivial Errors}{chapter.13}
+\BOOKMARK [1][-]{section.13.3}{Registering Your Algorithms}{chapter.13}
+\BOOKMARK [1][-]{section.13.4}{Key Sizes}{chapter.13}
+\BOOKMARK [2][-]{subsection.13.4.1}{Symmetric Ciphers}{section.13.4}
+\BOOKMARK [2][-]{subsection.13.4.2}{Assymetric Ciphers}{section.13.4}
+\BOOKMARK [1][-]{section.13.5}{Thread Safety}{chapter.13}
+\BOOKMARK [0][-]{chapter.14}{Configuring the Library}{}
+\BOOKMARK [1][-]{section.14.1}{Introduction}{chapter.14}
+\BOOKMARK [1][-]{section.14.2}{mycrypt\137cfg.h}{chapter.14}
+\BOOKMARK [1][-]{section.14.3}{The Configure Script}{chapter.14}

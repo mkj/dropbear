@@ -20,24 +20,26 @@ int yarrow_start(prng_state *prng)
    /* these are the default hash/cipher combo used */
 #ifdef RIJNDAEL
    prng->yarrow.cipher = register_cipher(&rijndael_desc);
-#elif defined(NOEKEON)   
-   prng->yarrow.cipher = register_cipher(&noekeon_desc);
 #elif defined(BLOWFISH)
    prng->yarrow.cipher = register_cipher(&blowfish_desc);
 #elif defined(TWOFISH)
    prng->yarrow.cipher = register_cipher(&twofish_desc);
-#elif defined(CAST5)
-   prng->yarrow.cipher = register_cipher(&cast5_desc);
-#elif defined(SAFER)
-   prng->yarrow.cipher = register_cipher(&saferp_desc);
-#elif defined(RC5)
-   prng->yarrow.cipher = register_cipher(&rc5_desc);
 #elif defined(RC6)
    prng->yarrow.cipher = register_cipher(&rc6_desc);
-#elif defined(XTEA)
-   prng->yarrow.cipher = register_cipher(&xtea_desc);
+#elif defined(RC5)
+   prng->yarrow.cipher = register_cipher(&rc5_desc);
+#elif defined(SAFERP)
+   prng->yarrow.cipher = register_cipher(&saferp_desc);
 #elif defined(RC2)
    prng->yarrow.cipher = register_cipher(&rc2_desc);
+#elif defined(NOEKEON)   
+   prng->yarrow.cipher = register_cipher(&noekeon_desc);
+#elif defined(CAST5)
+   prng->yarrow.cipher = register_cipher(&cast5_desc);
+#elif defined(XTEA)
+   prng->yarrow.cipher = register_cipher(&xtea_desc);
+#elif defined(SAFER)
+   prng->yarrow.cipher = register_cipher(&safer_sk128_desc);
 #elif defined(DES)
    prng->yarrow.cipher = register_cipher(&des3_desc);
 #elif
@@ -51,12 +53,14 @@ int yarrow_start(prng_state *prng)
    prng->yarrow.hash   = register_hash(&sha256_desc);
 #elif defined(SHA512)
    prng->yarrow.hash   = register_hash(&sha512_desc);
-#elif defined(SHA384)
-   prng->yarrow.hash   = register_hash(&sha384_desc);
-#elif defined(SHA1)
-   prng->yarrow.hash   = register_hash(&sha1_desc);
 #elif defined(TIGER)
    prng->yarrow.hash   = register_hash(&tiger_desc);
+#elif defined(SHA1)
+   prng->yarrow.hash   = register_hash(&sha1_desc);
+#elif defined(RIPEMD160)
+   prng->yarrow.hash   = register_hash(&rmd160_desc);
+#elif defined(RIPEMD128)
+   prng->yarrow.hash   = register_hash(&rmd128_desc);
 #elif defined(MD5)
    prng->yarrow.hash   = register_hash(&md5_desc);
 #elif defined(MD4)

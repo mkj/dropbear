@@ -1,3 +1,68 @@
+Dec 24th, 2003
+v0.92  -- Updated the config.pl script so the options have more details.
+       -- Updated demos/tv_gen to include RIPEMD hashes
+       -- Updated Twofish so when TWOFISH_ALL_TABLES is defined a pre-computed RS table
+          is included [speedup: slight, about 4k cycles on my Athlon].
+       -- Re-wrote the twofish large key generation [the four 8x32 key dependent tables].  Now about twice as fast.
+          With both optimizations [e.g. TWOFISH_ALL_TABLES defined] a 128-bit Twofish key can now be scheduled
+          in 26,000 cycles on my Athlon XP [as opposed to 49,000 before] when optimized for size.
+       -- config.pl has been updated so rmd128.o and rmd160.o are objects included in the build [oops]
+       -- Andrew Mann found a bug in rsa_exptmod() which wouldn't indicate if the wrong type of key was specified
+          (e.g. not PK_PRIVATE or PK_PUBLIC)
+       -- Fixed up demos/x86_prof so it sorts the output now :-)  
+       -- The project is now powered by radioactive rubber pants.
+       -- Fixed dh_encrypt_key() so if you pass it a hash with a smaller output than the input key it 
+          will return CRYPT_INVALID_HASH [to match what ecc_encrypt_key() will do]
+       -- Merge the store/encrypt key part of ecc_encrypt_key() as per dh_encrypt_key() [can you guess what I'm upto?]
+       -- Massive updates to the prime generation code.  I use the LTM random prime functions [and provide a nice 
+          interface between the LTC PRNG's and the LTM generic prng prototype].  I also use a variable number of tests
+          depending on the input size.  This nicely speeds up most prime generation/testing within the library.
+       -- Added SHA-224 to the list of hashes.
+       -- Made HMAC test vectors constant and static [takes ROM space instead of RAM]
+       -- This release was brought to you by the letter P which stands for Patent Infringement.
+       -- Added generic HASH_PROCESS macro to mycrypt_hash.h which simplifies the hash "process" functions
+          I also optimized the compression functions of all but MD2 to not perform input copies when avoidable.
+       -- Removed the division from the Blowfish setup function [dropped 3k cycles on my Athlon]
+       -- Added stack cleaning to rijndael, cast5 so now all ciphers have CLEAN_STACK code.  
+       -- Added Skipjack to the list of ciphers [made appropriate changes to demos/test.c, demos/tv_gen.c and 
+          demos/x86_prof.c]
+       -- Added mechanical testing to cipher test vector routines.  Now it encrypts 1000 times, then decrypts and
+          compares.  Any fault (e.g. bug in code, compiler) in the routines is likely to show through.  Doesn't
+          stress test the key gen though...
+       -- Matt Johnson found a bug in the blowfish.c  apparently I was out of my mind and put twofish defines in there 
+          The code now builds with any config.  Thanks.
+       -- Added OMAC1 Message Authentication Code support to the library.
+       -- Re-prototyped the hash "process" and "done" to prevent buffer overflows [which don't seem easy to exploit].  
+          Updated HMAC code to use them too.  Hazaa!
+       -- Fixed bug in ECC code which wouldn't do an _ARGCHK on stat in ecc_verify_hash().
+       -- Fixed [temp fix] bug in all PK where the OUTPUT_BIGNUM macros would not trap errors on the to_unsigned_bin 
+          conversion [now returns CRYPT_MEM, will fix it up better later]
+       -- Added DSA to the list of supported PK algorithms.  
+       -- Fixed up various ciphers to &255 the input key bytes where required [e.g. where used to index a table] to prevent
+          problems on platforms where CHAR_BIT != 8 
+       -- Merged in LibTomMath v0.28
+       -- Updated demos/x86_prof.c to use Yarrow during the key sched testing [was horribly slow on platforms with blockable
+          /dev/random]. 
+       -- Added OMAC/HMAC tests to demos/tv_gen and I now store the output of this in notes/ 
+       -- Fixed a bug in config.pl that wouldn't have TWOFISH_TABLES defined by default (too many commas on the line)
+       -- Fixed bug in hmac_done().  Apparently FIPS-198 [HMAC] specifies that the output can be truncated.  My code
+          would not support that (does now just like the new OMAC code).
+       -- Removed "hashsize" from hmac_state as it wasn't being used.
+       -- Made demos/test.c stop if OMAC or HMAC tests fail (instead of just printing a failed message and keep going).
+       -- Updated notes/tech0003.txt to take into account the existence of Skipjack [also I fixed a few typos].
+       -- Slight changes to Noekeon, with SMALL_CODE undefined it uses a fully unrolled version.  Dropped +10 cycles/byte
+          on my Athlon (35 cycles per byte or 410.4Mbit/sec at 1795Mhz)
+       -- Added _ARGCHK() calls to is_prime() for the two input pointers.
+
+Sept 25th, 2003
+v0.91  -- HMAC fix of 0.90 was incorrect for keys larger than the block size of the hash.
+       -- Added error CRYPT_FILE_NOTFOUND for the file [hmac/hash] routines.
+       -- Added RIPEMD hashes to the hashsum demo.
+       -- Added hashsum demo to MSVC makefile.
+       -- Added RMD160 to the x86_prof demo [oops]
+       -- Merged in LibTomMath-0.27 with a patch to mp_shrink() that will be in LibTomMath-0.28
+          Fixes another potential memory leak.
+
 Sept 7th, 2003
 v0.90  -- new ROL/ROR for x86 GCC
        -- Jochen Katz submitted a patch to the makefile to prevent "make" from making the .a library

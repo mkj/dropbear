@@ -69,7 +69,7 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 
     /* setup the S array */
     t = (ulong32)(2 * (num_rounds + 1));
-    memcpy(S, stab, t * sizeof(stab[0]));
+    memcpy(S, stab, t * sizeof(*S));
 
     /* mix buffer */
     s = 3 * MAX(t, j);
@@ -211,8 +211,8 @@ int rc5_test(void)
        { 0x65, 0xc1, 0x78, 0xb2, 0x84, 0xd1, 0x97, 0xcc }
    }
    };
-   unsigned char buf[2][8];
-   int x, err;
+   unsigned char tmp[2][8];
+   int x, y, err;
    symmetric_key key;
 
    for (x = 0; x < (int)(sizeof(tests) / sizeof(tests[0])); x++) {
@@ -222,13 +222,19 @@ int rc5_test(void)
       }
 
       /* encrypt and decrypt */
-      rc5_ecb_encrypt(tests[x].pt, buf[0], &key);
-      rc5_ecb_decrypt(buf[0], buf[1], &key);
+      rc5_ecb_encrypt(tests[x].pt, tmp[0], &key);
+      rc5_ecb_decrypt(tmp[0], tmp[1], &key);
 
       /* compare */
-      if (memcmp(buf[0], tests[x].ct, 8) != 0 || memcmp(buf[1], tests[x].pt, 8) != 0) {
+      if (memcmp(tmp[0], tests[x].ct, 8) != 0 || memcmp(tmp[1], tests[x].pt, 8) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) rc5_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) rc5_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 8; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
    }
    return CRYPT_OK;
   #endif

@@ -59,17 +59,17 @@ const struct _hash_descriptor rmd128_desc =
       (a) = ROL((a), (s));
 
 #ifdef CLEAN_STACK
-static void _rmd128_compress(hash_state *md)
+static void _rmd128_compress(hash_state *md, unsigned char *buf)
 #else
-static void rmd128_compress(hash_state *md)
+static void rmd128_compress(hash_state *md, unsigned char *buf)
 #endif
 {
-   unsigned long aa,bb,cc,dd,aaa,bbb,ccc,ddd,X[16];
+   ulong32 aa,bb,cc,dd,aaa,bbb,ccc,ddd,X[16];
    int i;
 
    /* load words X */
    for (i = 0; i < 16; i++){
-      LOAD32L(X[i], md->rmd128.buf + (4 * i));
+      LOAD32L(X[i], buf + (4 * i));
    }
 
    /* load state */
@@ -231,10 +231,10 @@ static void rmd128_compress(hash_state *md)
 }
 
 #ifdef CLEAN_STACK
-static void rmd128_compress(hash_state *md)
+static void rmd128_compress(hash_state *md, unsigned char *buf)
 {
-   _rmd128_compress(md);
-   burn_stack(sizeof(unsigned long) * 24 + sizeof(int));
+   _rmd128_compress(md, buf);
+   burn_stack(sizeof(ulong32) * 24 + sizeof(int));
 }
 #endif
 
@@ -249,33 +249,19 @@ void rmd128_init(hash_state * md)
    md->rmd128.length   = 0;
 }
 
-void rmd128_process(hash_state * md, const unsigned char *buf, unsigned long len)
-{
-    unsigned long n;
-    _ARGCHK(md != NULL);
-    _ARGCHK(buf != NULL);
-    while (len > 0) {
-        n = MIN(len, (64 - md->rmd128.curlen));
-        memcpy(md->rmd128.buf + md->rmd128.curlen, buf, (size_t)n);
-        md->rmd128.curlen += n;
-        buf               += n;
-        len               -= n;
+HASH_PROCESS(rmd128_process, rmd128_compress, rmd128, 64)
 
-        /* is 64 bytes full? */
-        if (md->rmd128.curlen == 64) {
-            rmd128_compress(md);
-            md->rmd128.length += 512;
-            md->rmd128.curlen = 0;
-        }
-    }
-}
-
-void rmd128_done(hash_state * md, unsigned char *hash)
+int rmd128_done(hash_state * md, unsigned char *hash)
 {
     int i;
 
     _ARGCHK(md != NULL);
     _ARGCHK(hash != NULL);
+
+    if (md->rmd128.curlen >= sizeof(md->rmd128.buf)) {
+       return CRYPT_INVALID_ARG;
+    }
+
 
     /* increase the length of the message */
     md->rmd128.length += md->rmd128.curlen * 8;
@@ -291,7 +277,7 @@ void rmd128_done(hash_state * md, unsigned char *hash)
         while (md->rmd128.curlen < 64) {
             md->rmd128.buf[md->rmd128.curlen++] = (unsigned char)0;
         }
-        rmd128_compress(md);
+        rmd128_compress(md, md->rmd128.buf);
         md->rmd128.curlen = 0;
     }
 
@@ -302,7 +288,7 @@ void rmd128_done(hash_state * md, unsigned char *hash)
 
     /* store length */
     STORE64L(md->rmd128.length, md->rmd128.buf+56);
-    rmd128_compress(md);
+    rmd128_compress(md, md->rmd128.buf);
 
     /* copy output */
     for (i = 0; i < 4; i++) {
@@ -311,6 +297,7 @@ void rmd128_done(hash_state * md, unsigned char *hash)
 #ifdef CLEAN_STACK
     zeromem(md, sizeof(hash_state));
 #endif
+   return CRYPT_OK;  
 }
 
 int rmd128_test(void)

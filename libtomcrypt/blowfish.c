@@ -304,7 +304,10 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    for (x = y = 0; x < 18; x++) {
        A = 0;
        for (z = 0; z < 4; z++) {
-           A = (A << 8) | ((ulong32)key[y++ % keylen]);
+           A = (A << 8) | ((ulong32)key[y++] & 255);
+           if (y == (ulong32)keylen) { 
+              y = 0; 
+           }
        }
        skey->blowfish.K[x] = ORIG_P[x] ^ A;
    }
@@ -347,13 +350,6 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    return CRYPT_OK;
 }
 
-#if defined(__GNUC__)
-   #define S1 key->blowfish.S[0]
-   #define S2 key->blowfish.S[1]
-   #define S3 key->blowfish.S[2]
-   #define S4 key->blowfish.S[3]
-#endif   
-
 #define F(x) ((S1[byte(x,3)] + S2[byte(x,2)]) ^ S3[byte(x,1)]) + S4[byte(x,0)]
 
 #ifdef CLEAN_STACK
@@ -364,20 +360,16 @@ void blowfish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
 {
    ulong32 L, R;
    int r;
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
-    ulong32 *S1, *S2, *S3, *S4;
-#endif    
+   ulong32 *S1, *S2, *S3, *S4;
 
     _ARGCHK(pt != NULL);
     _ARGCHK(ct != NULL);
     _ARGCHK(key != NULL);
-    
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+
     S1 = key->blowfish.S[0];
     S2 = key->blowfish.S[1];
     S3 = key->blowfish.S[2];
     S4 = key->blowfish.S[3];
-#endif    
 
    /* load it */
    LOAD32H(L, &pt[0]);
@@ -416,20 +408,16 @@ void blowfish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
 {
    ulong32 L, R;
    int r;
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
-    ulong32 *S1, *S2, *S3, *S4;
-#endif    
+   ulong32 *S1, *S2, *S3, *S4;
 
     _ARGCHK(pt != NULL);
     _ARGCHK(ct != NULL);
     _ARGCHK(key != NULL);
     
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
     S1 = key->blowfish.S[0];
     S2 = key->blowfish.S[1];
     S3 = key->blowfish.S[2];
     S4 = key->blowfish.S[3];
-#endif  
 
    /* load it */
    LOAD32H(R, &ct[0]);
@@ -487,8 +475,8 @@ int blowfish_test(void)
            { 0x7D, 0x85, 0x6F, 0x9A, 0x61, 0x30, 0x63, 0xF2}
        }
    };
-   unsigned char buf[2][8];
-   int x;
+   unsigned char tmp[2][8];
+   int x, y;
 
    for (x = 0; x < (int)(sizeof(tests) / sizeof(tests[0])); x++) {
       /* setup key */
@@ -497,13 +485,19 @@ int blowfish_test(void)
       }
 
       /* encrypt and decrypt */
-      blowfish_ecb_encrypt(tests[x].pt, buf[0], &key);
-      blowfish_ecb_decrypt(buf[0], buf[1], &key);
+      blowfish_ecb_encrypt(tests[x].pt, tmp[0], &key);
+      blowfish_ecb_decrypt(tmp[0], tmp[1], &key);
 
       /* compare */
-      if ((memcmp(buf[0], tests[x].ct, 8) != 0) || (memcmp(buf[1], tests[x].pt, 8) != 0)) {
+      if ((memcmp(tmp[0], tests[x].ct, 8) != 0) || (memcmp(tmp[1], tests[x].pt, 8) != 0)) {
          return CRYPT_FAIL_TESTVECTOR;
       }
+
+      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+      for (y = 0; y < 8; y++) tmp[0][y] = 0;
+      for (y = 0; y < 1000; y++) blowfish_ecb_encrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 1000; y++) blowfish_ecb_decrypt(tmp[0], tmp[0], &key);
+      for (y = 0; y < 8; y++) if (tmp[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
    }
    return CRYPT_OK;
  #endif
