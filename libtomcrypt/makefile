@@ -17,7 +17,7 @@ VERSION=0.90
 #LD=ld
 
 # Archiver [makes .a files]
-AR=ar
+#AR=ar
 ARFLAGS=r
 #ch1-01-1
 
@@ -103,7 +103,7 @@ library: $(LIBNAME)
 
 $(LIBNAME): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
-	ranlib $(LIBNAME)
+	$(RANLIB) $(LIBNAME)
 
 #This rule makes the test program included with libtomcrypt
 test: library $(TESTOBJECTS)

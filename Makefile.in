@@ -27,6 +27,9 @@ sbindir=${exec_prefix}/sbin
 
 CC=@CC@
 LD=@CC@
+AR=@AR@
+RANLIB=@RANLIB@
+STRIP=@STRIP@
 CFLAGS=-Wall -W -Ilibtomcrypt @CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
@@ -34,6 +37,7 @@ LDFLAGS=@LDFLAGS@
 # these are exported so that libtomcrypt's makefile will use them
 export CC
 export CFLAGS
+export RANLIB AR STRIP
 
 all: dropbear dropbearkey dropbearconvert
 	@echo

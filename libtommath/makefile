@@ -48,7 +48,7 @@ bn_mp_init_multi.o bn_mp_clear_multi.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
-	ranlib libtommath.a
+	$(RANLIB) libtommath.a
 
 install: libtommath.a
 	install -d -g root -o root $(DESTDIR)$(LIBPATH)
