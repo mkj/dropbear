@@ -307,9 +307,6 @@ const char *crypt_build_settings =
 #if defined(RC6)
    "   RC6\n"
 #endif
-#if defined(SERPENT)
-   "   Serpent\n"
-#endif
 #if defined(SAFERP)
    "   Safer+\n"
 #endif

@@ -9,7 +9,7 @@
 #include "../options.h"
 
 #ifdef CRYPT
-	#error mycrypt_custom.h should be included before mycrypt.h
+    #error mycrypt_custom.h should be included before mycrypt.h
 #endif
 
 #define XMALLOC malloc
@@ -19,6 +19,8 @@
 #define XCLOCK clock
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
 #define SMALL_CODE
+
+/* #define LTC_TEST */
 
 #ifdef DROPBEAR_BLOWFISH_CBC
 #define BLOWFISH
@@ -50,6 +52,7 @@
 
 #define HMAC
 #define BASE64
+
 #define MPI
 
 #include <mycrypt.h>

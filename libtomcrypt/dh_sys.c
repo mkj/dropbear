@@ -194,7 +194,24 @@ done:
    return res;
 }
 
-
+/* perform an ElGamal Signature of a hash 
+ *
+ * The math works as follows.  x is the private key, M is the message to sign
+ 
+ 1.  pick a random k
+ 2.  compute a = g^k mod p
+ 3.  compute b = (M - xa)/k mod p
+ 4.  Send (a,b)
+ 
+ Now to verify with y=g^x mod p, a and b
+ 
+ 1.  compute y^a * a^b = g^(xa) * g^(k*(M-xa)/k)
+                       = g^(xa + (M - xa))
+                       = g^M [all mod p]
+                       
+ 2.  Compare against g^M mod p [based on input hash].
+ 3.  If result of #2 == result of #1 then signature valid 
+*/
 int dh_sign_hash(const unsigned char *in,  unsigned long inlen,
                        unsigned char *out, unsigned long *outlen,
                        prng_state *prng, int wprng, dh_key *key)

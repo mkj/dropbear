@@ -29,7 +29,7 @@ const struct _hash_descriptor md4_desc =
 #define S34 15
 
 /* F, G and H are basic MD4 functions. */
-#define F(x, y, z) (((x) & (y)) | ((~x) & (z)))
+#define F(x, y, z) (z ^ (x & (y ^ z)))
 #define G(x, y, z) ((x & y) | (z & (x | y)))
 #define H(x, y, z) ((x) ^ (y) ^ (z))
 
@@ -221,6 +221,9 @@ void md4_done(hash_state * md, unsigned char *hash)
 
 int md4_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
     static const struct md4_test_case {
         char *input;
         unsigned char digest[16];
@@ -261,6 +264,7 @@ int md4_test(void)
 
     }
     return CRYPT_OK;
+  #endif
 }
 
 #endif

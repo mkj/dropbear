@@ -299,7 +299,19 @@ done1:
    return res;   
 }
 
-/* verify that mG = (bA + Y) */
+/* verify that mG = (bA + Y)
+ *
+ * The signatures work by making up a fresh key "a" with a public key "A".  Now we want to sign so the 
+ * public key Y = xG can verify it.
+ *
+ * b = (m - x)/k, A is the public key embedded and Y is the users public key [who signed it]
+ * A = kG therefore bA == ((m-x)/k)kG == (m-x)G
+ *
+ * Adding Y = xG to the bA gives us (m-x)G + xG == mG
+ *
+ * The user given only xG, kG and b cannot determine k or x which means they can't find the private key.
+ * 
+ */
 int ecc_verify_hash(const unsigned char *sig, unsigned long siglen,
                     const unsigned char *hash, unsigned long inlen, 
                     int *stat, ecc_key *key)

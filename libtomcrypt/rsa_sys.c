@@ -69,7 +69,7 @@ int rsa_decrypt_key(const unsigned char *in, unsigned long inlen,
                           unsigned char *outkey, unsigned long *keylen, 
                           rsa_key *key)
 {
-   unsigned char sym_key[MAXBLOCKSIZE], rsa_in[4096], rsa_out[4096];
+   unsigned char sym_key[MAXBLOCKSIZE], rsa_out[4096];
    unsigned long x, y, z, i, rsa_size;
    int err;
 
@@ -129,7 +129,6 @@ int rsa_decrypt_key(const unsigned char *in, unsigned long inlen,
 #ifdef CLEAN_STACK
    /* clean up */
    zeromem(sym_key, sizeof(sym_key));
-   zeromem(rsa_in, sizeof(rsa_in));
    zeromem(rsa_out, sizeof(rsa_out));
 #endif
    *keylen = z;
@@ -150,7 +149,7 @@ int rsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(key != NULL);
    
    /* reject nonsense sizes */
-   if (inlen < 16) {
+   if (inlen > MAXBLOCKSIZE || inlen < 16) {
       return CRYPT_INVALID_ARG;
    }
 

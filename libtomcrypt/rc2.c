@@ -239,6 +239,9 @@ void rc2_ecb_decrypt( const unsigned char *cipher,
 
 int rc2_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
    static const struct {
         int keylen;
         unsigned char key[16], pt[8], ct[8];
@@ -276,6 +279,7 @@ int rc2_test(void)
         }
     }
     return CRYPT_OK;
+   #endif
 }
 
 int rc2_keysize(int *keysize)

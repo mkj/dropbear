@@ -37,12 +37,12 @@ static const char *err_2_str[] =
    "Invalid size for prime."
 };
 
-const char *error_to_string(int errno)
+const char *error_to_string(int err)
 {
-   if (errno < 0 || errno >= (int)(sizeof(err_2_str)/sizeof(err_2_str[0]))) {
+   if (err < 0 || err >= (int)(sizeof(err_2_str)/sizeof(err_2_str[0]))) {
       return "Invalid error code.";
    } else {
-      return err_2_str[errno];
+      return err_2_str[err];
    }   
 }
 

@@ -32,10 +32,10 @@ static const unsigned long K[64] = {
 };
 
 /* Various logical functions */
-#define Ch(x,y,z)       ((x & y) | (~x & z))
+#define Ch(x,y,z)       (z ^ (x & (y ^ z)))
 #define Maj(x,y,z)      (((x | y) & z) | (x & y)) 
-#define S(x, n)	        ROR((x),(n))
-#define R(x, n)	        (((x)&0xFFFFFFFFUL)>>(n))
+#define S(x, n)         ROR((x),(n))
+#define R(x, n)         (((x)&0xFFFFFFFFUL)>>(n))
 #define Sigma0(x)       (S(x, 2) ^ S(x, 13) ^ S(x, 22))
 #define Sigma1(x)       (S(x, 6) ^ S(x, 11) ^ S(x, 25))
 #define Gamma0(x)       (S(x, 7) ^ S(x, 18) ^ R(x, 3))
@@ -180,6 +180,9 @@ void sha256_done(hash_state * md, unsigned char *hash)
 
 int  sha256_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
   static const struct {
        char *msg;
       unsigned char hash[32];
@@ -211,6 +214,7 @@ int  sha256_test(void)
       }
   }
   return CRYPT_OK;
+ #endif
 }
 
 #endif

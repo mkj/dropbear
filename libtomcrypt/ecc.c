@@ -30,7 +30,7 @@ static const struct {
 },
 #endif
 #ifdef ECC192
-{  
+{
     24,
    "ECC-192",
    /* prime */
@@ -65,7 +65,7 @@ static const struct {
 
    /* Gx */
    "jpqOf1BHus6Yd/pyhyVpP",
- 
+
    /* Gy */
    "3FCtyo2yHA5SFjkCGbYxbOvNeChwS+j6wSIwck",
 },
@@ -88,7 +88,7 @@ static const struct {
 
    /* Gy */
    "4/ZGkB+6d+RZkVhIdmFdXOhpZDNQp5UpiksG6Wtlr7r"
-}, 
+},
 #endif
 #ifdef ECC384
 {
@@ -97,11 +97,11 @@ static const struct {
    /* prime */
    "//////////////////////////////////////////x/////00000000003/"
    "////",
-   
+
    /* B */
    "ip4lf+8+v+IOZWLhu/Wj6HWTd6x+WK4I0nG8Zr0JXrh6LZcDYYxHdIg5oEtJ"
    "x2hl",
-   
+
    /* Order */
    "////////////////////////////////nsDDWVGtBTzO6WsoIB2dUkpi6MhC"
    "nIbp",
@@ -109,7 +109,7 @@ static const struct {
    /* Gx and Gy */
    "geVA8hwB1JUEiSSUyo2jT6uTEsABfvkOMVT1u89KAZXL0l9TlrKfR3fKNZXo"
    "TWgt",
-   
+
    "DXVUIfOcB6zTdfY/afBSAVZq7RqecXHywTen4xNmkC0AOB7E7Nw1dNf37NoG"
    "wWvV"
 },
@@ -118,22 +118,22 @@ static const struct {
 {
    65,
    "ECC-521",
-   /* prime */ 
+   /* prime */
    "V///////////////////////////////////////////////////////////"
    "///////////////////////////",
- 
+
    /* B */
    "56LFhbXZXoQ7vAQ8Q2sXK3kejfoMvcp5VEuj8cHZl49uLOPEL7iVfDx5bB0l"
    "JknlmSrSz+8FImqyUz57zHhK3y0",
- 
-   /* Order */ 
+
+   /* Order */
    "V//////////////////////////////////////////+b66XuE/BvPhVym1I"
    "FS9fT0xjScuYPn7hhjljnwHE6G9",
 
    /* Gx and Gy */
    "CQ5ZWQt10JfpPu+osOZbRH2d6I1EGK/jI7uAAzWQqqzkg5BNdVlvrae/Xt19"
    "wB/gDupIBF1XMf2c/b+VZ72vRrc",
-   
+
    "HWvAMfucZl015oANxGiVHlPcFL4ILURH6WNhxqN9pvcB9VkSfbUz2P0nL2v0"
    "J+j1s4rF726edB2G8Y+b7QVqMPG",
 },
@@ -189,7 +189,7 @@ void ecc_find_base(void)
       mp_sqrmod(&tmp2, &p, &tmp2);
 
       /* tmp2 should equal tmp1 */
-   } while (mp_cmp(&tmp1, &tmp2)); 
+   } while (mp_cmp(&tmp1, &tmp2));
 
    /* now output values in way that libtomcrypt wants */
    mp_todecimal(&p, buf);
@@ -249,8 +249,8 @@ static int dbl_point(ecc_point *P, ecc_point *R, mp_int *modulus, mp_int *mu)
 {
    mp_int s, tmp, tmpx;
    int res;
-   
-   if (mp_init_multi(&s, &tmp, &tmpx, NULL) != MP_OKAY) { 
+
+   if (mp_init_multi(&s, &tmp, &tmpx, NULL) != MP_OKAY) {
       return CRYPT_MEM;
    }
 
@@ -293,8 +293,8 @@ static int add_point(ecc_point *P, ecc_point *Q, ecc_point *R, mp_int *modulus, 
 {
    mp_int s, tmp, tmpx;
    int res;
-   
-   if (mp_init(&tmp) != MP_OKAY) { 
+
+   if (mp_init(&tmp) != MP_OKAY) {
       return CRYPT_MEM;
    }
 
@@ -303,14 +303,14 @@ static int add_point(ecc_point *P, ecc_point *Q, ecc_point *R, mp_int *modulus, 
       mp_clear(&tmp);
       return CRYPT_MEM;
    }
-   
+
    if (mp_cmp(&P->x, &Q->x) == MP_EQ)
       if (mp_cmp(&P->y, &Q->y) == MP_EQ || mp_cmp(&P->y, &tmp) == MP_EQ) {
          mp_clear(&tmp);
          return dbl_point(P, R, modulus, mu);
       }
 
-   if (mp_init_multi(&tmpx, &s, NULL) != MP_OKAY) { 
+   if (mp_init_multi(&tmpx, &s, NULL) != MP_OKAY) {
       mp_clear(&tmp);
       return CRYPT_MEM;
    }
@@ -360,7 +360,7 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
    mp_int mu;
    mp_digit buf;
    int     first, bitbuf, bitcpy, bitcnt, mode, digidx;
-   
+
   /* init barrett reduction */
   if (mp_init(&mu) != MP_OKAY) {
       return CRYPT_MEM;
@@ -369,7 +369,7 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
       mp_clear(&mu);
       return CRYPT_MEM;
   }
-   
+
   /* alloc ram for window temps */
   for (i = 0; i < 8; i++) {
       M[i] = new_point();
@@ -381,7 +381,7 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
          return CRYPT_MEM;
       }
   }
-   
+
    /* make a copy of G incase R==G */
    tG = new_point();
    if (tG == NULL)                                                    { goto error; }
@@ -391,12 +391,12 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
    if (dbl_point(G, M[0], modulus, &mu) != CRYPT_OK)                  { goto error; }
    if (dbl_point(M[0], M[0], modulus, &mu) != CRYPT_OK)               { goto error; }
    if (dbl_point(M[0], M[0], modulus, &mu) != CRYPT_OK)               { goto error; }
-   
+
    /* now find (8+k)G for k=1..7 */
    for (j = 9; j < 16; j++) {
        if (add_point(M[j-9], G, M[j-8], modulus, &mu) != CRYPT_OK)    { goto error; }
    }
-  
+
    /* tG = G */
    if (mp_copy(&G->x, &tG->x) != MP_OKAY)                             { goto error; }
    if (mp_copy(&G->y, &tG->y) != MP_OKAY)                             { goto error; }
@@ -408,13 +408,13 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
    digidx = k->used - 1;
    bitcpy = bitbuf = 0;
    first  = 1;
-   
+
    /* perform ops */
    for (;;) {
      /* grab next digit as required */
      if (--bitcnt == 0) {
        if (digidx == -1) {
- 	break;
+          break;
        }
        buf = k->dp[digidx--];
        bitcnt = (int) DIGIT_BIT;
@@ -423,17 +423,18 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
      /* grab the next msb from the multiplicand */
      i = (buf >> (DIGIT_BIT - 1)) & 1;
      buf <<= 1;
-     
+
      /* skip leading zero bits */
-     if (mode == 0 && i == 0)
-       continue;
-     
-     /* if the bit is zero and mode == 1 then we double */
-     if (mode == 1 && i == 0) {
-        if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                          { goto error; }   
+     if (mode == 0 && i == 0) {
         continue;
      }
-   
+
+     /* if the bit is zero and mode == 1 then we double */
+     if (mode == 1 && i == 0) {
+        if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                          { goto error; }
+        continue;
+     }
+
      /* else we add it to the window */
      bitbuf |= (i << (WINSIZE - ++bitcpy));
      mode = 2;
@@ -442,39 +443,35 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
        /* if this is the first window we do a simple copy */
        if (first == 1) {
           /* R = kG [k = first window] */
-          if (mp_copy(&M[bitbuf-8]->x, &R->x) != MP_OKAY)                    { goto error; }
-          if (mp_copy(&M[bitbuf-8]->y, &R->y) != MP_OKAY)                    { goto error; }
+          if (mp_copy(&M[bitbuf-8]->x, &R->x) != MP_OKAY)                       { goto error; }
+          if (mp_copy(&M[bitbuf-8]->y, &R->y) != MP_OKAY)                       { goto error; }
           first = 0;
        } else {
          /* normal window */
          /* ok window is filled so double as required and add  */
          /* double first */
          for (j = 0; j < WINSIZE; j++) {
-           if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }   
+           if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }
          }
 
-         /* then add, bitbuf will be 1..15 [1..2^WINSIZE] guaranteed */
-         if (bitbuf == 1) {
-            if (add_point(R, tG, R, modulus, &mu) != CRYPT_OK)                  { goto error; }
-         } else {
-            if (add_point(R, M[bitbuf-8], R, modulus, &mu) != CRYPT_OK)         { goto error; }
-         }
+         /* then add, bitbuf will be 8..15 [8..2^WINSIZE] guaranteed */
+         if (add_point(R, M[bitbuf-8], R, modulus, &mu) != CRYPT_OK)            { goto error; }
        }
        /* empty window and reset */
        bitcpy = bitbuf = 0;
        mode = 1;
     }
   }
-   
+
    /* if bits remain then double/add */
    if (mode == 2 && bitcpy > 0) {
      /* double then add */
      for (j = 0; j < bitcpy; j++) {
        /* only double if we have had at least one add first */
        if (first == 0) {
-          if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }   
+          if (dbl_point(R, R, modulus, &mu) != CRYPT_OK)                       { goto error; }
        }
- 
+
        bitbuf <<= 1;
        if ((bitbuf & (1 << WINSIZE)) != 0) {
          if (first == 1){
@@ -489,7 +486,7 @@ static int ecc_mulmod(mp_int *k, ecc_point *G, ecc_point *R, mp_int *modulus)
        }
      }
    }
-   res = CRYPT_OK; 
+   res = CRYPT_OK;
    goto done;
 error:
    res = CRYPT_MEM;
@@ -510,18 +507,18 @@ int ecc_test(void)
    ecc_point  *G, *GG;
    int i, res, primality;
 
-   if (mp_init_multi(&modulus, &order, NULL) != MP_OKAY) { 
+   if (mp_init_multi(&modulus, &order, NULL) != MP_OKAY) {
       return CRYPT_MEM;
    }
 
    G   = new_point();
-   if (G == NULL) { 
+   if (G == NULL) {
       mp_clear_multi(&modulus, &order, NULL);
       return CRYPT_MEM;
    }
 
    GG  = new_point();
-   if (GG == NULL) { 
+   if (GG == NULL) {
       mp_clear_multi(&modulus, &order, NULL);
       del_point(G);
       return CRYPT_MEM;
@@ -540,7 +537,7 @@ int ecc_test(void)
           res = CRYPT_FAIL_TESTVECTOR;
           goto done1;
        }
-  
+
        /* is order prime ? */
        if (is_prime(&order, &primality) != CRYPT_OK)             { goto error; }
        if (primality == 0) {
@@ -579,11 +576,11 @@ void ecc_sizes(int *low, int *high)
  *low = INT_MAX;
  *high = 0;
  for (i = 0; sets[i].size != 0; i++) {
-     if (sets[i].size < *low)  { 
-        *low  = sets[i].size; 
+     if (sets[i].size < *low)  {
+        *low  = sets[i].size;
      }
-     if (sets[i].size > *high) { 
-        *high = sets[i].size; 
+     if (sets[i].size > *high) {
+        *high = sets[i].size;
      }
  }
 }
@@ -606,7 +603,7 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    for (x = 0; (keysize > sets[x].size) && (sets[x].size != 0); x++);
    keysize = sets[x].size;
 
-   if (sets[x].size == 0) { 
+   if (sets[x].size == 0) {
       return CRYPT_INVALID_KEYSIZE;
    }
    key->idx = x;
@@ -617,7 +614,7 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    }
 
    /* setup the key variables */
-   if (mp_init_multi(&key->pubkey.x, &key->pubkey.y, &key->k, &prime, NULL) != MP_OKAY) { 
+   if (mp_init_multi(&key->pubkey.x, &key->pubkey.y, &key->k, &prime, NULL) != MP_OKAY) {
       return CRYPT_MEM;
    }
    base = new_point();
@@ -635,7 +632,7 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    /* make the public key */
    if (ecc_mulmod(&key->k, base, &key->pubkey, &prime) != CRYPT_OK) { goto error; }
    key->type = PK_PRIVATE;
-   
+
    /* shrink key */
    if (mp_shrink(&key->k) != MP_OKAY)          { goto error; }
    if (mp_shrink(&key->pubkey.x) != MP_OKAY)   { goto error; }
@@ -689,12 +686,12 @@ static int compress_y_point(ecc_point *pt, int idx, int *result)
    if (mp_exptmod(&tmp, &tmp2, &p, &tmp) != MP_OKAY)       { goto error; } /* tmp  = (x^3 - 3x + b)^((p+1)/4) mod p */
 
    /* if tmp equals the y point give a 0, otherwise 1 */
-   if (mp_cmp(&tmp, &pt->y) == 0) { 
+   if (mp_cmp(&tmp, &pt->y) == 0) {
       *result = 0;
    } else {
       *result = 1;
    }
-   
+
    res = CRYPT_OK;
    goto done;
 error:
@@ -710,7 +707,7 @@ static int expand_y_point(ecc_point *pt, int idx, int result)
    int res;
 
    _ARGCHK(pt != NULL);
- 
+
    if (mp_init_multi(&tmp, &tmp2, &p, NULL) != MP_OKAY) {
       return CRYPT_MEM;
    }
@@ -736,7 +733,7 @@ static int expand_y_point(ecc_point *pt, int idx, int result)
    } else {
       if (mp_sub(&p, &tmp, &pt->y) != MP_OKAY) { goto error; }
    }
-   
+
    res = CRYPT_OK;
    goto done;
 error:
@@ -795,8 +792,8 @@ int ecc_export(unsigned char *out, unsigned long *outlen, int type, ecc_key *key
    _ARGCHK(key != NULL);
 
    /* type valid? */
-   if (key->type != PK_PRIVATE && type == PK_PRIVATE) { 
-      return CRYPT_PK_TYPE_MISMATCH; 
+   if (key->type != PK_PRIVATE && type == PK_PRIVATE) {
+      return CRYPT_PK_TYPE_MISMATCH;
    }
 
    /* output type and magic byte */
@@ -818,7 +815,7 @@ int ecc_export(unsigned char *out, unsigned long *outlen, int type, ecc_key *key
    }
 
    /* check size */
-   if (*outlen < y) { 
+   if (*outlen < y) {
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -842,13 +839,14 @@ int ecc_import(const unsigned char *in, unsigned long inlen, ecc_key *key)
    _ARGCHK(in != NULL);
    _ARGCHK(key != NULL);
 
-   /* check type */
-   if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_ECC, PACKET_SUB_KEY)) != CRYPT_OK) { 
-      return err;
-   }
-   
+   /* check length */
    if (2+PACKET_SIZE > inlen) {
       return CRYPT_INVALID_PACKET;
+   }
+
+   /* check type */
+   if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_ECC, PACKET_SUB_KEY)) != CRYPT_OK) {
+      return err;
    }
 
    /* init key */
@@ -859,9 +857,9 @@ int ecc_import(const unsigned char *in, unsigned long inlen, ecc_key *key)
    y = PACKET_SIZE;
    key->type = (int)in[y++];
    s = (unsigned long)in[y++];
-   
+
    for (x = 0; (s > (unsigned long)sets[x].size) && (sets[x].size != 0); x++);
-   if (sets[x].size == 0) { 
+   if (sets[x].size == 0) {
       err = CRYPT_INVALID_KEYSIZE;
       goto error;
    }
@@ -881,36 +879,36 @@ int ecc_import(const unsigned char *in, unsigned long inlen, ecc_key *key)
 
    /* load x coordinate */
    INPUT_BIGNUM(&key->pubkey.x, in, x, y);
-  
+
    /* load y */
    x = (unsigned long)in[y++];
-   if ((err = expand_y_point(&key->pubkey, key->idx, (int)x)) != CRYPT_OK) { 
-       goto error; 
+   if ((err = expand_y_point(&key->pubkey, key->idx, (int)x)) != CRYPT_OK) {
+       goto error;
    }
 
    if (key->type == PK_PRIVATE) {
       /* load private key */
       INPUT_BIGNUM(&key->k, in, x, y);
    }
-   
+
    /* eliminate private key if public */
    if (key->type == PK_PUBLIC) {
       mp_clear(&key->k);
-   }      
-   
+   }
+
    return CRYPT_OK;
 error:
    mp_clear_multi(&key->pubkey.x, &key->pubkey.y, &key->k, NULL);
    return err;
 }
 
-int ecc_shared_secret(ecc_key *private_key, ecc_key *public_key, 
+int ecc_shared_secret(ecc_key *private_key, ecc_key *public_key,
                       unsigned char *out, unsigned long *outlen)
 {
    unsigned long x, y;
    ecc_point *result;
    mp_int prime;
-   int res, err;
+   int res;
 
    _ARGCHK(private_key != NULL);
    _ARGCHK(public_key != NULL);
@@ -928,17 +926,17 @@ int ecc_shared_secret(ecc_key *private_key, ecc_key *public_key,
 
    /* make new point */
    result = new_point();
-   if (result == NULL) { 
+   if (result == NULL) {
       return CRYPT_MEM;
    }
 
-   if (mp_init(&prime) != MP_OKAY) { 
+   if (mp_init(&prime) != MP_OKAY) {
       del_point(result);
       return CRYPT_MEM;
    }
 
-   if (mp_read_radix(&prime, (unsigned char *)sets[private_key->idx].prime, 64) != MP_OKAY) { goto error; }
-   if ((err = ecc_mulmod(&private_key->k, &public_key->pubkey, result, &prime)) != CRYPT_OK) { res = err; goto done1; }
+   if (mp_read_radix(&prime, (unsigned char *)sets[private_key->idx].prime, 64) != MP_OKAY)  { goto error; }
+   if ((res = ecc_mulmod(&private_key->k, &public_key->pubkey, result, &prime)) != CRYPT_OK) { goto done1; }
 
    x = (unsigned long)mp_unsigned_bin_size(&result->x);
    y = (unsigned long)mp_unsigned_bin_size(&result->y);
@@ -948,8 +946,8 @@ int ecc_shared_secret(ecc_key *private_key, ecc_key *public_key,
       goto done1;
    }
    *outlen = x+y;
-   (void)mp_to_unsigned_bin(&result->x, out);
-   (void)mp_to_unsigned_bin(&result->y, out+x);
+   if (mp_to_unsigned_bin(&result->x, out) != MP_OKAY)                                       { goto error; }
+   if (mp_to_unsigned_bin(&result->y, out+x) != MP_OKAY)                                     { goto error; }
 
    res = CRYPT_OK;
    goto done1;

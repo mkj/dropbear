@@ -30,15 +30,10 @@ struct saferp_key {
 };
 #endif
 
-#ifdef SERPENT
-struct serpent_key {
-   unsigned long K[132];
-};
-#endif
-
 #ifdef RIJNDAEL
 struct rijndael_key {
-   unsigned long eK[64], dK[64], k_len;
+   unsigned long eK[64], dK[64];
+   int Nr;
 };
 #endif
 
@@ -96,7 +91,7 @@ struct cast5_key {
 
 #ifdef NOEKEON
 struct noekeon_key {
-	unsigned long K[4], dK[4];
+    unsigned long K[4], dK[4];
 };
 #endif
 
@@ -125,9 +120,6 @@ typedef union Symmetric_key {
 #endif
 #ifdef SAFERP
    struct saferp_key   saferp;
-#endif
-#ifdef SERPENT
-   struct serpent_key  serpent;
 #endif
 #ifdef RIJNDAEL
    struct rijndael_key rijndael;
@@ -251,23 +243,14 @@ extern int safer_128_keysize(int *desired_keysize);
 extern const struct _cipher_descriptor safer_k64_desc, safer_k128_desc, safer_sk64_desc, safer_sk128_desc;
 #endif
 
-#ifdef SERPENT
-extern int serpent_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
-extern void serpent_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key);
-extern void serpent_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key);
-extern int serpent_test(void);
-extern int serpent_keysize(int *desired_keysize);
-extern const struct _cipher_descriptor serpent_desc;
-#endif
-
 #ifdef RIJNDAEL
 
 /* make aes an alias */
-#define aes_setup			rijndael_setup
-#define aes_ecb_encrypt		rijndael_ecb_encrypt
-#define aes_ecb_decrypt		rijndael_ecb_decrypt
-#define aes_test			rijndael_test
-#define aes_keysize			rijndael_keysize
+#define aes_setup           rijndael_setup
+#define aes_ecb_encrypt     rijndael_ecb_encrypt
+#define aes_ecb_decrypt     rijndael_ecb_decrypt
+#define aes_test            rijndael_test
+#define aes_keysize         rijndael_keysize
 
 extern int rijndael_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
 extern void rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key);
@@ -363,7 +346,7 @@ extern int ctr_start(int cipher, const unsigned char *IV, const unsigned char *k
 extern int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, symmetric_CTR *ctr);
 extern int ctr_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, symmetric_CTR *ctr);
 #endif
-	
+    
 extern int find_cipher(const char *name);
 extern int find_cipher_any(const char *name, int blocklen, int keylen);
 extern int find_cipher_id(unsigned char ID);

@@ -1,4 +1,5 @@
 \documentclass{book}
+\usepackage{hyperref}
 \usepackage{makeidx}
 \usepackage{amssymb}
 \usepackage{color}
@@ -41,14 +42,12 @@
 \def\C{{\mathbb C}}
 \def\Q{{\mathbb Q}}
 
-\newcommand{\url}[1]{\mbox{$<${#1}$>$}}
-\newcommand{\emailaddr}[1]{\mbox{$<${#1}$>$}}
 \def\twiddle{\raisebox{0.3ex}{\mbox{\tiny $\sim$}}}
 
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.83}
+\title{A Tiny Crypto Library, \\ LibTomCrypt \\ Version 0.86}
 \author{Tom St Denis \\
 Algonquin College \\
 \\
@@ -64,8 +63,8 @@ Canada
 \newpage
 \tableofcontents
 \chapter{Introduction}
-\section{What is the Libtomcrypt?}
-Libtomcrypt is a portable ANSI C cryptographic library that supports symmetric ciphers, one-way hashes, 
+\section{What is the LibTomCrypt?}
+LibTomCrypt is a portable ANSI C cryptographic library that supports symmetric ciphers, one-way hashes, 
 pseudo-random number generators, public key cryptography (via RSA,DH or ECC/DH) and a plethora of support 
 routines.  It is designed to compile out of the box with the GNU C Compiler (GCC) version 2.95.3 (and higher) 
 and with MSVC version 6 in win32.
@@ -162,14 +161,11 @@ All of the source code except for the following files have been written by the a
 under the TDCAL license:
 
 \begin{enumerate}
-   \item aes.c
    \item rc2.c
-   \item serpent.c
    \item safer.c
 \end{enumerate}
 
-``aes.c'' and ``serpent.c'' were written by Brian Gladman (gladman@seven77.demon.co.uk).  They are copyrighted works
-but were both granted unrestricted usage in any project (commercial or otherwise).  ``mpi.c'' was originally written 
+`mpi.c'' was originally written 
 by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with my LibTomMath library.  
 ``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c'' 
 was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and is public domain.
@@ -512,7 +508,6 @@ As of this release the current cipher\_descriptors elements are
      \hline Safer SK64  & safer\_sk64\_desc & 8 & 8 & 6 .. 13 \\
      \hline Safer K128  & safer\_k128\_desc & 8 & 16 & 6 .. 13 \\
      \hline Safer SK128 & safer\_sk128\_desc & 8 & 16 & 6 .. 13 \\
-     \hline Serpent & serpent\_desc & 16 & 16 .. 32 & 32 \\
      \hline AES & aes\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
      \hline Twofish & twofish\_desc & 16 & 16, 24, 32 & 16 \\
      \hline DES & des\_desc & 8 & 7 & 16 \\
@@ -932,12 +927,12 @@ int hash_filehandle(int hash, FILE *in,
                     unsigned char *dst, unsigned long *outlen);
 \end{verbatim}
 
-All three functions return {\bf CRYPT\_OK} on success, otherwise they return an error code.  The ``hash'' parameter is
-the location in the descriptor table of the hash.  The ``*outlen'' variable is used to keep track of the output size.  You
+The ``hash'' parameter is the location in the descriptor table of the hash (\textit{e.g. the return of find\_hash()}).  
+The ``*outlen'' variable is used to keep track of the output size.  You
 must set it to the size of your output buffer before calling the functions.  When they complete succesfully they store
 the length of the message digest back in it.  The functions are otherwise straightforward.  The ``hash\_filehandle'' 
-function assumes that ``in'' is an file handle opened in binary mode.  It will not reset the file position after 
-hashing the content.
+function assumes that ``in'' is an file handle opened in binary mode.  It will hash to the end of file and not reset
+the file position when finished.
 
 To perform the above hash with md5 the following code could be used:
 \begin{small}
@@ -993,7 +988,7 @@ int unregister_hash(const struct _hash_descriptor *hash);
 \end{verbatim}
 
 \subsection{Notice}
-It is highly recommended that you not use the MD4 or MD5 hashes for the purposes of digital signatures or authentication codes.  
+It is highly recommended that you \textbf{not} use the MD4 or MD5 hashes for the purposes of digital signatures or authentication codes.  
 These hashes are provided for completeness and they still can be used for the purposes of password hashing or one-way accumulators
 (e.g. Yarrow).
 
@@ -1039,16 +1034,16 @@ int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
                 unsigned char *dst, unsigned long *dstlen);
 \end{verbatim}
 This will produce an HMAC code for the array of octets in ``data'' of length ``len''.  The index into the hash descriptor 
-table must be provided in ``hash'' it uses the key from ``key'' with a key length of ``keylen''.  
-The result is stored in the array of octets ``dst'' and the length in ``dstlen''.  Similarly for files there is the 
-following function:
+table must be provided in ``hash''.  It uses the key from ``key'' with a key length of ``keylen''.  
+The result is stored in the array of octets ``dst'' and the length in ``dstlen''.  The value of ``dstlen'' must be set
+to the size of the destination buffer before calling this function.  Similarly for files there is the  following function:
 \begin{verbatim}
 int hmac_file(int hash, const char *fname, const unsigned char *key,
               unsigned long keylen, 
               unsigned char *dst, unsigned long *dstlen);
 \end{verbatim}
-``hash'' is the index into the hash descriptor table of the hash you want to use.  ``fname'' is the filename to process.  ``key''
-is the array of octets to use as the key.  ``keylen'' is the length of the key.  ``dst'' is the array of octets where the 
+``hash'' is the index into the hash descriptor table of the hash you want to use.  ``fname'' is the filename to process.  
+``key'' is the array of octets to use as the key of length ``keylen''.  ``dst'' is the array of octets where the 
 result should be stored.
 
 To test if the HMAC code is working there is the following function:
@@ -1378,7 +1373,7 @@ int rsa_make_key(prng_state *prng,
 Where ``wprng'' is the index into the PRNG descriptor array.  ``size'' is the size in bytes of the RSA modulus desired.
 ``e'' is the encryption exponent desired, typical values are 3, 17, 257 and 65537.  I suggest you stick with 65537 since its big
 enough to prevent trivial math attacks and not super slow.  ``key'' is where the key is placed.  All keys must be at 
-least 128 bytes and no more than 512 bytes in size (that is from 1024 to 4096 bits).
+least 128 bytes and no more than 512 bytes in size (\textit{that is from 1024 to 4096 bits}).
 
 Note that the ``rsa\_make\_key()'' function allocates memory at runtime when you make the key.  Make sure to call 
 ``rsa\_free()'' (see below) when you are finished with the key.  If ``rsa\_make\_key()'' fails it will automatically 
@@ -1408,22 +1403,21 @@ recipient who can RSA decrypt it and symmetrically decrypt the message.
 int rsa_encrypt_key(const unsigned char *inkey, unsigned long inlen,
                           unsigned char *outkey, unsigned long *outlen,
                           prng_state *prng, int wprng, rsa_key *key);
+\end{verbatim}
+This function is used to RSA encrypt a symmetric to share with another user.  The symmetric key and its length are
+passed as ``inkey'' and ``inlen'' respectively.  The symmetric key is limited to a range of 8 to 32 bytes 
+(\textit{64 to 256 bits}).  The RSA encrypted packet is stored in ``outkey'' and will be of length ``outlen'' bytes.  The
+value of ``outlen'' must be originally set to the size of the output buffer. 
 
+\begin{verbatim}
 int rsa_decrypt_key(const unsigned char *in, unsigned long inlen, 
                           unsigned char *outkey, unsigned long *keylen, 
                           rsa_key *key);
 \end{verbatim}
 
-The ``rsa\_encrypt\_key()'' function accepts a symmetric key (limited to 32 bytes) as input in ``inkey''.  ``inlen''
-is the size of the input key in bytes.  The function will then ``rsa\_pad()'' the key and encrypt it using the RSA
-algorithm.  It will store the result in ``outkey'' along with the length in ``outlen''.  
-
-The ``rsa\_decrypt\_key()'' function performs the opposite.  The ``in'' variable is where the RSA packet of length 
-``inlen'' goes and it will store the original symmetric key in the ``outkey'' variable along with its length in 
-``keylen''.
-
-Similarly to sign or verify a hash of a message the following two messages are provided.  The idea is to hash your 
-message then use these functions to RSA sign the hash.  
+This function will decrypt an RSA packet to retrieve the original symmetric key encrypted with rsa\_encrypt\_key().  
+Similarly to sign or verify a hash of a message the following two messages are provided.  The idea is to hash your message 
+then use these functions to RSA sign the hash.  
 \begin{verbatim}
 int rsa_sign_hash(const unsigned char *in,  unsigned long inlen, 
                         unsigned char *out, unsigned long *outlen, 

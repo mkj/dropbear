@@ -5,7 +5,7 @@
 int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
 {
    mp_int p, q, tmp1, tmp2, tmp3;
-   int res, err;   
+   int res, err;
 
    _ARGCHK(key != NULL);
 
@@ -16,7 +16,7 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
    if ((e < 3) || ((e & 1) == 0)) {
       return CRYPT_INVALID_ARG;
    }
- 
+
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
       return err;
    }
@@ -34,7 +34,7 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
        if (mp_sub_d(&p, 1, &tmp1) != MP_OKAY)              { goto error; }  /* tmp1 = p-1 */
        if (mp_gcd(&tmp1, &tmp3, &tmp2) != MP_OKAY)         { goto error; }  /* tmp2 = gcd(p-1, e) */
    } while (mp_cmp_d(&tmp2, 1) != 0);                                       /* while e divides p-1 */
-       
+
    /* make prime "q" */
    do {
        if (rand_prime(&q, size/2, prng, wprng) != CRYPT_OK) { res = CRYPT_ERROR; goto done; }
@@ -48,7 +48,7 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
    if (mp_lcm(&tmp1, &tmp2, &tmp1) != MP_OKAY)             { goto error; } /* tmp1 = lcm(p-1, q-1) */
 
    /* make key */
-   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, 
+   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP,
                      &key->qP, &key->pQ, &key->p, &key->q, NULL) != MP_OKAY) {
       goto error;
    }
@@ -64,16 +64,16 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
 
    if (mp_mod(&key->d, &tmp1, &key->dP) != MP_OKAY)        { goto error2; } /* dP = d mod p-1 */
    if (mp_mod(&key->d, &tmp2, &key->dQ) != MP_OKAY)        { goto error2; } /* dQ = d mod q-1 */
-  
+
    if (mp_invmod(&q, &p, &key->qP) != MP_OKAY)             { goto error2; } /* qP = 1/q mod p */
    if (mp_mulmod(&key->qP, &q, &key->N, &key->qP))         { goto error2; } /* qP = q * (1/q mod p) mod N */
 
-   if (mp_invmod(&p, &q, &key->pQ) != MP_OKAY)             { goto error2; } /* pQ = 1/p mod q */    
+   if (mp_invmod(&p, &q, &key->pQ) != MP_OKAY)             { goto error2; } /* pQ = 1/p mod q */
    if (mp_mulmod(&key->pQ, &p, &key->N, &key->pQ))         { goto error2; } /* pQ = p * (1/p mod q) mod N */
 
    if (mp_copy(&p, &key->p) != MP_OKAY)                    { goto error2; }
    if (mp_copy(&q, &key->q) != MP_OKAY)                    { goto error2; }
- 
+
    /* shrink ram required  */
    if (mp_shrink(&key->e) != MP_OKAY)                      { goto error2; }
    if (mp_shrink(&key->d) != MP_OKAY)                      { goto error2; }
@@ -84,12 +84,12 @@ int rsa_make_key(prng_state *prng, int wprng, int size, long e, rsa_key *key)
    if (mp_shrink(&key->pQ) != MP_OKAY)                     { goto error2; }
    if (mp_shrink(&key->p) != MP_OKAY)                      { goto error2; }
    if (mp_shrink(&key->q) != MP_OKAY)                      { goto error2; }
-   
+
    res = CRYPT_OK;
    key->type = PK_PRIVATE_OPTIMIZED;
    goto done;
 error2:
-   mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP, 
+   mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
                   &key->qP, &key->pQ, &key->p, &key->q, NULL);
 error:
    res = CRYPT_MEM;
@@ -101,7 +101,7 @@ done:
 void rsa_free(rsa_key *key)
 {
    _ARGCHK(key != NULL);
-   mp_clear_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, 
+   mp_clear_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP,
                   &key->qP, &key->pQ, &key->p, &key->q, NULL);
 }
 
@@ -125,7 +125,7 @@ int rsa_exptmod(const unsigned char *in,  unsigned long inlen,
    /* init and copy into tmp */
    if (mp_init_multi(&tmp, &tmpa, &tmpb, NULL) != MP_OKAY)                { goto error; }
    if (mp_read_unsigned_bin(&tmp, (unsigned char *)in, (int)inlen) != MP_OKAY) { goto error; }
-   
+
    /* sanity check on the input */
    if (mp_cmp(&key->N, &tmp) == MP_LT) {
       res = CRYPT_PK_INVALID_SIZE;
@@ -158,7 +158,7 @@ int rsa_exptmod(const unsigned char *in,  unsigned long inlen,
    *outlen = x;
 
    /* convert it */
-   (void)mp_to_unsigned_bin(&tmp, out);
+   if (mp_to_unsigned_bin(&tmp, out) != MP_OKAY)                    { goto error; }
 
    /* clean up and return */
    res = CRYPT_OK;
@@ -170,7 +170,7 @@ done:
    return res;
 }
 
-int rsa_signpad(const unsigned char *in,  unsigned long inlen, 
+int rsa_signpad(const unsigned char *in,  unsigned long inlen,
                       unsigned char *out, unsigned long *outlen)
 {
    unsigned long x, y;
@@ -184,10 +184,10 @@ int rsa_signpad(const unsigned char *in,  unsigned long inlen,
    }
 
    /* check inlen */
-   if ((inlen <= 0) || inlen > 512) {
+   if (inlen > 512) {
       return CRYPT_PK_INVALID_SIZE;
    }
-   
+
    for (y = x = 0; x < inlen; x++)
        out[y++] = (unsigned char)0xFF;
    for (x = 0; x < inlen; x++)
@@ -198,8 +198,8 @@ int rsa_signpad(const unsigned char *in,  unsigned long inlen,
    return CRYPT_OK;
 }
 
-int rsa_pad(const unsigned char *in,  unsigned long inlen, 
-                  unsigned char *out, unsigned long *outlen, 
+int rsa_pad(const unsigned char *in,  unsigned long inlen,
+                  unsigned char *out, unsigned long *outlen,
                   int wprng, prng_state *prng)
 {
    unsigned char buf[1536];
@@ -211,17 +211,17 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(outlen != NULL);
 
    /* is output big enough? */
-   if (*outlen < (3 * inlen)) { 
+   if (*outlen < (3 * inlen)) {
       return CRYPT_BUFFER_OVERFLOW;
    }
 
    /* get random padding required */
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
-      return err; 
+      return err;
    }
 
    /* check inlen */
-   if ((inlen <= 0) || inlen > 512) {
+   if (inlen > 512) {
       return CRYPT_PK_INVALID_SIZE;
    }
 
@@ -229,14 +229,14 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
        return CRYPT_ERROR_READPRNG;
    }
 
-   /* pad it like a sandwitch (sp?) 
+   /* pad it like a sandwhich
     *
     * Looks like 0xFF R1 M R2 0xFF
-    * 
-    * Where R1/R2 are random and exactly equal to the length of M minus one byte.  
+    *
+    * Where R1/R2 are random and exactly equal to the length of M minus one byte.
     */
-   for (x = 0; x < inlen-1; x++) { 
-       out[x+1] = buf[x]; 
+   for (x = 0; x < inlen-1; x++) {
+       out[x+1] = buf[x];
    }
 
    for (x = 0; x < inlen; x++) {
@@ -258,7 +258,7 @@ int rsa_pad(const unsigned char *in,  unsigned long inlen,
    return CRYPT_OK;
 }
 
-int rsa_signdepad(const unsigned char *in,  unsigned long inlen, 
+int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
                     unsigned char *out, unsigned long *outlen)
 {
    unsigned long x;
@@ -267,7 +267,7 @@ int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(out != NULL);
    _ARGCHK(outlen != NULL);
 
-   if (*outlen < inlen/3) { 
+   if (*outlen < inlen/3) {
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -277,13 +277,13 @@ int rsa_signdepad(const unsigned char *in,  unsigned long inlen,
           return CRYPT_INVALID_PACKET;
        }
    }
-   for (x = 0; x < inlen/3; x++) 
+   for (x = 0; x < inlen/3; x++)
        out[x] = in[x+(inlen/3)];
    *outlen = inlen/3;
    return CRYPT_OK;
 }
 
-int rsa_depad(const unsigned char *in,  unsigned long inlen, 
+int rsa_depad(const unsigned char *in,  unsigned long inlen,
                     unsigned char *out, unsigned long *outlen)
 {
    unsigned long x;
@@ -292,10 +292,10 @@ int rsa_depad(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(out != NULL);
    _ARGCHK(outlen != NULL);
 
-   if (*outlen < inlen/3) { 
+   if (*outlen < inlen/3) {
       return CRYPT_BUFFER_OVERFLOW;
    }
-   for (x = 0; x < inlen/3; x++) 
+   for (x = 0; x < inlen/3; x++)
        out[x] = in[x+(inlen/3)];
    *outlen = inlen/3;
    return CRYPT_OK;
@@ -350,8 +350,8 @@ int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key
    _ARGCHK(key != NULL);
 
    /* type valid? */
-   if (!(key->type == PK_PRIVATE || key->type == PK_PRIVATE_OPTIMIZED) && 
-        (type == PK_PRIVATE || type == PK_PRIVATE_OPTIMIZED)) { 
+   if (!(key->type == PK_PRIVATE || key->type == PK_PRIVATE_OPTIMIZED) &&
+        (type == PK_PRIVATE || type == PK_PRIVATE_OPTIMIZED)) {
       return CRYPT_PK_INVALID_TYPE;
    }
 
@@ -363,7 +363,7 @@ int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key
 
    /* output modulus */
    OUTPUT_BIGNUM(&key->N, buf2, y, z);
-  
+
    /* output public key */
    OUTPUT_BIGNUM(&key->e, buf2, y, z);
 
@@ -381,7 +381,7 @@ int rsa_export(unsigned char *out, unsigned long *outlen, int type, rsa_key *key
    }
 
    /* check size */
-   if (*outlen < y) { 
+   if (*outlen < y) {
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -407,17 +407,18 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
    _ARGCHK(in != NULL);
    _ARGCHK(key != NULL);
 
-   /* test packet header */
-   if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_RSA, PACKET_SUB_KEY)) != CRYPT_OK) { 
-      return err;
-   }
-   
+   /* check length */
    if (inlen < 1+PACKET_SIZE) {
       return CRYPT_INVALID_PACKET;
    }
 
+   /* test packet header */
+   if ((err = packet_valid_header((unsigned char *)in, PACKET_SECT_RSA, PACKET_SUB_KEY)) != CRYPT_OK) {
+      return err;
+   }
+
    /* init key */
-   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP, 
+   if (mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP,
                      &key->pQ, &key->p, &key->q, NULL) != MP_OKAY) {
       return CRYPT_MEM;
    }
@@ -446,7 +447,7 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
       INPUT_BIGNUM(&key->p, in, x, y);
       INPUT_BIGNUM(&key->q, in, x, y);
    }
-   
+
    /* free up ram not required */
    if (key->type != PK_PRIVATE_OPTIMIZED) {
       mp_clear_multi(&key->dQ, &key->dP, &key->pQ, &key->qP, &key->p, &key->q, NULL);
@@ -457,7 +458,7 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
 
    return CRYPT_OK;
 error2:
-   mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP, 
+   mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
                   &key->pQ, &key->qP, &key->p, &key->q, NULL);
    return err;
 }

@@ -28,8 +28,6 @@ int yarrow_start(prng_state *prng)
    prng->yarrow.cipher = register_cipher(&twofish_desc);
 #elif defined(CAST5)
    prng->yarrow.cipher = register_cipher(&cast5_desc);
-#elif defined(SERPENT)
-   prng->yarrow.cipher = register_cipher(&serpent_desc);
 #elif defined(SAFER)
    prng->yarrow.cipher = register_cipher(&saferp_desc);
 #elif defined(RC5)

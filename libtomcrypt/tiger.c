@@ -687,6 +687,9 @@ void tiger_done(hash_state * md, unsigned char *hash)
 
 int  tiger_test(void)
 {
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
   static const struct {
       char *msg;
       unsigned char hash[24];
@@ -731,6 +734,7 @@ int  tiger_test(void)
       }
   }
   return CRYPT_OK;
+  #endif
 }
 
 #endif

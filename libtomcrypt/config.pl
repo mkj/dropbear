@@ -24,12 +24,12 @@
    "SMALL_CODE,Use small code where possible (slower code),y",
    "NO_FILE,Avoid file I/O calls,n",
    "CLEAN_STACK,Clean the stack within functions,n",
+   "LTC_TEST,Include Test Vector Routines,y",
 
    "BLOWFISH,Include Blowfish block cipher,y",
    "RC2,Include RC2 block cipher,y",
    "RC5,Include RC5 block cipher,y",
    "RC6,Include RC6 block cipher,y",
-   "SERPENT,Include Serpent block cipher,y",
    "SAFERP,Include Safer+ block cipher,y",
    "SAFER,Include Safer-64 block ciphers,y",
    "RIJNDAEL,Include Rijndael (AES) block cipher,y",
@@ -144,7 +144,7 @@ for (@settings) {
 
 # output objects
 print OUT "\ndefault: library\n\n";
-print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o serpent.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o ampi.o mpi.o prime.o twofish.o packet.o hmac.o strings.o\n\n";
+print OUT "OBJECTS = keyring.o gf.o mem.o sprng.o ecc.o base64.o dh.o rsa.o bits.o yarrow.o cfb.o ofb.o ecb.o ctr.o cbc.o hash.o tiger.o sha1.o md5.o md4.o md2.o sha256.o sha512.o xtea.o aes.o des.o safer_tab.o safer.o safer+.o rc4.o rc2.o rc6.o rc5.o cast5.o noekeon.o blowfish.o crypt.o mpi.o prime.o twofish.o packet.o hmac.o strings.o \n\n";
 
 # some depends
 print OUT "rsa.o: rsa_sys.c\ndh.o: dh_sys.c\necc.o: ecc_sys.c\n\n";

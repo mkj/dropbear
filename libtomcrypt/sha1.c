@@ -14,7 +14,7 @@ const struct _hash_descriptor sha1_desc =
     &sha1_test
 };
 
-#define F0(x,y,z)  ( (x&y) | ((~x)&z) )
+#define F0(x,y,z)  (z ^ (x & (y ^ z)))
 #define F1(x,y,z)  (x ^ y ^ z)
 #define F2(x,y,z)  ((x & y) | (z & (x | y)))
 #define F3(x,y,z)  (x ^ y ^ z)
@@ -25,7 +25,7 @@ static void _sha1_compress(hash_state *md)
 static void sha1_compress(hash_state *md)
 #endif
 {
-    unsigned long a,b,c,d,e,W[80],i,j,j2,j3;
+    unsigned long a,b,c,d,e,W[80],i,j;
 
     _ARGCHK(md != NULL);
 
@@ -184,7 +184,9 @@ void sha1_done(hash_state * md, unsigned char *hash)
 
 int  sha1_test(void)
 {
-#ifdef LTC_DOTESTS
+ #ifndef LTC_TEST
+    return CRYPT_NOP;
+ #else    
   static const struct {
       char *msg;
       unsigned char hash[20];
@@ -214,9 +216,7 @@ int  sha1_test(void)
       }
   }
   return CRYPT_OK;
-#else
-  return CRYPT_NOP;
-#endif /* LTC_DOTESTS */
+  #endif
 }
 
 #endif
