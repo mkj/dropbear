@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* shift right by a certain bit count (store quotient in c, optional remainder in d) */
-int
-mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
+int mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
 {
   mp_digit D, r, rr;
   int     x, res;

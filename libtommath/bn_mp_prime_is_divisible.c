@@ -19,14 +19,13 @@
  *
  * sets result to 0 if not, 1 if yes
  */
-int
-mp_prime_is_divisible (mp_int * a, int *result)
+int mp_prime_is_divisible (mp_int * a, int *result)
 {
   int     err, ix;
   mp_digit res;
 
   /* default to not */
-  *result = 0;
+  *result = MP_NO;
 
   for (ix = 0; ix < PRIME_SIZE; ix++) {
     /* what is a mod __prime_tab[ix] */
@@ -36,7 +35,7 @@ mp_prime_is_divisible (mp_int * a, int *result)
 
     /* is the residue zero? */
     if (res == 0) {
-      *result = 1;
+      *result = MP_YES;
       return MP_OKAY;
     }
   }

@@ -24,24 +24,24 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream)
       return MP_VAL;
    }
    
-   buf = malloc(len);
+   buf = XMALLOC (len);
    if (buf == NULL) {
       return MP_MEM;
    }
    
    if ((err = mp_toradix(a, buf, radix)) != MP_OKAY) {
-      free(buf);
+      XFREE (buf);
       return err;
    }
    
    for (x = 0; x < len; x++) {
        if (fputc(buf[x], stream) == EOF) {
-          free(buf);
+          XFREE (buf);
           return MP_VAL;
        }
    }
    
-   free(buf);
+   XFREE (buf);
    return MP_OKAY;
 }
 

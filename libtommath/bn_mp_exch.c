@@ -15,7 +15,7 @@
 #include <tommath.h>
 
 /* swap the elements of two integers, for cases where you can't simply swap the 
- * mp_int pointers around 
+ * mp_int pointers around
  */
 void
 mp_exch (mp_int * a, mp_int * b)

@@ -19,6 +19,11 @@ tune86: tune.c
 	nasm -f coff timer.asm
 	$(CC) -DX86_TIMER $(CFLAGS) tune.c timer.o  $(LIBNAME) -o tune86
 	
+# for cygwin
+tune86c: tune.c
+	nasm -f gnuwin32 timer.asm
+	$(CC) -DX86_TIMER $(CFLAGS) tune.c timer.o  $(LIBNAME) -o tune86
+
 #make tune86 for linux or any ELF format
 tune86l: tune.c
 	nasm -f elf -DUSE_ELF timer.asm

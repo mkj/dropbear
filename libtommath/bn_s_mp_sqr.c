@@ -27,6 +27,8 @@ s_mp_sqr (mp_int * a, mp_int * b)
   if ((res = mp_init_size (&t, 2*pa + 1)) != MP_OKAY) {
     return res;
   }
+
+  /* default used is maximum possible size */
   t.used = 2*pa + 1;
 
   for (ix = 0; ix < pa; ix++) {
@@ -36,20 +38,20 @@ s_mp_sqr (mp_int * a, mp_int * b)
         ((mp_word)a->dp[ix])*((mp_word)a->dp[ix]);
 
     /* store lower part in result */
-    t.dp[2*ix] = (mp_digit) (r & ((mp_word) MP_MASK));
+    t.dp[ix+ix] = (mp_digit) (r & ((mp_word) MP_MASK));
 
     /* get the carry */
-    u = (mp_digit)(r >> ((mp_word) DIGIT_BIT));
+    u           = (mp_digit)(r >> ((mp_word) DIGIT_BIT));
 
     /* left hand side of A[ix] * A[iy] */
-    tmpx = a->dp[ix];
+    tmpx        = a->dp[ix];
 
     /* alias for where to store the results */
-    tmpt = t.dp + (2*ix + 1);
+    tmpt        = t.dp + (2*ix + 1);
     
     for (iy = ix + 1; iy < pa; iy++) {
       /* first calculate the product */
-      r = ((mp_word)tmpx) * ((mp_word)a->dp[iy]);
+      r       = ((mp_word)tmpx) * ((mp_word)a->dp[iy]);
 
       /* now calculate the double precision result, note we use
        * addition instead of *2 since it's easier to optimize

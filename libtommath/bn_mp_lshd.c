@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* shift left a certain amount of digits */
-int
-mp_lshd (mp_int * a, int b)
+int mp_lshd (mp_int * a, int b)
 {
   int     x, res;
 

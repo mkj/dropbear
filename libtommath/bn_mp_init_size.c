@@ -15,14 +15,13 @@
 #include <tommath.h>
 
 /* init an mp_init for a given size */
-int
-mp_init_size (mp_int * a, int size)
+int mp_init_size (mp_int * a, int size)
 {
   /* pad size so there are always extra digits */
   size += (MP_PREC * 2) - (size % MP_PREC);	
   
   /* alloc mem */
-  a->dp = OPT_CAST calloc (sizeof (mp_digit), size);
+  a->dp = OPT_CAST XCALLOC (sizeof (mp_digit), size);
   if (a->dp == NULL) {
     return MP_MEM;
   }

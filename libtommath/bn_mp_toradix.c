@@ -23,17 +23,18 @@ mp_toradix (mp_int * a, char *str, int radix)
   mp_digit d;
   char   *_s = str;
 
+  /* check range of the radix */
   if (radix < 2 || radix > 64) {
     return MP_VAL;
   }
-  
+
   /* quick out if its zero */
   if (mp_iszero(a) == 1) {
      *str++ = '0';
      *str = '\0';
      return MP_OKAY;
   }
-  
+
   if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
     return res;
   }
@@ -59,11 +60,10 @@ mp_toradix (mp_int * a, char *str, int radix)
    * to the first digit [exluding the sign] of the number]
    */
   bn_reverse ((unsigned char *)_s, digs);
-  
+
   /* append a NULL so the string is properly terminated */
-  *str++ = '\0';
-  
-  
+  *str = '\0';
+
   mp_clear (&t);
   return MP_OKAY;
 }

@@ -24,7 +24,7 @@ mp_clear (mp_int * a)
     memset (a->dp, 0, sizeof (mp_digit) * a->used);
 
     /* free ram */
-    free (a->dp);
+    XFREE(a->dp);
 
     /* reset members to make debugging easier */
     a->dp    = NULL;

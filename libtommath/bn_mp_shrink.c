@@ -15,13 +15,14 @@
 #include <tommath.h>
 
 /* shrink a bignum */
-int
-mp_shrink (mp_int * a)
+int mp_shrink (mp_int * a)
 {
+  mp_digit *tmp;
   if (a->alloc != a->used) {
-    if ((a->dp = OPT_CAST realloc (a->dp, sizeof (mp_digit) * a->used)) == NULL) {
+    if ((tmp = OPT_CAST XREALLOC (a->dp, sizeof (mp_digit) * a->used)) == NULL) {
       return MP_MEM;
     }
+    a->dp    = tmp;
     a->alloc = a->used;
   }
   return MP_OKAY;

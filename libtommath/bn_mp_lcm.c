@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* computes least common multiple as |a*b|/(a, b) */
-int
-mp_lcm (mp_int * a, mp_int * b, mp_int * c)
+int mp_lcm (mp_int * a, mp_int * b, mp_int * c)
 {
   int     res;
   mp_int  t1, t2;

@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* set a 32-bit const */
-int
-mp_set_int (mp_int * a, unsigned int b)
+int mp_set_int (mp_int * a, unsigned long b)
 {
   int     x, res;
 

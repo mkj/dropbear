@@ -1,3 +1,24 @@
+Dec 24th, 2003
+v0.28  -- Henrik suggested I add casts to the montomgery code [stores into mu...] so compilers wouldn't
+          spew [erroneous] diagnostics... fixed.
+       -- Henrik also spotted two typos.  One in mp_radix_size() and another in mp_toradix().
+       -- Added fix to mp_shrink() to avoid a memory leak.
+       -- Added mp_prime_random() which requires a callback to make truly random primes of a given nature
+          (idea from chat with Niels Ferguson at Crypto'03)
+       -- Picked up a second wind.  I'm filled with Gooo.  Mission Gooo!
+       -- Removed divisions from mp_reduce_is_2k()
+       -- Sped up mp_div_d() [general case] to use only one division per digit instead of two.  
+       -- Added the heap macros from LTC to LTM.  Now you can easily [by editing four lines of tommath.h]
+          change the name of the heap functions used in LTM [also compatible with LTC via MPI mode]
+       -- Added bn_prime_rabin_miller_trials() which gives the number of Rabin-Miller trials to achieve
+          a failure rate of less than 2^-96
+       -- fixed bug in fast_mp_invmod().  The initial testing logic was wrong.  An invalid input is not when
+          "a" and "b" are even it's when "b" is even [the algo is for odd moduli only].  
+       -- Started a new manual [finally].  It is incomplete and will be finished as time goes on.  I had to stop
+          adding full demos around half way in chapter three so I could at least get a good portion of the 
+          manual done.   If you really need help using the library you can always email me!
+       -- My Textbook is now included as part of the package [all Public Domain]       
+
 Sept 19th, 2003
 v0.27  -- Removed changes.txt~ which was made by accident since "kate" decided it was
           a good time to re-enable backups... [kde is fun!]

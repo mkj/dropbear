@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* creates "a" then copies b into it */
-int
-mp_init_copy (mp_int * a, mp_int * b)
+int mp_init_copy (mp_int * a, mp_int * b)
 {
   int     res;
 

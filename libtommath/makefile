@@ -4,9 +4,9 @@
 CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -funroll-loops
 
 #x86 optimizations [should be valid for any GCC install though]
-CFLAGS  += -fomit-frame-pointer 
+CFLAGS  += -fomit-frame-pointer
 
-VERSION=0.27
+VERSION=0.28
 
 default: libtommath.a
 
@@ -44,7 +44,7 @@ bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
 bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
 bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
 bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
-bn_mp_init_multi.o bn_mp_clear_multi.o
+bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_prime_random.o bn_prime_sizes_tab.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
@@ -81,29 +81,35 @@ poster: poster.tex
 docs:	
 	cd pics ; make pdfes
 	echo "hello" > tommath.ind
-	perl booker.pl PDF
+	perl booker.pl PDF 
 	latex tommath > /dev/null
 	makeindex tommath
 	latex tommath > /dev/null
 	pdflatex tommath
 	rm -f tommath.log tommath.aux tommath.dvi tommath.idx tommath.toc tommath.lof tommath.ind tommath.ilg
+	cd pics ; make clean
 	
-#the old manual being phased out
-manual:	
-	latex bn
-	pdflatex bn
-	rm -f bn.aux bn.dvi bn.log
+#LTM user manual
+mandvi: bn.tex
+	echo "hello" > bn.ind
+	latex bn > /dev/null
+	makeindex bn
+	latex bn > /dev/null
+
+#LTM user manual [pdf]
+manual:	mandvi
+	pdflatex bn >/dev/null
+	rm -f bn.aux bn.dvi bn.log bn.idx bn.lof bn.out bn.toc
 	
 clean:
-	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
-        tommath.idx tommath.toc tommath.log tommath.aux tommath.dvi tommath.lof tommath.ind tommath.ilg *.ps *.pdf *.log *.s mpi.c \
-        poster.aux poster.dvi poster.log
+	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
+        *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c 
 	cd etc ; make clean
 	cd pics ; make clean
 
-zipup: clean manual poster
+zipup: clean manual poster docs
 	perl gen.pl ; mv mpi.c pre_gen/ ; \
 	cd .. ; rm -rf ltm* libtommath-$(VERSION) ; mkdir libtommath-$(VERSION) ; \
-	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; cd ./libtommath-$(VERSION) ; rm -f tommath.src tommath.tex tommath.out ; cd pics ; rm -f *.tif *.ps *.pdf ; cd .. ; cd .. ; ls ; \
-	tar -c libtommath-$(VERSION)/* > ltm-$(VERSION).tar ; \
-	bzip2 -9vv ltm-$(VERSION).tar ; zip -9 -r ltm-$(VERSION).zip libtommath-$(VERSION)/*
+	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; \
+	tar -c libtommath-$(VERSION)/* | bzip2 -9vvc > ltm-$(VERSION).tar.bz2 ; \
+	zip -9 -r ltm-$(VERSION).zip libtommath-$(VERSION)/*

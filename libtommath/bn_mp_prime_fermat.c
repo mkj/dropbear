@@ -22,14 +22,13 @@
  *
  * Sets result to 1 if the congruence holds, or zero otherwise.
  */
-int
-mp_prime_fermat (mp_int * a, mp_int * b, int *result)
+int mp_prime_fermat (mp_int * a, mp_int * b, int *result)
 {
   mp_int  t;
   int     err;
 
   /* default to composite  */
-  *result = 0;
+  *result = MP_NO;
 
   /* ensure b > 1 */
   if (mp_cmp_d(b, 1) != MP_GT) {
@@ -48,7 +47,7 @@ mp_prime_fermat (mp_int * a, mp_int * b, int *result)
 
   /* is it equal to b? */
   if (mp_cmp (&t, b) == MP_EQ) {
-    *result = 1;
+    *result = MP_YES;
   }
 
   err = MP_OKAY;

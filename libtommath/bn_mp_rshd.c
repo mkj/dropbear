@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* shift right a certain amount of digits */
-void
-mp_rshd (mp_int * a, int b)
+void mp_rshd (mp_int * a, int b)
 {
   int     x;
 

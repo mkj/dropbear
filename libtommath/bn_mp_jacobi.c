@@ -17,8 +17,7 @@
 /* computes the jacobi c = (a | n) (or Legendre if n is prime)
  * HAC pp. 73 Algorithm 2.149
  */
-int
-mp_jacobi (mp_int * a, mp_int * p, int *c)
+int mp_jacobi (mp_int * a, mp_int * p, int *c)
 {
   mp_int  a1, p1;
   int     k, s, r, res;

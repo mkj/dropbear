@@ -24,8 +24,7 @@
  * each step involves a fair bit.  This is not meant to 
  * find huge roots [square and cube, etc].
  */
-int
-mp_n_root (mp_int * a, mp_digit b, mp_int * c)
+int mp_n_root (mp_int * a, mp_digit b, mp_int * c)
 {
   mp_int  t1, t2, t3;
   int     res, neg;

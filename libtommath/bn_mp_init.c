@@ -15,11 +15,10 @@
 #include <tommath.h>
 
 /* init a new bigint */
-int
-mp_init (mp_int * a)
+int mp_init (mp_int * a)
 {
   /* allocate memory required and clear it */
-  a->dp = OPT_CAST calloc (sizeof (mp_digit), MP_PREC);
+  a->dp = OPT_CAST XCALLOC (sizeof (mp_digit), MP_PREC);
   if (a->dp == NULL) {
     return MP_MEM;
   }

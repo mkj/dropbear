@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* compare maginitude of two ints (unsigned) */
-int
-mp_cmp_mag (mp_int * a, mp_int * b)
+int mp_cmp_mag (mp_int * a, mp_int * b)
 {
   int     n;
   mp_digit *tmpa, *tmpb;

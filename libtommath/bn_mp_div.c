@@ -27,8 +27,7 @@
  * The overall algorithm is as described as 
  * 14.20 from HAC but fixed to treat these cases.
 */
-int
-mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
+int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 {
   mp_int  q, x, y, t1, t2;
   int     res, n, t, i, norm, neg;

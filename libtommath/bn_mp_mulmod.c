@@ -21,7 +21,6 @@ mp_mulmod (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   int     res;
   mp_int  t;
 
-
   if ((res = mp_init (&t)) != MP_OKAY) {
     return res;
   }

@@ -111,10 +111,10 @@ int main(void)
 
 /* test mp_reduce_2k */
 #if 0
-   for (cnt = 3; cnt <= 256; ++cnt) {
+   for (cnt = 3; cnt <= 384; ++cnt) {
        mp_digit tmp;
        mp_2expt(&a, cnt);
-       mp_sub_d(&a, 1, &a);  /* a = 2**cnt - 1 */
+       mp_sub_d(&a, 2, &a);  /* a = 2**cnt - 2 */
 
 
        printf("\nTesting %4d bits", cnt);
@@ -138,11 +138,11 @@ int main(void)
 
 /* test mp_div_3  */
 #if 0
-   for (cnt = 0; cnt < 10000; ) {
+   for (cnt = 0; cnt < 1000000; ) {
       mp_digit r1, r2;
 
       if (!(++cnt & 127)) printf("%9d\r", cnt);
-      mp_rand(&a, abs(rand()) % 32 + 1);
+      mp_rand(&a, abs(rand()) % 128 + 1);
       mp_div_d(&a, 3, &b, &r1);
       mp_div_3(&a, &c, &r2);
 
@@ -155,7 +155,7 @@ int main(void)
 
 /* test the DR reduction */
 #if 0
-   for (cnt = 2; cnt < 32; cnt++) {
+   for (cnt = 2; cnt < 128; cnt++) {
        printf("%d digit modulus\n", cnt);
        mp_grow(&a, cnt);
        mp_zero(&a);
@@ -181,7 +181,7 @@ int main(void)
             printf("Failed on trial %lu\n", rr); exit(-1);
 
          }
-      } while (++rr < 10000);
+      } while (++rr < 100000);
       printf("Passed DR test for %d digits\n", cnt);
    }
 #endif
@@ -203,8 +203,8 @@ int main(void)
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
          tt = rdtsc();
-         printf("Adding\t\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+         printf("Adding\t\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
 
@@ -220,12 +220,13 @@ int main(void)
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
          tt = rdtsc();
-         printf("Subtracting\t\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+         printf("Subtracting\t\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
 
    /* do mult/square twice, first without karatsuba and second with */
+mult_test:   
    old_kara_m = KARATSUBA_MUL_CUTOFF;
    old_kara_s = KARATSUBA_SQR_CUTOFF;
    for (ix = 0; ix < 2; ix++) {
@@ -246,8 +247,8 @@ int main(void)
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
          tt = rdtsc();
-         printf("Multiplying\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+         printf("Multiplying\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+         fprintf(log, "%d %9llu\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
 
@@ -262,8 +263,8 @@ int main(void)
             rr += 16;
          } while (rdtsc() < (CLOCKS_PER_SEC * 2));
          tt = rdtsc();
-         printf("Squaring\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-         fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+         printf("Squaring\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+         fprintf(log, "%d %9llu\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
       }
       fclose(log);
 
@@ -297,12 +298,14 @@ int main(void)
          "1214855636816562637502584060163403830270705000634713483015101384881871978446801224798536155406895823305035467591632531067547890948695117172076954220727075688048751022421198712032848890056357845974246560748347918630050853933697792254955890439720297560693579400297062396904306270145886830719309296352765295712183040773146419022875165382778007040109957609739589875590885701126197906063620133954893216612678838507540777138437797705602453719559017633986486649523611975865005712371194067612263330335590526176087004421363598470302731349138773205901447704682181517904064735636518462452242791676541725292378925568296858010151852326316777511935037531017413910506921922450666933202278489024521263798482237150056835746454842662048692127173834433089016107854491097456725016327709663199738238442164843147132789153725513257167915555162094970853584447993125488607696008169807374736711297007473812256272245489405898470297178738029484459690836250560495461579533254473316340608217876781986188705928270735695752830825527963838355419762516246028680280988020401914551825487349990306976304093109384451438813251211051597392127491464898797406789175453067960072008590614886532333015881171367104445044718144312416815712216611576221546455968770801413440778423979",
          NULL
       };
+expt_test:
    log = fopen("logs/expt.log", "w");
    logb = fopen("logs/expt_dr.log", "w");
    logc = fopen("logs/expt_2k.log", "w");
    for (n = 0; primes[n]; n++) {
       SLEEP;
       mp_read_radix(&a, primes[n], 10);
+         printf("Different (%d)!!!\n", mp_count_bits(&a));
       mp_zero(&b);
       for (rr = 0; rr < mp_count_bits(&a); rr++) {
          mp_mul_2(&b, &b);
@@ -328,8 +331,8 @@ int main(void)
          draw(&d);
          exit(0);
       }
-      printf("Exponentiating\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-      fprintf((n < 6) ? logc : (n < 13) ? logb : log, "%d %9llu\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+      printf("Exponentiating\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+      fprintf((n < 6) ? logc : (n < 13) ? logb : log, "%d %9llu\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
    }
    }
    fclose(log);
@@ -359,8 +362,8 @@ int main(void)
          printf("Failed to invert\n");
          return 0;
       }
-      printf("Inverting mod\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt, tt);
-      fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((unsigned long long)rr)*CLOCKS_PER_SEC)/tt);
+      printf("Inverting mod\t%4d-bit => %9llu/sec, %9llu ticks\n", mp_count_bits(&a), (((ulong64)rr)*CLOCKS_PER_SEC)/tt, tt);
+      fprintf(log, "%d %9llu\n", cnt*DIGIT_BIT, (((ulong64)rr)*CLOCKS_PER_SEC)/tt);
    }
    fclose(log);
 

@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* calculate c = a**b  using a square-multiply algorithm */
-int
-mp_expt_d (mp_int * a, mp_digit b, mp_int * c)
+int mp_expt_d (mp_int * a, mp_digit b, mp_int * c)
 {
   int     res, x;
   mp_int  g;

@@ -146,12 +146,12 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
           if ((err = mp_prime_miller_rabin(a, &b, &res)) != MP_OKAY) {
              goto __ERR;
           }
-          if (res == 0) {
+          if (res == MP_NO) {
              break;
           }
       }
 
-      if (res == 1) {
+      if (res == MP_YES) {
          break;
       }
    }

@@ -15,10 +15,9 @@
 #include <tommath.h>
 
 /* determines if mp_reduce_2k can be used */
-int 
-mp_reduce_is_2k(mp_int *a)
+int mp_reduce_is_2k(mp_int *a)
 {
-   int ix, iy;
+   int ix, iy, iz, iw;
    
    if (a->used == 0) {
       return 0;
@@ -26,10 +25,18 @@ mp_reduce_is_2k(mp_int *a)
       return 1;
    } else if (a->used > 1) {
       iy = mp_count_bits(a);
+      iz = 1;
+      iw = 1;
+    
+      /* Test every bit from the second digit up, must be 1 */
       for (ix = DIGIT_BIT; ix < iy; ix++) {
-          if ((a->dp[ix/DIGIT_BIT] & 
-              ((mp_digit)1 << (mp_digit)(ix % DIGIT_BIT))) == 0) {
+          if ((a->dp[iw] & iz) == 0) {
              return 0;
+          }
+          iz <<= 1;
+          if (iz > (int)MP_MASK) {
+             ++iw;
+             iz = 1;
           }
       }
    }

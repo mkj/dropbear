@@ -26,11 +26,8 @@ fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
   mp_int  x, y, u, v, B, D;
   int     res, neg;
 
-  /* 2. [modified] if a,b are both even then return an error!
-   *
-   * That is if gcd(a,b) = 2**k * q then obviously there is no inverse.
-   */
-  if (mp_iseven (a) == 1 && mp_iseven (b) == 1) {
+  /* 2. [modified] b must be odd   */
+  if (mp_iseven (b) == 1) {
     return MP_VAL;
   }
 

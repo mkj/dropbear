@@ -21,14 +21,13 @@
  *
  * Sets result to 1 if probably prime, 0 otherwise
  */
-int
-mp_prime_is_prime (mp_int * a, int t, int *result)
+int mp_prime_is_prime (mp_int * a, int t, int *result)
 {
   mp_int  b;
   int     ix, err, res;
 
   /* default to no */
-  *result = 0;
+  *result = MP_NO;
 
   /* valid value of t? */
   if (t <= 0 || t > PRIME_SIZE) {
@@ -49,7 +48,7 @@ mp_prime_is_prime (mp_int * a, int t, int *result)
   }
 
   /* return if it was trivially divisible */
-  if (res == 1) {
+  if (res == MP_YES) {
     return MP_OKAY;
   }
 
@@ -66,13 +65,13 @@ mp_prime_is_prime (mp_int * a, int t, int *result)
       goto __B;
     }
 
-    if (res == 0) {
+    if (res == MP_NO) {
       goto __B;
     }
   }
 
   /* passed the test */
-  *result = 1;
+  *result = MP_YES;
 __B:mp_clear (&b);
   return err;
 }

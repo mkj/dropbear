@@ -15,12 +15,10 @@
 #include <tommath.h>
 
 /* grow as required */
-int
-mp_grow (mp_int * a, int size)
+int mp_grow (mp_int * a, int size)
 {
   int     i;
   mp_digit *tmp;
-
 
   /* if the alloc size is smaller alloc more ram */
   if (a->alloc < size) {
@@ -33,7 +31,7 @@ mp_grow (mp_int * a, int size)
      * in case the operation failed we don't want
      * to overwrite the dp member of a.
      */
-    tmp = OPT_CAST realloc (a->dp, sizeof (mp_digit) * size);
+    tmp = OPT_CAST XREALLOC (a->dp, sizeof (mp_digit) * size);
     if (tmp == NULL) {
       /* reallocation failed but "a" is still valid [can be freed] */
       return MP_MEM;

@@ -14,11 +14,11 @@
  */
 #include <tommath.h>
 
-/* computes xR**-1 == x (mod N) via Montgomery Reduction 
- * 
- * This is an optimized implementation of mp_montgomery_reduce 
+/* computes xR**-1 == x (mod N) via Montgomery Reduction
+ *
+ * This is an optimized implementation of mp_montgomery_reduce
  * which uses the comba method to quickly calculate the columns of the
- * reduction.  
+ * reduction.
  *
  * Based on Algorithm 14.32 on pp.601 of HAC.
 */
@@ -69,11 +69,11 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
     /* mu = ai * m' mod b
      *
      * We avoid a double precision multiplication (which isn't required)
-     * by casting the value down to a mp_digit.  Note this requires 
+     * by casting the value down to a mp_digit.  Note this requires
      * that W[ix-1] have  the carry cleared (see after the inner loop)
      */
     register mp_digit mu;
-    mu = ((W[ix] & MP_MASK) * rho) & MP_MASK;
+    mu = (mp_digit) (((W[ix] & MP_MASK) * rho) & MP_MASK);
 
     /* a = a + mu * m * b**i
      *
@@ -81,12 +81,12 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
      * by b**i is handled by offseting which columns the results
      * are added to.
      *
-     * Note the comba method normally doesn't handle carries in the 
-     * inner loop In this case we fix the carry from the previous 
-     * column since the Montgomery reduction requires digits of the 
+     * Note the comba method normally doesn't handle carries in the
+     * inner loop In this case we fix the carry from the previous
+     * column since the Montgomery reduction requires digits of the
      * result (so far) [see above] to work.  This is
-     * handled by fixing up one carry after the inner loop.  The 
-     * carry fixups are done in order so after these loops the 
+     * handled by fixing up one carry after the inner loop.  The
+     * carry fixups are done in order so after these loops the
      * first m->used words of W[] have the carries fixed
      */
     {
@@ -132,8 +132,8 @@ fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 
     /* copy out, A = A/b**n
      *
-     * The result is A/b**n but instead of converting from an 
-     * array of mp_word to mp_digit than calling mp_rshd 
+     * The result is A/b**n but instead of converting from an
+     * array of mp_word to mp_digit than calling mp_rshd
      * we just copy them in the right order
      */
 

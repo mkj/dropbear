@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* shift left by a certain bit count */
-int
-mp_mul_2d (mp_int * a, int b, mp_int * c)
+int mp_mul_2d (mp_int * a, int b, mp_int * c)
 {
   mp_digit d;
   int      res;

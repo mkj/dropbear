@@ -81,7 +81,7 @@ mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
      
      if (w >= b) {
         t = (mp_digit)(w / b);
-        w = w % b;
+        w -= ((mp_word)t) * ((mp_word)b);
       } else {
         t = 0;
       }

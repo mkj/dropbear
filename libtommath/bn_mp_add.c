@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* high level addition (handles signs) */
-int
-mp_add (mp_int * a, mp_int * b, mp_int * c)
+int mp_add (mp_int * a, mp_int * b, mp_int * c)
 {
   int     sa, sb, res;
 

@@ -28,8 +28,8 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
    * are fixed up in the inner loop.
    */
   digs = n->used * 2 + 1;
-  if ((digs < MP_WARRAY) && 
-      n->used < 
+  if ((digs < MP_WARRAY) &&
+      n->used <
       (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
     return fast_mp_montgomery_reduce (x, n, rho);
   }
@@ -51,7 +51,7 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
      * following inner loop to reduce the
      * input one digit at a time
      */
-    mu = ((mp_word)x->dp[ix]) * ((mp_word)rho) & MP_MASK;
+    mu = (mp_digit) (((mp_word)x->dp[ix]) * ((mp_word)rho) & MP_MASK);
 
     /* a = a + mu * m * b**i */
     {
@@ -67,7 +67,7 @@ mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 
       /* set the carry to zero */
       u = 0;
-      
+
       /* Multiply and add in place */
       for (iy = 0; iy < n->used; iy++) {
         /* compute product and sum */

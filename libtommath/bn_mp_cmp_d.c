@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* compare a digit */
-int
-mp_cmp_d (mp_int * a, mp_digit b)
+int mp_cmp_d(mp_int * a, mp_digit b)
 {
   /* compare based on sign */
   if (a->sign == MP_NEG) {
