@@ -52,6 +52,7 @@ static void authclear() {
 	ses.authstate.authdone = 0;
 	ses.authstate.pw = NULL;
 	ses.authstate.username = NULL;
+	ses.authstate.printableuser = NULL;
 	ses.authstate.authtypes = 0;
 #ifdef DROPBEAR_PUBKEY_AUTH
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
@@ -167,11 +168,14 @@ out:
 static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* shell;
+	char* newprintableuser;
 	
 	TRACE(("enter checkusername"));
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;
 	}
+
+	newprintableuser = stripcontrol(username);
 
 	/* new user or username has changed */
 	if (ses.authstate.username == NULL ||
@@ -180,12 +184,15 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 			if (ses.authstate.username != NULL) {
 				dropbear_log(LOG_WARNING,
 					"client trying multiple usernames: '%s' and '%s' from %s",
-					ses.authstate.username, username, ses.addrstring);
+					ses.authstate.printableuser, newprintableuser,
+					ses.addrstring);
 				m_free(ses.authstate.username);
+				m_free(ses.authstate.printableuser);
 			}
 			authclear();
 			ses.authstate.pw = getpwnam((char*)username);
 			ses.authstate.username = strdup(username);
+			ses.authstate.printableuser = newprintableuser;
 	}
 
 	/* check that user exists */
@@ -289,7 +296,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		if (ses.authstate.username == NULL) {
 			userstr = "is unknown!!!!";
 		} else {
-			userstr = ses.authstate.username;
+			userstr = ses.authstate.printableuser;
 		}
 		dropbear_exit("Max auth tries reached - user %s", userstr);
 	}

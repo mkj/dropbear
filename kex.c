@@ -419,7 +419,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
 	sha1_done(&hs, ses.hash);
-#ifdef DEBUG_KEXHASH
+#if defined(DEBUG_KEXHASH) && defined(DEBUG_TRACE)
 	{
 		int hashfd;
 		int hashwritelen;

@@ -74,7 +74,7 @@ void passwordauth() {
 	if (passwdcrypt[0] == '\0') {
 		dropbear_log(LOG_WARNING,
 				"disallowed login with empty password for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
@@ -100,12 +100,12 @@ void passwordauth() {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
 				"password auth succeeded for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
 				"bad password attempt for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
 

@@ -237,7 +237,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	buf_incrwritepos(buf, ssize);
 	mp_clear(&rsa_s);
 
-#ifdef DEBUG_RSA
+#if defined(DEBUG_RSA) && defined(DEBUG_TRACE)
 	printhex(buf->data, buf->len);
 #endif
 	

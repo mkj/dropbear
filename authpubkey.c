@@ -114,12 +114,12 @@ void pubkeyauth() {
 				signbuf->len) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
 				"pubkey auth succeeded for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
 				"pubkey auth failure for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
 
@@ -174,7 +174,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
 		dropbear_log(LOG_WARNING,
 				"pubkey auth attempt with unknown algo '%s' for '%s' from %s",
-				algo, ses.authstate.username, ses.addrstring);
+				algo, ses.authstate.printableuser, ses.addrstring);
 		goto out;
 	}
 
@@ -183,7 +183,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		TRACE(("perms failed"));
 		dropbear_log(LOG_NOTICE,
 				"bad authorized_keys permissions for '%s' from %s",
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 		goto out;
 	}
 

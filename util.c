@@ -135,7 +135,7 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 		/* user has authenticated */
 		assert(ses.authstate.username);
 		snprintf(infostr, sizeof(infostr), "post-userauth (%s) from %s: ", 
-				ses.authstate.username, ses.addrstring);
+				ses.authstate.printableuser, ses.addrstring);
 	} else {
 		/* before userauth */
 		snprintf(infostr, sizeof(infostr), "before userauth: ");
@@ -315,6 +315,7 @@ strlcat(dst, src, siz)
 }
 #endif /* HAVE_STRLCAT */
 
+#ifdef DEBUG_TRACE
 void printhex(unsigned char* buf, int len) {
 
 	int i;
@@ -330,6 +331,35 @@ void printhex(unsigned char* buf, int len) {
 	}
 	fprintf(stderr, "\n");
 }
+#endif
+
+/* Strip all control characters from text (a null-terminated string), except
+ * for '\n', '\r' and '\t'.
+ * The result returned is a newly allocated string, this must be free()d after
+ * use */
+char * stripcontrol(const char * text) {
+
+	char * ret;
+	int len, pos;
+	int i;
+	
+	len = strlen(text);
+	ret = m_malloc(len+1);
+
+	pos = 0;
+	for (i = 0; i < len; i++) {
+		if ((text[i] <= '~' && text[i] >= ' ') /* normal printable range */
+				|| text[i] == '\n' || text[i] == '\r' || text[i] == '\t') {
+			ret[pos] = text[i];
+			pos++;
+		}
+	}
+	ret[pos] = 0x0;
+	return ret;
+}
+			
+
+
 
 /* returns the current position on success, or -1 on failure */
 int readln(int fd, char* buf, int count) {

@@ -37,10 +37,11 @@ void dropbear_close(const char* format, ...);
 void dropbear_log(int priority, const char* format, ...);
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...);
+void printhex(unsigned char* buf, int len);
 #endif
+char * stripcontrol(const char * text);
 unsigned char * getaddrstring(struct sockaddr * addr);
 int getaddrhostname(char * dest, unsigned int len, char * addr);
-void printhex(unsigned char* buf, int len);
 int readln(int fd, char* buf, int count);
 int writeln(int fd, char* str);
 int buf_readfile(buffer* buf, char* filename);
