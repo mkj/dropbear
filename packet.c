@@ -42,6 +42,7 @@
 #include "libtomcrypt/mycrypt.h"
 
 static void read_packet_init();
+static void process_postauth_packet(unsigned int type);
 
 #define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
 #define ZLIB_DECOMPRESS_INCR 100
@@ -417,6 +418,58 @@ void process_packet() {
 
 	switch (type) {
 
+		case SSH_MSG_SERVICE_REQUEST:
+			recv_msg_service_request();
+			break;
+
+		case SSH_MSG_USERAUTH_REQUEST:
+			recv_msg_userauth_request();
+			break;
+			
+		case SSH_MSG_KEXINIT:
+			recv_msg_kexinit();
+			break;
+
+		case SSH_MSG_KEXDH_INIT:
+			recv_msg_kexdh_init();
+			break;
+
+		case SSH_MSG_NEWKEYS:
+			recv_msg_newkeys();
+			break;
+
+		case SSH_MSG_CHANNEL_DATA:
+		case SSH_MSG_CHANNEL_WINDOW_ADJUST:
+		case SSH_MSG_CHANNEL_REQUEST:
+		case SSH_MSG_CHANNEL_OPEN:
+		case SSH_MSG_CHANNEL_EOF:
+		case SSH_MSG_CHANNEL_CLOSE:
+			/* these should be checked for authdone below */
+			process_postauth_packet(type);
+			break;
+	
+		default:
+			/* TODO this possibly should be handled */
+			TRACE(("unknown packet"));
+	}
+
+out:
+	buf_free(ses.payload);
+	ses.payload = NULL;
+
+	TRACE(("leave process_packet"));
+}
+
+/* process a packet, and also check that auth has been done */
+static void process_postauth_packet(unsigned int type) {
+
+	/* messages following here require userauth before use */
+	if (!ses.authstate.authdone) {
+		dropbear_exit("received message %d before userauth", type);
+	}
+
+	switch (type) {
+
 		case SSH_MSG_CHANNEL_DATA:
 			recv_msg_channel_data();
 			break;
@@ -440,38 +493,10 @@ void process_packet() {
 		case SSH_MSG_CHANNEL_CLOSE:
 			recv_msg_channel_close();
 			break;
-
-		case SSH_MSG_SERVICE_REQUEST:
-			recv_msg_service_request();
-			break;
-
-		case SSH_MSG_USERAUTH_REQUEST:
-			recv_msg_userauth_request();
-			break;
-			
-		case SSH_MSG_KEXINIT:
-			recv_msg_kexinit();
-			break;
-
-		case SSH_MSG_KEXDH_INIT:
-			recv_msg_kexdh_init();
-			break;
-
-		case SSH_MSG_NEWKEYS:
-			recv_msg_newkeys();
-			break;
-
-		default:
-			/* TODO this possibly should be handled */
-			TRACE(("unknown packet"));
 	}
-
-out:
-	buf_free(ses.payload);
-	ses.payload = NULL;
-
-	TRACE(("leave process_packet"));
 }
+	
+
 
 /* encrypt the writepayload, putting into writebuf, ready for write_packet()
  * to put on the wire */

@@ -103,7 +103,7 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 		if (ses.chansize > MAX_CHANNELS) {
 			send_msg_channel_open_failure(remotechan,
 					SSH_OPEN_RESOURCE_SHORTAGE, "", "");
-			TRACE(("enter newchannel: max chans reached"));
+			TRACE(("leave newchannel: max chans reached"));
 			return NULL;
 		}
 
@@ -136,7 +136,7 @@ static struct Channel* newchannel(unsigned int remotechan, char type,
 
 	send_msg_channel_open_success(newchan, RECV_MAXWINDOW,
 			RECV_MAXPACKET);
-	TRACE(("enter newchannel"));
+	TRACE(("leave newchannel"));
 
 	return newchan;
 }
@@ -160,17 +160,17 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 			continue;
 		}
 
-		/* read from program stdout */
+		/* read from program/pipe/etc stdout */
 		if (channel->outfd != -1 && channel->transeof == 0 &&
 				FD_ISSET(channel->outfd, readfd)) {
 			send_msg_channel_data(channel, 0, 0);
 		}
-		/* read from program stderr for interactive sessions */
+		/* read from program/pipe stderr for interactive sessions */
 		if (channel->errfd != -1 && channel->erreof == 0 &&
 				FD_ISSET(channel->errfd, readfd)) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
-		/* write to program stdin */
+		/* write to program/pipe stdin */
 		if (channel->infd != -1 && channel->recveof == 0 &&
 				FD_ISSET(channel->infd, writefd)) {
 			writechannel(channel);
@@ -255,7 +255,7 @@ static void writechannel(struct Channel* channel) {
 			/* no more to write */
 			channel->recveof = 1;
 
-			/* if everything's closed the close it all up */
+			/* if everything's closed then close it all up */
 			if (channel->transeof && 
 					(channel->erreof || channel->errfd == -1)) {
 				send_msg_channel_close(channel);
@@ -265,6 +265,7 @@ static void writechannel(struct Channel* channel) {
 		return;
 	}
 	
+	/* extend the window */
 	/* TODO - this is inefficient */
 	if (len == maxlen) {
 		buf_setpos(buf, 0);
@@ -325,7 +326,6 @@ void recv_msg_channel_eof() {
 	if (channel == NULL) {
 		dropbear_exit("EOF for unknown channel");
 	}
-	assert(ses.authstate.authdone);
 
 	channel->recveof = 1;
 
@@ -352,7 +352,6 @@ void recv_msg_channel_close() {
 		/* disconnect ? */
 		dropbear_exit("Close for unknown channel");
 	}
-	assert(ses.authstate.authdone);
 
 	if (!channel->sentclosed) {
 		send_msg_channel_close(channel);
@@ -398,8 +397,6 @@ void recv_msg_channel_request() {
 		dropbear_exit("Unknown channel");
 	}
 
-	/* if the channel exists, then we've checked for auth when creating */
-	assert(ses.authstate.authdone);
 
 	TRACE(("chan type is %d", channel->type));
 
@@ -482,8 +479,6 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 					&& channel->transeof) {
 				send_msg_channel_eof(channel);
 			}
-		} else {
-			fprintf(stderr, "EINTR happened!\n");
 		}
 		buf_free(buf);
 		TRACE(("leave send_msg_channel_data: len <= 0, erreof %d transeof %d",
@@ -517,6 +512,7 @@ void recv_msg_channel_data() {
 	struct Channel * channel;
 	unsigned int datalen;
 	unsigned int pos;
+	unsigned int maxdata;
 
 	TRACE(("enter recv_msg_channel_data"));
 	
@@ -527,7 +523,6 @@ void recv_msg_channel_data() {
 		dropbear_exit("Unknown channel");
 	}
 
-	assert(ses.authstate.authdone);
 	assert(channel->infd != -1);
 	assert(channel->sentclosed == 0);
 
@@ -535,9 +530,10 @@ void recv_msg_channel_data() {
 
 	/* if the client is going to send us more data than we've allocated, then 
 	 * it has ignored the windowsize, so we "MAY ignore all extra data" */
-	if (datalen > channel->writebuf->size - channel->writebuf->pos) {
+	maxdata = channel->writebuf->size - channel->writebuf->pos;
+	if (datalen > maxdata) {
 		TRACE(("Warning: recv_msg_channel_data: extra data past window"));
-		datalen = channel->writebuf->size - channel->writebuf->pos;
+		datalen = maxdata;
 	}
 
 	/* write to the buffer - we always append to the end of the buffer */
@@ -576,6 +572,7 @@ void recv_msg_channel_window_adjust() {
 	incr = MIN(incr, MAX_TRANS_WIN_INCR);
 	
 	channel->transwindow += incr;
+	channel->transwindow = MIN(channel->transwindow, MAX_TRANS_WINDOW);
 
 }
 
@@ -602,11 +599,6 @@ void recv_msg_channel_open() {
 
 	TRACE(("enter recv_msg_channel_open"));
 
-	/* check we have auth */
-	if (ses.authstate.authdone != 1) {
-		dropbear_exit("Attempt to open channel before userauth");
-	}
-	
 	type = buf_getstring(ses.payload, &typelen);
 
 	TRACE(("thing here"));
