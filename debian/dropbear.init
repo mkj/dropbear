@@ -24,6 +24,19 @@ DROPBEAR_EXTRA_ARGS=
 NO_START=0
 set -e
 test -f /etc/default/dropbear && . /etc/default/dropbear
+
+if [ -n "$DROPBEAR_BANNER" ]; then
+	DROPBEAR_EXTRA_ARGS="$DROPBEAR_EXTRA_ARGS -b $DROPBEAR_BANNER"
+fi
+
+if [ -z "$DROPBEAR_RSAKEY" ]; then
+	DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
+fi
+
+if [ -z "$DROPBEAR_DSSKEY" ]; then
+	DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+fi
+
 test "$NO_START" != "0" && exit 0
 
 test -x $DAEMON || exit 0
@@ -32,7 +45,7 @@ case "$1" in
   start)
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON -- -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key -p $DROPBEAR_PORT $DROPBEAR_EXTRA_ARGS
+		--exec $DAEMON -- -d $DROPBEAR_DSSKEY -r $DROPBEAR_RSAKEY -p $DROPBEAR_PORT $DROPBEAR_EXTRA_ARGS
 	echo "$NAME."
 	;;
   stop)
@@ -51,7 +64,7 @@ case "$1" in
 		/var/run/$NAME.pid
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile /var/run/$NAME.pid \
-		--exec $DAEMON -- -d /etc/dropbear/dropbear_dss_host_key -r /etc/dropbear/dropbear_rsa_host_key -p $DROPBEAR_PORT $DROPBEAR_EXTRA_ARGS
+		--exec $DAEMON -- -d $DROPBEAR_DSSKEY -r $DROPBEAR_RSAKEY -p $DROPBEAR_PORT $DROPBEAR_EXTRA_ARGS
 	echo "$NAME."
 	;;
   *)
