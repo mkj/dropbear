@@ -171,8 +171,12 @@ void x11cleanup(struct ChanSess *chansess) {
 
 	m_free(chansess->x11authprot);
 	m_free(chansess->x11authcookie);
-	remove_listener(chansess->x11listener);
-	chansess->x11listener = NULL;
+
+	TRACE(("chansess %s", chansess));
+	if (chansess->x11listener != NULL) {
+		remove_listener(chansess->x11listener);
+		chansess->x11listener = NULL;
+	}
 }
 
 static const struct ChanType chan_x11 = {
