@@ -130,6 +130,14 @@ void rsa_key_free(rsa_key *key) {
 		 mp_clear(key->n);
 		 m_free(key->n);
 	}
+	if (key->p) {
+		mp_clear(key->p);
+		m_free(key->p);
+	}
+	if (key->q) {
+		mp_clear(key->q);
+		m_free(key->q);
+	}
 	m_free(key);
 	TRACE(("leave rsa_key_free"));
 }
