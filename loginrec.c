@@ -155,7 +155,7 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.2 2003/05/07 10:57:49 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.3 2003/05/08 06:22:24 matt Exp $");*/
 
 #include "options.h"
 #include "loginrec.h"
@@ -638,9 +638,7 @@ construct_utmp(struct logininfo *li,
 # endif
 	set_utmp_time(li, ut);
 
-	dropbear_log(LOG_DEBUG, "user's line is %s\n", li->line);
 	line_stripname(ut->ut_line, li->line, sizeof(ut->ut_line));
-	dropbear_log(LOG_DEBUG, "line is %s\n", ut->ut_line);
 
 # ifdef HAVE_STRUCT_UTMP_UT_PID
 	ut->ut_pid = li->pid;
