@@ -92,27 +92,6 @@ void process_packet() {
 		goto out;
 	}
 
-	/* XXX This code somewhere else perhaps? */
-#ifdef DROPBEAR_CLIENT
-	if (IS_DROPBEAR_CLIENT) {
-
-		/* XXX - needs changing */
-		/* In client mode, we REUSE ses.expecting to proceed to the 
-		 *  next phase when a packet was received.
-		 * If the "expecting" flag is set to a non-null value, it will 
-		 *  be reset when a packet of that type is received.
-		 * This is different from the server-mode behaviour, when 
-		 *  a packet type mismatch would have caused sudden death.
-		 */
-		 
-		/* check that we aren't expecting a particular packet */
-#if 0
-		if (cli_ses.expecting && cli_ses.expecting == type) {
-			cli_ses.expecting = 0;
-		}
-#endif
-	}
-#endif
 
 	/* Kindly the protocol authors gave all the preauth packets type values
 	 * less-than-or-equal-to 60 ( == MAX_UNAUTH_PACKET_TYPE ).
