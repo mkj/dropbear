@@ -330,11 +330,8 @@ void recv_msg_channel_eof() {
 	channel->recveof = 1;
 
 	/* we should close the channel */
-	if (close(channel->infd) < 0) {
-		dropbear_log(LOG_DAEMON | LOG_INFO, "error closing channel->infd");
-	} else {
-		dropbear_log(LOG_DAEMON | LOG_INFO, "success closing channel->infd");
-	}
+	/* XXX when TCP forwarding etc is done, use shutdown() not close() */
+	close(channel->infd);
 
 	if (channel->transeof && (channel->erreof || channel->errfd == -1)
 			&& !channel->sentclosed) {
