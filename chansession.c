@@ -534,23 +534,30 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
+	int ret;
 
 	TRACE(("enter sessioncommand"));
 
 	if (chansess->cmd != NULL) {
-		/* TODO - send error - multiple commands? */
+		/* Note that only one command can _succeed_, if we fail somewhere,
+		 * we need to set cmd to null, since the client might send another
+		 * request (ala pscp) */
 		return DROPBEAR_FAILURE;
 	}
 
 	if (iscmd) {
+		TRACE(("iscmd is on"));
 		/* "exec" */
 		chansess->cmd = buf_getstring(ses.payload, &cmdlen);
 
 		if (cmdlen > MAX_CMD_LEN) {
 			/* TODO - send error - too long ? */
+			m_free(chansess->cmd);
 			return DROPBEAR_FAILURE;
 		}
+		TRACE(("cmd is %s\n", chansess->cmd));
 		if (issubsys) {
+		TRACE(("we're a subsystem\n"));
 #ifdef SFTPSERVER_PATH
 			if ((cmdlen == 4) && strncmp(chansess->cmd, "sftp", 4) == 0) {
 				m_free(chansess->cmd);
@@ -558,6 +565,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			} else 
 #endif
 			{
+				m_free(chansess->cmd);
 				return DROPBEAR_FAILURE;
 			}
 		}
@@ -565,11 +573,17 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	if (chansess->term == NULL) {
 		/* no pty */
-		return noptycommand(channel, chansess);
+		ret = noptycommand(channel, chansess);
 	} else {
 		/* want pty */
-		 return ptycommand(channel, chansess);
+		 ret = ptycommand(channel, chansess);
 	}
+
+	/* clean up cmd in case we will get another request */
+	if (ret == DROPBEAR_FAILURE) {
+		m_free(chansess->cmd);
+	}
+	return ret;
 }
 
 /* Execute a command and set up redirection of stdin/stdout/stderr without a
