@@ -11,6 +11,9 @@
 # The version
 VERSION=0.96
 
+VPATH=@srcdir@
+srcdir=@srcdir@
+
 # Compiler and Linker Names
 #CC=gcc
 #LD=ld
@@ -21,7 +24,7 @@ VERSION=0.96
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
 # The rest of the flags come from the parent Dropbear makefile
-CFLAGS += -c -I./
+CFLAGS += -c -I$(srcdir)
 # -Werror
 
 # optimize for SPEED
@@ -149,7 +152,7 @@ default:library
 
 #ciphers come in two flavours... enc+dec and enc 
 aes_enc.o: aes.c aes_tab.c
-	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c aes.c -o aes_enc.o
+	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c $(srcdir)/aes.c -o aes_enc.o
 		
 #These are the rules to make certain object files.
 ecc.o: ecc.c ecc_sys.c
@@ -196,18 +199,18 @@ install: library docs
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
 clean:
-	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
-	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
-	rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
+	-rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
+	-rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
+	-rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
          *.gcda *.gcno demos/*.gcno demos/*.gcda *~ doc/*
-	cd demos/test && make clean   
+	-cd demos/test && make clean   
 
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the
 #nice pre-compiled crypt.pdf that comes with libtomcrypt! We only need to
 #delete it if we are rebuilding it.
 docs: crypt.tex
-	rm -f doc/crypt.pdf $(LEFTOVERS)
+	-rm -f doc/crypt.pdf $(LEFTOVERS)
 	echo "hello" > crypt.ind
 	latex crypt > /dev/null
 	makeindex crypt > /dev/null
@@ -215,7 +218,7 @@ docs: crypt.tex
 	latex crypt > /dev/null
 	dvipdf crypt
 	mv -ivf crypt.pdf doc/crypt.pdf
-	rm -f $(LEFTOVERS)
+	-rm -f $(LEFTOVERS)
 
 docdvi: crypt.tex
 	echo hello > crypt.ind
