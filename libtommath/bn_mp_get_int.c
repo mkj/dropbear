@@ -14,20 +14,26 @@
  */
 #include <tommath.h>
 
-/* init a new bigint */
-int mp_init (mp_int * a)
+/* get the lower 32-bits of an mp_int */
+unsigned long mp_get_int(mp_int * a) 
 {
-  /* allocate memory required and clear it */
-  a->dp = OPT_CAST(mp_digit) XCALLOC (sizeof (mp_digit), MP_PREC);
-  if (a->dp == NULL) {
-    return MP_MEM;
+  int i;
+  unsigned long res;
+
+  if (a->used == 0) {
+     return 0;
   }
 
-  /* set the used to zero, allocated digits to the default precision
-   * and sign to positive */
-  a->used  = 0;
-  a->alloc = MP_PREC;
-  a->sign  = MP_ZPOS;
+  /* get number of digits of the lsb we have to read */
+  i = MIN(a->used,(int)((sizeof(unsigned long)*CHAR_BIT+DIGIT_BIT-1)/DIGIT_BIT))-1;
 
-  return MP_OKAY;
+  /* get most significant digit of result */
+  res = DIGIT(a,i);
+   
+  while (--i >= 0) {
+    res = (res << DIGIT_BIT) | DIGIT(a,i);
+  }
+
+  /* force result to 32-bits always so it is consistent on non 32-bit platforms */
+  return res & 0xFFFFFFFFUL;
 }

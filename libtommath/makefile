@@ -1,12 +1,22 @@
-# for Dropbear, optimisation flags come from the toplevel Makefile
+#Makefile for GCC
+#
+#Tom St Denis
 
-#CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
-CFLAGS  +=  -I./ 
+# Dropbear takes flags from the toplevel makefile
+CFLAGS += -I./
+
+#CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
+
+#for speed 
+#CFLAGS += -O3 -funroll-loops
+
+#for size 
+#CFLAGS += -Os
 
 #x86 optimizations [should be valid for any GCC install though]
-#CFLAGS  += -fomit-frame-pointer 
+#CFLAGS  += -fomit-frame-pointer
 
-VERSION=0.29
+VERSION=0.30
 
 default: libtommath.a
 
@@ -44,7 +54,9 @@ bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
 bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
 bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
 bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
-bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_prime_random.o bn_prime_sizes_tab.o bn_mp_exteuclid.o
+bn_mp_init_multi.o bn_mp_clear_multi.o bn_prime_sizes_tab.o bn_mp_exteuclid.o bn_mp_toradix_n.o \
+bn_mp_prime_random_ex.o bn_mp_get_int.o bn_mp_sqrt.o bn_mp_is_square.o bn_mp_init_set.o \
+bn_mp_init_set_int.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
@@ -58,6 +70,8 @@ install: libtommath.a
 
 test: libtommath.a demo/demo.o
 	$(CC) demo/demo.o libtommath.a -o test
+	
+mtest: test	
 	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest -s
         
 timing: libtommath.a
@@ -69,29 +83,25 @@ docdvi: tommath.src
 	echo "hello" > tommath.ind
 	perl booker.pl
 	latex tommath > /dev/null
+	latex tommath > /dev/null
 	makeindex tommath
 	latex tommath > /dev/null
-		
+
 # poster, makes the single page PDF poster
 poster: poster.tex
 	pdflatex poster
 	rm -f poster.aux poster.log 
 
-# makes the LTM book PS/PDF file, requires tetex, cleans up the LaTeX temp files
-docs:	
-	cd pics ; make pdfes
-	echo "hello" > tommath.ind
-	perl booker.pl PDF 
-	latex tommath > /dev/null
-	makeindex tommath
-	latex tommath > /dev/null
-	pdflatex tommath
+# makes the LTM book PDF file, requires tetex, cleans up the LaTeX temp files
+docs:   docdvi
+	dvipdf tommath
 	rm -f tommath.log tommath.aux tommath.dvi tommath.idx tommath.toc tommath.lof tommath.ind tommath.ilg
 	cd pics ; make clean
 	
 #LTM user manual
 mandvi: bn.tex
 	echo "hello" > bn.ind
+	latex bn > /dev/null
 	latex bn > /dev/null
 	makeindex bn
 	latex bn > /dev/null

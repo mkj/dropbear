@@ -33,12 +33,12 @@
 extern "C" {
 
 /* C++ compilers don't like assigning void * to mp_digit * */
-#define  OPT_CAST  (mp_digit *)
+#define  OPT_CAST(x)  (x *)
 
 #else
 
 /* C on the other hand doesn't care */
-#define  OPT_CAST
+#define  OPT_CAST(x)
 
 #endif
 
@@ -102,13 +102,13 @@ extern "C" {
        #define XFREE    free
        #define XREALLOC realloc
        #define XCALLOC  calloc
+   #else
+      /* prototypes for our heap functions */
+      extern void *XMALLOC(size_t n);
+      extern void *REALLOC(void *p, size_t n);
+      extern void *XCALLOC(size_t n, size_t s);
+      extern void XFREE(void *p);
    #endif
-
-   /* prototypes for our heap functions */
-   extern void *XMALLOC(size_t n);
-   extern void *REALLOC(void *p, size_t n);
-   extern void *XCALLOC(size_t n, size_t s);
-   extern void XFREE(void *p);
 #endif
 
 
@@ -137,6 +137,12 @@ extern "C" {
 #define MP_YES        1   /* yes response */
 #define MP_NO         0   /* no response */
 
+/* Primality generation flags */
+#define LTM_PRIME_BBS      0x0001 /* BBS style prime */
+#define LTM_PRIME_SAFE     0x0002 /* Safe prime (p-1)/2 == prime */
+#define LTM_PRIME_2MSB_OFF 0x0004 /* force 2nd MSB to 0 */
+#define LTM_PRIME_2MSB_ON  0x0008 /* force 2nd MSB to 1 */
+
 typedef int           mp_err;
 
 /* you'll have to tune these... */
@@ -145,11 +151,17 @@ extern int KARATSUBA_MUL_CUTOFF,
            TOOM_MUL_CUTOFF,
            TOOM_SQR_CUTOFF;
 
-/* various build options */
-#define MP_PREC                 64     /* default digits of precision */
-
 /* define this to use lower memory usage routines (exptmods mostly) */
 /* #define MP_LOW_MEM */
+
+/* default precision */
+#ifndef MP_PREC
+   #ifdef MP_LOW_MEM
+      #define MP_PREC                 64     /* default digits of precision */
+   #else
+      #define MP_PREC                 8      /* default digits of precision */
+   #endif   
+#endif
 
 /* size of comba arrays, should be at least 2 * 2**(BITS_PER_WORD - BITS_PER_DIGIT*2) */
 #define MP_WARRAY               (1 << (sizeof(mp_word) * CHAR_BIT - 2 * DIGIT_BIT + 1))
@@ -209,6 +221,15 @@ void mp_set(mp_int *a, mp_digit b);
 
 /* set a 32-bit const */
 int mp_set_int(mp_int *a, unsigned long b);
+
+/* get a 32-bit value */
+unsigned long mp_get_int(mp_int * a);
+
+/* initialize and set a digit */
+int mp_init_set (mp_int * a, mp_digit b);
+
+/* initialize and set 32-bit value */
+int mp_init_set_int (mp_int * a, unsigned long b);
 
 /* copy, b = a */
 int mp_copy(mp_int *a, mp_int *b);
@@ -353,8 +374,11 @@ int mp_lcm(mp_int *a, mp_int *b, mp_int *c);
  */
 int mp_n_root(mp_int *a, mp_digit b, mp_int *c);
 
-/* shortcut for square root */
-#define mp_sqrt(a, b) mp_n_root(a, 2, b)
+/* special sqrt algo */
+int mp_sqrt(mp_int *arg, mp_int *ret);
+
+/* is number a square? */
+int mp_is_square(mp_int *arg, int *ret);
 
 /* computes the jacobi c = (a | n) (or Legendre if b is prime)  */
 int mp_jacobi(mp_int *a, mp_int *n, int *c);
@@ -396,7 +420,7 @@ int mp_reduce_is_2k(mp_int *a);
 int mp_reduce_2k_setup(mp_int *a, mp_digit *d);
 
 /* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
-int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit k);
+int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit d);
 
 /* d = a**b (mod c) */
 int mp_exptmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
@@ -456,8 +480,23 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style);
  *
  * The prime generated will be larger than 2^(8*size).
  */
-int mp_prime_random(mp_int *a, int t, int size, int bbs, ltm_prime_callback cb, void *dat);
+#define mp_prime_random(a, t, size, bbs, cb, dat) mp_prime_random_ex(a, t, ((size) * 8) + 1, (bbs==1)?LTM_PRIME_BBS:0, cb, dat)
 
+/* makes a truly random prime of a given size (bits),
+ *
+ * Flags are as follows:
+ * 
+ *   LTM_PRIME_BBS      - make prime congruent to 3 mod 4
+ *   LTM_PRIME_SAFE     - make sure (p-1)/2 is prime as well (implies LTM_PRIME_BBS)
+ *   LTM_PRIME_2MSB_OFF - make the 2nd highest bit zero
+ *   LTM_PRIME_2MSB_ON  - make the 2nd highest bit one
+ *
+ * You have to supply a callback which fills in a buffer with random bytes.  "dat" is a parameter you can
+ * have passed to the callback (e.g. a state or something).  This function doesn't use "dat" itself
+ * so it can be NULL
+ *
+ */
+int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback cb, void *dat);
 
 /* ---> radix conversion <--- */
 int mp_count_bits(mp_int *a);
@@ -472,6 +511,7 @@ int mp_to_signed_bin(mp_int *a, unsigned char *b);
 
 int mp_read_radix(mp_int *a, char *str, int radix);
 int mp_toradix(mp_int *a, char *str, int radix);
+int mp_toradix_n(mp_int * a, char *str, int radix, int maxlen);
 int mp_radix_size(mp_int *a, int radix, int *size);
 
 int mp_fread(mp_int *a, int radix, FILE *stream);

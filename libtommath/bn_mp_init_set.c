@@ -14,33 +14,13 @@
  */
 #include <tommath.h>
 
-int mp_fwrite(mp_int *a, int radix, FILE *stream)
+/* initialize and set a digit */
+int mp_init_set (mp_int * a, mp_digit b)
 {
-   char *buf;
-   int err, len, x;
-   
-   if ((err = mp_radix_size(a, radix, &len)) != MP_OKAY) {
-      return err;
-   }
-
-   buf = OPT_CAST(char) XMALLOC (len);
-   if (buf == NULL) {
-      return MP_MEM;
-   }
-   
-   if ((err = mp_toradix(a, buf, radix)) != MP_OKAY) {
-      XFREE (buf);
-      return err;
-   }
-   
-   for (x = 0; x < len; x++) {
-       if (fputc(buf[x], stream) == EOF) {
-          XFREE (buf);
-          return MP_VAL;
-       }
-   }
-   
-   XFREE (buf);
-   return MP_OKAY;
+  int err;
+  if ((err = mp_init(a)) != MP_OKAY) {
+     return err;
+  }
+  mp_set(a, b);
+  return err;
 }
-

@@ -6,7 +6,7 @@
 
     Arbitrary precision integer arithmetic library
 
-    $Id: mpi.c,v 1.1 2003/05/19 04:01:19 matt Exp $
+    $Id: mpi.c,v 1.2 2004/06/15 17:33:43 matt Exp $
  */
 
 #include "mpi.h"

@@ -1,9 +1,9 @@
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
- * LibTomMath is library that provides for multiple-precision
+ * LibTomMath is a library that provides multiple-precision
  * integer arithmetic as well as number theoretic functionality.
  *
- * The library is designed directly after the MPI library by
+ * The library was designed directly after the MPI library by
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
@@ -16,14 +16,15 @@
 
 /* find the n'th root of an integer 
  *
- * Result found such that (c)^b <= a and (c+1)^b > a 
+ * Result found such that (c)**b <= a and (c+1)**b > a 
  *
- * This algorithm uses Newton's approximation x[i+1] = x[i] - f(x[i])/f'(x[i]) 
- * which will find the root in log(N) time where each step involves a fair bit.  This
- * is not meant to find huge roots [square and cube at most].
+ * This algorithm uses Newton's approximation 
+ * x[i+1] = x[i] - f(x[i])/f'(x[i]) 
+ * which will find the root in log(N) time where 
+ * each step involves a fair bit.  This is not meant to 
+ * find huge roots [square and cube, etc].
  */
-int
-mp_n_root (mp_int * a, mp_digit b, mp_int * c)
+int mp_n_root (mp_int * a, mp_digit b, mp_int * c)
 {
   mp_int  t1, t2, t3;
   int     res, neg;
@@ -46,7 +47,7 @@ mp_n_root (mp_int * a, mp_digit b, mp_int * c)
   }
 
   /* if a is negative fudge the sign but keep track */
-  neg = a->sign;
+  neg     = a->sign;
   a->sign = MP_ZPOS;
 
   /* t2 = 2 */
@@ -58,33 +59,39 @@ mp_n_root (mp_int * a, mp_digit b, mp_int * c)
       goto __T3;
     }
 
-    /* t2 = t1 - ((t1^b - a) / (b * t1^(b-1))) */
-    if ((res = mp_expt_d (&t1, b - 1, &t3)) != MP_OKAY) {	/* t3 = t1^(b-1) */
+    /* t2 = t1 - ((t1**b - a) / (b * t1**(b-1))) */
+    
+    /* t3 = t1**(b-1) */
+    if ((res = mp_expt_d (&t1, b - 1, &t3)) != MP_OKAY) {   
       goto __T3;
     }
 
     /* numerator */
-    if ((res = mp_mul (&t3, &t1, &t2)) != MP_OKAY) {	/* t2 = t1^b */
+    /* t2 = t1**b */
+    if ((res = mp_mul (&t3, &t1, &t2)) != MP_OKAY) {    
       goto __T3;
     }
 
-    if ((res = mp_sub (&t2, a, &t2)) != MP_OKAY) {	/* t2 = t1^b - a */
+    /* t2 = t1**b - a */
+    if ((res = mp_sub (&t2, a, &t2)) != MP_OKAY) {  
       goto __T3;
     }
 
-    if ((res = mp_mul_d (&t3, b, &t3)) != MP_OKAY) {	/* t3 = t1^(b-1) * b  */
+    /* denominator */
+    /* t3 = t1**(b-1) * b  */
+    if ((res = mp_mul_d (&t3, b, &t3)) != MP_OKAY) {    
       goto __T3;
     }
 
-    if ((res = mp_div (&t2, &t3, &t3, NULL)) != MP_OKAY) {	/* t3 = (t1^b - a)/(b * t1^(b-1)) */
+    /* t3 = (t1**b - a)/(b * t1**(b-1)) */
+    if ((res = mp_div (&t2, &t3, &t3, NULL)) != MP_OKAY) {  
       goto __T3;
     }
 
     if ((res = mp_sub (&t1, &t3, &t2)) != MP_OKAY) {
       goto __T3;
     }
-  }
-  while (mp_cmp (&t1, &t2) != MP_EQ);
+  }  while (mp_cmp (&t1, &t2) != MP_EQ);
 
   /* result can be off by a few so check */
   for (;;) {
@@ -94,7 +101,7 @@ mp_n_root (mp_int * a, mp_digit b, mp_int * c)
 
     if (mp_cmp (&t2, a) == MP_GT) {
       if ((res = mp_sub_d (&t1, 1, &t1)) != MP_OKAY) {
-	goto __T3;
+         goto __T3;
       }
     } else {
       break;
