@@ -411,7 +411,6 @@ void recv_msg_kexinit() {
 
 
 	if (IS_DROPBEAR_CLIENT) {
-#ifdef DROPBEAR_CLIENT
 
 		/* read the peer's choice of algos */
 		read_kex_algos();
@@ -433,10 +432,8 @@ void recv_msg_kexinit() {
 			buf_getptr(ses.payload, ses.payload->len),
 			ses.payload->len);
 
-#endif
 	} else {
 		/* SERVER */
-#ifdef DROPBEAR_SERVER
 
 		/* read the peer's choice of algos */
 		read_kex_algos();
@@ -457,7 +454,6 @@ void recv_msg_kexinit() {
 			buf_getptr(ses.transkexinit, ses.transkexinit->len),
 			ses.transkexinit->len);
 		ses.requirenext = SSH_MSG_KEXDH_INIT;
-#endif
 	}
 
 	buf_free(ses.transkexinit);
@@ -596,7 +592,17 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
  * algos for the client or server. */
 static void read_kex_algos() {
 
-	algo_type * algo;
+	/* for asymmetry */
+	algo_type * c2s_hash_algo = NULL;
+	algo_type * s2c_hash_algo = NULL;
+	algo_type * c2s_cipher_algo = NULL;
+	algo_type * s2c_cipher_algo = NULL;
+	algo_type * c2s_comp_algo = NULL;
+	algo_type * s2c_comp_algo = NULL;
+	/* the generic one */
+	algo_type * algo = NULL;
+
+	/* which algo couldn't match */
 	char * erralgo = NULL;
 
 	int goodguess = 0;
@@ -628,58 +634,46 @@ static void read_kex_algos() {
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
-	algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
+	c2s_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
 	}
-	ses.newkeys->recv_algo_crypt = (struct dropbear_cipher*)algo->data;
-	TRACE(("enc algo recv %s", algo->name));
 
 	/* encryption_algorithms_server_to_client */
-	algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
+	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
 	if (algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
 	}
-	ses.newkeys->trans_algo_crypt = (struct dropbear_cipher*)algo->data;
-	TRACE(("enc algo trans %s", algo->name));
 
 	/* mac_algorithms_client_to_server */
-	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
+	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
 	}
-	ses.newkeys->recv_algo_mac = (struct dropbear_hash*)algo->data;
-	TRACE(("mac algo recv %s", algo->name));
 
 	/* mac_algorithms_server_to_client */
-	algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
+	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
 	if (algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
 	}
-	ses.newkeys->trans_algo_mac = (struct dropbear_hash*)algo->data;
-	TRACE(("mac algo trans %s", algo->name));
 
 	/* compression_algorithms_client_to_server */
-	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
+	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
 	}
-	ses.newkeys->recv_algo_comp = algo->val;
-	TRACE(("comp algo recv %s", algo->name));
 
 	/* compression_algorithms_server_to_client */
-	algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
+	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
 	if (algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
 	}
-	ses.newkeys->trans_algo_comp = algo->val;
-	TRACE(("comp algo trans %s", algo->name));
 
 	/* languages_client_to_server */
 	buf_eatstring(ses.payload);
@@ -695,6 +689,39 @@ static void read_kex_algos() {
 			ses.ignorenext = 1;
 		}
 	}
+
+	/* Handle the asymmetry */
+	if (IS_DROPBEAR_CLIENT) {
+		ses.newkeys->recv_algo_crypt = 
+			(struct dropbear_cipher*)s2c_cipher_algo->data;
+		ses.newkeys->trans_algo_crypt = 
+			(struct dropbear_cipher*)c2s_cipher_algo->data;
+		ses.newkeys->recv_algo_mac = 
+			(struct dropbear_hash*)s2c_hash_algo->data;
+		ses.newkeys->trans_algo_mac = 
+			(struct dropbear_hash*)c2s_hash_algo->data;
+		ses.newkeys->recv_algo_comp = s2c_comp_algo->val;
+		ses.newkeys->trans_algo_comp = c2s_comp_algo->val;
+	} else {
+		/* SERVER */
+		ses.newkeys->recv_algo_crypt = 
+			(struct dropbear_cipher*)c2s_cipher_algo->data;
+		ses.newkeys->trans_algo_crypt = 
+			(struct dropbear_cipher*)s2c_cipher_algo->data;
+		ses.newkeys->recv_algo_mac = 
+			(struct dropbear_hash*)c2s_hash_algo->data;
+		ses.newkeys->trans_algo_mac = 
+			(struct dropbear_hash*)s2c_hash_algo->data;
+		ses.newkeys->recv_algo_comp = c2s_comp_algo->val;
+		ses.newkeys->trans_algo_comp = s2c_comp_algo->val;
+	}
+
+	TRACE(("enc algo recv %s", algo->name));
+	TRACE(("enc algo trans %s", algo->name));
+	TRACE(("mac algo recv %s", algo->name));
+	TRACE(("mac algo trans %s", algo->name));
+	TRACE(("comp algo recv %s", algo->name));
+	TRACE(("comp algo trans %s", algo->name));
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);
