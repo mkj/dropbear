@@ -199,6 +199,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	if (authfile == NULL) {
 		goto out;
 	}
+	TRACE(("checkpubkey: opened authorized_keys OK"));
 
 	line = buf_new(MAX_AUTHKEYS_LINE);
 
@@ -213,10 +214,12 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		if (getauthline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
+			TRACE(("checkpubkey: authorized_keys EOF reached"));
 			break;
 		}
 
 		if (line->len < MIN_AUTHKEYS_LINE) {
+			TRACE(("checkpubkey: line too short"));
 			continue; /* line is too short for it to be a valid key */
 		}
 
@@ -229,6 +232,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		
 		/* check for space (' ') character */
 		if (buf_getbyte(line) != ' ') {
+			TRACE(("checkpubkey: space character expected, isn't there"));
 			continue;
 		}
 
@@ -247,6 +251,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 					line->len - line->pos,
 					buf_getwriteptr(decodekey, decodekey->size),
 					&decodekeylen) != CRYPT_OK) {
+			TRACE(("checkpubkey: base64 decode failed"));
 			continue;
 		}
 		buf_incrlen(decodekey, decodekeylen);
@@ -255,6 +260,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		if (decodekeylen != keybloblen || memcmp(
 					buf_getptr(decodekey, decodekey->len),
 					keyblob, decodekey->len) != 0) {
+			TRACE(("checkpubkey: compare failed"));
 			continue;
 		}
 
@@ -262,6 +268,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		 * itself match */
 		filealgo = buf_getstring(decodekey, &filealgolen);
 		if (filealgolen != algolen || memcmp(filealgo, algo, algolen) != 0) {
+			TRACE(("checkpubkey: algo match failed")); 
 			continue;
 		}
 
@@ -283,7 +290,7 @@ out:
 	}
 	m_free(filename);
 	m_free(filealgo);
-	TRACE(("leave checkpubkey"));
+	TRACE(("leave checkpubkey: ret=%d", ret));
 	return ret;
 }
 
@@ -375,18 +382,24 @@ out:
 static int checkfileperm(char * filename) {
 	struct stat filestat;
 
+	TRACE(("enter checkfileperm(%s)", filename));
+
 	if (stat(filename, &filestat) != 0) {
+		TRACE(("leave checkfileperm: stat() != 0"));
 		return DROPBEAR_FAILURE;
 	}
 	/* check ownership - user or root only*/
 	if (filestat.st_uid != ses.authstate.pw->pw_uid
 			&& filestat.st_uid != 0) {
+		TRACE(("leave checkfileperm: wrong ownership"));
 		return DROPBEAR_FAILURE;
 	}
 	/* check permissions - don't want group or others +w */
 	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
+		TRACE(("leave checkfileperm: wrong perms"));
 		return DROPBEAR_FAILURE;
 	}
+	TRACE(("leave checkfileperm: success"));
 	return DROPBEAR_SUCCESS;
 }
 
