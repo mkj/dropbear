@@ -116,7 +116,7 @@ void process_packet() {
 	 * less-than-or-equal-to 60 ( == MAX_UNAUTH_PACKET_TYPE ).
 	 * NOTE: if the protocol changes and new types are added, revisit this 
 	 * assumption */
-	if ( !ses.authdone && type > MAX_UNAUTH_PACKET_TYPE ) {
+	if ( !ses.authstate.authdone && type > MAX_UNAUTH_PACKET_TYPE ) {
 		dropbear_exit("received message %d before userauth", type);
 	}
 
@@ -138,6 +138,7 @@ void process_packet() {
 	recv_unimplemented();
 
 out:
+	buf_burn(ses.payload); /* Clear the memory to avoid swapping it out */
 	buf_free(ses.payload);
 	ses.payload = NULL;
 
