@@ -1,3 +1,9 @@
+dropbear (0.32cvs-4matt) unstable; urgency=medium
+
+  * updated to current cvs
+
+ -- Matt Johnston <matt@ucc.asn.au>  Sun, 22 Jun 2003 20:62:00 +0800
+
 dropbear (0.32cvs-1) unstable; urgency=medium
 
   * now maintained in UCC CVS

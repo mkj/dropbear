@@ -56,13 +56,13 @@ case "$1" in
             echo "DROPBEAR_PORT=22" >> /etc/default/dropbear
             echo "# any additional arguments for dropbear (try -6 to enable IPv6 support)" >> /etc/default/dropbear
             echo "DROPBEAR_EXTRA_ARGS=" >> /etc/default/dropbear
-			echo "# specify an optional banner file containing a message to be"
-			echo "# sent to clients before they connect, such as \"/etc/issue.net\""
+			echo "# specify an optional banner file containing a message to be" >> /etc/default/dropbear
+			echo "# sent to clients before they connect, such as \"/etc/issue.net\"" >> /etc/default/dropbear
 			echo "DROPBEAR_BANNER=\"\"" >> /etc/default/dropbear
-			echo "# RSA hostkey file (default: /etc/dropbear/dropbear_rsa_host_key"
-			echo "#DROPBEAR_RSAKEY=\"/etc/dropbear/dropbear_rsa_host_key\""
-			echo "# DSS hostkey file (default: /etc/dropbear/dropbear_dss_host_key"
-			echo "#DROPBEAR_DSSKEY=\"/etc/dropbear/dropbear_dss_host_key\""
+			echo "# RSA hostkey file (default: /etc/dropbear/dropbear_rsa_host_key" >> /etc/default/dropbear
+			echo "#DROPBEAR_RSAKEY=\"/etc/dropbear/dropbear_rsa_host_key\"" >> /etc/default/dropbear
+			echo "# DSS hostkey file (default: /etc/dropbear/dropbear_dss_host_key" >> /etc/default/dropbear
+			echo "#DROPBEAR_DSSKEY=\"/etc/dropbear/dropbear_dss_host_key\"" >> /etc/default/dropbear
         fi
         if [ -e /etc/init.d/dropbear ]; then
             update-rc.d dropbear defaults >/dev/null
