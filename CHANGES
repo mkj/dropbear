@@ -1,4 +1,15 @@
-0.34 - Sun August 17 2003 05:37:47 +0800
+0.36 - Tue August 19 2003 12:16:23 +0800
+
+- Fix uninitialised temporary variable in DSS signing code
+  (thanks to Matthew Franz <mdfranz at io.com> for reporting, and the authors
+  of Valgrind for making it easy to track down)
+- Fix remote version-string parsing error
+  (thanks to Bernard Blackham <bernard at blackham.com.au> for noticing)
+- Improved host-algorithm-matching algorithm in algo.c
+- Decreased MAX_STRING_LEN to a more realistic value
+- Fix incorrect version (0.34) in this CHANGES file for the previous release.
+
+0.35 - Sun August 17 2003 05:37:47 +0800
 
 - Fix for remotely exploitable format string buffer overflow.
   (thanks to Joel Eriksson <je at bitnux.com>)

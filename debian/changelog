@@ -1,3 +1,9 @@
+dropbear (0.36-1) unstable; urgency=high
+
+  * updated to 0.36 release - various important bugfixes
+
+ -- Matt Johnston <matt@ucc.asn.aU>  Tues, 19 Aug 2003 12:20:54 +0800
+
 dropbear (0.35-1) unstable; urgency=high
 
   * updated to 0.35 release - contains fix for remotely exploitable
