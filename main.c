@@ -38,10 +38,11 @@ static int childpipes[MAX_UNAUTH_CLIENTS];
 
 #if defined(DBMULTI_DROPBEAR) || !defined(DROPBEAR_MULTI)
 #if defined(DBMULTI_DROPBEAR) && defined(DROPBEAR_MULTI)
-int dropbear_main(int argc, char ** argv) {
+int dropbear_main(int argc, char ** argv)
 #else
-int main(int argc, char ** argv) {
+int main(int argc, char ** argv)
 #endif
+{
 	
 	fd_set fds;
 	struct timeval seltimeout;
@@ -64,29 +65,31 @@ int main(int argc, char ** argv) {
 	/* get commandline options */
 	opts = getrunopts(argc, argv);
 
+	/* fork */
+	if (opts->forkbg) {
+		int closefds = 0;
+#ifndef DEBUG_TRACE
+		if (!usingsyslog) {
+			closefds = 1;
+		}
+#endif
+		if (daemon(0, closefds) < 0) {
+			dropbear_exit("Failed to create background process: %s",
+					strerror(errno));
+		}
+	}
+
 #ifndef DISABLE_SYSLOG
 	if (usingsyslog) {
 		startsyslog();
 	}
 #endif
 
-	/* fork to background, returning (interactive) users to a term */
-	if (!opts->forkbg) {
-		dropbear_log(LOG_INFO, "Not forking");
-	} else {
-		switch (fork()) {
-			case -1:
-				dropbear_exit("Failed to create background process");
-			case 0:
-				break;
-			default:
-				exit(0);
-		}
-
-		if (setpgid(0,0) < 0) {
-			dropbear_exit("Failed to set process group");
-		}
+	/* should be done after syslog is working */
+	if (opts->forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
+	} else {
+		dropbear_log(LOG_INFO, "Not forking");
 	}
 
 	/* create a PID file so that we can be killed easily */
@@ -213,8 +216,8 @@ int main(int argc, char ** argv) {
 				extern void _start(void), etext(void);
 				monstartup((u_long)&_start, (u_long)&etext);
 #endif /* DEBUG_FORKGPROF */
-				if (setpgid(0,0) < 0) {
-					dropbear_exit("Error creating child");
+				if (setsid() < 0) {
+					dropbear_exit("setsid: %s", strerror(errno));
 				}
 
 				/* make sure we close sockets */
