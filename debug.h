@@ -29,14 +29,11 @@
 
 /* Debugging */
 
-/*#define DEBUG_KEXHASH*/
-/*#define DEBUG_RSA*/
-
 /* Don't clear environment variables, useful if we are debugging with
  * something requiring LD_PRELOAD etc, but dangerous if used normally */
 /*#define DEBUG_KEEP_ENV*/
 
-/* Define this to print trace statements */
+/* Define this to print trace statements - very verbose */
 /*#define DEBUG_TRACE*/
 
 /* All functions writing to the cleartext payload buffer call
@@ -49,6 +46,11 @@
  * output when Dropbear forks. This will allow it gprof to be used.
  * It's useful to run dropbear -F, so you don't fork as much */
 /*#define DEBUG_FORKGPROF*/
+
+/* A couple of flags, not usually useful, and mightn't do anything */
+
+/*#define DEBUG_KEXHASH*/
+/*#define DEBUG_RSA*/
 
 /* you don't need to touch this block */
 #ifdef DEBUG_TRACE
