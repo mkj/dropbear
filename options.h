@@ -35,7 +35,7 @@
  * Define compile-time options below.
  ******************************************************************/
 
-#define DROPBEAR_PORT 2244 /* for testing */
+#define DROPBEAR_PORT 22
 
 /* Hostkey paths */
 #define DSS_PRIV_FILENAME "dropbear_dss_host_key"
@@ -52,7 +52,7 @@
  * SSH2 RFC Draft requires sha1-hmac, recommends md5-hmac */
 /* Note: there's no point disabling sha1 to save space, since it's used in the
  * pubkey stuff anyway. Disabling it here will just stop it from being
- * used as the integrity portion of the ssh protoco l*/
+ * used as the integrity portion of the ssh protocol */
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_MD5_HMAC
 
@@ -65,9 +65,8 @@
 /* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
  * rather than just from the random byte source.
  * Undefining this will save you ~4k in binary size with static uclibc, but
- * your DSS hostkey could be exposed if the random number source isn't good.
- * If in doubt, leave it defined */
-#define DSS_PROTOK
+ * your DSS hostkey could be exposed if the random number source isn't good. */
+/* #define DSS_PROTOK */
 
 /* Whether to do reverse DNS lookups. This is advisable, though will add
  * code size with gethostbyname() etc, so for very small environments where
@@ -103,7 +102,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.30"
+#define DROPBEAR_VERSION "0.31"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
