@@ -15,7 +15,8 @@ VERSION=0.99
 #ARFLAGS=r
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
-CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wshadow 
+# The rest of the flags come from the parent Dropbear makefile
+CFLAGS += -c -I$(srcdir)
 # -Werror
 
 # optimize for SPEED
@@ -25,7 +26,7 @@ CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wshadow
 #CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
-CFLAGS += -Os -DSMALL_CODE
+#CFLAGS += -Os -DSMALL_CODE
 
 # compile for DEBUGING (required for ccmalloc checking!!!)
 #CFLAGS += -g3
@@ -51,7 +52,9 @@ DATAPATH=/usr/share/doc/libtomcrypt/pdf
 #List of objects to compile.
 
 #Leave MPI built-in or force developer to link against libtommath?
-MPIOBJECT=mpi.o
+#MPIOBJECT=mpi.o
+#Dropbear uses libtommath
+MPIOBJECT=
 
 OBJECTS=error_to_string.o mpi_to_ltc_error.o base64_encode.o base64_decode.o \
 \
@@ -138,14 +141,14 @@ COMPRESSED=crypt-$(VERSION).tar.bz2 crypt-$(VERSION).zip
 HEADERS=ltc_tommath.h mycrypt_cfg.h \
 mycrypt_misc.h  mycrypt_prng.h mycrypt_cipher.h  mycrypt_hash.h \
 mycrypt_macros.h  mycrypt_pk.h mycrypt.h mycrypt_argchk.h \
-mycrypt_custom.h mycrypt_pkcs.h tommath_class.h tommath_superclass.h
+mycrypt_custom.h mycrypt_pkcs.h
 
 #The default rule for make builds the libtomcrypt library.
 default:library
 
 #ciphers come in two flavours... enc+dec and enc 
 aes_enc.o: aes.c aes_tab.c
-	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c aes.c -o aes_enc.o
+	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c $(srcdir)/aes.c -o aes_enc.o
 
 #These are the rules to make certain object files.
 aes.o: aes.c aes_tab.c
@@ -161,6 +164,7 @@ library: $(LIBNAME)
 
 $(LIBNAME): $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
+	$(RANLIB) $@
 
 #This rule makes the hash program included with libtomcrypt
 hashsum: library $(HASHOBJECTS)
@@ -200,19 +204,19 @@ install_lib: library
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
 clean:
-	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
-	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
-	rm -f *.la *.lo *.o *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
+	-rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
+	-rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
+	-rm -f *.la *.lo *.o *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
 	*.gcda *.gcno demos/*.gcno demos/*.gcda *~ doc/*
-	cd demos/test ; make clean   
-	rm -rf .libs demos/.libs demos/test/.libs
+	-cd demos/test && make clean   
+	-rm -rf .libs demos/.libs demos/test/.libs
 	
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the
 #nice pre-compiled crypt.pdf that comes with libtomcrypt! We only need to
 #delete it if we are rebuilding it.
 docs: crypt.tex
-	rm -f doc/crypt.pdf $(LEFTOVERS)
+	-rm -f doc/crypt.pdf $(LEFTOVERS)
 	echo "hello" > crypt.ind
 	latex crypt > /dev/null
 	latex crypt > /dev/null
@@ -220,7 +224,7 @@ docs: crypt.tex
 	latex crypt > /dev/null
 	dvipdf crypt
 	mv -ivf crypt.pdf doc/crypt.pdf
-	rm -f $(LEFTOVERS)
+	-rm -f $(LEFTOVERS)
 
 docdvi: crypt.tex
 	echo hello > crypt.ind

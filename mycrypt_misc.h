@@ -14,4 +14,7 @@
  const char *error_to_string(int err);
  int mpi_to_ltc_error(int err);
 
- extern const char *crypt_build_settings;
+#if 0
+/* Takes up space we don\'t need for Dropbear */
+extern const char *crypt_build_settings;
+#endif

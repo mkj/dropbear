@@ -23,7 +23,8 @@ extern "C" {
 #define MAXBLOCKSIZE  64
 
 /* descriptor table size */
-#define TAB_SIZE      32
+/* Dropbear change - this should be smaller, saves some size */
+#define TAB_SIZE    4
 
 /* error codes [will be expanded in future releases] */
 enum {
