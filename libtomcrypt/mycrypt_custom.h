@@ -21,6 +21,7 @@
 #define TWOFISH
 #define DES
 #define CBC
+#define CTR
 #define SHA512
 #define SHA1
 #define MD5
@@ -30,6 +31,7 @@
 #define TRY_URANDOM_FIRST
 #define SPRNG
 #define MPI
+#define YARROW
 
 
 #include <mycrypt.h>
