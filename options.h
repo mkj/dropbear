@@ -62,7 +62,7 @@
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
 
-/* Define DSS_PROTOK to use Putty's method of generating the value k for dss,
+/* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
  * rather than just from the random byte source.
  * Undefining this will save you ~4k in binary size with static uclibc, but
  * your DSS hostkey could be exposed if the random number source isn't good.

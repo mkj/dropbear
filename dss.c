@@ -247,7 +247,7 @@ out:
  * to the buffer
  *
  * when DSS_PROTOK is #defined:
- * The alternate k generation method is based on the method used in putty. 
+ * The alternate k generation method is based on the method used in PuTTY. 
  * In particular to avoid being vulnerable to attacks using flaws in random
  * generation of k, we use the following:
  *

@@ -74,7 +74,7 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	m_mp_init(&qminus);
 	m_mp_init(&q);
 
-	/* putty doesn't like it if the modulus isn't a multiple of 8 bits,
+	/* PuTTY doesn't like it if the modulus isn't a multiple of 8 bits,
 	 * so we just generate them until we get one which is OK */
 	do {
 		getrsaprime(&p, &pminus, key->e, size/2, wprng);
