@@ -1,9 +1,5 @@
 /*
- * Dropbear - a SSH2 server
- * SSH client implementation
- *
- * This code is copied from the larger file "kex.c" 
- * some functions are verbatim, others are generalized --mihnea
+ * Dropbear SSH
  * 
  * Copyright (c) 2002-2004 Matt Johnston
  * Portions Copyright (c) 2004 by Mihnea Stoenescu

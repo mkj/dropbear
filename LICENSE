@@ -1,6 +1,15 @@
-The majority of code is written by Matt Johnston, under the following license:
+Dropbear contains a number of components from different sources, hence there
+are a few licenses and authors involved. All licenses are fairly 
+non-restrictive.
 
-Copyright (c) 2002,2003 Matt Johnston
+
+The majority of code is written by Matt Johnston, under the license below.
+
+Portions of the client-mode work are (c) 2004 Mihnea Stoenescu, under the
+same license:
+
+Copyright (c) 2002-2004 Matt Johnston
+Portions copyright (c) 2004 Mihnea Stoenescu
 All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -24,7 +33,6 @@ SOFTWARE.
 =====
 
 LibTomCrypt and LibTomMath are written by Tom St Denis, and are Public Domain.
-Some files are from other public domain sources, see libtomcrypt/legal.txt
 
 =====
 

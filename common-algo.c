@@ -1,7 +1,8 @@
 /*
- * Dropbear - a SSH2 server
+ * Dropbear SSH
  * 
  * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
