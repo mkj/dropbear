@@ -327,6 +327,8 @@ static int ident_readln(int fd, char* buf, int count) {
 	fd_set fds;
 	struct timeval timeout;
 
+	TRACE(("enter ident_readln"));
+
 	if (count < 1) {
 		return -1;
 	}
@@ -346,21 +348,37 @@ static int ident_readln(int fd, char* buf, int count) {
 			if (errno == EINTR) {
 				continue;
 			}
+			TRACE(("leave ident_readln: select error"));
 			return -1;
 		}
 
 		checktimeouts();
 		
+		/* Have to go one byte at a time, since we don't want to read past
+		 * the end, and have to somehow shove bytes back into the normal
+		 * packet reader */
 		if (FD_ISSET(fd, &fds)) {
 			num = read(fd, &in, 1);
 			/* a "\n" is a newline, "\r" we want to read in and keep going
 			 * so that it won't be read as part of the next line */
-			if (num <= 0 || in == '\n') {
+			if (num < 0) {
+				/* error */
 				if (errno == EINTR) {
-					continue;
+					continue; /* not a real error */
 				}
+				TRACE(("leave ident_readln: read error"));
+				return -1;
+			}
+			if (num == 0) {
+				/* EOF */
+				TRACE(("leave ident_readln: EOF"));
+				return -1;
+			}
+			if (in == '\n') {
+				/* end of ident string */
 				break;
 			}
+			/* we don't want to include '\r's */
 			if (in != '\r') {
 				buf[pos] = in;
 				pos++;
@@ -369,5 +387,6 @@ static int ident_readln(int fd, char* buf, int count) {
 	}
 
 	buf[pos] = '\0';
+	TRACE(("leave ident_readln: return %d", pos+1));
 	return pos+1;
 }
