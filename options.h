@@ -39,7 +39,9 @@
 /*#define DISABLE_X11FWD*/
 
 /* Disable TCP Fowarding */
-/*#define DISABLE_TCPFWD*/
+/* NOTE: TCP forwarding is still in-progress, -L forwarding should work,
+ * enable TCP forwarding at your own risk. */
+#define DISABLE_TCPFWD
 
 /* Disable Authentication Agent Forwarding */
 /*#define DISABLE_AGENTFWD*/
@@ -196,5 +198,10 @@
 								 ipv4 and ipv6 don't count twice */
 
 #define _PATH_TTY "/dev/tty"
+
+#ifdef DISABLE_TCPFWD
+#define DISABLE_LOCALTCPFWD
+#define DISABLE_REMOTETCPFWD
+#endif
 
 #endif /* _OPTIONS_H_ */

@@ -1,10 +1,9 @@
 #include "includes.h"
 #include "session.h"
 #include "util.h"
-#include "tcpfwd.h"
+#include "localtcpfwd.h"
 
-#ifndef DISABLE_TCPFWD
-
+#ifndef DISABLE_LOCALTCPFWD
 static int newtcp(const char * host, int port);
 
 /* Called upon creating a new direct tcp channel (ie we connect out to an
@@ -47,11 +46,14 @@ int newtcpdirect(struct Channel * channel) {
 		goto out;
 	}
 
+	ses.maxfd = MAX(ses.maxfd, sock);
+
 	/* Note that infd is actually the "outgoing" direction on the
 	 * tcp connection, vice versa for outfd.
 	 * We don't set outfd, that will get set after the connection's
 	 * progress succeeds */
 	channel->infd = sock;
+	channel->initconn = 1;
 	
 	ret = DROPBEAR_SUCCESS;
 
@@ -133,4 +135,4 @@ static int newtcp(const char * host, int port) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 	return sock;
 }
-#endif /* DISABLE_TCPFWD */
+#endif /* DISABLE_LOCALTCPFWD */

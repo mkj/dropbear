@@ -49,7 +49,7 @@
 
 /* a simpler way to define that we need code for listeners */
 #if !defined(DISABLE_X11FWD) || !defined(DISABLE_AUTHFWD) || \
-	!defined(DISABLE_TCPFWD)
+	!defined(DISABLE_REMOTETCPFWD)
 #define USE_LISTENERS
 #endif
 

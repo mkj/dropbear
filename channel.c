@@ -35,7 +35,7 @@
 #include "ssh.h"
 #include "x11fwd.h"
 #include "agentfwd.h"
-#include "tcpfwd.h"
+#include "localtcpfwd.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -134,6 +134,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 	newchan->infd = -1;
 	newchan->outfd = -1;
 	newchan->errfd = -1;
+	newchan->initconn = 0;
 
 	newchan->writebuf = buf_new(RECV_MAXWINDOW);
 	newchan->recvwindow = RECV_MAXWINDOW;
@@ -407,7 +408,8 @@ void recv_msg_channel_eof() {
 	channel->recveof = 1;
 
 	/* we should close the channel */
-	if (channel->type == CHANNEL_ID_X11 || channel->type == CHANNEL_ID_AGENT) {
+	if (channel->type == CHANNEL_ID_X11 || channel->type == CHANNEL_ID_AGENT
+			|| channel->type == CHANNEL_ID_TCPDIRECT) {
 		shutdown(channel->infd, 0);
 	} else {
 		close(channel->infd);
@@ -723,8 +725,10 @@ void recv_msg_channel_open() {
 	}
 	if (strcmp(type, "session") == 0) {
 		typeval = CHANNEL_ID_SESSION;
+#ifndef DISABLE_LOCALTCPFWD
 	} else if (strcmp(type, "direct-tcpip") == 0) {
 		typeval = CHANNEL_ID_TCPDIRECT;
+#endif
 	} else {
 		goto failure;
 	}
@@ -740,11 +744,13 @@ void recv_msg_channel_open() {
 	/* type specific initialisation */
 	if (typeval == CHANNEL_ID_SESSION) {
 		newchansess(channel);
+#ifndef DISABLE_LOCALTCPFWD
 	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
 		if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
 			deletechannel(channel);
 			goto failure;
 		}
+#endif
 	}
 
 	/* success */
