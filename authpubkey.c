@@ -178,12 +178,8 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		goto out;
 	}
 
-	/* check file permissions */
+	/* check file permissions, also whether file exists */
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
-		TRACE(("perms failed"));
-		dropbear_log(LOG_NOTICE,
-				"bad authorized_keys permissions for '%s' from %s",
-				ses.authstate.printableuser, ses.addrstring);
 		goto out;
 	}
 
