@@ -109,7 +109,9 @@ AC_ARG_ENABLE(syslog,
 			AC_MSG_RESULT(Disabling syslog)
 		else
 			AC_MSG_RESULT(Enabling syslog)
+		fi
 	],
+	[
 		AC_MSG_RESULT(Enabling syslog)
 	]
 )
