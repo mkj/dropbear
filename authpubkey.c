@@ -311,7 +311,7 @@ static int getauthline(buffer * line, FILE * authfile) {
 	buf_setlen(line, 0);
 
 	for (count = 0; count < line->size; count++) {
-		c = fgetc(authfile);
+		c = fgetc(authfile); /*getc() is weird with some uClibc systems*/
 		if (c == EOF || c == '\n' || c == '\r') {
 			goto out;
 		}
