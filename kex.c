@@ -324,7 +324,7 @@ static void gen_new_zstreams() {
  * that function, then brings the new keys into use */
 void recv_msg_kexdh_init() {
 
-	mp_int dh_e;
+	DEF_MP_INT(dh_e);
 
 	TRACE(("enter recv_msg_kexdh_init"));
 	if (!ses.kexstate.recvkexinit) {
@@ -351,7 +351,11 @@ void recv_msg_kexdh_init() {
  * See the ietf-secsh-transport draft, section 6, for details */
 static void send_msg_kexdh_reply(mp_int *dh_e) {
 
-	mp_int dh_p, dh_q, dh_g, dh_y, dh_f;
+	DEF_MP_INT(dh_p);
+	DEF_MP_INT(dh_q);
+	DEF_MP_INT(dh_g);
+	DEF_MP_INT(dh_y);
+	DEF_MP_INT(dh_f);
 	unsigned char randbuf[DH_P_LEN];
 	int dh_q_len;
 	hash_state hs;
