@@ -13,6 +13,8 @@ me if you have any questions/bugs found/features/ideas/comments etc :)
 Matt Johnston
 matt@ucc.asn.au
 
+
+In the absence of detailed documentation, some notes follow:
 ============================================================================
 
 Public key auth:
@@ -28,6 +30,13 @@ user.
 NOTE: Dropbear ignores authorized_keys options such as those described in the
 OpenSSH sshd manpage, and will not allow a login for these keys. 
 
+============================================================================
+
+If you want to get the public-key portion of a Dropbear private key, look at
+dropbearkey's '-y' option.
+
+============================================================================
+
 To run the server, you need to generate server keys, this is one-off:
 ./dropbearkey -t rsa -f dropbear_rsa_host_key
 ./dropbearkey -t dss -f dropbear_dss_host_key
@@ -35,18 +44,16 @@ To run the server, you need to generate server keys, this is one-off:
 or alternatively convert OpenSSH keys to Dropbear:
 ./dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key dropbear_dss_host_key
 
-And you can now run the server.
-./dropbear
-
-or './dropbear -h' to get options.
+============================================================================
 
 If the server is run as non-root, you most likely won't be able to allocate a
 pty, and you cannot login as any user other than that running the daemon
 (obviously). Shadow passwords will also be unusable as non-root.
 
+============================================================================
+
 The Dropbear distribution includes a standalone version of OpenSSH's scp
 program. You can compile it with "make scp", you may want to change the path
 of the ssh binary, specified near the top of the scp.c file. By default
-the progress meter isn't compiled in to save space, you can enable it with
-"make scp-progress".
-
+the progress meter isn't compiled in to save space, you can enable it by 
+adding 'SCPPROGRESS=1' to the make commandline.

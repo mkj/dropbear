@@ -23,3 +23,7 @@ Things which might need doing:
 - Use m_burn for clearing sensitive items in LTM/LTC
 
 - fix scp.c for IRIX
+
+- Be able to use OpenSSH keys for the client? or at least have some form of 
+  encrypted keys.
+- Client agent forwarding
