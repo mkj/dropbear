@@ -373,8 +373,8 @@ int readln(int fd, char* buf, int count) {
 }
 
 /* Atomically write a string to a non-blocking socket.
- * Returns 0 on success, -1 on failure */
-int writeln(int fd, char* str) {
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+int writeln(int fd, const char* str) {
 
 	int len, writelen, pos = 0;
 	fd_set fds;
@@ -392,7 +392,7 @@ int writeln(int fd, char* str) {
 			if (errno == EINTR) {
 				continue;
 			}
-			return -1;
+			return DROPBEAR_FAILURE;
 		}
 		if (FD_ISSET(fd, &fds)) {
 			writelen = write(fd, &str[pos], len - pos);
@@ -400,7 +400,7 @@ int writeln(int fd, char* str) {
 				if (errno == EINTR) {
 					continue;
 				}
-				return -1;
+				return DROPBEAR_FAILURE;
 			}
 			pos += writelen;
 		}
@@ -408,14 +408,14 @@ int writeln(int fd, char* str) {
 			break;
 		}
 	}
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
 
 /* reads the contents of filename into the buffer buf, from the current
  * position, either to the end of the file, or the buffer being full.
- * Returns 0 on success, -1 on failure */
-int buf_readfile(buffer* buf, char* filename) {
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+int buf_readfile(buffer* buf, const char* filename) {
 
 	int fd;
 	int len;
@@ -425,7 +425,7 @@ int buf_readfile(buffer* buf, char* filename) {
 
 	if (fd == -1) {
 		close(fd);
-		return -1;
+		return DROPBEAR_FAILURE;
 	}
 	
 	do {
@@ -436,20 +436,24 @@ int buf_readfile(buffer* buf, char* filename) {
 	} while (len != maxlen && len > 0);
 
 	close(fd);
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
 /* loop until the socket is closed (in case of EINTR) or
  * we get and error.
- * Returns 0 on fd successfully closed or bad FD, -1 otherwise */
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int m_close(int fd) {
 
 	int val;
 	do {
 		val = close(fd);
 	} while (val < 0 && errno == EINTR);
-	return (val == -1 &&
-			errno == EBADF) ? 0 : val;
+
+	if (val == 0 || errno == EBADF) {
+		return DROPBEAR_SUCCESS;
+	} else {
+		return DROPBEAR_FAILURE;
+	}
 }
 	
 void * m_malloc(size_t size) {

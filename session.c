@@ -269,7 +269,7 @@ static void session_identification() {
 	char done = 0;
 
 	/* write our version string, this blocks */
-	if (writeln(ses.sock, LOCAL_IDENT "\r\n") != 0) {
+	if (writeln(ses.sock, LOCAL_IDENT "\r\n") == DROPBEAR_FAILURE) {
 		dropbear_exit("Error writing ident string");
 	}
 

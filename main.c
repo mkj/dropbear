@@ -222,12 +222,12 @@ int main(int argc, char ** argv) {
 
 				/* make sure we close sockets */
 				for (i = 0; i < listensockcount; i++) {
-					if (m_close(listensocks[i]) == -1) {
+					if (m_close(listensocks[i]) == DROPBEAR_FAILURE) {
 						dropbear_exit("Couldn't close socket");
 					}
 				}
 
-				if (m_close(childpipe[0]) == -1) {
+				if (m_close(childpipe[0]) == DROPBEAR_FAILURE) {
 					dropbear_exit("Couldn't close socket");
 				}
 				/* start the session */
@@ -238,8 +238,8 @@ int main(int argc, char ** argv) {
 			
 			/* parent */
 			childpipes[j] = childpipe[0];
-			if (m_close(childpipe[1]) == -1
-						|| m_close(childsock) == -1) {
+			if (m_close(childpipe[1]) == DROPBEAR_FAILURE
+					|| m_close(childsock) == DROPBEAR_FAILURE) {
 				dropbear_exit("Couldn't close socket");
 			}
 		}

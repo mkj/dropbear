@@ -82,7 +82,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 	
 }
 
-/* returns 0 on success, -1 on fail */
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 
 	unsigned char* ident;
@@ -100,6 +100,9 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 		dss_key_free(key->dsskey);
 		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
 		ret = buf_get_dss_priv_key(buf, key->dsskey);
+		if (ret == DROPBEAR_FAILURE) {
+			m_free(key->dsskey);
+		}
 		TRACE(("leave buf_get_priv_key: done get dss"));
 		return ret;
 	}
@@ -112,6 +115,9 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 		rsa_key_free(key->rsakey);
 		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
 		ret = buf_get_rsa_priv_key(buf, key->rsakey);
+		if (ret == DROPBEAR_FAILURE) {
+			m_free(key->rsakey);
+		}
 		TRACE(("leave buf_get_priv_key: done get rsa"));
 		return ret;
 	}
@@ -120,7 +126,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 	m_free(ident);
 	
 	TRACE(("leave buf_get_priv_key"));
-	return -1;
+	return DROPBEAR_FAILURE;
 	
 }
 
