@@ -302,7 +302,7 @@ out:
  * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
 static int getauthline(buffer * line, FILE * authfile) {
 
-	int c;
+	int c = EOF;
 	int count = 0;
 
 	TRACE(("enter getauthline"));
@@ -310,21 +310,27 @@ static int getauthline(buffer * line, FILE * authfile) {
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
 
-	for (;;) {
-		c = getc(authfile);
+	for (count = 0; count < line->size; count++) {
+		c = fgetc(authfile);
 		if (c == EOF || c == '\n' || c == '\r') {
-			break;
+			goto out;
 		}
 		buf_putbyte(line, (unsigned char)c);
-		count++;
 	}
 
+	TRACE(("leave getauthline: line too long"));
+	return DROPBEAR_FAILURE;
+
+out:
+
 	buf_setpos(line, 0);
-	if (count == 0 && c == EOF) {
-		TRACE(("leave getauthline: FAILURE"));
+
+	/* if we didn't read anything before EOF or error, exit */
+	if (c == EOF && count == 0) {
+		TRACE(("leave getauthline: failure"));
 		return DROPBEAR_FAILURE;
 	} else {
-		TRACE(("leave getauthline: SUCCESS"));
+		TRACE(("leave getauthline: success"));
 		return DROPBEAR_SUCCESS;
 	}
 }	
