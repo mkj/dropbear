@@ -81,15 +81,12 @@ int x11accept(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	if (send_msg_channel_open_x11(fd, &addr) == DROPBEAR_FAILURE) {
-		return DROPBEAR_FAILURE;
-	}
-
 	/* if single-connection we close it up */
 	if (chansess->x11singleconn) {
 		x11cleanup(chansess);
 	}
-	return DROPBEAR_SUCCESS;
+
+	return send_msg_channel_open_x11(fd, &addr);
 }
 
 /* This is called after switching to the user, and sets up the xauth

@@ -32,7 +32,6 @@ int agentreq(struct ChanSess * chansess) {
 
 	/* create the unix socket dir and file */
 	if (bindagent(chansess) == DROPBEAR_FAILURE) {
-		dropbear_log(LOG_DEBUG, "bindagent failed");
 		return DROPBEAR_FAILURE;
 	}
 
@@ -70,11 +69,8 @@ int agentaccept(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	if (send_msg_channel_open_agent(fd) == DROPBEAR_FAILURE) {
-		return DROPBEAR_FAILURE;
-	}
+	return send_msg_channel_open_agent(fd);
 
-	return DROPBEAR_SUCCESS;
 }
 
 /* set up the environment variable pointing to the socket. This is called
@@ -94,6 +90,7 @@ void agentset(struct ChanSess * chansess) {
 
 void agentcleanup(struct ChanSess * chansess) {
 
+	char path[MAXPATHLEN];
 	uid_t uid;
 	gid_t gid;
 
@@ -102,7 +99,6 @@ void agentcleanup(struct ChanSess * chansess) {
 	}
 
 	close(chansess->agentfd);
-	m_free(chansess->agentfile);
 
 	/* Remove the dir as the user. That way they can't cause problems except
 	 * for themselves */
@@ -113,7 +109,10 @@ void agentcleanup(struct ChanSess * chansess) {
 		dropbear_exit("failed to set euid");
 	}
 
-	unlink(chansess->agentfile);
+	snprintf(path, sizeof(path),
+			"%s/%s", chansess->agentdir, chansess->agentfile);
+
+	unlink(path);
 	rmdir(chansess->agentdir);
 
 	if ((seteuid(uid)) < 0 ||
@@ -121,6 +120,7 @@ void agentcleanup(struct ChanSess * chansess) {
 		dropbear_exit("failed to revert euid");
 	}
 
+	m_free(chansess->agentfile);
 	m_free(chansess->agentdir);
 
 }
@@ -206,7 +206,7 @@ bindsocket:
 			chansess->agentfd);
 	snprintf(addr.sun_path, sizeof(addr.sun_path), "%s/%s", path, sockfile);
 
-	if (bind(chansess->agentfd, (struct sockaddr*)&addr,	sizeof(addr)) == 0) {
+	if (bind(chansess->agentfd, (struct sockaddr*)&addr, sizeof(addr)) == 0) {
 		chansess->agentdir = strdup(path);
 		chansess->agentfile = strdup(sockfile);
 		ret = DROPBEAR_SUCCESS;
