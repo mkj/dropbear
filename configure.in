@@ -40,8 +40,9 @@ case "$host" in
 	;;
 
 *-*-aix*)
+	AC_DEFINE(AIX,,Using AIX)
+	;;
 	
-
 esac
 
 dnl Can't use login() or logout() with uclibc

@@ -44,7 +44,11 @@ const struct TermCode termcodes[] = {
 		{0, 0},
 #endif
 		{VREPRINT, TERMCODE_CONTROLCHAR},
+#ifdef AIX
+		{CERASE, TERMCODE_CONTROLCHAR},
+#else
 		{VWERASE, TERMCODE_CONTROLCHAR},
+#endif
 		{VLNEXT, TERMCODE_CONTROLCHAR},
 #ifdef VFLUSH
 		{VFLUSH, TERMCODE_CONTROLCHAR},
@@ -61,7 +65,11 @@ const struct TermCode termcodes[] = {
 #else
 		{0, 0},
 #endif
+#ifdef AIX
+		{CKILL, TERMCODE_CONTROLCHAR},
+#else
 		{VDISCARD, TERMCODE_CONTROLCHAR},
+#endif
 		{0, 0}, /* 19 */
 		{0, 0},
 		{0, 0},

@@ -120,7 +120,9 @@ static void sesssigchild_handler(int val) {
 				}
 				if (WIFSIGNALED(status)) {
 					chansess->exitsignal = WTERMSIG(status);
+#ifndef AIX
 					chansess->exitcore = WCOREDUMP(status);
+#endif
 				} else {
 					/* we use this to determine how pid exited */
 					chansess->exitsignal = -1;
