@@ -38,8 +38,8 @@
 #define DROPBEAR_PORT 22
 
 /* Default hostkey paths - these can be specified on the command line */
-#define DSS_PRIV_FILENAME "dropbear_dss_host_key"
-#define RSA_PRIV_FILENAME "dropbear_rsa_host_key"
+#define DSS_PRIV_FILENAME "/etc/dropbear_dss_host_key"
+#define RSA_PRIV_FILENAME "/etc/dropbear_rsa_host_key"
 
 /* Disable X11 Forwarding */
 /*#define DISABLE_X11FWD*/
@@ -118,7 +118,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.32"
+#define DROPBEAR_VERSION "0.32-cvs"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
