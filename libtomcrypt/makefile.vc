@@ -1,0 +1,243 @@
+# MAKEFILE for MSVC 6.0 SP5
+#
+# Tom St Denis, tomstdenis@yahoo.com
+#
+CC=cl
+AR=lib
+
+#here you can set the malloc/calloc/free functions you want
+XMALLOC=malloc
+XCALLOC=calloc
+XFREE=free
+
+#you can redefine the clock
+XCLOCK=clock
+XCLOCKS_PER_SEC=CLOCKS_PER_SEC
+
+CFLAGS = /c /Ogisy1 /Gs /I. /W3 /DWIN32 /DXMALLOC=$(XMALLOC) /DXCALLOC=$(XCALLOC) /DXFREE=$(XFREE) /DXCLOCK=$(XCLOCK) /DXCLOCKS_PER_SEC=$(XCLOCKS_PER_SEC)
+
+#Small code (smaller variants of some block ciphers)
+CFLAGS += /DSMALL_CODE
+
+#These flags control how the library gets built.
+
+#no file support, when defined the library will not have any functions that can read/write files 
+#(comment out to have file support)
+#CFLAGS += /DNO_FILE
+
+#Support the UNIX /dev/random or /dev/urandom
+#CFLAGS += /DDEVRANDOM
+
+# Use /dev/urandom first on devices where /dev/random is too slow */
+#CFLAGS += /DTRY_URANDOM_FIRST
+
+# Clean the stack after sensitive functions.  Not always required... 
+# With this defined most of the ciphers and hashes will clean their stack area
+# after usage with a (sometimes) huge penalty in speed.  Normally this is not
+# required if you simply lock your stack and wipe it when your program is done.
+#
+#CFLAGS += /DCLEAN_STACK
+
+# What algorithms to include? comment out and rebuild to remove em
+CFLAGS += /DBLOWFISH
+CFLAGS += /DRC2
+CFLAGS += /DRC5
+CFLAGS += /DRC6
+CFLAGS += /DSERPENT
+CFLAGS += /DSAFERP
+CFLAGS += /DSAFER
+CFLAGS += /DRIJNDAEL
+CFLAGS += /DXTEA
+CFLAGS += /DTWOFISH
+CFLAGS += /DDES
+CFLAGS += /DCAST5
+CFLAGS += /DNOEKEON
+
+#You can also customize the Twofish code.  All four combinations 
+#of the flags are possible but only three of them make sense.
+#
+#Both undefined:  Very fast, requires ~4.2KB of ram per scheduled key
+#Both defined  :  Slow, requires only ~100 bytes of ram per scheduled key
+#
+#If defined on their own
+#_SMALL defined:  Very Slow, small code only ~100 bytes of ram
+#_TABLES defined: Very fast, not faster than if both were undefined.  Code is ~1KB bigger
+#                 faster keysetup though...
+
+# Small Ram Variant of Twofish.  For this you must have TWOFISH defined.  This
+# variant requires about 4kb less memory but is considerably slower.  It is ideal
+# when high throughput is less important than conserving memory. By default it is
+# not defined which means the larger ram (about 4.2Kb used) variant is built.
+# CFLAGS += /DTWOFISH_SMALL
+
+# Tell Twofish to use precomputed tables.  If you want to use the small table
+# variant of Twofish you may want to turn this on.  Essentially it tells Twofish to use
+# precomputed S-boxes (Q0 and Q1) as well as precomputed GF multiplications [in the MDS].
+# This speeds up the cipher somewhat.
+# CFLAGS += /DTWOFISH_TABLES 
+
+#Use fast PK routines.  Basically this limits the size of the private key in the
+#DH system to 256 bits.  The group order remains unchanged so the best
+#attacks are still GNFS (for DH upto 2560-bits)
+#
+#This will only speed up the key generation and encryption routines.  It lowers the
+#security so its by default not turned on.  USE AT YOUR RISK!
+#CFLAGS += /DFAST_PK
+
+# Chaining modes
+CFLAGS += /DCFB
+CFLAGS += /DOFB
+CFLAGS += /DECB
+CFLAGS += /DCBC
+CFLAGS += /DCTR
+
+#One-way hashes
+CFLAGS += /DSHA512
+CFLAGS += /DSHA384
+CFLAGS += /DSHA256
+CFLAGS += /DTIGER
+CFLAGS += /DSHA1
+CFLAGS += /DMD5
+CFLAGS += /DMD4
+CFLAGS += /DMD2
+
+# base64 
+CFLAGS += /DBASE64
+
+# prngs 
+CFLAGS += /DYARROW
+CFLAGS += /DSPRNG
+CFLAGS += /DRC4
+
+# PK code 
+CFLAGS += /DMRSA
+CFLAGS += /DMDH
+CFLAGS += /DMECC
+CFLAGS += /DKR
+
+# include GF math routines?  (not currently used by anything internally)
+#CFLAGS += /DGF
+
+# include large integer math routines? (required by the PK code)
+CFLAGS += /DMPI
+
+# include HMAC support
+CFLAGS += /DHMAC
+
+default: tomcrypt.lib
+
+keyring.obj: keyring.c
+	$(CC) $(CFLAGS) keyring.c
+ampi.obj: ampi.c
+	$(CC) $(CFLAGS) ampi.c
+mpi.obj: mpi.c
+	$(CC) $(CFLAGS) mpi.c
+blowfish.obj: blowfish.c
+	$(CC) $(CFLAGS) blowfish.c
+crypt.obj: crypt.c
+	$(CC) $(CFLAGS) crypt.c
+sha512.obj: sha512.c sha384.c
+	$(CC) $(CFLAGS) sha512.c
+sha256.obj: sha256.c
+	$(CC) $(CFLAGS) sha256.c
+hash.obj: hash.c
+	$(CC) $(CFLAGS) hash.c
+md5.obj: md5.c
+	$(CC) $(CFLAGS) md5.c
+md4.obj: md4.c
+	$(CC) $(CFLAGS) md4.c
+sha1.obj: sha1.c
+	$(CC) $(CFLAGS) sha1.c
+cfb.obj: cfb.c
+	$(CC) $(CFLAGS) cfb.c
+ofb.obj: ofb.c
+	$(CC) $(CFLAGS) ofb.c
+ecb.obj: ecb.c
+	$(CC) $(CFLAGS) ecb.c
+ctr.obj: ctr.c
+	$(CC) $(CFLAGS) ctr.c
+prime.obj: prime.c
+	$(CC) $(CFLAGS) prime.c
+base64.obj: base64.c
+	$(CC) $(CFLAGS) base64.c
+sprng.obj: sprng.c
+	$(CC) $(CFLAGS) sprng.c
+mem.obj: mem.c
+	$(CC) $(CFLAGS) mem.c
+gf.obj: gf.c
+	$(CC) $(CFLAGS) gf.c
+ecc.obj: ecc.c ecc_sys.c
+	$(CC) $(CFLAGS) ecc.c
+yarrow.obj: yarrow.c
+	$(CC) $(CFLAGS) yarrow.c
+bits.obj: bits.c
+	$(CC) $(CFLAGS) bits.c
+rsa.obj: rsa.c
+	$(CC) $(CFLAGS) rsa.c
+rc6.obj: rc6.c
+	$(CC) $(CFLAGS) rc6.c
+des.obj: des.c
+	$(CC) $(CFLAGS) des.c
+tiger.obj: tiger.c
+	$(CC) $(CFLAGS) tiger.c
+dh.obj: dh.c dh_sys.c
+	$(CC) $(CFLAGS) dh.c
+serpent.obj: serpent.c
+	$(CC) $(CFLAGS) serpent.c
+aes.obj: aes.c aes_tab.c
+	$(CC) $(CFLAGS) aes.c
+rc5.obj: rc5.c
+	$(CC) $(CFLAGS) rc5.c
+rc2.obj: rc2.c
+	$(CC) $(CFLAGS) rc2.c
+cbc.obj: cbc.c
+	$(CC) $(CFLAGS) cbc.c
+safer+.obj: safer+.c
+	$(CC) $(CFLAGS) safer+.c
+safer.obj: safer.c
+	$(CC) $(CFLAGS) safer.c
+safer_tab.obj: safer_tab.c
+	$(CC) $(CFLAGS) safer_tab.c
+xtea.obj: xtea.c
+	$(CC) $(CFLAGS) xtea.c
+twofish.obj: twofish.c
+	$(CC) $(CFLAGS) twofish.c
+packet.obj: packet.c
+	$(CC) $(CFLAGS) packet.c
+pack.obj: pack.c
+	$(CC) $(CFLAGS) pack.c
+hmac.obj: hmac.c
+	$(CC) $(CFLAGS) hmac.c
+strings.obj: strings.c
+	$(CC) $(CFLAGS) strings.c
+md2.obj: md2.c
+	$(CC) $(CFLAGS) md2.c
+cast5.obj: cast5.c
+	$(CC) $(CFLAGS) cast5.c
+noekeon.obj: noekeon.c
+	$(CC) $(CFLAGS) noekeon.c
+
+demos/test.obj: demos/test.c
+	$(CC) $(CFLAGS) demos/test.c
+
+demos/hashsum.obj: demos/hashsum.c
+	$(CC) $(CFLAGS) demos/hashsum.c
+
+tomcrypt.lib: keyring.obj gf.obj mem.obj sprng.obj ecc.obj  base64.obj dh.obj rsa.obj bits.obj hmac.obj  \
+yarrow.obj cfb.obj ofb.obj ecb.obj ctr.obj cbc.obj hash.obj tiger.obj sha1.obj md2.obj md5.obj md4.obj sha256.obj sha512.obj xtea.obj \
+aes.obj serpent.obj safer_tab.obj safer.obj safer+.obj cast5.obj noekeon.obj rc2.obj rc6.obj rc5.obj des.obj blowfish.obj crypt.obj ampi.obj \
+strings.obj mpi.obj prime.obj twofish.obj packet.obj
+	$(AR) /out:tomcrypt.lib keyring.obj gf.obj mem.obj sprng.obj ecc.obj  base64.obj dh.obj rsa.obj hmac.obj \
+bits.obj yarrow.obj cfb.obj ofb.obj ecb.obj ctr.obj cbc.obj hash.obj tiger.obj sha1.obj md2.obj md5.obj md4.obj sha256.obj \
+strings.obj sha512.obj xtea.obj aes.obj serpent.obj safer_tab.obj safer.obj safer+.obj cast5.obj noekeon.obj rc2.obj rc6.obj rc5.obj des.obj \
+blowfish.obj crypt.obj ampi.obj mpi.obj prime.obj twofish.obj packet.obj
+
+
+test.exe: tomcrypt.lib demos/test.obj
+	link /OUT:test.exe test.obj tomcrypt.lib advapi32.lib
+
+hashsum.exe: tomcrypt.lib demos/hashsum.obj
+	link /OUT:hashsum.exe hashsum.obj tomcrypt.lib advapi32.lib
+
+clean:
+	rm -f demos/*.obj *.obj *.exe *.lib

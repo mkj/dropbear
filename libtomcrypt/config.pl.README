@@ -1,0 +1,18 @@
+How to use the config.pl script
+-------------------------------
+
+The configuration script "config.pl" is very simple to use.  It is designed to prompt the user for
+all the valid libtomcrypt build options then make "makefile.out" and "mycrypt_custom.h".  In order to
+run the script you need Perl installed.
+
+After running the script you can build the library two ways.
+
+1) Use the makefile.out it generates.  Simply type "make -f makefile.out" to build the library.
+
+2) Add the libtomcrypt source files to your project.  You have to make sure HAVE_CUSTOM is defined when you
+build the source files.  You have to copy "mycrypt_custom.h" into the your projects include path.
+
+You should copy the library and header files to their respective global search paths.
+
+To use the library with this system you need only include "mycrypt_custom.h" in your application.  It will
+include the required header files.

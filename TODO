@@ -1,0 +1,19 @@
+Current:
+
+- fix genrsa/check keys for validity - putty doesn't like RSA keys where n (the
+  modulus) isn't exactly a multiple of 8, so 1023 bits won't work.
+
+Things which need doing:
+
+- fix compilation for gendss/genrsa when don't have both defined
+- disconnect messages etc
+- kexfollows
+- make sure are using random not urandom
+- check that channel EOF/CLOSE code seems OK
+
+Features to add:
+
+- PAM
+- utmp etc handling
+- TCP fwd
+- X11 fwd

@@ -1,0 +1,69 @@
+CC=@CC@
+LD=@CC@
+CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
+LIBS=libtomcrypt/libtomcrypt.a @LIBS@
+LDFLAGS=@LDFLAGS@
+
+OBJS=util.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
+		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
+		chansession.o queue.o sshpty.o termcodes.o authpubkey.o runopts.o
+
+DROPBEAROBJS=$(OBJS) main.o
+
+TESTSIGNOBJS=$(OBJS) testsign.o
+
+HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
+		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
+		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
+		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h
+
+#CFLAGS+=-Wall -O2 -pedantic -ansi -I libtomcrypt
+#CFLAGS+=-Wall -g3 -I libtomcrypt
+
+UCLIBC_CC=/home/matt/uclibc/bin/i386-uclibc-gcc
+
+all: dropbear
+
+$(OBJS): $(HEADERS) Makefile
+
+dropbear: $(DROPBEAROBJS) $(HEADERS) Makefile 
+	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS)
+
+uclibc-dropbear: Makefile
+	make clean
+	CC=$(UCLIBC_CC) make $(DROPBEAROBJS)
+	$(UCLIBC_CC) $(CFLAGS) -o uclibc-dropbear $(DROPBEAROBJS) -static $(LIBS)
+
+testsign:
+	make clean
+	CFLAGS="$(CFLAGS) -DDEBUG_DSS_SIGN" make $(TESTSIGNOBJS)
+	$(CC) -o testsign $(TESTSIGNOBJS) $(LIBS)
+
+testsignver: $(OBJS) testsignver.c
+	$(CC) -o testsignver $(OBJS) testsignver.c $(LIBS) $(CFLAGS)
+
+genkey: $(OBJS) $(HEADERS) Makefile gendss.o genrsa.o
+	@echo
+	@echo "==== Ignore errors in compiling if you've disabled RSA or DSS ===="
+	@echo
+	-$(CC) $(CFLAGS) -o gendss gendss.o $(OBJS) $(LIBS)
+	-$(CC) $(CFLAGS) -o genrsa genrsa.o $(OBJS) $(LIBS)
+
+ucsizes: uclibc-dropbear
+	objdump -t uclibc-dropbear|grep ".text"|cut -d "." -f 2|sort -n
+
+sizes: dropbear
+	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -n
+
+queuetest: queuetest.o $(OBJS) $(HEADERS) Makefile
+	$(CC) -o queuetest $(OBJS) queuetest.o $(LIBS)
+	
+testnum: testnum.o $(OBJS) $(HEADERS) Makefile
+	$(CC) -o testnum  testnum.o kex.o crypto.o packet.o util.o session.o buffer.o $(LIBS)
+
+clean:
+	-rm -f dropbear uclibc-dropbear *.o *.da *.bb *.bbg *.prof genrsa gendss \
+	testsign test2 testnum testqueue
+
+tidy:
+	-rm -f *~ *.gcov

@@ -1,0 +1,28 @@
+This is dropbear, a smallish and friendly ssh2 daemon.
+
+It is currently usable though betaish, requiring work in certain areas before
+use in a production environment. If you need a small sshd to run on a cruddy
+4 meg laptop, then sure, use it now. But don't use it on a dept webserver yet :)
+
+See TODO for a few of the things I know need looking at.
+
+matt@ucc.asn.au
+
+Basic build instructions:
+
+edit options.h to choose ciphers/hashes/other options
+edit debug.h if you want some debug options
+./configure, optionally with --disable-zlib
+cd libtomcrypt; make
+cd ..; make
+
+You need to generate server keys, this is one-off:
+make genkey
+./gendss dropbear_dss_host_key
+./genrsa dropbear_rsa_host_key
+
+And you can now run the server
+./dropbear
+
+ssh to port 2244, you need to run dropbear as root if you want to get a
+pseudo-tty
