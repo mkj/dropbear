@@ -155,6 +155,9 @@
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 #endif
 
+/* This is used by the scp binary when used as a client binary */
+#define _PATH_SSH_PROGRAM "/usr/bin/ssh"
+
 /* Multi-purpose binary  configuration - if you want to make the combined
  * binary, first define DROPBEAR_MULTI, and then define which of the three
  * components you want. You should then compile Dropbear with 

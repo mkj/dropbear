@@ -76,20 +76,14 @@
 #include "scpmisc.h"
 #include "progressmeter.h"
 
-#define _PATH_SSH_PROGRAM "/usr/bin/ssh"
 #define _PATH_CP "/bin/cp"
 
-/*#include "pathnames.h"
-#include "log.h"
-*/
-
-/*
-#ifdef HAVE___PROGNAME
-extern char *__progname;
-#else
-char *__progname;
+#ifndef TIMEVAL_TO_TIMESPEC
+#define	TIMEVAL_TO_TIMESPEC(tv, ts) {					\
+	(ts)->tv_sec = (tv)->tv_sec;					\
+	(ts)->tv_nsec = (tv)->tv_usec * 1000;				\
+}
 #endif
-*/
 
 void bwlimit(int);
 
