@@ -93,7 +93,8 @@ int main(int argc, char ** argv) {
 
 	/* set up cleanup handler */
 	if (signal(SIGINT, sigintterm_handler) == SIG_ERR || 
-		signal(SIGTERM, sigintterm_handler) == SIG_ERR) {
+		signal(SIGTERM, sigintterm_handler) == SIG_ERR ||
+		signal(SIGPIPE, SIG_IGN)) {
 		dropbear_exit("signal() error");
 	}
 
