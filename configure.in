@@ -76,3 +76,5 @@ AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup cl
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
+AC_MSG_RESULT()
+AC_MSG_RESULT(Now edit options.h to choose features.)
