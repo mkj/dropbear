@@ -248,8 +248,7 @@ void cli_session_cleanup() {
 
 	/* Set stdin back to non-blocking - busybox ash dies nastily
 	 * if we don't revert the flags */
-	TRACE(("close stdincopy = %d", cli_ses.stdincopy));
-	//fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+	fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
 
 	cli_tty_cleanup();
 
