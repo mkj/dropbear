@@ -11,7 +11,7 @@ DROPBEARKEYOBJS=dropbearkey.o gendss.o genrsa.o
 HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
-		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h
+		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h
 
 ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 
