@@ -120,10 +120,6 @@ typedef unsigned short u_int16_t;
 typedef u_int16_t uint16_t;
 #endif /* HAVE_UINT16_T */
 
-#ifndef HAVE_SOCKLEN_T
-typedef int socklen_t;
-#endif
-
 #ifndef LOG_AUTHPRIV
 #define LOG_AUTHPRIV LOG_AUTH
 #endif

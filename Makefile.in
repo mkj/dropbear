@@ -4,7 +4,7 @@ LTM=libtommath/libtommath.a
 OBJS=dbutil.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
 		chansession.o queue.o sshpty.o termcodes.o authpubkey.o runopts.o \
-		loginrec.o atomicio.o x11fwd.o agentfwd.o localtcpfwd.o
+		loginrec.o atomicio.o x11fwd.o agentfwd.o localtcpfwd.o compat.o
 
 DROPBEAROBJS=main.o
 
@@ -16,7 +16,7 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
-		loginrec.h atomicio.h x11fwd.h agentfwd.h localtcpfwd.h
+		loginrec.h atomicio.h x11fwd.h agentfwd.h localtcpfwd.h compat.h
 
 ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 

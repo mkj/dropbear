@@ -168,14 +168,40 @@ AC_TYPE_SIZE_T
 AC_HEADER_TIME
 
 AC_CHECK_TYPES([uint16_t, u_int16_t, struct sockaddr_storage])
-AC_CHECK_TYPES([socklen_t],,,
-#if HAVE_SYS_SOCKET_H
-#include <sys/socket.h>
-#endif
-#if HAVE_SYS_TYPES_H
-#include <sys/types.h>
-#endif
-)
+AC_CHECK_TYPE([socklen_t], ,[
+	AC_MSG_CHECKING([for socklen_t equivalent])
+	AC_CACHE_VAL([curl_cv_socklen_t_equiv],
+	[
+	# Systems have either "struct sockaddr *" or
+	# "void *" as the second argument to getpeername
+	curl_cv_socklen_t_equiv=
+	for arg2 in "struct sockaddr" void; do
+		for t in int size_t unsigned long "unsigned long"; do
+		AC_TRY_COMPILE([
+			#include <sys/types.h>
+			#include <sys/socket.h>
+
+			int getpeername (int, $arg2 *, $t *);
+		],[
+			$t len;
+			getpeername(0,0,&len);
+		],[
+			curl_cv_socklen_t_equiv="$t"
+			break
+		])
+		done
+	done
+
+	if test "x$curl_cv_socklen_t_equiv" = x; then
+		AC_MSG_ERROR([Cannot find a type to use in place of socklen_t])
+	fi
+	])
+	AC_MSG_RESULT($curl_cv_socklen_t_equiv)
+	AC_DEFINE_UNQUOTED(socklen_t, $curl_cv_socklen_t_equiv,
+			[type to use in place of socklen_t if not defined])],
+	[#include <sys/types.h>
+	#include <sys/socket.h>])
+
 
 # for loginrec.c
 
@@ -428,7 +454,7 @@ AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_TYPE_SIGNAL
-AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat])
+AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon])
 
 # Solaris needs ptmx
 if test -z "$no_ptmx_check" ; then
