@@ -347,7 +347,7 @@ int blowfish_setup(const unsigned char *key, int keylen, int num_rounds,
    return CRYPT_OK;
 }
 
-#if defined(__GNUC__)
+#if defined(TWOFISH_SMALL) || defined(__GNUC__)
    #define S1 key->blowfish.S[0]
    #define S2 key->blowfish.S[1]
    #define S3 key->blowfish.S[2]
