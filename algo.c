@@ -184,30 +184,32 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]) {
 
 	unsigned char * algolist = NULL;
-	unsigned char* alterlist = NULL;
 	unsigned char * remotealgos[MAX_PROPOSED_ALGO];
-	unsigned int pos1, pos2;
 	unsigned int len;
 	unsigned int count, i, j;
-	algo_type * ret;
+	algo_type * ret = NULL;
 
 	/* get the comma-seperated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
 	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
-		ret = NULL;
 		goto out; /* just a sanity check, no other use */
 	}
-	alterlist = strdup((char*)algolist);
 
 	/* remotealgos will contain a list of the strings parsed out */
-	count = 0;
-	pos1 = 0;
-	for (pos2 = 0; pos2 <= len; pos2++) {
-		if (alterlist[pos2] == ',' || alterlist[pos2] == '\0') {
-			remotealgos[count] = &alterlist[pos1];
-			alterlist[pos2] = '\0';
+	/* We will have at least one string (even if it's just "") */
+	remotealgos[0] = algolist;
+	count = 1;
+	/* Iterate through, replacing ','s with NULs, to split it into
+	 * words. */
+	for (i = 0; i < len; i++) {
+		if (algolist[i] == '\0') {
+			/* someone is trying something strange */
+			goto out;
+		}
+		if (algolist[i] == ',' && i != len) {
+			algolist[i] = '\0';
+			remotealgos[count] = &algolist[i+1];
 			count++;
-			pos1 = pos2+1; /* this is safe since we check pos2 next loop */
 		}
 		if (count == MAX_PROPOSED_ALGO) {
 			break;
@@ -228,10 +230,8 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]) {
 			}
 		}
 	}
-	ret = NULL;
 
 out:
-	m_free(alterlist);
 	m_free(algolist);
 	return ret;
 }
