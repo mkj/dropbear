@@ -37,6 +37,8 @@
 #include <pam/pam_appl.h>
 #endif
 
+#ifdef ENABLE_SVR_PAM_AUTH
+
 struct UserDataS {
 	char* user;
 	char* passwd;
@@ -217,3 +219,5 @@ cleanup:
 		(void) pam_end(pamHandlep, 0 /* pam_status */);
 	}
 }
+
+#endif /* ENABLE_SVR_PAM_AUTH */
