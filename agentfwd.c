@@ -194,7 +194,7 @@ static int bindagent(struct ChanSess * chansess) {
 
 	mode = S_IRWXU;
 
-	for (i = 0; i < 200; i++) {
+	for (i = 0; i < 20; i++) {
 		genrandom((unsigned char*)&prefix, sizeof(prefix));
 		/* we want 32 bits (8 hex digits) - "/tmp/dropbear-f19c62c0" */
 		snprintf(path, sizeof(path), AGENTDIRPREFIX "%.8x", prefix);
