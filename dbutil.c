@@ -192,7 +192,7 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
 		case PF_INET: 
 			snprintf(retstring, 22, "%s:%hu",
 					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr),
-					((struct sockaddr_in *)addr)->sin_port);
+					ntohs(((struct sockaddr_in *)addr)->sin_port));
 			break;
 
 		default:
