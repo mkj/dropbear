@@ -4,6 +4,7 @@
 # This Autoconf file was cobbled from various locations.
 
 #AC_INIT(FULL-PACKAGE-NAME, VERSION, BUG-REPORT-ADDRESS)
+AC_PREREQ(2.50)
 AC_INIT(algo.c)
 
 # Checks for programs.
@@ -14,6 +15,20 @@ if test -z "$LD" ; then
 	LD=$CC
 fi
 AC_SUBST(LD)	
+
+# Host specific options
+# this isn't a definitive list of hosts, they are just added as required
+AC_CANONICAL_HOST
+
+case "$host" in
+
+*-*-linux*)
+	no_ptmx_check=1
+	;;
+*-*-solaris*)
+	;;
+
+esac
 
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
@@ -78,8 +93,10 @@ AC_FUNC_SETPGRP
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv openpty strlcpy])
 
-# Solaris need ptmx
-AC_CHECK_FILE("/dev/ptmx", AC_DEFINE(HAVE_DEV_PTMX,,Have ptmx))
+# Solaris needs ptmx
+if test -z "$no_ptmx_check" ; then
+	AC_CHECK_FILE("/dev/ptmx", AC_DEFINE(USE_DEV_PTMX,,Use /dev/ptmx))
+fi
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
