@@ -1,5 +1,24 @@
+0.34 - Fri August 15 2003 15:10:00 +0800
 
 - Made syslog optional, both at compile time and as a compile option
+  (suggested by Laurent Bercot <ska at skarnet.org>)
+- Fixup for bad base64 parsing in authorized_keys
+  (noticed by Davyd Madeley <davyd at zdlcomputing.com>)
+- Added initial tcp forwarding code, only -L (local) at this stage
+- Improved "make install" with DESTDIR and changing ownership seperately,
+  don't check for setpgrp on Linux for crosscompiling.
+  (from Erik Andersen <andersen at codepoet.org>)
+- More commenting, fix minor compile warnings, make return values more
+  consistent etc
+- Various signedness fixes
+- Can listen on multiple ports
+- added option to disable openpty with configure script,
+  (from K.-P. Kirchdörfer <kapeka at epost.de>)
+- Various cleanups to bignum code
+  (thanks to Tom St Denis <tomstdenis at iahu.ca>)
+- Fix compile error when disabling RSA
+  (from Marc Kleine-Budde <kleine-budde at gmx.de>)
+- Other cleanups, splitting large functions for packet and kex handling etc
 
 0.33 - Sun June 22 2003 22:24:12 +0800
 
