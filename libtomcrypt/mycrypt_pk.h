@@ -5,6 +5,7 @@
 
 extern int is_prime(mp_int *, int *);
 extern int rand_prime(mp_int *N, long len, prng_state *prng, int wprng);
+extern int next_prime(mp_int *N, mp_digit step);
 extern mp_err mp_init_multi(mp_int* mp, ...);
 extern void mp_clear_multi(mp_int* mp, ...);
 
