@@ -33,8 +33,8 @@ static int listensockets(int *sock, runopts * opts, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
-static void main_inetd();
-static void main_noinetd();
+static void main_inetd(runopts * opts);
+static void main_noinetd(runopts * opts);
 static void commonsetup();
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
@@ -61,7 +61,7 @@ int main(int argc, char ** argv)
 #endif
 
 #ifdef NON_INETD_MODE
-		main_noinetd();
+		main_noinetd(opts);
 #endif
 
 	dropbear_exit("Compiled without normal mode, can't run without -i\n");
