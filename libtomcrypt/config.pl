@@ -36,7 +36,7 @@
    "XTEA,Include XTEA block cipher,y",
    "TWOFISH,Include Twofish block cipher,y",
    "TWOFISH_SMALL,Include Use a low ram variant of Twofish,n",
-   "TWOFISH_TABLES,Include Use precomputed tables to speed up the low-ram variant,n",
+   "TWOFISH_TABLES,Include Use precomputed tables to speed up the low-ram variant,y",
    "DES,Include DES and 3DES block ciphers,y",
    "CAST5,Include CAST5 (aka CAST-128) block cipher,y",
    "NOEKEON,Include Noekeon block cipher,y",
@@ -55,6 +55,8 @@
    "MD5,Include MD5 one-way hash,y",
    "MD4,Include MD4 one-way hash,y",
    "MD2,Include MD2 one-way hash,y",
+   "RIPEMD128,Include RIPEMD-128 one-way hash,y",
+   "RIPEMD160,Include RIPEMD-160 one-way hash,y",
    "HMAC,Include Hash based Message Authentication Support,y",
 
    "BASE64,Include Base64 encoding support,y",
@@ -68,7 +70,7 @@
    "MRSA,Include RSA public key support,y",
    "MDH,Include Diffie-Hellman (over Z/pZ) public key support,y",
    "MECC,Include Eliptic Curve public key crypto support,y",
-   "KR,Include Keyring support (groups all three PK systems),y",
+   "KR,Include Keyring support (groups all three PK systems),n",
    
    "DH768,768-bit DH key support,y",
    "DH1024,1024-bit DH key support,y",

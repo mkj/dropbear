@@ -190,7 +190,7 @@ static const unsigned char safer_bias[33][16] = {
 
 int saferp_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
-   unsigned x, y;
+   unsigned x, y, z;
    unsigned char t[33];
    static const int rounds[3] = { 8, 12, 16 };
 
@@ -231,8 +231,10 @@ int saferp_setup(const unsigned char *key, int keylen, int num_rounds, symmetric
            }
 
            /* select and add */
+           z = x;
            for (y = 0; y < 16; y++) {
-               skey->saferp.K[x][y] = (t[(x+y)%17] + safer_bias[x-1][y]) & 255;
+               skey->saferp.K[x][y] = (t[z] + safer_bias[x-1][y]) & 255;
+               if (++z == 17) { z = 0; }
            }
        }
        skey->saferp.rounds = 8;
@@ -256,8 +258,10 @@ int saferp_setup(const unsigned char *key, int keylen, int num_rounds, symmetric
            }
 
            /* select and add */
+           z = x;
            for (y = 0; y < 16; y++) { 
-               skey->saferp.K[x][y] = (t[(x+y)%25] + safer_bias[x-1][y]) & 255;
+               skey->saferp.K[x][y] = (t[z] + safer_bias[x-1][y]) & 255;
+               if (++z == 25) { z = 0; }
            }
        }
        skey->saferp.rounds = 12;
@@ -281,8 +285,10 @@ int saferp_setup(const unsigned char *key, int keylen, int num_rounds, symmetric
            }
            
            /* select and add */
+           z = x;
            for (y = 0; y < 16; y++) {
-               skey->saferp.K[x][y] = (t[(x+y)%33] + safer_bias[x-1][y]) & 255;
+               skey->saferp.K[x][y] = (t[z] + safer_bias[x-1][y]) & 255;
+               if (++z == 33) { z = 0; }
            }
        }
        skey->saferp.rounds = 16;

@@ -14,7 +14,7 @@ const struct _cipher_descriptor cast5_desc = {
    &cast5_keysize
 };
 
-static const unsigned long S1[256] = {
+static const ulong32 S1[256] = {
 0x30fb40d4UL, 0x9fa0ff0bUL, 0x6beccd2fUL, 0x3f258c7aUL, 0x1e213f2fUL, 0x9c004dd3UL, 
 0x6003e540UL, 0xcf9fc949UL, 0xbfd4af27UL, 0x88bbbdb5UL, 0xe2034090UL, 0x98d09675UL, 
 0x6e63a0e0UL, 0x15c361d2UL, 0xc2e7661dUL, 0x22d4ff8eUL, 0x28683b6fUL, 0xc07fd059UL, 
@@ -59,7 +59,7 @@ static const unsigned long S1[256] = {
 0xb141ab08UL, 0x7cca89b9UL, 0x1a69e783UL, 0x02cc4843UL, 0xa2f7c579UL, 0x429ef47dUL, 
 0x427b169cUL, 0x5ac9f049UL, 0xdd8f0f00UL, 0x5c8165bfUL};
 
-static const unsigned long S2[256] = {
+static const ulong32 S2[256] = {
 0x1f201094UL, 0xef0ba75bUL, 0x69e3cf7eUL, 0x393f4380UL, 0xfe61cf7aUL, 0xeec5207aUL, 
 0x55889c94UL, 0x72fc0651UL, 0xada7ef79UL, 0x4e1d7235UL, 0xd55a63ceUL, 0xde0436baUL, 
 0x99c430efUL, 0x5f0c0794UL, 0x18dcdb7dUL, 0xa1d6eff3UL, 0xa0b52f7bUL, 0x59e83605UL, 
@@ -104,7 +104,7 @@ static const unsigned long S2[256] = {
 0x5c038323UL, 0x3e5d3bb9UL, 0x43d79572UL, 0x7e6dd07cUL, 0x06dfdf1eUL, 0x6c6cc4efUL, 
 0x7160a539UL, 0x73bfbe70UL, 0x83877605UL, 0x4523ecf1UL};
 
-static const unsigned long S3[256] = {
+static const ulong32 S3[256] = {
 0x8defc240UL, 0x25fa5d9fUL, 0xeb903dbfUL, 0xe810c907UL, 0x47607fffUL, 0x369fe44bUL, 
 0x8c1fc644UL, 0xaececa90UL, 0xbeb1f9bfUL, 0xeefbcaeaUL, 0xe8cf1950UL, 0x51df07aeUL, 
 0x920e8806UL, 0xf0ad0548UL, 0xe13c8d83UL, 0x927010d5UL, 0x11107d9fUL, 0x07647db9UL, 
@@ -149,7 +149,7 @@ static const unsigned long S3[256] = {
 0x52bce688UL, 0x1b03588aUL, 0xf7baefd5UL, 0x4142ed9cUL, 0xa4315c11UL, 0x83323ec5UL, 
 0xdfef4636UL, 0xa133c501UL, 0xe9d3531cUL, 0xee353783UL};
 
-static const unsigned long S4[256] = {
+static const ulong32 S4[256] = {
 0x9db30420UL, 0x1fb6e9deUL, 0xa7be7befUL, 0xd273a298UL, 0x4a4f7bdbUL, 0x64ad8c57UL, 
 0x85510443UL, 0xfa020ed1UL, 0x7e287affUL, 0xe60fb663UL, 0x095f35a1UL, 0x79ebf120UL, 
 0xfd059d43UL, 0x6497b7b1UL, 0xf3641f63UL, 0x241e4adfUL, 0x28147f5fUL, 0x4fa2b8cdUL, 
@@ -194,7 +194,7 @@ static const unsigned long S4[256] = {
 0xb657c34dUL, 0x4edfd282UL, 0x7ae5290cUL, 0x3cb9536bUL, 0x851e20feUL, 0x9833557eUL, 
 0x13ecf0b0UL, 0xd3ffb372UL, 0x3f85c5c1UL, 0x0aef7ed2UL};
 
-static const unsigned long S5[256] = {
+static const ulong32 S5[256] = {
 0x7ec90c04UL, 0x2c6e74b9UL, 0x9b0e66dfUL, 0xa6337911UL, 0xb86a7fffUL, 0x1dd358f5UL, 
 0x44dd9d44UL, 0x1731167fUL, 0x08fbf1faUL, 0xe7f511ccUL, 0xd2051b00UL, 0x735aba00UL, 
 0x2ab722d8UL, 0x386381cbUL, 0xacf6243aUL, 0x69befd7aUL, 0xe6a2e77fUL, 0xf0c720cdUL, 
@@ -239,7 +239,7 @@ static const unsigned long S5[256] = {
 0x34010718UL, 0xbb30cab8UL, 0xe822fe15UL, 0x88570983UL, 0x750e6249UL, 0xda627e55UL, 
 0x5e76ffa8UL, 0xb1534546UL, 0x6d47de08UL, 0xefe9e7d4UL};
 
-static const unsigned long S6[256] = {
+static const ulong32 S6[256] = {
 0xf6fa8f9dUL, 0x2cac6ce1UL, 0x4ca34867UL, 0xe2337f7cUL, 0x95db08e7UL, 0x016843b4UL, 
 0xeced5cbcUL, 0x325553acUL, 0xbf9f0960UL, 0xdfa1e2edUL, 0x83f0579dUL, 0x63ed86b9UL, 
 0x1ab6a6b8UL, 0xde5ebe39UL, 0xf38ff732UL, 0x8989b138UL, 0x33f14961UL, 0xc01937bdUL, 
@@ -284,7 +284,7 @@ static const unsigned long S6[256] = {
 0xb0e93524UL, 0xbebb8fbdUL, 0xa2d762cfUL, 0x49c92f54UL, 0x38b5f331UL, 0x7128a454UL, 
 0x48392905UL, 0xa65b1db8UL, 0x851c97bdUL, 0xd675cf2fUL};
 
-static const unsigned long S7[256] = {
+static const ulong32 S7[256] = {
 0x85e04019UL, 0x332bf567UL, 0x662dbfffUL, 0xcfc65693UL, 0x2a8d7f6fUL, 0xab9bc912UL, 
 0xde6008a1UL, 0x2028da1fUL, 0x0227bce7UL, 0x4d642916UL, 0x18fac300UL, 0x50f18b82UL, 
 0x2cb2cb11UL, 0xb232e75cUL, 0x4b3695f2UL, 0xb28707deUL, 0xa05fbcf6UL, 0xcd4181e9UL, 
@@ -329,7 +329,7 @@ static const unsigned long S7[256] = {
 0xc3c0bdaeUL, 0x4958c24cUL, 0x518f36b2UL, 0x84b1d370UL, 0x0fedce83UL, 0x878ddadaUL, 
 0xf2a279c7UL, 0x94e01be8UL, 0x90716f4bUL, 0x954b8aa3UL};
 
-static const unsigned long S8[256] = {
+static const ulong32 S8[256] = {
 0xe216300dUL, 0xbbddfffcUL, 0xa7ebdabdUL, 0x35648095UL, 0x7789f8b7UL, 0xe6c1121bUL, 
 0x0e241600UL, 0x052ce8b5UL, 0x11a9cfb0UL, 0xe5952f11UL, 0xece7990aUL, 0x9386d174UL, 
 0x2a42931cUL, 0x76e38111UL, 0xb12def3aUL, 0x37ddddfcUL, 0xde9adeb1UL, 0x0a0cc32cUL, 
@@ -375,11 +375,15 @@ static const unsigned long S8[256] = {
 0x50b2ad80UL, 0xeaee6801UL, 0x8db2a283UL, 0xea8bf59eUL};
 
 /* returns the i'th byte of a variable */
-#define GB(x, i) (((x[(15-i)>>2])>>(unsigned)(8*((15-i)&3)))&255)
+#ifdef _MSC_VER
+   #define GB(x, i) ((unsigned char)((x[(15-i)>>2])>>(unsigned)(8*((15-i)&3))))
+#else   
+   #define GB(x, i) (((x[(15-i)>>2])>>(unsigned)(8*((15-i)&3)))&255)
+#endif   
 
 int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
-   unsigned long x[4], z[4];
+   ulong32 x[4], z[4];
    unsigned char buf[16];
    int y, i;
 
@@ -458,33 +462,39 @@ int cast5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_
    return CRYPT_OK;
 }
 
-static unsigned long FI(unsigned long R, unsigned long Km, unsigned long Kr)
+#ifdef _MSC_VER
+   #define INLINE __inline
+#else
+   #define INLINE 
+#endif   
+   
+INLINE static ulong32 FI(ulong32 R, ulong32 Km, ulong32 Kr)
 {
-   unsigned long I;
+   ulong32 I;
    I = (Km + R);
    I = ROL(I, Kr);
-   return ((S1[(I>>24)&255] ^ S2[(I>>16)&255]) - S3[(I>>8)&255]) + S4[I&255];
+   return ((S1[byte(I, 3)] ^ S2[byte(I,2)]) - S3[byte(I,1)]) + S4[byte(I,0)];
 }
    
-static unsigned long FII(unsigned long R, unsigned long Km, unsigned long Kr)
+INLINE static ulong32 FII(ulong32 R, ulong32 Km, ulong32 Kr)
 {
-   unsigned long I;
+   ulong32 I;
    I = (Km ^ R);
    I = ROL(I, Kr);
-   return ((S1[(I>>24)&255] - S2[(I>>16)&255]) + S3[(I>>8)&255]) ^ S4[I&255];
+   return ((S1[byte(I, 3)] - S2[byte(I,2)]) + S3[byte(I,1)]) ^ S4[byte(I,0)];
 }
 
-static unsigned long FIII(unsigned long R, unsigned long Km, unsigned long Kr)
+INLINE static ulong32 FIII(ulong32 R, ulong32 Km, ulong32 Kr)
 {
-   unsigned long I;
+   ulong32 I;
    I = (Km - R);
    I = ROL(I, Kr);
-   return ((S1[(I>>24)&255] + S2[(I>>16)&255]) ^ S3[(I>>8)&255]) - S4[I&255];
+   return ((S1[byte(I, 3)] + S2[byte(I,2)]) ^ S3[byte(I,1)]) - S4[byte(I,0)];
 }
 
 void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
-   unsigned long R, L;
+   ulong32 R, L;
 
    _ARGCHK(pt != NULL);
    _ARGCHK(ct != NULL);
@@ -517,7 +527,7 @@ void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
 
 void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 {
-   unsigned long R, L;
+   ulong32 R, L;
 
    _ARGCHK(pt != NULL);
    _ARGCHK(ct != NULL);

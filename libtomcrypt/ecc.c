@@ -528,8 +528,8 @@ int ecc_test(void)
        #if 0
           printf("Testing %d\n", sets[i].size);
        #endif
-       if (mp_read_radix(&modulus, (unsigned char *)sets[i].prime, 64) != MP_OKAY)   { goto error; }
-       if (mp_read_radix(&order, (unsigned char *)sets[i].order, 64) != MP_OKAY)     { goto error; }
+       if (mp_read_radix(&modulus, (char *)sets[i].prime, 64) != MP_OKAY)   { goto error; }
+       if (mp_read_radix(&order, (char *)sets[i].order, 64) != MP_OKAY)     { goto error; }
 
        /* is prime actually prime? */
        if (is_prime(&modulus, &primality) != CRYPT_OK)           { goto error; }
@@ -545,8 +545,8 @@ int ecc_test(void)
           goto done1;
        }
 
-       if (mp_read_radix(&G->x, (unsigned char *)sets[i].Gx, 64) != MP_OKAY) { goto error; }
-       if (mp_read_radix(&G->y, (unsigned char *)sets[i].Gy, 64) != MP_OKAY) { goto error; }
+       if (mp_read_radix(&G->x, (char *)sets[i].Gx, 64) != MP_OKAY) { goto error; }
+       if (mp_read_radix(&G->y, (char *)sets[i].Gy, 64) != MP_OKAY) { goto error; }
 
        /* then we should have G == (order + 1)G */
        if (mp_add_d(&order, 1, &order) != MP_OKAY)                  { goto error; }
@@ -590,7 +590,7 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    int x, res, err;
    ecc_point *base;
    mp_int prime;
-   unsigned char buf[4096];
+   unsigned char buf[128];
 
    _ARGCHK(key != NULL);
 
@@ -624,9 +624,9 @@ int ecc_make_key(prng_state *prng, int wprng, int keysize, ecc_key *key)
    }
 
    /* read in the specs for this key */
-   if (mp_read_radix(&prime, (unsigned char *)sets[key->idx].prime, 64) != MP_OKAY)  { goto error; }
-   if (mp_read_radix(&base->x, (unsigned char *)sets[key->idx].Gx, 64) != MP_OKAY)   { goto error; }
-   if (mp_read_radix(&base->y, (unsigned char *)sets[key->idx].Gy, 64) != MP_OKAY)   { goto error; }
+   if (mp_read_radix(&prime, (char *)sets[key->idx].prime, 64) != MP_OKAY)  { goto error; }
+   if (mp_read_radix(&base->x, (char *)sets[key->idx].Gx, 64) != MP_OKAY)   { goto error; }
+   if (mp_read_radix(&base->y, (char *)sets[key->idx].Gy, 64) != MP_OKAY)   { goto error; }
    if (mp_read_unsigned_bin(&key->k, (unsigned char *)buf, keysize) != MP_OKAY)      { goto error; }
 
    /* make the public key */
@@ -671,12 +671,12 @@ static int compress_y_point(ecc_point *pt, int idx, int *result)
    }
 
    /* get x^3 - 3x + b */
-   if (mp_read_radix(&p, (unsigned char *)sets[idx].B, 64) != MP_OKAY) { goto error; } /* p = B */
+   if (mp_read_radix(&p, (char *)sets[idx].B, 64) != MP_OKAY) { goto error; } /* p = B */
    if (mp_expt_d(&pt->x, 3, &tmp) != MP_OKAY)              { goto error; } /* tmp = pX^3  */
    if (mp_mul_d(&pt->x, 3, &tmp2) != MP_OKAY)              { goto error; } /* tmp2 = 3*pX^3 */
    if (mp_sub(&tmp, &tmp2, &tmp) != MP_OKAY)               { goto error; } /* tmp = tmp - tmp2 */
    if (mp_add(&tmp, &p, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp + p */
-   if (mp_read_radix(&p, (unsigned char *)sets[idx].prime, 64) != MP_OKAY)  { goto error; } /* p = prime */
+   if (mp_read_radix(&p, (char *)sets[idx].prime, 64) != MP_OKAY)  { goto error; } /* p = prime */
    if (mp_mod(&tmp, &p, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp mod p */
 
    /* now find square root */
@@ -713,12 +713,12 @@ static int expand_y_point(ecc_point *pt, int idx, int result)
    }
 
    /* get x^3 - 3x + b */
-   if (mp_read_radix(&p, (unsigned char *)sets[idx].B, 64) != MP_OKAY) { goto error; } /* p = B */
+   if (mp_read_radix(&p, (char *)sets[idx].B, 64) != MP_OKAY) { goto error; } /* p = B */
    if (mp_expt_d(&pt->x, 3, &tmp) != MP_OKAY)              { goto error; } /* tmp = pX^3 */
    if (mp_mul_d(&pt->x, 3, &tmp2) != MP_OKAY)              { goto error; } /* tmp2 = 3*pX^3 */
    if (mp_sub(&tmp, &tmp2, &tmp) != MP_OKAY)               { goto error; } /* tmp = tmp - tmp2 */
    if (mp_add(&tmp, &p, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp + p */
-   if (mp_read_radix(&p, (unsigned char *)sets[idx].prime, 64) != MP_OKAY)  { goto error; } /* p = prime */
+   if (mp_read_radix(&p, (char *)sets[idx].prime, 64) != MP_OKAY)  { goto error; } /* p = prime */
    if (mp_mod(&tmp, &p, &tmp) != MP_OKAY)                  { goto error; } /* tmp = tmp mod p */
 
    /* now find square root */
@@ -935,7 +935,7 @@ int ecc_shared_secret(ecc_key *private_key, ecc_key *public_key,
       return CRYPT_MEM;
    }
 
-   if (mp_read_radix(&prime, (unsigned char *)sets[private_key->idx].prime, 64) != MP_OKAY)  { goto error; }
+   if (mp_read_radix(&prime, (char *)sets[private_key->idx].prime, 64) != MP_OKAY)  { goto error; }
    if ((res = ecc_mulmod(&private_key->k, &public_key->pubkey, result, &prime)) != CRYPT_OK) { goto done1; }
 
    x = (unsigned long)mp_unsigned_bin_size(&result->x);

@@ -14,16 +14,27 @@ const struct _cipher_descriptor rc5_desc =
     &rc5_keysize
 };
 
+static const ulong32 stab[50] = {
+0xb7e15163UL, 0x5618cb1cUL, 0xf45044d5UL, 0x9287be8eUL, 0x30bf3847UL, 0xcef6b200UL, 0x6d2e2bb9UL, 0x0b65a572UL,
+0xa99d1f2bUL, 0x47d498e4UL, 0xe60c129dUL, 0x84438c56UL, 0x227b060fUL, 0xc0b27fc8UL, 0x5ee9f981UL, 0xfd21733aUL,
+0x9b58ecf3UL, 0x399066acUL, 0xd7c7e065UL, 0x75ff5a1eUL, 0x1436d3d7UL, 0xb26e4d90UL, 0x50a5c749UL, 0xeedd4102UL,
+0x8d14babbUL, 0x2b4c3474UL, 0xc983ae2dUL, 0x67bb27e6UL, 0x05f2a19fUL, 0xa42a1b58UL, 0x42619511UL, 0xe0990ecaUL,
+0x7ed08883UL, 0x1d08023cUL, 0xbb3f7bf5UL, 0x5976f5aeUL, 0xf7ae6f67UL, 0x95e5e920UL, 0x341d62d9UL, 0xd254dc92UL,
+0x708c564bUL, 0x0ec3d004UL, 0xacfb49bdUL, 0x4b32c376UL, 0xe96a3d2fUL, 0x87a1b6e8UL, 0x25d930a1UL, 0xc410aa5aUL,
+0x62482413UL, 0x007f9dccUL
+};
+
 #ifdef CLEAN_STACK
 static int _rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #else
 int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #endif
 {
-    unsigned long L[64], S[50], A, B, i, j, v, s, t, l;
+    ulong32 L[64], *S, A, B, i, j, v, s, t, l;
 
     _ARGCHK(skey != NULL);
     _ARGCHK(key != NULL);
+    
 
     /* test parameters */
     if (num_rounds == 0) { 
@@ -38,10 +49,13 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     if (keylen < 8 || keylen > 128) {
        return CRYPT_INVALID_KEYSIZE;
     }
+    
+    skey->rc5.rounds = num_rounds;
+    S = skey->rc5.K;
 
     /* copy the key into the L array */
-    for (A = i = j = 0; i < (unsigned long)keylen; ) { 
-        A = (A << 8) | ((unsigned long)(key[i++] & 255));
+    for (A = i = j = 0; i < (ulong32)keylen; ) { 
+        A = (A << 8) | ((ulong32)(key[i++] & 255));
         if ((i & 3) == 0) {
            L[j++] = BSWAP(A);
            A = 0;
@@ -49,14 +63,13 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     }
 
     if ((keylen & 3) != 0) { 
-       A <<= (unsigned long)((8 * (4 - (keylen&3)))); 
+       A <<= (ulong32)((8 * (4 - (keylen&3)))); 
        L[j++] = BSWAP(A);
     }
 
     /* setup the S array */
-    t = (unsigned long)(2 * (num_rounds + 1));
-    S[0] = 0xB7E15163UL;
-    for (i = 1; i < t; i++) S[i] = S[i - 1] + 0x9E3779B9UL;
+    t = (ulong32)(2 * (num_rounds + 1));
+    memcpy(S, stab, t * sizeof(stab[0]));
 
     /* mix buffer */
     s = 3 * MAX(t, j);
@@ -64,15 +77,9 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     for (A = B = i = j = v = 0; v < s; v++) { 
         A = S[i] = ROL(S[i] + A + B, 3);
         B = L[j] = ROL(L[j] + A + B, (A+B));
-        i = (i + 1) % t;
-        j = (j + 1) % l;
+        if (++i == t) { i = 0; }
+        if (++j == l) { j = 0; }
     }
-    
-    /* copy to key */
-    for (i = 0; i < t; i++) {
-        skey->rc5.K[i] = S[i];
-    }
-    skey->rc5.rounds = num_rounds;
     return CRYPT_OK;
 }
 
@@ -81,7 +88,7 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 {
    int x;
    x = _rc5_setup(key, keylen, num_rounds, skey);
-   burn_stack(sizeof(unsigned long) * 122 + sizeof(int));
+   burn_stack(sizeof(ulong32) * 122 + sizeof(int));
    return x;
 }
 #endif
@@ -92,7 +99,7 @@ static void _rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetr
 void rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 #endif
 {
-   unsigned long A, B;
+   ulong32 A, B, *K;
    int r;
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -102,9 +109,22 @@ void rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
    LOAD32L(B, &pt[4]);
    A += key->rc5.K[0];
    B += key->rc5.K[1];
-   for (r = 0; r < key->rc5.rounds; r++) {
-       A = ROL(A ^ B, B) + key->rc5.K[r+r+2];
-       B = ROL(B ^ A, A) + key->rc5.K[r+r+3];
+   K  = key->rc5.K + 2;
+   
+   if ((key->rc5.rounds & 1) == 0) {
+      for (r = 0; r < key->rc5.rounds; r += 2) {
+          A = ROL(A ^ B, B) + K[0];
+          B = ROL(B ^ A, A) + K[1];
+          A = ROL(A ^ B, B) + K[2];
+          B = ROL(B ^ A, A) + K[3];
+          K += 4;
+      }
+   } else {
+      for (r = 0; r < key->rc5.rounds; r++) {
+          A = ROL(A ^ B, B) + K[0];
+          B = ROL(B ^ A, A) + K[1];
+          K += 2;
+      }
    }
    STORE32L(A, &ct[0]);
    STORE32L(B, &ct[4]);
@@ -114,7 +134,7 @@ void rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
 void rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
    _rc5_ecb_encrypt(pt, ct, key);
-   burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
+   burn_stack(sizeof(ulong32) * 2 + sizeof(int));
 }
 #endif
 
@@ -124,7 +144,7 @@ static void _rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetr
 void rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 #endif
 {
-   unsigned long A, B;
+   ulong32 A, B, *K;
    int r;
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
@@ -132,9 +152,23 @@ void rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
 
    LOAD32L(A, &ct[0]);
    LOAD32L(B, &ct[4]);
-   for (r = key->rc5.rounds - 1; r >= 0; r--) {
-       B = ROR(B - key->rc5.K[r+r+3], A) ^ A;
-       A = ROR(A - key->rc5.K[r+r+2], B) ^ B;
+   K = key->rc5.K + (key->rc5.rounds << 1);
+   
+   if ((key->rc5.rounds & 1) == 0) {
+       K -= 2;
+       for (r = key->rc5.rounds - 1; r >= 0; r -= 2) {
+          B = ROR(B - K[3], A) ^ A;
+          A = ROR(A - K[2], B) ^ B;
+          B = ROR(B - K[1], A) ^ A;
+          A = ROR(A - K[0], B) ^ B;
+          K -= 4;
+        }
+   } else {
+      for (r = key->rc5.rounds - 1; r >= 0; r--) {
+          B = ROR(B - K[1], A) ^ A;
+          A = ROR(A - K[0], B) ^ B;
+          K -= 2;
+      }
    }
    A -= key->rc5.K[0];
    B -= key->rc5.K[1];
@@ -146,7 +180,7 @@ void rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
 void rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 {
    _rc5_ecb_decrypt(ct, pt, key);
-   burn_stack(sizeof(unsigned long) * 2 + sizeof(int));
+   burn_stack(sizeof(ulong32) * 2 + sizeof(int));
 }
 #endif
 

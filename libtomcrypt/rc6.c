@@ -14,13 +14,21 @@ const struct _cipher_descriptor rc6_desc =
     &rc6_keysize
 };
 
+static const ulong32 stab[44] = {
+0xb7e15163UL, 0x5618cb1cUL, 0xf45044d5UL, 0x9287be8eUL, 0x30bf3847UL, 0xcef6b200UL, 0x6d2e2bb9UL, 0x0b65a572UL,
+0xa99d1f2bUL, 0x47d498e4UL, 0xe60c129dUL, 0x84438c56UL, 0x227b060fUL, 0xc0b27fc8UL, 0x5ee9f981UL, 0xfd21733aUL,
+0x9b58ecf3UL, 0x399066acUL, 0xd7c7e065UL, 0x75ff5a1eUL, 0x1436d3d7UL, 0xb26e4d90UL, 0x50a5c749UL, 0xeedd4102UL,
+0x8d14babbUL, 0x2b4c3474UL, 0xc983ae2dUL, 0x67bb27e6UL, 0x05f2a19fUL, 0xa42a1b58UL, 0x42619511UL, 0xe0990ecaUL,
+0x7ed08883UL, 0x1d08023cUL, 0xbb3f7bf5UL, 0x5976f5aeUL, 0xf7ae6f67UL, 0x95e5e920UL, 0x341d62d9UL, 0xd254dc92UL,
+0x708c564bUL, 0x0ec3d004UL, 0xacfb49bdUL, 0x4b32c376UL };
+
 #ifdef CLEAN_STACK
 static int _rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #else
 int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #endif
 {
-    unsigned long L[64], S[50], A, B, i, j, v, s, t, l;
+    ulong32 L[64], S[50], A, B, i, j, v, s, l;
 
     _ARGCHK(key != NULL);
     _ARGCHK(skey != NULL);
@@ -36,8 +44,8 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     }
 
     /* copy the key into the L array */
-    for (A = i = j = 0; i < (unsigned long)keylen; ) { 
-        A = (A << 8) | ((unsigned long)(key[i++] & 255));
+    for (A = i = j = 0; i < (ulong32)keylen; ) { 
+        A = (A << 8) | ((ulong32)(key[i++] & 255));
         if (!(i & 3)) {
            L[j++] = BSWAP(A);
            A = 0;
@@ -51,23 +59,20 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     }
 
     /* setup the S array */
-    t = 44;                                     /* fixed at 20 rounds */
-    S[0] = 0xB7E15163UL;
-    for (i = 1; i < t; i++) 
-        S[i] = S[i - 1] + 0x9E3779B9UL;
+    memcpy(S, stab, 44 * sizeof(stab[0]));
 
     /* mix buffer */
-    s = 3 * MAX(t, j);
+    s = 3 * MAX(44, j);
     l = j;
     for (A = B = i = j = v = 0; v < s; v++) { 
         A = S[i] = ROL(S[i] + A + B, 3);
         B = L[j] = ROL(L[j] + A + B, (A+B));
-        i = (i + 1) % t;
-        j = (j + 1) % l;
+        if (++i == 44) { i = 0; }
+        if (++j == l)  { j = 0; }
     }
     
     /* copy to key */
-    for (i = 0; i < t; i++) { 
+    for (i = 0; i < 44; i++) { 
         skey->rc6.K[i] = S[i];
     }
     return CRYPT_OK;
@@ -78,7 +83,7 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 {
    int x;
    x = _rc6_setup(key, keylen, num_rounds, skey);
-   burn_stack(sizeof(unsigned long) * 122);
+   burn_stack(sizeof(ulong32) * 122);
    return x;
 }
 #endif
@@ -89,22 +94,33 @@ static void _rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetr
 void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 #endif
 {
-   unsigned long a,b,c,d,t,u;
+   ulong32 a,b,c,d,t,u, *K;
    int r;
    
    _ARGCHK(key != NULL);
    _ARGCHK(pt != NULL);
    _ARGCHK(ct != NULL);
    LOAD32L(a,&pt[0]);LOAD32L(b,&pt[4]);LOAD32L(c,&pt[8]);LOAD32L(d,&pt[12]);
+
    b += key->rc6.K[0];
    d += key->rc6.K[1];
-   for (r = 0; r < 20; r++) {
-       t = (b * (b + b + 1)); t = ROL(t, 5);
-       u = (d * (d + d + 1)); u = ROL(u, 5);
-       a = ROL(a^t,u) + key->rc6.K[r+r+2];
-       c = ROL(c^u,t) + key->rc6.K[r+r+3];
-       t = a; a = b; b = c; c = d; d = t;
+
+#define RND(a,b,c,d) \
+       t = (b * (b + b + 1)); t = ROL(t, 5); \
+       u = (d * (d + d + 1)); u = ROL(u, 5); \
+       a = ROL(a^t,u) + K[0];                \
+       c = ROL(c^u,t) + K[1]; K += 2;   
+    
+   K = key->rc6.K + 2;
+   for (r = 0; r < 20; r += 4) {
+       RND(a,b,c,d);
+       RND(b,c,d,a);
+       RND(c,d,a,b);
+       RND(d,a,b,c);
    }
+   
+#undef RND
+
    a += key->rc6.K[42];
    c += key->rc6.K[43];
    STORE32L(a,&ct[0]);STORE32L(b,&ct[4]);STORE32L(c,&ct[8]);STORE32L(d,&ct[12]);
@@ -114,7 +130,7 @@ void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
 void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
    _rc6_ecb_encrypt(pt, ct, key);
-   burn_stack(sizeof(unsigned long) * 6 + sizeof(int));
+   burn_stack(sizeof(ulong32) * 6 + sizeof(int));
 }
 #endif
 
@@ -124,7 +140,7 @@ static void _rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetr
 void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 #endif
 {
-   unsigned long a,b,c,d,t,u;
+   ulong32 a,b,c,d,t,u, *K;
    int r;
 
    _ARGCHK(key != NULL);
@@ -134,13 +150,24 @@ void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
    LOAD32L(a,&ct[0]);LOAD32L(b,&ct[4]);LOAD32L(c,&ct[8]);LOAD32L(d,&ct[12]);
    a -= key->rc6.K[42];
    c -= key->rc6.K[43];
-   for (r = 19; r >= 0; r--) {
-       t = d; d = c; c = b; b = a; a = t;
-       t = (b * (b + b + 1)); t = ROL(t, 5);
-       u = (d * (d + d + 1)); u = ROL(u, 5);
-       c = ROR(c - key->rc6.K[r+r+3], t) ^ u;
-       a = ROR(a - key->rc6.K[r+r+2], u) ^ t;
+   
+#define RND(a,b,c,d) \
+       t = (b * (b + b + 1)); t = ROL(t, 5); \
+       u = (d * (d + d + 1)); u = ROL(u, 5); \
+       c = ROR(c - K[1], t) ^ u; \
+       a = ROR(a - K[0], u) ^ t; K -= 2;
+   
+   K = key->rc6.K + 40;
+   
+   for (r = 0; r < 20; r += 4) {
+       RND(d,a,b,c);
+       RND(c,d,a,b);
+       RND(b,c,d,a);
+       RND(a,b,c,d);
    }
+   
+#undef RND
+
    b -= key->rc6.K[0];
    d -= key->rc6.K[1];
    STORE32L(a,&pt[0]);STORE32L(b,&pt[4]);STORE32L(c,&pt[8]);STORE32L(d,&pt[12]);
@@ -150,7 +177,7 @@ void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
 void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *key)
 {
    _rc6_ecb_decrypt(ct, pt, key);
-   burn_stack(sizeof(unsigned long) * 6 + sizeof(int));
+   burn_stack(sizeof(ulong32) * 6 + sizeof(int));
 }
 #endif
 

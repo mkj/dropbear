@@ -1,7 +1,69 @@
 #include <mycrypt.h>
 
-extern void t_start(void);
-extern ulong64  t_read(void);
+#define KTIMES  25
+#define TIMES   100000
+
+/* RDTSC from Scott Duplichan */
+static ulong64 rdtsc (void)
+   {
+   #if defined __GNUC__
+      #ifdef i386
+         ulong64 a;
+         asm volatile("rdtsc ":"=A" (a));
+         return a;
+      #else /* gcc-IA64 version */
+         unsigned long result;
+         __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+         while (__builtin_expect ((int) result == -1, 0))
+         __asm__ __volatile__("mov %0=ar.itc" : "=r"(result) :: "memory");
+         return result;
+      #endif
+
+   // Microsoft and Intel Windows compilers
+   #elif defined _M_IX86
+     __asm rdtsc
+   #elif defined _M_AMD64
+     return __rdtsc ();
+   #elif defined _M_IA64
+     #if defined __INTEL_COMPILER
+       #include <ia64intrin.h>
+     #endif
+      return __getReg (3116);
+   #else
+     #error need rdtsc function for this build
+   #endif
+   }
+
+ulong64 timer, skew = 0;
+
+void t_start(void)
+{
+   timer = rdtsc();
+}
+
+ulong64 t_read(void)
+{
+   return rdtsc() - timer;
+}
+
+void init_timer(void)
+{
+   ulong64 c1, c2, t1, t2, t3;
+   unsigned long y1;
+   
+   c1 = c2 = (ulong64)-1;
+   for (y1 = 0; y1 < TIMES*100; y1++) {
+      t_start();
+      t1 = t_read();
+      t3 = t_read();
+      t2 = t_read() - t1;
+      
+      c1 = (c1 > t1) ? t1 : c1;
+      c2 = (c2 > t2) ? t2 : c2;
+   }
+   skew = c2 - c1;
+   printf("Clock Skew: %lu\n", (unsigned long)skew);
+}  
 
 void reg_algs(void)
 {
@@ -70,15 +132,48 @@ void reg_algs(void)
 #ifdef SHA512
   register_hash (&sha512_desc);
 #endif
+#ifdef RIPEMD128
+  register_hash (&rmd128_desc);
+#endif
 
 }
 
-#define TIMES  20
+int time_keysched(void)
+{
+  unsigned long x, i, y1;
+  ulong64 t1, c1;
+  symmetric_key skey;
+  int kl;
+  int    (*func) (const unsigned char *, int , int , symmetric_key *);
+  unsigned char key[MAXBLOCKSIZE];
+
+  printf ("\n\nKey Schedule Time Trials for the Symmetric Ciphers:\n(Times are cycles per key)\n");
+  for (x = 0; cipher_descriptor[x].name != NULL; x++) {
+#define DO1(k)   func(k, kl, 0, &skey);
+
+    func = cipher_descriptor[x].setup;
+    kl   = cipher_descriptor[x].min_key_length;
+    c1 = (ulong64)-1;
+    for (y1 = 0; y1 < KTIMES; y1++) {
+       rng_get_bytes(key, kl, NULL);
+       t_start();
+       DO1(key);
+       t1 = t_read();
+       c1 = (t1 > c1) ? c1 : t1;
+    }
+    t1 = c1 - skew;
+    printf("%-20s: Schedule at %6lu\n", cipher_descriptor[x].name, (unsigned long)t1);
+
+#undef DO1
+   }
+   
+   return 0;
+}
 
 int time_cipher(void)
 {
   unsigned long x, y1;
-  ulong64 t1, t2;
+  ulong64  t1, t2, c1, c2, a1, a2;
   symmetric_key skey;
   void    (*func) (const unsigned char *, unsigned char *, symmetric_key *);
   unsigned char key[MAXBLOCKSIZE], pt[MAXBLOCKSIZE];
@@ -91,43 +186,41 @@ int time_cipher(void)
 
 #define DO1   func(pt,pt,&skey);
 #define DO2   DO1 DO1
-#define DO4   DO2 DO2
-#define DO8   DO4 DO4
-#define DO16  DO8 DO8
-#define DO32  DO16 DO16
-#define DO64  DO32 DO32
-#define DO128 DO64 DO64
-#define DO256 DO128 DO128
 
     func = cipher_descriptor[x].ecb_encrypt;
-    y1 = 1<<TIMES;
-    t_start();
-    do {
-      DO256;
-    } while ((y1 -= 256) > 0);
-    t1 = t_read();
-
+    c1 = c2 = (ulong64)-1;
+    for (y1 = 0; y1 < TIMES; y1++) {
+        t_start();
+        DO1;
+        t1 = t_read();
+        DO2;
+        t2 = t_read();
+        t2 -= t1;
+        
+        c1 = (t1 > c1 ? c1 : t1);
+        c2 = (t2 > c2 ? c2 : t2);
+    }
+    a1 = c2 - c1 - skew;
+        
+        
     func = cipher_descriptor[x].ecb_decrypt;
-    y1 = 1<<TIMES;
-    t_start();
-    do {
-      DO256;
-    } while ((y1 -= 256) > 0);
-    t2 = t_read();
-    
-    t1 = ((t1 * CONST64(1000)) >> TIMES) / ((ulong64)cipher_descriptor[x].block_length);
-    t2 = ((t2 * CONST64(1000)) >> TIMES) / ((ulong64)cipher_descriptor[x].block_length);
+    c1 = c2 = (ulong64)-1;
+    for (y1 = 0; y1 < TIMES; y1++) {
+        t_start();
+        DO1;
+        t1 = t_read();
+        DO2;
+        t2 = t_read();
+        t2 -= t1;
+        
+        c1 = (t1 > c1 ? c1 : t1);
+        c2 = (t2 > c2 ? c2 : t2);
+    }
+    a2 = c2 - c1 - skew;
     
     printf
-      ("%-20s: Encrypt at %5.3f, Decrypt at %5.3f\n", cipher_descriptor[x].name, t1/1000.0, t2/1000.0);
+      ("%-20s: Encrypt at %7.3f, Decrypt at %7.3f\n", cipher_descriptor[x].name, a1/(double)cipher_descriptor[x].block_length, a2/(double)cipher_descriptor[x].block_length);
 
-#undef DO256
-#undef DO128
-#undef DO64
-#undef DO32
-#undef DO16
-#undef DO8
-#undef DO4
 #undef DO2
 #undef DO1
    }
@@ -138,47 +231,38 @@ int time_cipher(void)
 int time_hash(void)
 {
   unsigned long x, y1, len;
-  ulong64 t1;
+  ulong64 t1, t2, c1, c2;
   hash_state md;
   void    (*func)(hash_state *, const unsigned char *, unsigned long);
   unsigned char pt[MAXBLOCKSIZE];
 
  
-  printf ("HASH Time Trials for:\n");
+  printf ("\n\nHASH Time Trials for:\n");
   for (x = 0; hash_descriptor[x].name != NULL; x++) {
     hash_descriptor[x].init(&md);
 
 #define DO1   func(&md,pt,len);
 #define DO2   DO1 DO1
-#define DO4   DO2 DO2
-#define DO8   DO4 DO4
-#define DO16  DO8 DO8
-#define DO32  DO16 DO16
-#define DO64  DO32 DO32
-#define DO128 DO64 DO64
-#define DO256 DO128 DO128
 
     func = hash_descriptor[x].process;
     len  = hash_descriptor[x].blocksize;
-    y1 = 1<<TIMES;
-    t_start();
-    do {
-      DO256;
-    } while ((y1 -= 256) > 0);
-    t1 = t_read();
-   
-    t1 = ((t1 * CONST64(1000)) >> TIMES) / ((ulong64)hash_descriptor[x].blocksize);
+    
+    c1 = c2 = (ulong64)-1;
+    for (y1 = 0; y1 < TIMES; y1++) {
+       t_start();
+       DO1;
+       t1 = t_read();
+       DO2;
+       t2 = t_read() - t1;
+       c1 = (t1 > c1) ? c1 : t1;
+       c2 = (t2 > c2) ? c2 : t2;
+    }
+    t1 = c2 - c1 - skew;   
+    t1 = ((t1 * CONST64(1000))) / ((ulong64)hash_descriptor[x].blocksize);
     
     printf
-      ("%-20s: Process at %5.3f\n", hash_descriptor[x].name, t1 / 1000.0);
+      ("%-20s: Process at %9.3f\n", hash_descriptor[x].name, t1 / 1000.0);
 
-#undef DO256
-#undef DO128
-#undef DO64
-#undef DO32
-#undef DO16
-#undef DO8
-#undef DO4
 #undef DO2
 #undef DO1
    }
@@ -192,8 +276,10 @@ int main(void)
 
   printf("Timings for ciphers and hashes.  Times are listed as cycles per byte processed.\n\n");
   
-  time_hash();
+//  init_timer();
   time_cipher();
+  time_keysched();
+  time_hash();
   
   return EXIT_SUCCESS;
 }  

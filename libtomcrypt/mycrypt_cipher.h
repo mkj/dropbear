@@ -5,21 +5,21 @@
  */
 #ifdef BLOWFISH
 struct blowfish_key {
-   unsigned long S[4][256];
-   unsigned long K[18];
+   ulong32 S[4][256];
+   ulong32 K[18];
 };
 #endif
 
 #ifdef RC5
 struct rc5_key {
    int rounds;
-   unsigned long K[50];
+   ulong32 K[50];
 };
 #endif
 
 #ifdef RC6
 struct rc6_key {
-   unsigned long K[44];
+   ulong32 K[44];
 };
 #endif
 
@@ -32,7 +32,7 @@ struct saferp_key {
 
 #ifdef RIJNDAEL
 struct rijndael_key {
-   unsigned long eK[64], dK[64];
+   ulong32 eK[64], dK[64];
    int Nr;
 };
 #endif
@@ -46,11 +46,11 @@ struct xtea_key {
 #ifdef TWOFISH
 #ifndef TWOFISH_SMALL
    struct twofish_key {
-      unsigned long S[4][256], K[40];
+      ulong32 S[4][256], K[40];
    };
 #else
    struct twofish_key {
-      unsigned long K[40];
+      ulong32 K[40];
       unsigned char S[32], start;
    };
 #endif
@@ -75,23 +75,23 @@ struct rc2_key { unsigned xkey[64]; };
 
 #ifdef DES
 struct des_key {
-    unsigned long ek[32], dk[32];
+    ulong32 ek[32], dk[32];
 };
 
 struct des3_key {
-    unsigned long ek[3][32], dk[3][32];
+    ulong32 ek[3][32], dk[3][32];
 };
 #endif
 
 #ifdef CAST5
 struct cast5_key {
-    unsigned long K[32], keylen;
+    ulong32 K[32], keylen;
 };
 #endif
 
 #ifdef NOEKEON
 struct noekeon_key {
-    unsigned long K[4], dK[4];
+    ulong32 K[4], dK[4];
 };
 #endif
 

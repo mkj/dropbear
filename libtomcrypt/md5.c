@@ -15,21 +15,21 @@ const struct _hash_descriptor md5_desc =
 };
 
 #define F(x,y,z)  (z ^ (x & (y ^ z)))
-#define G(x,y,z)  ((x&z)|(y&(~z)))
+#define G(x,y,z)  (y ^ (z & (y ^ x)))
 #define H(x,y,z)  (x^y^z)
 #define I(x,y,z)  (y^(x|(~z)))
 
 #define FF(a,b,c,d,M,s,t) \
-    a = (a + F(b,c,d) + M + t); a = ROL(a, s); a = (b + a);
+    a = (a + F(b,c,d) + M + t); a = ROL(a, s) + b;
 
 #define GG(a,b,c,d,M,s,t) \
-    a = (a + G(b,c,d) + M + t); a = ROL(a, s); a = (b + a);
+    a = (a + G(b,c,d) + M + t); a = ROL(a, s) + b;
 
 #define HH(a,b,c,d,M,s,t) \
-    a = (a + H(b,c,d) + M + t); a = ROL(a, s); a = (b + a);
+    a = (a + H(b,c,d) + M + t); a = ROL(a, s) + b;
 
 #define II(a,b,c,d,M,s,t) \
-    a = (a + I(b,c,d) + M + t); a = ROL(a, s); a = (b + a);
+    a = (a + I(b,c,d) + M + t); a = ROL(a, s) + b;
 
 #ifdef CLEAN_STACK
 static void _md5_compress(hash_state *md)

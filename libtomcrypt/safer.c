@@ -91,7 +91,7 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
                                  int strengthened,
                                  safer_key_t key)
 #endif
-{   unsigned int i, j;
+{   unsigned int i, j, k;
     unsigned char ka[SAFER_BLOCK_LEN + 1];
     unsigned char kb[SAFER_BLOCK_LEN + 1];
 
@@ -100,6 +100,7 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
     *key++ = (unsigned char)nof_rounds;
     ka[SAFER_BLOCK_LEN] = (unsigned char)0;
     kb[SAFER_BLOCK_LEN] = (unsigned char)0;
+    k = 0;
     for (j = 0; j < SAFER_BLOCK_LEN; j++) {
         ka[j] = ROL8(userkey_1[j], 5);
         ka[SAFER_BLOCK_LEN] ^= ka[j];
@@ -111,18 +112,28 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
             ka[j] = ROL8(ka[j], 6);
             kb[j] = ROL8(kb[j], 6);
         }
+        if (strengthened) {
+           k = 2 * i - 1;
+           while (k >= (SAFER_BLOCK_LEN + 1)) { k -= SAFER_BLOCK_LEN + 1; }
+        }
         for (j = 0; j < SAFER_BLOCK_LEN; j++) {
             if (strengthened) {
-                *key++ = (ka[(j + 2 * i - 1) % (SAFER_BLOCK_LEN + 1)]
+                *key++ = (ka[k]
                                 + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 1)&0xFF)]]) & 0xFF;
+                if (++k == (SAFER_BLOCK_LEN + 1)) { k = 0; }
             } else {
                 *key++ = (ka[j] + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 1)&0xFF)]]) & 0xFF;
             }
         }
+        if (strengthened) {
+           k = 2 * i;
+           while (k >= (SAFER_BLOCK_LEN + 1)) { k -= SAFER_BLOCK_LEN + 1; }
+        }
         for (j = 0; j < SAFER_BLOCK_LEN; j++) {
             if (strengthened) {
-                *key++ = (kb[(j + 2 * i) % (SAFER_BLOCK_LEN + 1)]
+                *key++ = (kb[k]
                                 + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 10)&0xFF)]]) & 0xFF;
+                if (++k == (SAFER_BLOCK_LEN + 1)) { k = 0; }
             } else {
                 *key++ = (kb[j] + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 10)&0xFF)]]) & 0xFF;
             }

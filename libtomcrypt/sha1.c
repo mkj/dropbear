@@ -25,7 +25,7 @@ static void _sha1_compress(hash_state *md)
 static void sha1_compress(hash_state *md)
 #endif
 {
-    unsigned long a,b,c,d,e,W[80],i,j;
+    unsigned long a,b,c,d,e,W[80],i;
 
     _ARGCHK(md != NULL);
 
@@ -43,51 +43,55 @@ static void sha1_compress(hash_state *md)
 
     /* expand it */
     for (i = 16; i < 80; i++) {
-        j = W[i-3] ^ W[i-8] ^ W[i-14] ^ W[i-16]; 
-        W[i] = ROL(j, 1);
+        W[i] = ROL(W[i-3] ^ W[i-8] ^ W[i-14] ^ W[i-16], 1); 
     }
-
 
     /* compress */
     /* round one */
-    for (i = 0;  i < 20; i++)  { 
-        j = (ROL(a, 5) + F0(b,c,d) + e + W[i] + 0x5a827999UL); 
-        e = d; 
-        d = c; 
-        c = ROL(b, 30); 
-        b = a; 
-        a = j; 
+    #define FF0(a,b,c,d,e,i) e = (ROL(a, 5) + F0(b,c,d) + e + W[i] + 0x5a827999UL); b = ROL(b, 30);
+    #define FF1(a,b,c,d,e,i) e = (ROL(a, 5) + F1(b,c,d) + e + W[i] + 0x6ed9eba1UL); b = ROL(b, 30);
+    #define FF2(a,b,c,d,e,i) e = (ROL(a, 5) + F2(b,c,d) + e + W[i] + 0x8f1bbcdcUL); b = ROL(b, 30);
+    #define FF3(a,b,c,d,e,i) e = (ROL(a, 5) + F3(b,c,d) + e + W[i] + 0xca62c1d6UL); b = ROL(b, 30);
+ 
+    for (i = 0; i < 20; ) {
+       FF0(a,b,c,d,e,i++);
+       FF0(e,a,b,c,d,i++);
+       FF0(d,e,a,b,c,i++);
+       FF0(c,d,e,a,b,i++);
+       FF0(b,c,d,e,a,i++);
     }
 
     /* round two */
-    for (i = 20; i < 40; i++)  { 
-        j = (ROL(a, 5) + F1(b,c,d) + e + W[i] + 0x6ed9eba1UL); 
-        e = d; 
-        d = c; 
-        c = ROL(b, 30); 
-        b = a; 
-        a = j; 
+    for (i = 20; i < 40; )  { 
+       FF1(a,b,c,d,e,i++);
+       FF1(e,a,b,c,d,i++);
+       FF1(d,e,a,b,c,i++);
+       FF1(c,d,e,a,b,i++);
+       FF1(b,c,d,e,a,i++);
     }
 
     /* round three */
-    for (i = 40; i < 60; i++)  { 
-        j = (ROL(a, 5) + F2(b,c,d) + e + W[i] + 0x8f1bbcdcUL); 
-        e = d; 
-        d = c; 
-        c = ROL(b, 30); 
-        b = a; 
-        a = j; 
+    for (i = 40; i < 60; )  { 
+       FF2(a,b,c,d,e,i++);
+       FF2(e,a,b,c,d,i++);
+       FF2(d,e,a,b,c,i++);
+       FF2(c,d,e,a,b,i++);
+       FF2(b,c,d,e,a,i++);
     }
 
     /* round four */
-    for (i = 60; i < 80; i++)  { 
-        j = (ROL(a, 5) + F3(b,c,d) + e + W[i] + 0xca62c1d6UL);
-        e = d;
-        d = c;
-        c = ROL(b, 30);
-        b = a;
-        a = j;
+    for (i = 60; i < 80; )  { 
+       FF3(a,b,c,d,e,i++);
+       FF3(e,a,b,c,d,i++);
+       FF3(d,e,a,b,c,i++);
+       FF3(c,d,e,a,b,i++);
+       FF3(b,c,d,e,a,i++);
     }
+
+    #undef FF0
+    #undef FF1
+    #undef FF2
+    #undef FF3
 
     /* store */
     md->sha1.state[0] = md->sha1.state[0] + a;

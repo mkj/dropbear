@@ -37,7 +37,8 @@ int hmac_init(hmac_state *hmac, int hash, const unsigned char *key, unsigned lon
         return err;
     }
 
-    if (keylen == 0) {
+    /* valid key length? */
+    if (keylen == 0 || keylen > MAXBLOCKSIZE) {
         return CRYPT_INVALID_KEYSIZE;
     }
 
@@ -88,7 +89,7 @@ int hmac_process(hmac_state *hmac, const unsigned char *buf, unsigned long len)
     return CRYPT_OK;
 }
 
-int hmac_done(hmac_state *hmac, unsigned char *hashOut)
+int hmac_done(hmac_state *hmac, unsigned char *hashOut, unsigned long *outlen)
 {
     unsigned char buf[MAXBLOCKSIZE];
     unsigned char isha[MAXBLOCKSIZE];
@@ -103,11 +104,17 @@ int hmac_done(hmac_state *hmac, unsigned char *hashOut)
         return err;
     }
 
+    /* ensure the output size is valid */
+    hashsize = hash_descriptor[hash].hashsize;
+    if (*outlen < hashsize) {
+       return CRYPT_BUFFER_OVERFLOW;
+    }
+    *outlen = hashsize;
+
     // Get the hash of the first HMAC vector plus the data
     hash_descriptor[hash].done(&hmac->md, isha);
 
     // Create the second HMAC vector vector for step (3)
-    hashsize = hash_descriptor[hash].hashsize;
     for(i=0; i < HMAC_BLOCKSIZE; i++) {
         buf[i] = hmac->key[i] ^ 0x5C;
     }
@@ -138,20 +145,16 @@ int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
     if((err = hash_is_valid(hash)) != CRYPT_OK) {
         return err;
     }
-    if (hash_descriptor[hash].hashsize > *dstlen) {
-       return CRYPT_BUFFER_OVERFLOW;
-    }
-    *dstlen = hash_descriptor[hash].hashsize;
 
     if ((err = hmac_init(&hmac, hash, key, keylen)) != CRYPT_OK) {
         return err;
     }
-  
+
     if ((err = hmac_process(&hmac, data, len)) != CRYPT_OK) {
        return err;
     }
 
-    if ((err = hmac_done(&hmac, dst)) != CRYPT_OK) {
+    if ((err = hmac_done(&hmac, dst, dstlen)) != CRYPT_OK) {
        return err;
     }
     return CRYPT_OK;
@@ -163,7 +166,7 @@ int hmac_file(int hash, const char *fname, const unsigned char *key,
                 unsigned char *dst, unsigned long *dstlen)
 {
 #ifdef NO_FILE
-    return CRYPT_ERROR;
+    return CRYPT_NOP;
 #else
    hmac_state hmac;
    FILE *in;
@@ -178,10 +181,6 @@ int hmac_file(int hash, const char *fname, const unsigned char *key,
    if((err = hash_is_valid(hash)) != CRYPT_OK) {
        return err;
    }
-   if (hash_descriptor[hash].hashsize > *dstlen) {
-      return CRYPT_BUFFER_OVERFLOW;
-   }
-   *dstlen = hash_descriptor[hash].hashsize;
 
    if ((err = hmac_init(&hmac, hash, key, keylen)) != CRYPT_OK) {
        return err;
@@ -203,7 +202,7 @@ int hmac_file(int hash, const char *fname, const unsigned char *key,
    (void)fclose(in);
 
    /* get final hmac */
-   if ((err = hmac_done(&hmac, dst)) != CRYPT_OK) {
+   if ((err = hmac_done(&hmac, dst, dstlen)) != CRYPT_OK) {
       return err;
    }
 
