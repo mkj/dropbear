@@ -36,3 +36,14 @@ sshpty.c is taken from OpenSSH 3.5p1,
   software must be clearly marked as such, and if the derived work is
   incompatible with the protocol description in the RFC file, it must be
   called by a name other than "ssh" or "Secure Shell". "
+
+loginrec.c
+loginrec.h
+atomicio.h
+atomicio.c
+and strlcat() (included in util.c) are from OpenSSH 3.6.1p2, and are licensed
+under the 2 point BSD license.
+
+loginrec is written primarily by Andre Lucas, atomicio.c by Theo de Raadt.
+
+strlcat() is (c) Todd C. Miller

@@ -1,8 +1,6 @@
 /*
  * Dropbear - a SSH2 server
  * 
- * Portions (strlcat) 
- *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
  * 
