@@ -110,9 +110,19 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MOTD_FILENAME "/etc/motd"
 #endif
 
-/* Authentication types to enable, at least one required.
+/* Authentication Types - at least one required.
    RFC Draft requires pubkey auth, and recommends password */
-#define ENABLE_SVR_PASSWORD_AUTH
+
+/* PAM auth is quite simple, and only works for PAM modules which just do a
+ * simple "Login: " "Password: " (or something like that - if your module is
+ * similar but not quite like that, edit the strings in svr-authpam.c).
+ * Basically, it's useful for systems like OS X where standard password crypts
+ * don't work, but there's and interface via a PAM module. You'll need to
+ * configure with --enable-pam as well, since it's off by default. And you
+ * should only enable either PASSWORD _or_ PAM auth, not both. */
+
+/*#define ENABLE_SVR_PASSWORD_AUTH*/
+#define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -173,7 +183,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.44test3"
+#define DROPBEAR_VERSION "0.44rez1"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -320,6 +330,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
+#endif
+
+#if defined(ENABLE_SVR_PASSWORD_AUTH) && defined(ENABLE_SVR_PAM_AUTH)
+#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
 #endif
 
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
