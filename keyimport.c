@@ -376,8 +376,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	char buffer[256];
 	char *errmsg = NULL, *p = NULL;
 	int headers_done;
-	char base64_bit[4];
-	int base64_chars = 0;
+	unsigned long len, outlen;
 
 	ret = (struct openssh_key*)m_malloc(sizeof(struct openssh_key));
 	ret->keyblob = NULL;
@@ -454,39 +453,20 @@ static struct openssh_key *load_openssh_key(const char *filename)
 			}
 		} else {
 			headers_done = 1;
-
-			p = buffer;
-			while (isbase64(*p)) {
-				base64_bit[base64_chars++] = *p;
-				if (base64_chars == 4) {
-					unsigned char out[3];
-					unsigned long len;
-
-					base64_chars = 0;
-
-					/* not real efficient, but eh, this code doesn't run often.
-					 * matt */
-					base64_decode(base64_bit, 4, out, &len);
-
-					if (len <= 0) {
-						errmsg = "Invalid base64 encoding";
-						goto error;
-					}
-
-					if (ret->keyblob_len + len > ret->keyblob_size) {
-						ret->keyblob_size = ret->keyblob_len + len + 256;
-						ret->keyblob = (unsigned char*)m_realloc(ret->keyblob,
-								ret->keyblob_size);
-					}
-
-					memcpy(ret->keyblob + ret->keyblob_len, out, len);
-					ret->keyblob_len += len;
-
-					memset(out, 0, sizeof(out));
-				}
-
-				p++;
+			len = strlen(buffer);
+			outlen = len*4/3;
+			if (ret->keyblob_len + outlen > ret->keyblob_size) {
+				ret->keyblob_size = ret->keyblob_len + outlen + 256;
+				ret->keyblob = (unsigned char*)m_realloc(ret->keyblob,
+						ret->keyblob_size);
 			}
+			outlen = ret->keyblob_size - ret->keyblob_len;
+			if (base64_decode(buffer, len, 
+						ret->keyblob + ret->keyblob_len, &outlen) != CRYPT_OK){
+				errmsg = "Error decoding base64";
+				goto error;
+			}
+			ret->keyblob_len += outlen;
 		}
 	}
 
@@ -501,12 +481,10 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	}
 
 	memset(buffer, 0, sizeof(buffer));
-	memset(base64_bit, 0, sizeof(base64_bit));
 	return ret;
 
 	error:
 	memset(buffer, 0, sizeof(buffer));
-	memset(base64_bit, 0, sizeof(base64_bit));
 	if (ret) {
 		if (ret->keyblob) {
 			memset(ret->keyblob, 0, ret->keyblob_size);

@@ -102,14 +102,15 @@ usage:
 static int do_convert(int intype, const char* infile, int outtype,
 		const char* outfile) {
 
-	sign_key * key;
+	sign_key * key = NULL;
 	char * keytype;
+	int ret = 1;
 
 	key = import_read(infile, NULL, intype);
 	if (!key) {
 		fprintf(stderr, "Error reading key from '%s'\n",
 				infile);
-		return 1;
+		goto out;
 	}
 
 	keytype = key->rsakey != NULL ? "RSA" : "DSS";
@@ -117,12 +118,15 @@ static int do_convert(int intype, const char* infile, int outtype,
 	fprintf(stderr, "Key is a %s key\n", keytype);
 
 	if (import_write(outfile, key, NULL, outtype) != 1) {
-		fprintf(stderr, "Error writing key to '%s'\n",
-				outfile);
-		return 1;
+		fprintf(stderr, "Error writing key to '%s'\n", outfile);
 	} else {
-		fprintf(stderr, "Wrote key to '%s'\n",
-				outfile);
-		return 0;
+		fprintf(stderr, "Wrote key to '%s'\n", outfile);
+		ret = 0;
 	}
+
+out:
+	if (key) {
+		sign_key_free(key);
+	}
+	return ret;
 }
