@@ -255,5 +255,7 @@ out:
 		fclose(hostsfile);
 	}
 	m_free(filename);
-	buf_free(line);
+	if (line != NULL) {
+		buf_free(line);
+	}
 }

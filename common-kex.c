@@ -464,6 +464,8 @@ void recv_msg_kexinit() {
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
  * See the ietf-secsh-transport draft, section 6, for details */
+/* dh_pub and dh_priv will be initialised by this function, and should be
+ * mp_clear()ed after finished */
 void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 
 	mp_int dh_p, dh_q, dh_g;
