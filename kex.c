@@ -455,8 +455,8 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 /* read the client's choice of algorithms */
 static void read_kex() {
 
-	algo_type * algo;
-	unsigned char* str;
+	algo_type * algo = NULL;
+	unsigned char* str = NULL;
 	char * erralgo = NULL;
 
 	int goodguess = 0;

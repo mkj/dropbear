@@ -76,7 +76,7 @@ void remotetcpinitialise() {
 void setremotetcpfds(fd_set * readfds) {
 
 	unsigned int i;
-	struct TCPListener *listener;
+	struct TCPListener *listener = NULL;
 
 	/* check each in turn */
 	for (i = 0; i < ses.tcplistensize; i++) {
@@ -91,7 +91,7 @@ void setremotetcpfds(fd_set * readfds) {
 void handleremotetcp(fd_set * readfds) {
 
 	unsigned int i;
-	struct TCPListener *listener;
+	struct TCPListener *listener = NULL;
 
 	/* check each in turn */
 	for (i = 0; i < ses.tcplistensize; i++) {
@@ -246,7 +246,7 @@ out:
 static int newlistener(unsigned char* bindaddr, unsigned int port) {
 
 	unsigned int i, j;
-	struct TCPListener* newtcp;
+	struct TCPListener* newtcp = NULL;
 	char portstring[6]; /* "65535\0" */
 	struct addrinfo *res = NULL, *ai = NULL;
 	struct addrinfo hints;
@@ -262,11 +262,11 @@ static int newlistener(unsigned char* bindaddr, unsigned int port) {
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
 
 	if (getaddrinfo(bindaddr, portstring, &hints, &res) < 0) {
+		TRACE(("leave newlistener: getaddrinfo failed: %s",
+					strerror(errno)));
 		if (res) {
 			freeaddrinfo(res);
 		}
-		TRACE(("leave newlistener: getaddrinfo failed: %s",
-					strerror(errno)));
 		return DROPBEAR_FAILURE;
 	}
 

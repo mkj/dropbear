@@ -538,6 +538,7 @@ static void removechannel(struct Channel * channel) {
 	TRACE(("channel index is %d", channel->index));
 
 	buf_free(channel->writebuf);
+	channel->writebuf = NULL;
 
 	/* close the FDs in case they haven't been done
 	 * yet (ie they were shutdown etc */
@@ -548,6 +549,7 @@ static void removechannel(struct Channel * channel) {
 		closechansess(channel);
 		close(channel->errfd);
 	}
+	channel->typedata = NULL;
 
 	deletechannel(channel);
 

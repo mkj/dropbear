@@ -239,8 +239,11 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	}
 
 out:
-	mp_clear_multi(rsa_em, &rsa_mdash, &rsa_s, NULL);
-	m_free(rsa_em);
+	if (rsa_em) {
+		mp_clear(rsa_em);
+		m_free(rsa_em);
+	}
+	mp_clear_multi(&rsa_mdash, &rsa_s, NULL);
 	return ret;
 
 }
@@ -254,15 +257,15 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	unsigned int nsize, ssize;
 	unsigned int i;
 	mp_int rsa_s;
-	mp_int *rsa_em;
+	mp_int *rsa_em = NULL;
 	
 	TRACE(("enter buf_put_rsa_sign"));
 	assert(key != NULL);
 
 	rsa_em = rsa_pad_em(key, data, len);
+	m_mp_init(&rsa_s);
 
 	/* the actual signing of the padded data */
-	m_mp_init(&rsa_s);
 	/* s = em^d mod n */
 	if (mp_exptmod(rsa_em, key->d, key->n, &rsa_s) != MP_OKAY) {
 		dropbear_exit("rsa error");
@@ -316,10 +319,10 @@ static mp_int * rsa_pad_em(rsa_key * key,
 		{0x00, 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 
 		 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14};
 #define RSA_ASN1_MAGIC_LEN 16
-	buffer * rsa_EM;
+	buffer * rsa_EM = NULL;
 	hash_state hs;
 	unsigned int nsize;
-	mp_int * rsa_em;
+	mp_int * rsa_em = NULL;
 	
 	assert(key != NULL);
 	assert(data != NULL);

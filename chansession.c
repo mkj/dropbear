@@ -286,7 +286,7 @@ void closechansess(struct Channel *channel) {
  * or x11/authagent forwarding. These are passed to appropriate handlers */
 void chansessionrequest(struct Channel *channel) {
 
-	unsigned char * type;
+	unsigned char * type = NULL;
 	unsigned int typelen;
 	unsigned char wantreply;
 	int ret = 1;
@@ -351,7 +351,7 @@ out:
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
-	unsigned char* signame;
+	unsigned char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
@@ -670,7 +670,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
-	struct logininfo *li;
+	struct logininfo *li = NULL;
 #ifdef DO_MOTD
 	buffer * motdbuf = NULL;
 	int len;
@@ -798,8 +798,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
-	char * usershell;
-	char * baseshell;
+	char * usershell = NULL;
+	char * baseshell = NULL;
 	unsigned int i;
 
 	/* wipe the hostkey */
@@ -917,7 +917,7 @@ static void execchild(struct ChanSess *chansess) {
 /* add a new environment variable, allocating space for the entry */
 void addnewvar(const char* param, const char* var) {
 
-	char* newvar;
+	char* newvar = NULL;
 	int plen, vlen;
 
 	plen = strlen(param);

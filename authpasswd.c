@@ -38,14 +38,14 @@
 void passwordauth() {
 	
 #ifdef HAVE_SHADOW_H
-	struct spwd *spasswd;
+	struct spwd *spasswd = NULL;
 #endif
-	char * passwdcrypt; /* the crypt from /etc/passwd or /etc/shadow */
-	char * testcrypt; /* crypt generated from the user's password sent */
-	unsigned char * password;
+	char * passwdcrypt = NULL; /* the crypt from /etc/passwd or /etc/shadow */
+	char * testcrypt = NULL; /* crypt generated from the user's password sent */
+	unsigned char * password = NULL;
 	unsigned int passwordlen;
 
-	unsigned char changepw;
+	unsigned int changepw;
 
 	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H

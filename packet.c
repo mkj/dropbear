@@ -52,7 +52,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 void write_packet() {
 
 	int len, written;
-	buffer * writebuf;
+	buffer * writebuf = NULL;
 	
 	TRACE(("enter write_packet"));
 	assert(!isempty(&ses.writequeue));

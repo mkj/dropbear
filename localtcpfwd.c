@@ -77,7 +77,7 @@ static int newtcp(const char * host, int port) {
 
 	int sock = -1;
 	char portstring[6];
-	struct addrinfo *res = NULL, *ai;
+	struct addrinfo *res = NULL, *ai = NULL;
 	int val;
 
 	struct addrinfo hints;
@@ -91,10 +91,10 @@ static int newtcp(const char * host, int port) {
 
 	snprintf(portstring, sizeof(portstring), "%d", port);
 	if (getaddrinfo(host, portstring, &hints, &res) != 0) {
+		TRACE(("leave newtcp: failed getaddrinfo"));
 		if (res) {
 			freeaddrinfo(res);
 		}
-		TRACE(("leave newtcp: failed getaddrinfo"));
 		return -1;
 	}
 
