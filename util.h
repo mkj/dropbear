@@ -38,6 +38,7 @@ void dropbear_log(int priority, const char* format, ...);
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...);
 #endif
+unsigned char * getaddrstring(struct sockaddr * addr);
 void printhex(unsigned char* buf, int len);
 int readln(int fd, char* buf, int count);
 int writeln(int fd, char* str);

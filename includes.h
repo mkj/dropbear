@@ -51,6 +51,12 @@
 #include <unistd.h>
 #include <syslog.h>
 
+#include <arpa/inet.h>
+
+#ifdef HAVE_NETINET_IN_H
+#include <netinet/in.h>
+#endif
+
 #ifdef HAVE_INTTYPES_H
 #include <inttypes.h>
 #endif

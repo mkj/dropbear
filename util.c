@@ -48,7 +48,7 @@ void startsyslog() {
 
 	int fd;
 
-	openlog(PROGNAME, LOG_PID, LOG_DAEMON);
+	openlog(PROGNAME, LOG_PID, LOG_AUTHPRIV);
 
 #ifndef DEBUG_TRACE
 	/* redirect stdin/stdout/stderr to /dev/null */
@@ -106,8 +106,8 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 	if (sessinitdone && ses.authstate.authdone) {
 		/* user has authenticated */
 		assert(ses.authstate.username);
-		snprintf(infostr, sizeof(infostr), "post-userauth (%s): ", 
-				ses.authstate.username);
+		snprintf(infostr, sizeof(infostr), "post-userauth (%s) from %s: ", 
+				ses.authstate.username, ses.addrstring);
 	} else {
 		/* before userauth */
 		snprintf(infostr, sizeof(infostr), "before userauth: ");
@@ -116,7 +116,7 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 	
 	strncat(fmtbuf, format, MAX_FMT);
 
-	_dropbear_log(LOG_DAEMON | LOG_INFO, fmtbuf, param);
+	_dropbear_log(LOG_INFO, fmtbuf, param);
 
 	exit(exitcode);
 
@@ -159,6 +159,30 @@ void dropbear_trace(const char* format, ...) {
 	va_end(param);
 }
 #endif /* DEBUG_TRACE */
+
+/* return a string representation of the socket address passed. Accepts
+ * INET and INET6 types */
+unsigned char * getaddrstring(struct sockaddr * addr) {
+
+	unsigned char * ret;
+
+	/* extensible for ip6 */
+	switch (addr->sa_family) {
+		case PF_INET: 
+			/* max len is "XXX.XXX.XXX.XXX:PPPPP\0" */
+			ret = (unsigned char*)m_malloc(15 + 1 + 5 + 1);
+			snprintf(ret, 15+1+5+1, "%s:%.5d",
+					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr),
+					((struct sockaddr_in*)addr)->sin_port);
+			return ret;
+			break;
+		default:
+			/* don't get here */
+			assert(0);
+			break;
+	}
+
+}
 
 #ifndef HAVE_STRLCPY
 /* Implemented by matt as specified in freebsd 4.7 manpage.

@@ -72,9 +72,9 @@ void passwordauth() {
 	 * since the shadow password may differ to that tested
 	 * in auth.c */
 	if (passwdcrypt[0] == '\0') {
-		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"disallowed login with empty password for '%s'",
-				ses.authstate.username);
+		dropbear_log(LOG_WARNING,
+				"disallowed login with empty password for '%s' from %s",
+				ses.authstate.username, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
@@ -98,14 +98,14 @@ void passwordauth() {
 
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
-		dropbear_log(LOG_AUTHPRIV | LOG_NOTICE, 
-				"password auth succeeded for '%s'",
-				ses.authstate.username);
+		dropbear_log(LOG_NOTICE, 
+				"password auth succeeded for '%s' from %s",
+				ses.authstate.username, ses.addrstring);
 		send_msg_userauth_success();
 	} else {
-		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"bad password attempt for '%s'",
-				ses.authstate.username);
+		dropbear_log(LOG_WARNING,
+				"bad password attempt for '%s' from %s",
+				ses.authstate.username, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
 

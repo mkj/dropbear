@@ -178,9 +178,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 		strcmp(username, ses.authstate.username) != 0) {
 			/* the username needs resetting */
 			if (ses.authstate.username != NULL) {
-				dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-						"client trying multiple usernames: '%s' and '%s'",
-						ses.authstate.username, username);
+				dropbear_log(LOG_WARNING,
+					"client trying multiple usernames: '%s' and '%s' from %s",
+					ses.authstate.username, username, ses.addrstring);
 				m_free(ses.authstate.username);
 			}
 			authclear();
@@ -191,8 +191,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* check that user exists */
 	if (ses.authstate.pw == NULL) {
 		TRACE(("leave checkusername: user doesn't exist"));
-		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"login attempt for nonexistant user '%s'", username);
+		dropbear_log(LOG_WARNING,
+				"login attempt for nonexistant user '%s' from %s",
+				username, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -200,8 +201,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* check for an empty password */
 	if (ses.authstate.pw->pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"));
-		dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-				"disallowing login for '%s' - empty password", username);
+		dropbear_log(LOG_WARNING,
+				"disallowing login for '%s' from %s - empty password",
+				username, ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
@@ -223,8 +225,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	/* no matching shell */
 	endusershell();
 	TRACE(("no matching shell"));
-	dropbear_log(LOG_AUTHPRIV | LOG_WARNING,
-			"disallowing login for '%s' - invalid shell", username);
+	dropbear_log(LOG_WARNING,
+			"disallowing login for '%s' from %s - invalid shell",
+			username, ses.addrstring);
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	

@@ -55,7 +55,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 	i = openpty(ptyfd, ttyfd, NULL, NULL, NULL);
 	if (i < 0) {
-		dropbear_log(LOG_WARNING | LOG_DAEMON, 
+		dropbear_log(LOG_WARNING, 
 				"pty_allocate: openpty: %.100s", strerror(errno));
 		return 0;
 	}
@@ -76,7 +76,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 	slave = _getpty(ptyfd, O_RDWR, 0622, 0);
 	if (slave == NULL) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"pty_allocate: _getpty: %.100s", strerror(errno));
 		return 0;
 	}
@@ -84,7 +84,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	/* Open the slave side. */
 	*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"pty_allocate error: ttyftd open error");
 		close(*ptyfd);
 		return 0;
@@ -103,23 +103,23 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 	ptm = open("/dev/ptmx", O_RDWR | O_NOCTTY);
 	if (ptm < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"pty_allocate: /dev/ptmx: %.100s", strerror(errno));
 		return 0;
 	}
 	if (grantpt(ptm) < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"grantpt: %.100s", strerror(errno));
 		return 0;
 	}
 	if (unlockpt(ptm) < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"unlockpt: %.100s", strerror(errno));
 		return 0;
 	}
 	pts = ptsname(ptm);
 	if (pts == NULL) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"Slave pty side name could not be obtained.");
 	}
 	strlcpy(namebuf, pts, namebuflen);
@@ -128,7 +128,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	/* Open the slave side. */
 	*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"error opening pts %.100s: %.100s", namebuf, strerror(errno));
 		close(*ptyfd);
 		return 0;
@@ -139,16 +139,16 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	 * HP-UX pts(7) doesn't have ttcompat module.
 	 */
 	if (ioctl(*ttyfd, I_PUSH, "ptem") < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 				"ioctl I_PUSH ptem: %.100s", strerror(errno));
 	}
 	if (ioctl(*ttyfd, I_PUSH, "ldterm") < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 			"ioctl I_PUSH ldterm: %.100s", strerror(errno));
 	}
 #ifndef __hpux
 	if (ioctl(*ttyfd, I_PUSH, "ttcompat") < 0) {
-		dropbear_log(LOG_WARNING|LOG_DAEMON,
+		dropbear_log(LOG_WARNING,
 			"ioctl I_PUSH ttcompat: %.100s", strerror(errno));
 	}
 #endif
@@ -161,7 +161,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 	*ptyfd = open("/dev/ptc", O_RDWR | O_NOCTTY);
 	if (*ptyfd < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"Could not open /dev/ptc: %.100s", strerror(errno));
 		return 0;
 	}
@@ -172,7 +172,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	strlcpy(namebuf, name, namebuflen);
 	*ttyfd = open(name, O_RDWR | O_NOCTTY);
 	if (*ttyfd < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"Could not open pty slave side %.100s: %.100s",
 		    name, strerror(errno));
 		close(*ptyfd);
@@ -210,14 +210,14 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 		/* Open the slave side. */
 		*ttyfd = open(namebuf, O_RDWR | O_NOCTTY);
 		if (*ttyfd < 0) {
-			dropbear_log(LOG_ERR|LOG_DAEMON,
+			dropbear_log(LOG_ERR,
 				"pty_allocate: %.100s: %.100s", namebuf, strerror(errno));
 			close(*ptyfd);
 			return 0;
 		}
 		/* set tty modes to a sane state for broken clients */
 		if (tcgetattr(*ptyfd, &tio) < 0) {
-			dropbear_log(LOG_WARNING|LOG_DAEMON,
+			dropbear_log(LOG_WARNING,
 				"ptyallocate: tty modes failed: %.100s", strerror(errno));
 		} else {
 			tio.c_lflag |= (ECHO | ISIG | ICANON);
@@ -226,7 +226,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 			/* Set the new modes for the terminal. */
 			if (tcsetattr(*ptyfd, TCSANOW, &tio) < 0) {
-				dropbear_log(LOG_WARNING|LOG_DAEMON,
+				dropbear_log(LOG_WARNING,
 					"Setting tty modes for pty failed: %.100s",
 					strerror(errno));
 			}
@@ -247,11 +247,11 @@ void
 pty_release(const char *ttyname)
 {
 	if (chown(ttyname, (uid_t) 0, (gid_t) 0) < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 				"chown %.100s 0 0 failed: %.100s", ttyname, strerror(errno));
 	}
 	if (chmod(ttyname, (mode_t) 0666) < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"chmod %.100s 0666 failed: %.100s", ttyname, strerror(errno));
 	}
 }
@@ -279,7 +279,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	}
 #endif /* TIOCNOTTY */
 	if (setsid() < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"setsid: %.100s", strerror(errno));
 	}
 
@@ -289,20 +289,20 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	 */
 	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 				"Failed to disconnect from controlling tty.\n");
 		close(fd);
 	}
 	/* Make it our controlling tty. */
 #ifdef TIOCSCTTY
 	if (ioctl(*ttyfd, TIOCSCTTY, NULL) < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"ioctl(TIOCSCTTY): %.100s", strerror(errno));
 	}
 #endif /* TIOCSCTTY */
 #ifdef HAVE_NEWS4
 	if (setpgrp(0,0) < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			error("SETPGRP %s",strerror(errno)));
 	}
 #endif /* HAVE_NEWS4 */
@@ -313,7 +313,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 #endif /* USE_VHANGUP */
 	fd = open(ttyname, O_RDWR);
 	if (fd < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"%.100s: %.100s", ttyname, strerror(errno));
 	} else {
 #ifdef USE_VHANGUP
@@ -326,7 +326,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	/* Verify that we now have a controlling tty. */
 	fd = open(_PATH_TTY, O_WRONLY);
 	if (fd < 0) {
-		dropbear_log(LOG_ERR|LOG_DAEMON,
+		dropbear_log(LOG_ERR,
 			"open /dev/tty failed - could not set controlling tty: %.100s",
 		    strerror(errno));
 	} else {
@@ -381,7 +381,7 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 		if (chown(ttyname, pw->pw_uid, gid) < 0) {
 			if (errno == EROFS &&
 			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
-				dropbear_log(LOG_ERR|LOG_DAEMON,
+				dropbear_log(LOG_ERR,
 					"chown(%.100s, %u, %u) failed: %.100s",
 						ttyname, (u_int)pw->pw_uid, (u_int)gid,
 						strerror(errno));
@@ -397,7 +397,7 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 		if (chmod(ttyname, mode) < 0) {
 			if (errno == EROFS &&
 			    (st.st_mode & (S_IRGRP | S_IROTH)) == 0) {
-				dropbear_log(LOG_ERR|LOG_DAEMON,
+				dropbear_log(LOG_ERR,
 					"chmod(%.100s, 0%o) failed: %.100s",
 					ttyname, mode, strerror(errno));
 			} else {
