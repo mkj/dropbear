@@ -103,7 +103,7 @@ static int do_convert(int intype, const char* infile, int outtype,
 		const char* outfile) {
 
 	sign_key * key = NULL;
-	char * keytype;
+	char * keytype = NULL;
 	int ret = 1;
 
 	key = import_read(infile, NULL, intype);

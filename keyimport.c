@@ -154,7 +154,7 @@ error:
 /* returns 0 on fail, 1 on success */
 static int dropbear_write(const char*filename, sign_key * key) {
 
-	int keytype;
+	int keytype = -1;
 	buffer * buf;
 	FILE*fp;
 	int len;
@@ -709,8 +709,8 @@ static int openssh_write(const char *filename, sign_key *key,
 	unsigned char *outblob = NULL;
 	int outlen = -9999;
 	struct mpint_pos numbers[9];
-	int nnumbers, pos, len, seqlen, i;
-	char *header, *footer;
+	int nnumbers = -1, pos, len, seqlen, i;
+	char *header = NULL, *footer = NULL;
 	char zero[1];
 	unsigned char iv[8];
 	int ret = 0;

@@ -315,6 +315,7 @@ static int checkmac(buffer* macbuf, buffer* sourcebuf) {
 	unsigned char macsize;
 	hmac_state hmac;
 	unsigned char tempbuf[MAX_MAC_LEN];
+	unsigned long hashsize;
 	int len;
 
 	macsize = ses.keys->recv_algo_mac->hashsize;
@@ -344,7 +345,8 @@ static int checkmac(buffer* macbuf, buffer* sourcebuf) {
 		dropbear_exit("HMAC error");
 	}
 
-	if (hmac_done(&hmac, tempbuf) != CRYPT_OK) {
+	hashsize = sizeof(tempbuf);
+	if (hmac_done(&hmac, tempbuf, &hashsize) != CRYPT_OK) {
 		dropbear_exit("HMAC error");
 	}
 
@@ -671,6 +673,7 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 
 	int macsize;
 	unsigned char seqbuf[4];
+	unsigned long hashsize;
 	hmac_state hmac;
 
 	TRACE(("enter writemac"));
@@ -701,7 +704,8 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 			dropbear_exit("HMAC error");
 		}
 	
-		if (hmac_done(&hmac, buf_getwriteptr(outputbuffer, macsize)) 
+		hashsize = macsize;
+		if (hmac_done(&hmac, buf_getwriteptr(outputbuffer, macsize), &hashsize) 
 				!= CRYPT_OK) {
 			dropbear_exit("HMAC error");
 		}

@@ -112,7 +112,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		}
 
 		/* find the next integer which is prime, 8 round of miller-rabin */
-		if (mp_prime_next_prime(prime, 8) != MP_OKAY) {
+		if (mp_prime_next_prime(prime, 8, 0) != MP_OKAY) {
 			fprintf(stderr, "rsa generation failed\n");
 			exit(1);
 		}

@@ -82,7 +82,7 @@ static void getq(dss_key *key) {
 	}
 
 	/* 18 rounds are required according to HAC */
-	if (mp_prime_next_prime(key->q, 18) != MP_OKAY) {
+	if (mp_prime_next_prime(key->q, 18, 0) != MP_OKAY) {
 		fprintf(stderr, "dss key generation failed\n");
 		exit(1);
 	}
