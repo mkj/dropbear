@@ -101,8 +101,10 @@ int main(int argc, char ** argv)
 
 	/* set up cleanup handler */
 	if (signal(SIGINT, sigintterm_handler) == SIG_ERR || 
+#ifndef DEBUG_VALGRIND
 		signal(SIGTERM, sigintterm_handler) == SIG_ERR ||
-		signal(SIGPIPE, SIG_IGN)) {
+#endif
+		signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		dropbear_exit("signal() error");
 	}
 
