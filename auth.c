@@ -22,6 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* This file (auth.c) handles authentication requests, passing it to the
+ * particular type (auth-passwd, auth-pubkey). */
+
 #include "includes.h"
 #include "util.h"
 #include "session.h"
@@ -36,6 +39,7 @@ static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);
 static void send_msg_userauth_banner();
 
+/* initialise the first time for a session, resetting all parameters */
 void authinitialise() {
 
 	ses.authstate.failcount = 0;
@@ -43,6 +47,9 @@ void authinitialise() {
 	
 }
 
+/* Reset the auth state, but don't reset the failcount. This is for if the
+ * user decides to try with a different username etc, and is also invoked
+ * on initialisation */
 static void authclear() {
 	
 	ses.authstate.authdone = 0;
@@ -59,6 +66,8 @@ static void authclear() {
 
 }
 
+/* Send a banner message if specified to the client. The client might
+ * ignore this, but possibly serves as a legal "no trespassing" sign */
 static void send_msg_userauth_banner() {
 
 	TRACE(("enter send_msg_userauth_banner"));
@@ -81,6 +90,8 @@ static void send_msg_userauth_banner() {
 	TRACE(("leave send_msg_userauth_banner"));
 }
 
+/* handle a userauth request, check validity, pass to password or pubkey
+ * checking, and handle success or failure */
 void recv_msg_userauth_request() {
 
 	unsigned char *username, *servicename, *methodname;
@@ -161,7 +172,9 @@ out:
 	m_free(methodname);
 }
 
-/* returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
+/* Check that the username exists, has a non-empty password, and has a valid
+ * shell.
+ * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
 static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* shell;
@@ -245,9 +258,11 @@ goodshell:
 
 }
 
-/* partial indicates whether to set the "partial success" flag,
+/* Send a failure message to the client, in responds to a userauth_request.
+ * Partial indicates whether to set the "partial success" flag,
  * incrfail is whether to count this failure in the failure count (which
- * is limited */
+ * is limited. This function also handles disconnection after too many
+ * failures */
 void send_msg_userauth_failure(int partial, int incrfail) {
 
 	buffer *typebuf;
@@ -301,7 +316,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	TRACE(("leave send_msg_userauth_failure"));
 }
 
-/* only to be called when writebuf is empty */
+/* Send a success message to the user, and set the "authdone" flag */
 void send_msg_userauth_success() {
 
 	TRACE(("enter send_msg_userauth_success"));

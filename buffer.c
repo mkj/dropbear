@@ -125,7 +125,8 @@ void buf_incrwritepos(buffer* buf, unsigned int incr) {
 /* increment the position by incr, negative values are allowed, to
  * decrement the pos*/
 void buf_incrpos(buffer* buf,  int incr) {
-	if (buf->pos + incr > buf->len || buf->pos + incr < 0) {
+	if ((unsigned int)((int)buf->pos + incr) > buf->len 
+			|| ((int)buf->pos + incr) < 0) {
 		dropbear_exit("bad buf_incrpos");
 	}
 	buf->pos += incr;

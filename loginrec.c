@@ -150,7 +150,7 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.6 2003/06/22 10:42:51 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.7 2003/06/23 08:15:05 matt Exp $");*/
 
 #include "includes.h"
 #include "loginrec.h"
@@ -509,7 +509,7 @@ getlast_entry(struct logininfo *li)
 /* line_fullname(): add the leading '/dev/' if it doesn't exist make
  * sure dst has enough space, if not just copy src (ugh) */
 char *
-line_fullname(char *dst, const char *src, int dstsize)
+line_fullname(char *dst, const char *src, size_t dstsize)
 {
 	memset(dst, '\0', dstsize);
 	if ((strncmp(src, "/dev/", 5) == 0) || (dstsize < (strlen(src) + 5))) {
@@ -523,7 +523,7 @@ line_fullname(char *dst, const char *src, int dstsize)
 
 /* line_stripname(): strip the leading '/dev' if it exists, return dst */
 char *
-line_stripname(char *dst, const char *src, int dstsize)
+line_stripname(char *dst, const char *src, size_t dstsize)
 {
 	memset(dst, '\0', dstsize);
 	if (strncmp(src, "/dev/", 5) == 0)
@@ -540,7 +540,7 @@ line_stripname(char *dst, const char *src, int dstsize)
  * NOTE: use strncpy because we do NOT necessarily want zero
  * termination */
 char *
-line_abbrevname(char *dst, const char *src, int dstsize)
+line_abbrevname(char *dst, const char *src, size_t dstsize)
 {
 	size_t len;
 

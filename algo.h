@@ -64,7 +64,7 @@ struct dropbear_hash {
 };
 
 void crypto_init();
-int have_algo(char* algo, int algolen, algo_type algos[]);
+int have_algo(char* algo, size_t algolen, algo_type algos[]);
 algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]);
 void buf_put_algolist(buffer * buf, algo_type localalgos[]);
 

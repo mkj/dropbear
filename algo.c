@@ -24,7 +24,10 @@
 
 #include "algo.h"
 
-/* Mapping of ssh ciphers to libtomcrypt ciphers, with blocksizes etc.
+/* This file (algo.c) organises the ciphers which can be used, and is used to
+ * decide which ciphers/hashes/compression/signing to use during key exchange*/
+
+/* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
 
 #ifdef DROPBEAR_AES128_CBC
@@ -78,7 +81,7 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_3DES_CBC
 	{"3des-cbc", 0, (void*)&dropbear_3des, 1},
 #endif
-	{0}
+	{NULL, 0, NULL, 0}
 };
 
 algo_type sshhashes[] = {
@@ -88,7 +91,7 @@ algo_type sshhashes[] = {
 #ifdef DROPBEAR_MD5_HMAC
 	{"hmac-md5", 0, (void*)&dropbear_md5, 1},
 #endif
-	{0}
+	{NULL, 0, NULL, 0}
 };
 
 algo_type sshcompress[] = {
@@ -96,7 +99,7 @@ algo_type sshcompress[] = {
 #ifndef DISABLE_ZLIB
 	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1},
 #endif
-	{0}
+	{NULL, 0, NULL, 0}
 };
 
 algo_type sshhostkey[] = {
@@ -106,12 +109,12 @@ algo_type sshhostkey[] = {
 #ifdef DROPBEAR_DSS
 	{"ssh-dss", DROPBEAR_SIGNKEY_DSS, NULL, 1},
 #endif
-	{0}
+	{NULL, 0, NULL, 0}
 };
 
 algo_type sshkex[] = {
 	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1},
-	{0}
+	{NULL, 0, NULL, 0}
 };
 
 
@@ -161,7 +164,7 @@ void crypto_init() {
 
 /* returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
  * otherwise */
-int have_algo(char* algo, int algolen, algo_type algos[]) {
+int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 
 	int i = 0;
 	while (algos[i].name != NULL) {
@@ -176,9 +179,8 @@ int have_algo(char* algo, int algolen, algo_type algos[]) {
 }
 
 
-
-/* hashlist is a comma seperated, null terminated list of hashes.
- * The first item in the list which also has a local entry will be chosen */
+/* match the first algorithm in the comma-seperated list in buf which is
+ * also in localalgos[], or return NULL on failure. */
 algo_type * buf_match_algo(buffer* buf, algo_type localalgos[]) {
 
 	unsigned char * algolist = NULL;
@@ -234,7 +236,7 @@ out:
 	return ret;
 }
 
-/* output a comma seperated list of algorithms to a buffer */
+/* Output a comma seperated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
 	unsigned int pos = 0, i, len;

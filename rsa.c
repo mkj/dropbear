@@ -199,7 +199,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	m_mp_init(&rsa_s);
 
 	slen = buf_getint(buf);
-	if (slen != mp_unsigned_bin_size(key->n)) {
+	if (slen != (unsigned int)mp_unsigned_bin_size(key->n)) {
 		TRACE(("bad size"));
 		goto out;
 	}

@@ -22,6 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+/* This file (agentfwd.c) handles authentication agent forwarding, for OpenSSH
+ * style agents. */
+
 #include "includes.h"
 
 #ifndef DISABLE_AGENTFWD
@@ -41,7 +44,8 @@
 static int send_msg_channel_open_agent(int fd);
 static int bindagent(struct ChanSess * chansess);
 
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* Handles client requests to start agent forwarding, sets up listening socket.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int agentreq(struct ChanSess * chansess) {
 
 	if (chansess->agentfd != -1) {
@@ -72,7 +76,7 @@ int agentreq(struct ChanSess * chansess) {
 	/* channel.c's channel fd code will handle the socket now */
 
 	/* set the maxfd so that select() loop will notice it */
-	ses.maxfd = MAX(ses.maxfd, chansess->agentfd);
+	ses.maxfd = MAX(ses.maxfd, (unsigned int)chansess->agentfd);
 
 	return DROPBEAR_SUCCESS;
 
@@ -83,6 +87,8 @@ fail:
 	return DROPBEAR_FAILURE;
 }
 
+/* accepts a connection on the forwarded socket and opens a new channel for it
+ * back to the client */
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int agentaccept(struct ChanSess * chansess) {
 
@@ -112,6 +118,7 @@ void agentset(struct ChanSess * chansess) {
 	addnewvar("SSH_AUTH_SOCK", path);
 }
 
+/* close the socket, remove the socket-file */
 void agentcleanup(struct ChanSess * chansess) {
 
 	char path[MAXPATHLEN];
@@ -149,6 +156,7 @@ void agentcleanup(struct ChanSess * chansess) {
 
 }
 
+/* helper for accepting an agent request */
 static int send_msg_channel_open_agent(int fd) {
 
 	if (send_msg_channel_open_init(fd, "auth-agent@openssh.com") 
@@ -160,7 +168,8 @@ static int send_msg_channel_open_agent(int fd) {
 	}
 }
 
-/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+/* helper for creating the agent socket-file
+   returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int bindagent(struct ChanSess * chansess) {
 
 	struct sockaddr_un addr;

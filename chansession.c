@@ -67,7 +67,7 @@ struct SigMap signames[] = {
 	{SIGTERM, "TERM"},
 	{SIGUSR1, "USR1"},
 	{SIGUSR2, "USR2"},
-	{0}
+	{0, NULL}
 };
 
 /* required to clear environment */
@@ -94,7 +94,7 @@ static void sesssigchild_handler(int val) {
 
 	int status;
 	pid_t pid;
-	int i;
+	unsigned int i;
 	struct ChanSess * chansess;
 	struct sigaction sa_chld;
 	
@@ -227,7 +227,7 @@ void newchansess(struct Channel *channel) {
 void closechansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
-	int i;
+	unsigned int i;
 	struct logininfo *li;
 
 	chansess = (struct ChanSess*)channel->typedata;
@@ -337,7 +337,7 @@ void chansessionrequest(struct Channel *channel) {
 }
 
 
-/* returns 0 on success, 1 otherwise */
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
@@ -346,7 +346,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 
 	if (chansess->pid == 0) {
 		/* haven't got a process pid yet */
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 
 	signame = buf_getstring(ses.payload, NULL);
@@ -364,22 +364,22 @@ static int sessionsignal(struct ChanSess *chansess) {
 
 	if (sig == 0) {
 		/* failed */
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 			
 	if (kill(chansess->pid, sig) < 0) {
-		return 1;
+		return DROPBEAR_FAILURE;
 	} 
 
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
-/* returns 0 on success, 1 on failure */
+/* Returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
 static int sessionwinchange(struct ChanSess *chansess) {
 
 	if (chansess->master < 0) {
 		/* haven't got a pty yet */
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 			
 	chansess->termc = buf_getint(ses.payload);
@@ -390,12 +390,12 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	pty_change_window_size(chansess->master, chansess->termr, chansess->termc,
 		chansess->termw, chansess->termh);
 
-	return 0;
+	return DROPBEAR_FAILURE;
 }
 
 
 
-/* returns 0 on success, 1 on failure */
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
@@ -407,7 +407,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
 		TRACE(("leave sessionpty: term len too long"));
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 	chansess->termc = buf_getint(ses.payload);
 	chansess->termr = buf_getint(ses.payload);
@@ -418,7 +418,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	assert(chansess->master == -1); /* haven't already got one */
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"));
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 	
 	chansess->tty = (char*)strdup(namebuf);
@@ -497,11 +497,10 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 
 	TRACE(("leave sessionpty"));
-	return 0;
-	
+	return DROPBEAR_SUCCESS;
 }
 
-/* returns 0 on sucesss, 1 otherwise */
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd) {
 
@@ -511,7 +510,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	if (chansess->cmd != NULL) {
 		/* TODO - send error - multiple commands? */
-		return 1;
+		return DROPBEAR_FAILURE;
 	}
 
 	if (iscmd) {
@@ -520,7 +519,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 		if (cmdlen > MAX_CMD_LEN) {
 			/* TODO - send error - too long ? */
-			return 1;
+			return DROPBEAR_FAILURE;
 		}
 	}
 
@@ -533,7 +532,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	}
 }
 
-/* returns 0 on success, 1 on fail */
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	int infds[2];
@@ -545,15 +544,15 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	/* redirect stdin/stdout/stderr */
 	if (pipe(infds) != 0)
-		return 1;
+		return DROPBEAR_FAILURE;
 	if (pipe(outfds) != 0)
-		return 1;
+		return DROPBEAR_FAILURE;
 	if (pipe(errfds) != 0)
-		return 1;
+		return DROPBEAR_FAILURE;
 
 	pid = fork();
 	if (pid < 0)
-		return 1;
+		return DROPBEAR_FAILURE;
 
 	if (!pid) {
 		/* child */
@@ -565,7 +564,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
 			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
 			TRACE(("leave sessioncommand: error redirecting FDs"));
-			return 1;
+			return DROPBEAR_FAILURE;
 		}
 
 		close(infds[FDOUT]);
@@ -592,9 +591,9 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->infd = infds[FDOUT];
 		channel->outfd = outfds[FDIN];
 		channel->errfd = errfds[FDIN];
-		ses.maxfd = MAX(ses.maxfd, channel->infd);
-		ses.maxfd = MAX(ses.maxfd, channel->outfd);
-		ses.maxfd = MAX(ses.maxfd, channel->errfd);
+		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->infd);
+		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->outfd);
+		ses.maxfd = MAX(ses.maxfd, (unsigned int)channel->errfd);
 
 		if ((fcntl(channel->outfd, F_SETFL, O_NONBLOCK) < 0) ||
 			(fcntl(channel->infd, F_SETFL, O_NONBLOCK) < 0) ||
@@ -606,10 +605,10 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 #undef FDOUT
 
 	TRACE(("leave noptycommand"));
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
-/* returns 0 on success, 1 on fail */
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
@@ -621,7 +620,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	assert(chansess->master != -1 && chansess->tty != NULL);
 	pid = fork();
 	if (pid < 0)
-		return 1;
+		return DROPBEAR_FAILURE;
 
 	if (pid == 0) {
 		/* child */
@@ -635,7 +634,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			(dup2(chansess->slave, STDERR_FILENO) < 0) ||
 			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
 			TRACE(("leave sessioncommand: error redirecting filedesc"));
-			return 1;
+			return DROPBEAR_FAILURE;
 		}
 
 		close(chansess->slave);
@@ -664,7 +663,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->infd = chansess->master;
 		channel->outfd = chansess->master;
 		/* don't need to set stderr here */
-		ses.maxfd = MAX(ses.maxfd, chansess->master);
+		ses.maxfd = MAX(ses.maxfd, (unsigned int)chansess->master);
 
 		if (fcntl(chansess->master, F_SETFL, O_NONBLOCK) < 0) {
 			dropbear_exit("Couldn't set nonblocking");
@@ -673,12 +672,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	}
 
 	TRACE(("leave ptycommand"));
-	return 0;
+	return DROPBEAR_SUCCESS;
 }
 
 static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
-	int i;
+	unsigned int i;
 	for (i = 0; i < ses.childpidsize; i++) {
 		if (ses.childpids[i].pid == -1) {
 			break;
@@ -703,7 +702,7 @@ static void execchild(struct ChanSess *chansess) {
 	char *argv[4];
 	char * usershell;
 	char * baseshell;
-	int i;
+	unsigned int i;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);

@@ -40,7 +40,8 @@ int main(int argc, char ** argv) {
 	
 	fd_set fds;
 	struct timeval seltimeout;
-	int i, j, val;
+	unsigned int i, j;
+	int val;
 	int maxsock;
 	struct sockaddr remoteaddr;
 	int remoteaddrlen;

@@ -41,6 +41,6 @@ struct TermCode {
 
 };
 
-const extern struct TermCode termcodes[];
+extern const struct TermCode termcodes[];
 
 #endif /* _TERMCODES_H_ */

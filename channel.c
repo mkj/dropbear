@@ -62,7 +62,7 @@ void chaninitialise() {
 
 void chancleanup() {
 
-	int i;
+	unsigned int i;
 
 	TRACE(("enter chancleanup"));
 	for (i = 0; i < ses.chansize; i++) {
@@ -83,7 +83,7 @@ struct Channel* newchannel(unsigned int remotechan, unsigned char type,
 		unsigned int transwindow, unsigned int transmaxpacket) {
 
 	struct Channel * newchan;
-	int i, j;
+	unsigned int i, j;
 
 	TRACE(("enter newchannel"));
 	
@@ -150,7 +150,7 @@ static struct Channel* getchannel(unsigned int chan) {
 void channelio(fd_set *readfd, fd_set *writefd) {
 
 	struct Channel *channel;
-	int i;
+	unsigned int i;
 
 	for (i = 0; i < ses.chansize; i++) {
 
@@ -293,7 +293,7 @@ static void writechannel(struct Channel* channel) {
 
 void setchannelfds(fd_set *readfd, fd_set *writefd) {
 	
-	int i;
+	unsigned int i;
 	struct Channel * channel;
 	
 	for (i = 0; i < ses.chansize; i++) {
@@ -762,7 +762,7 @@ int send_msg_channel_open_init(int fd, const char * typestring) {
 	}
 
 	chan->infd = chan->outfd = fd;
-	ses.maxfd = MAX(ses.maxfd, fd);
+	ses.maxfd = MAX(ses.maxfd, (unsigned int)fd);
 
 	/* now open the channel connection */
 	CHECKCLEARTOWRITE();

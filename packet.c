@@ -124,7 +124,7 @@ void read_packet() {
 		}
 	}
 
-	if (len == maxlen) {
+	if ((unsigned int)len == maxlen) {
 		decrypt_packet();
 		/* process_packet() will handle the packet from the main select loop */
 	}
@@ -164,7 +164,7 @@ static void read_packet_init() {
 	}
 
 	buf_incrwritepos(ses.readbuf, len);
-	if (len != maxlen) {
+	if ((unsigned int)len != maxlen) {
 		/* don't have enough bytes to determine length, get next time */
 		return;
 	}

@@ -31,7 +31,7 @@
 
 #include "includes.h"
 
-/* RCSID("$Id: loginrec.h,v 1.5 2003/06/22 10:42:51 matt Exp $"); */
+/* RCSID("$Id: loginrec.h,v 1.6 2003/06/23 08:15:06 matt Exp $"); */
 
 /* The following #defines are from OpenSSH's defines.h, required for loginrec */
 
@@ -187,8 +187,8 @@ struct logininfo *login_get_lastlog(struct logininfo *li, const int uid);
 unsigned int login_get_lastlog_time(const int uid);
 
 /* produce various forms of the line filename */
-char *line_fullname(char *dst, const char *src, int dstsize);
-char *line_stripname(char *dst, const char *src, int dstsize);
-char *line_abbrevname(char *dst, const char *src, int dstsize);
+char *line_fullname(char *dst, const char *src, size_t dstsize);
+char *line_stripname(char *dst, const char *src, size_t dstsize);
+char *line_abbrevname(char *dst, const char *src, size_t dstsize);
 
 #endif /* _HAVE_LOGINREC_H_ */
