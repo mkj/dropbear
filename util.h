@@ -39,6 +39,7 @@ void dropbear_log(int priority, const char* format, ...);
 void dropbear_trace(const char* format, ...);
 #endif
 unsigned char * getaddrstring(struct sockaddr * addr);
+int getaddrhostname(char * dest, unsigned int len, char * addr);
 void printhex(unsigned char* buf, int len);
 int readln(int fd, char* buf, int count);
 int writeln(int fd, char* str);

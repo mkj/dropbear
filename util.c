@@ -185,6 +185,39 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
 
 }
 
+/* get the hostname corresponding to the address in addr, putting the result in
+ * dest, truncating the result to fit in dest. If the result is too long to fit,
+ * the result WON'T be null-terminated.
+ * On failure the string in addr will be copied to dest.
+ * The return value is the length of the string copied to dest */
+int getaddrhostname(char * dest, unsigned int len, char * addr) {
+
+	struct hostent *host;
+	int retlen;
+	char * retstring;
+
+	if (len < 1) {
+		return 0;
+	}
+
+	host = gethostbyname(addr);
+	
+	if (!host) {
+		/* return the address */
+		retstring = addr;
+	} else {
+		/* return the hostname */
+		retstring = host->h_name;
+	}
+
+	retlen = strlen(retstring);
+	retlen = MIN(len, retlen);
+
+	/* we don't need null-termination if it fills the buffer */
+	strncpy(dest, retstring, retlen);
+	return retlen;
+}
+
 #ifndef HAVE_STRLCPY
 /* Implemented by matt as specified in freebsd 4.7 manpage.
  * We don't require great speed, is simply for use with sshpty code */

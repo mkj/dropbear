@@ -50,6 +50,7 @@
 #include <termios.h>
 #include <unistd.h>
 #include <syslog.h>
+#include <netdb.h>
 
 #include <arpa/inet.h>
 
