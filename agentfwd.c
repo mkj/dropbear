@@ -113,7 +113,8 @@ void agentcleanup(struct ChanSess * chansess) {
 		dropbear_exit("failed to set euid");
 	}
 
-	unlink(chansess->agentdir);
+	unlink(chansess->agentfile);
+	rmdir(chansess->agentdir);
 
 	if ((seteuid(uid)) < 0 ||
 		(setegid(gid)) < 0) {
