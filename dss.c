@@ -261,6 +261,25 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
+/* convert an unsigned mp into an array of bytes, malloced.
+ * This array must be freed after use, len contains the length of the array,
+ * if len != NULL */
+static unsigned char* mptobytes(mp_int *mp, int *len) {
+	
+	unsigned char* ret;
+	int size;
+
+	size = mp_unsigned_bin_size(mp);
+	ret = m_malloc(size);
+	if (mp_to_unsigned_bin(mp, ret) != MP_OKAY) {
+		dropbear_exit("mem alloc error");
+	}
+	if (len != NULL) {
+		*len = size;
+	}
+	return ret;
+}
+
 /* Sign the data presented with key, writing the signature contents
  * to the buffer
  *

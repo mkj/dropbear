@@ -150,7 +150,6 @@ struct logininfo {
 
 /** 'public' functions */
 
-/* construct a new login entry */
 struct logininfo *login_alloc_entry(int pid, const char *username,
 				    const char *hostname, const char *line);
 /* free a structure */
@@ -177,14 +176,6 @@ int login_log_entry(struct logininfo *li);
 /* set the network address based on network address type */
 void login_set_addr(struct logininfo *li, const struct sockaddr *sa,
 		    const unsigned int sa_size);
-
-/*
- * lastlog retrieval functions
- */
-/* lastlog *entry* functions fill out a logininfo */
-struct logininfo *login_get_lastlog(struct logininfo *li, const int uid);
-/* lastlog *time* functions return time_t equivalent (uint) */
-unsigned int login_get_lastlog_time(const int uid);
 
 /* produce various forms of the line filename */
 char *line_fullname(char *dst, const char *src, size_t dstsize);

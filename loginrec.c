@@ -29,6 +29,8 @@
  ** loginrec.c:  platform-independent login recording and lastlog retrieval
  **/
 
+/* For now lastlog code has been removed as it wasn't being used by Dropbear. */
+
 /*
   The new login code explained
   ============================
@@ -174,11 +176,8 @@ int utmp_write_entry(struct logininfo *li);
 int utmpx_write_entry(struct logininfo *li);
 int wtmp_write_entry(struct logininfo *li);
 int wtmpx_write_entry(struct logininfo *li);
-int lastlog_write_entry(struct logininfo *li);
 int syslogin_write_entry(struct logininfo *li);
 
-int getlast_entry(struct logininfo *li);
-int lastlog_get_entry(struct logininfo *li);
 int wtmp_get_entry(struct logininfo *li);
 int wtmpx_get_entry(struct logininfo *li);
 
@@ -219,74 +218,6 @@ login_logout(struct logininfo *li)
 {
 	li->type = LTYPE_LOGOUT;
 	return login_write(li);
-}
-
-/* login_get_lastlog_time(int)           - Retrieve the last login time
- *
- * Retrieve the last login time for the given uid. Will try to use the
- * system lastlog facilities if they are available, but will fall back
- * to looking in wtmp/wtmpx if necessary
- *
- * Returns:
- *   0 on failure, or if user has never logged in
- *   Time in seconds from the epoch if successful
- *
- * Useful preprocessor symbols:
- *   DISABLE_LASTLOG: If set, *never* even try to retrieve lastlog
- *                    info
- *   USE_LASTLOG: If set, indicates the presence of system lastlog
- *                facilities. If this and DISABLE_LASTLOG are not set,
- *                try to retrieve lastlog information from wtmp/wtmpx.
- */
-unsigned int
-login_get_lastlog_time(const int uid)
-{
-	struct logininfo li;
-
-	if (login_get_lastlog(&li, uid))
-		return li.tv_sec;
-	else
-		return 0;
-}
-
-/* login_get_lastlog(struct logininfo *, int)   - Retrieve a lastlog entry
- *
- * Retrieve a logininfo structure populated (only partially) with
- * information from the system lastlog data, or from wtmp/wtmpx if no
- * system lastlog information exists.
- *
- * Note this routine must be given a pre-allocated logininfo.
- *
- * Returns:
- *  >0: A pointer to your struct logininfo if successful
- *  0  on failure (will use OpenSSH's logging facilities for diagnostics)
- *
- */
-struct logininfo *
-login_get_lastlog(struct logininfo *li, const int uid)
-{
-	struct passwd *pw;
-
-	memset(li, '\0', sizeof(*li));
-	li->uid = uid;
-
-	/*
-	 * If we don't have a 'real' lastlog, we need the username to
-	 * reliably search wtmp(x) for the last login (see
-	 * wtmp_get_entry().)
-	 */
-	pw = getpwuid(uid);
-	if (pw == NULL)
-		dropbear_exit("login_get_lastlog: Cannot find account for uid %i", uid);
-
-	/* No MIN_SIZEOF here - we absolutely *must not* truncate the
-	 * username */
-	strlcpy(li->username, pw->pw_name, sizeof(li->username));
-
-	if (getlast_entry(li))
-		return li;
-	else
-		return NULL;
 }
 
 
@@ -449,42 +380,6 @@ login_utmp_only(struct logininfo *li)
 	return 0;
 }
 #endif
-
-/**
- ** getlast_entry: Call low-level functions to retrieve the last login
- **                time.
- **/
-
-/* take the uid in li and return the last login time */
-int
-getlast_entry(struct logininfo *li)
-{
-#ifdef USE_LASTLOG
-	return(lastlog_get_entry(li));
-#else /* !USE_LASTLOG */
-
-#ifdef DISABLE_LASTLOG
-	/* On some systems we shouldn't even try to obtain last login
-	 * time, e.g. AIX */
-	return 0;
-# else /* DISABLE_LASTLOG */
-	/* Try to retrieve the last login time from wtmp */
-#  if defined(USE_WTMP) && (defined(HAVE_STRUCT_UTMP_UT_TIME) || defined(HAVE_STRUCT_UTMP_UT_TV))
-	/* retrieve last login time from utmp */
-	return (wtmp_get_entry(li));
-#  else /* defined(USE_WTMP) && (defined(HAVE_STRUCT_UTMP_UT_TIME) || defined(HAVE_STRUCT_UTMP_UT_TV)) */
-	/* If wtmp isn't available, try wtmpx */
-#   if defined(USE_WTMPX) && (defined(HAVE_STRUCT_UTMPX_UT_TIME) || defined(HAVE_STRUCT_UTMPX_UT_TV))
-	/* retrieve last login time from utmpx */
-	return (wtmpx_get_entry(li));
-#   else
-	/* Give up: No means of retrieving last login time */
-	return 0;
-#   endif /* USE_WTMPX && (HAVE_STRUCT_UTMPX_UT_TIME || HAVE_STRUCT_UTMPX_UT_TV) */
-#  endif /* USE_WTMP && (HAVE_STRUCT_UTMP_UT_TIME || HAVE_STRUCT_UTMP_UT_TV) */
-# endif /* DISABLE_LASTLOG */
-#endif /* USE_LASTLOG */
-}
 
 
 
@@ -1495,45 +1390,4 @@ lastlog_write_entry(struct logininfo *li)
 	}
 }
 
-static void
-lastlog_populate_entry(struct logininfo *li, struct lastlog *last)
-{
-	line_fullname(li->line, last->ll_line, sizeof(li->line));
-	strlcpy(li->hostname, last->ll_host,
-		MIN_SIZEOF(li->hostname, last->ll_host));
-	li->tv_sec = last->ll_time;
-}
-
-int
-lastlog_get_entry(struct logininfo *li)
-{
-	struct lastlog last;
-	int fd, ret;
-
-	if (!lastlog_openseek(li, &fd, O_RDONLY))
-		return (0);
-
-	ret = atomicio(read, fd, &last, sizeof(last));
-	close(fd);
-
-	switch (ret) {
-	case 0:
-		memset(&last, '\0', sizeof(last));
-		/* FALLTHRU */
-	case sizeof(last):
-		lastlog_populate_entry(li, &last);
-		return (1);
-	case -1:
-		dropbear_log(LOG_ERR, "Error reading from %s: %s",
-		    LASTLOG_FILE, strerror(errno));
-		return (0);
-	default:
-		dropbear_log(LOG_ERR, "Error reading from %s: Expecting %d, got %d",
-		    LASTLOG_FILE, sizeof(last), ret);
-		return (0);
-	}
-
-	/* NOTREACHED */
-	return (0);
-}
 #endif /* USE_LASTLOG */

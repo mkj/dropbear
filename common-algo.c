@@ -34,7 +34,7 @@
 
 #ifdef DROPBEAR_AES128_CBC
 const struct dropbear_cipher dropbear_aes128 = 
-	{&rijndael_desc, 16, 16};
+	{&aes_desc, 16, 16};
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 const struct dropbear_cipher dropbear_blowfish = 
@@ -127,7 +127,7 @@ void crypto_init() {
 
 	const struct _cipher_descriptor *regciphers[] = {
 #ifdef DROPBEAR_AES128_CBC
-		&rijndael_desc,
+		&aes_desc,
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 		&blowfish_desc,

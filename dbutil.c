@@ -70,7 +70,6 @@ void (*_dropbear_log)(int priority, const char* format, va_list param)
 int debug_trace = 0;
 #endif
 
-int usingsyslog = 0; /* set by runopts, but required externally to sessions */
 #ifndef DISABLE_SYSLOG
 void startsyslog() {
 

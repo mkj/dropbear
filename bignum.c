@@ -52,25 +52,6 @@ void m_mp_init_multi(mp_int *mp, ...)
     va_end(args);
 }
 
-/* convert an unsigned mp into an array of bytes, malloced.
- * This array must be freed after use, len contains the length of the array,
- * if len != NULL */
-unsigned char* mptobytes(mp_int *mp, int *len) {
-	
-	unsigned char* ret;
-	int size;
-
-	size = mp_unsigned_bin_size(mp);
-	ret = m_malloc(size);
-	if (mp_to_unsigned_bin(mp, ret) != MP_OKAY) {
-		dropbear_exit("mem alloc error");
-	}
-	if (len != NULL) {
-		*len = size;
-	}
-	return ret;
-}
-
 void bytestomp(mp_int *mp, unsigned char* bytes, unsigned int len) {
 
 	if (mp_read_unsigned_bin(mp, bytes, len) != MP_OKAY) {
