@@ -39,6 +39,7 @@ static void read_packet_init();
 static void process_postauth_packet(unsigned int type);
 static void recv_unimplemented();
 static void writemac(buffer * outputbuffer, buffer * clearwritebuf);
+static int checkmac(buffer* hashbuf, buffer* readbuf);
 
 #define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
 #define ZLIB_DECOMPRESS_INCR 100
@@ -191,10 +192,18 @@ static void read_packet_init() {
 	/* now we have the first block, need to get packet length, so we decrypt
 	 * the first block (only need first 4 bytes) */
 	buf_setpos(ses.readbuf, 0);
-	if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-				buf_getwriteptr(ses.decryptreadbuf,blocksize),
-				&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-		dropbear_exit("error decrypting");
+	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
+		/* copy it */
+		memcpy(buf_getwriteptr(ses.decryptreadbuf, blocksize),
+				buf_getptr(ses.readbuf, blocksize),
+				blocksize);
+	} else {
+		/* decrypt it */
+		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
+					buf_getwriteptr(ses.decryptreadbuf,blocksize),
+					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
+			dropbear_exit("error decrypting");
+		}
 	}
 	buf_setlen(ses.decryptreadbuf, blocksize);
 	len = buf_getint(ses.decryptreadbuf) + 4 + macsize;
@@ -216,13 +225,10 @@ static void read_packet_init() {
 /* handle the received packet */
 void decrypt_packet() {
 
-	hmac_state hmac;
-	unsigned char seqbuf[4];
 	unsigned char blocksize;
 	unsigned char macsize;
 	unsigned int padlen;
 	unsigned int len;
-	unsigned char *recvmac;
 
 	TRACE(("enter decrypt_packet"));
 	blocksize = ses.keys->recv_algo_crypt->blocksize;
@@ -238,53 +244,29 @@ void decrypt_packet() {
 	buf_setpos(ses.decryptreadbuf, blocksize);
 
 	/* decrypt if encryption is set, memcpy otherwise */
-	while (ses.readbuf->pos < ses.readbuf->len - macsize) {
-		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-					buf_getwriteptr(ses.decryptreadbuf, blocksize),
-					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-			dropbear_exit("error decrypting");
+	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
+		/* copy it */
+		len = ses.readbuf->len - macsize - blocksize;
+		memcpy(buf_getwriteptr(ses.decryptreadbuf, len),
+				buf_getptr(ses.readbuf, len), len);
+	} else {
+		/* decrypt */
+		while (ses.readbuf->pos < ses.readbuf->len - macsize) {
+			if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
+						buf_getwriteptr(ses.decryptreadbuf, blocksize),
+						&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
+				dropbear_exit("error decrypting");
+			}
+			buf_incrpos(ses.readbuf, blocksize);
+			buf_incrwritepos(ses.decryptreadbuf, blocksize);
 		}
-		buf_incrpos(ses.readbuf, blocksize);
-		buf_incrwritepos(ses.decryptreadbuf, blocksize);
 	}
 
-	if (macsize > 0) {
-		/* calculate the mac */
-		if (hmac_init(&hmac, 
-					find_hash(ses.keys->recv_algo_mac->hashdesc->name), 
-					ses.keys->recvmackey, 
-					ses.keys->recv_algo_mac->keysize) 
-					!= CRYPT_OK) {
-			dropbear_exit("HMAC error");
-		}
-	
-		/* sequence number */
-		STORE32H(ses.recvseq, seqbuf);
-		if (hmac_process(&hmac, seqbuf, 4) != CRYPT_OK) {
-			dropbear_exit("HMAC error");
-		}
-	
-		buf_setpos(ses.decryptreadbuf, 0);
-		len = ses.decryptreadbuf->len;
-		if (hmac_process(&hmac, buf_getptr(ses.decryptreadbuf, len), len)
-				!= CRYPT_OK) {
-			dropbear_exit("HMAC error");
-		}
-	
-		recvmac = (unsigned char*)m_malloc(macsize);
-		if (hmac_done(&hmac, recvmac) != CRYPT_OK) {
-			dropbear_exit("HMAC error");
-		}
-	
-		/* compare the hash */
-		buf_setpos(ses.readbuf, ses.readbuf->len - macsize);
-		if (memcmp(recvmac, buf_getptr(ses.readbuf, macsize),
-					macsize) != 0) {
-			dropbear_exit("Integrity error");
-		}
-		m_free(recvmac);
-
-	} /* hash */
+	/* check the hmac */
+	buf_setpos(ses.readbuf, ses.readbuf->len - macsize);
+	if (checkmac(ses.readbuf, ses.decryptreadbuf) != DROPBEAR_SUCCESS) {
+		dropbear_exit("Integrity error");
+	}
 
 	/* readbuf no longer required */
 	buf_free(ses.readbuf);
@@ -313,8 +295,7 @@ void decrypt_packet() {
 	{
 		/* copy payload */
 		ses.payload = buf_new(len);
-		memcpy(ses.payload->data, buf_getptr(ses.decryptreadbuf, len),
-				len);
+		memcpy(ses.payload->data, buf_getptr(ses.decryptreadbuf, len), len);
 		buf_incrlen(ses.payload, len);
 	}
 
@@ -325,6 +306,54 @@ void decrypt_packet() {
 	ses.recvseq++;
 
 	TRACE(("leave decrypt_packet"));
+}
+
+/* Checks the mac in hashbuf, for the data in readbuf.
+ * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+static int checkmac(buffer* macbuf, buffer* sourcebuf) {
+
+	unsigned char macsize;
+	hmac_state hmac;
+	unsigned char tempbuf[MAX_MAC_LEN];
+	int len;
+
+	macsize = ses.keys->recv_algo_mac->hashsize;
+
+	if (macsize == 0) {
+		return DROPBEAR_SUCCESS;
+	}
+
+	/* calculate the mac */
+	if (hmac_init(&hmac, 
+				find_hash(ses.keys->recv_algo_mac->hashdesc->name), 
+				ses.keys->recvmackey, 
+				ses.keys->recv_algo_mac->keysize) 
+				!= CRYPT_OK) {
+		dropbear_exit("HMAC error");
+	}
+	
+	/* sequence number */
+	STORE32H(ses.recvseq, tempbuf);
+	if (hmac_process(&hmac, tempbuf, 4) != CRYPT_OK) {
+		dropbear_exit("HMAC error");
+	}
+
+	buf_setpos(sourcebuf, 0);
+	len = sourcebuf->len;
+	if (hmac_process(&hmac, buf_getptr(sourcebuf, len), len) != CRYPT_OK) {
+		dropbear_exit("HMAC error");
+	}
+
+	if (hmac_done(&hmac, tempbuf) != CRYPT_OK) {
+		dropbear_exit("HMAC error");
+	}
+
+	/* compare the hash */
+	if (memcmp(tempbuf, buf_getptr(macbuf, macsize), macsize) != 0) {
+		return DROPBEAR_FAILURE;
+	} else {
+		return DROPBEAR_SUCCESS;
+	}
 }
 
 #ifndef DISABLE_ZLIB
@@ -600,15 +629,23 @@ void encrypt_packet() {
 	 * wire by writepacket() */
 	writebuf = buf_new(clearwritebuf->len + macsize);
 
-	/* encrypt it */
-	while (clearwritebuf->pos < clearwritebuf->len) {
-		if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
-					buf_getwriteptr(writebuf, blocksize),
-					&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
-			dropbear_exit("error encrypting");
+	if (ses.keys->trans_algo_crypt->cipherdesc == NULL) {
+		/* copy it */
+		memcpy(buf_getwriteptr(writebuf, clearwritebuf->len),
+				buf_getptr(clearwritebuf, clearwritebuf->len),
+				clearwritebuf->len);
+		buf_incrwritepos(writebuf, clearwritebuf->len);
+	} else {
+		/* encrypt it */
+		while (clearwritebuf->pos < clearwritebuf->len) {
+			if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
+						buf_getwriteptr(writebuf, blocksize),
+						&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
+				dropbear_exit("error encrypting");
+			}
+			buf_incrpos(clearwritebuf, blocksize);
+			buf_incrwritepos(writebuf, blocksize);
 		}
-		buf_incrpos(clearwritebuf, blocksize);
-		buf_incrwritepos(writebuf, blocksize);
 	}
 
 	/* now add a hmac and we're done */
@@ -635,6 +672,8 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 	int macsize;
 	unsigned char seqbuf[4];
 	hmac_state hmac;
+
+	TRACE(("enter writemac"));
 
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
@@ -668,6 +707,7 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 		}
 		buf_incrwritepos(outputbuffer, macsize);
 	}
+	TRACE(("leave writemac"));
 }
 
 #ifndef DISABLE_ZLIB

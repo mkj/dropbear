@@ -151,6 +151,9 @@
 /* SHA512 is 64 bytes == 512 bits */
 #define SHA512_HASH_SIZE 64
 
+/* largest of MD5 and SHA1 */
+#define MAX_MAC_LEN SHA1_HASH_SIZE
+
 
 #define MAX_KEY_LEN 24 /* 3DES requires a 24 byte key */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 

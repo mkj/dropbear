@@ -23,7 +23,6 @@
  * SOFTWARE. */
 
 #include "algo.h"
-#include "nullcipher.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
@@ -48,9 +47,9 @@ const struct dropbear_cipher dropbear_3des =
 	{&des3_desc, 24, 8};
 #endif
 
-/* used initially, performs no encryption, as defined in rfc2410 */
+/* used to indicate no encryption, as defined in rfc2410 */
 const struct dropbear_cipher dropbear_nocipher =
-	{&null_desc, 16, 8}; 
+	{NULL, 16, 8}; 
 
 /* Mapping of ssh hashes to libtomcrypt hashes, including keysize etc.
    {&hash_desc, keysize, hashsize} */
@@ -137,9 +136,7 @@ void crypto_init() {
 #ifdef DROPBEAR_3DES_CBC
 		&des3_desc,
 #endif
-		&null_desc,
-
-	NULL
+		NULL
 	};
 
 	const struct _hash_descriptor *reghashes[] = {
@@ -163,7 +160,6 @@ void crypto_init() {
 			dropbear_exit("error registering crypto");
 		}
 	}
-
 }
 
 /* returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
