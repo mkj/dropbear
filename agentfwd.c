@@ -169,8 +169,8 @@ void agentcleanup(struct ChanSess * chansess) {
 /* helper for accepting an agent request */
 static int send_msg_channel_open_agent(int fd) {
 
-	if (send_msg_channel_open_init(fd, "auth-agent@openssh.com") 
-			== DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, CHANNEL_ID_AGENT,
+				"auth-agent@openssh.com") == DROPBEAR_SUCCESS) {
 		encrypt_packet();
 		return DROPBEAR_SUCCESS;
 	} else {

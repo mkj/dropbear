@@ -170,7 +170,8 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
 	char* ipstring;
 
-	if (send_msg_channel_open_init(fd, "x11") == DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, CHANNEL_ID_X11, "x11") 
+			== DROPBEAR_SUCCESS) {
 		ipstring = inet_ntoa(addr->sin_addr);
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
 		buf_putint(ses.writepayload, addr->sin_port);

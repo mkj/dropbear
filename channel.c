@@ -869,17 +869,21 @@ static void send_msg_channel_open_confirmation(struct Channel* channel,
  * options, with the calling function calling encrypt_packet() after
  * completion. It is mandatory for the caller to encrypt_packet() if
  * DROPBEAR_SUCCESS is returned */
-int send_msg_channel_open_init(int fd, const char * typestring) {
+int send_msg_channel_open_init(int fd, unsigned char type,
+		const char * typestring) {
 
 	struct Channel* chan;
 
-	chan = newchannel(0, CHANNEL_ID_AGENT, 0, 0);
+	TRACE(("enter send_msg_channel_open_init()"));
+	chan = newchannel(0, type, 0, 0);
 	if (!chan) {
+		TRACE(("leave send_msg_channel_open_init() - FAILED in newchannel()"));
 		return DROPBEAR_FAILURE;
 	}
 
 	/* set fd non-blocking */
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+		TRACE(("leave send_msg_channel_open_init() - FAILED in fcntl()"));
 		return DROPBEAR_FAILURE;
 	}
 
@@ -895,6 +899,7 @@ int send_msg_channel_open_init(int fd, const char * typestring) {
 	buf_putint(ses.writepayload, RECV_MAXWINDOW);
 	buf_putint(ses.writepayload, RECV_MAXPACKET);
 
+	TRACE(("leave send_msg_channel_open_init()"));
 	return DROPBEAR_SUCCESS;
 }
 
