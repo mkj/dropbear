@@ -350,7 +350,7 @@ int readln(int fd, char* buf, int count) {
 		pos++;
 	}
 	buf[pos] = '\0';
-	return pos;
+	return pos+1;
 }
 
 /* reads the contents of filename into the buffer buf, from the current
