@@ -10,7 +10,7 @@
 
 #ifndef DISABLE_X11FWD
 
-#define X11BASEPORT 6000
+#define X11BASEPORT 6010
 
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
@@ -104,7 +104,7 @@ void x11setauth(struct ChanSess *chansess) {
 
 	/* create the DISPLAY string */
 	if (snprintf(display, sizeof(display), "localhost:%d.%d",
-			chansess->x11port - X11BASEPORT, chansess->x11screennum) 
+			chansess->x11port - 6000, chansess->x11screennum) 
 			>= sizeof(display)) {
 		/* string was truncated */
 		return;
@@ -114,7 +114,7 @@ void x11setauth(struct ChanSess *chansess) {
 
 	/* create the xauth string */
 	if (snprintf(display, sizeof(display), "unix:%d.%d",
-			chansess->x11port - X11BASEPORT, chansess->x11screennum) 
+			chansess->x11port - 6000, chansess->x11screennum) 
 			>= sizeof(display)) {
 		/* string was truncated */
 		return;
@@ -182,7 +182,7 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 }
 
 /* returns the port bound to, or -1 on failure.
- * Will attempt to bind to a port 6000 or upwards */
+ * Will attempt to bind to a port X11BASEPORT (6010 usually) or upwards */
 static int bindport(int fd) {
 
 	struct sockaddr_in addr;
@@ -199,11 +199,12 @@ static int bindport(int fd) {
 			/* success */
 			return port;
 		}
-		if (errno != EADDRINUSE) {
-			/* error we can't handle */
-			break;
+		if (errno == EADDRINUSE) {
+			/* try the next port */
+			continue;
 		}
-		/* otherwise we loop and try a higher port */
+		/* otherwise it was an error we don't know about */
+		break;
 	}
 	return -1;
 }
