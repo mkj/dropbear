@@ -127,8 +127,11 @@ extern  struct _hash_descriptor {
     unsigned char ID;
     unsigned long hashsize;       /* digest output size in bytes  */
     unsigned long blocksize;      /* the block size the hash uses */
+#if 0
+	/*matt - we don't need these and they make the intialisers more ugly.*/
     unsigned char DER[64];        /* DER encoded identifier */
     unsigned long DERlen;         /* length of DER encoding */
+#endif
     int (*init)(hash_state *);
     int (*process)(hash_state *, const unsigned char *, unsigned long);
     int (*done)(hash_state *, unsigned char *);

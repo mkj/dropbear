@@ -276,10 +276,13 @@ typedef struct {
 
 #endif
 
+/* ifdef added by matt - a bit of a hack */
+#ifdef MPI
 /* DER handling */
 int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen);
 int der_decode_integer(const unsigned char *in, unsigned long *inlen, mp_int *num);
 int der_length_integer(mp_int *num, unsigned long *len);
 int der_put_multi_integer(unsigned char *dst, unsigned long *outlen, mp_int *num, ...);
 int der_get_multi_integer(const unsigned char *src, unsigned long *inlen,  mp_int *num, ...);
+#endif
 

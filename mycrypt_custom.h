@@ -74,6 +74,7 @@
 /* Various tidbits of modern neatoness */
 #define BASE64
 
+#define FORTUNA_POOLS 0
 
 #endif
 

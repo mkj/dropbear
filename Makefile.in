@@ -6,6 +6,9 @@
 # The version
 VERSION=0.99
 
+VPATH=@srcdir@
+srcdir=@srcdir@
+
 # Compiler and Linker Names
 #CC=gcc
 #LD=ld
@@ -110,15 +113,6 @@ ecb_start.o ecb_encrypt.o ecb_decrypt.o \
 hash_file.o  hash_filehandle.o  hash_memory.o \
 \
 hmac_done.o  hmac_file.o  hmac_init.o  hmac_memory.o  hmac_process.o  hmac_test.o \
-\
-pkcs_1_mgf1.o pkcs_1_oaep_encode.o pkcs_1_oaep_decode.o  \
-pkcs_1_pss_encode.o pkcs_1_pss_decode.o pkcs_1_i2osp.o pkcs_1_os2ip.o \
-pkcs_1_v15_es_encode.o pkcs_1_v15_es_decode.o pkcs_1_v15_sa_encode.o pkcs_1_v15_sa_decode.o \
-\
-pkcs_5_1.o pkcs_5_2.o \
-\
-der_encode_integer.o der_decode_integer.o der_length_integer.o \
-der_put_multi_integer.o der_get_multi_integer.o \
 \
 burn_stack.o zeromem.o \
 \
