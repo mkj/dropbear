@@ -58,7 +58,7 @@ AC_ARG_ENABLE(zlib,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h shadow.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h sys/stropts.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -77,6 +77,9 @@ AC_FUNC_SELECT_ARGTYPES
 AC_FUNC_SETPGRP
 AC_TYPE_SIGNAL
 AC_CHECK_FUNCS([dup2 getspnam getusershell memset putenv select socket strdup clearenv openpty strlcpy])
+
+# Solaris need ptmx
+AC_CHECK_FILE("/dev/ptmx", AC_DEFINE(HAVE_DEV_PTMX,,Have ptmx))
 
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
