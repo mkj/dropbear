@@ -109,10 +109,8 @@ static void sesssigchild_handler(int val) {
 
 		/* find the corresponding chansess */
 		for (i = 0; i < ses.childpidsize; i++) {
-			assert(pid > 1);
 			if (ses.childpids[i].pid == pid) {
 
-				assert(ses.childpids[i].chansess != NULL);
 				chansess = ses.childpids[i].chansess;
 				chansess->exited = 1;
 				if (WIFEXITED(status)) {
@@ -750,6 +748,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 	if (i == ses.childpidsize) {
 		ses.childpids = (struct ChildPid*)m_realloc(ses.childpids,
 				sizeof(struct ChildPid) * ses.childpidsize+1);
+		ses.childpidsize++;
 	}
 	
 	ses.childpids[i].pid = pid;
