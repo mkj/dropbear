@@ -333,6 +333,8 @@ out:
 		TRACE(("leave getauthline: success"));
 		return DROPBEAR_SUCCESS;
 	}
+
+	TRACE(("leave getauthline"));
 }	
 
 /* Returns DROPBEAR_SUCCESS if file permissions for pubkeys are ok,
