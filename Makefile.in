@@ -41,12 +41,14 @@ all: dropbear dropbearkey dropbearconvert
 	@echo or \"make install\" to install to ${prefix}
 
 strip:
-	strip dropbear
-	strip dropbearkey
+	-strip dropbear
+	-strip dropbearkey
+	-strip dropbearconvert
 
 install: all
 	install -o root -g root dropbear $(sbindir)
 	install -o root -g root dropbearkey $(bindir)
+	install -o root -g root dropbearconvert $(bindir)
 
 static: dropbear-static dropbearkey-static dropbearconvert-static
 
@@ -91,6 +93,7 @@ sizes: dropbear
 
 clean: ltc-clean ltm-clean
 	-rm -f dropbear dropbear dropbearkey staticdropbear staticdropbearkey
+	-rm -f dropbearconvert staticdropbearconvert
 	-rm -f *.o *.da *.bb *.bbg *.prof 
 
 tidy:
