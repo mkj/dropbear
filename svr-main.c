@@ -33,8 +33,12 @@ static int listensockets(int *sock, int sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
+#ifdef INETD_MODE
 static void main_inetd();
+#endif
+#ifdef NON_INETD_MODE
 static void main_noinetd();
+#endif
 static void commonsetup();
 
 static int childpipes[MAX_UNAUTH_CLIENTS];

@@ -33,7 +33,7 @@
 #include "listener.h"
 #include "runopts.h"
 
-#ifndef DISABLE_SVR_REMOTETCPFWD
+#ifdef ENABLE_SVR_REMOTETCPFWD
 
 static void send_msg_request_success();
 static void send_msg_request_failure();

@@ -921,7 +921,7 @@ static void send_msg_channel_open_confirmation(struct Channel* channel,
 	TRACE(("leave send_msg_channel_open_confirmation"));
 }
 
-#ifdef USING_LISTENERS
+#if defined(USING_LISTENERS) || defined(DROPBEAR_CLIENT)
 /* Create a new channel, and start the open request. This is intended
  * for X11, agent, tcp forwarding, and should be filled with channel-specific
  * options, with the calling function calling encrypt_packet() after
@@ -1006,6 +1006,7 @@ void recv_msg_channel_open_failure() {
 
 	removechannel(channel);
 }
+#endif /* USING_LISTENERS */
 
 /* close a stdout/stderr fd */
 static void closeoutfd(struct Channel * channel, int fd) {
@@ -1057,5 +1058,3 @@ static void closechanfd(struct Channel *channel, int fd, int how) {
 		channel->errfd = FD_CLOSED;
 	}
 }
-
-#endif /* USING_LISTENERS */

@@ -158,12 +158,11 @@ struct sshsession {
 
 	
 	/* TCP forwarding - where manage listeners */
-#ifdef USING_LISTENERS
 	struct Listener ** listeners;
 	unsigned int listensize;
+
 	/* Whether to allow binding to privileged ports (<1024). This doesn't
 	 * really belong here, but nowhere else fits nicely */
-#endif
 	int allowprivport;
 
 };

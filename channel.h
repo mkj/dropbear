@@ -122,7 +122,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 const struct ChanType clichansess;
 #endif
 
-#ifdef USING_LISTENERS
+#if defined(USING_LISTENERS) || defined(DROPBEAR_CLIENT)
 int send_msg_channel_open_init(int fd, const struct ChanType *type);
 void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();

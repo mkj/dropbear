@@ -31,8 +31,7 @@
 #include "session.h"
 #include "ssh.h"
 
-static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
-		unsigned int remoteport);
+#ifdef ENABLE_CLI_REMOTETCPFWD
 static int newtcpforwarded(struct Channel * channel);
 
 const struct ChanType cli_chan_tcpremote = {
@@ -43,6 +42,11 @@ const struct ChanType cli_chan_tcpremote = {
 	NULL,
 	NULL
 };
+#endif
+
+#ifdef ENABLE_CLI_LOCALTCPFWD
+static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
+		unsigned int remoteport);
 static const struct ChanType cli_chan_tcplocal = {
 	1, /* sepfds */
 	"direct-tcpip",
@@ -51,7 +55,9 @@ static const struct ChanType cli_chan_tcplocal = {
 	NULL,
 	NULL
 };
+#endif
 
+#ifdef ENABLE_CLI_LOCALTCPFWD
 void setup_localtcp() {
 
 	int ret;
@@ -102,7 +108,9 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 	TRACE(("leave cli_localtcp: %d", ret));
 	return ret;
 }
+#endif /* ENABLE_CLI_LOCALTCPFWD */
 
+#ifdef  ENABLE_CLI_REMOTETCPFWD
 static void send_msg_global_request_remotetcp(int port) {
 
 	TRACE(("enter send_msg_global_request_remotetcp"));
@@ -191,3 +199,4 @@ out:
 	TRACE(("leave newtcpdirect: err %d", err));
 	return err;
 }
+#endif /* ENABLE_CLI_REMOTETCPFWD */
