@@ -70,7 +70,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 	FD_ZERO(&readfd);
 	FD_ZERO(&writefd);
 
-	/* main loop, select()s for network and other connections */
+	/* main loop, select()s for all sockets in use */
 	for(;;) {
 
 
@@ -107,6 +107,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 			}
 		}
 
+		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
 		
 		if (val == 0) {
@@ -115,6 +116,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 			continue;
 		}
 
+		/* process session socket's incoming/outgoing data */
 		if (ses.sock != -1) {
 			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
 				write_packet();
@@ -131,7 +133,8 @@ void child_session(int sock, runopts *opts, int childpipe,
 			}
 		}
 
-		/* process pipes etc for the channels */
+		/* process pipes etc for the channels, ses.dataallowed == 0
+		 * during rekeying ) */
 		if (ses.dataallowed == 1) {
 			channelio(&readfd, &writefd);
 		}
@@ -141,7 +144,7 @@ void child_session(int sock, runopts *opts, int childpipe,
 
 /* Check all timeouts which are required. Currently these are the time for
  * user authentication, and the automatic rekeying. */
-void checktimeouts() {
+static void checktimeouts() {
 
 	struct timeval tv;
 	long secs;
@@ -169,6 +172,7 @@ void checktimeouts() {
 /* called when the remote side closes the connection */
 void session_remoteclosed() {
 
+//	/* matt */
 //	close(ses.sock);
 	ses.sock = -1;
 
@@ -182,6 +186,7 @@ void session_cleanup() {
 	
 	/* we can't cleanup if we don't know the session state */
 	if (!sessinitdone) {
+		TRACE(("leave session_cleanup: !sessinitdone"));
 		return;
 	}
 	
