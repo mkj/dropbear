@@ -6,9 +6,9 @@ COMMONOBJS=dbutil.o common-session.o common-packet.o common-algo.o buffer.o \
 		signkey.o rsa.o random.o common-channel.o \
 		common-chansession.o queue.o termcodes.o  \
 		loginrec.o atomicio.o svr-x11fwd.o tcpfwd-direct.o compat.o \
-		tcpfwd-remote.o listener.o
+		tcpfwd-remote.o listener.o process-packet.o
 
-SVROBJS=svr-kex.o svr-packet.o svr-algo.o svr-auth.o sshpty.o \
+SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-session.o svr-service.o \
 		svr-chansession.o svr-runopts.o svr-agentfwd.o
 
@@ -26,7 +26,7 @@ SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o
 
 HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
-		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
+		debug.h channel.h chansession.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd-direct.h compat.h \
 		tcpfwd-remote.h listener.h
