@@ -244,24 +244,24 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 /* Releases the tty.  Its ownership is returned to root, and permissions to 0666. */
 
 void
-pty_release(const char *ttyname)
+pty_release(const char *tty_name)
 {
-	if (chown(ttyname, (uid_t) 0, (gid_t) 0) < 0
+	if (chown(tty_name, (uid_t) 0, (gid_t) 0) < 0
 			&& (errno != ENOENT)) {
 		dropbear_log(LOG_ERR,
-				"chown %.100s 0 0 failed: %.100s", ttyname, strerror(errno));
+				"chown %.100s 0 0 failed: %.100s", tty_name, strerror(errno));
 	}
-	if (chmod(ttyname, (mode_t) 0666) < 0
+	if (chmod(tty_name, (mode_t) 0666) < 0
 			&& (errno != ENOENT)) {
 		dropbear_log(LOG_ERR,
-			"chmod %.100s 0666 failed: %.100s", ttyname, strerror(errno));
+			"chmod %.100s 0666 failed: %.100s", tty_name, strerror(errno));
 	}
 }
 
 /* Makes the tty the processes controlling tty and sets it to sane modes. */
 
 void
-pty_make_controlling_tty(int *ttyfd, const char *ttyname)
+pty_make_controlling_tty(int *ttyfd, const char *tty_name)
 {
 	int fd;
 #ifdef USE_VHANGUP
@@ -313,10 +313,10 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	vhangup();
 	mysignal(SIGHUP, old);
 #endif /* USE_VHANGUP */
-	fd = open(ttyname, O_RDWR);
+	fd = open(tty_name, O_RDWR);
 	if (fd < 0) {
 		dropbear_log(LOG_ERR,
-			"%.100s: %.100s", ttyname, strerror(errno));
+			"%.100s: %.100s", tty_name, strerror(errno));
 	} else {
 #ifdef USE_VHANGUP
 		close(*ttyfd);
@@ -352,7 +352,7 @@ pty_change_window_size(int ptyfd, int row, int col,
 }
 
 void
-pty_setowner(struct passwd *pw, const char *ttyname)
+pty_setowner(struct passwd *pw, const char *tty_name)
 {
 	struct group *grp;
 	gid_t gid;
@@ -374,37 +374,37 @@ pty_setowner(struct passwd *pw, const char *ttyname)
 	 * Warn but continue if filesystem is read-only and the uids match/
 	 * tty is owned by root.
 	 */
-	if (stat(ttyname, &st)) {
+	if (stat(tty_name, &st)) {
 		dropbear_exit("pty_setowner: stat(%.101s) failed: %.100s",
-				ttyname, strerror(errno));
+				tty_name, strerror(errno));
 	}
 
 	if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
-		if (chown(ttyname, pw->pw_uid, gid) < 0) {
+		if (chown(tty_name, pw->pw_uid, gid) < 0) {
 			if (errno == EROFS &&
 			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
 				dropbear_log(LOG_ERR,
 					"chown(%.100s, %u, %u) failed: %.100s",
-						ttyname, (unsigned int)pw->pw_uid, (unsigned int)gid,
+						tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
 						strerror(errno));
 			} else {
 				dropbear_exit("chown(%.100s, %u, %u) failed: %.100s",
-				    ttyname, (unsigned int)pw->pw_uid, (unsigned int)gid,
+				    tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
 				    strerror(errno));
 			}
 		}
 	}
 
 	if ((st.st_mode & (S_IRWXU|S_IRWXG|S_IRWXO)) != mode) {
-		if (chmod(ttyname, mode) < 0) {
+		if (chmod(tty_name, mode) < 0) {
 			if (errno == EROFS &&
 			    (st.st_mode & (S_IRGRP | S_IROTH)) == 0) {
 				dropbear_log(LOG_ERR,
 					"chmod(%.100s, 0%o) failed: %.100s",
-					ttyname, mode, strerror(errno));
+					tty_name, mode, strerror(errno));
 			} else {
 				dropbear_exit("chmod(%.100s, 0%o) failed: %.100s",
-				    ttyname, mode, strerror(errno));
+				    tty_name, mode, strerror(errno));
 			}
 		}
 	}

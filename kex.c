@@ -52,7 +52,9 @@ const unsigned int dh_g_val = 2;
 
 static void read_kex();
 static void gen_new_keys();
+#ifndef DISABLE_ZLIB
 static void gen_new_zstreams();
+#endif
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, unsigned const char X);
