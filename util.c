@@ -162,7 +162,6 @@ static void _dropbear_log(int priority, const char* format, va_list param) {
 	} else {
 		fprintf(stderr, "dropbear %s\n", printbuf);
 	}
-
 }
 
 #ifdef DEBUG_TRACE
@@ -178,47 +177,35 @@ void dropbear_trace(const char* format, ...) {
 }
 #endif /* DEBUG_TRACE */
 
-/* return a string representation of the socket address passed. Accepts
- * INET and INET6 types */
+/* Return a string representation of the socket address passed. The return
+ * value is allocated with strdup() */
 unsigned char * getaddrstring(struct sockaddr * addr) {
 
-	unsigned char * ret;
-
-	/* extensible for ip6 */
 	switch (addr->sa_family) {
 		case PF_INET: 
-			/* max len is "XXX.XXX.XXX.XXX:PPPPP\0" */
-			ret = (unsigned char*)m_malloc(15 + 1);
-			snprintf(ret, 15+1, "%s",
-					inet_ntoa(((struct sockaddr_in *)addr)->sin_addr));
-			return ret;
-			break;
-		default:
-			/* don't get here */
-			assert(0);
-			return NULL;
-			break;
+			return strdup(inet_ntoa(((struct sockaddr_in *)addr)->sin_addr));
 	}
+
+	/* Need to extend for IP6 */
+	return NULL;
 
 }
 
-/* get the hostname corresponding to the address in addr, putting the result in
- * dest, truncating the result to fit in dest. If the result is too long to fit,
- * the result WON'T be null-terminated.
- * On failure the string in addr will be copied to dest.
- * The return value is the length of the string copied to dest */
-char* getaddrhostname(char * addr) {
+/* Get the hostname corresponding to the address addr. On failure, the IP
+ * address is returned. The return value is allocated with strdup() */
+char* getaddrhostname(struct sockaddr * addr) {
 
 	struct hostent *host = NULL;
 	char * retstring;
 
 #ifdef DO_HOST_LOOKUP
-	host = gethostbyname(addr);
+	host = gethostbyaddr((char*)&((struct sockaddr_in*)addr)->sin_addr,
+			sizeof(struct in_addr), AF_INET);
 #endif
 	
-	if (!host) {
+	if (host == NULL) {
 		/* return the address */
-		retstring = addr;
+		retstring = inet_ntoa(((struct sockaddr_in *)addr)->sin_addr);
 	} else {
 		/* return the hostname */
 		retstring = host->h_name;

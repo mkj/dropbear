@@ -201,6 +201,7 @@ static void session_init(int sock, runopts *opts, int childpipe,
 	ses.remoteaddr = remoteaddr;
 
 	ses.addrstring = getaddrstring(remoteaddr);
+	ses.hostname = getaddrhostname(remoteaddr);
 
 	ses.sock = sock;
 	ses.maxfd = sock;

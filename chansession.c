@@ -244,7 +244,7 @@ void closechansess(struct Channel *channel) {
 	if (chansess->tty) {
 		/* write the utmp/wtmp login record */
 		li = login_alloc_entry(chansess->pid, ses.authstate.username,
-				NULL, chansess->tty);
+				ses.hostname, chansess->tty);
 		login_logout(li);
 		login_free_entry(li);
 
@@ -614,7 +614,6 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
 	struct logininfo *li;
-	
 
 	TRACE(("enter ptycommand"));
 
@@ -644,7 +643,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* write the utmp/wtmp login record - must be after changing the
 		 * terminal used for stdout with the dup2 above */
 		li= login_alloc_entry(getpid(), ses.authstate.username,
-				ses.addrstring, chansess->tty);
+				ses.hostname, chansess->tty);
 		login_login(li);
 		login_free_entry(li);
 

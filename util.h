@@ -41,7 +41,7 @@ void printhex(unsigned char* buf, int len);
 #endif
 char * stripcontrol(const char * text);
 unsigned char * getaddrstring(struct sockaddr * addr);
-char* getaddrhostname(char * addr);
+char* getaddrhostname(struct sockaddr * addr);
 int readln(int fd, char* buf, int count);
 int writeln(int fd, char* str);
 int buf_readfile(buffer* buf, char* filename);
