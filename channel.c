@@ -329,10 +329,11 @@ void recv_msg_channel_eof() {
 
 	channel->recveof = 1;
 
-	/* if we have nothing else to write out, then we respond with an eof for
-	 * the other way */
-	if (channel->writebuf->pos < channel->writebuf->len) {
-		send_msg_channel_eof(channel);
+	/* we should close the channel */
+	if (close(channel->infd) < 0) {
+		dropbear_log(LOG_DAEMON | LOG_INFO, "error closing channel->infd");
+	} else {
+		dropbear_log(LOG_DAEMON | LOG_INFO, "success closing channel->infd");
 	}
 
 	if (channel->transeof && (channel->erreof || channel->errfd == -1)
