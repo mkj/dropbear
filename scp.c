@@ -52,11 +52,7 @@
  * 2. Redistributions in binary form must reproduce the above copyright
  *    notice, this list of conditions and the following disclaimer in the
  *    documentation and/or other materials provided with the distribution.
- * 3. All advertising materials mentioning features or use of this software
- *    must display the following acknowledgement:
- *	This product includes software developed by the University of
- *	California, Berkeley and its contributors.
- * 4. Neither the name of the University nor the names of its contributors
+ * 3. Neither the name of the University nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
  *
@@ -75,19 +71,25 @@
  */
 
 #include "includes.h"
-/* RCSID("$OpenBSD: scp.c,v 1.102 2003/03/05 22:33:43 markus Exp $"); */
-
 #include "atomicio.h"
+#include "compat.h"
+#include "scpmisc.h"
+#include "progressmeter.h"
+
+#define _PATH_SSH_PROGRAM "/usr/bin/ssh"
+#define _PATH_CP "/bin/cp"
+
 /*#include "pathnames.h"
 #include "log.h"
-#include "misc.h"
-#include "progressmeter.h"*/
+*/
 
+/*
 #ifdef HAVE___PROGNAME
 extern char *__progname;
 #else
 char *__progname;
 #endif
+*/
 
 void bwlimit(int);
 
@@ -103,14 +105,25 @@ char *curfile;
 /* This is set to non-zero to enable verbose mode. */
 int verbose_mode = 0;
 
+#ifdef PROGRESS_METER
 /* This is set to zero if the progressmeter is not desired. */
 int showprogress = 1;
+#endif
 
 /* This is the program to execute for the secured connection. ("ssh" or -S) */
 char *ssh_program = _PATH_SSH_PROGRAM;
 
 /* This is used to store the pid of ssh_program */
-pid_t do_cmd_pid;
+pid_t do_cmd_pid = -1;
+
+static void
+killchild(int signo)
+{
+	if (do_cmd_pid > 1)
+		kill(do_cmd_pid, signo);
+
+	_exit(1);
+}
 
 /*
  * This function executes the given command as the specified user on the
@@ -136,8 +149,8 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	pipe(reserved);
 
 	/* Create a socket pair for communicating with ssh. */
-	if (pipe(pin) < 0 || pipe(pout) < 0) {
-		run_err("pipe: %s\n", stderr(errno));
+	if (pipe(pin) < 0 || pipe(pout) < 0)
+	{
 		fprintf(stderr, "Fatal error: pipe: %s\n", strerror(errno));
 		exit(1);
 	}
@@ -146,7 +159,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	close(reserved[0]);
 	close(reserved[1]);
 
-	/* For a child to execute the command on the remote host using ssh. */
+	/* Fork a child to execute the command on the remote host using ssh. */
 	do_cmd_pid = fork();
 	if (do_cmd_pid == 0) {
 		/* Child. */
@@ -175,6 +188,9 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	*fdout = pin[1];
 	close(pout[1]);
 	*fdin = pout[0];
+	signal(SIGTERM, killchild);
+	signal(SIGINT, killchild);
+	signal(SIGHUP, killchild);
 	return 0;
 }
 
@@ -207,9 +223,7 @@ void toremote(char *, int, char *[]);
 void usage(void);
 
 int
-main(argc, argv)
-	int argc;
-	char *argv[];
+main(int argc, char **argv)
 {
 	int ch, fflag, tflag, status;
 	double speed;
@@ -217,7 +231,8 @@ main(argc, argv)
 	extern char *optarg;
 	extern int optind;
 
-	__progname = get_progname(argv[0]);
+	/* hack, seems to work */
+//	__progname = argv[0];
 
 	args.list = NULL;
 	addargs(&args, "ssh");		/* overwritten with ssh_program */
@@ -267,9 +282,11 @@ main(argc, argv)
 			addargs(&args, "-v");
 			verbose_mode = 1;
 			break;
+#ifdef PROGRESS_METER
 		case 'q':
 			showprogress = 0;
 			break;
+#endif
 
 		/* Server options. */
 		case 'd':
@@ -293,12 +310,13 @@ main(argc, argv)
 	argv += optind;
 
 	if ((pwd = getpwuid(userid = getuid())) == NULL) {
-		fprintf(stderr, "Unknown user %d", (int)userid);
-		exit(1);
+		fprintf(stderr, "unknown user %u", (u_int) userid);
 	}
 
+#ifdef PROGRESS_METER
 	if (!isatty(STDERR_FILENO))
 		showprogress = 0;
+#endif
 
 	remin = STDIN_FILENO;
 	remout = STDOUT_FILENO;
@@ -356,9 +374,7 @@ main(argc, argv)
 }
 
 void
-toremote(targ, argc, argv)
-	char *targ, *argv[];
-	int argc;
+toremote(char *targ, int argc, char **argv)
 {
 	int i, len;
 	char *bp, *host, *src, *suser, *thost, *tuser;
@@ -391,7 +407,7 @@ toremote(targ, argc, argv)
 			    strlen(src) + (tuser ? strlen(tuser) : 0) +
 			    strlen(thost) + strlen(targ) +
 			    strlen(ssh_options) + CMDNEEDS + 20;
-			bp = m_malloc(len);
+			bp = xmalloc(len);
 			if (host) {
 				*host++ = 0;
 				host = cleanhostname(host);
@@ -399,11 +415,11 @@ toremote(targ, argc, argv)
 				if (*suser == '\0')
 					suser = pwd->pw_name;
 				else if (!okname(suser)) {
-					m_free(bp);
+					xfree(bp);
 					continue;
 				}
 				if (tuser && !okname(tuser)) {
-					m_free(bp);
+					xfree(bp);
 					continue;
 				}
 				snprintf(bp, len,
@@ -426,11 +442,11 @@ toremote(targ, argc, argv)
 			if (verbose_mode)
 				fprintf(stderr, "Executing: %s\n", bp);
 			(void) system(bp);
-			(void) m_free(bp);
+			(void) xfree(bp);
 		} else {	/* local to remote */
 			if (remin == -1) {
 				len = strlen(targ) + CMDNEEDS + 20;
-				bp = m_malloc(len);
+				bp = xmalloc(len);
 				(void) snprintf(bp, len, "%s -t %s", cmd, targ);
 				host = cleanhostname(thost);
 				if (do_cmd(host, tuser, bp, &remin,
@@ -438,7 +454,7 @@ toremote(targ, argc, argv)
 					exit(1);
 				if (response() < 0)
 					exit(1);
-				(void) m_free(bp);
+				(void) xfree(bp);
 			}
 			source(1, argv + i);
 		}
@@ -446,9 +462,7 @@ toremote(targ, argc, argv)
 }
 
 void
-tolocal(argc, argv)
-	int argc;
-	char *argv[];
+tolocal(int argc, char **argv)
 {
 	int i, len;
 	char *bp, *host, *src, *suser;
@@ -457,7 +471,7 @@ tolocal(argc, argv)
 		if (!(src = colon(argv[i]))) {	/* Local to local. */
 			len = strlen(_PATH_CP) + strlen(argv[i]) +
 			    strlen(argv[argc - 1]) + 20;
-			bp = m_malloc(len);
+			bp = xmalloc(len);
 			(void) snprintf(bp, len, "exec %s%s%s %s %s", _PATH_CP,
 			    iamrecursive ? " -r" : "", pflag ? " -p" : "",
 			    argv[i], argv[argc - 1]);
@@ -465,7 +479,7 @@ tolocal(argc, argv)
 				fprintf(stderr, "Executing: %s\n", bp);
 			if (system(bp))
 				++errs;
-			(void) m_free(bp);
+			(void) xfree(bp);
 			continue;
 		}
 		*src++ = 0;
@@ -482,14 +496,14 @@ tolocal(argc, argv)
 		}
 		host = cleanhostname(host);
 		len = strlen(src) + CMDNEEDS + 20;
-		bp = m_malloc(len);
+		bp = xmalloc(len);
 		(void) snprintf(bp, len, "%s -f %s", cmd, src);
 		if (do_cmd(host, suser, bp, &remin, &remout, argc) < 0) {
-			(void) m_free(bp);
+			(void) xfree(bp);
 			++errs;
 			continue;
 		}
-		m_free(bp);
+		xfree(bp);
 		sink(1, argv + argc - 1);
 		(void) close(remin);
 		remin = remout = -1;
@@ -497,9 +511,7 @@ tolocal(argc, argv)
 }
 
 void
-source(argc, argv)
-	int argc;
-	char *argv[];
+source(int argc, char **argv)
 {
 	struct stat stb;
 	static BUF buffer;
@@ -552,33 +564,28 @@ syserr:			run_err("%s: %s", name, strerror(errno));
 			(void) snprintf(buf, sizeof buf, "T%lu 0 %lu 0\n",
 			    (u_long) stb.st_mtime,
 			    (u_long) stb.st_atime);
-			(void) atomicio(write, remout, buf, strlen(buf));
+			(void) atomicio(vwrite, remout, buf, strlen(buf));
 			if (response() < 0)
 				goto next;
 		}
 #define	FILEMODEMASK	(S_ISUID|S_ISGID|S_IRWXU|S_IRWXG|S_IRWXO)
-#ifdef HAVE_LONG_LONG_INT
 		snprintf(buf, sizeof buf, "C%04o %lld %s\n",
 		    (u_int) (stb.st_mode & FILEMODEMASK),
-		    (long long)stb.st_size, last);
-#else
-		/* XXX: Handle integer overflow? */
-		snprintf(buf, sizeof buf, "C%04o %lu %s\n",
-		    (u_int) (stb.st_mode & FILEMODEMASK),
-		    (u_long) stb.st_size, last);
-#endif
+		    (int64_t)stb.st_size, last);
 		if (verbose_mode) {
 			fprintf(stderr, "Sending file modes: %s", buf);
 		}
-		(void) atomicio(write, remout, buf, strlen(buf));
+		(void) atomicio(vwrite, remout, buf, strlen(buf));
 		if (response() < 0)
 			goto next;
 		if ((bp = allocbuf(&buffer, fd, 2048)) == NULL) {
 next:			(void) close(fd);
 			continue;
 		}
+#ifdef PROGRESS_METER
 		if (showprogress)
 			start_progress_meter(curfile, stb.st_size, &statbytes);
+#endif
 		/* Keep writing after an error so that we stay sync'd up. */
 		for (haderr = i = 0; i < stb.st_size; i += bp->cnt) {
 			amt = bp->cnt;
@@ -590,9 +597,9 @@ next:			(void) close(fd);
 					haderr = result >= 0 ? EIO : errno;
 			}
 			if (haderr)
-				(void) atomicio(write, remout, bp->buf, amt);
+				(void) atomicio(vwrite, remout, bp->buf, amt);
 			else {
-				result = atomicio(write, remout, bp->buf, amt);
+				result = atomicio(vwrite, remout, bp->buf, amt);
 				if (result != amt)
 					haderr = result >= 0 ? EIO : errno;
 				statbytes += result;
@@ -600,13 +607,15 @@ next:			(void) close(fd);
 			if (limitbw)
 				bwlimit(amt);
 		}
+#ifdef PROGRESS_METER
 		if (showprogress)
 			stop_progress_meter();
+#endif
 
 		if (close(fd) < 0 && !haderr)
 			haderr = errno;
 		if (!haderr)
-			(void) atomicio(write, remout, "", 1);
+			(void) atomicio(vwrite, remout, "", 1);
 		else
 			run_err("%s: %s", name, strerror(haderr));
 		(void) response();
@@ -614,9 +623,7 @@ next:			(void) close(fd);
 }
 
 void
-rsource(name, statp)
-	char *name;
-	struct stat *statp;
+rsource(char *name, struct stat *statp)
 {
 	DIR *dirp;
 	struct dirent *dp;
@@ -635,7 +642,7 @@ rsource(name, statp)
 		(void) snprintf(path, sizeof(path), "T%lu 0 %lu 0\n",
 		    (u_long) statp->st_mtime,
 		    (u_long) statp->st_atime);
-		(void) atomicio(write, remout, path, strlen(path));
+		(void) atomicio(vwrite, remout, path, strlen(path));
 		if (response() < 0) {
 			closedir(dirp);
 			return;
@@ -645,7 +652,7 @@ rsource(name, statp)
 	    (u_int) (statp->st_mode & FILEMODEMASK), 0, last);
 	if (verbose_mode)
 		fprintf(stderr, "Entering directory: %s", path);
-	(void) atomicio(write, remout, path, strlen(path));
+	(void) atomicio(vwrite, remout, path, strlen(path));
 	if (response() < 0) {
 		closedir(dirp);
 		return;
@@ -664,7 +671,7 @@ rsource(name, statp)
 		source(1, vect);
 	}
 	(void) closedir(dirp);
-	(void) atomicio(write, remout, "E\n", 2);
+	(void) atomicio(vwrite, remout, "E\n", 2);
 	(void) response();
 }
 
@@ -723,9 +730,7 @@ bwlimit(int amount)
 }
 
 void
-sink(argc, argv)
-	int argc;
-	char *argv[];
+sink(int argc, char **argv)
 {
 	static BUF buffer;
 	struct stat stb;
@@ -756,7 +761,7 @@ sink(argc, argv)
 	if (targetshouldbedirectory)
 		verifydir(targ);
 
-	(void) atomicio(write, remout, "", 1);
+	(void) atomicio(vwrite, remout, "", 1);
 	if (stat(targ, &stb) == 0 && S_ISDIR(stb.st_mode))
 		targisdir = 1;
 	for (first = 1;; first = 0) {
@@ -774,7 +779,7 @@ sink(argc, argv)
 
 		if (buf[0] == '\01' || buf[0] == '\02') {
 			if (iamremote == 0)
-				(void) atomicio(write, STDERR_FILENO,
+				(void) atomicio(vwrite, STDERR_FILENO,
 				    buf + 1, strlen(buf + 1));
 			if (buf[0] == '\02')
 				exit(1);
@@ -782,7 +787,7 @@ sink(argc, argv)
 			continue;
 		}
 		if (buf[0] == 'E') {
-			(void) atomicio(write, remout, "", 1);
+			(void) atomicio(vwrite, remout, "", 1);
 			return;
 		}
 		if (ch == '\n')
@@ -804,7 +809,7 @@ sink(argc, argv)
 			atime.tv_usec = strtol(cp, &cp, 10);
 			if (!cp || *cp++ != '\0')
 				SCREWUP("atime.usec not delimited");
-			(void) atomicio(write, remout, "", 1);
+			(void) atomicio(vwrite, remout, "", 1);
 			continue;
 		}
 		if (*cp != 'C' && *cp != 'D') {
@@ -842,8 +847,8 @@ sink(argc, argv)
 			need = strlen(targ) + strlen(cp) + 250;
 			if (need > cursize) {
 				if (namebuf)
-					m_free(namebuf);
-				namebuf = m_malloc(need);
+					xfree(namebuf);
+				namebuf = xmalloc(need);
 				cursize = need;
 			}
 			(void) snprintf(namebuf, need, "%s%s%s", targ,
@@ -880,7 +885,7 @@ sink(argc, argv)
 			if (mod_flag)
 				(void) chmod(vect[0], mode);
 			if (vect[0])
-				m_free(vect[0]);
+				xfree(vect[0]);
 			continue;
 		}
 		omode = mode;
@@ -889,7 +894,7 @@ sink(argc, argv)
 bad:			run_err("%s: %s", np, strerror(errno));
 			continue;
 		}
-		(void) atomicio(write, remout, "", 1);
+		(void) atomicio(vwrite, remout, "", 1);
 		if ((bp = allocbuf(&buffer, ofd, 4096)) == NULL) {
 			(void) close(ofd);
 			continue;
@@ -898,8 +903,10 @@ bad:			run_err("%s: %s", np, strerror(errno));
 		wrerr = NO;
 
 		statbytes = 0;
+#ifdef PROGRESS_METER
 		if (showprogress)
 			start_progress_meter(curfile, size, &statbytes);
+#endif
 		for (count = i = 0; i < size; i += 4096) {
 			amt = 4096;
 			if (i + amt > size)
@@ -926,7 +933,7 @@ bad:			run_err("%s: %s", np, strerror(errno));
 			if (count == bp->cnt) {
 				/* Keep reading so we stay sync'd up. */
 				if (wrerr == NO) {
-					j = atomicio(write, ofd, bp->buf, count);
+					j = atomicio(vwrite, ofd, bp->buf, count);
 					if (j != count) {
 						wrerr = YES;
 						wrerrno = j >= 0 ? EIO : errno;
@@ -936,10 +943,12 @@ bad:			run_err("%s: %s", np, strerror(errno));
 				cp = bp->buf;
 			}
 		}
+#ifdef PROGRESS_METER
 		if (showprogress)
 			stop_progress_meter();
+#endif
 		if (count != 0 && wrerr == NO &&
-		    (j = atomicio(write, ofd, bp->buf, count)) != count) {
+		    (j = atomicio(vwrite, ofd, bp->buf, count)) != count) {
 			wrerr = YES;
 			wrerrno = j >= 0 ? EIO : errno;
 		}
@@ -984,7 +993,7 @@ bad:			run_err("%s: %s", np, strerror(errno));
 			run_err("%s: %s", np, strerror(wrerrno));
 			break;
 		case NO:
-			(void) atomicio(write, remout, "", 1);
+			(void) atomicio(vwrite, remout, "", 1);
 			break;
 		case DISPLAYED:
 			break;
@@ -1019,7 +1028,7 @@ response(void)
 		} while (cp < &rbuf[sizeof(rbuf) - 1] && ch != '\n');
 
 		if (!iamremote)
-			(void) atomicio(write, STDERR_FILENO, rbuf, cp - rbuf);
+			(void) atomicio(vwrite, STDERR_FILENO, rbuf, cp - rbuf);
 		++errs;
 		if (resp == 1)
 			return (-1);
@@ -1064,8 +1073,7 @@ run_err(const char *fmt,...)
 }
 
 void
-verifydir(cp)
-	char *cp;
+verifydir(char *cp)
 {
 	struct stat stb;
 
@@ -1079,8 +1087,7 @@ verifydir(cp)
 }
 
 int
-okname(cp0)
-	char *cp0;
+okname(char *cp0)
 {
 	int c;
 	char *cp;
@@ -1110,9 +1117,7 @@ bad:	fprintf(stderr, "%s: invalid user name\n", cp0);
 }
 
 BUF *
-allocbuf(bp, fd, blksize)
-	BUF *bp;
-	int fd, blksize;
+allocbuf(BUF *bp, int fd, int blksize)
 {
 	size_t size;
 #ifdef HAVE_STRUCT_STAT_ST_BLKSIZE
@@ -1131,17 +1136,16 @@ allocbuf(bp, fd, blksize)
 	if (bp->cnt >= size)
 		return (bp);
 	if (bp->buf == NULL)
-		bp->buf = m_malloc(size);
+		bp->buf = xmalloc(size);
 	else
-		bp->buf = m_realloc(bp->buf, size);
+		bp->buf = xrealloc(bp->buf, size);
 	memset(bp->buf, 0, size);
 	bp->cnt = size;
 	return (bp);
 }
 
 void
-lostconn(signo)
-	int signo;
+lostconn(int signo)
 {
 	if (!iamremote)
 		write(STDERR_FILENO, "lost connection\n", 16);
