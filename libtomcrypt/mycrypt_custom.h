@@ -18,7 +18,10 @@
 #define XFREE free
 #define XCLOCK clock
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
+
+#ifdef DROPBEAR_SMALL_CODE
 #define SMALL_CODE
+#endif
 
 /* #define LTC_TEST */
 

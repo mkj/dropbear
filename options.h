@@ -42,10 +42,16 @@
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
 #endif
 
-/* Setting this disables the fast exptmod bignum code. It saves ~5kB, but is
- * perhaps 20% slower for pubkey operations (it is probably worth experimenting
- * if you want to use this) */
+/* Setting this disables the faster version of the modular exponentiation
+ * bignum code. It saves ~5kB, but is perhaps 20% slower for public-key and key
+ * exchange operations.  It is probably worth experimenting to decide if it's
+ * worthwhile on your platform. */
 /*#define NO_FAST_EXPTMOD*/
+
+/* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
+ * several kB in binary size, however will make the symmetrical ciphers (AES,
+ * DES etc) slower (perhaps by 50%). Recommended for most small systems. */
+#define DROPBEAR_SMALL_CODE
 
 /* Enable X11 Forwarding */
 #define ENABLE_X11FWD
