@@ -61,7 +61,7 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 		return DROPBEAR_FAILURE;
 	}
 
-	if (mp_unsigned_bin_size(key->p) < MIN_DSS_KEYLEN) {
+	if (mp_count_bits(key->p) < MIN_DSS_KEYLEN) {
 		dropbear_log(LOG_WARNING, "DSS key too short");
 		return DROPBEAR_FAILURE;
 	}
