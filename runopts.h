@@ -36,7 +36,7 @@ struct RunOpts {
 	char * bannerfile;
 	int forkbg;
 
-	uint16_t port;
+	u_int16_t port;
 	
 	sign_key *hostkey;
 	buffer * banner;
