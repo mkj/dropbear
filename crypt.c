@@ -10,6 +10,8 @@
  */
 #include "mycrypt.h"
 
+/* Dropbear doesn't need these 
+
 const char *crypt_build_settings =
    "LibTomCrypt " SCRYPT "\n\n"
    "Endianess: "
@@ -236,4 +238,5 @@ const char *crypt_build_settings =
     "\n"
     "\n\n\n"
     ;
+	*/
 

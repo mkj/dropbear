@@ -5,6 +5,9 @@
 #ifndef MYCRYPT_CUSTOM_H_
 #define MYCRYPT_CUSTOM_H_
 
+/* this will sort out which stuff based on the user-config in options.h */
+#include "../options.h"
+
 #ifdef CRYPT
 	#error mycrypt_custom.h should be included before mycrypt.h
 #endif
@@ -17,102 +20,50 @@
 #define XCLOCK clock
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
 
-/* Use small code where possible */
+#ifdef DROPBEAR_SMALL_CODE
 #define SMALL_CODE
+#endif
 
-/* Enable self-test test vector checking */
-#define LTC_TEST
+/* #define LTC_TEST */
+#define CLEAN_STACK
+#define NO_FILE
 
-/* clean the stack of functions which put private information on stack */
-//#define CLEAN_STACK
-
-/* disable all file related functions */
-//#define NO_FILE
-
-/* various ciphers */
+#ifdef DROPBEAR_BLOWFISH_CBC
 #define BLOWFISH
-#define RC2
-#define RC5
-#define RC6
-#define SAFERP
+#endif
+
+#ifdef DROPBEAR_AES128_CBC
 #define RIJNDAEL
-#define XTEA
+#endif
+
+#ifdef DROPBEAR_TWOFISH128_CBC
 #define TWOFISH
-#define TWOFISH_TABLES
-//#define TWOFISH_ALL_TABLES
-//#define TWOFISH_SMALL
+
+/* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
+ * TWOFISH_TABLES will make it a few kB bigger, but perhaps reduces runtime
+ * memory usage? */
+#define TWOFISH_SMALL
+/*#define TWOFISH_TABLES*/
+#endif
+
+#ifdef DROPBEAR_3DES_CBC
 #define DES
-#define CAST5
-#define NOEKEON
-#define SKIPJACK
+#endif
 
-/* modes of operation */
-#define CFB
-#define OFB
-#define ECB
 #define CBC
-#define CTR
 
-/* hash functions */
-#define WHIRLPOOL
+#if defined(DROPBEAR_DSS) && defined(DSS_PROTOK)
 #define SHA512
-#define SHA384
-#define SHA256
-#define SHA224
-#define TIGER
+#endif
+
 #define SHA1
+
+#ifdef DROPBEAR_MD5_HMAC
 #define MD5
-#define MD4
-#define MD2
-#define RIPEMD128
-#define RIPEMD160
+#endif
 
-/* MAC functions */
 #define HMAC
-#define OMAC
-#define PMAC
-
-/* Encrypt + Authenticate Modes */
-#define EAX_MODE
-#define OCB_MODE
-
-/* Various tidbits of modern neatoness */
 #define BASE64
-#define YARROW
-// which descriptor of AES to use? 
-// 0 = rijndael_enc 1 = aes_enc, 2 = rijndael [full], 3 = aes [full]
-#define YARROW_AES 0
-#define SPRNG
-#define RC4
-#define DEVRANDOM
-#define TRY_URANDOM_FIRST
-
-/* Public Key Neatoness */
-#define MRSA
-#define RSA_TIMING                   // enable RSA side channel timing prevention 
-#define MDSA
-#define MDH
-#define MECC
-#define DH768
-#define DH1024
-#define DH1280
-#define DH1536
-#define DH1792
-#define DH2048
-#define DH2560
-#define DH3072
-#define DH4096
-#define ECC160
-#define ECC192
-#define ECC224
-#define ECC256
-#define ECC384
-#define ECC521
-#define MPI
-
-/* PKCS #1 and 5 stuff */
-#define PKCS_1
-#define PKCS_5
 
 #include <mycrypt.h>
 

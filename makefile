@@ -20,17 +20,18 @@ VERSION=0.96
 #ARFLAGS=r
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
-CFLAGS += -c -I./ -Wall -Wsign-compare -W -Wshadow 
+# The rest of the flags come from the parent Dropbear makefile
+CFLAGS += -c -I./
 # -Werror
 
 # optimize for SPEED
 #CFLAGS += -O3 -funroll-loops
 
-#add -fomit-frame-pointer.  GCC v3.2 is buggy for certain platforms!
-CFLAGS += -fomit-frame-pointer
+#add -fomit-frame-pointer.  v3.2 is buggy for certain platforms!
+#CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
-CFLAGS += -Os
+#CFLAGS += -Os
 
 # compile for DEBUGING
 #CFLAGS += -g3
