@@ -37,6 +37,8 @@
 #define X11BASEPORT 6000
 #define X11BINDBASE 6010
 
+static void x11accept(struct Listener* listener);
+static void x11cleanup(struct Listener *listener);
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 
@@ -44,8 +46,10 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int x11req(struct ChanSess * chansess) {
 
+	int fd;
+
 	/* we already have an x11 connection */
-	if (chansess->x11fd != -1) {
+	if (chansess->x11listener != NULL) {
 		return DROPBEAR_FAILURE;
 	}
 
@@ -55,62 +59,71 @@ int x11req(struct ChanSess * chansess) {
 	chansess->x11screennum = buf_getint(ses.payload);
 
 	/* create listening socket */
-	chansess->x11fd = socket(PF_INET, SOCK_STREAM, 0);
-	if (chansess->x11fd < 0) {
+	fd = socket(PF_INET, SOCK_STREAM, 0);
+	if (fd < 0) {
 		goto fail;
 	}
 
 	/* allocate port and bind */
-	chansess->x11port = bindport(chansess->x11fd);
+	chansess->x11port = bindport(fd);
 	if (chansess->x11port < 0) {
 		goto fail;
 	}
 
 	/* listen */
-	if (listen(chansess->x11fd, 20) < 0) {
+	if (listen(fd, 20) < 0) {
 		goto fail;
 	}
 
 	/* set non-blocking */
-	if (fcntl(chansess->x11fd, F_SETFL, O_NONBLOCK) < 0) {
+	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		goto fail;
 	}
 
-	/* channel.c's channel fd code will handle the socket now */
-
-	/* set the maxfd so that select() loop will notice it */
-	ses.maxfd = MAX(ses.maxfd, chansess->x11fd);
+	/* listener code will handle the socket now.
+	 * No cleanup handler needed, since listener_remove only happens
+	 * from our cleanup anyway */
+	chansess->x11listener = new_listener( fd, 0, chansess, x11accept, NULL);
+	if (chansess->x11listener == NULL) {
+		goto fail;
+	}
 
 	return DROPBEAR_SUCCESS;
 
 fail:
 	/* cleanup */
-	x11cleanup(chansess);
+	m_free(chansess->x11authprot);
+	m_free(chansess->x11authcookie);
+	close(fd);
 
 	return DROPBEAR_FAILURE;
 }
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-int x11accept(struct ChanSess * chansess) {
+static void x11accept(struct Listener* listener) {
 
 	int fd;
 	struct sockaddr_in addr;
 	int len;
+	int ret;
 
 	len = sizeof(addr);
 
-	fd = accept(chansess->x11fd, (struct sockaddr*)&addr, &len);
+	fd = accept(listener->sock, (struct sockaddr*)&addr, &len);
 	if (fd < 0) {
-		return DROPBEAR_FAILURE;
+		return;
 	}
 
 	/* if single-connection we close it up */
-	if (chansess->x11singleconn) {
-		x11cleanup(chansess);
+	if (((struct ChanSess *)(listener->typedata))->x11singleconn) {
+		x11cleanup(listener);
 	}
 
-	return send_msg_channel_open_x11(fd, &addr);
+	ret = send_msg_channel_open_x11(fd, &addr);
+	if (ret == DROPBEAR_FAILURE) {
+		close(fd);
+	}
 }
 
 /* This is called after switching to the user, and sets up the xauth
@@ -121,7 +134,7 @@ void x11setauth(struct ChanSess *chansess) {
 	FILE * authprog;
 	int val;
 
-	if (chansess->x11fd == -1) {
+	if (chansess->x11listener == NULL) {
 		return;
 	}
 
@@ -154,24 +167,31 @@ void x11setauth(struct ChanSess *chansess) {
 	}
 }
 
-void x11cleanup(struct ChanSess * chansess) {
+static void x11cleanup(struct Listener *listener) {
 
-	if (chansess->x11fd == -1) {
-		return;
-	}
+	struct ChanSess *chansess = (struct ChanSess*)listener->typedata;
 
 	m_free(chansess->x11authprot);
 	m_free(chansess->x11authcookie);
-	close(chansess->x11fd);
-	chansess->x11fd = -1;
+	remove_listener(listener);
+	chansess->x11listener = NULL;
 }
+
+static const struct ChanType chan_x11 = {
+	0, /* sepfds */
+	"x11",
+	NULL, /* inithandler */
+	NULL, /* checkclose */
+	NULL, /* reqhandler */
+	NULL /* closehandler */
+};
+
 
 static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
 	char* ipstring;
 
-	if (send_msg_channel_open_init(fd, CHANNEL_ID_X11, "x11") 
-			== DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, &chan_x11) == DROPBEAR_SUCCESS) {
 		ipstring = inet_ntoa(addr->sin_addr);
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
 		buf_putint(ses.writepayload, addr->sin_port);

@@ -114,8 +114,7 @@ void recv_msg_channel_close();
 void recv_msg_channel_eof();
 
 #ifdef USE_LISTENERS
-int send_msg_channel_open_init(int fd, struct ChanType *type,
-		const char * typestring);
+int send_msg_channel_open_init(int fd, const struct ChanType *type);
 void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();
 #endif

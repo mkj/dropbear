@@ -33,7 +33,7 @@
 #include "channel.h"
 #include "queue.h"
 #include "runopts.h"
-#include "remotetcpfwd.h"
+#include "listener.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
@@ -139,8 +139,8 @@ struct sshsession {
 	
 	/* TCP forwarding - where manage listeners */
 #ifndef DISABLE_REMOTETCPFWD
-	struct TCPListener ** tcplisteners;
-	unsigned int tcplistensize;
+	struct Listener ** listeners;
+	unsigned int listensize;
 #endif
 
 };

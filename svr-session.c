@@ -35,7 +35,7 @@
 #include "channel.h"
 #include "chansession.h"
 #include "atomicio.h"
-#include "localtcpfwd.h"
+#include "tcpfwd-direct.h"
 
 static void svr_remoteclosed();
 

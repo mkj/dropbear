@@ -4,9 +4,9 @@ LTM=libtommath/libtommath.a
 COMMONOBJS=dbutil.o common-session.o common-packet.o common-algo.o buffer.o \
 		common-kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o common-channel.o \
-		common-chansession.o queue.o termcodes.o runopts.o \
-		loginrec.o atomicio.o x11fwd.o agentfwd.o localtcpfwd.o compat.o \
-		remotetcpfwd.o tcpfwd.o
+		common-chansession.o queue.o termcodes.o  \
+		loginrec.o atomicio.o x11fwd.o tcpfwd-direct.o compat.o \
+		tcpfwd-remote.o listener.o
 
 SVROBJS=svr-kex.o svr-packet.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-session.o svr-service.o \
@@ -28,8 +28,8 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h includes.h \
-		loginrec.h atomicio.h x11fwd.h agentfwd.h localtcpfwd.h compat.h \
-		remotetcpfwd.h tcpfwd.h
+		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd-direct.h compat.h \
+		tcpfwd-remote.h listener.h
 
 ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 

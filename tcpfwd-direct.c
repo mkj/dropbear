@@ -2,9 +2,9 @@
 #include "session.h"
 #include "dbutil.h"
 #include "channel.h"
-#include "localtcpfwd.h"
+#include "tcpfwd-direct.h"
 
-#ifndef DISABLE_LOCALTCPFWD
+#ifndef DISABLE_TCPFWD_DIRECT
 static int newtcpdirect(struct Channel * channel);
 static int newtcp(const char * host, int port);
 
@@ -16,7 +16,6 @@ const struct ChanType chan_tcpdirect = {
 	NULL, /* reqhandler */
 	NULL /* closehandler */
 };
-
 
 
 /* Called upon creating a new direct tcp channel (ie we connect out to an
@@ -152,4 +151,4 @@ static int newtcp(const char * host, int port) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 	return sock;
 }
-#endif /* DISABLE_LOCALTCPFWD */
+#endif /* DISABLE_TCPFWD_DIRECT */

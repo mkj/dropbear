@@ -27,6 +27,7 @@
 
 #include "loginrec.h"
 #include "channel.h"
+#include "listener.h"
 
 struct ChanSess {
 
@@ -47,7 +48,7 @@ struct ChanSess {
 	unsigned char exitcore;
 	
 #ifndef DISABLE_X11FWD
-	int x11fd; /* set to -1 to indicate forwarding not established */
+	struct Listener * x11listener;
 	int x11port;
 	char * x11authprot;
 	char * x11authcookie;
@@ -56,7 +57,7 @@ struct ChanSess {
 #endif
 
 #ifndef DISABLE_AGENTFWD
-	int agentfd;
+	struct Listener * agentlistener;
 	char * agentfile;
 	char * agentdir;
 #endif

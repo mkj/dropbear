@@ -1,11 +1,11 @@
 #include "includes.h"
 #include "ssh.h"
-#include "remotetcpfwd.h"
+#include "tcpfwd-remote.h"
 #include "dbutil.h"
 #include "session.h"
 #include "buffer.h"
 #include "packet.h"
-#include "tcpfwd.h"
+#include "listener.h"
 
 #ifndef DISABLE_REMOTETCPFWD
 
@@ -20,8 +20,8 @@ static void send_msg_request_success();
 static void send_msg_request_failure();
 static int cancelremotetcp();
 static int remotetcpreq();
-static int newlistener(unsigned char* bindaddr, unsigned int port);
-static void acceptremote(struct TCPListener *listener);
+static int listen_tcpfwd(unsigned char* bindaddr, unsigned int port);
+static void acceptremote(struct Listener *listener);
 
 /* At the moment this is completely used for tcp code (with the name reflecting
  * that). If new request types are added, this should be replaced with code
@@ -70,7 +70,17 @@ out:
 	TRACE(("leave recv_msg_global_request"));
 }
 
-static void acceptremote(struct TCPListener *listener) {
+static const struct ChanType chan_tcpremote = {
+	0, /* sepfds */
+	"forwarded-tcpip",
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+
+
+static void acceptremote(struct Listener *listener) {
 
 	int fd;
 	struct sockaddr addr;
@@ -90,19 +100,22 @@ static void acceptremote(struct TCPListener *listener) {
 		return;
 	}
 
-	/* XXX XXX XXX - type here needs fixing */
-	if (send_msg_channel_open_init(fd, CHANNEL_ID_TCPFORWARDED, 
-				"forwarded-tcpip") == DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, &chan_tcpremote) == DROPBEAR_SUCCESS) {
+
 		buf_putstring(ses.writepayload, tcpinfo->addr,
 				strlen(tcpinfo->addr));
 		buf_putint(ses.writepayload, tcpinfo->port);
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
 		buf_putint(ses.writepayload, atol(portstring));
 		encrypt_packet();
+
+	} else {
+		/* XXX debug? */
+		close(fd);
 	}
 }
 
-static void cleanupremote(struct TCPListener *listener) {
+static void cleanupremote(struct Listener *listener) {
 
 	struct RemoteTCP *tcpinfo = (struct RemoteTCP*)(listener->typedata);
 
@@ -141,7 +154,7 @@ static int cancelremotetcp() {
 	unsigned char * bindaddr = NULL;
 	unsigned int addrlen;
 	unsigned int port;
-	struct TCPListener * listener = NULL;
+	struct Listener * listener = NULL;
 	struct RemoteTCP tcpinfo;
 
 	TRACE(("enter cancelremotetcp"));
@@ -203,7 +216,7 @@ static int remotetcpreq() {
 	}
 	*/
 
-	ret = newlistener(bindaddr, port);
+	ret = listen_tcpfwd(bindaddr, port);
 
 out:
 	if (ret == DROPBEAR_FAILURE) {
@@ -215,16 +228,16 @@ out:
 	return ret;
 }
 
-static int newlistener(unsigned char* bindaddr, unsigned int port) {
+static int listen_tcpfwd(unsigned char* bindaddr, unsigned int port) {
 
 	struct RemoteTCP * tcpinfo = NULL;
 	char portstring[6]; /* "65535\0" */
 	struct addrinfo *res = NULL, *ai = NULL;
 	struct addrinfo hints;
 	int sock = -1;
-	int ret = DROPBEAR_FAILURE;
+	struct Listener *listener = NULL;
 
-	TRACE(("enter newlistener"));
+	TRACE(("enter listen_tcpfwd"));
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%d", port);
@@ -234,7 +247,7 @@ static int newlistener(unsigned char* bindaddr, unsigned int port) {
 	hints.ai_flags = AI_PASSIVE | AI_NUMERICHOST;
 
 	if (getaddrinfo(bindaddr, portstring, &hints, &res) < 0) {
-		TRACE(("leave newlistener: getaddrinfo failed: %s",
+		TRACE(("leave listen_tcpfwd: getaddrinfo failed: %s",
 					strerror(errno)));
 		goto done;
 	}
@@ -283,10 +296,10 @@ fail:
 	tcpinfo->addr = bindaddr;
 	tcpinfo->port = port;
 
-	ret = new_fwd(sock, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
+	listener = new_listener(sock, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
 			acceptremote, cleanupremote);
 
-	if (ret == DROPBEAR_FAILURE) {
+	if (listener == NULL) {
 		m_free(tcpinfo);
 	}
 
@@ -295,8 +308,12 @@ done:
 		freeaddrinfo(res);
 	}
 	
-	TRACE(("leave newlistener"));
-	return ret;
+	TRACE(("leave listen_tcpfwd"));
+	if (listener == NULL) {
+		return DROPBEAR_FAILURE;
+	} else {
+		return DROPBEAR_SUCCESS;
+	}
 }
 
 #endif /* DISABLE_REMOTETCPFWD */

@@ -32,9 +32,9 @@
 #include "dbutil.h"
 #include "channel.h"
 #include "ssh.h"
-#include "localtcpfwd.h"
-#include "remotetcpfwd.h"
-#include "tcpfwd.h"
+#include "tcpfwd-direct.h"
+#include "tcpfwd-remote.h"
+#include "listener.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -70,8 +70,8 @@ void chaninitialise(const struct ChanType *chantypes[]) {
 
 	ses.chantypes = chantypes;
 
-#ifdef USING_TCP_LISTENERS
-	tcp_fwd_initialise();
+#ifdef USING_LISTENERS
+	listeners_initialise();
 #endif
 
 }
@@ -219,9 +219,9 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 
 	} /* foreach channel */
 
-	/* Not channel specific */
-#ifdef USING_TCP_LISTENERS
-		handle_tcp_fwd(readfd);
+	/* Listeners such as TCP, X11, agent-auth */
+#ifdef USING_LISTENERS
+	handle_listeners(readfd);
 #endif
 }
 
@@ -429,8 +429,8 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 
 	} /* foreach channel */
 
-#ifdef USING_TCP_LISTENERS
-	set_tcp_fwd_fds(readfd);
+#ifdef USING_LISTENERS
+	set_listener_fds(readfd);
 #endif
 
 }
@@ -895,8 +895,7 @@ static void send_msg_channel_open_confirmation(struct Channel* channel,
  * options, with the calling function calling encrypt_packet() after
  * completion. It is mandatory for the caller to encrypt_packet() if
  * DROPBEAR_SUCCESS is returned */
-int send_msg_channel_open_init(int fd, struct ChanType *type,
-		const char * typestring) {
+int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 
 	struct Channel* chan;
 
@@ -920,7 +919,7 @@ int send_msg_channel_open_init(int fd, struct ChanType *type,
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
-	buf_putstring(ses.writepayload, typestring, strlen(typestring));
+	buf_putstring(ses.writepayload, type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
 	buf_putint(ses.writepayload, RECV_MAXWINDOW);
 	buf_putint(ses.writepayload, RECV_MAXPACKET);

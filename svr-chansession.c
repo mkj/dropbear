@@ -201,13 +201,13 @@ static int newchansess(struct Channel *channel) {
 	channel->typedata = chansess;
 
 #ifndef DISABLE_X11FWD
-	chansess->x11fd = -1;
+	chansess->x11listener = NULL;
 	chansess->x11authprot = NULL;
 	chansess->x11authcookie = NULL;
 #endif
 
 #ifndef DISABLE_AGENTFWD
-	chansess->agentfd = -1;
+	chansess->agentlistener = NULL;
 	chansess->agentfile = NULL;
 	chansess->agentdir = NULL;
 #endif
@@ -881,7 +881,7 @@ static void execchild(struct ChanSess *chansess) {
 	/* only reached on error */
 	dropbear_exit("child failed");
 }
-	
+
 const struct ChanType svrchansess = {
 	0, /* sepfds */
 	"session", /* name */
