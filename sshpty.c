@@ -98,7 +98,6 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 	 */
 	int ptm;
 	char *pts;
-	mysig_t old_signal;
 
 	TRACE(("#if defined(HAVE_DEV_PTMX)"));
 
@@ -108,13 +107,11 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 		/*error("/dev/ptmx: %.100s", strerror(errno)); matt */
 		return 0;
 	}
-	old_signal = mysignal(SIGCHLD, SIG_DFL);
 	if (grantpt(ptm) < 0) {
 		TRACE(("grantpt: error"));
 		/*error("grantpt: %.100s", strerror(errno)); matt */
 		return 0;
 	}
-	mysignal(SIGCHLD, old_signal);
 	if (unlockpt(ptm) < 0) {
 		TRACE(("unlockpt: error"));
 		/*error("unlockpt: %.100s", strerror(errno)); matt */
@@ -256,7 +253,8 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 		}
 		/* set tty modes to a sane state for broken clients */
 		if (tcgetattr(*ptyfd, &tio) < 0) {
-			TRACE(("Getting tty modes for pty failed"));
+			TRACE(("Getting tty modes for pty failed: %.100s", strerror
+(errno))); 
 /*			log("Getting tty modes for pty failed: %.100s", strerror(errno)); matt */
 		} else {
 			tio.c_lflag |= (ECHO | ISIG | ICANON);
@@ -306,6 +304,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 #endif /* USE_VHANGUP */
 
 #ifdef _UNICOS
+	TRACE(("unicos"));
 	if (setsid() < 0) {
 		TRACE(("setsid error"));
 /*		error("setsid: %.100s", strerror(errno)); matt */
@@ -334,10 +333,16 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	*ttyfd = fd;
 #else /* _UNICOS */
 
+	/* solaris has a problem with TIOCNOTTY for a bg process, so
+	 * we disable the signal which would STOP the process */
+	signal(SIGTTOU, SIG_IGN);
+
 	/* First disconnect from the old controlling tty. */
 #ifdef TIOCNOTTY
+	TRACE(("TIOCNOTTY"));
 	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
+		TRACE(("before ioctl TIOCNOTTY"));
 		(void) ioctl(fd, TIOCNOTTY, NULL);
 		close(fd);
 	}
@@ -351,6 +356,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 	 * Verify that we are successfully disconnected from the controlling
 	 * tty.
 	 */
+	TRACE(("verify disconnect"));
 	fd = open(_PATH_TTY, O_RDWR | O_NOCTTY);
 	if (fd >= 0) {
 		TRACE(("pty_make_controlling_tty: Failed to disconnect from"
@@ -392,6 +398,7 @@ pty_make_controlling_tty(int *ttyfd, const char *ttyname)
 #endif /* USE_VHANGUP */
 	}
 	/* Verify that we now have a controlling tty. */
+	TRACE(("verify have controlling"));
 	fd = open(_PATH_TTY, O_WRONLY);
 	if (fd < 0) {
 		TRACE(("pty_make_controlling_tty: failed to open /dev/tty"));
