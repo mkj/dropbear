@@ -32,8 +32,11 @@
 
 #ifdef DROPBEAR_TWOFISH128_CBC
 #define TWOFISH
-#define TWOFISH_SMALL
-//#define TWOFISH_TABLES
+/* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
+ * TWOFISH_TABLES will make it a few kB bigger, but perhaps reduces runtime
+ * memory usage? The standard one is OK for now */
+/*#define TWOFISH_SMALL*/
+/*#define TWOFISH_TABLES*/
 #endif
 
 #ifdef DROPBEAR_3DES_CBC
