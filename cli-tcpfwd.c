@@ -32,6 +32,8 @@ void setup_localtcp() {
 
 	int ret;
 
+	TRACE(("enter setup_localtcp"));
+
 	if (cli_opts.localfwds == NULL) {
 		TRACE(("cli_opts.localfwds == NULL"));
 	}
@@ -49,6 +51,7 @@ void setup_localtcp() {
 
 		cli_opts.localfwds = cli_opts.localfwds->next;
 	}
+	TRACE(("leave setup_localtcp"));
 
 }
 
@@ -96,6 +99,8 @@ void setup_remotetcp() {
 
 	struct TCPFwdList * iter = NULL;
 
+	TRACE(("enter setup_remotetcp"));
+
 	if (cli_opts.remotefwds == NULL) {
 		TRACE(("cli_opts.remotefwds == NULL"));
 	}
@@ -106,6 +111,7 @@ void setup_remotetcp() {
 		send_msg_global_request_remotetcp(iter->listenport);
 		iter = iter->next;
 	}
+	TRACE(("leave setup_remotetcp"));
 }
 
 static int newtcpforwarded(struct Channel * channel) {

@@ -44,7 +44,7 @@ static void addforward(char* str, struct TCPFwdList** fwdlist);
 static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
-					"Usage: %s [options] user@host\n"
+					"Usage: %s [options] [user@]host\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
 					"-t    Allocate a pty\n"
@@ -58,6 +58,7 @@ static void printhelp() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
+					"-l <username>\n"
 					,DROPBEAR_VERSION, cli_opts.progname);
 }
 
@@ -75,6 +76,7 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	int nextisremote = 0;
 #endif
+	char* dummy = NULL; /* Not used for anything real */
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -138,6 +140,12 @@ void cli_getopts(int argc, char ** argv) {
 		if (argv[i][0] == '-') {
 			/* A flag *waves* */
 
+			if (strlen(argv[i]) > 2) {
+					fprintf(stderr, 
+						"WARNING: Ignoring unknown argument '%s'\n", argv[i]);
+					continue;
+			}
+
 			switch (argv[i][1]) {
 				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
@@ -163,10 +171,30 @@ void cli_getopts(int argc, char ** argv) {
 					nextisremote = 1;
 					break;
 #endif
-				default:
-					fprintf(stderr, "Unknown argument '%s'\n", argv[i]);
+				case 'l':
+					next = &cli_opts.username;
+					break;
+				case 'h':
 					printhelp();
-					exit(EXIT_FAILURE);
+					exit(EXIT_SUCCESS);
+					break;
+				case 'F':
+				case 'e':
+				case 'c':
+				case 'm':
+				case 'D':
+#ifndef ENABLE_CLI_REMOTETCPFWD
+				case 'R':
+#endif
+#ifndef ENABLE_CLI_LOCALTCPFWD
+				case 'L':
+#endif
+				case 'o':
+				case 'b':
+					next = &dummy;
+				default:
+					fprintf(stderr, 
+						"WARNING: Ignoring unknown argument '%s'\n", argv[i]);
 					break;
 			} /* Switch */
 
@@ -208,7 +236,8 @@ void cli_getopts(int argc, char ** argv) {
 	}
 
 	if (cli_opts.remotehost == NULL) {
-		dropbear_exit("Bad syntax");
+		printhelp();
+		exit(EXIT_FAILURE);
 	}
 
 	if (cli_opts.remoteport == NULL) {

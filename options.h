@@ -47,19 +47,20 @@
  * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
 
-/* Enable X11 Forwarding */
+/* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
 
 /* Enable TCP Fowarding */
-/* "-L" style forwarding (client listening port forwarded via server) */
+/* 'Local' is "-L" style (client listening port forwarded via server)
+ * 'Remote' is "-R" style (server listening port forwarded via client) */
+
 #define ENABLE_CLI_LOCALTCPFWD
-/* "-R" style forwarding (server listening port forwarded via client) */
 #define ENABLE_CLI_REMOTETCPFWD
 
 #define ENABLE_SVR_LOCALTCPFWD
 #define ENABLE_SVR_REMOTETCPFWD
 
-/* Enable Authentication Agent Forwarding */
+/* Enable Authentication Agent Forwarding - server only for now */
 #define ENABLE_AGENTFWD
 
 /* Encryption - at least one required.
@@ -113,8 +114,11 @@
 
 /* Authentication types to enable, at least one required.
    RFC Draft requires pubkey auth, and recommends password */
-#define DROPBEAR_PASSWORD_AUTH
-#define DROPBEAR_PUBKEY_AUTH
+#define DROPBEAR_SVR_PASSWORD_AUTH
+#define DROPBEAR_SVR_PUBKEY_AUTH
+
+#define DROPBEAR_CLI_PASSWORD_AUTH
+#define DROPBEAR_CLI_PUBKEY_AUTH
 
 /* Random device to use - you must specify _one only_.
  * DEV_RANDOM is recommended on hosts with a good /dev/urandom, otherwise use
@@ -136,7 +140,7 @@
 #define MAX_UNAUTH_CLIENTS 30
 #endif
 
-/* Maximum number of failed authentication tries */
+/* Maximum number of failed authentication tries (server option) */
 #ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
 #endif
@@ -159,8 +163,9 @@
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 #endif
 
-/* This is used by the scp binary when used as a client binary */
-#define _PATH_SSH_PROGRAM "/usr/bin/ssh"
+/* This is used by the scp binary when used as a client binary. If you're
+ * not using the Dropbear client, you'll need to change it */
+#define _PATH_SSH_PROGRAM "/usr/bin/dbclient"
 
 /* Multi-purpose binary configuration has now moved. Look at the top
  * of the Makefile for instructions, or INSTALL */
