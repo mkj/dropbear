@@ -126,6 +126,13 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
 
+/* Define this (as well as ENABLE_CLI_PASSWORD_AUTH) to allow the use of
+ * a helper program for the ssh client. The helper program should be
+ * specified in the SSH_ASKPASS environment variable, and dbclient
+ * should be run with DISPLAY set and no tty. The program should
+ * return the password on standard output */
+/*#define ENABLE_CLI_ASKPASS_HELPER*/
+
 /* Random device to use - define either DROPBEAR_RANDOM_DEV or
  * DROPBEAR_PRNGD_SOCKET.
  * DROPBEAR_RANDOM_DEV is recommended on hosts with a good /dev/(u)random,
@@ -296,6 +303,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
 								in a few years time.... */
+
+#define DROPBEAR_MAX_CLI_PASS 1024
 
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD

@@ -627,7 +627,13 @@ void setnonblocking(int fd) {
 	TRACE(("setnonblocking: %d", fd))
 
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
-		dropbear_exit("Couldn't set nonblocking");
+		if (errno == ENODEV) {
+			/* Some devices (like /dev/null redirected in)
+			 * can't be set to non-blocking */
+			TRACE(("ignoring ENODEV for setnonblocking"))
+		} else {
+			dropbear_exit("Couldn't set nonblocking");
+		}
 	}
 	TRACE(("leave setnonblocking"))
 }
