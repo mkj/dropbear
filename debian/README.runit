@@ -1,0 +1,46 @@
+Using the dropbear SSH server with runit's services supervision
+---------------------------------------------------------------
+
+The dropbear SSH server is perfectly suited to be run under runit's
+service supervision, and this package already has prepared an adequate
+service directory.  Follow these steps to enable the dropbear service
+using the runit package.
+
+If not yet installed on your system, install the runit package, and make
+sure its service supervision is enabled (it's by default)
+
+ # apt-get install runit
+
+Make sure the dropbear service normally handled through the sysv init
+script is stopped
+
+ # /etc/init.d/dropbear stop
+
+Create the system user ``dropbearlog'' which will run the logger service,
+and own the logs
+
+ # adduser --system --home /var/log/dropbear --no-create-home dropbearlog
+
+Create the log directory and make the newly created system user the owner
+of this directory
+
+ # mkdir -p /var/log/dropbear && chown dropbearlog /var/log/dropbear
+
+Optionally adjust the configuration of the dropbear service by editing the
+run script
+
+ # vi /etc/dropbear/run
+
+Finally enable the service by linking dropbear's service directory to
+/var/service/.  The service will be started within five seconds, and
+automatically at boot time.  The sysv init script is disabled; see the
+runsvctrl(8) program for information on how to control services handled by
+runit.  See the svlogd(8) program on how to configure the log service.
+
+ # ln -s /etc/dropbear /var/service/
+
+Optionally check the status of the service a few seconds later
+
+ # runsvstat -l /var/service/dropbear
+
+ -- Gerrit Pape <pape@smarden.org>, Sun, 16 May 2004 15:52:34 +0000

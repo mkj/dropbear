@@ -1,6 +1,26 @@
-Current CVS
+0.42 - Tue Jun 15 2004 21:44:54 +0800
 
-- Changed license text for LibTom*
+- Updated to Gerrit Pape's official Debian subdirectory
+
+- Fixed bad check when opening /dev/urandom - thanks to Danny Sung.
+
+- Added -i inetd mode flag, and associated options in options.h . Dropbear
+  can be compiled with either normal mode, inetd, or both modes. Thanks
+  to Gerrit Pape for basic patch and motivation.
+
+- Use <dirent.h> rather than <sys/dir.h> for POSIX compliance. Thanks to Bill
+  Sommerfield.
+
+- Fixed a TCP forwarding (client-local, -L style) bug which caused the whole
+  session to close if the TCP connection failed. Thanks to Andrew Braund for
+  reporting it and helping track it down.
+
+- Re-enable sigpipe for child processes. Thanks to Gerrit Pape for some
+  suggestions, and BSD manpages for a clearer explanation of the behaviour.
+
+- Added manpages, thanks to Gerrit Pape.
+
+- Changed license text for LibTomCrypt and LibTomMath.
 
 - Added strip-static target
 
@@ -16,9 +36,9 @@ Current CVS
 - Allow repeated requests in a single session if previous ones fail - this fixes  PuTTY and some other SCP clients, which try SFTP, then fall-back to SCP if it
   isn't available. Thanks to Stirling Westrup for the report.
 
-- Updated to LibTomCrypt 0.94 and LibTomMath 0.29. Also applied Tom's patch for
-  the AES code to use smaller non-precomputed tables if DROPBEAR_SMALL_CODE is
-  defined in options.h - this leads to a significant reduction in binary size.
+- Updated to LibTomCrypt 0.96 and LibTomMath 0.30. The AES code now uses
+  smaller non-precomputed tables if DROPBEAR_SMALL_CODE is defined in
+  options.h, leading to a significant reduction in the binary size.
 
 0.41 - Mon Jan 19 2004 22:40:19 +0800
 
