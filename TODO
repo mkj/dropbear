@@ -5,6 +5,7 @@ Things which need doing:
 - fix -lnsl testing
 - re-enable sigpipe for children...
 - investigate self-pipe?
+- "no root password" and "no password" runtime options?
 
 - kexfollows ?
 - check PRNG
