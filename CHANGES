@@ -1,0 +1,19 @@
+0.30 - Thu Apr 17 2003 18:46:15 +0800
+
+- SECURITY: buffer.c had bad checking for buffer increment length - fixed
+- channel code now closes properly on EOF - scp processes don't hang around
+- syslog support added - improved auth/login/failure messages
+- general code tidying, made return codes more consistent
+- Makefile fixed for dependencies and makes libtomcrypt as well
+- Implemented sending SSH_MSG_UNIMPLEMENTED :)
+
+0.29 - Wed Apr 9 2003
+
+- Fixed a stupid bug in 0.28 release, 'newstr = strdup(oldstr)',
+  not 'newstr=oldstr'
+
+0.28 - Sun Apr 6 2003
+
+- Initial public release
+
+Development was started in October 2002
