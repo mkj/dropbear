@@ -277,7 +277,6 @@ static void session_identification() {
 	/* max length of 255 chars */
 	char linebuf[256];
 	int len = 0;
-	int i;
 	char done = 0;
 
 	/* write our version string, this blocks */
