@@ -38,7 +38,6 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/wait.h>
-#include <sys/dir.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -56,6 +55,7 @@
 #include <netdb.h>
 #include <ctype.h>
 #include <stdarg.h>
+#include <dirent.h>
 
 #include <arpa/inet.h>
 
@@ -109,10 +109,6 @@
 
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
-#endif
-
-#ifdef HAVE_SYS_DIRENT_H
-#include <sys/dirent.h>
 #endif
 
 #include "libtomcrypt/mycrypt_custom.h"
