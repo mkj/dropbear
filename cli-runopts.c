@@ -149,7 +149,12 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
-					nextiskey = 1;
+					/* Keep scp happy when it changes "-i file" to "-ifile" */
+					if (strlen(argv[i]) > 2) {
+						loadidentityfile(&argv[i][2]);
+					} else  {
+						nextiskey = 1;
+					}
 					break;
 #endif
 				case 't': /* we want a pty */

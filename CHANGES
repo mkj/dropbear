@@ -1,3 +1,17 @@
+0.44test5 - 
+
+- Fix dbclient so that "scp -i keyfile" works. (It can handle "-ikeyfile
+  properly)
+
+- Fix for PAM auth so that usernames are logged and conversation function
+  responses are allocated correctly.
+
+- Avoid a race in server shell-handling code which prevents the exit-code
+  from being returned to the client.
+
+- Makefile modified so that install target works correctly (doesn't try
+  to install "all" binary) - patch from Juergen Daubert
+
 0.44test4 - Tue Sept 14 21:15:54 +0800
 
 - Fix inetd mode so it actually loads the hostkeys (oops)
