@@ -41,6 +41,13 @@ case "$host" in
 
 esac
 
+dnl Can't use login() or logout() with uclibc
+AC_CHECK_DECL(__UCLIBC__, 
+	[
+	AC_DEFINE(DISABLE_LOGIN,,)
+	AC_MSG_RESULT(Using uClibc - login() and logout() probably don't work, so we won't use them.)
+	],,,)
+
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
 AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
@@ -166,6 +173,7 @@ AC_ARG_WITH(lastlog,
 		fi
 	]
 )
+
 
 dnl lastlog, [uw]tmpx? detection
 dnl  NOTE: set the paths in the platform section to avoid the
