@@ -83,6 +83,9 @@ typedef struct cli_runopts {
 	char *remoteport;
 
 	char *username;
+
+	char *cmd;
+	int wantpty;
 	/* XXX TODO */
 
 } cli_runopts;

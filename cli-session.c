@@ -37,7 +37,6 @@ static const packettype cli_packettypes[] = {
 };
 
 static const struct ChanType *cli_chantypes[] = {
-//	&clichansess,
 	/* &chan_tcpdirect etc, though need to only allow if we've requested
 	 * that forwarding */
 	NULL /* Null termination */
@@ -146,6 +145,20 @@ static void cli_sessionloop() {
 		case USERAUTH_FAIL_RCVD:
 			cli_auth_try();
 			TRACE(("leave cli_sessionloop: cli_auth_try"));
+			return;
+
+			/*
+		case USERAUTH_SUCCESS_RCVD:
+			send_msg_service_request(SSH_SERVICE_CONNECTION);
+			cli_ses.state = SERVICE_CONN_REQ_SENT;
+			TRACE(("leave cli_sessionloop: sent ssh-connection service req"));
+			return;
+			*/
+
+		case USERAUTH_SUCCESS_RCVD:
+			cli_send_chansess_request();
+			TRACE(("leave cli_sessionloop: cli_send_chansess_request"));
+			cli_ses.state = SESSION_RUNNING;
 			return;
 
 		/* XXX more here needed */

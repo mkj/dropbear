@@ -152,6 +152,7 @@ struct sshsession {
 	/* Channel related */
 	struct Channel ** channels; /* these pointers may be null */
 	unsigned int chansize; /* the number of Channel*s allocated for channels */
+	unsigned int chancount; /* the number of Channel*s in use */
 	const struct ChanType **chantypes; /* The valid channel types */
 
 	
@@ -194,6 +195,8 @@ typedef enum {
 	USERAUTH_METHODS_SENT,
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
+	USERAUTH_SUCCESS_RCVD,
+	SESSION_RUNNING,
 
 } cli_state;
 

@@ -96,6 +96,7 @@ void recv_msg_userauth_failure() {
 void recv_msg_userauth_success() {
 	TRACE(("received msg_userauth_success"));
 	ses.authstate.authdone = 1;
+	cli_ses.state = USERAUTH_SUCCESS_RCVD;
 }
 
 void cli_auth_try() {

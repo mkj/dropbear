@@ -67,6 +67,7 @@ void chaninitialise(const struct ChanType *chantypes[]) {
 	ses.channels = (struct Channel**)m_malloc(sizeof(struct Channel*));
 	ses.chansize = 1;
 	ses.channels[0] = NULL;
+	ses.chancount = 0;
 
 	ses.chantypes = chantypes;
 
@@ -153,6 +154,7 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->recvmaxpacket = RECV_MAXPACKET;
 
 	ses.channels[i] = newchan;
+	ses.chancount++;
 
 	TRACE(("leave newchannel"));
 
@@ -515,6 +517,7 @@ static void deletechannel(struct Channel *channel) {
 
 	ses.channels[channel->index] = NULL;
 	m_free(channel);
+	ses.chancount--;
 	
 }
 
@@ -934,6 +937,7 @@ void recv_msg_channel_open_confirmation() {
 
 	unsigned int chan;
 	struct Channel * channel;
+	int ret;
 
 	TRACE(("enter recv_msg_channel_open_confirmation"));
 	chan = buf_getint(ses.payload);
@@ -948,6 +952,15 @@ void recv_msg_channel_open_confirmation() {
 	channel->transmaxpacket = buf_getint(ses.payload);
 	
 	TRACE(("new chan remote %d localho %d", channel->remotechan, chan));
+
+	/* Run the inithandler callback */
+	if (channel->type->inithandler) {
+		ret = channel->type->inithandler(channel);
+		if (ret > 0) {
+			removechannel(channel);
+			TRACE(("inithandler returned failure %d", ret));
+		}
+	}
 
 	
 	TRACE(("leave recv_msg_channel_open_confirmation"));
