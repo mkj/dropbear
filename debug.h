@@ -42,16 +42,11 @@
 /* Define this to print trace statements */
 /*#define DEBUG_TRACE*/
 
-/* Define this if you want to check that the buffer is clear before each
- * write function. All functions writing to the cleartext payload buffer
- * call CHECKCLEARTOWRITE() before writing. This is only really useful if
- * you're attempting to track down a problem */
-#if 0
-#define CHECKCLEARTOWRITE() assert(ses.writepayload->len == 0 \
-								&& ses.writepayload->pos == 0)
-#else
-#define CHECKCLEARTOWRITE() {}
-#endif
+/* All functions writing to the cleartext payload buffer call
+ * CHECKCLEARTOWRITE() before writing. This is only really useful if you're
+ * attempting to track down a problem */
+#define CHECKCLEARTOWRITE() assert(ses.writepayload->len == 0 && \
+		ses.writepayload->pos == 0)
 
 /* Define this, compile with -pg and set GMON_OUT_PREFIX=gmon to get gmon
  * output when Dropbear forks. This will allow it gprof to be used.
