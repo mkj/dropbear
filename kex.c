@@ -543,7 +543,7 @@ static void read_kex() {
 	}
 
 	/* reserved for future extensions */
-	/* buf_getint(ses.payload);*/
+	buf_getint(ses.payload);
 
 	return;
 
