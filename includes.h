@@ -29,8 +29,6 @@
 #include "config.h"
 #include "options.h"
 #include "debug.h"
-#include "libtomcrypt/mycrypt_custom.h"
-#include "libtommath/tommath.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -111,6 +109,9 @@
 #ifdef HAVE_LIBGEN_H
 #include <libgen.h>
 #endif
+
+#include "libtomcrypt/mycrypt_custom.h"
+#include "libtommath/tommath.h"
 
 #ifndef HAVE_UINT16_T
 #ifndef HAVE_U_INT16_T
