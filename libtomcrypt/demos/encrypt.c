@@ -11,19 +11,11 @@
 
 int errno;
 
-static const struct _cipher_descriptor *ciphers[] = {
-   &blowfish_desc,   &xtea_desc,        &rc5_desc,        &rc6_desc,
-   &saferp_desc,     &rijndael_desc,
-   &twofish_desc,    &safer_k64_desc,   &safer_sk64_desc,
-   &safer_k128_desc, &safer_sk128_desc, &rc2_desc,
-   &des_desc,        &des3_desc,        &cast5_desc, &skipjack_desc, NULL
-};
-
 int usage(char *name) 
 {
    int x;
 
-   printf("Usage: ./%s [-d](ecrypt) cipher infile outfile\nCiphers:\n", name);
+   printf("Usage: %s [-d](ecrypt) cipher infile outfile\nCiphers:\n", name);
    for (x = 0; cipher_descriptor[x].name != NULL; x++) {
       printf("%s\n",cipher_descriptor[x].name);
    }
@@ -34,12 +26,49 @@ void register_algs(void)
 {
    int x;
    
-   for (x = 0; ciphers[x] != NULL; x++) {
-       if (register_cipher(ciphers[x]) == -1) {
-          printf("Error registering cipher\n");
-          exit(-1);
-       }
-   }
+#ifdef RIJNDAEL
+  register_cipher (&aes_desc);
+#endif
+#ifdef BLOWFISH
+  register_cipher (&blowfish_desc);
+#endif
+#ifdef XTEA
+  register_cipher (&xtea_desc);
+#endif
+#ifdef RC5
+  register_cipher (&rc5_desc);
+#endif
+#ifdef RC6
+  register_cipher (&rc6_desc);
+#endif
+#ifdef SAFERP
+  register_cipher (&saferp_desc);
+#endif
+#ifdef TWOFISH
+  register_cipher (&twofish_desc);
+#endif
+#ifdef SAFER
+  register_cipher (&safer_k64_desc);
+  register_cipher (&safer_sk64_desc);
+  register_cipher (&safer_k128_desc);
+  register_cipher (&safer_sk128_desc);
+#endif
+#ifdef RC2
+  register_cipher (&rc2_desc);
+#endif
+#ifdef DES
+  register_cipher (&des_desc);
+  register_cipher (&des3_desc);
+#endif
+#ifdef CAST5
+  register_cipher (&cast5_desc);
+#endif
+#ifdef NOEKEON
+  register_cipher (&noekeon_desc);
+#endif
+#ifdef SKIPJACK
+  register_cipher (&skipjack_desc);
+#endif
 
    if (register_hash(&sha256_desc) == -1) {
       printf("Error registering SHA256\n");
@@ -121,9 +150,9 @@ int main(int argc, char *argv[])
    }
 
    printf("\nEnter key: ");
-   fgets(tmpkey,sizeof(tmpkey), stdin);
+   fgets((char *)tmpkey,sizeof(tmpkey), stdin);
    outlen = sizeof(key);
-   if ((errno = hash_memory(hash_idx,tmpkey,strlen(tmpkey),key,&outlen)) != CRYPT_OK) {
+   if ((errno = hash_memory(hash_idx,tmpkey,strlen((char *)tmpkey),key,&outlen)) != CRYPT_OK) {
       printf("Error hashing key: %s\n", error_to_string(errno));
       exit(-1);
    }

@@ -613,47 +613,50 @@ rsa_test (void)
     for (z = 1024; z <= limit; z += 512) {
       t = XCLOCK ();
       for (tt = 0; tt < 3; tt++) {
-    if ((errnum =
-         rsa_make_key (&prng, find_prng ("yarrow"), z / 8, 65537,
-               &key)) != CRYPT_OK) {
-      printf ("Error: %s\n", error_to_string (errnum));
-      exit (-1);
-    }
-    if (tt < 2)
-      rsa_free (&key);
+         if ((errnum = rsa_make_key (&prng, find_prng ("yarrow"), z / 8, 65537, &key)) != CRYPT_OK) {
+            printf ("Error: %s\n", error_to_string (errnum));
+            exit (-1);
+         }
+
+         /* check modulus size */
+         if (mp_unsigned_bin_size(&key.N) != (int)(z/8)) { 
+            printf("\nRSA key supposed to be %lu bits but was %d bits\n", z, mp_count_bits(&key.N));
+            exit(EXIT_FAILURE);
+         }
+
+         if (tt < 2) {
+            rsa_free (&key);
+         }
       }
       t = XCLOCK () - t;
-      printf ("Took %.0f ms to make a %ld-bit RSA key.\n",
-          1000.0 * (((double) t / 3.0) / (double) XCLOCKS_PER_SEC), z);
+      printf ("Took %.0f ms to make a %ld-bit RSA key.\n", 1000.0 * (((double) t / 3.0) / (double) XCLOCKS_PER_SEC), z);
 
       /* time encryption */
       t = XCLOCK ();
 
       for (tt = 0; tt < 20; tt++) {
-    y = sizeof (in);
-    if ((errnum =
-         rsa_exptmod (in, 8, out, &y, PK_PUBLIC, &key)) != CRYPT_OK) {
-      printf ("Error: %s\n", error_to_string (errnum));
-      exit (-1);
-    }
+         y = sizeof (in);
+         if ((errnum = rsa_exptmod (in, 8, out, &y, PK_PUBLIC, &key)) != CRYPT_OK) {
+            printf ("Error: %s\n", error_to_string (errnum));
+            exit (-1);
+         }
       }
       t = XCLOCK () - t;
       printf ("Took %.0f ms to encrypt with a %ld-bit RSA key.\n",
-          1000.0 * (((double) t / 20.0) / (double) XCLOCKS_PER_SEC), z);
+              1000.0 * (((double) t / 20.0) / (double) XCLOCKS_PER_SEC), z);
 
       /* time decryption */
       t = XCLOCK ();
       for (tt = 0; tt < 20; tt++) {
-    x = sizeof (out);
-    if ((errnum =
-         rsa_exptmod (out, y, in, &x, PK_PRIVATE, &key)) != CRYPT_OK) {
-      printf ("Error: %s\n", error_to_string (errnum));
-      exit (-1);
-    }
+          x = sizeof (out);
+          if ((errnum = rsa_exptmod (out, y, in, &x, PK_PRIVATE, &key)) != CRYPT_OK) {
+             printf ("Error: %s\n", error_to_string (errnum));
+             exit (-1);
+          }
       }
       t = XCLOCK () - t;
       printf ("Took %.0f ms to decrypt with a %ld-bit RSA key.\n",
-          1000.0 * (((double) t / 20.0) / (double) XCLOCKS_PER_SEC), z);
+      1000.0 * (((double) t / 20.0) / (double) XCLOCKS_PER_SEC), z);
       rsa_free (&key);
     }
   }
@@ -970,12 +973,12 @@ dh_tests (void)
     printf ("Error: %s\n", error_to_string (errnum));
     exit (-1);
   }
-  if (dh_verify_hash (buf[1], x, buf[0], 16, &stat, &usera)) {
+  if ((errnum = dh_verify_hash (buf[1], x, buf[0], 16, &stat, &usera)) != CRYPT_OK) {
     printf ("Error: %s\n", error_to_string (errnum));
     exit (-1);
   }
   buf[0][0] ^= 1;
-  if (dh_verify_hash (buf[1], x, buf[0], 16, &stat2, &usera)) {
+  if ((errnum = dh_verify_hash (buf[1], x, buf[0], 16, &stat2, &usera)) != CRYPT_OK) {
     printf ("Error: %s\n", error_to_string (errnum));
     exit (-1);
   }
@@ -1199,69 +1202,6 @@ ecc_tests (void)
 }
 #endif
 
-#ifdef GF
-void
-gf_tests (void)
-{
-  gf_int  a, b, c, d;
-  int     n;
-  unsigned char buf[1024];
-
-  printf ("GF tests\n");
-  gf_zero (a);
-  gf_zero (b);
-  gf_zero (c);
-  gf_zero (d);
-
-  /* a == 0x18000000b */
-  a[1] = 1;
-  a[0] = 0x8000000bUL;
-
-  /* b == 0x012345678 */
-  b[0] = 0x012345678UL;
-
-  /* find 1/b mod a */
-  gf_invmod (b, a, c);
-
-  /* find 1/1/b mod a */
-  gf_invmod (c, a, d);
-
-  /* display them */
-  printf ("  %08lx %08lx\n", c[0], d[0]);
-
-  /* store as binary string */
-  n = gf_size (a);
-  printf ("  a takes %d bytes\n", n);
-  gf_toraw (a, buf);
-  gf_readraw (a, buf, n);
-  printf ("  a == %08lx%08lx\n", a[1], a[0]);
-
-  /* primality testing */
-  gf_zero (a);
-  a[0] = 0x169;
-  printf ("  GF prime: %s, ", gf_is_prime (a) ? "passed" : "failed");
-  a[0] = 0x168;
-  printf ("  %s\n", gf_is_prime (a) ? "failed" : "passed");
-
-  /* test sqrt code */
-  gf_zero (a);
-  a[1] = 0x00000001;
-  a[0] = 0x8000000bUL;
-  gf_zero (b);
-  b[0] = 0x12345678UL;
-
-  gf_sqrt (b, a, c);
-  gf_mulmod (c, c, a, b);
-  printf ("  (%08lx)^2 = %08lx (mod %08lx%08lx) \n", c[0], b[0], a[1], a[0]);
-}
-#else
-void
-gf_tests (void)
-{
-  printf ("GF not compiled in\n");
-}
-#endif
-
 #ifdef MPI
 void
 test_prime (void)
@@ -1272,7 +1212,7 @@ test_prime (void)
 
   /* make a 1024 bit prime */
   mp_init (&a);
-  rand_prime (&a, 128, &prng, find_prng ("yarrow"));
+  rand_prime (&a, 128*8, &prng, find_prng ("yarrow"));
 
   /* dump it */
   mp_todecimal (&a, buf);
@@ -1386,299 +1326,6 @@ register_all_algs (void)
   register_prng (&sprng_desc);
 #endif
 }
-
-#ifdef KR
-void
-kr_display (pk_key * kr)
-{
-  static const char *sys[] = { "NON-KEY", "RSA", "DH", "ECC" };
-  static const char *type[] = { "PRIVATE", "PUBLIC", "PRIVATE_OPTIMIZED" };
-
-  while (kr->system != NON_KEY) {
-    printf ("CRC [%08lx], System [%10s], Type [%20s], %s, %s, %s\n", kr->ID,
-        sys[kr->system], type[kr->key_type], kr->name, kr->email,
-        kr->description);
-    kr = kr->next;
-  }
-  printf ("\n");
-}
-
-void
-kr_test_makekeys (pk_key ** kr)
-{
-  if ((errnum = kr_init (kr)) != CRYPT_OK) {
-    printf ("KR init error %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* make a DH key */
-  printf ("KR: Making DH key...\n");
-  if ((errnum =
-       kr_make_key (*kr, &prng, find_prng ("yarrow"), DH_KEY, 128, "dhkey",
-            "dh@dh.dh", "dhkey one")) != CRYPT_OK) {
-    printf ("Make key error: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* make a ECC key */
-  printf ("KR: Making ECC key...\n");
-  if ((errnum =
-       kr_make_key (*kr, &prng, find_prng ("yarrow"), ECC_KEY, 20, "ecckey",
-            "ecc@ecc.ecc", "ecckey one")) != CRYPT_OK) {
-    printf ("Make key error: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* make a RSA key */
-  printf ("KR: Making RSA key...\n");
-  if ((errnum =
-       kr_make_key (*kr, &prng, find_prng ("yarrow"), RSA_KEY, 128, "rsakey",
-            "rsa@rsa.rsa", "rsakey one")) != CRYPT_OK) {
-    printf ("Make key error: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-}
-
-void
-kr_test (void)
-{
-  pk_key *kr, *_kr;
-  unsigned char buf[8192], buf2[8192], buf3[8192];
-  unsigned long len;
-  int     i, j, stat;
-#ifndef NO_FILE
-  FILE   *f;
-#endif
-
-  kr_test_makekeys (&kr);
-
-  printf ("The original list:\n");
-  kr_display (kr);
-
-  for (i = 0; i < 3; i++) {
-    len = sizeof (buf);
-    if ((errnum = kr_export (kr, kr->ID, kr->key_type, buf, &len)) != CRYPT_OK) {
-      printf ("Error exporting key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    printf ("Exported key was: %lu bytes\n", len);
-    if ((errnum = kr_del (&kr, kr->ID)) != CRYPT_OK) {
-      printf ("Error deleting key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    kr_display (kr);
-    if ((errnum = kr_import (kr, buf, len)) != CRYPT_OK) {
-      printf ("Error importing key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    kr_display (kr);
-  }
-
-  for (i = 0; i < 3; i++) {
-    len = sizeof (buf);
-    if ((errnum = kr_export (kr, kr->ID, PK_PUBLIC, buf, &len)) != CRYPT_OK) {
-      printf ("Error exporting key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    printf ("Exported key was: %lu bytes\n", len);
-    if ((errnum = kr_del (&kr, kr->ID)) != CRYPT_OK) {
-      printf ("Error deleting key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    kr_display (kr);
-    if ((errnum = kr_import (kr, buf, len)) != CRYPT_OK) {
-      printf ("Error importing key %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    kr_display (kr);
-  }
-
-  if ((errnum = kr_clear (&kr)) != CRYPT_OK) {
-    printf ("Error clearing ring: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-
-/* TEST output to file */
-#ifndef NO_FILE
-
-  if ((errnum = kr_init (&kr)) != CRYPT_OK) {
-    printf ("KR init error %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-  kr_test_makekeys (&kr);
-
-  /* save to file */
-  f = fopen ("ring.dat", "wb");
-  if ((errnum = kr_save (kr, f, NULL)) != CRYPT_OK) {
-    printf ("kr_save error %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-  fclose (f);
-
-  /* delete and load */
-  if ((errnum = kr_clear (&kr)) != CRYPT_OK) {
-    printf ("clear error: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  f = fopen ("ring.dat", "rb");
-  if ((errnum = kr_load (&kr, f, NULL)) != CRYPT_OK) {
-    printf ("kr_load error %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-  fclose (f);
-  remove ("ring.dat");
-  printf ("After load and save...\n");
-  kr_display (kr);
-
-  if ((errnum = kr_clear (&kr)) != CRYPT_OK) {
-    printf ("clear error: %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-#endif
-
-/* test the packet encryption/sign stuff */
-  for (i = 0; i < 32; i++)
-    buf[i] = i;
-  kr_test_makekeys (&kr);
-  _kr = kr;
-  for (i = 0; i < 3; i++) {
-    printf ("Testing a key with system %d, type %d:\t", _kr->system,
-        _kr->key_type);
-    len = sizeof (buf2);
-    if ((errnum =
-     kr_encrypt_key (kr, _kr->ID, buf, 16, buf2, &len, &prng,
-             find_prng ("yarrow"),
-             find_hash ("md5"))) != CRYPT_OK) {
-      printf ("Encrypt error, %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    len = sizeof (buf3);
-    if ((errnum = kr_decrypt_key (kr, buf2, buf3, &len)) != CRYPT_OK) {
-      printf ("decrypt error, %d, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    if (len != 16 || memcmp (buf3, buf, 16)) {
-      printf ("kr_decrypt_key failed, %i, %lu\n", i, len);
-      exit (-1);
-    }
-    printf ("kr_encrypt_key passed, ");
-
-    len = sizeof (buf2);
-    if ((errnum =
-     kr_sign_hash (kr, _kr->ID, buf, 32, buf2, &len, &prng,
-               find_prng ("yarrow"))) != CRYPT_OK) {
-      printf ("kr_sign_hash failed, %i, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    printf ("kr_sign_hash: ");
-    if ((errnum = kr_verify_hash (kr, buf2, buf, 32, &stat)) != CRYPT_OK) {
-      printf ("kr_sign_hash failed, %i, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    printf ("%s, ", stat ? "passed" : "failed");
-    buf[15] ^= 1;
-    if ((errnum = kr_verify_hash (kr, buf2, buf, 32, &stat)) != CRYPT_OK) {
-      printf ("kr_sign_hash failed, %i, %s\n", i, error_to_string (errnum));
-      exit (-1);
-    }
-    printf ("%s\n", (!stat) ? "passed" : "failed");
-    buf[15] ^= 1;
-
-    len = sizeof (buf);
-    if ((errnum =
-     kr_fingerprint (kr, _kr->ID, find_hash ("sha1"), buf,
-             &len)) != CRYPT_OK) {
-      printf ("kr_fingerprint failed, %i, %lu\n", i, len);
-      exit (-1);
-    }
-    printf ("Fingerprint:  ");
-    for (j = 0; j < 20; j++) {
-      printf ("%02x", buf[j]);
-      if (j < 19)
-    printf (":");
-    }
-    printf ("\n\n");
-
-    _kr = _kr->next;
-  }
-
-/* Test encrypting/decrypting to a public key */
-/* first dump the other two keys */
-  kr_del (&kr, kr->ID);
-  kr_del (&kr, kr->ID);
-  kr_display (kr);
-
-  /* now export it as public and private */
-  len = sizeof (buf);
-  if ((errnum = kr_export (kr, kr->ID, PK_PUBLIC, buf, &len)) != CRYPT_OK) {
-    printf ("Error exporting key %d, %s\n", i, error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* check boundaries */
-  memset (buf + len, 0, sizeof (buf) - len);
-
-  len = sizeof (buf2);
-  if ((errnum = kr_export (kr, kr->ID, PK_PRIVATE, buf2, &len)) != CRYPT_OK) {
-    printf ("Error exporting key  %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* check boundaries */
-  memset (buf2 + len, 0, sizeof (buf2) - len);
-
-  /* delete the key and import the public */
-  kr_clear (&kr);
-  kr_init (&kr);
-  kr_display (kr);
-  if ((errnum = kr_import (kr, buf, len)) != CRYPT_OK) {
-    printf ("Error importing key %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-  kr_display (kr);
-
-  /* now encrypt a buffer */
-  for (i = 0; i < 16; i++)
-    buf[i] = i;
-  len = sizeof (buf3);
-  if ((errnum =
-       kr_encrypt_key (kr, kr->ID, buf, 16, buf3, &len, &prng,
-               find_prng ("yarrow"),
-               find_hash ("md5"))) != CRYPT_OK) {
-    printf ("Encrypt error, %d, %s\n", i, error_to_string (errnum));
-    exit (-1);
-  }
-
-  /* now delete the key and import the private one */
-  kr_clear (&kr);
-  kr_init (&kr);
-  kr_display (kr);
-  if ((errnum = kr_import (kr, buf2, len)) != CRYPT_OK) {
-    printf ("Error importing key %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-  kr_display (kr);
-
-  /* now decrypt */
-  len = sizeof (buf2);
-  if ((errnum = kr_decrypt_key (kr, buf3, buf2, &len)) != CRYPT_OK) {
-    printf ("decrypt error, %s\n", error_to_string (errnum));
-    exit (-1);
-  }
-
-  printf ("KR encrypt to public, decrypt with private: ");
-  if (len == 16 && !memcmp (buf2, buf, 16)) {
-    printf ("passed\n");
-  } else {
-    printf ("failed\n");
-  }
-
-  kr_clear (&kr);
-}
-#endif
 
 void
 test_errs (void)
@@ -1809,8 +1456,87 @@ void dsa_tests(void)
    dsa_free(&key);
 }
 
+#ifdef PKCS_1
+void pkcs1_test(void)
+{
+   unsigned char buf[3][128];
+   int err, res1, res2, res3, prng_idx, hash_idx;
+   unsigned long x, y, l1, l2, l3, i1, i2;
 
+   /* get hash/prng  */
+   hash_idx = find_hash("sha1");
+   prng_idx = find_prng("yarrow");
 
+   /* do many tests */
+   for (x = 0; x < 10000; x++) {
+      zeromem(buf, sizeof(buf));
+
+      /* make a dummy message (of random length) */
+      l3 = (rand() & 31) + 8;
+      for (y = 0; y < l3; y++) buf[0][y] = rand() & 255;
+
+      /* encode it */
+      l1 = sizeof(buf[1]);
+      if ((err = pkcs_1_oaep_encode(buf[0], l3, NULL, 0, 1024, hash_idx, prng_idx, &prng, buf[1], &l1)) != CRYPT_OK) {
+         printf("OAEP encode: %s\n", error_to_string(err));
+         exit(-1);
+      }
+
+      /* decode it */
+      l2 = sizeof(buf[2]);
+      if ((err = pkcs_1_oaep_decode(buf[1], l1, NULL, 0, 1024, hash_idx, buf[2], &l2, &res1)) != CRYPT_OK) {
+         printf("OAEP decode: %s\n", error_to_string(err));
+         exit(-1);
+      }
+
+      if (res1 != 1 || l2 != l3 || memcmp(buf[2], buf[0], l3) != 0) {
+         printf("res == %d, Outsize == %lu, should have been %lu, msg contents follow.\n", res1, l2, l3);
+         printf("ORIGINAL:\n");
+         for (x = 0; x < l3; x++) {
+             printf("%02x ", buf[0][x]);
+         }
+         printf("\nRESULT:\n");
+         for (x = 0; x < l2; x++) {
+             printf("%02x ", buf[2][x]);
+         }
+         printf("\n\n");
+         exit(-1);
+      }
+
+      /* test PSS */
+      l1 = sizeof(buf[1]);
+      if ((err = pkcs_1_pss_encode(buf[0], l3, l3>>2, hash_idx, prng_idx, &prng, 1024, buf[1], &l1)) != CRYPT_OK) {
+         printf("PSS encode: %s\n", error_to_string(err));
+         exit(-1); 
+      }
+      
+      if ((err = pkcs_1_pss_decode(buf[0], l3, buf[1], l1, l3>>2, hash_idx, 1024, &res1)) != CRYPT_OK) {
+         printf("PSS decode1: %s\n", error_to_string(err));
+         exit(-1); 
+      }
+      
+      buf[0][i1 = abs(rand()) % l3] ^= 1;
+      if ((err = pkcs_1_pss_decode(buf[0], l3, buf[1], l1, l3>>2, hash_idx, 1024, &res2)) != CRYPT_OK) {
+         printf("PSS decode2: %s\n", error_to_string(err));
+         exit(-1); 
+      }
+
+      buf[0][i1] ^= 1;
+      buf[1][i2 = abs(rand()) % l1] ^= 1;
+      if ((err = pkcs_1_pss_decode(buf[0], l3, buf[1], l1, l3>>2, hash_idx, 1024, &res3)) != CRYPT_OK) {
+         printf("PSS decode3: %s\n", error_to_string(err));
+         exit(-1); 
+      }
+
+      if (!(res1 == 1 && res2 == 0 && res3 == 0)) {
+         printf("PSS failed: %d, %d, %d, %lu\n", res1, res2, res3, l3);
+         exit(-1);
+      }
+   }
+   printf("PKCS #1: Passed\n");
+}
+
+#endif /* PKCS_1 */
 
 int
 main (void)
@@ -1818,6 +1544,7 @@ main (void)
 #ifdef SONY_PS2
   TIMER_Init ();
 #endif
+  srand(time(NULL));
 
   register_all_algs ();
    
@@ -1833,7 +1560,6 @@ main (void)
 
   printf (crypt_build_settings);
   test_errs ();
-
 
 #ifdef HMAC
   printf ("HMAC: %s\n", hmac_test () == CRYPT_OK ? "passed" : "failed");
@@ -1864,6 +1590,10 @@ main (void)
   cipher_tests ();
   hash_tests ();
 
+#ifdef PKCS_1
+  pkcs1_test();
+#endif
+
   ecb_tests ();
   cbc_tests ();
   ctr_tests ();
@@ -1873,17 +1603,12 @@ main (void)
   rng_tests ();
   test_prime();
 
-#ifdef KR
-  kr_test ();
-#endif
   dsa_tests();
   rsa_test ();
   pad_test ();
   ecc_tests ();
   dh_tests ();
 
-
-  gf_tests ();
   base64_test ();
 
   time_ecb ();
