@@ -75,11 +75,11 @@
 #define DROPBEAR_PUBKEY_AUTH
 
 /* Random device to use - you must specify one only.
- * DEV_RANDOM is recommended on hosts with a good /dev/random,
+ * DEV_RANDOM is recommended on hosts with a good /dev/urandom,
  * otherwise use EGD and run EGD or PRNGD, specifying
  * the socket. This is only used for the initial seed, further
  * entropy is gathered from timings etc */
-#define DROPBEAR_DEV_RANDOM /* use /dev/random and /dev/urandom */
+#define DROPBEAR_DEV_RANDOM /* use /dev/urandom */
 
 /*#undef DROPBEAR_EGD */ /* use egd or prngd socket */
 #define DROPBEAR_EGD_SOCKET "./rng"
@@ -95,7 +95,7 @@
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.28"
+#define DROPBEAR_VERSION "0.29"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 

@@ -167,7 +167,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 			}
 			authclear();
 			ses.authstate.pw = getpwnam((char*)username);
-			ses.authstate.username = username;
+			ses.authstate.username = strdup(username);
 	}
 
 	/* check that user exists */
