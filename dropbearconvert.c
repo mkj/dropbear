@@ -47,10 +47,8 @@ static void printhelp(char * progname) {
 					"dropbear\n"
 					"\n"
 					"Example:\n"
-					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n"
-					"\n"
-					"The inputfile and outputfile can be '-' to specify\n"
-					"standard input or standard output.\n", progname);
+					"dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear_rsa_host_key\n",
+					progname);
 }
 
 #if defined(DBMULTI_dropbearconvert) || !defined(DROPBEAR_MULTI)

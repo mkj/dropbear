@@ -108,13 +108,10 @@ int import_write(const char *filename, sign_key *key, char *passphrase,
 static sign_key *dropbear_read(const char* filename) {
 
 	buffer * buf = NULL;
-	int len, maxlen;
-	FILE *fp = NULL;
 	sign_key *ret = NULL;
 	int type;
 
 	buf = buf_new(MAX_PRIVKEY_SIZE);
-	/* buf_readfile knows about "-" */
 	if (buf_readfile(buf, filename) == DROPBEAR_FAILURE) {
 		goto error;
 	}
@@ -163,11 +160,7 @@ static int dropbear_write(const char*filename, sign_key * key) {
 	buf = buf_new(MAX_PRIVKEY_SIZE);
 	buf_put_priv_key(buf, key, keytype);
 
-	if (strlen(filename) == 1 && filename[0] == '-') {
-		fp = stdout;
-	} else {
-		fp = fopen(filename, "w");
-	}
+	fp = fopen(filename, "w");
 	if (!fp) {
 		ret = 0;
 		goto out;
