@@ -3,6 +3,8 @@ Current:
 Things which need doing:
 
 - fix -lnsl testing
+- re-enable sigpipe for children...
+- investigate self-pipe?
 
 - kexfollows ?
 - check PRNG
