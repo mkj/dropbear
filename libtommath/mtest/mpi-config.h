@@ -1,5 +1,5 @@
 /* Default configuration for MPI library */
-/* $Id: mpi-config.h,v 1.1 2003/05/19 04:01:19 matt Exp $ */
+/* $Id: mpi-config.h,v 1.1.1.1 2003/05/19 04:01:19 matt Exp $ */
 
 #ifndef MPI_CONFIG_H_
 #define MPI_CONFIG_H_

@@ -6,7 +6,7 @@
 
     Arbitrary precision integer arithmetic library
 
-    $Id: mpi.h,v 1.1 2003/05/19 04:01:19 matt Exp $
+    $Id: mpi.h,v 1.1.1.1 2003/05/19 04:01:19 matt Exp $
  */
 
 #ifndef _H_MPI_
