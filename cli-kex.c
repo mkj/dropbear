@@ -147,21 +147,27 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	/* Check that ~/.ssh exists - easiest way is just to mkdir */
 	if (mkdir(filename, S_IRWXU) != 0) {
 		if (errno != EEXIST) {
+			dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
+					strerror(errno));
+			TRACE(("mkdir didn't work: %s", strerror(errno)));
 			ask_to_confirm(keyblob, keybloblen);
 			goto out; /* only get here on success */
 		}
 	}
 
 	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
-	hostsfile = fopen(filename, "r+");
+	hostsfile = fopen(filename, "a+");
+	fseek(hostsfile, 0, SEEK_SET);
 	
 	/* We mightn't have been able to open it if it was read-only */
 	if (hostsfile == NULL && (errno == EACCES || errno == EROFS)) {
+			TRACE(("trying readonly: %s", strerror(errno)));
 			readonly = 1;
 			hostsfile = fopen(filename, "r");
 	}
 
 	if (hostsfile == NULL) {
+		TRACE(("hostsfile didn't open: %s", strerror(errno)));
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}
@@ -228,11 +234,12 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	/* If we get here, they said yes */
 
 	if (readonly) {
+		TRACE(("readonly"));
 		goto out;
 	}
 
 	/* put the new entry in the file */
-	fseek(hostsfile, 0, SEEK_END);
+	fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
 	buf_putbytes(line, ses.remotehost, hostlen);
