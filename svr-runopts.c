@@ -70,7 +70,7 @@ static void printhelp(const char * progname) {
 					"-k		Disable remote port forwarding\n"
 #endif
 					"-p port	Listen on specified tcp port, up to %d can be specified\n"
-					"		(default %d if none specified)\n"
+					"		(default %s if none specified)\n"
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif

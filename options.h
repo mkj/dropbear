@@ -11,7 +11,7 @@
  ******************************************************************/
 
 #ifndef DROPBEAR_PORT
-#define DROPBEAR_PORT 22
+#define DROPBEAR_DEFPORT "22"
 #endif
 
 /* Default hostkey paths - these can be specified on the command line */
