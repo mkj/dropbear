@@ -49,6 +49,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		int nonblocking, char ** errstring);
 char* getaddrhostname(struct sockaddr * addr);
 int buf_readfile(buffer* buf, const char* filename);
+int buf_getline(buffer * line, FILE * authfile);
 
 int m_close(int fd);
 void * m_malloc(size_t size);

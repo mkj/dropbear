@@ -50,7 +50,7 @@ void svr_auth_password() {
 	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
-	spasswd = getspnam(ses.authstate.pw->pw_name);
+	spasswd = getspnam(ses.authstate.printableuser);
 	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
 		passwdcrypt = spasswd->sp_pwdp;
 	}
@@ -87,6 +87,8 @@ void svr_auth_password() {
 
 	/* the first bytes of passwdcrypt are the salt */
 	testcrypt = crypt((char*)password, passwdcrypt);
+	m_burn(password, passwordlen);
+	m_free(password);
 
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
@@ -101,8 +103,6 @@ void svr_auth_password() {
 		send_msg_userauth_failure(0, 1);
 	}
 
-	m_burn(password, passwordlen);
-	m_free(password);
 }
 
 #endif /* DROPBEAR_PASSWORD_AUTH */

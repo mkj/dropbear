@@ -272,25 +272,20 @@ static char hexdig(unsigned char x) {
 /* Since we're not sure if we'll have md5 or sha1, we present both.
  * MD5 is used in preference, but sha1 could still be useful */
 #ifdef DROPBEAR_MD5_HMAC
-static char * sign_key_md5_fingerprint(sign_key *key, int type) {
+static char * sign_key_md5_fingerprint(unsigned char* keyblob,
+		unsigned int keybloblen) {
 
 	char * ret;
 	hash_state hs;
-	buffer *pubkeys;
 	unsigned char hash[MD5_HASH_SIZE];
 	unsigned int h, i;
 	unsigned int buflen;
 
 	md5_init(&hs);
 
-	pubkeys = buf_new(1000);
-	buf_put_pub_key(pubkeys, key, type);
 	/* skip the size int of the string - this is a bit messy */
-	buf_setpos(pubkeys, 4);
-	md5_process(&hs, buf_getptr(pubkeys, pubkeys->len-pubkeys->pos),
-			pubkeys->len-pubkeys->pos);
+	md5_process(&hs, keyblob, keybloblen);
 
-	buf_free(pubkeys);
 	md5_done(&hs, hash);
 
 	/* "md5 hexfingerprinthere\0", each hex digit is "AB:" etc */
@@ -311,25 +306,20 @@ static char * sign_key_md5_fingerprint(sign_key *key, int type) {
 }
 
 #else /* use SHA1 rather than MD5 for fingerprint */
-static char * sign_key_sha1_fingerprint(sign_key *key, int type) {
+static char * sign_key_sha1_fingerprint(unsigned char* keyblob, 
+		unsigned int keybloblen) {
 
 	char * ret;
 	hash_state hs;
-	buffer *pubkeys;
 	unsigned char hash[SHA1_HASH_SIZE];
 	unsigned int h, i;
 	unsigned int buflen;
 
 	sha1_init(&hs);
 
-	pubkeys = buf_new(1000);
-	buf_put_pub_key(pubkeys, key, type);
-	buf_setpos(pubkeys, 4);
 	/* skip the size int of the string - this is a bit messy */
-	sha1_process(&hs, buf_getptr(pubkeys, pubkeys->len-pubkeys->pos),
-			pubkeys->len-pubkeys->pos);
+	sha1_process(&hs, keyblob, keybloblen);
 
-	buf_free(pubkeys);
 	sha1_done(&hs, hash);
 
 	/* "sha1 hexfingerprinthere\0", each hex digit is "AB:" etc */
@@ -352,12 +342,12 @@ static char * sign_key_sha1_fingerprint(sign_key *key, int type) {
 
 /* This will return a freshly malloced string, containing a fingerprint
  * in either sha1 or md5 */
-char * sign_key_fingerprint(sign_key *key, int type) {
+char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen) {
 
 #ifdef DROPBEAR_MD5_HMAC
-	return sign_key_md5_fingerprint(key, type);
+	return sign_key_md5_fingerprint(keyblob, keybloblen);
 #else
-	return sign_key_sha1_fingerprint(key, type);
+	return sign_key_sha1_fingerprint(keyblob, keybloblen);
 #endif
 }
 
@@ -427,3 +417,59 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 	return DROPBEAR_FAILURE;
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
+
+#ifdef DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
+
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE when given a buffer containing
+ * a key, a key, and a type. The buffer is positioned at the start of the
+ * base64 data, and contains no trailing data */
+int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
+					const unsigned char* algoname, unsigned int algolen, 
+					buffer * line) {
+
+	buffer * decodekey = NULL;
+	int ret = DROPBEAR_FAILURE;
+	unsigned int len, filealgolen;
+	unsigned long decodekeylen;
+	unsigned char* filealgo = NULL;
+
+	/* now we have the actual data */
+	len = line->len - line->pos;
+	decodekeylen = len * 2; /* big to be safe */
+	decodekey = buf_new(decodekeylen);
+
+	if (base64_decode(buf_getptr(line, len), len,
+				buf_getwriteptr(decodekey, decodekey->size),
+				&decodekeylen) != CRYPT_OK) {
+		TRACE(("checkpubkey: base64 decode failed"));
+		goto out;
+	}
+	TRACE(("checkpubkey: base64_decode success"));
+	buf_incrlen(decodekey, decodekeylen);
+	
+	/* compare the keys */
+	if ( ( decodekeylen != keybloblen )
+			|| memcmp( buf_getptr(decodekey, decodekey->len),
+						keyblob, decodekey->len) != 0) {
+		TRACE(("checkpubkey: compare failed"));
+		goto out;
+	}
+
+	/* ... and also check that the algo specified and the algo in the key
+	 * itself match */
+	filealgolen = buf_getint(decodekey);
+	filealgo = buf_getptr(decodekey, filealgolen);
+	if (filealgolen != algolen || memcmp(filealgo, algoname, algolen) != 0) {
+		TRACE(("checkpubkey: algo match failed")); 
+		goto out;
+	}
+
+	/* All checks passed */
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	buf_free(decodekey);
+	decodekey = NULL;
+	return ret;
+}
+#endif

@@ -301,6 +301,10 @@
 #define USING_LISTENERS
 #endif
 
+#if defined(DROPBEAR_CLIENT) || defined(DROPBEAR_PUBKEY_AUTH)
+#define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
+#endif
+
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
  * code, if we're just compiling as client or server */
 #if defined(DROPBEAR_SERVER) && defined(DROPBEAR_CLIENT)
