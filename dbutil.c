@@ -139,14 +139,23 @@ static void _dropbear_log(int priority, const char* format, va_list param) {
 	char printbuf[1024];
 	char datestr[20];
 	time_t timesec;
+	int havetrace = 0;
 
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
 
 #ifndef DISABLE_SYSLOG
 	if (usingsyslog) {
 		syslog(priority, "%s", printbuf);
-	} else 
+	}
 #endif
+
+	/* if we are using DEBUG_TRACE, we want to print to stderr even if
+	 * syslog is used, so it is included in error reports */
+#ifdef DEBUG_TRACE
+	havetrace = 1;
+#endif
+
+	if (!usingsyslog || havetrace)
 	{
 		timesec = time(NULL);
 		if (strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
