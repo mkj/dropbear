@@ -58,7 +58,9 @@ DATAPATH=/usr/share/doc/libtomcrypt/pdf
 #List of objects to compile.
 
 #Leave MPI built-in or force developer to link against libtommath?
-MPIOBJECT=mpi.o
+#MPIOBJECT=mpi.o
+#Dropbear uses libtommath
+MPIOBJECT=
 
 OBJECTS=error_to_string.o mpi_to_ltc_error.o base64_encode.o base64_decode.o \
 \
@@ -198,7 +200,7 @@ clean:
 	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
 	rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn *.dpi \
          *.gcda *.gcno demos/*.gcno demos/*.gcda *~ doc/*
-	cd demos/test ; make clean   
+	cd demos/test && make clean   
 
 #This builds the crypt.pdf file. Note that the rm -f *.pdf has been removed
 #from the clean command! This is because most people would like to keep the
