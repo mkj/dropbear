@@ -88,10 +88,7 @@ install-arch:
 
 	# Add here commands to install the arch part of the package into 
 	# debian/tmp.
-	cp dropbear $(CURDIR)/debian/dropbear/usr/sbin
-	cp dropbearkey $(CURDIR)/debian/dropbear/usr/bin
-	cp dropbearconvert $(CURDIR)/debian/dropbear/usr/bin
-#	$(MAKE) install prefix=$(CURDIR)/debian/dropbear/usr
+	$(MAKE) install prefix=$(CURDIR)/debian/dropbear/usr
 
 	dh_install -a
 # Must not depend on anything. This is to be called by
