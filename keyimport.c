@@ -121,11 +121,14 @@ static sign_key *dropbear_read(const char* filename) {
 		goto error;
 	}
 
+	fprintf(stderr, "here blah \n");
 	do {
 		maxlen = buf->size - buf->pos;
-		len = fread(buf_getwriteptr(buf, maxlen), maxlen, 1, fp);
+		len = fread(buf_getwriteptr(buf, maxlen), 1, maxlen, fp);
+		printf("len = %d\n", len);
 		buf_incrwritepos(buf, len);
 	} while (len != maxlen && len > 0);
+	fprintf(stderr, "there blah len %d\n", buf->len);
 
 	fclose(fp);
 
@@ -177,9 +180,10 @@ static int dropbear_write(const char*filename, sign_key * key) {
 		goto out;
 	}
 
+	buf_setpos(buf, 0);
 	do {
 		len = fwrite(buf_getptr(buf, buf->len - buf->pos),
-				buf->len - buf->pos, 1, fp);
+				1, buf->len - buf->pos, fp);
 		buf_incrpos(buf, len);
 	} while (len > 0 && buf->len != buf->pos);
 
@@ -663,7 +667,8 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 				/* Save the details for after we deal with number 2. */
 				modptr = (char *)p;
 				modlen = len;
-			} else if (i <= 2 && i <= 5) {
+			} else if (i >= 2 && i <= 5) {
+		fprintf(stderr, "len ber is %d\n", len);
 				buf_putstring(blobbuf, p, len);
 				if (i == 2) {
 					buf_putstring(blobbuf, modptr, len);
@@ -687,14 +692,17 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	 * functions; this is a bit faffy but it does mean we get all
 	 * the sanity checks for free.
 	 */
+	fprintf(stderr, "here blah 123 %d\n", blobbuf->len);
 	retkey = new_sign_key();
 	buf_setpos(blobbuf, 0);
 	if (buf_get_priv_key(blobbuf, retkey, DROPBEAR_SIGNKEY_ANY)
 			!= DROPBEAR_SUCCESS) {
 		errmsg = "unable to create key structure";
 		sign_key_free(retkey);
+		retkey = NULL;
 		goto error;
 	}
+	fprintf(stderr, "here blah 321\n");
 
 	errmsg = NULL;					 /* no error */
 	retval = retkey;
@@ -706,11 +714,12 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	}
 	m_burn(key->keyblob, key->keyblob_size);
 	m_free(key->keyblob);
-	m_burn(&key, sizeof(key));
+	m_burn(key, sizeof(key));
 	m_free(key);
 	if (errmsg) {
 		fprintf(stderr, "Error: %s\n", errmsg);
 	}
+	printf("before retval\n");
 	return retval;
 }
 
@@ -743,6 +752,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	keyblob = buf_new(3000);
 	buf_put_priv_key(keyblob, key, keytype);
 
+	buf_setpos(keyblob, 0);
 	/* skip the "ssh-rsa" or "ssh-dss" header */
 	buf_incrpos(keyblob, buf_getint(keyblob));
 
@@ -753,7 +763,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
 	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 
-		if (key->rsakey->p == NULL) {
+		if (key->rsakey->p == NULL || key->rsakey->q == NULL) {
 			fprintf(stderr, "Pre-0.33 Dropbear keys cannot be converted to OpenSSH keys.\n");
 			goto error;
 		}
@@ -791,22 +801,27 @@ static int openssh_write(const char *filename, sign_key *key,
 
 		/* dmp1 = d mod (p-1) */
 		if (mp_sub_d(key->rsakey->p, 1, &tmpval) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for p-1\n");
 			goto error;
 		}
 		if (mp_mod(key->rsakey->d, &tmpval, &dmp1) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for dmp1\n");
 			goto error;
 		}
 
 		/* dmq1 = d mod (q-1) */
 		if (mp_sub_d(key->rsakey->q, 1, &tmpval) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for q-1\n");
 			goto error;
 		}
 		if (mp_mod(key->rsakey->d, &tmpval, &dmq1) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for dmq1\n");
 			goto error;
 		}
 
 		/* iqmp = (q^-1) mod p */
 		if (mp_invmod(key->rsakey->q, key->rsakey->p, &tmpval) != MP_OKAY) {
+			fprintf(stderr, "Bignum error for iqmpr\n");
 			goto error;
 		}
 
@@ -976,6 +991,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		fp = fopen(filename, "wb");	  /* ensure Unix line endings */
 	}
 	if (!fp)
+		fprintf(stderr, "Failed opening output file\n");
 		goto error;
 	fputs(header, fp);
 	if (passphrase) {

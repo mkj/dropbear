@@ -54,9 +54,6 @@ static void printhelp(char * progname) {
 
 int main(int argc, char ** argv) {
 
-	sign_key *key;
-	buffer *buf;
-	char * filename = NULL;
 	int intype, outtype;
 	const char* infile;
 	const char* outfile;
@@ -68,6 +65,7 @@ int main(int argc, char ** argv) {
 
 	/* input type */
 	if (strlen(argv[1]) != 2 || argv[1][0] != '-') {
+		fprintf(stderr, "All arguments must be specified\n");
 		goto usage;
 	}
 	if (argv[1][1] == 'd') {
@@ -75,6 +73,7 @@ int main(int argc, char ** argv) {
 	} else if (argv[1][1] == 'o') {
 		intype = KEYFILE_OPENSSH;
 	} else {
+		fprintf(stderr, "Invalid input key type\n");
 		goto usage;
 	}
 
@@ -82,11 +81,12 @@ int main(int argc, char ** argv) {
 	if (strlen(argv[2]) != 2 || argv[2][0] != '-') {
 		goto usage;
 	}
-	if (argv[2][1] == 'd') {
+	if (argv[2][1] == 'D') {
 		outtype = KEYFILE_DROPBEAR;
-	} else if (argv[2][1] == 'o') {
+	} else if (argv[2][1] == 'O') {
 		outtype = KEYFILE_OPENSSH;
 	} else {
+		fprintf(stderr, "Invalid output key type\n");
 		goto usage;
 	}
 
