@@ -10,6 +10,9 @@ matt@ucc.asn.au
 
 Basic build instructions:
 
+First time after checkout, or after chaning autoconf stuff, do
+autoconf; autoheader
+
 edit options.h to choose ciphers/hashes/other options
 edit debug.h if you want some debug options
 ./configure, optionally with --disable-zlib
