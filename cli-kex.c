@@ -125,8 +125,10 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	char * filename = NULL;
 	FILE *hostsfile = NULL;
+	int readonly = 0;
 	struct passwd *pw = NULL;
-	unsigned int len, hostlen;
+	unsigned int hostlen, algolen;
+	unsigned long len;
 	const char *algoname = NULL;
 	buffer * line = NULL;
 	int ret;
@@ -151,6 +153,13 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
 	hostsfile = fopen(filename, "r+");
+	
+	/* We mightn't have been able to open it if it was read-only */
+	if (hostsfile == NULL && (errno == EACCES || errno == EROFS)) {
+			readonly = 1;
+			hostsfile = fopen(filename, "r");
+	}
+
 	if (hostsfile == NULL) {
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
@@ -158,6 +167,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	line = buf_new(MAX_KNOWNHOSTS_LINE);
 	hostlen = strlen(cli_opts.remotehost);
+	algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &algolen);
 
 	do {
 		if (buf_getline(line, hostsfile) == DROPBEAR_FAILURE) {
@@ -188,20 +198,19 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 			continue;
 		}
 
-		algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &len);
-		if ( strncmp(buf_getptr(line, len), algoname, len) != 0) {
+		if ( strncmp(buf_getptr(line, algolen), algoname, algolen) != 0) {
 			TRACE(("algo doesn't match"));
 			continue;
 		}
 
-		buf_incrpos(line, len);
+		buf_incrpos(line, algolen);
 		if (buf_getbyte(line) != ' ') {
 			TRACE(("missing space after algo"));
 			continue;
 		}
 
 		/* Now we're at the interesting hostkey */
-		ret = cmp_base64_key(keyblob, keybloblen, algoname, len, line);
+		ret = cmp_base64_key(keyblob, keybloblen, algoname, algolen, line);
 
 		if (ret == DROPBEAR_SUCCESS) {
 			/* Good matching key */
@@ -214,7 +223,31 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	/* Key doesn't exist yet */
 	ask_to_confirm(keyblob, keybloblen);
+
 	/* If we get here, they said yes */
+
+	if (readonly) {
+		goto out;
+	}
+
+	/* put the new entry in the file */
+	fseek(hostsfile, 0, SEEK_END);
+	buf_setpos(line, 0);
+	buf_setlen(line, 0);
+	buf_putbytes(line, ses.remotehost, hostlen);
+	buf_putbyte(line, ' ');
+	buf_putbytes(line, algoname, algolen);
+	buf_putbyte(line, ' ');
+	len = line->size - line->pos;
+	TRACE(("keybloblen %d, len %d", keybloblen, len));
+	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
+	 * will die horribly in the case anyway */
+	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
+	buf_incrwritepos(line, len);
+	buf_putbyte(line, '\n');
+	buf_setpos(line, 0);
+	fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
+	/* We ignore errors, since there's not much we can do about them */
 
 out:
 	if (hostsfile != NULL) {
