@@ -23,7 +23,7 @@
  * SOFTWARE. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "session.h"
 #include "buffer.h"
 #include "signkey.h"

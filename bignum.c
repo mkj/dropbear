@@ -25,7 +25,7 @@
 /* Contains helper functions for mp_int handling */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 
 /* wrapper for mp_init, failing fatally on errors (memory allocation) */
 void m_mp_init(mp_int *mp) {

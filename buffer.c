@@ -25,7 +25,7 @@
 /* Buffer handling routines, designed to avoid overflows/using invalid data */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "buffer.h"
 
 /* Prevent integer overflows when incrementing buffer position/length.

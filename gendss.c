@@ -23,7 +23,7 @@
  * SOFTWARE. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "signkey.h"
 #include "bignum.h"
 #include "random.h"

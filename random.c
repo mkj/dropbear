@@ -24,7 +24,7 @@
 
 #include "includes.h"
 #include "buffer.h"
-#include "util.h"
+#include "dbutil.h"
 
 int donerandinit = 0;
 

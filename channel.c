@@ -29,7 +29,7 @@
 #include "packet.h"
 #include "ssh.h"
 #include "buffer.h"
-#include "util.h"
+#include "dbutil.h"
 #include "channel.h"
 #include "chansession.h"
 #include "ssh.h"

@@ -48,7 +48,7 @@
 #include "runopts.h"
 #include "signkey.h"
 #include "buffer.h"
-#include "util.h"
+#include "dbutil.h"
 
 #include "genrsa.h"
 #include "gendss.h"

@@ -24,7 +24,7 @@
 
 #include "includes.h"
 #include "session.h"
-#include "util.h"
+#include "dbutil.h"
 #include "packet.h"
 #include "algo.h"
 #include "buffer.h"

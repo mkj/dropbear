@@ -29,7 +29,7 @@
  * Applied Cryptography detail the general algorithm. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "bignum.h"
 #include "rsa.h"
 #include "buffer.h"

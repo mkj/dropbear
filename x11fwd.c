@@ -28,7 +28,7 @@
 #include "x11fwd.h"
 #include "session.h"
 #include "ssh.h"
-#include "util.h"
+#include "dbutil.h"
 #include "chansession.h"
 #include "channel.h"
 #include "packet.h"

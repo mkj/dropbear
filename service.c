@@ -23,7 +23,7 @@
  * SOFTWARE. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "service.h"
 #include "session.h"
 #include "packet.h"

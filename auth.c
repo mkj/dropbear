@@ -26,7 +26,7 @@
  * particular type (auth-passwd, auth-pubkey). */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "session.h"
 #include "buffer.h"
 #include "ssh.h"

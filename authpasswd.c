@@ -27,7 +27,7 @@
 #include "includes.h"
 #include "session.h"
 #include "buffer.h"
-#include "util.h"
+#include "dbutil.h"
 #include "auth.h"
 #include "authpasswd.h"
 

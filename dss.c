@@ -23,7 +23,7 @@
  * SOFTWARE. */
 
 #include "includes.h"
-#include "util.h"
+#include "dbutil.h"
 #include "bignum.h"
 #include "dss.h"
 #include "buffer.h"

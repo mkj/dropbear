@@ -35,7 +35,7 @@
 #include "keyimport.h"
 #include "bignum.h"
 #include "buffer.h"
-#include "util.h"
+#include "dbutil.h"
 
 #define PUT_32BIT(cp, value) do { \
   (cp)[3] = (unsigned char)(value); \

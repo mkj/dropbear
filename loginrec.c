@@ -150,11 +150,11 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.7 2003/06/23 08:15:05 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.8 2003/09/24 10:23:02 matt Exp $");*/
 
 #include "includes.h"
 #include "loginrec.h"
-#include "util.h"
+#include "dbutil.h"
 #include "atomicio.h"
 
 /**

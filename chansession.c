@@ -26,7 +26,7 @@
 #include "packet.h"
 #include "buffer.h"
 #include "session.h"
-#include "util.h"
+#include "dbutil.h"
 #include "channel.h"
 #include "chansession.h"
 #include "sshpty.h"

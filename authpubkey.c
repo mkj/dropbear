@@ -26,7 +26,7 @@
 
 #include "includes.h"
 #include "session.h"
-#include "util.h"
+#include "dbutil.h"
 #include "buffer.h"
 #include "signkey.h"
 #include "auth.h"

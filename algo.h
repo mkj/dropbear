@@ -27,7 +27,6 @@
 #define _ALGO_H_
 
 #include "includes.h"
-#include "util.h"
 #include "buffer.h"
 
 struct Algo_Type {

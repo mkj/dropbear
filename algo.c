@@ -23,6 +23,7 @@
  * SOFTWARE. */
 
 #include "algo.h"
+#include "dbutil.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
