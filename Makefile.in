@@ -1,24 +1,29 @@
-CC=@CC@
-LD=@CC@
-CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
-LIBS=libtomcrypt/libtomcrypt.a @LIBS@
-LDFLAGS=@LDFLAGS@
+LTC=libtomcrypt/libtomcrypt.a
 
 OBJS=util.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
 		chansession.o queue.o sshpty.o termcodes.o authpubkey.o runopts.o
 
-DROPBEAROBJS=$(OBJS) main.o
+DROPBEAROBJS=main.o
 
-TESTSIGNOBJS=$(OBJS) testsign.o
+DROPBEARKEYOBJS=dropbearkey.o gendss.o genrsa.o
 
 HEADERS=options.h util.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h authpasswd.h \
 		debug.h channel.h chansession.h debug.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h authpubkey.h runopts.h
 
-#CFLAGS+=-Wall -O2 -pedantic -ansi -I libtomcrypt
-#CFLAGS+=-Wall -g3 -I libtomcrypt
+ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
+
+CC=@CC@
+LD=@CC@
+CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
+LIBS=$(LTC) @LIBS@
+LDFLAGS=@LDFLAGS@
+
+# these are exported so that libtomcrypt's makefile will use them
+export CC
+export CFLAGS
 
 UCLIBC_CC=/home/matt/uclibc/bin/i386-uclibc-gcc
 
@@ -26,26 +31,32 @@ all: dropbear dropbearkey
 
 static: dropbear-static dropbearkey-static
 
-$(OBJS): $(HEADERS) Makefile
+$(ALLOBJS): $(HEADERS) Makefile
 
-dropbear: $(DROPBEAROBJS) $(HEADERS) Makefile 
-	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS)
+dropbear: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile $(LTC)
+	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(OBJS) $(LIBS)
 
-dropbear-static: $(DROPBEAROBJS) $(HEADERS) Makefile 
-	$(LD) $(LDFLAGS) -o staticdropbear $(DROPBEAROBJS) $(LIBS) -static
+dropbear-static: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile  $(LTC)
+	$(LD) $(LDFLAGS) -o staticdropbear $(DROPBEAROBJS) $(OBJS) $(LIBS) -static
 
-dropbearkey: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
-	$(LD) $(LDFLAGS) -o dropbearkey dropbearkey.o gendss.o genrsa.o \
+dropbearkey: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC)
+	$(LD) $(LDFLAGS) -o dropbearkey $(DROPBEARKEYOBJS) \
 		$(OBJS) $(LIBS)
 
-dropbearkey-static: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
-	$(LD) $(LDFLAGS) -o staticdropbearkey dropbearkey.o gendss.o genrsa.o \
+dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC)
+	$(LD) $(LDFLAGS) -o staticdropbearkey $(DROPBEARKEYOBJS) \
 		$(OBJS) $(LIBS) -static
+
+$(LTC):
+	cd libtomcrypt && $(MAKE) clean && $(MAKE)
+
+ltc-clean:
+	cd libtomcrypt && $(MAKE) clean
 
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -n
 
-clean:
+clean: ltc-clean
 	-rm -f dropbear uclibc-dropbear dropbearkey *.o *.da *.bb *.bbg *.prof 
 
 tidy:
