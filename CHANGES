@@ -1,3 +1,24 @@
+- Changed "DISABLE_TCPFWD" to "ENABLE_TCPFWD" (and for x11/auth) so
+  "disable DISABLE_TCPWD" isn't so confusing.
+
+- Fix authorized_keys handling (don't crash on too-long keys, and
+  use fgetc not getc to avoid strange macro-related issues), thanks to
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com> 
+  and Steve Rodgers <hwstar@cox.net> for reporting and testing.
+
+- Fixes to the README with regard to uClibc systems, thanks to 
+  Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com>,
+  as well as general improvements to documentation (split README/INSTALL)
+
+- Fixed up some compilation problems with dropbearconvert/dropbearkey if
+  DSS or RSA were disabled, reported by Patrik Karlsson <patrik at cqure.net>
+
+- Fix double-free bug for hostkeys, reported by
+  Vincent Sanders <vince at kyllikki.org>
+
+- Fix up missing \ns from dropbearconvert help message,
+  thanks to Mordy Ovits <movits at bloomberg.com> for the patch
+
 0.36 - Tue August 19 2003 12:16:23 +0800
 
 - Fix uninitialised temporary variable in DSS signing code

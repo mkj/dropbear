@@ -2,6 +2,10 @@ Current:
 
 Things which need doing:
 
+- fix the README
+- make combined or shared libraries
+- fix up channel close handling
+
 - kexfollows
 - check PRNG is good
 - improved checking in DSS/RSA routines for valid sized keys etc
@@ -12,6 +16,7 @@ Things which need doing:
 - inetd
 - IP6 (binding to :: takes over ipv4 as well, sigh. If anyone wants to suggest
   a clean way (ie no V4MAPPED or setsockopt things) please let me know :)
+- Binding to different interfaces (see ipv6 probably)
 - TCP forwarding (-L is done)
 
 Features to add:
