@@ -281,7 +281,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
 
-	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s,
+	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp2, &dss_r, &dss_s,
 			&dss_m, NULL);
 #ifdef DSS_PROTOK	
 	/* hash the privkey */
