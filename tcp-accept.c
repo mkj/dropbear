@@ -8,8 +8,7 @@
 #include "listener.h"
 #include "runopts.h"
 
-#ifndef DISABLE_TCP_ACCEPT
-
+#ifdef DROPBEAR_TCP_ACCEPT
 
 static void cleanup_tcp(struct Listener *listener) {
 
@@ -94,4 +93,4 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	return DROPBEAR_SUCCESS;
 }
 
-#endif /* DISABLE_REMOTETCPFWD */
+#endif /* DROPBEAR_TCP_ACCEPT */

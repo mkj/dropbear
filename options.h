@@ -306,6 +306,10 @@
 #define ENABLE_CLI_ANYTCPFWD 
 #endif
 
+#if defined(ENABLE_CLI_LOCALTCPFWD) || defined(ENABLE_SVR_REMOTETCPFWD)
+#define DROPBEAR_TCP_ACCEPT
+#endif
+
 #if defined(ENABLE_REMOTETCPFWD) || defined(ENABLE_LOCALTCPFWD) || \
 	defined(ENABLE_AGENTFWD) || defined(ENABLE_X11FWD)
 #define USING_LISTENERS

@@ -33,7 +33,7 @@ CLIOBJS=cli-algo.o cli-main.o cli-auth.o cli-authpasswd.o cli-kex.o \
 
 CLISVROBJS=common-session.o packet.o common-algo.o common-kex.o \
 			common-channel.o common-chansession.o termcodes.o loginrec.o \
-			tcp-accept.o tcp-connect.o listener.o process-packet.o \
+			tcp-accept.o listener.o process-packet.o \
 			common-runopts.o
 
 KEYOBJS=dropbearkey.o gendss.o genrsa.o
