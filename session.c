@@ -286,23 +286,14 @@ static void session_identification() {
 		dropbear_exit("Error writing ident string");
 	}
 
-	/* Now read the client version string, there are allowed to be other lines
-	 * before the "SSH-*" line. We allow a max of 9 lines before it, just for
-	 * sanity */
-	for (i = 0; i < 10; i++) {
-		len = ident_readln(ses.sock, linebuf, 256);
-		if (len < 0) {
-			break;
-		}
-		if (len >= 4 && memcmp(linebuf, "SSH-", 4) == 0) {
-			/* start of line matches */
-			done = 1;
-			break;
-		}
+	len = ident_readln(ses.sock, linebuf, 256);
+	if (len >= 4 && memcmp(linebuf, "SSH-", 4) == 0) {
+		/* start of line matches */
+		done = 1;
 	}
 
 	if (!done) {
-		dropbear_exit("Failed to get remote ident");
+		dropbear_exit("Failed to get client version");
 	} else {
 		/* linebuf is already null terminated */
 		ses.remoteident = m_malloc(len);
