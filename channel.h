@@ -45,7 +45,8 @@
 
 #define RECV_MAXWINDOW 6000 /* tweak */
 #define RECV_MAXPACKET 1400 /* tweak */
-#define RECV_MINWINDOW 10000 /* when we get below this, we send a windowadjust*/
+#define RECV_MINWINDOW 10000 /* when we get below this, we send a windowadjust,
+								not currently used */
 
 /* a simpler way to define that we need code for listeners */
 #if !defined(DISABLE_X11FWD) || !defined(DISABLE_AUTHFWD) || \
