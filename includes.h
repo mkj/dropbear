@@ -79,4 +79,11 @@
 #include <libgen.h>
 #endif
 
+#ifndef HAVE_UINT16_T
+#ifndef HAVE_U_INT16_T
+typedef unsigned short u_int16_t;
+#endif /* HAVE_U_INT16_T */
+typedef u_int16_t uint16_t;
+#endif /* HAVE_UINT16_T */
+
 #endif /* _INCLUDES_H_ */
