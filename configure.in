@@ -1,5 +1,5 @@
 #                                               -*- Autoconf -*-
-# Process this file with autoconf to produce a configure script.
+# Process this file with autoconf and autoheader to produce a configure script.
 
 # This Autoconf file was cobbled from various locations.
 
