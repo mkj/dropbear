@@ -52,6 +52,9 @@ struct RunOpts {
 #endif
 
 	int norootlogin;
+
+	int noauthpass;
+	int norootpass;
 	
 	sign_key *hostkey;
 	buffer * banner;

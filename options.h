@@ -39,12 +39,12 @@
 #define DSS_PRIV_FILENAME "/etc/dropbear/dropbear_dss_host_key"
 #endif
 #ifndef RSA_PRIV_FILENAME
-#define RSA_PRIV_FILENAME "/etc//dropbear/dropbear_rsa_host_key"
+#define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
 #endif
 
 /* Setting this disables the fast exptmod bignum code. It saves ~5kB, but is
  * perhaps 20% slower for pubkey operations (it is probably worth experimenting
- * if you want to use this */
+ * if you want to use this) */
 /*#define NO_FAST_EXPTMOD*/
 
 /* Enable X11 Forwarding */
@@ -185,8 +185,9 @@
 
 /* Timeouts in seconds */
 #define SELECT_TIMEOUT 20
-/* Spec recommends after one hour or 1 gigabyte of data */
-#define KEX_REKEY_TIMEOUT 3600
+/* Spec recommends after one hour or 1 gigabyte of data. One hour
+ * is a bit too verbose, so we try 8 hours */
+#define KEX_REKEY_TIMEOUT (3600 * 8)
 #define KEX_REKEY_DATA (1<<30) /* 2^30 == 1GB, this value must be < INT_MAX */
 /* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
 #define AUTH_TIMEOUT 300 /* we choose 5 minutes */

@@ -103,11 +103,11 @@ static void _dropbear_exit(int exitcode, const char* format, va_list param) {
 		snprintf(fmtbuf, sizeof(fmtbuf),
 				"exit after auth (%s): %s", 
 				ses.authstate.printableuser, format);
-	} else if (ses.authstate.username) {
+	} else if (ses.authstate.printableuser) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
 				"exit before auth (user '%s', %d fails): %s",
-				ses.authstate.username, ses.authstate.failcount, format);
+				ses.authstate.printableuser, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 

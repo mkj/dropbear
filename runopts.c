@@ -39,30 +39,34 @@ static void printhelp(const char * progname) {
 	fprintf(stderr, "Dropbear sshd v%s\n"
 					"Usage: %s [options]\n"
 					"Options are:\n"
-					"-b bannerfile     Display the contents of bannerfile"
+					"-b bannerfile	Display the contents of bannerfile"
 					" before user login\n"
-					"                  (default: none)\n"
+					"		(default: none)\n"
 #ifdef DROPBEAR_DSS
-					"-d dsskeyfile     Use dsskeyfile for the dss host key\n"
-					"                  (default: %s)\n"
+					"-d dsskeyfile	Use dsskeyfile for the dss host key\n"
+					"		(default: %s)\n"
 #endif
 #ifdef DROPBEAR_RSA
-					"-r rsakeyfile     Use rsakeyfile for the rsa host key\n"
-					"                  (default: %s)\n"
+					"-r rsakeyfile	Use rsakeyfile for the rsa host key\n"
+					"		(default: %s)\n"
 #endif
-					"-F                Don't fork into background\n"
+					"-F		Don't fork into background\n"
 #ifdef DISABLE_SYSLOG
 					"(Syslog support not compiled in, using stderr)\n"
 #else
-					"-E                Log to stderr rather than syslog\n"
+					"-E		Log to stderr rather than syslog\n"
 #endif
 #ifdef DO_MOTD
-					"-m                Don't display the motd on login\n"
+					"-m		Don't display the motd on login\n"
 #endif
-					"-w                Disallow root logins\n"
-					"-p port           Listen on specified tcp port, up to %d can be specified\n"
-					"                  (default %d if none specified)\n"
-/*					"-4/-6             Disable listening on ipv4/ipv6 respectively\n"*/
+					"-w		Disallow root logins\n"
+#ifdef DROPBEAR_PASSWORD_AUTH
+					"-s		Disable password logins\n"
+					"-g		Disable password logins for root\n"
+#endif
+					"-p port	Listen on specified tcp port, up to %d can be specified\n"
+					"		(default %d if none specified)\n"
+/*					"-4/-6		Disable listening on ipv4/ipv6 respectively\n"*/
 
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS
@@ -93,6 +97,8 @@ runopts * getrunopts(int argc, char ** argv) {
 	opts->banner = NULL;
 	opts->forkbg = 1;
 	opts->norootlogin = 0;
+	opts->noauthpass = 0;
+	opts->norootpass = 0;
 	/* not yet
 	opts->ipv4 = 1;
 	opts->ipv6 = 1;
@@ -153,6 +159,14 @@ runopts * getrunopts(int argc, char ** argv) {
 				case 'w':
 					opts->norootlogin = 1;
 					break;
+#ifdef DROPBEAR_PASSWORD_AUTH
+				case 's':
+					opts->noauthpass = 1;
+					break;
+				case 'g':
+					opts->norootpass = 1;
+					break;
+#endif
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);

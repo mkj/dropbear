@@ -50,7 +50,7 @@ struct AuthState {
 
 	char *username; /* This is the username the client presents to check. It
 					   is updated each run through, used for auth checking */
-	char *printableuser; /* stripped of control chars */
+	char *printableuser; /* stripped of control chars, used for logs etc */
 	struct passwd * pw;
 	unsigned char authtypes; /* Flags indicating which auth types are still 
 								valid */

@@ -61,7 +61,9 @@ static void authclear() {
 	ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 #endif
 #ifdef DROPBEAR_PASSWORD_AUTH
-	ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
+	if (!ses.opts->noauthpass) {
+		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
+	}
 #endif
 
 }
@@ -143,12 +145,15 @@ void recv_msg_userauth_request() {
 	}
 
 #ifdef DROPBEAR_PASSWORD_AUTH
-	/* user wants to try password auth */
-	if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
-			strncmp(methodname, AUTH_METHOD_PASSWORD,
-				AUTH_METHOD_PASSWORD_LEN) == 0) {
-		passwordauth(username, userlen);
-		goto out;
+	if (!ses.opts->noauthpass &&
+			!(ses.opts->norootpass && ses.authstate.pw->pw_uid == 0) ) {
+		/* user wants to try password auth */
+		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
+				strncmp(methodname, AUTH_METHOD_PASSWORD,
+					AUTH_METHOD_PASSWORD_LEN) == 0) {
+			passwordauth(username, userlen);
+			goto out;
+		}
 	}
 #endif
 
@@ -178,30 +183,24 @@ out:
 static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* shell;
-	char* newprintableuser;
 	
 	TRACE(("enter checkusername"));
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;
 	}
 
-	newprintableuser = stripcontrol(username);
-
 	/* new user or username has changed */
 	if (ses.authstate.username == NULL ||
 		strcmp(username, ses.authstate.username) != 0) {
 			/* the username needs resetting */
 			if (ses.authstate.username != NULL) {
-				dropbear_log(LOG_WARNING,
-					"client trying multiple usernames: '%s' and '%s'",
-					ses.authstate.printableuser, newprintableuser);
+				dropbear_log(LOG_WARNING, "client trying multiple usernames");
 				m_free(ses.authstate.username);
-				m_free(ses.authstate.printableuser);
 			}
 			authclear();
 			ses.authstate.pw = getpwnam((char*)username);
 			ses.authstate.username = strdup(username);
-			ses.authstate.printableuser = newprintableuser;
+			m_free(ses.authstate.printableuser);
 	}
 
 	/* check that user exists */
@@ -212,6 +211,9 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
+
+	/* We can set it once we know its a real user */
+	ses.authstate.printableuser = strdup(ses.authstate.pw->pw_name);
 
 	/* check for non-root if desired */
 	if (ses.opts->norootlogin && ses.authstate.pw->pw_uid == 0) {
@@ -299,7 +301,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	encrypt_packet();
 
 	if (incrfail) {
-		usleep(100000); /* XXX improve this */
+		usleep(300000); /* XXX improve this */
 		ses.authstate.failcount++;
 	}
 
@@ -308,8 +310,8 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"));
 
-		if (ses.authstate.username == NULL) {
-			userstr = "is unknown!!!!";
+		if (ses.authstate.printableuser == NULL) {
+			userstr = "is invalid";
 		} else {
 			userstr = ses.authstate.printableuser;
 		}
@@ -325,8 +327,6 @@ void send_msg_userauth_success() {
 	TRACE(("enter send_msg_userauth_success"));
 
 	CHECKCLEARTOWRITE();
-
-	assert(ses.authstate.username);
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SUCCESS);
 	encrypt_packet();
