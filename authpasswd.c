@@ -20,7 +20,7 @@
 /* process a password auth request */
 void passwordauth() {
 	
-#ifdef ENABLE_SHADOW
+#ifdef HAVE_SHADOW_H
 	struct spwd *spasswd;
 #endif
 	char * usercrypt;
@@ -30,7 +30,7 @@ void passwordauth() {
 	unsigned char changepw;
 
 	usercrypt = ses.authstate.pw->pw_passwd;
-#ifdef ENABLE_SHADOW
+#ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
 	spasswd = getspnam(ses.authstate.pw->pw_name);
 	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
