@@ -194,7 +194,9 @@ ltm-clean:
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -rn
 
-clean: ltc-clean ltm-clean
+clean: ltc-clean ltm-clean thisclean
+
+thisclean:
 	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress
 	-rm -f staticdropbear staticdropbearkey staticdropbearconvert staticscp
 	-rm -f dropbearmulti staticdropbearmulti

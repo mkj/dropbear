@@ -44,7 +44,8 @@ int main(int argc, char ** argv) {
 		}
 #endif
 #ifdef DBMULTI_dbclient
-		if (strcmp(progname, "dbclient") == 0) {
+		if (strcmp(progname, "dbclient") == 0
+				|| strcmp(progname, "ssh") == 0) {
 			return cli_main(argc, argv);
 		}
 #endif
