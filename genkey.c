@@ -245,7 +245,7 @@ static void getx(dss_key *key) {
 	m_mp_init(&val);
 	
 	do {
-		genhighrandom(buf, QSIZE);
+		genrandom(buf, QSIZE);
 
 		if (mp_read_unsigned_bin(&val, buf, QSIZE) != MP_OKAY) {
 			fprintf(stderr, "couldn't load random num\n");

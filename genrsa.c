@@ -109,7 +109,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		 * for primality - inefficient but works */
 		isprime = 0;
 		do {
-			genhighrandom(buf, size);
+			genrandom(buf, size);
 			buf[0] |= 0x80; /* MSB set */
 			buf[size] |= 0x01; /* LSB for odd */
 

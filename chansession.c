@@ -8,6 +8,7 @@
 #include "sshpty.h"
 #include "termcodes.h"
 #include "ssh.h"
+#include "random.h"
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd);
@@ -659,13 +660,26 @@ static void execchild(struct ChanSess *chansess) {
 
 	char *argv[4];
 	int i, len;
+	int ret;
 
 	/* wipe the hostkey */
 	sign_key_free(ses.opts->hostkey);
+
+	/* clear the state of the prng */
+	initrandom();
+
 	/* close file descriptors except stdin/stdout/stderr */
 	for (i = 3; i < ses.maxfd; i++) {
-		close(i);
+		/* close() can fail, we need to be sure fds are closed */
+		do {
+			ret = close(i);
+			if (ret < 0 && (errno != EINTR) && (errno != EBADF)) {
+				dropbear_exit("error closing file desc");
+			}
+		} while ((ret < 0) && (errno != EBADF));
 	}
+
+
 	/* clear environment */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
 	 * etc. this is hazardous, so should only be used for debugging. */

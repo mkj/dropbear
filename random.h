@@ -1,8 +1,8 @@
 #ifndef _RANDOM_H_
 #define _RANDOM_H_
 
-void genrandom(unsigned char* buf, int len);
-void genhighrandom(unsigned char* buf, int len);
 void initrandom();
+void genrandom(unsigned char* buf, int len);
+void addrandom(unsigned char* buf, int len);
 
 #endif /* _RANDOM_H_ */

@@ -290,7 +290,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	m_burn(proto_k, SHA512_HASH_SIZE);
 #else /* DSS_PROTOK not defined*/
 	do {
-		genhighrandom(kbuf, SHA1_HASH_SIZE);
+		genrandom(kbuf, SHA1_HASH_SIZE);
 		if (mp_read_unsigned_bin(&dss_k, kbuf, SHA1_HASH_SIZE) != MP_OKAY) {
 			dropbear_exit("dss error");
 		}

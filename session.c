@@ -30,12 +30,13 @@ void child_session(int sock, runopts *opts, int childpipe) {
 	struct timeval timeout;
 	int val;
 	
-	initrandom();
 	crypto_init();
 	session_init(sock, opts, childpipe);
 
 	/* exchange identification, version etc */
 	session_identification();
+
+	initrandom();
 
 	/* start off with key exchange */
 	send_msg_kexinit();

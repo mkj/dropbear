@@ -13,29 +13,46 @@
 #include "util.h"
 #include "libtomcrypt/mycrypt.h"
 
-int randfd = -1;
-int urandfd = -1;
+int donerandinit = 0;
 
+prng_state prng;
+
+#define ENTROPY_ADD_AMOUNT 200
+#define MAX_ENTROPY_ADD 2000 /* basically to stop overflow of the counter */
+#define INIT_SEED_SIZE 32 /* 256 bits */
+
+/* we reseed after addcount reaches ENTROPY_ADD_AMOUNT, though we also include
+ * the previous state to avoid someone flushing the state to something known */
+unsigned int addcount = 0;
+
+/* The basic approach of the PRNG is to start with an initial good random
+ * source (such as /dev/random on supported systems), then feed in further
+ * entropy from timings etc. This is all hashed with libtomcrypt's yarrow
+ * implementation, which should ensure that as as long as there is some initial
+ * random data, it will not be possible to calculate further states, or force
+ * the generator into a known state - at least not without guessing the initial
+ * state or breaking the hash function */
+
+/* Will read in randomness from /dev/random or EGD, and initialise the yarrow
+ * state */
+void initrandom() {
+		
+	unsigned char randbuf[INIT_SEED_SIZE];
+	int randfd;
+	int readlen, readpos;
 #ifdef DROPBEAR_EGD
-struct sockaddr_un egdsock;
+	struct sockaddr_un egdsock;
 #endif
 
-void initrandom() {
-
-	if (randfd != -1) {
-		close(randfd);
-	}
-	if (urandfd != -1) {
-		close(urandfd);
-	}
+	/* clear the state if it has already been started */
+	m_burn(&prng, sizeof(prng));
+	addcount = 0;
 
 #ifdef DROPBEAR_DEV_RANDOM
 	randfd = open(DEV_RANDOM, O_RDONLY);
-	urandfd = open(DEV_URANDOM, O_RDONLY);
-	if (!randfd || !urandfd) {
+	if (!randfd) {
 		dropbear_exit("couldn't open random device");
 	}
-	return;
 #endif
 
 #ifdef DROPBEAR_EGD
@@ -52,56 +69,74 @@ void initrandom() {
 			sizeof(struct sockaddr_un)) < 0) {
 		dropbear_exit("couldn't open random device");
 	}
-	urandfd = randfd;
-	return;
 #endif
-}
 
-void genrandfd(int fd, unsigned char* buf, int len) {
+	if (yarrow_start(&prng) != CRYPT_OK) {
+		dropbear_exit("error in yarrow PRNG");
+	}
+
 	
-	int readlen;
-	int pos = 0;
-
-#ifdef DROPBEAR_DEV_RANDOM
+	/* read the actual random data */
+	readpos = 0;
 	do {
-		readlen = read(fd, &buf[pos], len - pos);
+		readlen = read(randfd, &randbuf[readpos], sizeof(randbuf) - readpos);
 		if (readlen <= 0) {
 			if (errno == EINTR) {
 				continue;
 			}
 			dropbear_exit("error reading random source");
 		}
-		pos += readlen;
-		
-	} while (pos < len);
-	return;
-#endif
+		readpos += readlen;
+	} while (readpos < sizeof(randbuf));
 
-#ifdef DROPBEAR_EGD
-	do {
-		unsigned char egdreq[2] = {0x02, 0x00}; /* 0x02 = blocking read req */
-		egdreq[1] = MIN(0xff, len - pos); /* bytes requested */
-		if (write(fd, egdreq, 2) != 2) {
-			dropbear_exit("error reading random source");
-		}
-		if ((readlen = read(fd, &buf[pos], egdreq[1])) != egdreq[1]) {
-			dropbear_exit("error reading random source");
-		}
-		pos += readlen;
-	} while (pos < len);
-		
-	return;
-#endif
+	close (randfd);
+
+	if (yarrow_add_entropy(randbuf, sizeof(randbuf), &prng) != CRYPT_OK) {
+		dropbear_exit("error in yarrow PRNG");
+	}
+	m_burn(randbuf, sizeof(randbuf));
+	
+
+	if (yarrow_ready(&prng) != CRYPT_OK) {
+		dropbear_exit("error in yarrow PRNG");
+	}
+
+	donerandinit = 1;
+
 }
 
 void genrandom(unsigned char* buf, int len) {
 
-	genrandfd(urandfd, buf, len);
+	assert(donerandinit);
+
+	if (yarrow_read(buf, len, &prng) != len) {
+		dropbear_exit("error in yarrow PRNG");
+	}
 
 }
 
-void genhighrandom(unsigned char* buf, int len) {
+/* Adds entropy to the PRNG state. As long as the hash is strong, then we
+ * don't need to worry about entropy being added "diluting" the current
+ * state - it should only make it stronger. After every ENTROPY_ADD_AMOUNT we
+ * reseed. Reseeding also includes the previous state, so we can't get forced
+ * to use just the new stuff */
+void addrandom(unsigned char* buf, int len) {
 
-	genrandfd(randfd, buf, len);
+	assert(donerandinit);
 
+	if (len > MAX_ENTROPY_ADD) {
+		dropbear_exit("error in yarrow PRNG");
+	}
+
+	if (yarrow_add_entropy(buf, len, &prng) != CRYPT_OK) {
+		dropbear_exit("error in yarrow PRNG");
+	}
+	addcount += len;
+	
+	if (addcount >= ENTROPY_ADD_AMOUNT) {
+		if (yarrow_ready(&prng) != CRYPT_OK) {
+			dropbear_exit("error in yarrow PRNG");
+		}
+		addcount = 0;
+	}
 }
