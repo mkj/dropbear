@@ -123,7 +123,6 @@ void main_noinetd() {
 	pid_t childpid;
 	int childpipe[2];
 
-	struct sigaction sa_chld;
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;
@@ -303,7 +302,7 @@ void main_noinetd() {
 
 
 /* catch + reap zombie children */
-static void sigchld_handler(int fish) {
+static void sigchld_handler(int UNUSED(unused)) {
 	struct sigaction sa_chld;
 
 	while(waitpid(-1, NULL, WNOHANG) > 0); 
@@ -316,14 +315,14 @@ static void sigchld_handler(int fish) {
 }
 
 /* catch any segvs */
-static void sigsegv_handler(int fish) {
+static void sigsegv_handler(int UNUSED(unused)) {
 	fprintf(stderr, "Aiee, segfault! You should probably report "
 			"this as a bug to the developer\n");
 	exit(EXIT_FAILURE);
 }
 
 /* catch ctrl-c or sigterm */
-static void sigintterm_handler(int fish) {
+static void sigintterm_handler(int UNUSED(unused)) {
 
 	exitflag = 1;
 }

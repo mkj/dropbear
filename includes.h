@@ -128,4 +128,14 @@ typedef u_int16_t uint16_t;
 #define LOG_AUTHPRIV LOG_AUTH
 #endif
 
+/* so we can avoid warnings about unused params (ie in signal handlers etc) */
+#ifdef UNUSED 
+#elif defined(__GNUC__) 
+# define UNUSED(x) UNUSED_ ## x __attribute__((unused)) 
+#elif defined(__LCLINT__) 
+# define UNUSED(x) /*@unused@*/ x 
+#else 
+# define UNUSED(x) x 
+#endif
+
 #endif /* _INCLUDES_H_ */

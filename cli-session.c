@@ -118,6 +118,9 @@ static void cli_session_init() {
 	cli_ses.stdincopy = dup(STDIN_FILENO);
 	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
 
+	cli_ses.retval = EXIT_SUCCESS; /* Assume it's clean if we don't get a
+									  specific exit status */
+
 	/* Auth */
 	cli_ses.lastpubkey = NULL;
 	cli_ses.lastauthtype = NULL;
@@ -261,7 +264,7 @@ static void cli_finished() {
 	common_session_cleanup();
 	fprintf(stderr, "Connection to %s@%s:%s closed.\n", cli_opts.username,
 			cli_opts.remotehost, cli_opts.remoteport);
-	exit(EXIT_SUCCESS);
+	exit(cli_ses.retval);
 }
 
 

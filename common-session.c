@@ -35,6 +35,8 @@
 #include "channel.h"
 #include "atomicio.h"
 
+static void checktimeouts();
+static int ident_readln(int fd, char* buf, int count);
 
 struct sshsession ses; /* GLOBAL */
 
@@ -46,8 +48,6 @@ int sessinitdone = 0; /* GLOBAL */
 int exitflag = 0; /* GLOBAL */
 
 
-static void checktimeouts();
-static int ident_readln(int fd, char* buf, int count);
 
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock, char* remotehost) {

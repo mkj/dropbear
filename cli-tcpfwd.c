@@ -89,7 +89,7 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 				remoteport));
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener*));
-	tcpinfo->sendaddr = remoteaddr;
+	tcpinfo->sendaddr = m_strdup(remoteaddr);
 	tcpinfo->sendport = remoteport;
 	tcpinfo->listenport = listenport;
 	tcpinfo->chantype = &cli_chan_tcplocal;

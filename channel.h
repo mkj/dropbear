@@ -45,16 +45,15 @@
 /* Not a real type */
 #define SSH_OPEN_IN_PROGRESS					99
 
-#define MAX_CHANNELS 60 /* simple mem restriction, includes each tcp/x11
+#define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
 							connection, so can't be _too_ small */
 
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
-#define RECV_MAXWINDOW 6000 /* tweak */
-#define RECV_WINDOWEXTEND (RECV_MAXWINDOW/2) /* We send a "window extend" every
-												RECV_WINDOWEXTEND bytes */
-#define RECV_MAXPACKET 1400 /* tweak */
-#define RECV_MINWINDOW 19000 /* when we get below this, we send a windowadjust */
+#define RECV_MAXWINDOW 4000 /* tweak */
+#define RECV_WINDOWEXTEND 500 /* We send a "window extend" every
+								RECV_WINDOWEXTEND bytes */
+#define RECV_MAXPACKET RECV_MAXWINDOW /* tweak */
 
 struct ChanType;
 
@@ -63,6 +62,7 @@ struct Channel {
 	unsigned int index; /* the local channel index */
 	unsigned int remotechan;
 	unsigned int recvwindow, transwindow;
+	unsigned int recvdonelen;
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
 	int infd; /* data to send over the wire */

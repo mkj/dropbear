@@ -96,7 +96,8 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 	exit(exitcode);
 }
 
-static void cli_dropbear_log(int priority, const char* format, va_list param) {
+static void cli_dropbear_log(int UNUSED(priority), 
+		const char* format, va_list param) {
 
 	char printbuf[1024];
 

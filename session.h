@@ -43,7 +43,6 @@ extern int exitflag;
 void common_session_init(int sock, char* remotehost);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
-void checktimeouts();
 void session_identification();
 
 
@@ -54,8 +53,6 @@ void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
 void cli_session(int sock, char *remotehost);
-void cli_dropbear_exit(int exitcode, const char* format, va_list param);
-void cli_dropbear_log(int priority, const char* format, va_list param);
 void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
@@ -220,6 +217,8 @@ struct clientsession {
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
 	struct PubkeyList *lastpubkey;
+
+	int retval; /* What the command exit status was - we emulate it */
 #if 0
 	TODO
 	struct AgentkeyList *agentkeys; /* Keys to use for public-key auth */

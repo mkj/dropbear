@@ -55,6 +55,10 @@ static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
 
 static void send_exitsignalstatus(struct Channel *channel);
+static void send_msg_chansess_exitstatus(struct Channel * channel,
+		struct ChanSess * chansess);
+static void send_msg_chansess_exitsignal(struct Channel * channel,
+		struct ChanSess * chansess);
 static int sesscheckclose(struct Channel *channel);
 static void get_termmodes(struct ChanSess *chansess);
 
@@ -68,7 +72,7 @@ static int sesscheckclose(struct Channel *channel) {
 }
 
 /* handler for childs exiting, store the state for return to the client */
-static void sesssigchild_handler(int dummy) {
+static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	int status;
 	pid_t pid;
@@ -498,7 +502,9 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 
 	/* allocate the pty */
-	assert(chansess->master == -1); /* haven't already got one */
+	if (chansess->master != -1) {
+		dropbear_exit("multiple pty requests");
+	}
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"));
 		return DROPBEAR_FAILURE;

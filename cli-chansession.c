@@ -32,9 +32,11 @@
 #include "ssh.h"
 #include "runopts.h"
 #include "termcodes.h"
+#include "chansession.h"
 
 static void cli_closechansess(struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
+static void cli_chansessreq(struct Channel *channel);
 
 static void start_channel_request(struct Channel *channel, unsigned char *type);
 
@@ -42,19 +44,43 @@ static void send_chansess_pty_req(struct Channel *channel);
 static void send_chansess_shell_req(struct Channel *channel);
 
 static void cli_tty_setup();
-void cli_tty_cleanup();
 
 const struct ChanType clichansess = {
 	0, /* sepfds */
 	"session", /* name */
 	cli_initchansess, /* inithandler */
 	NULL, /* checkclosehandler */
-	NULL, /* reqhandler */
+	cli_chansessreq, /* reqhandler */
 	cli_closechansess, /* closehandler */
 };
 
+static void cli_chansessreq(struct Channel *channel) {
+
+	unsigned char* type = NULL;
+	int wantreply;
+
+	TRACE(("enter cli_chansessreq"));
+
+	type = buf_getstring(ses.payload, NULL);
+	wantreply = buf_getbyte(ses.payload);
+
+	if (strcmp(type, "exit-status") != 0) {
+		TRACE(("unknown request '%s'", type));
+		send_msg_channel_failure(channel);
+		goto out;
+	}
+		
+	/* We'll just trust what they tell us */
+	cli_ses.retval = buf_getint(ses.payload);
+	TRACE(("got exit-status of '%d'", cli_ses.retval));
+
+out:
+	m_free(type);
+}
+	
+
 /* If the main session goes, we close it up */
-static void cli_closechansess(struct Channel *channel) {
+static void cli_closechansess(struct Channel *UNUSED(channel)) {
 
 	/* This channel hasn't gone yet, so we have > 1 */
 	if (ses.chancount > 1) {
@@ -228,7 +254,7 @@ static void put_winsize() {
 
 }
 
-static void sigwinch_handler(int dummy) {
+static void sigwinch_handler(int UNUSED(unused)) {
 
 	cli_ses.winchange = 1;
 
@@ -317,7 +343,7 @@ static int cli_initchansess(struct Channel *channel) {
 	channel->infd = STDOUT_FILENO;
 	channel->outfd = STDIN_FILENO;
 	channel->errfd = STDERR_FILENO;
-	channel->extrabuf = buf_new(RECV_MAXWINDOW);
+	channel->extrabuf = cbuf_new(RECV_MAXWINDOW);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);

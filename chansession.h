@@ -68,11 +68,6 @@ struct ChildPid {
 };
 
 
-void chansessionrequest(struct Channel * channel);
-void send_msg_chansess_exitstatus(struct Channel * channel,
-		struct ChanSess * chansess);
-void send_msg_chansess_exitsignal(struct Channel * channel,
-		struct ChanSess * chansess);
 void addnewvar(const char* param, const char* var);
 
 void cli_send_chansess_request();

@@ -111,7 +111,7 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 	exit(exitcode);
 }
 
-static void generic_dropbear_log(int priority, const char* format, 
+static void generic_dropbear_log(int UNUSED(priority), const char* format, 
 		va_list param) {
 
 	char printbuf[1024];
@@ -146,7 +146,6 @@ void dropbear_trace(const char* format, ...) {
 	fprintf(stderr, "TRACE: ");
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
-	fflush(stderr);
 	va_end(param);
 }
 #endif /* DEBUG_TRACE */
