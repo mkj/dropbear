@@ -51,7 +51,8 @@ static void readrand(unsigned char* buf, unsigned int buflen);
 static void readrand(unsigned char* buf, unsigned int buflen) {
 
 	int readfd;
-	unsigned int readpos, readlen;
+	unsigned int readpos;
+	int readlen;
 #ifdef DROPBEAR_EGD
 	struct sockaddr_un egdsock;
 #endif
