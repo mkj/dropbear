@@ -24,22 +24,23 @@ UCLIBC_CC=/home/matt/uclibc/bin/i386-uclibc-gcc
 
 all: dropbear dropbearkey
 
+static: dropbear-static dropbearkey-static
+
 $(OBJS): $(HEADERS) Makefile
 
 dropbear: $(DROPBEAROBJS) $(HEADERS) Makefile 
 	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS)
 
+dropbear-static: $(DROPBEAROBJS) $(HEADERS) Makefile 
+	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(LIBS) -static
+
 dropbearkey: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
 	$(CC) $(CFLAGS) -o dropbearkey dropbearkey.o gendss.o genrsa.o \
 		$(OBJS) $(LIBS)
 
-uclibc-dropbear: Makefile
-	make clean
-	CC=$(UCLIBC_CC) make $(DROPBEAROBJS)
-	$(UCLIBC_CC) $(CFLAGS) -o uclibc-dropbear $(DROPBEAROBJS) -static $(LIBS)
-
-ucsizes: uclibc-dropbear
-	objdump -t uclibc-dropbear|grep ".text"|cut -d "." -f 2|sort -n
+dropbearkey-static: $(OBJS) $(HEADERS) Makefile dropbearkey.o gendss.o genrsa.o
+	$(CC) $(CFLAGS) -o dropbearkey dropbearkey.o gendss.o genrsa.o \
+		$(OBJS) $(LIBS) -static
 
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -n
