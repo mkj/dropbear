@@ -800,7 +800,7 @@ void recv_msg_channel_open() {
 		newchansess(channel);
 #ifndef DISABLE_LOCALTCPFWD
 	} else if (typeval == CHANNEL_ID_TCPDIRECT) {
-		if (ses.runopts->nolocaltcp) {
+		if (ses.opts->nolocaltcp) {
 			errtype = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 		} else if (newtcpdirect(channel) == DROPBEAR_FAILURE) {
 			errtype = SSH_OPEN_CONNECT_FAILED;
