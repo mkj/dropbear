@@ -96,7 +96,8 @@ void chancleanup() {
 /* If remotechan, transwindow and transmaxpacket are not know (for a new
  * outgoing connection, with them to be filled on confirmation), they should
  * all be set to 0 */
-struct Channel* newchannel(unsigned int remotechan, struct ChanType *type, 
+struct Channel* newchannel(unsigned int remotechan, 
+		const struct ChanType *type, 
 		unsigned int transwindow, unsigned int transmaxpacket) {
 
 	struct Channel * newchan;
@@ -535,8 +536,6 @@ void recv_msg_channel_request() {
 		dropbear_exit("Unknown channel");
 	}
 
-	TRACE(("chan type is %d", channel->type));
-
 	if (channel->type->reqhandler) {
 		channel->type->reqhandler(channel);
 	} else {
@@ -737,6 +736,7 @@ void recv_msg_channel_open() {
 	unsigned int typelen;
 	unsigned int remotechan, transwindow, transmaxpacket;
 	struct Channel *channel;
+	const struct ChanType **cp;
 	const struct ChanType *chantype;
 	unsigned int errtype = SSH_OPEN_UNKNOWN_CHANNEL_TYPE;
 	int ret;
@@ -758,18 +758,23 @@ void recv_msg_channel_open() {
 		goto failure;
 	}
 
-	/* Get the channel type. This will depend if it is a client or a server,
-	 * so we iterate through the connection-specific list which was 
-	 * set up when the connection started */
-	for (chantype = ses.chantypes[0]; chantype != NULL; chantype++) {
+	/* Get the channel type. Client and server style invokation will set up a
+	 * different list for ses.chantypes at startup. We just iterate through
+	 * this list and find the matching name */
+	for (cp = &ses.chantypes[0], chantype = (*cp); 
+			chantype != NULL;
+			cp++, chantype = (*cp)) {
 		if (strcmp(type, chantype->name) == 0) {
 			break;
 		}
 	}
 
 	if (chantype == NULL) {
+		TRACE(("No matching type for '%s'", type));
 		goto failure;
 	}
+
+	TRACE(("matched type '%s'", type));
 
 	/* create the channel */
 	channel = newchannel(remotechan, chantype, transwindow, transmaxpacket);

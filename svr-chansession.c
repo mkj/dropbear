@@ -56,16 +56,6 @@ static void chansessionrequest(struct Channel *channel);
 static void send_exitsignalstatus(struct Channel *channel);
 static int sesscheckclose(struct Channel *channel);
 
-const struct ChanType svrchansess = {
-	0, /* sepfds */
-	"session", /* name */
-	newchansess, /* inithandler */
-	sesscheckclose, /* checkclosehandler */
-	chansessionrequest, /* reqhandler */
-	closechansess, /* closehandler */
-};
-
-
 
 /* required to clear environment */
 extern char** environ;
@@ -73,25 +63,6 @@ extern char** environ;
 static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	return chansess->exited;
-}
-
-/* Set up the general chansession environment, in particular child-exit
- * handling */
-void svr_chansessinitialise() {
-
-	struct sigaction sa_chld;
-
-	/* single child process intially */
-	svr_ses.childpids = (struct ChildPid*)m_malloc(sizeof(struct ChildPid));
-	svr_ses.childpids[0].pid = -1; /* unused */
-	svr_ses.childpids[0].chansess = NULL;
-	svr_ses.childpidsize = 1;
-	sa_chld.sa_handler = sesssigchild_handler;
-	sa_chld.sa_flags = SA_NOCLDSTOP;
-	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
-		dropbear_exit("signal() error");
-	}
-	
 }
 
 /* handler for childs exiting, store the state for return to the client */
@@ -254,7 +225,7 @@ static void closechansess(struct Channel *channel) {
 
 	chansess = (struct ChanSess*)channel->typedata;
 
-	send_exitsignalstatus(chansess);
+	send_exitsignalstatus(channel);
 
 	TRACE(("enter closechansess"));
 	if (chansess == NULL) {
@@ -911,6 +882,35 @@ static void execchild(struct ChanSess *chansess) {
 	dropbear_exit("child failed");
 }
 	
+const struct ChanType svrchansess = {
+	0, /* sepfds */
+	"session", /* name */
+	newchansess, /* inithandler */
+	sesscheckclose, /* checkclosehandler */
+	chansessionrequest, /* reqhandler */
+	closechansess, /* closehandler */
+};
+
+
+/* Set up the general chansession environment, in particular child-exit
+ * handling */
+void svr_chansessinitialise() {
+
+	struct sigaction sa_chld;
+
+	/* single child process intially */
+	svr_ses.childpids = (struct ChildPid*)m_malloc(sizeof(struct ChildPid));
+	svr_ses.childpids[0].pid = -1; /* unused */
+	svr_ses.childpids[0].chansess = NULL;
+	svr_ses.childpidsize = 1;
+	sa_chld.sa_handler = sesssigchild_handler;
+	sa_chld.sa_flags = SA_NOCLDSTOP;
+	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
+		dropbear_exit("signal() error");
+	}
+	
+}
+
 /* add a new environment variable, allocating space for the entry */
 void addnewvar(const char* param, const char* var) {
 

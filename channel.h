@@ -81,7 +81,7 @@ struct Channel {
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
 
-	struct ChanType* type;
+	const struct ChanType* type;
 
 };
 
@@ -100,7 +100,8 @@ void chaninitialise();
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
-struct Channel* newchannel(unsigned int remotechan, struct ChanType *type, 
+struct Channel* newchannel(unsigned int remotechan, 
+		const struct ChanType *type, 
 		unsigned int transwindow, unsigned int transmaxpacket);
 
 void recv_msg_channel_open();

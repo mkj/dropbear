@@ -90,6 +90,7 @@ static void acceptremote(struct TCPListener *listener) {
 		return;
 	}
 
+	/* XXX XXX XXX - type here needs fixing */
 	if (send_msg_channel_open_init(fd, CHANNEL_ID_TCPFORWARDED, 
 				"forwarded-tcpip") == DROPBEAR_SUCCESS) {
 		buf_putstring(ses.writepayload, tcpinfo->addr,

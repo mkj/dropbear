@@ -28,7 +28,7 @@
 #include "includes.h"
 #include "channel.h"
 
-int newtcpdirect(struct Channel * channel);
+extern const struct ChanType chan_tcpdirect;
 
 #endif
 #endif

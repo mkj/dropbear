@@ -25,7 +25,7 @@
 #include "chansession.h"
 
 /* Mapping of signal values to ssh signal strings */
-const extern struct SigMap signames[] = {
+const struct SigMap signames[] = {
 	{SIGABRT, "ABRT"},
 	{SIGALRM, "ALRM"},
 	{SIGFPE, "FPE"},

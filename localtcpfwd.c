@@ -1,14 +1,27 @@
 #include "includes.h"
 #include "session.h"
 #include "dbutil.h"
+#include "channel.h"
 #include "localtcpfwd.h"
 
 #ifndef DISABLE_LOCALTCPFWD
+static int newtcpdirect(struct Channel * channel);
 static int newtcp(const char * host, int port);
+
+const struct ChanType chan_tcpdirect = {
+	0, /* sepfds */
+	"direct-tcpip",
+	newtcpdirect, /* init */
+	NULL, /* checkclose */
+	NULL, /* reqhandler */
+	NULL /* closehandler */
+};
+
+
 
 /* Called upon creating a new direct tcp channel (ie we connect out to an
  * address */
-int newtcpdirect(struct Channel * channel) {
+static int newtcpdirect(struct Channel * channel) {
 
 	unsigned char* desthost = NULL;
 	unsigned int destport;

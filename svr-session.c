@@ -35,6 +35,7 @@
 #include "channel.h"
 #include "chansession.h"
 #include "atomicio.h"
+#include "localtcpfwd.h"
 
 static void svr_remoteclosed();
 
@@ -42,6 +43,7 @@ struct serversession svr_ses;
 
 const struct ChanType *chantypes[] = {
 	&svrchansess,
+	&chan_tcpdirect,
 	NULL /* Null termination is mandatory. */
 };
 
