@@ -35,6 +35,7 @@
 #include "ssh.h"
 #include "x11fwd.h"
 #include "agentfwd.h"
+#include "tcpfwd.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -51,6 +52,7 @@ static void send_msg_channel_close(struct Channel *channel);
 static void closechannel(struct Channel *channel);
 static void deletechannel(struct Channel *channel);
 static void send_exitsignalstatus(struct Channel *channel);
+static void checkinitdone(struct Channel *channel);
 
 /* initialise channels */
 void chaninitialise() {
@@ -212,7 +214,20 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 static void checkinitdone(struct Channel *channel) {
 
 	int val;
-	XXXXXXXXXXXXXXX here
+	socklen_t vallen = sizeof(val);
+
+	TRACE(("enter checkinitdone"));
+
+	if (getsockopt(channel->infd, SOL_SOCKET, SO_ERROR, &val, &vallen)
+			|| val != 0) {
+		close(channel->infd);
+		deletechannel(channel);
+		TRACE(("leave checkinitdone: fail"));
+	} else {
+		channel->outfd = channel->infd;
+		channel->initconn = 0;
+		TRACE(("leave checkinitdone: success"));
+	}
 }
 
 
@@ -347,7 +362,8 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 		}
 		/* stdin */
 		if (channel->infd != -1 && channel->recveof == 0 &&
-				channel->writebuf->pos < channel->writebuf->len) {
+				(channel->writebuf->pos < channel->writebuf->len ||
+				 channel->initconn)) {
 			/* there's space to write more to the program */
 			FD_SET(channel->infd, writefd);
 		}
@@ -707,6 +723,8 @@ void recv_msg_channel_open() {
 	}
 	if (strcmp(type, "session") == 0) {
 		typeval = CHANNEL_ID_SESSION;
+	} else if (strcmp(type, "direct-tcpip") == 0) {
+		typeval = CHANNEL_ID_TCPDIRECT;
 	} else {
 		goto failure;
 	}

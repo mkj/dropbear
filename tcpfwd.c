@@ -1,10 +1,15 @@
+#include "includes.h"
+#include "session.h"
+#include "util.h"
 #include "tcpfwd.h"
 
 #ifndef DISABLE_TCPFWD
 
+static int newtcp(const char * host, int port);
+
 /* Called upon creating a new direct tcp channel (ie we connect out to an
  * address */
-int newtcpdirect(struct Channel * chan) {
+int newtcpdirect(struct Channel * channel) {
 
 	unsigned char* desthost = NULL;
 	unsigned int destport;
@@ -14,7 +19,7 @@ int newtcpdirect(struct Channel * chan) {
 	int len;
 	int ret = DROPBEAR_FAILURE;
 
-	desthost = buf_getstring(ses.payload, len);
+	desthost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: desthost too long"));
 		goto out;
@@ -22,7 +27,7 @@ int newtcpdirect(struct Channel * chan) {
 
 	destport = buf_getint(ses.payload);
 	
-	orighost = buf_getstring(ses.payload);
+	orighost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: orighost too long"));
 		goto out;
@@ -31,12 +36,14 @@ int newtcpdirect(struct Channel * chan) {
 	origport = buf_getint(ses.payload);
 
 	/* best be sure */
-	if (origport > 65535 || destport > 65536) {
+	if (origport > 65535 || destport > 65535) {
+		TRACE(("leave newtcpdirect: port > 65535"));
 		goto out;
 	}
 
 	sock = newtcp(desthost, destport);
 	if (sock < 0) {
+		TRACE(("leave newtcpdirect: sock failed"));
 		goto out;
 	}
 
@@ -45,13 +52,13 @@ int newtcpdirect(struct Channel * chan) {
 	 * We don't set outfd, that will get set after the connection's
 	 * progress succeeds */
 	channel->infd = sock;
-	channel->initconn = 1;
 	
 	ret = DROPBEAR_SUCCESS;
 
 out:
 	m_free(desthost);
 	m_free(orighost);
+	TRACE(("leave newtcpdirect: ret %d", ret));
 	return ret;
 }
 
@@ -70,9 +77,9 @@ static int newtcp(const char * host, int port) {
 
 	TRACE(("enter newtcp"));
 
-	memset(hints, 0, sizeof(hints));
+	memset(&hints, 0, sizeof(hints));
 	/* TCP, either ip4 or ip6 */
-	hints.ai_type = SOCK_STREAM;
+	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = PF_UNSPEC;
 
 	snprintf(portstring, sizeof(portstring), "%d", port);
@@ -105,12 +112,15 @@ static int newtcp(const char * host, int port) {
 		}
 
 		/* non-blocking, so it might return without success (EINPROGRESS) */
-		if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0 &&
-				errno != EINPROGRESS) {
-			close(sock);
-			TRACE(("TCP connect failed"));
-			continue;
-		}
+		if (connect(sock, ai->ai_addr, ai->ai_addrlen) < 0) {
+			if (errno == EINPROGRESS) {
+				TRACE(("connect in progress"));
+			} else {
+				close(sock);
+				TRACE(("TCP connect failed"));
+				continue;
+			}
+		} 
 		break;
 	}
 

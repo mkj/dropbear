@@ -190,6 +190,8 @@
 #define MAX_CMD_LEN 1024 /* max length of a command */
 #define MAX_TERM_LEN 200 /* max length of TERM name */
 
+#define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
+
 #define _PATH_TTY "/dev/tty"
 
 #endif /* _OPTIONS_H_ */

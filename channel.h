@@ -33,6 +33,7 @@
 #define CHANNEL_ID_SESSION 1
 #define CHANNEL_ID_X11 2
 #define CHANNEL_ID_AGENT 3
+#define CHANNEL_ID_TCPDIRECT 4
 
 #define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
 #define SSH_OPEN_CONNECT_FAILED                 2
@@ -72,6 +73,9 @@ struct Channel {
 	/* whether we've reached the end of reading/writing to/from/err for a pipe
 	 * or program */
 	int transeof, recveof, erreof; 
+
+	int initconn; /* used for TCP forwarding, whether the channel has been
+					 fully initialised */
 
 };
 	
