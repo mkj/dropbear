@@ -40,7 +40,7 @@
 /* Handles sessions (either shells or programs) requested by the client */
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
-		char iscmd);
+		int iscmd, int issubsys);
 static int sessionpty(struct ChanSess * chansess);
 static int sessionsignal(struct ChanSess *chansess);
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
@@ -317,11 +317,13 @@ void chansessionrequest(struct Channel *channel) {
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
 	} else if (strcmp(type, "shell") == 0) {
-		ret = sessioncommand(channel, chansess, 0);
+		ret = sessioncommand(channel, chansess, 0, 0);
 	} else if (strcmp(type, "pty-req") == 0) {
 		ret = sessionpty(chansess);
 	} else if (strcmp(type, "exec") == 0) {
-		ret = sessioncommand(channel, chansess, 1);
+		ret = sessioncommand(channel, chansess, 1, 0);
+	} else if (strcmp(type, "subsystem") == 0) {
+		ret = sessioncommand(channel, chansess, 1, 1);
 #ifndef DISABLE_X11FWD
 	} else if (strcmp(type, "x11-req") == 0) {
 		ret = x11req(chansess);
@@ -518,7 +520,7 @@ static int sessionpty(struct ChanSess * chansess) {
  * noptycommand or ptycommand as appropriate.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
-		char iscmd) {
+		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
 
@@ -536,6 +538,17 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		if (cmdlen > MAX_CMD_LEN) {
 			/* TODO - send error - too long ? */
 			return DROPBEAR_FAILURE;
+		}
+		if (issubsys) {
+#ifdef SFTPSERVER_PATH
+			if ((cmdlen == 4) && strncmp(chansess->cmd, "sftp", 4) == 0) {
+				m_free(chansess->cmd);
+				chansess->cmd = strdup(SFTPSERVER_PATH);
+			} else 
+#endif
+			{
+				return DROPBEAR_FAILURE;
+			}
 		}
 	}
 

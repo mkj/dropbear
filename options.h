@@ -118,6 +118,11 @@
  * "-q" for quiet */
 #define XAUTH_COMMAND "/usr/X11R6/bin/xauth -q"
 
+/* if you want to enable running an sftp server (such as the one included with
+ * OpenSSH), set the path below. If the path isn't defined, sftp will not
+ * be enabled */
+#define SFTPSERVER_PATH "/usr/libexec/sftp-server"
+
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
