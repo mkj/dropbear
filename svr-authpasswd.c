@@ -50,7 +50,7 @@ void svr_auth_password() {
 	passwdcrypt = ses.authstate.pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
 	/* get the shadow password if possible */
-	spasswd = getspnam(ses.authstate.pw->pw_name);
+	spasswd = getspnam(ses.authstate.printableuser);
 	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
 		passwdcrypt = spasswd->sp_pwdp;
 	}
