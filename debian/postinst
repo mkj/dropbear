@@ -27,19 +27,19 @@ case "$1" in
     configure)
         if [ ! -e /etc/dropbear/dropbear_rsa_host_key ]; then
             if [ -f /etc/ssh/ssh_host_rsa_key ]; then
-                echo "Converting existing OpenSSH RSA host key to dropbear format."
+                echo "Converting existing OpenSSH RSA host key to Dropbear format."
                 /usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_rsa_key /etc/dropbear/dropbear_rsa_host_key
             else
-                echo "Generating dropbear RSA key. Please wait."
+                echo "Generating Dropbear RSA key. Please wait."
                 /usr/bin/dropbearkey -t rsa -f /etc/dropbear/dropbear_rsa_host_key
             fi
         fi
         if [ ! -e /etc/dropbear/dropbear_dss_host_key ]; then
             if [ -f /etc/ssh/ssh_host_dsa_key ]; then
-                echo "Converting existing OpenSSH RSA host key to dropbear format."
+                echo "Converting existing OpenSSH RSA host key to Dropbear format."
                 /usr/bin/dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key /etc/dropbear/dropbear_dss_host_key
             else
-                echo "Generating dropbear DSS key. Please wait."
+                echo "Generating Dropbear DSS key. Please wait."
                 /usr/bin/dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
             fi
         fi
@@ -47,14 +47,14 @@ case "$1" in
             # check whether OpenSSH seems to be installed.
             if dpkg -l ssh >/dev/null 2>&1; then 
                 echo "OpenSSH appears to be installed. Setting /etc/default/dropbear"
-                echo "so that dropbear will not start by default. Edit this file to change"
+                echo "so that Dropbear will not start by default. Edit this file to change"
                 echo "this behaviour."
-                echo "# disabled because openssh is installed, change to NO_START=0 to enable dropbear" > /etc/default/dropbear
+                echo "# disabled because OpenSSH is installed, change to NO_START=0 to enable Dropbear" > /etc/default/dropbear
                 echo "NO_START=1" >> /etc/default/dropbear
             fi
-            echo "# the TCP port that dropbear listens on" >> /etc/default/dropbear
+            echo "# the TCP port that Dropbear listens on" >> /etc/default/dropbear
             echo "DROPBEAR_PORT=22" >> /etc/default/dropbear
-            echo "# any additional arguments for dropbear (try -6 to enable IPv6 support)" >> /etc/default/dropbear
+            echo "# any additional arguments for Dropbear" >> /etc/default/dropbear
             echo "DROPBEAR_EXTRA_ARGS=" >> /etc/default/dropbear
 			echo "# specify an optional banner file containing a message to be" >> /etc/default/dropbear
 			echo "# sent to clients before they connect, such as \"/etc/issue.net\"" >> /etc/default/dropbear
