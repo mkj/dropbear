@@ -63,6 +63,12 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 		TRACE(("leave buf_get_rsa_pub_key: failure"));
 		return DROPBEAR_FAILURE;
 	}
+
+	if (mp_count_bits(key->n) < MIN_RSA_KEYLEN) {
+		TRACE(("leave buf_get_rsa_pub_key: key too short"));
+		return DROPBEAR_FAILURE;
+	}
+
 	TRACE(("leave buf_get_rsa_pub_key: success"));
 	return DROPBEAR_SUCCESS;
 
@@ -211,6 +217,12 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	if (mp_read_unsigned_bin(&rsa_s, buf_getptr(buf, buf->len - buf->pos),
 				buf->len - buf->pos) != MP_OKAY) {
+		goto out;
+	}
+
+	/* check that s <= n-1 */
+	if (mp_cmp(&rsa_s, key->n) != MP_LT) {
+		TRACE(("s > n-1"));
 		goto out;
 	}
 

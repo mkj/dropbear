@@ -61,6 +61,11 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 		return DROPBEAR_FAILURE;
 	}
 
+	if (mp_unsigned_bin_size(key->p) < MIN_DSS_KEYLEN) {
+		TRACE(("leave buf_get_dss_pub_key: key too short"));
+		return DROPBEAR_FAILURE;
+	}
+
 	return DROPBEAR_SUCCESS;
 }
 
@@ -182,6 +187,10 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 			!= MP_OKAY) {
 		goto out;
 	}
+	if (mp_cmp(&val1, key->q) != MP_LT) {
+		TRACE(("verify failed, s' >= q"));
+		goto out;
+	}
 	/* let val2 = w = (s')^-1 mod q*/
 	if (mp_invmod(&val1, key->q, &val2) != MP_OKAY) {
 		goto out;
@@ -201,6 +210,10 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	/* let val1 = r' */
 	if (mp_read_unsigned_bin(&val1, &string[0], SHA1_HASH_SIZE)
 			!= MP_OKAY) {
+		goto out;
+	}
+	if (mp_cmp(&val1, key->q) != MP_LT) {
+		TRACE(("verify failed, r' >= q"));
 		goto out;
 	}
 	/* let val4 = u2 = ((r')w) mod q */

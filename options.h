@@ -67,10 +67,16 @@
 
 /* Integrity - at least one required.
  * RFC Draft requires sha1-hmac, and recommends md5-hmac.
+ *
  * Note: there's no point disabling sha1 to save space, since it's used in the
  * for the random number generator and public-key cryptography anyway.
  * Disabling it here will just stop it from being used as the integrity portion
- * of the ssh protocol */
+ * of the ssh protocol.
+ *
+ * These are also used for key fingerprints in logs (when pubkey auth is used),
+ * MD5 fingerprints are printed by default, however SHA1 fingerprints will be
+ * generated otherwise. This isn't exactly optimal, although sha1 fingerprints
+ * are not too hard go create from pubkeys if required. */
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_MD5_HMAC
 
@@ -203,6 +209,10 @@
 #ifdef DROPBEAR_PUBKEY_AUTH
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
+
+/* Minimum key sizes for DSS and RSA */
+#define MIN_DSS_KEYLEN 512
+#define MIN_RSA_KEYLEN 512
 
 /* SHA1 is 20 bytes == 160 bits */
 #define SHA1_HASH_SIZE 20
