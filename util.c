@@ -271,6 +271,6 @@ void m_burn(void *data, unsigned int len) {
 	if (data == NULL)
 		return;
 	while (len--) {
-		*p++ = '\0';
+		*p++ = 0x66;
 	}
 }

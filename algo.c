@@ -138,6 +138,10 @@ void crypto_init() {
 			dropbear_exit("error registering crypto");
 		}
 	}
+
+	if (register_prng(&yarrow_desc) == -1) {
+		dropbear_exit("error registering crypto");
+	}
 }
 
 /* returns 0 if we have a match for algo, -1 otherwise */

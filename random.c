@@ -109,15 +109,14 @@ void genrandom(unsigned char* buf, int len) {
 	int i;
 	assert(donerandinit);
 
-	/*
+	/* XXX m_burn is required since yarrow_read relies on the contents of
+	 * buf for its prng. This isn't a problem in itself, but memory
+	 * debuggers like Valgrind don't like the undefined memory being used */
+	m_burn(buf, len);
 	if (yarrow_read(buf, len, &prng) != len) {
 		dropbear_exit("error in yarrow PRNG");
 	}
-	*/
-	for (i = 0; i < len; i++) {
-		buf[i] = random() % 256;
-	}
-
+	
 }
 
 /* Adds entropy to the PRNG state. As long as the hash is strong, then we
