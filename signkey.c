@@ -28,6 +28,12 @@
 #include "buffer.h"
 #include "ssh.h"
 
+/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
+#define MAX_PUBKEY_SIZE 1600
+
+/* The max size of a sigblob is 529 for RSA-4096bit, or ~143 for DSA-4096  */
+#define MAX_SIGBLOB  550
+
 /* malloc a new sign_key and set the dss and rsa keys to NULL */
 sign_key * new_sign_key() {
 
@@ -143,7 +149,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 	buffer *pubkeys;
 
 	TRACE(("enter buf_put_pub_key"));
-	pubkeys = buf_new(1000);
+	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
@@ -232,7 +238,7 @@ static char * sign_key_md5_fingerprint(sign_key *key, int type) {
 
 	md5_init(&hs);
 
-	pubkeys = buf_new(1000);
+	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	buf_put_pub_key(pubkeys, key, type);
 	/* skip the size int of the string - this is a bit messy */
 	buf_setpos(pubkeys, 4);
@@ -249,6 +255,7 @@ static char * sign_key_md5_fingerprint(sign_key *key, int type) {
 	memset(ret, 'Z', buflen);
 	strcpy(ret, "md5 ");
 
+	/* print the hexadecimal */
 	for (i = 4, h = 0; i < buflen; i+=3, h++) {
 		ret[i] = hexdig(hash[h] >> 4);
 		ret[i+1] = hexdig(hash[h] & 0x0f);
@@ -271,7 +278,7 @@ static char * sign_key_sha1_fingerprint(sign_key *key, int type) {
 
 	sha1_init(&hs);
 
-	pubkeys = buf_new(1000);
+	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	buf_put_pub_key(pubkeys, key, type);
 	buf_setpos(pubkeys, 4);
 	/* skip the size int of the string - this is a bit messy */
@@ -315,7 +322,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 
 	buffer *sigblob;
 
-	sigblob = buf_new(1000);
+	sigblob = buf_new(MAX_SIGBLOB);
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
