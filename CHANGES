@@ -1,3 +1,10 @@
+- Updated LibTomMath to 0.27 and LibTomCrypt to 0.90
+
+- Renamed util.{c,h} to dbutil.{c,h} to avoid conflicts with system util.h
+
+- Added some small changes so it'll work with AIX (plus Linux Affinity).
+  Thanks to Shig for them.
+
 - Improved the closing messages, so a clean exit is "Exited normally"
 
 - Added some more robust integer/size checking in buffer.c as a backstop for
