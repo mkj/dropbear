@@ -22,15 +22,13 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "bignum.h"
 #include "rsa.h"
 #include "buffer.h"
 #include "ssh.h"
 #include "random.h"
-
-#include "libtomcrypt/mycrypt.h"
 
 #ifdef DROPBEAR_RSA 
 

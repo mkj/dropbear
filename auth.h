@@ -25,8 +25,7 @@
 #ifndef _AUTH_H_
 #define _AUTH_H_
 
-#include "options.h"
-#include "pwd.h"
+#include "includes.h"
 
 void authinitialise();
 

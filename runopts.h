@@ -25,7 +25,7 @@
 #ifndef _RUNOPTS_H_
 #define _RUNOPTS_H_
 
-#include "options.h"
+#include "includes.h"
 #include "signkey.h"
 #include "buffer.h"
 

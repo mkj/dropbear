@@ -22,10 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <unistd.h>
-#include <termios.h>
-
-#include "options.h"
+#include "includes.h"
 #include "termcodes.h"
 
 const struct TermCode termcodes[] = {

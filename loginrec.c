@@ -150,20 +150,12 @@
  **
  **/
 
-/*RCSID("$Id: loginrec.c,v 1.5 2003/05/09 10:06:32 matt Exp $");*/
+/*RCSID("$Id: loginrec.c,v 1.6 2003/06/22 10:42:51 matt Exp $");*/
 
-#include "options.h"
+#include "includes.h"
 #include "loginrec.h"
 #include "util.h"
 #include "atomicio.h"
-
-#ifdef HAVE_UTIL_H
-#  include <util.h>
-#endif
-
-#ifdef HAVE_LIBUTIL_H
-#   include <libutil.h>
-#endif
 
 /**
  ** prototypes for helper functions in this file

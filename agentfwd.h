@@ -25,7 +25,7 @@
 #define _AGENTFWD_H_
 #ifndef DISABLE_AGENTFWD
 
-#include "options.h"
+#include "includes.h"
 #include "chansession.h"
 #include "channel.h"
 

@@ -29,13 +29,9 @@
  ** loginrec.h:  platform-independent login recording and lastlog retrieval
  **/
 
-#include "options.h"
+#include "includes.h"
 
-#include <sys/types.h>
-#include <netinet/in.h>
-#include <sys/socket.h>
-
-/* RCSID("$Id: loginrec.h,v 1.4 2003/05/09 10:06:32 matt Exp $"); */
+/* RCSID("$Id: loginrec.h,v 1.5 2003/06/22 10:42:51 matt Exp $"); */
 
 /* The following #defines are from OpenSSH's defines.h, required for loginrec */
 

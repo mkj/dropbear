@@ -48,20 +48,10 @@
  * OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
  * ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <errno.h>
-#include <sys/time.h>
-#include <sys/types.h>
-#include <fcntl.h>
-#include <stdarg.h>
-#include <syslog.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "buffer.h"
 #include "session.h"
-#include "libtomcrypt/mycrypt.h"
 
 #define MAX_FMT 100
 

@@ -26,10 +26,9 @@
 
 #define _ALGO_H_
 
-#include "options.h"
+#include "includes.h"
+#include "util.h"
 #include "buffer.h"
-
-#include "libtomcrypt/mycrypt.h"
 
 struct Algo_Type {
 

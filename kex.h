@@ -25,8 +25,7 @@
 #ifndef _KEX_H_
 #define _KEX_H_
 
-#include "options.h"
-#include "session.h"
+#include "includes.h"
 
 void send_msg_kexinit();
 void recv_msg_kexinit();

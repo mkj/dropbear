@@ -26,9 +26,7 @@
 
 #define _UTIL_H_
 
-#include <sys/types.h>
-
-#include "options.h"
+#include "includes.h"
 #include "buffer.h"
 
 void startsyslog();

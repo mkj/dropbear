@@ -23,7 +23,7 @@
  * SOFTWARE. */
 
 /* This program converts to/from Dropbear and OpenSSH private-key formats */
-#include "options.h"
+#include "includes.h"
 #include "runopts.h"
 #include "signkey.h"
 #include "buffer.h"

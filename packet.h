@@ -26,8 +26,7 @@
 
 #define _PACKET_H_
 
-#include "options.h"
-#include "session.h"
+#include "includes.h"
 
 void write_packet();
 void read_packet();

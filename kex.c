@@ -22,11 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <sys/stat.h>
-#include <fcntl.h>
-#include <unistd.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "algo.h"
 #include "buffer.h"
@@ -36,7 +32,6 @@
 #include "packet.h"
 #include "bignum.h"
 #include "random.h"
-#include "libtomcrypt/mycrypt.h"
 
 /* diffie-hellman-group1-sha1 values for g and p */
 const unsigned char dh_p_val[] = {

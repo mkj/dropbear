@@ -22,22 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <unistd.h>
-
-#include "options.h"
+#include "includes.h"
 #include "session.h"
 #include "buffer.h"
 #include "util.h"
 #include "auth.h"
 #include "authpasswd.h"
-
-#ifdef HAVE_CRYPT_H
-#include <crypt.h>
-#endif
-
-#ifdef HAVE_SHADOW_H
-#include <shadow.h>
-#endif
 
 #ifdef DROPBEAR_PASSWORD_AUTH
 

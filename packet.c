@@ -22,12 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <stdio.h>
-#include <stdlib.h>
-#include <unistd.h>
-#include <netinet/in.h>
-
-#include "options.h"
+#include "includes.h"
 #include "packet.h"
 #include "session.h"
 #include "util.h"
@@ -39,7 +34,6 @@
 #include "service.h"
 #include "auth.h"
 #include "channel.h"
-#include "libtomcrypt/mycrypt.h"
 
 static void read_packet_init();
 static void process_postauth_packet(unsigned int type);

@@ -27,6 +27,10 @@
 
 
 #include "config.h"
+#include "options.h"
+#include "debug.h"
+#include "libtomcrypt/mycrypt_custom.h"
+#include "libtommath/tommath.h"
 
 #include <sys/types.h>
 #include <sys/ioctl.h>
@@ -52,6 +56,7 @@
 #include <syslog.h>
 #include <netdb.h>
 #include <ctype.h>
+#include <stdarg.h>
 
 #include <arpa/inet.h>
 
@@ -73,6 +78,10 @@
 
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
+#endif
+
+#ifdef HAVE_NETINET_TCP_H
+#include <netinet/tcp.h>
 #endif
 
 #ifdef HAVE_INTTYPES_H

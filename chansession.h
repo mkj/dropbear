@@ -25,8 +25,6 @@
 #ifndef _CHANSESSION_H_
 #define _CHANSESSION_H_
 
-#include <sys/types.h>
-#include <unistd.h>
 #include "loginrec.h"
 #include "channel.h"
 

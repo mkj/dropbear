@@ -26,7 +26,7 @@
 
 #define _BUFFER_H_
 
-#include "options.h"
+#include "includes.h"
 
 #define MAX_STRING_LEN MAX_PACKET_LEN
 struct buf {

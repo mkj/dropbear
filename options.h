@@ -22,14 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include "libtomcrypt/mycrypt_custom.h"
-
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
-
-#include "config.h"
-#include "debug.h"
-#include "includes.h"
 
 /******************************************************************
  * Define compile-time options below.

@@ -25,6 +25,7 @@
 #ifndef _RSA_H_
 #define _RSA_H_
 
+#include "includes.h"
 #include "buffer.h"
 
 #ifdef DROPBEAR_RSA 

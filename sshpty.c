@@ -17,7 +17,7 @@
 
 /*RCSID("$OpenBSD: sshpty.c,v 1.7 2002/06/24 17:57:20 deraadt Exp $");*/
 
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "errno.h"
 #include "sshpty.h"

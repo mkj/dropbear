@@ -25,12 +25,7 @@
 #ifndef _SESSION_H_
 #define _SESSION_H_
 
-#include <stdio.h>
-#ifndef DISABLE_ZLIB
-#include <zlib.h>
-#endif
-
-#include "options.h"
+#include "includes.h"
 #include "buffer.h"
 #include "signkey.h"
 #include "kex.h"

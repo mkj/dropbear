@@ -25,8 +25,7 @@
 #ifndef _CHANNEL_H_
 #define _CHANNEL_H_
 
-#include <sys/types.h>
-#include "options.h"
+#include "includes.h"
 #include "buffer.h"
 
 /* channel->type values */

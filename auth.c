@@ -22,10 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <stdio.h>
-#include <unistd.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "session.h"
 #include "buffer.h"
@@ -34,7 +31,6 @@
 #include "auth.h"
 #include "authpasswd.h"
 #include "authpubkey.h"
-#include "pwd.h"
 
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);

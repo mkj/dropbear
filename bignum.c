@@ -22,10 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include "options.h"
+#include "includes.h"
 #include "util.h"
-#include "stdlib.h"
-#include "libtomcrypt/mycrypt.h"
 
 /* wrapper for mp_init to handle errors */
 void m_mp_init(mp_int *mp) {

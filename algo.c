@@ -22,11 +22,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include "options.h"
-#include "libtomcrypt/mycrypt.h"
-#include "util.h"
-#include "buffer.h"
-
 #include "algo.h"
 
 /* Mapping of ssh ciphers to libtomcrypt ciphers, with blocksizes etc.

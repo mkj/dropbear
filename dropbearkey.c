@@ -44,7 +44,7 @@
  * mp_int	x
  *
  */
-#include "options.h"
+#include "includes.h"
 #include "runopts.h"
 #include "signkey.h"
 #include "buffer.h"

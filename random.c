@@ -22,20 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <string.h>
-#include <sys/types.h>
-#include <sys/socket.h>
-#include <sys/un.h>
-#include <limits.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <unistd.h>
-#include <errno.h>
-
-#include "options.h"
+#include "includes.h"
 #include "buffer.h"
 #include "util.h"
-#include "libtomcrypt/mycrypt.h"
 
 int donerandinit = 0;
 

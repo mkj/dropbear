@@ -22,9 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include "options.h"
+#include "includes.h"
 #include "util.h"
-#include "libtomcrypt/mycrypt.h"
 #include "buffer.h"
 
 buffer* buf_new(unsigned int size) {

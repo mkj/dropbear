@@ -53,8 +53,6 @@
 #define HMAC
 #define BASE64
 
-#define MPI
-
 #include <mycrypt.h>
 
 #endif

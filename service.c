@@ -22,9 +22,7 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <string.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "service.h"
 #include "session.h"

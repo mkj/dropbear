@@ -22,20 +22,12 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#include <stdio.h>
-#include <unistd.h>
-#include <fcntl.h>
-#include <sys/stat.h>
-#include <sys/types.h>
-
-#include "options.h"
+#include "includes.h"
 #include "util.h"
 #include "bignum.h"
 #include "random.h"
 #include "rsa.h"
 #include "genrsa.h"
-
-#include "libtomcrypt/mycrypt.h"
 
 #define RSA_E 65537
 
@@ -128,8 +120,8 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 			exit(1);
 		}
 
-		/* find the next value which is prime, stepping by 2 */
-		if (next_prime(prime, 2) != CRYPT_OK) {
+		/* find the next integer which is prime, 8 round of miller-rabin */
+		if (mp_prime_next_prime(prime, 8) != MP_OKAY) {
 			fprintf(stderr, "rsa generation failed\n");
 			exit(1);
 		}

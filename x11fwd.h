@@ -25,7 +25,7 @@
 #define _X11FWD_H_
 #ifndef DISABLE_X11FWD
 
-#include "options.h"
+#include "includes.h"
 #include "chansession.h"
 #include "channel.h"
 
