@@ -59,9 +59,12 @@ install: all
 	$(INSTALL) -m 755 dropbearkey $(DESTDIR)$(bindir)
 	$(INSTALL) -m 755 dropbearconvert $(DESTDIR)$(bindir)
 	# chown might fail, so do it separately to the install
-	-chown root:root $(DESTDIR)$(sbindir)/dropbear
-	-chown root:root $(DESTDIR)$(bindir)/dropbearkey
-	-chown root:root $(DESTDIR)$(bindir)/dropbearconvert
+	-chown root $(DESTDIR)$(sbindir)/dropbear
+	-chgrp 0 $(DESTDIR)$(sbindir)/dropbear
+	-chown root $(DESTDIR)$(bindir)/dropbearkey
+	-chgrp 0 $(DESTDIR)$(bindir)/dropbearkey
+	-chown root $(DESTDIR)$(bindir)/dropbearconvert
+	-chgrp 0 $(DESTDIR)$(bindir)/dropbearconvert
 
 
 static: dropbear-static dropbearkey-static dropbearconvert-static
