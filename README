@@ -13,13 +13,14 @@ matt@ucc.asn.au
 
 Basic build instructions:
 
-First time after checkout, or after changing autoconf stuff, do
+First time after CVS checkout, or after changing autoconf stuff, do
 autoconf; autoheader
 
 edit options.h to choose ciphers/hashes/other options
 edit debug.h if you want some debug options
 ./configure, optionally with --disable-zlib
-cd libtomcrypt; make
+cd libtomcrypt; make        <- note that you should make clean in libtomcrypt
+                               if you change options.h
 cd ..; make
 
 You need to generate server keys, this is one-off:
