@@ -29,7 +29,7 @@
 - Fix authorized_keys handling (don't crash on too-long keys, and
   use fgetc not getc to avoid strange macro-related issues), thanks to
   Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com> 
-  and Steve Rodgers <hwstar@cox.net> for reporting and testing.
+  and Steve Rodgers <hwstar at cox.net> for reporting and testing.
 
 - Fixes to the README with regard to uClibc systems, thanks to 
   Cristian Ionescu-Idbohrn <cristian.ionescu-idbohrn at axis.com>,
@@ -89,7 +89,8 @@
 - Add dropbearconvert to convert to/from OpenSSH host keys and Dropbear keys
 - RSA keys now keep p and q parameters for compatibility -- old Dropbear keys
   still work, but can't be converted to OpenSSH etc.
-- Debian packaging directory added, thanks to Grahame (grahame@angrygoats.net)
+- Debian packaging directory added, thanks to 
+  Grahame (grahame at angrygoats.net)
 - 'install' target added to the makefile
 - general tidying, improve consistency of functions etc
 - If RSA or DSS hostkeys don't exist, that algorithm won't be used.
