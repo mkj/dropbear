@@ -34,6 +34,8 @@
 #define PSIZE 128 /* 1024 bit*/
 #define QSIZE 20 /* 160 bit */
 
+/* This is just a test */
+
 #ifdef DROPBEAR_DSS
 
 static void getq(dss_key *key);
