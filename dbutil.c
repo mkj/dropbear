@@ -60,8 +60,8 @@ static void _dropbear_log(int priority, const char* format, va_list param);
 static void _dropbear_exit(int exitcode, const char* format, va_list param);
 
 
-#ifndef DISABLE_SYSLOG
 int usingsyslog = 0; /* set by runopts, but required externally to sessions */
+#ifndef DISABLE_SYSLOG
 void startsyslog() {
 
 	openlog(PROGNAME, LOG_PID, LOG_AUTHPRIV);
