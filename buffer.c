@@ -107,7 +107,7 @@ void buf_setlen(buffer* buf, unsigned int len) {
 }
 
 void buf_incrlen(buffer* buf, unsigned int incr) {
-	if (buf->pos + incr > buf->size) {
+	if (buf->len + incr > buf->size) {
 		dropbear_exit("bad buf_incrlen");
 	}
 	buf->len += incr;
