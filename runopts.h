@@ -52,7 +52,7 @@ typedef struct svr_runopts {
 	int usingsyslog;
 
 	/* ports is an array of the portcount listening ports */
-	uint16_t *ports;
+	char *ports[DROPBEAR_MAX_PORTS];
 	unsigned int portcount;
 
 	int inetdmode;
@@ -81,6 +81,7 @@ typedef struct svr_runopts {
 extern svr_runopts svr_opts;
 
 void svr_getopts(int argc, char ** argv);
+void loadhostkeys();
 
 /* Uncompleted XXX matt */
 typedef struct cli_runopts {

@@ -31,8 +31,6 @@
 
 svr_runopts svr_opts; /* GLOBAL */
 
-static sign_key * loadhostkeys(const char * dsskeyfile,
-		const char * rsakeyfile);
 static void printhelp(const char * progname);
 
 static void printhelp(const char * progname) {
@@ -86,16 +84,13 @@ static void printhelp(const char * progname) {
 #ifdef DROPBEAR_RSA
 					RSA_PRIV_FILENAME,
 #endif
-					DROPBEAR_MAX_PORTS, DROPBEAR_PORT);
+					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT);
 }
 
 void svr_getopts(int argc, char ** argv) {
 
 	unsigned int i;
 	char ** next = 0;
-	unsigned int portnum = 0;
-	char *portstring[DROPBEAR_MAX_PORTS];
-	unsigned int longport;
 
 	/* see printhelp() for options */
 	svr_opts.rsakeyfile = NULL;
@@ -107,6 +102,8 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
 	svr_opts.inetdmode = 0;
+	svr_opts.portcount = 0;
+	svr_opts.hostkey = NULL;
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
 	/* not yet
@@ -169,10 +166,12 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #endif
 				case 'p':
-					if (portnum < DROPBEAR_MAX_PORTS) {
-						portstring[portnum] = NULL;
-						next = &portstring[portnum];
-						portnum++;
+					if (svr_opts.portcount < DROPBEAR_MAX_PORTS) {
+						svr_opts.ports[svr_opts.portcount] = NULL;
+						next = &svr_opts.ports[svr_opts.portcount];
+						/* Note: if it doesn't actually get set, we'll
+						 * decrement it after the loop */
+						svr_opts.portcount++;
 					}
 					break;
 #ifdef DO_MOTD
@@ -201,14 +200,6 @@ void svr_getopts(int argc, char ** argv) {
 					debug_trace = 1;
 					break;
 #endif
-					/*
-				case '4':
-					svr_opts.ipv4 = 0;
-					break;
-				case '6':
-					svr_opts.ipv6 = 0;
-					break;
-					*/
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);
@@ -218,13 +209,24 @@ void svr_getopts(int argc, char ** argv) {
 		}
 	}
 
+	/* Set up listening ports */
+	if (svr_opts.portcount == 0) {
+		svr_opts.ports[0] = m_strdup(DROPBEAR_DEFPORT);
+		svr_opts.portcount = 1;
+	} else {
+		/* we may have been given a -p option but no argument to go with
+		 * it */
+		if (svr_opts.ports[svr_opts.portcount-1] == NULL) {
+			svr_opts.portcount--;
+		}
+	}
+
 	if (svr_opts.dsskeyfile == NULL) {
 		svr_opts.dsskeyfile = DSS_PRIV_FILENAME;
 	}
 	if (svr_opts.rsakeyfile == NULL) {
 		svr_opts.rsakeyfile = RSA_PRIV_FILENAME;
 	}
-	svr_opts.hostkey = loadhostkeys(svr_opts.dsskeyfile, svr_opts.rsakeyfile);
 
 	if (svr_opts.bannerfile) {
 		struct stat buf;
@@ -246,35 +248,6 @@ void svr_getopts(int argc, char ** argv) {
 		buf_setpos(svr_opts.banner, 0);
 	}
 
-	/* not yet
-	if (!(svr_opts.ipv4 || svr_opts.ipv6)) {
-		fprintf(stderr, "You can't disable ipv4 and ipv6.\n");
-		exit(1);
-	}
-	*/
-
-	/* create the array of listening ports */
-	if (portnum == 0) {
-		/* non specified */
-		svr_opts.portcount = 1;
-		svr_opts.ports = m_malloc(sizeof(uint16_t));
-		svr_opts.ports[0] = DROPBEAR_PORT;
-	} else {
-		svr_opts.portcount = portnum;
-		svr_opts.ports = (uint16_t*)m_malloc(sizeof(uint16_t)*portnum);
-		for (i = 0; i < portnum; i++) {
-			if (portstring[i]) {
-				longport = atoi(portstring[i]);
-					if (longport <= 65535 && longport > 0) {
-						svr_opts.ports[i] = (uint16_t)longport;
-						continue;
-					}
-			}
-			fprintf(stderr, "Bad port '%s'\n",
-					portstring[i] ? portstring[i] : "null");
-		}
-	}
-
 }
 
 static void disablekey(int type, const char* filename) {
@@ -287,47 +260,45 @@ static void disablekey(int type, const char* filename) {
 			break;
 		}
 	}
-	fprintf(stderr, "Failed reading '%s', disabling %s\n", filename,
+	dropbear_log(LOG_WARNING, "Failed reading '%s', disabling %s", filename,
 			type == DROPBEAR_SIGNKEY_DSS ? "DSS" : "RSA");
 }
 
-static sign_key * loadhostkeys(const char * dsskeyfile, 
-		const char * rsakeyfile) {
+/* Must be called after syslog/etc is working */
+void loadhostkeys() {
 
-	sign_key * hostkey;
 	int ret;
 	int type;
 
 	TRACE(("enter loadhostkeys"));
 
-	hostkey = new_sign_key();
+	svr_opts.hostkey = new_sign_key();
 
 #ifdef DROPBEAR_RSA
 	type = DROPBEAR_SIGNKEY_RSA;
-	ret = readhostkey(rsakeyfile, hostkey, &type);
+	ret = readhostkey(svr_opts.rsakeyfile, svr_opts.hostkey, &type);
 	if (ret == DROPBEAR_FAILURE) {
-		disablekey(DROPBEAR_SIGNKEY_RSA, rsakeyfile);
+		disablekey(DROPBEAR_SIGNKEY_RSA, svr_opts.rsakeyfile);
 	}
 #endif
 #ifdef DROPBEAR_DSS
 	type = DROPBEAR_SIGNKEY_DSS;
-	ret = readhostkey(dsskeyfile, hostkey, &type);
+	ret = readhostkey(svr_opts.dsskeyfile, svr_opts.hostkey, &type);
 	if (ret == DROPBEAR_FAILURE) {
-		disablekey(DROPBEAR_SIGNKEY_DSS, dsskeyfile);
+		disablekey(DROPBEAR_SIGNKEY_DSS, svr_opts.dsskeyfile);
 	}
 #endif
 
 	if ( 1
 #ifdef DROPBEAR_DSS
-		&& hostkey->dsskey == NULL
+		&& svr_opts.hostkey->dsskey == NULL
 #endif
 #ifdef DROPBEAR_RSA
-		&& hostkey->rsakey == NULL
+		&& svr_opts.hostkey->rsakey == NULL
 #endif
 		) {
 		dropbear_exit("No hostkeys available");
 	}
 
 	TRACE(("leave loadhostkeys"));
-	return hostkey;
 }

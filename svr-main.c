@@ -139,6 +139,10 @@ void main_noinetd() {
 
 	commonsetup();
 
+	/* Now we can setup the hostkeys - needs to be after logging is on,
+	 * otherwise we might end up blatting error messages to the socket */
+	loadhostkeys();
+
 	/* should be done after syslog is working */
 	if (svr_opts.forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
@@ -358,21 +362,23 @@ static void commonsetup() {
 static int listensockets(int *sock, int sockcount, int *maxfd) {
 	
 	unsigned int i;
-	char portstring[NI_MAXSERV];
 	char* errstring = NULL;
 	unsigned int sockpos = 0;
 	int nsock;
 
+	TRACE(("listensockets: %d to try\n", svr_opts.portcount));
+
 	for (i = 0; i < svr_opts.portcount; i++) {
 
-		snprintf(portstring, sizeof(portstring), "%d", svr_opts.ports[i]);
-		nsock = dropbear_listen(NULL, portstring, &sock[sockpos], 
+		TRACE(("listening on '%s'", svr_opts.ports[i]));
+
+		nsock = dropbear_listen(NULL, svr_opts.ports[i], &sock[sockpos], 
 				sockcount - sockpos,
 				&errstring, maxfd);
 
 		if (nsock < 0) {
-			dropbear_log(LOG_WARNING, "Failed listening on port %s: %s", 
-							portstring, errstring);
+			dropbear_log(LOG_WARNING, "Failed listening on '%s': %s", 
+							svr_opts.ports[i], errstring);
 			m_free(errstring);
 			continue;
 		}
