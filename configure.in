@@ -33,6 +33,7 @@ esac
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
 AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
+AC_CHECK_LIB(nsl, inet_ntoa, LIBS="$LIBS -lnsl")
 
 # Check if zlib is needed
 AC_ARG_WITH(zlib,

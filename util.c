@@ -179,6 +179,7 @@ unsigned char * getaddrstring(struct sockaddr * addr) {
 		default:
 			/* don't get here */
 			assert(0);
+			return NULL;
 			break;
 	}
 
