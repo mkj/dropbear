@@ -39,8 +39,6 @@
 
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 1000 /* max length of a line in authkeys */
-#define MIN_AUTHKEYS_FILE MIN_AUTHKEYS_LINE
-#define MAX_AUTHKEYS_FILE 10000 /* should allow at least 20 authkeys */
 
 static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
@@ -303,14 +301,13 @@ out:
 static int getauthline(buffer * line, FILE * authfile) {
 
 	int c = EOF;
-	unsigned int count = 0;
 
 	TRACE(("enter getauthline"));
 
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
 
-	for (count = 0; count < line->size; count++) {
+	while (line->pos < line->size) {
 		c = fgetc(authfile); /*getc() is weird with some uClibc systems*/
 		if (c == EOF || c == '\n' || c == '\r') {
 			goto out;
@@ -326,7 +323,7 @@ out:
 	buf_setpos(line, 0);
 
 	/* if we didn't read anything before EOF or error, exit */
-	if (c == EOF && count == 0) {
+	if (c == EOF && line->pos == 0) {
 		TRACE(("leave getauthline: failure"));
 		return DROPBEAR_FAILURE;
 	} else {
