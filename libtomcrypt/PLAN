@@ -1,0 +1,38 @@
+The following functions are marked for removal and/or behavioural change by v1.00 of LibTomCrypt
+
+1.  RSA Support
+
+      rsa_pad, rsa_signpad, rsa_depad, rsa_signdepad, rsa_import, rsa_export
+
+They will be replaced with PKCS #1 compliant OAEP/PSS padding function as early as v0.96
+
+2.  DSA Support
+
+      dsa_import, dsa_export
+
+Will be replaced with suitable DSS [what is the standard?] compliant formats.  Planned for v0.96
+
+3.  Key Ring Support
+  
+      (all)
+
+The entire API will be dropped as early as v0.96.  It was just an experiment and nobody uses it anyways.
+
+4.  Test Harness
+ 
+      demos/test.c
+
+The test harness is well overdue for a makeover.  Planned for as early as v0.97
+
+
+Put things in order...
+
+v0.96  -- removed keyring.c and gf.c
+       -- removed LTC RSA padding
+       -- DSS support [whatever this entails]
+       -- Bug fixes/updates to the PKCS/DSS support, should be stable in this release
+
+v0.97  -- Re-written test harness
+       -- More demos in the manual and demos/ directory
+
+... future???
