@@ -42,8 +42,8 @@ struct SIGN_key {
 typedef struct SIGN_key sign_key;
 
 sign_key * new_sign_key();
-int buf_get_pub_key(buffer *buf, sign_key *key, int type);
-int buf_get_priv_key(buffer* buf, sign_key *key, int type);
+int buf_get_pub_key(buffer *buf, sign_key *key, int *type);
+int buf_get_priv_key(buffer* buf, sign_key *key, int *type);
 void buf_put_pub_key(buffer* buf, sign_key *key, int type);
 void buf_put_priv_key(buffer* buf, sign_key *key, int type);
 void sign_key_free(sign_key *key);
@@ -52,6 +52,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		unsigned int len);
+char * sign_key_fingerprint(sign_key *key, int type);
 #endif
 
 #endif /* _SIGNKEY_H_ */

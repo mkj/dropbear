@@ -208,6 +208,8 @@
 #define SHA1_HASH_SIZE 20
 /* SHA512 is 64 bytes == 512 bits */
 #define SHA512_HASH_SIZE 64
+/* MD5 is 16 bytes = 128 bits */
+#define MD5_HASH_SIZE 16
 
 /* largest of MD5 and SHA1 */
 #define MAX_MAC_LEN SHA1_HASH_SIZE

@@ -104,7 +104,7 @@ runopts * getrunopts(int argc, char ** argv) {
 	usingsyslog = 1;
 #endif
 
-	for (i = 1; i < argc; i++) {
+	for (i = 1; i < (unsigned int)argc; i++) {
 		if (next) {
 			*next = argv[i];
 			if (*next == NULL) {
@@ -262,7 +262,7 @@ static int readhostkey(const char * filename, sign_key * hostkey, int type) {
 		goto out;
 	}
 	buf_setpos(buf, 0);
-	if (buf_get_priv_key(buf, hostkey, type) == DROPBEAR_FAILURE) {
+	if (buf_get_priv_key(buf, hostkey, &type) == DROPBEAR_FAILURE) {
 		goto out;
 	}
 

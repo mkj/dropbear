@@ -44,8 +44,9 @@ sign_key * new_sign_key() {
 
 }
 
-/* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail */
-int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
+/* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
+ * type is set to hold the type returned */
+int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 
 	unsigned char* ident;
 	unsigned int len;
@@ -54,21 +55,25 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 
 #ifdef DROPBEAR_DSS
 	if (memcmp(ident, SSH_SIGNKEY_DSS, len) == 0
-			&& (type == DROPBEAR_SIGNKEY_ANY || type == DROPBEAR_SIGNKEY_DSS)) {
+			&& (*type == DROPBEAR_SIGNKEY_ANY 
+				|| *type == DROPBEAR_SIGNKEY_DSS)) {
 		m_free(ident);
 		buf_setpos(buf, buf->pos - len - 4);
 		dss_key_free(key->dsskey);
 		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
+		*type = DROPBEAR_SIGNKEY_DSS;
 		return buf_get_dss_pub_key(buf, key->dsskey);
 	}
 #endif
 #ifdef DROPBEAR_RSA
 	if (memcmp(ident, SSH_SIGNKEY_RSA, len) == 0
-			&& (type == DROPBEAR_SIGNKEY_ANY || type == DROPBEAR_SIGNKEY_RSA)) {
+			&& (*type == DROPBEAR_SIGNKEY_ANY 
+				|| *type == DROPBEAR_SIGNKEY_RSA)) {
 		m_free(ident);
 		buf_setpos(buf, buf->pos - len - 4);
 		rsa_key_free(key->rsakey);
 		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
+		*type = DROPBEAR_SIGNKEY_RSA;
 		return buf_get_rsa_pub_key(buf, key->rsakey);
 	}
 #endif
@@ -80,7 +85,8 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int type) {
 }
 
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
+/* type is set to hold the type returned */
+int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 
 	unsigned char* ident;
 	unsigned int len;
@@ -91,12 +97,14 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 
 #ifdef DROPBEAR_DSS
 	if (memcmp(ident, SSH_SIGNKEY_DSS, len) == 0
-			&& (type == DROPBEAR_SIGNKEY_ANY || type == DROPBEAR_SIGNKEY_DSS)) {
+			&& (*type == DROPBEAR_SIGNKEY_ANY 
+				|| *type == DROPBEAR_SIGNKEY_DSS)) {
 		m_free(ident);
 		buf_setpos(buf, buf->pos - len - 4);
 		dss_key_free(key->dsskey);
 		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
 		ret = buf_get_dss_priv_key(buf, key->dsskey);
+		*type = DROPBEAR_SIGNKEY_DSS;
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->dsskey);
 		}
@@ -106,12 +114,14 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int type) {
 #endif
 #ifdef DROPBEAR_RSA
 	if (memcmp(ident, SSH_SIGNKEY_RSA, len) == 0
-			&& (type == DROPBEAR_SIGNKEY_ANY || type == DROPBEAR_SIGNKEY_RSA)) {
+			&& (*type == DROPBEAR_SIGNKEY_ANY 
+				|| *type == DROPBEAR_SIGNKEY_RSA)) {
 		m_free(ident);
 		buf_setpos(buf, buf->pos - len - 4);
 		rsa_key_free(key->rsakey);
 		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
 		ret = buf_get_rsa_priv_key(buf, key->rsakey);
+		*type = DROPBEAR_SIGNKEY_RSA;
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->rsakey);
 		}
@@ -195,6 +205,109 @@ void sign_key_free(sign_key *key) {
 
 	m_free(key);
 	TRACE(("leave sign_key_free"));
+}
+
+static char hexdig(unsigned char x) {
+
+	if (x > 0xf)
+		return 'X';
+
+	if (x < 10)
+		return '0' + x;
+	else
+		return 'a' + x - 10;
+}
+
+/* Since we're not sure if we'll have md5 or sha1, we present both.
+ * MD5 is used in preference, but sha1 could still be useful */
+#ifdef DROPBEAR_MD5_HMAC
+static char * sign_key_md5_fingerprint(sign_key *key, int type) {
+
+	char * ret;
+	hash_state hs;
+	buffer *pubkeys;
+	unsigned char hash[MD5_HASH_SIZE];
+	unsigned int h, i;
+	unsigned int buflen;
+
+	md5_init(&hs);
+
+	pubkeys = buf_new(1000);
+	buf_put_pub_key(pubkeys, key, type);
+	/* skip the size int of the string - this is a bit messy */
+	buf_setpos(pubkeys, 4);
+	md5_process(&hs, buf_getptr(pubkeys, pubkeys->len-pubkeys->pos),
+			pubkeys->len-pubkeys->pos);
+
+	buf_free(pubkeys);
+	md5_done(&hs, hash);
+
+	/* "md5 hexfingerprinthere\0", each hex digit is "AB:" etc */
+	buflen = 4 + 3*MD5_HASH_SIZE;
+	ret = (char*)m_malloc(buflen);
+
+	memset(ret, 'Z', buflen);
+	strcpy(ret, "md5 ");
+
+	for (i = 4, h = 0; i < buflen; i+=3, h++) {
+		ret[i] = hexdig(hash[h] >> 4);
+		ret[i+1] = hexdig(hash[h] & 0x0f);
+		ret[i+2] = ':';
+	}
+	ret[buflen-1] = 0x0;
+
+	return ret;
+}
+
+#else /* use SHA1 rather than MD5 for fingerprint */
+static char * sign_key_sha1_fingerprint(sign_key *key, int type) {
+
+	char * ret;
+	hash_state hs;
+	buffer *pubkeys;
+	unsigned char hash[SHA1_HASH_SIZE];
+	unsigned int h, i;
+	unsigned int buflen;
+
+	sha1_init(&hs);
+
+	pubkeys = buf_new(1000);
+	buf_put_pub_key(pubkeys, key, type);
+	buf_setpos(pubkeys, 4);
+	/* skip the size int of the string - this is a bit messy */
+	sha1_process(&hs, buf_getptr(pubkeys, pubkeys->len-pubkeys->pos),
+			pubkeys->len-pubkeys->pos);
+
+	buf_free(pubkeys);
+	sha1_done(&hs, hash);
+
+	/* "sha1 hexfingerprinthere\0", each hex digit is "AB:" etc */
+	buflen = 5 + 3*SHA1_HASH_SIZE;
+	ret = (char*)m_malloc(buflen);
+
+	strcpy(ret, "sha1 ");
+
+	for (i = 5, h = 0; i < buflen; i+=3, h++) {
+		ret[i] = hexdig(hash[h] >> 4);
+		ret[i+1] = hexdig(hash[h] & 0x0f);
+		ret[i+2] = ':';
+	}
+	ret[buflen-1] = 0x0;
+
+	return ret;
+}
+
+#endif /* MD5/SHA1 switch */
+
+/* This will return a freshly malloced string, containing a fingerprint
+ * in either sha1 or md5 */
+char * sign_key_fingerprint(sign_key *key, int type) {
+
+#ifdef DROPBEAR_MD5_HMAC
+	return sign_key_md5_fingerprint(key, type);
+#else
+	return sign_key_sha1_fingerprint(key, type);
+#endif
 }
 
 void buf_put_sign(buffer* buf, sign_key *key, int type, 

@@ -111,6 +111,7 @@ static sign_key *dropbear_read(const char* filename) {
 	int len, maxlen;
 	FILE *fp;
 	sign_key *ret = NULL;
+	int type;
 
 	buf = buf_new(2000);
 	/* can't use buf_readfile since we might have "-" as filename */
@@ -134,7 +135,8 @@ static sign_key *dropbear_read(const char* filename) {
 	buf_setpos(buf, 0);
 	ret = new_sign_key();
 
-	if (buf_get_priv_key(buf, ret, DROPBEAR_SIGNKEY_ANY) == DROPBEAR_FAILURE){
+	type = DROPBEAR_SIGNKEY_ANY;
+	if (buf_get_priv_key(buf, ret, &type) == DROPBEAR_FAILURE){
 		goto error;
 	}
 	buf_free(buf);
@@ -529,6 +531,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	char *errmsg;
 	char *modptr = NULL;
 	int modlen = -9999;
+	int type;
 
 	sign_key *retkey;
 	buffer * blobbuf = NULL;
@@ -675,7 +678,8 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	 */
 	retkey = new_sign_key();
 	buf_setpos(blobbuf, 0);
-	if (buf_get_priv_key(blobbuf, retkey, DROPBEAR_SIGNKEY_ANY)
+	type = DROPBEAR_SIGNKEY_ANY;
+	if (buf_get_priv_key(blobbuf, retkey, &type)
 			!= DROPBEAR_SUCCESS) {
 		errmsg = "unable to create key structure";
 		sign_key_free(retkey);

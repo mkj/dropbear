@@ -60,6 +60,8 @@ void pubkeyauth() {
 	buffer * signbuf = NULL;
 	unsigned int sigoffset;
 	sign_key * key = NULL;
+	char* fp = NULL;
+	int type = -1;
 
 	TRACE(("enter pubkeyauth"));
 
@@ -87,8 +89,8 @@ void pubkeyauth() {
 	
 	/* get the key */
 	key = new_sign_key();
-	if (buf_get_pub_key(ses.payload, key, DROPBEAR_SIGNKEY_ANY) 
-			== DROPBEAR_FAILURE) {
+	type = DROPBEAR_SIGNKEY_ANY;
+	if (buf_get_pub_key(ses.payload, key, &type) == DROPBEAR_FAILURE) {
 		send_msg_userauth_failure(0, 1);
 		goto out;
 	}
@@ -106,18 +108,20 @@ void pubkeyauth() {
 
 	buf_setpos(signbuf, 0);
 	/* ... and finally verify the signature */
+	fp = sign_key_fingerprint(key, type);
 	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
 				signbuf->len) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
-				"pubkey auth succeeded for '%s' from %s",
-				ses.authstate.printableuser, ses.addrstring);
+				"pubkey auth succeeded for '%s' from %s with key %s",
+				ses.authstate.printableuser, ses.addrstring, fp);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
-				"pubkey auth failure for '%s' from %s",
-				ses.authstate.printableuser, ses.addrstring);
+				"pubkey auth bad signature for '%s' from %s with key %s",
+				ses.authstate.printableuser, ses.addrstring, fp);
 		send_msg_userauth_failure(0, 1);
 	}
+	m_free(fp);
 
 out:
 	/* cleanup stuff */
