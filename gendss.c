@@ -148,7 +148,6 @@ static void getp(dss_key *key, unsigned int size) {
 
 static void getg(dss_key * key) {
 
-	char printbuf[1000];
 	mp_int div, h, val;
 
 	m_mp_init_multi(&div, &h, &val, NULL);
@@ -178,8 +177,6 @@ static void getg(dss_key * key) {
 		}
 	
 	} while (mp_cmp_d(key->g, 1) != MP_GT);
-
-	mp_toradix(key->g, printbuf, 10);
 
 	mp_clear_multi(&div, &h, &val, NULL);
 }
