@@ -1,4 +1,5 @@
 LTC=libtomcrypt/libtomcrypt.a
+LTM=libtommath/libtommath.a
 
 OBJS=util.o session.o packet.o algo.o buffer.o kex.o dss.o bignum.o \
 		signkey.o rsa.o random.o service.o auth.o authpasswd.o channel.o \
@@ -20,7 +21,7 @@ ALLOBJS=$(OBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS)
 CC=@CC@
 LD=@CC@
 CFLAGS=-Wall -Ilibtomcrypt @CFLAGS@
-LIBS=$(LTC) @LIBS@
+LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
 
 # these are exported so that libtomcrypt's makefile will use them
@@ -35,32 +36,38 @@ static: dropbear-static dropbearkey-static
 
 $(ALLOBJS): $(HEADERS) Makefile
 
-dropbear: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile $(LTC)
+dropbear: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o dropbear $(DROPBEAROBJS) $(OBJS) $(LIBS)
 
-dropbear-static: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile  $(LTC)
+dropbear-static: $(DROPBEAROBJS) $(OBJS) $(HEADERS) Makefile  $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o staticdropbear $(DROPBEAROBJS) $(OBJS) $(LIBS) -static
 
-dropbearkey: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC)
+dropbearkey: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o dropbearkey $(DROPBEARKEYOBJS) \
 		$(OBJS) $(LIBS)
 
-dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC)
+dropbearkey-static: $(OBJS) $(HEADERS) Makefile $(DROPBEARKEYOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o staticdropbearkey $(DROPBEARKEYOBJS) \
 		$(OBJS) $(LIBS) -static
 
 $(LTC): $(HEADERS)
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)
 
+$(LTM): $(HEADERS)
+	cd libtommath && $(MAKE)
+
 ltc-clean:
 	cd libtomcrypt && $(MAKE) clean
+
+ltm-clean:
+	cd libtommath && $(MAKE) clean
 
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -rn
 
-clean: ltc-clean
+clean: ltc-clean ltm-clean
 	-rm -f dropbear dropbear dropbearkey staticdropbear staticdropbearkey
 	-rm -f *.o *.da *.bb *.bbg *.prof 
 
 tidy:
-	-rm -f *~ *.gcov
+	-rm -f *~ *.gcov */*~
