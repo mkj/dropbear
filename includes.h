@@ -62,6 +62,10 @@
 #include <utmpx.h>
 #endif
 
+#ifdef HAVE_PATHS_H
+#include <paths.h>
+#endif
+
 #ifdef HAVE_LASTLOG_H
 #include <lastlog.h>
 #endif
