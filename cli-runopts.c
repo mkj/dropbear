@@ -53,7 +53,7 @@ static void printhelp() {
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-					"-L <listenport:remotehsot:reportport> Local port forwarding\n"
+					"-L <listenport:remotehost:remoteport> Local port forwarding\n"
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
