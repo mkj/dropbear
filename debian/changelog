@@ -1,4 +1,4 @@
-dropbear (0.44-1) unstable; urgency=high
+dropbear (0.44+final-1) unstable; urgency=high
 
   * New upstream release, various fixes.
 
