@@ -182,7 +182,8 @@ out:
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
 static int checkusername(unsigned char *username, unsigned int userlen) {
 
-	char* shell;
+	char* listshell = NULL;
+	char* usershell = NULL;
 	
 	TRACE(("enter checkusername"));
 	if (userlen > MAX_USERNAME_LEN) {
@@ -233,14 +234,21 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	TRACE(("shell is %s", ses.authstate.pw->pw_shell));
-	/* check that the shell is valid */
-	if (ses.authstate.pw->pw_shell[0] == '\0') {
-		goto goodshell;
+
+	/* check that the shell is set */
+	usershell = ses.authstate.pw->pw_shell;
+	if (usershell[0] == '\0') {
+		/* empty shell in /etc/passwd means /bin/sh according to passwd(5) */
+		usershell = "/bin/sh";
 	}
+
+	/* check the shell is valid. If /etc/shells doesn't exist, getusershell()
+	 * should return some standard shells like "/bin/sh" and "/bin/csh" (this
+	 * is platform-specific) */
 	setusershell();
-	while ((shell = getusershell()) != NULL) {
-		TRACE(("test shell is '%s'", shell));
-		if (strcmp(shell, ses.authstate.pw->pw_shell) == 0) {
+	while ((listshell = getusershell()) != NULL) {
+		TRACE(("test shell is '%s'", listshell));
+		if (strcmp(listshell, usershell) == 0) {
 			/* have a match */
 			goto goodshell;
 		}
