@@ -15,8 +15,7 @@
 #include <tommath.h>
 
 /* hac 14.61, pp608 */
-int
-mp_invmod (mp_int * a, mp_int * b, mp_int * c)
+int mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 {
   mp_int  x, y, u, v, A, B, C, D;
   int     res;

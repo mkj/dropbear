@@ -20,8 +20,7 @@
  * embedded in the normal function but that wasted alot of stack space
  * for nothing (since 99% of the time the Montgomery code would be called)
  */
-int
-mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
+int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 {
   int dr;
 
