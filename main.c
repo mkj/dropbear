@@ -287,7 +287,6 @@ static void main_noinetd(runopts * opts) {
 	} /* for(;;) loop */
 
 	/* don't reach here */
-	return -1;
 }
 #endif /* NON_INETD_MODE */
 
