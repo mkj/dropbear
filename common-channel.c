@@ -61,7 +61,7 @@ static void closechanfd(struct Channel *channel, int fd, int how);
 #define FD_CLOSED (-1)
 
 /* Initialise all the channels */
-void chaninitialise(struct ChanType *chantypes[]) {
+void chaninitialise(const struct ChanType *chantypes[]) {
 
 	/* may as well create space for a single channel */
 	ses.channels = (struct Channel**)m_malloc(sizeof(struct Channel*));
@@ -737,7 +737,7 @@ void recv_msg_channel_open() {
 	unsigned int typelen;
 	unsigned int remotechan, transwindow, transmaxpacket;
 	struct Channel *channel;
-	struct ChanType *chantype;
+	const struct ChanType *chantype;
 	unsigned int errtype = SSH_OPEN_UNKNOWN_CHANNEL_TYPE;
 	int ret;
 
@@ -775,14 +775,16 @@ void recv_msg_channel_open() {
 	channel = newchannel(remotechan, chantype, transwindow, transmaxpacket);
 
 	if (channel == NULL) {
+		TRACE(("newchannel returned NULL"));
 		goto failure;
 	}
 
 	if (channel->type->inithandler) {
 		ret = channel->type->inithandler(channel);
-		if (ret >= 0) {
+		if (ret > 0) {
 			errtype = ret;
 			deletechannel(channel);
+			TRACE(("inithandler returned failure %d", ret));
 			goto failure;
 		}
 	}
@@ -810,6 +812,7 @@ void recv_msg_channel_open() {
 	goto cleanup;
 
 failure:
+	TRACE(("recv_msg_channel_open failure"));
 	send_msg_channel_open_failure(remotechan, errtype, "", "");
 
 cleanup:

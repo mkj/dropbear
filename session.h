@@ -134,7 +134,7 @@ struct sshsession {
 	/* Channel related */
 	struct Channel ** channels; /* these pointers may be null */
 	unsigned int chansize; /* the number of Channel*s allocated for channels */
-	struct ChanType **chantypes; /* The valid channel types */
+	const struct ChanType **chantypes; /* The valid channel types */
 
 	
 	/* TCP forwarding - where manage listeners */

@@ -40,6 +40,12 @@ static void svr_remoteclosed();
 
 struct serversession svr_ses;
 
+const struct ChanType *chantypes[] = {
+	&svrchansess,
+	NULL /* Null termination is mandatory. */
+};
+
+
 void svr_session(int sock, runopts *opts, int childpipe, 
 		struct sockaddr* remoteaddr) {
 
@@ -56,6 +62,7 @@ void svr_session(int sock, runopts *opts, int childpipe,
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
 	authinitialise();
+	chaninitialise(chantypes);
 	svr_chansessinitialise();
 
 	if (gettimeofday(&timeout, 0) < 0) {

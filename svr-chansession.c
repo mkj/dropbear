@@ -50,7 +50,7 @@ static void execchild(struct ChanSess *chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
 static void closechansess(struct Channel *channel);
-static void newchansess(struct Channel *channel);
+static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
 
 static void send_exitsignalstatus(struct Channel *channel);
@@ -205,7 +205,7 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 }
 
 /* set up a session channel */
-static void newchansess(struct Channel *channel) {
+static int newchansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
 
@@ -240,6 +240,8 @@ static void newchansess(struct Channel *channel) {
 	chansess->agentfile = NULL;
 	chansess->agentdir = NULL;
 #endif
+
+	return 0;
 
 }
 
@@ -309,8 +311,6 @@ static void chansessionrequest(struct Channel *channel) {
 	struct ChanSess *chansess;
 
 	TRACE(("enter chansessionrequest"));
-
-	assert(channel->type == CHANNEL_ID_SESSION);
 
 	type = buf_getstring(ses.payload, &typelen);
 	wantreply = buf_getbyte(ses.payload);

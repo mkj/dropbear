@@ -106,6 +106,8 @@ void common_session_init(int sock, runopts *opts) {
 	ses.dh_K = NULL;
 	ses.remoteident = NULL;
 
+	ses.chantypes = NULL;
+
 
 	TRACE(("leave session_init"));
 }

@@ -34,7 +34,7 @@
 /* #define DEBUG_VALGRIND */
 
 /* Define this to print trace statements - very verbose */
-/* #define DEBUG_TRACE */
+#define DEBUG_TRACE
 
 /* All functions writing to the cleartext payload buffer call
  * CHECKCLEARTOWRITE() before writing. This is only really useful if you're

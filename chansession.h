@@ -68,16 +68,15 @@ struct ChildPid {
 };
 
 
-void newchansess(struct Channel * channel);
 void chansessionrequest(struct Channel * channel);
-void closechansess(struct Channel * channel);
-void svr_chansessinitialise();
 void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess);
 void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
 void addnewvar(const char* param, const char* var);
 
+void svr_chansessinitialise();
+extern const struct ChanType svrchansess;
 
 struct SigMap {
 	int signal;
