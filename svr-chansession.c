@@ -960,6 +960,7 @@ void svr_chansessinitialise() {
 	svr_ses.childpids[0].pid = -1; /* unused */
 	svr_ses.childpids[0].chansess = NULL;
 	svr_ses.childpidsize = 1;
+	svr_ses.lastexit.exitpid = -1; /* Nothing has exited yet */
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
