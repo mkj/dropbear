@@ -36,6 +36,7 @@ static void sigintterm_handler(int fish);
 
 static int childpipes[MAX_UNAUTH_CLIENTS];
 
+#if defined(DBMULTI_DROPBEAR) || !defined(DROPBEAR_MULTI)
 #ifdef DBMULTI_DROPBEAR
 int dropbear_main(int argc, char ** argv) {
 #else
@@ -244,6 +245,7 @@ int main(int argc, char ** argv) {
 	/* don't reach here */
 	return -1;
 }
+#endif
 
 /* catch + reap zombie children */
 static void sigchld_handler(int fish) {

@@ -80,6 +80,7 @@ static void printhelp(char * progname) {
 					progname);
 }
 
+#if defined(DBMULTI_KEY) || !defined(DROPBEAR_MULTI)
 #ifdef DBMULTI_KEY
 int dropbearkey_main(int argc, char ** argv) {
 #else
@@ -236,6 +237,7 @@ int main(int argc, char ** argv) {
 
 	return EXIT_SUCCESS;
 }
+#endif
 
 /* Write a buffer to a file specified, failing if the file exists */
 static void buf_writefile(buffer * buf, const char * filename) {

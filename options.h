@@ -123,11 +123,26 @@
  * be enabled */
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 
+/* Multi-purpose binary  configuration - if you want to make the combined
+ * binary, first define DROPBEAR_MULTI, and then define which of the three
+ * components you want. You should then compile Dropbear with 
+ * "make clean; make dropbearmulti". You'll need to install the binary
+ * manually, see MULTI for details */
+
+/*#define DROPBEAR_MULTI*/
+
+/* The three multi binaries: dropbear, dropbearkey, dropbearconvert
+ * Comment out these if you don't want some of them */
+#define DBMULTI_DROPBEAR
+#define DBMULTI_KEY
+#define DBMULTI_CONVERT
+
+
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
-#define DROPBEAR_VERSION "0.37-cvs"
+#define DROPBEAR_VERSION "0.38-pre1"
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 

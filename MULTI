@@ -1,0 +1,31 @@
+Multi-binary compilation
+========================
+
+To compile for systems without much space (floppy distributions etc), you
+can create a single binary. This will save disk space by avoiding repeated
+code between the three components (dropbear, dropbearkey, dropbearconvert).
+If you are familiar with "busybox", it's the same principle.
+
+To use the multi-purpose binary, firstly enable the "#define DROPBEAR_MULTI"
+line in options.h
+
+Then enable which of the binaries you want to compile, also in options.h
+(by default these are all enabled).
+
+You should then "make clean" (if you compiled previously), then
+
+"make dropbearmulti"
+
+("make dropbearmultistatic" will make a static binary).
+
+To use the binary, symlink it from the desired executable:
+
+ln -s dropbearmulti dropbear
+
+then execute as normal:
+
+./dropbear <options here>
+
+"make install" doesn't currently work for multi-binary configuration, however
+in most situations where it is being used, the target and build systems will
+differ.

@@ -81,6 +81,16 @@ dropbearconvert-static: $(OBJS) $(HEADERS) Makefile $(CONVERTOBJS) $(LTC) $(LTM)
 	$(LD) $(LDFLAGS) -o staticdropbearconvert $(CONVERTOBJS) $(OBJS) $(LIBS) \
 		-static
 
+# multi-purpose binaries - make sure you make
+dropbearmulti: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o
+	$(LD) $(LDFLAGS) -o dropbearmulti $(OBJS) $(LTM) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o $(LIBS)
+	@echo
+	@echo "You should now create symlinks, ie 'ln -s dropbearmulti dropbear'"
+
+dropbearmultistatic: $(HEADERS) $(OBJS) $(LTC) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o
+	$(LD) $(LDFLAGS) -o staticdropbearmulti $(OBJS) $(LTM) $(LTM) $(CONVERTOBJS) $(DROPBEARKEYOBJS) $(DROPBEAROBJS) dbmulti.o $(LIBS)
+	@echo
+	@echo "You should now create symlinks, ie 'ln -s staticdropbearmulti staticdropbear'"
 
 $(LTC): $(HEADERS)
 	cd libtomcrypt && $(MAKE) clean && $(MAKE)

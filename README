@@ -8,4 +8,9 @@ See TODO for a few of the things I know need looking at.
 
 INSTALL has compilation instructions.
 
+MULTI has instructions on making a multi-purpose binary (ie a single binary
+which performs multiple tasks, to save disk space)
+
+SMALL has some tips on creating small binaries.
+
 matt@ucc.asn.au
