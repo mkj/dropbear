@@ -102,8 +102,9 @@ int rijndael_setup(const unsigned char *key, int keylen, int numrounds, symmetri
     _ARGCHK(key  != NULL);
     _ARGCHK(skey != NULL);
 
-    if (numrounds == 0)
+    if (numrounds == 0) { 
        numrounds = 10 + (2 * ((keylen/8)-2));
+    }       
 
     if (keylen != 16 && keylen != 24 && keylen != 32) {
        return CRYPT_INVALID_KEYSIZE;

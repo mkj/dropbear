@@ -13,6 +13,11 @@ int rsa_encrypt_key(const unsigned char *inkey, unsigned long inlen,
    _ARGCHK(outkey != NULL);
    _ARGCHK(outlen != NULL);
    _ARGCHK(key != NULL);
+   
+   /* only allow keys from 64 to 256 bits */
+   if (inlen < 8 || inlen > 32) {
+      return CRYPT_INVALID_ARG;
+   }
 
    /* are the parameters valid? */
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
@@ -99,16 +104,12 @@ int rsa_decrypt_key(const unsigned char *in, unsigned long inlen,
    }
    y += 4;
 
-   /* read it in */
-   for (x = 0; x < rsa_size; x++, y++) {
-       rsa_in[x] = in[y];
-   }
-
    /* decrypt it */
    x = (unsigned long)sizeof(rsa_out);
-   if ((err = rsa_exptmod(rsa_in, rsa_size, rsa_out, &x, PK_PRIVATE, key)) != CRYPT_OK) {
+   if ((err = rsa_exptmod(in+y, rsa_size, rsa_out, &x, PK_PRIVATE, key)) != CRYPT_OK) {
       return err;
    }
+   y += rsa_size;
 
    /* depad it */
    z = (unsigned long)sizeof(sym_key);
@@ -147,6 +148,11 @@ int rsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    _ARGCHK(out != NULL);
    _ARGCHK(outlen != NULL);
    _ARGCHK(key != NULL);
+   
+   /* reject nonsense sizes */
+   if (inlen < 16) {
+      return CRYPT_INVALID_ARG;
+   }
 
    /* type of key? */
    if (key->type != PK_PRIVATE && key->type != PK_PRIVATE_OPTIMIZED) {
@@ -230,16 +236,12 @@ int rsa_verify_hash(const unsigned char *sig, unsigned long siglen,
    }
    y += 4;
 
-   /* load the signature */
-   for (x = 0; x < rsa_size; x++, y++) {
-       rsa_in[x] = sig[y];
-   }
-
    /* exptmod it */
-   x = (unsigned long)sizeof(rsa_in);
-   if ((err = rsa_exptmod(rsa_in, rsa_size, rsa_out, &x, PK_PUBLIC, key)) != CRYPT_OK) {
+   x = (unsigned long)sizeof(rsa_out);
+   if ((err = rsa_exptmod(sig+y, rsa_size, rsa_out, &x, PK_PUBLIC, key)) != CRYPT_OK) {
       return err;
    }
+   y += rsa_size;
 
    /* depad it */
    z = (unsigned long)sizeof(rsa_in);

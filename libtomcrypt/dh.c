@@ -207,10 +207,11 @@ void dh_sizes(int *low, int *high)
 int dh_get_size(dh_key *key)
 {
     _ARGCHK(key != NULL);
-    if (is_valid_idx(key->idx) == 1) 
+    if (is_valid_idx(key->idx) == 1) {
         return sets[key->idx].size;
-    else
+    } else {
         return INT_MAX; /* large value that would cause dh_make_key() to fail */
+    }
 }
   
 int dh_make_key(prng_state *prng, int wprng, int keysize, dh_key *key)

@@ -241,35 +241,43 @@ void deskey(const unsigned char *key, short edf, unsigned long *keyout)
     unsigned long i, j, l, m, n, kn[32];
     unsigned char pc1m[56], pcr[56];
 
-    for(j=0; j < 56; j++)
-    {
+    for (j=0; j < 56; j++) {
         l = (unsigned long)pc1[j];
-        m = l & 07;
+        m = l & 7;
         pc1m[j] = (unsigned char)((key[l >> 3U] & bytebit[m]) == bytebit[m] ? 1 : 0);
     }
 
-    for(i=0; i < 16; i++)
-    {
-        if(edf == DE1) m = (15 - i) << 1;
-        else m = i << 1;
+    for (i=0; i < 16; i++) {
+        if (edf == DE1) {
+           m = (15 - i) << 1;
+        } else {
+           m = i << 1;
+        }
         n = m + 1;
         kn[m] = kn[n] = 0L;
-        for(j=0; j < 28; j++) 
-        {
+        for (j=0; j < 28; j++) {
             l = j + (unsigned long)totrot[i];
-            if(l < 28) pcr[j] = pc1m[l];
-            else pcr[j] = pc1m[l - 28];
+            if (l < 28) {
+               pcr[j] = pc1m[l];
+            } else {
+               pcr[j] = pc1m[l - 28];
+            }
         }
-        for(/*j = 28*/; j < 56; j++)
-        {
+        for (/*j = 28*/; j < 56; j++) {
             l = j + (unsigned long)totrot[i];
-            if(l < 56) pcr[j] = pc1m[l];
-            else pcr[j] = pc1m[l - 28];
+            if (l < 56) {
+               pcr[j] = pc1m[l];
+            } else {
+               pcr[j] = pc1m[l - 28];
+            }
         }
-        for(j=0; j < 24; j++)
-        {
-            if((int)pcr[(int)pc2[j]] != 0)    kn[m] |= bigbyte[j];
-            if((int)pcr[(int)pc2[j+24]] != 0) kn[n] |= bigbyte[j];
+        for (j=0; j < 24; j++)  {
+            if ((int)pcr[(int)pc2[j]] != 0) {
+               kn[m] |= bigbyte[j];
+            }
+            if ((int)pcr[(int)pc2[j+24]] != 0) {
+               kn[n] |= bigbyte[j];
+            }
         }
     }
 
@@ -326,7 +334,7 @@ static void desfunc(unsigned long *block, const unsigned long *keys)
 static void _desfunc(unsigned long *block, const unsigned long *keys)
 #endif
 {
-    unsigned long fval, work, right, leftt;
+    unsigned long work, right, leftt;
     int round;
 
     leftt = block[0];
@@ -348,38 +356,35 @@ static void _desfunc(unsigned long *block, const unsigned long *keys)
     leftt ^= work;
     right ^= (work << 8);
 
-    right = ((right << 1) | ((right >> 31) & 1L)) & 0xFFFFFFFFL;
+    right = ROL(right, 1);
     work = (leftt ^ right) & 0xaaaaaaaaL;
     
     leftt ^= work;
     right ^= work;
-    leftt = ((leftt << 1) | ((leftt >> 31) & 1L)) & 0xffffffffL;
+    leftt = ROL(leftt, 1);
 
-    for( round = 0; round < 8; round++)
-    {
-        work  = ((right << 28) | (right >> 4)) ^ *keys++;
-        fval  = SP7[ work        & 0x3fL]
-              | SP5[(work >>  8) & 0x3fL]
-              | SP3[(work >> 16) & 0x3fL]
-              | SP1[(work >> 24) & 0x3fL];
+    for (round = 0; round < 8; round++) {
+        work  = ROR(right, 4) ^ *keys++;
+        leftt ^= SP7[work        & 0x3fL]
+              ^ SP5[(work >>  8) & 0x3fL]
+              ^ SP3[(work >> 16) & 0x3fL]
+              ^ SP1[(work >> 24) & 0x3fL];
         work  = right ^ *keys++;
-        fval |= SP8[ work        & 0x3fL]
-              | SP6[(work >>  8) & 0x3fL]
-              | SP4[(work >> 16) & 0x3fL]
-              | SP2[(work >> 24) & 0x3fL];
-        leftt ^= fval;
+        leftt ^= SP8[ work        & 0x3fL]
+              ^  SP6[(work >>  8) & 0x3fL]
+              ^  SP4[(work >> 16) & 0x3fL]
+              ^  SP2[(work >> 24) & 0x3fL];
 
-        work = ((leftt << 28) | (leftt >> 4)) ^ *keys++;
-        fval  = SP7[ work        & 0x3fL]
-              | SP5[(work >>  8) & 0x3fL]
-              | SP3[(work >> 16) & 0x3fL]
-              | SP1[(work >> 24) & 0x3fL];
+        work = ROR(leftt, 4) ^ *keys++;
+        right ^= SP7[ work        & 0x3fL]
+              ^  SP5[(work >>  8) & 0x3fL]
+              ^  SP3[(work >> 16) & 0x3fL]
+              ^  SP1[(work >> 24) & 0x3fL];
         work  = leftt ^ *keys++;
-        fval |= SP8[ work        & 0x3fL]
-              | SP6[(work >>  8) & 0x3fL]
-              | SP4[(work >> 16) & 0x3fL]
-              | SP2[(work >> 24) & 0x3fL];
-        right ^= fval;
+        right ^= SP8[ work        & 0x3fL]
+              ^  SP6[(work >>  8) & 0x3fL]
+              ^  SP4[(work >> 16) & 0x3fL]
+              ^  SP2[(work >> 24) & 0x3fL];
     }
     right = (right << 31) | (right >> 1);
     work = (leftt ^ right) & 0xaaaaaaaaL;
@@ -411,7 +416,6 @@ static void desfunc(unsigned long *block, const unsigned long *keys)
    burn_stack(sizeof(unsigned long) * 4 + sizeof(int));
 }
 #endif
-
 
 int des_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
@@ -484,7 +488,8 @@ void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
 
 void des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *key)
 {
-    unsigned long work[2];
+    unsigned long work[2], *k[3];
+    
     _ARGCHK(pt != NULL);
     _ARGCHK(ct != NULL);
     _ARGCHK(key != NULL);

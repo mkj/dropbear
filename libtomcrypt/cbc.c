@@ -42,6 +42,11 @@ int cbc_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_CBC *cbc)
    if ((err = cipher_is_valid(cbc->cipher)) != CRYPT_OK) {
        return err;
    }
+   
+   /* is blocklen valid? */
+   if (cbc->blocklen < 0 || cbc->blocklen > (int)sizeof(cbc->IV)) {
+      return CRYPT_INVALID_ARG;
+   }    
 
    /* xor IV against plaintext */
    for (x = 0; x < cbc->blocklen; x++) {
@@ -76,6 +81,11 @@ int cbc_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_CBC *cbc)
        return err;
    }
    cipher_descriptor[cbc->cipher].ecb_decrypt(ct, tmp, &cbc->key);
+   
+   /* is blocklen valid? */
+   if (cbc->blocklen < 0 || cbc->blocklen > (int)sizeof(cbc->IV)) {
+      return CRYPT_INVALID_ARG;
+   } 
 
    /* xor IV against the plaintext of the previous step */
    for (x = 0; x < cbc->blocklen; x++) { 

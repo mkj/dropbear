@@ -177,8 +177,10 @@ extern int hmac_process(hmac_state *hmac, const unsigned char *buf, unsigned lon
 extern int hmac_done(hmac_state *hmac, unsigned char *hash);
 extern int hmac_test(void);
 extern int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
-                       const unsigned char *data, unsigned long len, unsigned char *dst);
+                       const unsigned char *data, unsigned long len, 
+                       unsigned char *dst, unsigned long *dstlen);
 extern int hmac_file(int hash, const char *fname, const unsigned char *key,
-                     unsigned long keylen, unsigned char *dst);
+                     unsigned long keylen, 
+                     unsigned char *dst, unsigned long *dstlen);
 #endif
 

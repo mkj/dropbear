@@ -14,10 +14,10 @@ const struct _hash_descriptor md5_desc =
     &md5_test
 };
 
-#define F(x,y,z)  ( (x&y)|((~x)&z) )
-#define G(x,y,z)  ( (x&z)|(y&(~z)) )
+#define F(x,y,z)  ((x&y)|((~x)&z))
+#define G(x,y,z)  ((x&z)|(y&(~z)))
 #define H(x,y,z)  (x^y^z)
-#define I(x,y,z)  (y ^ (x | (~z)))
+#define I(x,y,z)  (y^(x|(~z)))
 
 #define FF(a,b,c,d,M,s,t) \
     a = (a + F(b,c,d) + M + t); a = ROL(a, s); a = (b + a);

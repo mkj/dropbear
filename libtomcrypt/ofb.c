@@ -36,6 +36,13 @@ int ofb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    if ((err = cipher_is_valid(ofb->cipher)) != CRYPT_OK) {
        return err;
    }
+   
+   /* is blocklen/padlen valid? */
+   if (ofb->blocklen < 0 || ofb->blocklen > (int)sizeof(ofb->IV) ||
+       ofb->padlen   < 0 || ofb->padlen   > (int)sizeof(ofb->IV)) {
+      return CRYPT_INVALID_ARG;
+   }
+   
    while (len-- > 0) {
        if (ofb->padlen == ofb->blocklen) {
           cipher_descriptor[ofb->cipher].ecb_encrypt(ofb->IV, ofb->IV, &ofb->key);

@@ -30,7 +30,7 @@ const struct _hash_descriptor md4_desc =
 
 /* F, G and H are basic MD4 functions. */
 #define F(x, y, z) (((x) & (y)) | ((~x) & (z)))
-#define G(x, y, z) (((x) & (y)) | ((x) & (z)) | ((y) & (z)))
+#define G(x, y, z) ((x & y) | (z & (x | y)))
 #define H(x, y, z) ((x) ^ (y) ^ (z))
 
 /* ROTATE_LEFT rotates x left n bits. */

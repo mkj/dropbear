@@ -136,6 +136,10 @@ unsigned long yarrow_read(unsigned char *buf, unsigned long len, prng_state *prn
    _ARGCHK(buf != NULL);
    _ARGCHK(prng != NULL);
 
+   /* put buf in predictable state first */
+   zeromem(buf, len);
+   
+   /* now randomize it */
    if (ctr_encrypt(buf, buf, len, &prng->yarrow.ctr) != CRYPT_OK) {
       return 0;
    }

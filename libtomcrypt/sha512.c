@@ -60,7 +60,7 @@ CONST64(0x5fcb6fab3ad6faec), CONST64(0x6c44198c4a475817)
 
 /* Various logical functions */
 #define Ch(x,y,z)       ((x & y) | (~x & z))
-#define Maj(x,y,z)      ((x & y) ^ (x & z) ^ (y & z))
+#define Maj(x,y,z)      (((x | y) & z) | (x & y)) 
 #define S(x, n)         ROR64((x),(n))
 #define R(x, n)         (((x)&CONST64(0xFFFFFFFFFFFFFFFF))>>((ulong64)n))
 #define Sigma0(x)       (S(x, 28) ^ S(x, 34) ^ S(x, 39))

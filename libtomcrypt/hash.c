@@ -61,7 +61,6 @@ int hash_filehandle(int hash, FILE *in, unsigned char *dst, unsigned long *outle
 #endif
 }
 
-
 int hash_file(int hash, const char *fname, unsigned char *dst, unsigned long *outlen)
 {
 #ifdef NO_FILE

@@ -154,7 +154,7 @@ static void _ilt(unsigned char *b, unsigned char *b2)
 #endif
 
 /* These are the 33, 128-bit bias words for the key schedule */
-const unsigned char safer_bias[33][16] = {
+static const unsigned char safer_bias[33][16] = {
 {  70, 151, 177, 186, 163, 183,  16,  10, 197,  55, 179, 201,  90,  40, 172, 100},
 { 236, 171, 170, 198, 103, 149,  88,  13, 248, 154, 246, 110, 102, 220,   5,  61},
 { 138, 195, 216, 137, 106, 233,  54,  73,  67, 191, 235, 212, 150, 155, 104, 160},
@@ -469,14 +469,12 @@ int saferp_keysize(int *desired_keysize)
       return CRYPT_INVALID_KEYSIZE;
    if (*desired_keysize < 24) {
       *desired_keysize = 16;
-      return CRYPT_OK;
    } else if (*desired_keysize < 32) {
       *desired_keysize = 24;
-      return CRYPT_OK;
    } else {
       *desired_keysize = 32;
-      return CRYPT_OK;
    }
+   return CRYPT_OK;
 }
 
 #endif

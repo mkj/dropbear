@@ -5,6 +5,9 @@
 #ifndef MYCRYPT_CUSTOM_H_
 #define MYCRYPT_CUSTOM_H_
 
+/* this will sort out which stuff based on the user-config in options.h */
+#include "../options.h"
+
 #ifdef CRYPT
 	#error mycrypt_custom.h should be included before mycrypt.h
 #endif
@@ -16,21 +19,38 @@
 #define XCLOCK clock
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
 #define SMALL_CODE
+
+#ifdef DROPBEAR_BLOWFISH_CBC
 #define BLOWFISH
+#endif
+
+#ifdef DROPBEAR_AES128_CBC
 #define RIJNDAEL
+#endif
+
+#ifdef DROPBEAR_TWOFISH128_CBC
 #define TWOFISH
+#endif
+
+#ifdef DROPBEAR_3DES_CBC
 #define DES
+#endif
+
 #define CBC
+
+#if defined(DROPBEAR_DSS) && defined(DSS_PROTOK)
 #define SHA512
+#endif
+
 #define SHA1
+
+#ifdef DROPBEAR_MD5_HMAC
 #define MD5
+#endif
+
 #define HMAC
 #define BASE64
-#define DEVRANDOM
-#define TRY_URANDOM_FIRST
-#define SPRNG
 #define MPI
-
 
 #include <mycrypt.h>
 

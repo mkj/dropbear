@@ -7,7 +7,7 @@
  * more functions ;)
 */
 
-#include <mycrypt.h>
+#include <mycrypt_custom.h>
 
 int errno;
 

@@ -14,6 +14,7 @@ int cfb_start(int cipher, const unsigned char *IV, const unsigned char *key,
    if ((err = cipher_is_valid(cipher)) != CRYPT_OK) {
       return err;
    }
+   
 
    /* copy data */
    cfb->cipher = cipher;
@@ -44,6 +45,13 @@ int cfb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    if ((err = cipher_is_valid(cfb->cipher)) != CRYPT_OK) {
        return err;
    }
+
+   /* is blocklen/padlen valid? */
+   if (cfb->blocklen < 0 || cfb->blocklen > (int)sizeof(cfb->IV) ||
+       cfb->padlen   < 0 || cfb->padlen   > (int)sizeof(cfb->pad)) {
+      return CRYPT_INVALID_ARG;
+   }
+
    while (len-- > 0) {
        if (cfb->padlen == cfb->blocklen) {
           cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->pad, cfb->IV, &cfb->key);
@@ -68,6 +76,13 @@ int cfb_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
    if ((err = cipher_is_valid(cfb->cipher)) != CRYPT_OK) {
        return err;
    }
+
+   /* is blocklen/padlen valid? */
+   if (cfb->blocklen < 0 || cfb->blocklen > (int)sizeof(cfb->IV) ||
+       cfb->padlen   < 0 || cfb->padlen   > (int)sizeof(cfb->pad)) {
+      return CRYPT_INVALID_ARG;
+   }
+
    while (len-- > 0) {
        if (cfb->padlen == cfb->blocklen) {
           cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->pad, cfb->IV, &cfb->key);

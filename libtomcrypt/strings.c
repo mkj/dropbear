@@ -5,6 +5,7 @@ static const char *err_2_str[] =
 {
    "CRYPT_OK",
    "CRYPT_ERROR",
+   "Non-fatal 'no-operation' requested.",
 
    "Invalid keysize for block cipher.",
    "Invalid number of rounds for block cipher.",
