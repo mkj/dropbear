@@ -661,8 +661,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	TRACE(("enter ptycommand"));
 
-	/* we already have a pty allocated */
-	assert(chansess->master != -1 && chansess->tty != NULL);
+	/* we need to have a pty allocated */
+	if (chansess->master == -1 || chansess->tty == NULL) {
+		dropbear_log(LOG_WARNING, "no pty was allocated, couldn't execute");
+		return DROPBEAR_FAILURE;
+	}
+	
 	pid = fork();
 	if (pid < 0)
 		return DROPBEAR_FAILURE;
