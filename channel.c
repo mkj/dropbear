@@ -180,16 +180,7 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 			writechannel(channel);
 		}
 		
-	}
-
-	for (i = 0; i < ses.chansize; i++) {
-		channel = ses.channels[i];
-		if (channel == NULL) {
-			continue;
-		}
-
-		/* handle any listening sockets - should get optimised away if
-		 * we don't have x11 or agent fwd */
+		/* handle any listening sockets */
 		if (channel->type == CHANNEL_ID_SESSION) {
 			struct ChanSess * chansess = (struct ChanSess*)channel->typedata;
 #ifndef DISABLE_X11FWD
@@ -253,7 +244,6 @@ static void send_msg_channel_eof(struct Channel *channel) {
 
 	/* we already know that trans/eof channels are closed */
 	send_msg_channel_close(channel);
-
 
 	TRACE(("leave send_msg_channel_eof"));
 }
@@ -425,7 +415,6 @@ static void closechannel(struct Channel * channel) {
 	TRACE(("channel index is %d", channel->index));
 	
 	buf_free(channel->writebuf);
-	TRACE(("frees done "));
 
 	/* close the FDs in case they haven't been done
 	 * yet (ie they were shutdown etc */
@@ -436,9 +425,9 @@ static void closechannel(struct Channel * channel) {
 		closechansess(channel);
 	}
 
-	index = channel->index;
+	ses.channels[channel->index] = NULL;
 	m_free(channel);
-	ses.channels[index] = NULL;
+
 	TRACE(("leave closechannel"));
 }
 
@@ -582,7 +571,6 @@ void recv_msg_channel_data() {
 	}
 
 	assert(channel->infd != -1);
-	assert(channel->sentclosed == 0);
 
 	datalen = buf_getint(ses.payload);
 
