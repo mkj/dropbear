@@ -35,6 +35,7 @@
 #include "random.h"
 #include "utmp.h"
 #include "x11fwd.h"
+#include "agentfwd.h"
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		char iscmd);
@@ -214,6 +215,12 @@ void newchansess(struct Channel *channel) {
 	chansess->x11authcookie = NULL;
 #endif
 
+#ifndef DISABLE_AGENTFWD
+	chansess->agentfd = -1;
+	chansess->agentfile = NULL;
+	chansess->agentdir = NULL;
+#endif
+
 }
 
 /* clean up a session type channel */
@@ -247,6 +254,10 @@ void closechansess(struct Channel *channel) {
 
 #ifndef DISABLE_X11FWD
 	x11cleanup(chansess);
+#endif
+
+#ifndef DISABLE_AGENTFWD
+	agentcleanup(chansess);
 #endif
 
 	/* clear child pid entries */
@@ -290,6 +301,7 @@ void chansessionrequest(struct Channel *channel) {
 	chansess = (struct ChanSess*)channel->typedata;
 	assert(chansess != NULL);
 	TRACE(("type is %s\n", type));
+	dropbear_log(LOG_DEBUG, "type is '%s'", type);
 
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
@@ -302,6 +314,10 @@ void chansessionrequest(struct Channel *channel) {
 #ifndef DISABLE_X11FWD
 	} else if (strcmp(type, "x11-req") == 0) {
 		ret = x11req(chansess);
+#endif
+#ifndef DISABLE_AGENTFWD
+	} else if (strcmp(type, "auth-agent-req@openssh.com") == 0) {
+		ret = agentreq(chansess);
 #endif
 	} else if (strcmp(type, "signal") == 0) {
 		ret = sessionsignal(chansess);
@@ -757,6 +773,10 @@ static void execchild(struct ChanSess *chansess) {
 #ifndef DISABLE_X11FWD
 	/* set up X11 forwarding if enabled */
 	x11setauth(chansess);
+#endif
+#ifndef DISABLE_AGENTFWD
+	/* set up agent env variable */
+	agentset(chansess);
 #endif
 
 	/* an empty shell should be interpreted as "/bin/sh" */

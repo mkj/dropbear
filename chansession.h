@@ -50,13 +50,18 @@ struct ChanSess {
 	
 #ifndef DISABLE_X11FWD
 	int x11fd; /* set to -1 to indicate forwarding not established */
-	/* x11 forwarding details */
 	int x11port;
 	char * x11authprot;
 	char * x11authcookie;
 	unsigned int x11screennum;
 	unsigned char x11singleconn;
-#endif /* X11 fowarding */
+#endif
+
+#ifndef DISABLE_AGENTFWD
+	int agentfd;
+	char * agentfile;
+	char * agentdir;
+#endif
 };
 
 struct ChildPid {

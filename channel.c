@@ -37,6 +37,7 @@
 #include "chansession.h"
 #include "ssh.h"
 #include "x11fwd.h"
+#include "agentfwd.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -202,6 +203,11 @@ void channelio(fd_set *readfd, fd_set *writefd) {
 				x11accept(chansess);
 			}
 #endif
+#ifndef DISABLE_AGENTFWD
+			if (chansess->agentfd != -1 && FD_ISSET(chansess->agentfd,readfd)) {
+				agentaccept(chansess);
+			}
+#endif
 		}
 	} /* foreach channel */
 
@@ -349,6 +355,11 @@ void setchannelfds(fd_set *readfd, fd_set *writefd) {
 				FD_SET(chansess->x11fd, readfd);
 			}
 #endif
+#ifndef DISABLE_AGENTFWD
+			if (chansess->agentfd != -1) {
+				FD_SET(chansess->agentfd, readfd);
+			}
+#endif
 		}
 	} /* foreach channel */
 
@@ -371,7 +382,7 @@ void recv_msg_channel_eof() {
 	channel->recveof = 1;
 
 	/* we should close the channel */
-	if (channel->type == CHANNEL_ID_X11) {
+	if (channel->type == CHANNEL_ID_X11 || channel->type == CHANNEL_ID_AGENT) {
 		shutdown(channel->infd, 0);
 	} else {
 		close(channel->infd);

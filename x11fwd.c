@@ -1,4 +1,7 @@
 #include "options.h"
+
+#ifndef DISABLE_X11FWD
+
 #include "x11fwd.h"
 #include "session.h"
 #include "ssh.h"
@@ -7,8 +10,6 @@
 #include "channel.h"
 #include "packet.h"
 #include "buffer.h"
-
-#ifndef DISABLE_X11FWD
 
 #define X11BASEPORT 6010
 
