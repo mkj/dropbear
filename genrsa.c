@@ -29,7 +29,6 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	rsa_key * key;
 	mp_int p, pminus, q, qminus, lcm;
 	int wprng;
-	char out[1000];
 
 	key = (rsa_key*)m_malloc(sizeof(rsa_key));
 
@@ -54,18 +53,20 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 	
 	m_mp_init(&pminus);
 	m_mp_init(&p);
-	getrsaprime(&p, &pminus, key->e, size/2, wprng);
 	m_mp_init(&qminus);
 	m_mp_init(&q);
-	getrsaprime(&q, &qminus, key->e, size/2, wprng);
 
-	if (mp_mul(&p, &q, key->n) != MP_OKAY) {
-		fprintf(stderr, "rsa generation failed\n");
-		exit(1);
-	}
+	/* putty doesn't like it if the modulus isn't a multiple of 8 bits,
+	 * so we just generate them until we get one which is OK */
+	do {
+		getrsaprime(&p, &pminus, key->e, size/2, wprng);
+		getrsaprime(&q, &qminus, key->e, size/2, wprng);
 
-	fprintf(stderr, "bits: p %d q  %d n %d\n",
-			mp_count_bits(&p), mp_count_bits(&q), mp_count_bits(key->n));
+		if (mp_mul(&p, &q, key->n) != MP_OKAY) {
+			fprintf(stderr, "rsa generation failed\n");
+			exit(1);
+		}
+	} while (mp_count_bits(key->n) % 8 != 0);
 
 	m_mp_init(&lcm);
 	if (mp_lcm(&pminus, &qminus, &lcm) != MP_OKAY) {
@@ -77,13 +78,6 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 		fprintf(stderr, "rsa generation failed\n");
 		exit(1);
 	}
-
-	mp_toradix(key->e, out, 10);
-	fprintf(stderr, "key->e sign %d\n%s\n", SIGN(key->e), out);
-	mp_toradix(key->d, out, 10);
-	fprintf(stderr, "key->d sign %d\n%s\n", SIGN(key->d), out);
-	mp_toradix(key->n, out, 10);
-	fprintf(stderr, "key->n sign %d\n%s\n", SIGN(key->n), out);
 
 	mp_clear(&pminus);
 	mp_clear(&qminus);
@@ -103,15 +97,16 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 
 	m_mp_init(&temp_gcd);
 	buf = (unsigned char*)m_malloc(size+1);
-	printf("getprimesubone here\n");
 	do {
 #if 0
-		/* generate a prime */
+		/* generate a prime with libtomcrypt */
 		if (rand_prime(prime, size, NULL, wprng) != CRYPT_OK) {
 			fprintf(stderr, "rsa generation failed\n");
 			exit(1);
 		}
 #else 
+		/* generate a prime by getting a random number and checking
+		 * for primality - inefficient but works */
 		isprime = 0;
 		do {
 			genhighrandom(buf, size);
@@ -130,9 +125,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 			}
 
 		} while (!isprime);
-		printhex(buf, 10);
 #endif
-		printf("have prime here\n");
 
 		/* subtract one */
 		if (mp_sub_d(prime, 1, primeminus) != MP_OKAY) {
