@@ -782,7 +782,7 @@ static void execchild(struct ChanSess *chansess) {
 	/* clear environment */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
 	 * etc. This is hazardous, so should only be used for debugging. */
-#ifndef DEBUG_KEEP_ENV
+#ifndef DEBUG_VALGRIND
 #ifdef HAVE_CLEARENV
 	clearenv();
 #else /* don't HAVE_CLEARENV */
@@ -791,7 +791,7 @@ static void execchild(struct ChanSess *chansess) {
 		environ[0] = NULL;
 	}
 #endif /* HAVE_CLEARENV */
-#endif /* DEBUG_KEEP_ENV */
+#endif /* DEBUG_VALGRIND */
 
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {

@@ -29,12 +29,12 @@
 
 /* Debugging */
 
-/* Don't clear environment variables, useful if we are debugging with
- * something requiring LD_PRELOAD etc, but dangerous if used normally */
-/*#define DEBUG_KEEP_ENV*/
+/* Work well for valgrind - don't clear environment, be nicer with signals
+ * etc. Don't use this normally, it might cause problems */
+/* #define DEBUG_VALGRIND */
 
 /* Define this to print trace statements - very verbose */
-/*#define DEBUG_TRACE*/
+/* #define DEBUG_TRACE */
 
 /* All functions writing to the cleartext payload buffer call
  * CHECKCLEARTOWRITE() before writing. This is only really useful if you're
