@@ -24,7 +24,7 @@ mp_init (mp_int * a)
     return MP_MEM;
   }
 
-  /* set the used to zero, allocated digit to the default precision
+  /* set the used to zero, allocated digits to the default precision
    * and sign to positive */
   a->used  = 0;
   a->alloc = MP_PREC;

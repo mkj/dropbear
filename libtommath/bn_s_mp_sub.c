@@ -33,7 +33,6 @@ s_mp_sub (mp_int * a, mp_int * b, mp_int * c)
   olduse = c->used;
   c->used = max;
 
-  /* sub digits from lower part */
   {
     register mp_digit u, *tmpa, *tmpb, *tmpc;
     register int i;
@@ -52,7 +51,7 @@ s_mp_sub (mp_int * a, mp_int * b, mp_int * c)
       /* U = carry bit of T[i]
        * Note this saves performing an AND operation since
        * if a carry does occur it will propagate all the way to the
-       * MSB.  As a result a single shift is required to get the carry
+       * MSB.  As a result a single shift is enough to get the carry
        */
       u = *tmpc >> ((mp_digit)(CHAR_BIT * sizeof (mp_digit) - 1));
 
@@ -81,3 +80,4 @@ s_mp_sub (mp_int * a, mp_int * b, mp_int * c)
   mp_clamp (c);
   return MP_OKAY;
 }
+

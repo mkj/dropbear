@@ -14,10 +14,12 @@
  */
 #include <tommath.h>
 
-/* Karatsuba squaring, computes b = a*a using three half size squarings
+/* Karatsuba squaring, computes b = a*a using three 
+ * half size squarings
  *
- * See comments of mp_karatsuba_mul for details.  It is essentially the same algorithm
- * but merely tuned to perform recursive squarings.
+ * See comments of mp_karatsuba_mul for details.  It 
+ * is essentially the same algorithm but merely 
+ * tuned to perform recursive squarings.
  */
 int
 mp_karatsuba_sqr (mp_int * a, mp_int * b)
@@ -74,32 +76,32 @@ mp_karatsuba_sqr (mp_int * a, mp_int * b)
 
   /* now calc the products x0*x0 and x1*x1 */
   if (mp_sqr (&x0, &x0x0) != MP_OKAY)
-    goto X1X1;                  /* x0x0 = x0*x0 */
+    goto X1X1;           /* x0x0 = x0*x0 */
   if (mp_sqr (&x1, &x1x1) != MP_OKAY)
-    goto X1X1;                  /* x1x1 = x1*x1 */
+    goto X1X1;           /* x1x1 = x1*x1 */
 
-  /* now calc (x1-x0)^2 */
+  /* now calc (x1-x0)**2 */
   if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
-    goto X1X1;                  /* t1 = x1 - x0 */
+    goto X1X1;           /* t1 = x1 - x0 */
   if (mp_sqr (&t1, &t1) != MP_OKAY)
-    goto X1X1;                  /* t1 = (x1 - x0) * (x1 - x0) */
+    goto X1X1;           /* t1 = (x1 - x0) * (x1 - x0) */
 
   /* add x0y0 */
   if (s_mp_add (&x0x0, &x1x1, &t2) != MP_OKAY)
-    goto X1X1;                  /* t2 = x0y0 + x1y1 */
+    goto X1X1;           /* t2 = x0x0 + x1x1 */
   if (mp_sub (&t2, &t1, &t1) != MP_OKAY)
-    goto X1X1;                  /* t1 = x0y0 + x1y1 - (x1-x0)*(y1-y0) */
+    goto X1X1;           /* t1 = x0x0 + x1x1 - (x1-x0)*(x1-x0) */
 
   /* shift by B */
   if (mp_lshd (&t1, B) != MP_OKAY)
-    goto X1X1;                  /* t1 = (x0y0 + x1y1 - (x1-x0)*(y1-y0))<<B */
+    goto X1X1;           /* t1 = (x0x0 + x1x1 - (x1-x0)*(x1-x0))<<B */
   if (mp_lshd (&x1x1, B * 2) != MP_OKAY)
-    goto X1X1;                  /* x1y1 = x1y1 << 2*B */
+    goto X1X1;           /* x1x1 = x1x1 << 2*B */
 
   if (mp_add (&x0x0, &t1, &t1) != MP_OKAY)
-    goto X1X1;                  /* t1 = x0y0 + t1 */
+    goto X1X1;           /* t1 = x0x0 + t1 */
   if (mp_add (&t1, &x1x1, b) != MP_OKAY)
-    goto X1X1;                  /* t1 = x0y0 + t1 + x1y1 */
+    goto X1X1;           /* t1 = x0x0 + t1 + x1x1 */
 
   err = MP_OKAY;
 

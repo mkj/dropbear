@@ -14,12 +14,12 @@
  */
 #include <tommath.h>
 
-/* computes xR^-1 == x (mod N) via Montgomery Reduction */
+/* computes xR**-1 == x (mod N) via Montgomery Reduction */
 int
-mp_montgomery_reduce (mp_int * a, mp_int * m, mp_digit mp)
+mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 {
   int     ix, res, digs;
-  mp_digit ui;
+  mp_digit mu;
 
   /* can the fast reduction [comba] method be used?
    *
@@ -27,55 +27,61 @@ mp_montgomery_reduce (mp_int * a, mp_int * m, mp_digit mp)
    * than the available columns [255 per default] since carries
    * are fixed up in the inner loop.
    */
-  digs = m->used * 2 + 1;
-  if ((digs < MP_WARRAY)
-      && m->used < (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
-    return fast_mp_montgomery_reduce (a, m, mp);
+  digs = n->used * 2 + 1;
+  if ((digs < MP_WARRAY) && 
+      n->used < 
+      (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
+    return fast_mp_montgomery_reduce (x, n, rho);
   }
 
   /* grow the input as required */
-  if (a->alloc < m->used * 2 + 1) {
-    if ((res = mp_grow (a, m->used * 2 + 1)) != MP_OKAY) {
+  if (x->alloc < digs) {
+    if ((res = mp_grow (x, digs)) != MP_OKAY) {
       return res;
     }
   }
-  a->used = m->used * 2 + 1;
+  x->used = digs;
 
-  for (ix = 0; ix < m->used; ix++) {
-    /* ui = ai * m' mod b */
-    ui = (a->dp[ix] * mp) & MP_MASK;
+  for (ix = 0; ix < n->used; ix++) {
+    /* mu = ai * m' mod b */
+    mu = (x->dp[ix] * rho) & MP_MASK;
 
-    /* a = a + ui * m * b^i */
+    /* a = a + mu * m * b**i */
     {
       register int iy;
-      register mp_digit *tmpx, *tmpy, mu;
+      register mp_digit *tmpn, *tmpx, u;
       register mp_word r;
 
       /* aliases */
-      tmpx = m->dp;
-      tmpy = a->dp + ix;
+      tmpn = n->dp;
+      tmpx = x->dp + ix;
 
-      mu = 0;
-      for (iy = 0; iy < m->used; iy++) {
-        r = ((mp_word) ui) * ((mp_word) * tmpx++) + ((mp_word) mu) + ((mp_word) * tmpy);
-        mu = (r >> ((mp_word) DIGIT_BIT));
-        *tmpy++ = (r & ((mp_word) MP_MASK));
+      /* set the carry to zero */
+      u = 0;
+      
+      /* Multiply and add in place */
+      for (iy = 0; iy < n->used; iy++) {
+        r       = ((mp_word) mu) * ((mp_word) * tmpn++) + 
+                  ((mp_word) u) + ((mp_word) * tmpx);
+        u       = (mp_digit)(r >> ((mp_word) DIGIT_BIT));
+        *tmpx++ = (mp_digit)(r & ((mp_word) MP_MASK));
       }
       /* propagate carries */
-      while (mu) {
-        *tmpy += mu;
-        mu = (*tmpy >> DIGIT_BIT) & 1;
-        *tmpy++ &= MP_MASK;
+      while (u) {
+        *tmpx   += u;
+        u        = *tmpx >> DIGIT_BIT;
+        *tmpx++ &= MP_MASK;
       }
     }
   }
 
-  /* A = A/b^n */
-  mp_rshd (a, m->used);
+  /* x = x/b**n.used */
+  mp_clamp(x);
+  mp_rshd (x, n->used);
 
   /* if A >= m then A = A - m */
-  if (mp_cmp_mag (a, m) != MP_LT) {
-    return s_mp_sub (a, m, a);
+  if (mp_cmp_mag (x, n) != MP_LT) {
+    return s_mp_sub (x, n, x);
   }
 
   return MP_OKAY;

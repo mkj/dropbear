@@ -21,7 +21,7 @@ mp_copy (mp_int * a, mp_int * b)
   int     res, n;
 
   /* if dst == src do nothing */
-  if (a == b || a->dp == b->dp) {
+  if (a == b) {
     return MP_OKAY;
   }
 

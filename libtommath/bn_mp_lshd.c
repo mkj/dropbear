@@ -33,29 +33,29 @@ mp_lshd (mp_int * a, int b)
   }
 
   {
-    register mp_digit *tmpa, *tmpaa;
+    register mp_digit *top, *bottom;
 
-    /* increment the used by the shift amount than copy upwards */
+    /* increment the used by the shift amount then copy upwards */
     a->used += b;
 
     /* top */
-    tmpa = a->dp + a->used - 1;
+    top = a->dp + a->used - 1;
 
     /* base */
-    tmpaa = a->dp + a->used - 1 - b;
+    bottom = a->dp + a->used - 1 - b;
 
     /* much like mp_rshd this is implemented using a sliding window
      * except the window goes the otherway around.  Copying from
      * the bottom to the top.  see bn_mp_rshd.c for more info.
      */
     for (x = a->used - 1; x >= b; x--) {
-      *tmpa-- = *tmpaa--;
+      *top-- = *bottom--;
     }
 
     /* zero the lower digits */
-    tmpa = a->dp;
+    top = a->dp;
     for (x = 0; x < b; x++) {
-      *tmpa++ = 0;
+      *top++ = 0;
     }
   }
   return MP_OKAY;

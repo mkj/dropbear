@@ -40,14 +40,10 @@ void rand_num(mp_int *a)
    int n, size;
    unsigned char buf[2048];
 
-top:
-   size = 1 + ((fgetc(rng)*fgetc(rng)) % 1024);
+   size = 1 + ((fgetc(rng)<<8) + fgetc(rng)) % 1031;
    buf[0] = (fgetc(rng)&1)?1:0;
    fread(buf+1, 1, size, rng);
-   for (n = 0; n < size; n++) {
-       if (buf[n+1]) break;
-   }
-   if (n == size) goto top;
+   while (buf[1] == 0) buf[1] = fgetc(rng);
    mp_read_raw(a, buf, 1+size);
 }
 
@@ -56,14 +52,10 @@ void rand_num2(mp_int *a)
    int n, size;
    unsigned char buf[2048];
 
-top:
-   size = 1 + ((fgetc(rng)*fgetc(rng)) % 96);
+   size = 1 + ((fgetc(rng)<<8) + fgetc(rng)) % 97;
    buf[0] = (fgetc(rng)&1)?1:0;
    fread(buf+1, 1, size, rng);
-   for (n = 0; n < size; n++) {
-       if (buf[n+1]) break;
-   }
-   if (n == size) goto top;
+   while (buf[1] == 0) buf[1] = fgetc(rng);
    mp_read_raw(a, buf, 1+size);
 }
 
@@ -73,6 +65,7 @@ int main(void)
 {
    int n;
    mp_int a, b, c, d, e;
+   clock_t t1;
    char buf[4096];
 
    mp_init(&a);
@@ -108,8 +101,14 @@ int main(void)
       }
    }
 
+   t1 = clock();
    for (;;) {
-       n =  fgetc(rng) % 13;
+      if (clock() - t1 > CLOCKS_PER_SEC) {
+         sleep(1);
+         t1 = clock();
+      }
+   
+       n = fgetc(rng) % 13;
 
    if (n == 0) {
        /* add tests */
@@ -227,6 +226,7 @@ int main(void)
       rand_num2(&a);
       rand_num2(&b);
       rand_num2(&c);
+//      if (c.dp[0]&1) mp_add_d(&c, 1, &c);
       a.sign = b.sign = c.sign = 0;
       mp_exptmod(&a, &b, &c, &d);
       printf("expt\n");

@@ -1,3 +1,30 @@
+June 19th, 2003
+v0.21  -- Fixed bug in mp_mul_d which would not handle sign correctly [would not always forward it]
+       -- Removed the #line lines from gen.pl [was in violation of ISO C]       
+
+June 8th, 2003
+v0.20  -- Removed the book from the package.  Added the TDCAL license document.  
+       -- This release is officially pure-bred TDCAL again [last officially TDCAL based release was v0.16]
+
+June 6th, 2003
+v0.19  -- Fixed a bug in mp_montgomery_reduce() which was introduced when I tweaked mp_rshd() in the previous release.
+          Essentially the digits were not trimmed before the compare which cause a subtraction to occur all the time.
+       -- Fixed up etc/tune.c a bit to stop testing new cutoffs after 16 failures [to find more optimal points]. 
+          Brute force ho!
+          
+
+May 29th, 2003
+v0.18  -- Fixed a bug in s_mp_sqr which would handle carries properly just not very elegantly.
+          (e.g. correct result, just bad looking code)
+       -- Fixed bug in mp_sqr which still had a 512 constant instead of MP_WARRAY
+       -- Added Toom-Cook multipliers [needs tuning!]
+       -- Added efficient divide by 3 algorithm mp_div_3
+       -- Re-wrote mp_div_d to be faster than calling mp_div 
+       -- Added in a donated BCC makefile and a single page LTM poster (ahalhabsi@sbcglobal.net)
+       -- Added mp_reduce_2k which reduces an input modulo n = 2**p - k for any single digit k
+       -- Made the exptmod system be aware of the 2k reduction algorithms.
+       -- Rewrote mp_dr_reduce to be smaller, simpler and easier to understand.
+
 May 17th, 2003
 v0.17  -- Benjamin Goldberg submitted optimized mp_add and mp_sub routines.  A new gen.pl as well
           as several smaller suggestions.  Thanks!

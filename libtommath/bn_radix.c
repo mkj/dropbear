@@ -40,23 +40,25 @@ mp_read_radix (mp_int * a, char *str, int radix)
     ch = (char) ((radix < 36) ? toupper (*str) : *str);
     for (y = 0; y < 64; y++) {
       if (ch == s_rmap[y]) {
-	break;
+    break;
       }
     }
 
     if (y < radix) {
       if ((res = mp_mul_d (a, (mp_digit) radix, a)) != MP_OKAY) {
-	return res;
+    return res;
       }
       if ((res = mp_add_d (a, (mp_digit) y, a)) != MP_OKAY) {
-	return res;
+    return res;
       }
     } else {
       break;
     }
     ++str;
   }
-  a->sign = neg;
+  if (mp_iszero(a) != 1) {
+     a->sign = neg;
+  }
   return MP_OKAY;
 }
 
@@ -72,6 +74,14 @@ mp_toradix (mp_int * a, char *str, int radix)
   if (radix < 2 || radix > 64) {
     return MP_VAL;
   }
+  
+  /* quick out if its zero */
+  if (mp_iszero(a) == 1) {
+     *str++ = '0';
+     *str = '\0';
+     return MP_OKAY;
+  }
+  
 
   if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
     return res;

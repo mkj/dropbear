@@ -32,15 +32,15 @@ mp_rshd (mp_int * a, int b)
   }
 
   {
-    register mp_digit *tmpa, *tmpaa;
+    register mp_digit *bottom, *top;
 
     /* shift the digits down */
 
-    /* base */
-    tmpa = a->dp;
+    /* bottom */
+    bottom = a->dp;
 
-    /* offset into digits */
-    tmpaa = a->dp + b;
+    /* top [offset into digits] */
+    top = a->dp + b;
 
     /* this is implemented as a sliding window where 
      * the window is b-digits long and digits from 
@@ -53,13 +53,15 @@ mp_rshd (mp_int * a, int b)
                   \-------------------/      ---->
      */
     for (x = 0; x < (a->used - b); x++) {
-      *tmpa++ = *tmpaa++;
+      *bottom++ = *top++;
     }
 
     /* zero the top digits */
     for (; x < a->used; x++) {
-      *tmpa++ = 0;
+      *bottom++ = 0;
     }
   }
-  mp_clamp (a);
+  
+  /* remove excess digits */
+  a->used -= b;
 }

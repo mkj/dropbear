@@ -14,7 +14,7 @@
  */
 #include <tommath.h>
 
-/* shift right by a certain bit count (store quotient in c, remainder in d) */
+/* shift right by a certain bit count (store quotient in c, optional remainder in d) */
 int
 mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
 {
@@ -81,7 +81,6 @@ mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
     }
   }
   mp_clamp (c);
-  res = MP_OKAY;
   if (d != NULL) {
     mp_exch (&t, d);
   }

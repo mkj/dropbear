@@ -27,6 +27,11 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   mp_int  M[256], res;
   mp_digit buf, mp;
   int     err, bitbuf, bitcpy, bitcnt, mode, digidx, x, y, winsize;
+  
+  /* use a pointer to the reduction algorithm.  This allows us to use
+   * one of many reduction algorithms without modding the guts of
+   * the code with if statements everywhere.  
+   */
   int     (*redux)(mp_int*,mp_int*,mp_digit);
 
   /* find window size */
@@ -64,6 +69,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
     }
   }
 
+  /* determine and setup reduction code */
   if (redmode == 0) {
      /* now setup montgomery  */
      if ((err = mp_montgomery_setup (P, &mp)) != MP_OKAY) {
@@ -71,17 +77,23 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
      }
      
      /* automatically pick the comba one if available (saves quite a few calls/ifs) */
-     if ( ((P->used * 2 + 1) < MP_WARRAY) &&
+     if (((P->used * 2 + 1) < MP_WARRAY) &&
           P->used < (1 << ((CHAR_BIT * sizeof (mp_word)) - (2 * DIGIT_BIT)))) {
         redux = fast_mp_montgomery_reduce;
      } else {
         /* use slower baselien method */
         redux = mp_montgomery_reduce;
      }
-  } else {
+  } else if (redmode == 1) {
      /* setup DR reduction */
      mp_dr_setup(P, &mp);
      redux = mp_dr_reduce;
+  } else {
+     /* setup 2k reduction */
+     if ((err = mp_reduce_2k_setup(P, &mp)) != MP_OKAY) {
+        goto __M;
+     }
+     redux = mp_reduce_2k;
   }
 
   /* setup result */
@@ -142,7 +154,8 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   bitcnt = 1;
   buf    = 0;
   digidx = X->used - 1;
-  bitcpy = bitbuf = 0;
+  bitcpy = 0;
+  bitbuf = 0;
 
   for (;;) {
     /* grab next digit as required */
@@ -203,7 +216,8 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
       }
 
       /* empty window and reset */
-      bitcpy = bitbuf = 0;
+      bitcpy = 0;
+      bitbuf = 0;
       mode = 1;
     }
   }
@@ -233,7 +247,7 @@ mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode)
   }
 
   if (redmode == 0) {
-     /* fixup result */
+     /* fixup result if Montgomery reduction is used */
      if ((err = mp_montgomery_reduce (&res, P, mp)) != MP_OKAY) {
        goto __RES;
      }

@@ -8,10 +8,9 @@
 int
 is_mersenne (long s, int *pp)
 {
-  mp_int  n, u, mu;
+  mp_int  n, u;
   int     res, k;
-  long    ss;
-
+  
   *pp = 0;
 
   if ((res = mp_init (&n)) != MP_OKAY) {
@@ -22,24 +21,11 @@ is_mersenne (long s, int *pp)
     goto __N;
   }
 
-  if ((res = mp_init (&mu)) != MP_OKAY) {
-    goto __U;
-  }
-
   /* n = 2^s - 1 */
-  mp_set (&n, 1);
-  ss = s;
-  while (ss--) {
-    if ((res = mp_mul_2 (&n, &n)) != MP_OKAY) {
-      goto __MU;
-    }
+  if ((res = mp_2expt(&n, s)) != MP_OKAY) {
+     goto __MU;
   }
   if ((res = mp_sub_d (&n, 1, &n)) != MP_OKAY) {
-    goto __MU;
-  }
-
-  /* setup mu */
-  if ((res = mp_reduce_setup (&mu, &n)) != MP_OKAY) {
     goto __MU;
   }
 
@@ -57,26 +43,26 @@ is_mersenne (long s, int *pp)
     }
 
     /* make sure u is positive */
-    if (u.sign == MP_NEG) {
+    while (u.sign == MP_NEG) {
       if ((res = mp_add (&u, &n, &u)) != MP_OKAY) {
-	goto __MU;
+         goto __MU;
       }
     }
 
     /* reduce */
-    if ((res = mp_reduce (&u, &n, &mu)) != MP_OKAY) {
+    if ((res = mp_reduce_2k (&u, &n, 1)) != MP_OKAY) {
       goto __MU;
     }
   }
 
   /* if u == 0 then its prime */
   if (mp_iszero (&u) == 1) {
-    *pp = 1;
+    mp_prime_is_prime(&n, 8, pp);
+  if (*pp != 1) printf("FAILURE\n");
   }
 
   res = MP_OKAY;
-__MU:mp_clear (&mu);
-__U:mp_clear (&u);
+__MU:mp_clear (&u);
 __N:mp_clear (&n);
   return res;
 }

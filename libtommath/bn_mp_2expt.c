@@ -14,7 +14,7 @@
  */
 #include <tommath.h>
 
-/* computes a = 2^b 
+/* computes a = 2**b 
  *
  * Simple algorithm which zeroes the int, grows it then just sets one bit
  * as required.

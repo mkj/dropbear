@@ -14,31 +14,52 @@
  */
 #include <tommath.h>
 
-/* single digit division */
+/* single digit division (based on routine from MPI) */
 int
 mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
 {
-  mp_int  t, t2;
-  int     res;
-
-  if ((res = mp_init (&t)) != MP_OKAY) {
-    return res;
+  mp_int  q;
+  mp_word w;
+  mp_digit t;
+  int     res, ix;
+  
+  if (b == 0) {
+     return MP_VAL;
   }
-
-  if ((res = mp_init (&t2)) != MP_OKAY) {
-    mp_clear (&t);
-    return res;
+  
+  if (b == 3) {
+     return mp_div_3(a, c, d);
   }
-
-  mp_set (&t, b);
-  res = mp_div (a, &t, c, &t2);
-
-  /* set remainder if not null */
+  
+  if ((res = mp_init_size(&q, a->used)) != MP_OKAY) {
+     return res;
+  }
+  
+  q.used = a->used;
+  q.sign = a->sign;
+  w = 0;
+  for (ix = a->used - 1; ix >= 0; ix--) {
+     w = (w << ((mp_word)DIGIT_BIT)) | ((mp_word)a->dp[ix]);
+     
+     if (w >= b) {
+        t = (mp_digit)(w / b);
+        w = w % b;
+      } else {
+        t = 0;
+      }
+      q.dp[ix] = (mp_digit)t;
+  }
+  
   if (d != NULL) {
-    *d = t2.dp[0];
+     *d = (mp_digit)w;
   }
-
-  mp_clear (&t);
-  mp_clear (&t2);
+  
+  if (c != NULL) {
+     mp_clamp(&q);
+     mp_exch(&q, c);
+  }
+  mp_clear(&q);
+  
   return res;
 }
+

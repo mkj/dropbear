@@ -45,7 +45,6 @@ s_mp_add (mp_int * a, mp_int * b, mp_int * c)
   olduse = c->used;
   c->used = max + 1;
 
-  /* set the carry to zero */
   {
     register mp_digit u, *tmpa, *tmpb, *tmpc;
     register int i;

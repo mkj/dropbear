@@ -32,9 +32,13 @@ mersenne: mersenne.o
 drprime: drprime.o
 	$(CC) drprime.o $(LIBNAME) -o drprime
 	
+# fines 2k safe primes for the given config
+2kprime: 2kprime.o
+	$(CC) 2kprime.o $(LIBNAME) -o 2kprime
+
 mont: mont.o
 	$(CC) mont.o $(LIBNAME) -o mont
 
         
 clean:
-	rm -f *.log *.o *.obj *.exe pprime tune mersenne drprime tune86 tune86l mont
+	rm -f *.log *.o *.obj *.exe pprime tune mersenne drprime tune86 tune86l mont 2kprime

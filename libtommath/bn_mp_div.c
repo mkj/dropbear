@@ -14,21 +14,24 @@
  */
 #include <tommath.h>
 
-/* integer signed division. c*b + d == a [e.g. a/b, c=quotient, d=remainder]
+/* integer signed division. 
+ * c*b + d == a [e.g. a/b, c=quotient, d=remainder]
  * HAC pp.598 Algorithm 14.20
  *
- * Note that the description in HAC is horribly incomplete.  For example,
- * it doesn't consider the case where digits are removed from 'x' in the inner
- * loop.  It also doesn't consider the case that y has fewer than three digits, etc..
+ * Note that the description in HAC is horribly 
+ * incomplete.  For example, it doesn't consider 
+ * the case where digits are removed from 'x' in 
+ * the inner loop.  It also doesn't consider the 
+ * case that y has fewer than three digits, etc..
  *
- * The overall algorithm is as described as 14.20 from HAC but fixed to treat these cases.
+ * The overall algorithm is as described as 
+ * 14.20 from HAC but fixed to treat these cases.
 */
 int
 mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 {
   mp_int  q, x, y, t1, t2;
   int     res, n, t, i, norm, neg;
-
 
   /* is divisor zero ? */
   if (mp_iszero (b) == 1) {
@@ -73,7 +76,7 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   neg = (a->sign == b->sign) ? MP_ZPOS : MP_NEG;
   x.sign = y.sign = MP_ZPOS;
 
-  /* normalize both x and y, ensure that y >= b/2, [b == 2^DIGIT_BIT] */
+  /* normalize both x and y, ensure that y >= b/2, [b == 2**DIGIT_BIT] */
   norm = mp_count_bits(&y) % DIGIT_BIT;
   if (norm < (int)(DIGIT_BIT-1)) {
      norm = (DIGIT_BIT-1) - norm;
@@ -91,8 +94,8 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   n = x.used - 1;
   t = y.used - 1;
 
-  /* step 2. while (x >= y*b^n-t) do { q[n-t] += 1; x -= y*b^{n-t} } */
-  if ((res = mp_lshd (&y, n - t)) != MP_OKAY) { /* y = y*b^{n-t} */
+  /* while (x >= y*b**n-t) do { q[n-t] += 1; x -= y*b**{n-t} } */
+  if ((res = mp_lshd (&y, n - t)) != MP_OKAY) { /* y = y*b**{n-t} */
     goto __Y;
   }
 
@@ -111,7 +114,8 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
     if (i > x.used)
       continue;
 
-    /* step 3.1 if xi == yt then set q{i-t-1} to b-1, otherwise set q{i-t-1} to (xi*b + x{i-1})/yt */
+    /* step 3.1 if xi == yt then set q{i-t-1} to b-1, 
+     * otherwise set q{i-t-1} to (xi*b + x{i-1})/yt */
     if (x.dp[i] == y.dp[t]) {
       q.dp[i - t - 1] = ((((mp_digit)1) << DIGIT_BIT) - 1);
     } else {
@@ -124,7 +128,11 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
       q.dp[i - t - 1] = (mp_digit) (tmp & (mp_word) (MP_MASK));
     }
 
-    /* step 3.2 while (q{i-t-1} * (yt * b + y{t-1})) > xi * b^2 + xi-1 * b + xi-2 do q{i-t-1} -= 1; */
+    /* while (q{i-t-1} * (yt * b + y{t-1})) > 
+             xi * b**2 + xi-1 * b + xi-2 
+     
+       do q{i-t-1} -= 1; 
+    */
     q.dp[i - t - 1] = (q.dp[i - t - 1] + 1) & MP_MASK;
     do {
       q.dp[i - t - 1] = (q.dp[i - t - 1] - 1) & MP_MASK;
@@ -145,7 +153,7 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
       t2.used = 3;
     } while (mp_cmp_mag(&t1, &t2) == MP_GT);
 
-    /* step 3.3 x = x - q{i-t-1} * y * b^{i-t-1} */
+    /* step 3.3 x = x - q{i-t-1} * y * b**{i-t-1} */
     if ((res = mp_mul_d (&y, q.dp[i - t - 1], &t1)) != MP_OKAY) {
       goto __Y;
     }
@@ -158,7 +166,7 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
       goto __Y;
     }
 
-    /* step 3.4 if x < 0 then { x = x + y*b^{i-t-1}; q{i-t-1} -= 1; } */
+    /* if x < 0 then { x = x + y*b**{i-t-1}; q{i-t-1} -= 1; } */
     if (x.sign == MP_NEG) {
       if ((res = mp_copy (&y, &t1)) != MP_OKAY) {
         goto __Y;
@@ -174,7 +182,10 @@ mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
     }
   }
 
-  /* now q is the quotient and x is the remainder [which we have to normalize] */
+  /* now q is the quotient and x is the remainder 
+   * [which we have to normalize] 
+   */
+  
   /* get sign before writing to c */
   x.sign = a->sign;
 

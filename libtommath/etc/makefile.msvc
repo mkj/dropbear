@@ -2,7 +2,7 @@
 #
 #Tom St Denis
 
-CFLAGS = /I../ /Ogityb2 /Gs /DWIN32 /W3
+CFLAGS = /I../ /Ox /DWIN32 /W3
 
 pprime: pprime.obj
 	cl pprime.obj ../tommath.lib 
@@ -15,3 +15,6 @@ tune: tune.obj
 	
 drprime: drprime.obj
 	cl drprime.obj ../tommath.lib
+
+2kprime: 2kprime.obj
+	cl 2kprime.obj ../tommath.lib

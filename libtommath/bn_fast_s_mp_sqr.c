@@ -16,15 +16,17 @@
 
 /* fast squaring
  *
- * This is the comba method where the columns of the product are computed first
- * then the carries are computed.  This has the effect of making a very simple
- * inner loop that is executed the most
+ * This is the comba method where the columns of the product 
+ * are computed first then the carries are computed.  This 
+ * has the effect of making a very simple inner loop that 
+ * is executed the most
  *
  * W2 represents the outer products and W the inner.
  *
- * A further optimizations is made because the inner products are of the form
- * "A * B * 2".  The *2 part does not need to be computed until the end which is
- * good because 64-bit shifts are slow!
+ * A further optimizations is made because the inner 
+ * products are of the form "A * B * 2".  The *2 part does 
+ * not need to be computed until the end which is good 
+ * because 64-bit shifts are slow!
  *
  * Based on Algorithm 14.16 on pp.597 of HAC.
  *
@@ -48,26 +50,15 @@ fast_s_mp_sqr (mp_int * a, mp_int * b)
    * Note that there are two buffers.  Since squaring requires
    * a outter and inner product and the inner product requires
    * computing a product and doubling it (a relatively expensive
-   * op to perform n^2 times if you don't have to) the inner and
+   * op to perform n**2 times if you don't have to) the inner and
    * outer products are computed in different buffers.  This way
    * the inner product can be doubled using n doublings instead of
-   * n^2
+   * n**2
    */
   memset (W, 0, newused * sizeof (mp_word));
   memset (W2, 0, newused * sizeof (mp_word));
 
-/* note optimization
- * values in W2 are only written in even locations which means
- * we can collapse the array to 256 words [and fixup the memset above]
- * provided we also fix up the summations below.  Ideally
- * the fixup loop should be unrolled twice to handle the even/odd
- * cases, and then a final step to handle odd cases [e.g. newused == odd]
- *
- * This will not only save ~8*256 = 2KB of stack but lower the number of
- * operations required to finally fix up the columns
- */
-
-  /* This computes the inner product.  To simplify the inner N^2 loop
+  /* This computes the inner product.  To simplify the inner N**2 loop
    * the multiplication by two is done afterwards in the N loop.
    */
   for (ix = 0; ix < pa; ix++) {
@@ -101,18 +92,19 @@ fast_s_mp_sqr (mp_int * a, mp_int * b)
   }
 
   /* setup dest */
-  olduse = b->used;
+  olduse  = b->used;
   b->used = newused;
-
-  /* double first value, since the inner products are half of what they should be */
-  W[0] += W[0] + W2[0];
 
   /* now compute digits */
   {
     register mp_digit *tmpb;
 
-    tmpb = b->dp;
+    /* double first value, since the inner products are 
+     * half of what they should be 
+     */
+    W[0] += W[0] + W2[0];
 
+    tmpb = b->dp;
     for (ix = 1; ix < newused; ix++) {
       /* double/add next digit */
       W[ix] += W[ix] + W2[ix];
@@ -120,9 +112,13 @@ fast_s_mp_sqr (mp_int * a, mp_int * b)
       W[ix] = W[ix] + (W[ix - 1] >> ((mp_word) DIGIT_BIT));
       *tmpb++ = (mp_digit) (W[ix - 1] & ((mp_word) MP_MASK));
     }
+    /* set the last value.  Note even if the carry is zero 
+     * this is required since the next step will not zero 
+     * it if b originally had a value at b->dp[2*a.used]
+     */
     *tmpb++ = (mp_digit) (W[(newused) - 1] & ((mp_word) MP_MASK));
 
-    /* clear high */
+    /* clear high digits */
     for (; ix < olduse; ix++) {
       *tmpb++ = 0;
     }

@@ -33,6 +33,7 @@ mp_mul_d (mp_int * a, mp_digit b, mp_int * c)
 
   /* set the new temporary used count */
   c->used = pa + 1;
+  c->sign = a->sign;
 
   {
     register mp_digit u, *tmpa, *tmpc;

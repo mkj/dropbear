@@ -35,7 +35,7 @@ mp_set_int (mp_int * a, unsigned int b)
     b <<= 4;
 
     /* ensure that digits are not clamped off */
-    a->used += 32 / DIGIT_BIT + 2;
+    a->used += 1;
   }
   mp_clamp (a);
   return MP_OKAY;

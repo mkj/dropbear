@@ -69,7 +69,7 @@ extern "C" {
    
    /* this is to make porting into LibTomCrypt easier :-) */
 #ifndef CRYPT
-   #ifdef _MSC_VER
+   #if defined(_MSC_VER) || defined(__BORLANDC__) 
       typedef unsigned __int64   ulong64;
       typedef signed __int64     long64;
    #else
@@ -81,7 +81,11 @@ extern "C" {
    typedef unsigned long      mp_digit;
    typedef ulong64            mp_word;
 
+#ifdef MP_31BIT   
+   #define DIGIT_BIT          31
+#else
    #define DIGIT_BIT          28
+#endif   
 #endif
 
 /* otherwise the bits per digit is calculated automatically from the size of a mp_digit */
@@ -112,7 +116,8 @@ typedef int           mp_err;
 /* you'll have to tune these... */
 extern int KARATSUBA_MUL_CUTOFF,
            KARATSUBA_SQR_CUTOFF,
-           MONTGOMERY_EXPT_CUTOFF;
+           TOOM_MUL_CUTOFF,
+           TOOM_SQR_CUTOFF;
 
 /* various build options */
 #define MP_PREC                 64      /* default digits of precision (must be power of two) */
@@ -270,6 +275,9 @@ int mp_mul_d(mp_int *a, mp_digit b, mp_int *c);
 /* a/b => cb + d == a */
 int mp_div_d(mp_int *a, mp_digit b, mp_int *c, mp_digit *d);
 
+/* a/3 => 3c + d == a */
+int mp_div_3(mp_int *a, mp_int *c, mp_digit *d);
+
 /* c = a**b */
 int mp_expt_d(mp_int *a, mp_digit b, mp_int *c);
 
@@ -340,6 +348,15 @@ void mp_dr_setup(mp_int *a, mp_digit *d);
 
 /* reduces a modulo b using the Diminished Radix method */
 int mp_dr_reduce(mp_int *a, mp_int *b, mp_digit mp);
+
+/* returns true if a can be reduced with mp_reduce_2k */
+int mp_reduce_is_2k(mp_int *a);
+
+/* determines k value for 2k reduction */
+int mp_reduce_2k_setup(mp_int *a, mp_digit *d);
+
+/* reduces a modulo b where b is of the form 2**p - k [0 <= a] */
+int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit k);
 
 /* d = a**b (mod c) */
 int mp_exptmod(mp_int *a, mp_int *b, mp_int *c, mp_int *d);
@@ -425,10 +442,13 @@ int s_mp_mul_high_digs(mp_int *a, mp_int *b, mp_int *c, int digs);
 int fast_s_mp_sqr(mp_int *a, mp_int *b);
 int s_mp_sqr(mp_int *a, mp_int *b);
 int mp_karatsuba_mul(mp_int *a, mp_int *b, mp_int *c);
+int mp_toom_mul(mp_int *a, mp_int *b, mp_int *c);
 int mp_karatsuba_sqr(mp_int *a, mp_int *b);
+int mp_toom_sqr(mp_int *a, mp_int *b);
 int fast_mp_invmod(mp_int *a, mp_int *b, mp_int *c);
 int fast_mp_montgomery_reduce(mp_int *a, mp_int *m, mp_digit mp);
 int mp_exptmod_fast(mp_int *G, mp_int *X, mp_int *P, mp_int *Y, int mode);
+int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y);
 void bn_reverse(unsigned char *s, int len);
 
 #ifdef __cplusplus

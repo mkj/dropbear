@@ -1,6 +1,6 @@
 CFLAGS  +=  -I./ -Wall -W -Wshadow -O3 -fomit-frame-pointer -funroll-loops
 
-VERSION=0.17
+VERSION=0.21
 
 default: libtommath.a
 
@@ -33,7 +33,9 @@ bn_mp_to_signed_bin.o bn_mp_unsigned_bin_size.o bn_mp_signed_bin_size.o bn_radix
 bn_mp_xor.o bn_mp_and.o bn_mp_or.o bn_mp_rand.o bn_mp_montgomery_calc_normalization.o \
 bn_mp_prime_is_divisible.o bn_prime_tab.o bn_mp_prime_fermat.o bn_mp_prime_miller_rabin.o \
 bn_mp_prime_is_prime.o bn_mp_prime_next_prime.o bn_mp_dr_reduce.o bn_mp_multi.o \
-bn_mp_dr_is_modulus.o bn_mp_dr_setup.o
+bn_mp_dr_is_modulus.o bn_mp_dr_setup.o bn_mp_reduce_setup.o \
+bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
+bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
@@ -49,7 +51,7 @@ install: libtommath.a docs
 
 test: libtommath.a demo/demo.o
 	$(CC) demo/demo.o libtommath.a -o test
-	cd mtest ; gcc $(CFLAGS) mtest.c -o mtest -s
+	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest -s
         
 timing: libtommath.a
 	$(CC) $(CFLAGS) -DTIMER demo/demo.c libtommath.a -o ltmtest -s
@@ -63,6 +65,11 @@ docdvi: tommath.src
 	makeindex tommath
 	latex tommath > /dev/null
 		
+# poster, makes the single page PDF poster
+poster: poster.tex
+	pdflatex poster
+	rm -f poster.aux poster.log 
+	
 # makes the LTM book PS/PDF file, requires tetex, cleans up the LaTeX temp files
 docs:	
 	cd pics ; make pdfes
@@ -88,12 +95,14 @@ manual:
 	
 clean:
 	rm -f *.pdf *.o *.a *.obj *.lib *.exe etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
-        tommath.idx tommath.toc tommath.log tommath.aux tommath.dvi tommath.lof tommath.ind tommath.ilg *.ps *.pdf *.log *.s mpi.c 
+        tommath.idx tommath.toc tommath.log tommath.aux tommath.dvi tommath.lof tommath.ind tommath.ilg *.ps *.pdf *.log *.s mpi.c \
+        poster.aux poster.dvi poster.log
 	cd etc ; make clean
 	cd pics ; make clean
 
-zipup: clean manual
+zipup: clean manual poster
 	perl gen.pl ; mv mpi.c pre_gen/ ; \
 	cd .. ; rm -rf ltm* libtommath-$(VERSION) ; mkdir libtommath-$(VERSION) ; \
-	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; tar -c libtommath-$(VERSION)/* > ltm-$(VERSION).tar ; \
+	cp -R ./libtommath/* ./libtommath-$(VERSION)/ ; cp tdcal.pdf ./libtommath-$(VERSION)/ ; cd ./libtommath-$(VERSION) ; rm -f tommath.src tommath.tex tommath.out ; cd pics ; rm -f * ; cd .. ; cd .. ; ls ; \
+	tar -c libtommath-$(VERSION)/* > ltm-$(VERSION).tar ; \
 	bzip2 -9vv ltm-$(VERSION).tar ; zip -9 -r ltm-$(VERSION).zip libtommath-$(VERSION)/*

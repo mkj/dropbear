@@ -14,24 +14,34 @@
  */
 #include <tommath.h>
 
-/* c = |a| * |b| using Karatsuba Multiplication using three half size multiplications
+/* c = |a| * |b| using Karatsuba Multiplication using 
+ * three half size multiplications
  *
- * Let B represent the radix [e.g. 2**DIGIT_BIT] and let n represent half of the number of digits in the min(a,b)
+ * Let B represent the radix [e.g. 2**DIGIT_BIT] and 
+ * let n represent half of the number of digits in 
+ * the min(a,b)
  *
- * a = a1 * B^n + a0
- * b = b1 * B^n + b0
+ * a = a1 * B**n + a0
+ * b = b1 * B**n + b0
  *
- * Then, a * b => a1b1 * B^2n + ((a1 - b1)(a0 - b0) + a0b0 + a1b1) * B + a0b0
+ * Then, a * b => 
+   a1b1 * B**2n + ((a1 - a0)(b1 - b0) + a0b0 + a1b1) * B + a0b0
  *
- * Note that a1b1 and a0b0 are used twice and only need to be computed once.  So in total
- * three half size (half # of digit) multiplications are performed, a0b0, a1b1 and (a1-b1)(a0-b0)
+ * Note that a1b1 and a0b0 are used twice and only need to be 
+ * computed once.  So in total three half size (half # of 
+ * digit) multiplications are performed, a0b0, a1b1 and 
+ * (a1-b1)(a0-b0)
  *
- * Note that a multiplication of half the digits requires 1/4th the number of single precision 
- * multiplications so in total after one call 25% of the single precision multiplications are saved.
- * Note also that the call to mp_mul can end up back in this function if the a0, a1, b0, or b1 are above
- * the threshold.  This is known as divide-and-conquer and leads to the famous O(N^lg(3)) or O(N^1.584) work which
- * is asymptopically lower than the standard O(N^2) that the baseline/comba methods use.  Generally though the 
- * overhead of this method doesn't pay off until a certain size (N ~ 80) is reached.
+ * Note that a multiplication of half the digits requires
+ * 1/4th the number of single precision multiplications so in 
+ * total after one call 25% of the single precision multiplications 
+ * are saved.  Note also that the call to mp_mul can end up back 
+ * in this function if the a0, a1, b0, or b1 are above the threshold.  
+ * This is known as divide-and-conquer and leads to the famous 
+ * O(N**lg(3)) or O(N**1.584) work which is asymptopically lower than 
+ * the standard O(N**2) that the baseline/comba methods use.  
+ * Generally though the overhead of this method doesn't pay off 
+ * until a certain size (N ~ 80) is reached.
  */
 int
 mp_karatsuba_mul (mp_int * a, mp_int * b, mp_int * c)
@@ -39,6 +49,7 @@ mp_karatsuba_mul (mp_int * a, mp_int * b, mp_int * c)
   mp_int  x0, x1, y0, y1, t1, x0y0, x1y1;
   int     B, err;
 
+  /* default the return code to an error */
   err = MP_MEM;
 
   /* min # of digits */
@@ -101,14 +112,15 @@ mp_karatsuba_mul (mp_int * a, mp_int * b, mp_int * c)
     }
   }
 
-  /* only need to clamp the lower words since by definition the upper words x1/y1 must
-   * have a known number of digits
+  /* only need to clamp the lower words since by definition the 
+   * upper words x1/y1 must have a known number of digits
    */
   mp_clamp (&x0);
   mp_clamp (&y0);
 
   /* now calc the products x0y0 and x1y1 */
-  if (mp_mul (&x0, &y0, &x0y0) != MP_OKAY)  /* after this x0 is no longer required, free temp [x0==t2]! */
+  /* after this x0 is no longer required, free temp [x0==t2]! */
+  if (mp_mul (&x0, &y0, &x0y0) != MP_OKAY)  
     goto X1Y1;          /* x0y0 = x0*y0 */
   if (mp_mul (&x1, &y1, &x1y1) != MP_OKAY)
     goto X1Y1;          /* x1y1 = x1*y1 */
@@ -138,6 +150,7 @@ mp_karatsuba_mul (mp_int * a, mp_int * b, mp_int * c)
   if (mp_add (&t1, &x1y1, c) != MP_OKAY)
     goto X1Y1;          /* t1 = x0y0 + t1 + x1y1 */
 
+  /* Algorithm succeeded set the return code to MP_OKAY */
   err = MP_OKAY;
 
 X1Y1:mp_clear (&x1y1);
