@@ -171,7 +171,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 
 	TRACE(("enter buf_put_priv_key"));
-	TRACE(("type is %d\n", type));
+	TRACE(("type is %d", type));
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {

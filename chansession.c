@@ -270,8 +270,8 @@ void closechansess(struct Channel *channel) {
 	for (i = 0; i < ses.childpidsize; i++) {
 		if (ses.childpids[i].chansess == chansess) {
 			assert(ses.childpids[i].pid > 0);
-			TRACE(("closing pid %d\n", ses.childpids[i].pid));
-			TRACE(("exited = %d\n", chansess->exited));
+			TRACE(("closing pid %d", ses.childpids[i].pid));
+			TRACE(("exited = %d", chansess->exited));
 			ses.childpids[i].pid = -1;
 			ses.childpids[i].chansess = NULL;
 		}
@@ -308,7 +308,7 @@ void chansessionrequest(struct Channel *channel) {
 
 	chansess = (struct ChanSess*)channel->typedata;
 	assert(chansess != NULL);
-	TRACE(("type is %s\n", type));
+	TRACE(("type is %s", type));
 
 	if (strcmp(type, "window-change") == 0) {
 		ret = sessionwinchange(chansess);
