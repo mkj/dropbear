@@ -31,9 +31,21 @@
 void m_mp_init(mp_int *mp) {
 
 	if (mp_init(mp) != MP_OKAY) {
-		dropbear_exit("error initialising mpint");
+		dropbear_exit("mem alloc error");
 	}
 }
+
+void m_mp_init_multi(mp_int *mp, ...) {
+
+	va_list param;
+
+	va_start(param, mp);
+	if (mp_init_multi(param) != MP_OKAY) {
+		dropbear_exit("mem alloc error");
+	}
+	va_end(param);
+}
+
 
 /* convert an unsigned mp into an array of bytes, malloced.
  * This array must be freed after use, len contains the length of the array,
@@ -46,7 +58,7 @@ unsigned char* mptobytes(mp_int *mp, int *len) {
 	size = mp_unsigned_bin_size(mp);
 	ret = m_malloc(size);
 	if (mp_to_unsigned_bin(mp, ret) != MP_OKAY) {
-		dropbear_exit("error converting mp_int to bytes");
+		dropbear_exit("mem alloc error");
 	}
 	if (len != NULL) {
 		*len = size;
@@ -57,7 +69,7 @@ unsigned char* mptobytes(mp_int *mp, int *len) {
 void bytestomp(mp_int *mp, unsigned char* bytes, unsigned int len) {
 
 	if (mp_read_unsigned_bin(mp, bytes, len) != MP_OKAY) {
-		dropbear_exit("error converting bytes to mp_int");
+		dropbear_exit("mem alloc error");
 	}
 }
 

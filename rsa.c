@@ -50,9 +50,8 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 	TRACE(("enter buf_get_rsa_pub_key"));
 	assert(key != NULL);
 	key->e = m_malloc(sizeof(mp_int));
-	m_mp_init(key->e);
 	key->n = m_malloc(sizeof(mp_int));
-	m_mp_init(key->n);
+	m_mp_init_multi(key->e, key->n);
 	key->d = NULL;
 	key->p = NULL;
 	key->q = NULL;
@@ -96,14 +95,14 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 		key->q = NULL;
 	} else {
 		key->p = m_malloc(sizeof(mp_int));
-		m_mp_init(key->p);
+		key->q = m_malloc(sizeof(mp_int));
+		m_mp_init_multi(key->p, key->q);
+
 		if (buf_getmpint(buf, key->p) == DROPBEAR_FAILURE) {
 			TRACE(("leave buf_get_rsa_priv_key: p: ret == DROPBEAR_FAILURE"));
 			return DROPBEAR_FAILURE;
 		}
 
-		key->q = m_malloc(sizeof(mp_int));
-		m_mp_init(key->q);
 		if (buf_getmpint(buf, key->q) == DROPBEAR_FAILURE) {
 			TRACE(("leave buf_get_rsa_priv_key: q: ret == DROPBEAR_FAILURE"));
 			return DROPBEAR_FAILURE;
@@ -202,8 +201,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	assert(key != NULL);
 
-	m_mp_init(&rsa_mdash);
-	m_mp_init(&rsa_s);
+	m_mp_init_multi(&rsa_mdash, &rsa_s);
 
 	slen = buf_getint(buf);
 	if (slen != (unsigned int)mp_unsigned_bin_size(key->n)) {
@@ -229,10 +227,8 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	}
 
 out:
-	mp_clear(rsa_em);
+	mp_clear_multi(rsa_em, &rsa_mdash, &rsa_s);
 	m_free(rsa_em);
-	mp_clear(&rsa_mdash);
-	mp_clear(&rsa_s);
 	return ret;
 
 }

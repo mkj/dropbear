@@ -49,15 +49,11 @@ dss_key * gen_dss_priv_key(unsigned int size) {
 	key = (dss_key*)m_malloc(sizeof(dss_key));
 
 	key->p = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(key->p);
 	key->q = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(key->q);
 	key->g = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(key->g);
 	key->y = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(key->y);
 	key->x = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(key->x);
+	m_mp_init_multi(key->p, key->q, key->g, key->y, key->x);
 	
 	seedrandom();
 	
@@ -97,13 +93,8 @@ static void getp(dss_key *key, unsigned int size) {
 	mp_int tempX, tempC, tempP, temp2q;
 	int result;
 	unsigned char *buf;
-	unsigned int count;
 
-
-	m_mp_init(&tempX);
-	m_mp_init(&tempC);
-	m_mp_init(&tempP);
-	m_mp_init(&temp2q);
+	m_mp_init_multi(&tempX, &tempC, &tempP, &temp2q);
 
 
 	/* 2*q */
@@ -115,7 +106,6 @@ static void getp(dss_key *key, unsigned int size) {
 	buf = (unsigned char*)m_malloc(size);
 
 	result = 0;
-	count = 0;
 	do {
 		
 		genrandom(buf, size);
@@ -150,38 +140,25 @@ static void getp(dss_key *key, unsigned int size) {
 			fprintf(stderr, "dss key generation failed\n");
 			exit(1);
 		}
-		count++;
 	} while (!result);
 
-	mp_clear(&tempX);
-	mp_clear(&tempC);
-	mp_clear(&temp2q);
-	mp_clear(&tempP);
+	mp_clear_multi(&tempX, &tempC, &tempP, &temp2q);
 	m_free(buf);
 }
 
 static void getg(dss_key * key) {
 
 	char printbuf[1000];
-	mp_int div, h, val, dummy;
+	mp_int div, h, val, remaind;
 
-	m_mp_init(&div);
-	m_mp_init(&h);
-	m_mp_init(&val);
-	m_mp_init(&dummy);
+	m_mp_init_multi(&div, &h, &val);
 
 	/* get div=(p-1)/q */
 	if (mp_sub_d(key->p, 1, &val) != MP_OKAY) {
 		fprintf(stderr, "dss key generation failed\n");
 		exit(1);
 	}
-	if (mp_div(&val, key->q, &div, &dummy) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
-		exit(1);
-	}
-
-	/* check that (p-1) was divisible by q for sanity */
-	if (mp_cmp_d(&dummy, 0) != MP_EQ) {
+	if (mp_div(&val, key->q, &div, NULL) != MP_OKAY) {
 		fprintf(stderr, "dss key generation failed\n");
 		exit(1);
 	}
@@ -195,20 +172,16 @@ static void getg(dss_key * key) {
 			exit(1);
 		}
 
-		if (mp_add_d(&h, 1, &dummy) != MP_OKAY) {
+		if (mp_add_d(&h, 1, &h) != MP_OKAY) {
 			fprintf(stderr, "dss key generation failed\n");
 			exit(1);
 		}
-		mp_exch(&h, &dummy);
 	
 	} while (mp_cmp_d(key->g, 1) != MP_GT);
 
 	mp_toradix(key->g, printbuf, 10);
 
-	mp_clear(&div);
-	mp_clear(&h);
-	mp_clear(&val);
-	mp_clear(&dummy);
+	mp_clear_multi(&div, &h, &val);
 }
 
 static void getx(dss_key *key) {

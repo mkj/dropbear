@@ -47,13 +47,10 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 
 	assert(key != NULL);
 	key->p = m_malloc(sizeof(mp_int));
-	m_mp_init(key->p);
 	key->q = m_malloc(sizeof(mp_int));
-	m_mp_init(key->q);
 	key->g = m_malloc(sizeof(mp_int));
-	m_mp_init(key->g);
 	key->y = m_malloc(sizeof(mp_int));
-	m_mp_init(key->y);
+	m_mp_init_multi(key->p, key->q, key->g, key->y);
 	key->x = NULL;
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_DSS_LEN); /* int + "ssh-dss" */
@@ -176,10 +173,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
 
-	m_mp_init(&val1);
-	m_mp_init(&val2);
-	m_mp_init(&val3);
-	m_mp_init(&val4);
+	m_mp_init_multi(&val1, &val2, &val3, &val4);
 
 	/* create the signature - s' and r' are the received signatures in buf */
 	/* w = (s')-1 mod q */
@@ -239,10 +233,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	}
 
 out:
-	mp_clear(&val1);
-	mp_clear(&val2);
-	mp_clear(&val3);
-	mp_clear(&val4);
+	mp_clear_multi(&val1, &val2, &val3, &val4);
 	m_free(string);
 
 	return ret;
@@ -290,7 +281,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	sha1_process(&hs, data, len);
 	sha1_done(&hs, msghash);
 
-	m_mp_init(&dss_k);
+	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s, &dss_m);
 #ifdef DSS_PROTOK	
 	/* hash the privkey */
 	privkeytmp = mptobytes(key->x, &i);
@@ -324,11 +315,6 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 #endif
 
 	/* now generate the actual signature */
-	m_mp_init(&dss_temp1);
-	m_mp_init(&dss_temp2);
-	m_mp_init(&dss_r);
-	m_mp_init(&dss_s);
-	m_mp_init(&dss_m);
 	bytestomp(&dss_m, msghash, SHA1_HASH_SIZE);
 
 	/* g^k mod p */
@@ -348,22 +334,17 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	if (mp_addmod(&dss_m, &dss_temp1, key->q, &dss_temp2) != MP_OKAY) {
 		dropbear_exit("dss error");
 	}
-	mp_clear(&dss_m);
 	
 	/* (k^-1) mod q */
 	if (mp_invmod(&dss_k, key->q, &dss_temp1) != MP_OKAY) {
 		dropbear_exit("dss error");
 	}
-	mp_clear(&dss_k);
 
 	/* s = (k^-1(SHA1(M) + xr)) mod q */
 	if (mp_mulmod(&dss_temp1, &dss_temp2, key->q, &dss_s) != MP_OKAY) {
 		dropbear_exit("dss error");
 	}
-	mp_clear(&dss_temp1);
-	mp_clear(&dss_temp2);
-	
-	/* create the signature to return */
+
 	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putint(buf, 2*SHA1_HASH_SIZE);
 
@@ -392,6 +373,10 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	}
 	mp_clear(&dss_s);
 	buf_incrwritepos(buf, writelen);
+
+	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s, &dss_m);
+	
+	/* create the signature to return */
 
 	TRACE(("leave buf_put_dss_sign"));
 }
