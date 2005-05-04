@@ -419,7 +419,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	mp_clear(&dss_s);
 	buf_incrwritepos(buf, writelen);
 
-	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s,
+	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp2, &dss_r, &dss_s,
 			&dss_m, NULL);
 	
 	/* create the signature to return */
