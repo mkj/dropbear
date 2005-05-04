@@ -964,7 +964,8 @@ void recv_msg_channel_open_confirmation() {
 	channel->transwindow = buf_getint(ses.payload);
 	channel->transmaxpacket = buf_getint(ses.payload);
 	
-	TRACE(("new chan remote %d localho %d", channel->remotechan, chan))
+	TRACE(("new chan remote %d local %d", 
+				channel->remotechan, channel->index))
 
 	/* Run the inithandler callback */
 	if (channel->type->inithandler) {
