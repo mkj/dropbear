@@ -77,10 +77,7 @@ static void getq(dss_key *key) {
 	buf[0] |= 0x80; /* top bit high */
 	buf[QSIZE-1] |= 0x01; /* bottom bit high */
 
-	if (mp_read_unsigned_bin(key->q, buf, QSIZE) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
-		exit(1);
-	}
+	bytes_to_mp(key->q, buf, QSIZE);
 
 	/* 18 rounds are required according to HAC */
 	if (mp_prime_next_prime(key->q, 18, 0) != MP_OKAY) {
@@ -116,10 +113,7 @@ static void getp(dss_key *key, unsigned int size) {
 		buf[0] |= 0x80; /* set the top bit high */
 
 		/* X is a random mp_int */
-		if (mp_read_unsigned_bin(&tempX, buf, size) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
-			exit(1);
-		}
+		bytes_to_mp(&tempX, buf, size);
 
 		/* C = X mod 2q */
 		if (mp_mod(&tempX, &temp2q, &tempC) != MP_OKAY) {
@@ -147,6 +141,7 @@ static void getp(dss_key *key, unsigned int size) {
 	} while (!result);
 
 	mp_clear_multi(&tempX, &tempC, &tempP, &temp2q, NULL);
+	m_burn(buf, size);
 	m_free(buf);
 }
 
@@ -189,22 +184,7 @@ static void getg(dss_key * key) {
 
 static void getx(dss_key *key) {
 
-	DEF_MP_INT(val);
-	char buf[QSIZE];
-	
-	m_mp_init(&val);
-	
-	do {
-		genrandom(buf, QSIZE);
-
-		if (mp_read_unsigned_bin(&val, buf, QSIZE) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
-		}
-	} while ((mp_cmp_d(&val, 1) == MP_GT) && (mp_cmp(&val, key->q) == MP_LT));
-
-	mp_copy(&val, key->x);
-	mp_clear(&val);
-
+	gen_random_mpint(key->q, key->x);
 }
 
 static void gety(dss_key *key) {

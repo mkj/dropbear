@@ -38,8 +38,9 @@
 
 #ifdef DROPBEAR_RSA 
 
-static mp_int * rsa_pad_em(rsa_key * key,
-		const unsigned char * data, unsigned int len);
+static void rsa_pad_em(rsa_key * key,
+		const unsigned char * data, unsigned int len,
+		mp_int * rsa_em);
 
 /* Load a public rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
@@ -203,14 +204,14 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	unsigned int slen;
 	DEF_MP_INT(rsa_s);
 	DEF_MP_INT(rsa_mdash);
-	mp_int *rsa_em = NULL;
+	DEF_MP_INT(rsa_em);
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter buf_rsa_verify"))
 
 	assert(key != NULL);
 
-	m_mp_init_multi(&rsa_mdash, &rsa_s, NULL);
+	m_mp_init_multi(&rsa_mdash, &rsa_s, &rsa_em, NULL);
 
 	slen = buf_getint(buf);
 	if (slen != (unsigned int)mp_unsigned_bin_size(key->n)) {
@@ -231,29 +232,25 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 	}
 
 	/* create the magic PKCS padded value */
-	rsa_em = rsa_pad_em(key, data, len);
+	rsa_pad_em(key, data, len, &rsa_em);
 
 	if (mp_exptmod(&rsa_s, key->e, key->n, &rsa_mdash) != MP_OKAY) {
 		TRACE(("failed exptmod rsa_s"))
 		goto out;
 	}
 
-	if (mp_cmp(rsa_em, &rsa_mdash) == MP_EQ) {
+	if (mp_cmp(&rsa_em, &rsa_mdash) == MP_EQ) {
 		/* signature is valid */
 		TRACE(("success!"))
 		ret = DROPBEAR_SUCCESS;
 	}
 
 out:
-	if (rsa_em) {
-		mp_clear(rsa_em);
-		m_free(rsa_em);
-	}
-	mp_clear_multi(&rsa_mdash, &rsa_s, NULL);
+	mp_clear_multi(&rsa_mdash, &rsa_s, &rsa_em, NULL);
 	TRACE(("leave buf_rsa_verify: ret %d", ret))
 	return ret;
-
 }
+
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
 /* Sign the data presented with key, writing the signature contents
@@ -264,22 +261,56 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	unsigned int nsize, ssize;
 	unsigned int i;
 	DEF_MP_INT(rsa_s);
-	mp_int *rsa_em = NULL;
+	DEF_MP_INT(rsa_tmp1);
+	DEF_MP_INT(rsa_tmp2);
+	DEF_MP_INT(rsa_tmp3);
+	unsigned char *tmpbuf;
 	
 	TRACE(("enter buf_put_rsa_sign"))
 	assert(key != NULL);
 
-	rsa_em = rsa_pad_em(key, data, len);
+	m_mp_init_multi(&rsa_s, &rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 
-	m_mp_init(&rsa_s);
+	rsa_pad_em(key, data, len, &rsa_tmp1);
 
 	/* the actual signing of the padded data */
+
+#define RSA_BLINDING
+#ifdef RSA_BLINDING
+
+	/* With blinding, s = (r^(-1))((em)*r^e)^d mod n */
+
+	/* generate the r blinding value */
+	/* rsa_tmp2 is r */
+	gen_random_mpint(key->n, &rsa_tmp2);
+
+	/* rsa_tmp1 is em */
+	/* em' = em * r^e mod n */
+
+	mp_exptmod(&rsa_tmp2, key->e, key->n, &rsa_s); /* rsa_s used as a temp var*/
+	mp_invmod(&rsa_tmp2, key->n, &rsa_tmp3);
+	mp_mulmod(&rsa_tmp1, &rsa_s, key->n, &rsa_tmp2);
+
+	/* rsa_tmp2 is em' */
+	/* s' = (em')^d mod n */
+	mp_exptmod(&rsa_tmp2, key->d, key->n, &rsa_tmp1);
+
+	/* rsa_tmp1 is s' */
+	/* rsa_tmp3 is r^(-1) mod n */
+	/* s = (s')r^(-1) mod n */
+	mp_mulmod(&rsa_tmp1, &rsa_tmp3, key->n, &rsa_s);
+
+#else
+
 	/* s = em^d mod n */
-	if (mp_exptmod(rsa_em, key->d, key->n, &rsa_s) != MP_OKAY) {
+	/* rsa_tmp1 is em */
+	if (mp_exptmod(&rsa_tmp1, key->d, key->n, &rsa_s) != MP_OKAY) {
 		dropbear_exit("rsa error");
 	}
-	mp_clear(rsa_em);
-	m_free(rsa_em);
+
+#endif /* RSA_BLINDING */
+
+	mp_clear_multi(&rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 	
 	/* create the signature to return */
 	buf_putstring(buf, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
@@ -318,9 +349,12 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
  *
  * prefix is the ASN1 designator prefix,
  * hex 30 21 30 09 06 05 2B 0E 03 02 1A 05 00 04 14
+ *
+ * rsa_em must be a pointer to an initialised mp_int.
  */
-static mp_int * rsa_pad_em(rsa_key * key,
-		const unsigned char * data, unsigned int len) {
+static void rsa_pad_em(rsa_key * key,
+		const unsigned char * data, unsigned int len, 
+		mp_int * rsa_em) {
 
 	/* ASN1 designator (including the 0x00 preceding) */
 	const char rsa_asn1_magic[] = 
@@ -330,7 +364,6 @@ static mp_int * rsa_pad_em(rsa_key * key,
 	buffer * rsa_EM = NULL;
 	hash_state hs;
 	unsigned int nsize;
-	mp_int * rsa_em = NULL;
 	
 	assert(key != NULL);
 	assert(data != NULL);
@@ -358,16 +391,9 @@ static mp_int * rsa_pad_em(rsa_key * key,
 
 	/* Create the mp_int from the encoded bytes */
 	buf_setpos(rsa_EM, 0);
-	rsa_em = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(rsa_em);
-	if (mp_read_unsigned_bin(rsa_em, buf_getptr(rsa_EM, rsa_EM->size),
-				rsa_EM->size) != MP_OKAY) {
-		dropbear_exit("rsa error");
-	}
+	bytes_to_mp(rsa_em, buf_getptr(rsa_EM, rsa_EM->size),
+			rsa_EM->size);
 	buf_free(rsa_EM);
-
-	return rsa_em;
-
 }
 
 #endif /* DROPBEAR_RSA */

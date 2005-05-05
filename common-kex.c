@@ -469,18 +469,13 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 	DEF_MP_INT(dh_p);
 	DEF_MP_INT(dh_q);
 	DEF_MP_INT(dh_g);
-	unsigned char randbuf[DH_P_LEN];
-	int dh_q_len;
 
 	TRACE(("enter send_msg_kexdh_reply"))
 	
 	m_mp_init_multi(&dh_g, &dh_p, &dh_q, NULL);
 
 	/* read the prime and generator*/
-	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
-			!= MP_OKAY) {
-		dropbear_exit("Diffie-Hellman error");
-	}
+	bytes_to_mp(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN);
 	
 	if (mp_set_int(&dh_g, DH_G_VAL) != MP_OKAY) {
 		dropbear_exit("Diffie-Hellman error");
@@ -495,16 +490,8 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 		dropbear_exit("Diffie-Hellman error");
 	}
 
-	dh_q_len = mp_unsigned_bin_size(&dh_q);
-
-	/* calculate our random value dh_y */
-	do {
-		assert((unsigned int)dh_q_len <= sizeof(randbuf));
-		genrandom(randbuf, dh_q_len);
-		if (mp_read_unsigned_bin(dh_priv, randbuf, dh_q_len) != MP_OKAY) {
-			dropbear_exit("Diffie-Hellman error");
-		}
-	} while (mp_cmp(dh_priv, &dh_q) == MP_GT || mp_cmp_d(dh_priv, 0) != MP_GT);
+	/* Generate a private portion 0 < dh_priv < dh_q */
+	gen_random_mpint(&dh_q, dh_priv);
 
 	/* f = g^y mod p */
 	if (mp_exptmod(&dh_g, dh_priv, &dh_p, dh_pub) != MP_OKAY) {
@@ -526,10 +513,7 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 
 	/* read the prime and generator*/
 	mp_init(&dh_p);
-	if (mp_read_unsigned_bin(&dh_p, (unsigned char*)dh_p_val, DH_P_LEN)
-			!= MP_OKAY) {
-		dropbear_exit("Diffie-Hellman error");
-	}
+	bytes_to_mp(&dh_p, dh_p_val, DH_P_LEN);
 
 	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
 	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
