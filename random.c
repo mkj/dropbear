@@ -51,6 +51,7 @@ static void readrand(unsigned char* buf, unsigned int buflen);
 
 static void readrand(unsigned char* buf, unsigned int buflen) {
 
+	static int already_blocked = 0;
 	int readfd;
 	unsigned int readpos;
 	int readlen;
@@ -93,6 +94,24 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	/* read the actual random data */
 	readpos = 0;
 	do {
+		if (!already_blocked)
+		{
+			int ret;
+			struct timeval timeout;
+			fd_set read_fds;
+
+			timeout.tv_sec = 2; /* two seconds should be enough */
+			timeout.tv_usec = 0;
+
+			FD_ZERO(&read_fds);
+			FD_SET(readfd, &read_fds);
+			ret = select(readfd + 1, &read_fds, NULL, NULL, &timeout);
+			if (ret == 0)
+			{
+				dropbear_log(LOG_INFO, "Warning: Reading the random source seems to have blocked.\nIf you experience problems, you probably need to find a better entropy source.");
+				already_blocked = 1;
+			}
+		}
 		readlen = read(readfd, &buf[readpos], buflen - readpos);
 		if (readlen <= 0) {
 			if (readlen < 0 && errno == EINTR) {

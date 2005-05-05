@@ -4,9 +4,6 @@ Things which might need doing:
 
 - Make options.h generated from configure perhaps?
 
-- some sort of warning when blocking on random? (could be difficult,
-  investigate alarm() perhaps)
-
 - Improved queueing of unauthed connections
 
 - handle /etc/environment in AIX
