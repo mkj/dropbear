@@ -22,7 +22,7 @@ CC=icc
 #ARFLAGS=r
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
-CFLAGS += -c -I./ -DINTEL_CC
+CFLAGS += -c -I./src/headers/ -DINTEL_CC
 
 #The default rule for make builds the libtomcrypt library.
 default:library
@@ -30,18 +30,18 @@ default:library
 # optimize for SPEED
 #
 # -mcpu= can be pentium, pentiumpro (covers PII through PIII) or pentium4
-# -ax?   specifies make code specifically for ? but compatible with IA-32
-# -x?    specifies compile solely for ? [not specifically IA-32 compatible]
+# -ax?	specifies make code specifically for ? but compatible with IA-32
+# -x?	 specifies compile solely for ? [not specifically IA-32 compatible]
 #
 # where ? is 
-#   K - PIII
-#   W - first P4 [Williamette]
-#   N - P4 Northwood
-#   P - P4 Prescott
-#   B - Blend of P4 and PM [mobile]
+#	K - PIII
+#	W - first P4 [Williamette]
+#	N - P4 Northwood
+#	P - P4 Prescott
+#	B - Blend of P4 and PM [mobile]
 #
 # Default to just generic max opts
-CFLAGS += -O3 -xN -ip 
+CFLAGS += -O3 -xP -ip 
 
 # want to see stuff?
 #CFLAGS += -opt_report
@@ -50,11 +50,15 @@ CFLAGS += -O3 -xN -ip
 
 #Output filenames for various targets.
 LIBNAME=libtomcrypt.a
+LIBTEST=testprof/libtomcrypt_prof.a
 HASH=hashsum
 CRYPT=encrypt
 SMALL=small
 PROF=x86_prof
 TV=tv_gen
+MULTI=multi
+TIMING=timing
+TEST=test
 
 #LIBPATH-The directory for libtomcrypt to be installed to.
 #INCPATH-The directory to install the header files for libtomcrypt.
@@ -67,76 +71,80 @@ DATAPATH=/usr/share/doc/libtomcrypt/pdf
 #List of objects to compile.
 
 #Leave MPI built-in or force developer to link against libtommath?
-MPIOBJECT=mpi.o
+MPIOBJECT=src/misc/mpi/mpi.o
 
-OBJECTS=error_to_string.o mpi_to_ltc_error.o base64_encode.o base64_decode.o \
-\
-crypt.o                    crypt_find_cipher.o      crypt_find_hash_any.o      \
-crypt_hash_is_valid.o      crypt_register_hash.o    crypt_unregister_prng.o    \
-crypt_argchk.o             crypt_find_cipher_any.o  crypt_find_hash_id.o       \
-crypt_prng_descriptor.o    crypt_register_prng.o    crypt_cipher_descriptor.o  \
-crypt_find_cipher_id.o     crypt_find_prng.o        crypt_prng_is_valid.o      \
-crypt_unregister_cipher.o  crypt_cipher_is_valid.o  crypt_find_hash.o          \
-crypt_hash_descriptor.o    crypt_register_cipher.o  crypt_unregister_hash.o    \
-\
-sober128.o fortuna.o sprng.o yarrow.o rc4.o rng_get_bytes.o  rng_make_prng.o \
-\
-rand_prime.o is_prime.o \
-\
-ecc.o  dh.o \
-\
-rsa_decrypt_key.o  rsa_encrypt_key.o  rsa_exptmod.o  rsa_free.o  rsa_make_key.o  \
-rsa_sign_hash.o  rsa_verify_hash.o rsa_export.o rsa_import.o tim_exptmod.o \
-rsa_v15_encrypt_key.o rsa_v15_decrypt_key.o rsa_v15_sign_hash.o rsa_v15_verify_hash.o \
-\
-dsa_export.o  dsa_free.o  dsa_import.o  dsa_make_key.o  dsa_sign_hash.o  \
-dsa_verify_hash.o  dsa_verify_key.o \
-\
-aes.o aes_enc.o \
-\
-blowfish.o des.o safer_tab.o safer.o saferp.o rc2.o xtea.o \
-rc6.o rc5.o cast5.o noekeon.o twofish.o skipjack.o \
-\
-md2.o md4.o md5.o sha1.o sha256.o sha512.o tiger.o whirl.o \
-rmd128.o rmd160.o chc.o \
-\
-packet_store_header.o  packet_valid_header.o \
-\
-eax_addheader.o  eax_decrypt.o  eax_decrypt_verify_memory.o  eax_done.o  eax_encrypt.o  \
-eax_encrypt_authenticate_memory.o  eax_init.o  eax_test.o \
-\
-ocb_decrypt.o  ocb_decrypt_verify_memory.o  ocb_done_decrypt.o  ocb_done_encrypt.o  \
-ocb_encrypt.o  ocb_encrypt_authenticate_memory.o  ocb_init.o  ocb_ntz.o  \
-ocb_shift_xor.o  ocb_test.o s_ocb_done.o \
-\
-omac_done.o  omac_file.o  omac_init.o  omac_memory.o  omac_process.o  omac_test.o \
-\
-pmac_done.o  pmac_file.o  pmac_init.o  pmac_memory.o  pmac_ntz.o  pmac_process.o  \
-pmac_shift_xor.o  pmac_test.o \
-\
-cbc_start.o cbc_encrypt.o cbc_decrypt.o cbc_getiv.o cbc_setiv.o \
-cfb_start.o cfb_encrypt.o cfb_decrypt.o cfb_getiv.o cfb_setiv.o \
-ofb_start.o ofb_encrypt.o ofb_decrypt.o ofb_getiv.o ofb_setiv.o \
-ctr_start.o ctr_encrypt.o ctr_decrypt.o ctr_getiv.o ctr_setiv.o \
-ecb_start.o ecb_encrypt.o ecb_decrypt.o \
-\
-hash_file.o  hash_filehandle.o  hash_memory.o \
-\
-hmac_done.o  hmac_file.o  hmac_init.o  hmac_memory.o  hmac_process.o  hmac_test.o \
-\
-pkcs_1_mgf1.o pkcs_1_oaep_encode.o pkcs_1_oaep_decode.o  \
-pkcs_1_pss_encode.o pkcs_1_pss_decode.o pkcs_1_i2osp.o pkcs_1_os2ip.o \
-pkcs_1_v15_es_encode.o pkcs_1_v15_es_decode.o pkcs_1_v15_sa_encode.o pkcs_1_v15_sa_decode.o \
-\
-pkcs_5_1.o pkcs_5_2.o \
-\
-der_encode_integer.o der_decode_integer.o der_length_integer.o \
-der_put_multi_integer.o der_get_multi_integer.o \
-\
-burn_stack.o zeromem.o \
-\
-$(MPIOBJECT)
+OBJECTS=src/ciphers/aes/aes_enc.o $(MPIOBJECT) src/ciphers/aes/aes.o src/ciphers/anubis.o \
+src/ciphers/blowfish.o src/ciphers/cast5.o src/ciphers/des.o src/ciphers/khazad.o src/ciphers/noekeon.o \
+src/ciphers/rc2.o src/ciphers/rc5.o src/ciphers/rc6.o src/ciphers/safer/safer.o \
+src/ciphers/safer/safer_tab.o src/ciphers/safer/saferp.o src/ciphers/skipjack.o \
+src/ciphers/twofish/twofish.o src/ciphers/xtea.o src/encauth/ccm/ccm_memory.o \
+src/encauth/ccm/ccm_test.o src/encauth/eax/eax_addheader.o src/encauth/eax/eax_decrypt.o \
+src/encauth/eax/eax_decrypt_verify_memory.o src/encauth/eax/eax_done.o src/encauth/eax/eax_encrypt.o \
+src/encauth/eax/eax_encrypt_authenticate_memory.o src/encauth/eax/eax_init.o \
+src/encauth/eax/eax_test.o src/encauth/gcm/gcm_add_aad.o src/encauth/gcm/gcm_add_iv.o \
+src/encauth/gcm/gcm_done.o src/encauth/gcm/gcm_gf_mult.o src/encauth/gcm/gcm_init.o \
+src/encauth/gcm/gcm_memory.o src/encauth/gcm/gcm_process.o src/encauth/gcm/gcm_reset.o \
+src/encauth/gcm/gcm_test.o src/encauth/ocb/ocb_decrypt.o src/encauth/ocb/ocb_decrypt_verify_memory.o \
+src/encauth/ocb/ocb_done_decrypt.o src/encauth/ocb/ocb_done_encrypt.o src/encauth/ocb/ocb_encrypt.o \
+src/encauth/ocb/ocb_encrypt_authenticate_memory.o src/encauth/ocb/ocb_init.o src/encauth/ocb/ocb_ntz.o \
+src/encauth/ocb/ocb_shift_xor.o src/encauth/ocb/ocb_test.o src/encauth/ocb/s_ocb_done.o \
+src/hashes/chc/chc.o src/hashes/helper/hash_file.o src/hashes/helper/hash_filehandle.o \
+src/hashes/helper/hash_memory.o src/hashes/helper/hash_memory_multi.o src/hashes/md2.o src/hashes/md4.o \
+src/hashes/md5.o src/hashes/rmd128.o src/hashes/rmd160.o src/hashes/sha1.o src/hashes/sha2/sha256.o \
+src/hashes/sha2/sha512.o src/hashes/tiger.o src/hashes/whirl/whirl.o src/mac/hmac/hmac_done.o \
+src/mac/hmac/hmac_file.o src/mac/hmac/hmac_init.o src/mac/hmac/hmac_memory.o \
+src/mac/hmac/hmac_memory_multi.o src/mac/hmac/hmac_process.o src/mac/hmac/hmac_test.o \
+src/mac/omac/omac_done.o src/mac/omac/omac_file.o src/mac/omac/omac_init.o src/mac/omac/omac_memory.o \
+src/mac/omac/omac_memory_multi.o src/mac/omac/omac_process.o src/mac/omac/omac_test.o \
+src/mac/pelican/pelican.o src/mac/pelican/pelican_memory.o src/mac/pelican/pelican_test.o \
+src/mac/pmac/pmac_done.o src/mac/pmac/pmac_file.o src/mac/pmac/pmac_init.o src/mac/pmac/pmac_memory.o \
+src/mac/pmac/pmac_memory_multi.o src/mac/pmac/pmac_ntz.o src/mac/pmac/pmac_process.o \
+src/mac/pmac/pmac_shift_xor.o src/mac/pmac/pmac_test.o src/misc/base64/base64_decode.o \
+src/misc/base64/base64_encode.o src/misc/burn_stack.o src/misc/crypt/crypt.o \
+src/misc/crypt/crypt_argchk.o src/misc/crypt/crypt_cipher_descriptor.o \
+src/misc/crypt/crypt_cipher_is_valid.o src/misc/crypt/crypt_find_cipher.o \
+src/misc/crypt/crypt_find_cipher_any.o src/misc/crypt/crypt_find_cipher_id.o \
+src/misc/crypt/crypt_find_hash.o src/misc/crypt/crypt_find_hash_any.o \
+src/misc/crypt/crypt_find_hash_id.o src/misc/crypt/crypt_find_prng.o \
+src/misc/crypt/crypt_hash_descriptor.o src/misc/crypt/crypt_hash_is_valid.o \
+src/misc/crypt/crypt_prng_descriptor.o src/misc/crypt/crypt_prng_is_valid.o \
+src/misc/crypt/crypt_register_cipher.o src/misc/crypt/crypt_register_hash.o \
+src/misc/crypt/crypt_register_prng.o src/misc/crypt/crypt_unregister_cipher.o \
+src/misc/crypt/crypt_unregister_hash.o src/misc/crypt/crypt_unregister_prng.o \
+src/misc/error_to_string.o src/misc/mpi/is_prime.o src/misc/mpi/mpi_to_ltc_error.o \
+src/misc/mpi/rand_prime.o src/misc/pkcs5/pkcs_5_1.o src/misc/pkcs5/pkcs_5_2.o src/misc/zeromem.o \
+src/modes/cbc/cbc_decrypt.o src/modes/cbc/cbc_done.o src/modes/cbc/cbc_encrypt.o \
+src/modes/cbc/cbc_getiv.o src/modes/cbc/cbc_setiv.o src/modes/cbc/cbc_start.o \
+src/modes/cfb/cfb_decrypt.o src/modes/cfb/cfb_done.o src/modes/cfb/cfb_encrypt.o \
+src/modes/cfb/cfb_getiv.o src/modes/cfb/cfb_setiv.o src/modes/cfb/cfb_start.o \
+src/modes/ctr/ctr_decrypt.o src/modes/ctr/ctr_done.o src/modes/ctr/ctr_encrypt.o \
+src/modes/ctr/ctr_getiv.o src/modes/ctr/ctr_setiv.o src/modes/ctr/ctr_start.o \
+src/modes/ecb/ecb_decrypt.o src/modes/ecb/ecb_done.o src/modes/ecb/ecb_encrypt.o \
+src/modes/ecb/ecb_start.o src/modes/ofb/ofb_decrypt.o src/modes/ofb/ofb_done.o \
+src/modes/ofb/ofb_encrypt.o src/modes/ofb/ofb_getiv.o src/modes/ofb/ofb_setiv.o \
+src/modes/ofb/ofb_start.o src/pk/asn1/der/der_decode_integer.o src/pk/asn1/der/der_encode_integer.o \
+src/pk/asn1/der/der_get_multi_integer.o src/pk/asn1/der/der_length_integer.o \
+src/pk/asn1/der/der_put_multi_integer.o src/pk/dh/dh.o src/pk/dsa/dsa_export.o src/pk/dsa/dsa_free.o \
+src/pk/dsa/dsa_import.o src/pk/dsa/dsa_make_key.o src/pk/dsa/dsa_sign_hash.o \
+src/pk/dsa/dsa_verify_hash.o src/pk/dsa/dsa_verify_key.o src/pk/ecc/ecc.o src/pk/packet_store_header.o \
+src/pk/packet_valid_header.o src/pk/pkcs1/pkcs_1_i2osp.o src/pk/pkcs1/pkcs_1_mgf1.o \
+src/pk/pkcs1/pkcs_1_oaep_decode.o src/pk/pkcs1/pkcs_1_oaep_encode.o src/pk/pkcs1/pkcs_1_os2ip.o \
+src/pk/pkcs1/pkcs_1_pss_decode.o src/pk/pkcs1/pkcs_1_pss_encode.o src/pk/pkcs1/pkcs_1_v15_es_decode.o \
+src/pk/pkcs1/pkcs_1_v15_es_encode.o src/pk/pkcs1/pkcs_1_v15_sa_decode.o \
+src/pk/pkcs1/pkcs_1_v15_sa_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_encrypt_key.o \
+src/pk/rsa/rsa_export.o src/pk/rsa/rsa_exptmod.o src/pk/rsa/rsa_free.o src/pk/rsa/rsa_import.o \
+src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_v15_decrypt_key.o \
+src/pk/rsa/rsa_v15_encrypt_key.o src/pk/rsa/rsa_v15_sign_hash.o src/pk/rsa/rsa_v15_verify_hash.o \
+src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o src/prngs/rc4.o src/prngs/rng_get_bytes.o \
+src/prngs/rng_make_prng.o src/prngs/sober128.o src/prngs/sprng.o src/prngs/yarrow.o 
 
+HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h \
+src/headers/tomcrypt_mac.h src/headers/tomcrypt_macros.h \
+src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
+src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h \
+src/headers/tommath_class.h src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h \
+src/headers/tomcrypt_misc.h src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h \
+src/headers/tomcrypt_prng.h  testprof/tomcrypt_test.h
 
 #ciphers come in two flavours... enc+dec and enc 
 aes_enc.o: aes.c aes_tab.c
@@ -145,8 +153,9 @@ aes_enc.o: aes.c aes_tab.c
 HASHOBJECTS=demos/hashsum.o
 CRYPTOBJECTS=demos/encrypt.o
 SMALLOBJECTS=demos/small.o
-PROFS=demos/x86_prof.o
 TVS=demos/tv_gen.o
+TIMINGS=demos/timing.o
+TESTS=demos/test.o
 
 #Files left over from making the crypt.pdf.
 LEFTOVERS=*.dvi *.log *.aux *.toc *.idx *.ilg *.ind
@@ -154,25 +163,28 @@ LEFTOVERS=*.dvi *.log *.aux *.toc *.idx *.ilg *.ind
 #Compressed filenames
 COMPRESSED=crypt.tar.bz2 crypt.zip crypt.tar.gz
 
-#Header files used by libtomcrypt.
-HEADERS=ltc_tommath.h mycrypt_cfg.h \
-mycrypt_misc.h  mycrypt_prng.h mycrypt_cipher.h  mycrypt_hash.h \
-mycrypt_macros.h  mycrypt_pk.h mycrypt.h mycrypt_argchk.h mycrypt_custom.h
+#ciphers come in two flavours... enc+dec and enc 
+src/ciphers/aes/aes_enc.o: src/ciphers/aes/aes.c src/ciphers/aes/aes_tab.c
+	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c src/ciphers/aes/aes.c -o src/ciphers/aes/aes_enc.o
 
 #These are the rules to make certain object files.
-rsa.o: rsa.c rsa_sys.c
-ecc.o: ecc.c ecc_sys.c
-dh.o: dh.c dh_sys.c
-aes.o: aes.c aes_tab.c
-twofish.o: twofish.c twofish_tab.c
-sha512.o: sha512.c sha384.c
-sha256.o: sha256.c sha224.c
+src/ciphers/aes/aes.o: src/ciphers/aes/aes.c src/ciphers/aes/aes_tab.c
+src/ciphers/twofish/twofish.o: src/ciphers/twofish/twofish.c src/ciphers/twofish/twofish_tab.c
+src/hashes/whirl/whirl.o: src/hashes/whirl/whirl.c src/hashes/whirl/whirltab.c
+src/pk/ecc/ecc.o: src/pk/ecc/ecc.c src/pk/ecc/ecc_sys.c
+src/pk/dh/dh.o: src/pk/dh/dh.c src/pk/dh/dh_sys.c
+src/hashes/sha2/sha512.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha384.c
+src/hashes/sha2/sha256.o: src/hashes/sha2/sha256.c src/hashes/sha2/sha224.c
 
 #This rule makes the libtomcrypt library.
-library: $(LIBNAME)
+library: $(LIBTEST) $(LIBNAME)
+
+$(LIBTEST):
+	cd testprof ; make -f makefile.icc
 
 $(LIBNAME): $(OBJECTS)
-	$(AR) $(ARFLAGS) $@ $(OBJECTS) 
+	$(AR) $(ARFLAGS) $@ $(OBJECTS)
+	ranlib $(LIBNAME)
 
 #This rule makes the hash program included with libtomcrypt
 hashsum: library $(HASHOBJECTS)
@@ -186,19 +198,14 @@ crypt: library $(CRYPTOBJECTS)
 small: library $(SMALLOBJECTS)
 	$(CC) $(SMALLOBJECTS) $(LIBNAME) -o $(SMALL) $(WARN)
 	
-x86_prof: library $(PROFS)
-	$(CC) $(PROFS) $(LIBNAME) -o $(PROF)
-
 tv_gen: library $(TVS)
 	$(CC) $(TVS) $(LIBNAME) -o $(TV)
 
-profiled:
-	make clean
-	make CFLAGS="$(CFLAGS) -prof_gen" x86_prof
-	./x86_prof
-	rm *.o *.a x86_prof
-	make CFLAGS="$(CFLAGS) -prof_use" x86_prof
+timing: library $(TIMINGS)
+	$(CC) $(TIMINGS) $(LIBTEST) $(LIBNAME) -o $(TIMING)
 
+test: library $(TESTS)
+	$(CC) $(TESTS) $(LIBTEST) $(LIBNAME) -o $(TEST)
   
 #This rule installs the library and the header files. This must be run
 #as root in order to have a high enough permission to write to the correct
@@ -208,10 +215,3 @@ install: library
 	install -d -g root -o root $(DESTDIR)$(INCPATH)
 	install -g root -o root $(LIBNAME) $(DESTDIR)$(LIBPATH)
 	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
-
-#This rule cleans the source tree of all compiled code, not including the pdf
-#documentation.
-clean:
-	rm -f $(OBJECTS) $(TESTOBJECTS) $(HASHOBJECTS) $(CRYPTOBJECTS) $(SMALLOBJECTS) $(LEFTOVERS) $(LIBNAME)
-	rm -f $(TEST) $(HASH) $(COMPRESSED) $(PROFS) $(PROF) $(TVS) $(TV)
-	rm -f *.a *.dll *stackdump *.lib *.exe *.obj demos/*.obj demos/*.o *.bat *.txt *.il *.da demos/*.il demos/*.da *.dyn

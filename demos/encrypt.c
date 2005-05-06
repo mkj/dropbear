@@ -7,7 +7,7 @@
 /* ie: ./encrypt blowfish story.txt story.ct */
 /* ./encrypt -d blowfish story.ct story.pt */
 
-#include <mycrypt.h>
+#include <tomcrypt.h>
 
 int errno;
 
@@ -68,6 +68,12 @@ void register_algs(void)
 #endif
 #ifdef SKIPJACK
   register_cipher (&skipjack_desc);
+#endif
+#ifdef KHAZAD
+  register_cipher (&khazad_desc);
+#endif
+#ifdef ANUBIS
+  register_cipher (&anubis_desc);
 #endif
 
    if (register_hash(&sha256_desc) == -1) {

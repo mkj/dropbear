@@ -7,7 +7,7 @@
  * more functions ;)
 */
 
-#include <mycrypt.h>
+#include <tomcrypt.h>
 
 int errno;
 

@@ -1,3 +1,138 @@
+April 19th, 2005
+v1.02
+      -- Added LTC_TEST support to gcm_test()
+      -- "pt/ct" can now be NULL in gcm_process() if you are processing zero bytes
+      -- Optimized GCM by removing the "double copy" handling of the plaintext/aad
+      -- Richard Outerbridge pointed out that x86_prof won't build on MACOS and that the manual 
+         erroneously refers to "mycrypt" all over the place.  Fixed.
+
+April 17th, 2005
+v1.01
+       ** Secure Science Corporation has supported this release cycle by sponsoring the development time taken.  Their 
+          continuing support of this project has helped me maintain a steady pace in order to keep LibTomCrypt up to date,
+          stable and more efficient.
+       -----------------------------------------------------------------------------------------------------
+       -- Updated base64_decode.c so if there are more than 3 '=' signs it would stop parsing
+       -- Merged in latest mpi that fixed a few bugs here and there
+       -- Updated OAEP encoder/decoder to catch when the hash output is too large
+          Cleaned up PSS code too
+       -- Andy Bontoft fixed a bug in my demos/tests/makefile.msvc ... seems "dsa_test.c" isn't an object
+          afterall.  Thanks.
+       -- Made invalid ECC key sizes (configuration) not hard fault the program (it returns an error code now)
+       -- SAFER has been re-enabled after I was pointed to http://www.ciphersbyritter.com/NEWS2/95032301.HTM
+          [Mark Kotiaho]
+       -- Added CCM mode to the encauth list (now has EAX, OCB and CCM, c'est un treo magnifique!)
+       -- Added missing ASN.1 header to the RSA keys ... oops... now the rsa_export/import are FULLY compatible
+          with other libs like OpenSSL (comment:  Test vectors would go a long way RSA...)
+       -- Manually merged in fix to the prime_random_ex() LTM function that ensures the 2nd MSB is set properly.  Now
+          When you say "I want a 1024/8 byte RSA key" the MSB bit of the modulus is set as expected.  Note I generally 
+          don't view this as a "huge issue" but it's just one less nit to worry about. [Bryan Klisch]
+       -- A new CVS has been setup on my Athlon64 box... if you want developer access send me an email (and at this point the email would have to be awesome).
+       -- Updated API for ECB and CBC shell code.  Now can process N whole blocks in one call (like $DEITY intended)
+       -- Introduced a new "hardware accel" framework that can be used to speed up cipher ECB, CBC and CTR mode
+          calls.  Later on dependent code (e.g. OMAC, CCM) will be re-written to use the generic cbc/ctr functions.  But now
+          if you [say] call ctr_encrypt() with a cipher descriptor that has hardware CTR it will automatically
+          be used (e.g. no code rewrites)
+       -- Now ships with 20% more love.
+       -- x86_prof now uses ECB shell code (hint: accelerators) and outputs cycles per BLOCK not byte.  This will make it a bit 
+          easier to compare hardware vs. software cipher implementations.  It also emits timings for CBC and CTR modes
+       -- [Peter LaDow] fixed a typo w.r.t. XREALLOC macro (spelling counts kids!)
+       -- Fixed bug with __x86_64__ where ROL64/ROR64 with LTC_NO_ROLC would be the 32-bit versions instead...
+       -- Shipping with preliminary GCM code (disabled).  It's buggy (stack overflow hidden somewhere).  If anyone can spot it let me know.
+       -- Added Pelican MAC [it's an AES based fast MAC] to the list of supported MACs
+       -- Added LTC_FAST [and you can disable by defining LTC_NO_FAST] so that CBC and CTR mode XOR whole words [e.g. 32 or 64 bits] at a time
+          instead of one byte.  On my AMD64 this reduced the overhead for AES-128-CBC from 4.56 cycles/byte to around 1 cycle/byte.  This requires
+          that you either allow unaligned read/writes [e.g. x86_32/x86_64] or align all your data.  It won't go out of it's way to ensure 
+          aligned access.  Only enabled for x86_* platforms by default since they allow unaligned read/writes.
+       -- Added LTC_FAST support to PMAC (drops the cycle/byte by about 9 cycles on my AMD64) [note: I later rewrote this prior to release]
+       -- Updated "profiled" target to work with the new directory layout
+       -- Added [demo only] optimized RC5-CTR code to x86_prof demo to show off how to make an accelerator
+          [This has been removed prior to release... It may re-appear later]
+       -- Added CCM acelerator callbacks to the list [now supports ECB, CTR, CBC and now CCM].
+       -- Added chapter to manual about accelerators (you know you want it)
+       -- Added "bswap" optimizations to x86 LOAD/STORE with big endian.  Can be disabled by defining LTC_NO_BSWAP
+       -- LTC_NO_ASM is now the official "disable all non-portable stuff" macro.  When defined it will make the code endian-neutral,
+          disable any form of ASM and disable LTC_FAST load/stores.  Essentially build the library with this defined if you're having
+          trouble building the library (old GCCs for instance dislike the ROLc macro)
+       -- Added tomcrypt_mac.h and moved MAC/encMAC functions from tomcrypt_hash.h into it
+       -- Added "done" function to ciphers and the five chaining modes [and things like omac/pmac/etc]
+       -- Changed install group to "wheel" from "root".
+       -- Replaced // comments with /**/ so it will build on older UNIX-like platforms
+       -- x86_prof builds and runs with IntelCC fine now 
+       -- Added "stest" build to intel CC to test static linked from within the dir (so you don't have to install to test)
+       -- Moved testing/benchmark into testprof directory and build it as part of the build.  Now you can link against libtomcrypt_prof.a to get 
+          testing info (hint: hardware developers ;-) )
+       -- Added CCM to tv_gen 
+       -- Added demos to MSVC makefile
+       -- Removed -funroll-all-loops from GCC makefile and replaced with -funroll-loops which is a bit more sane (P4 ain't got much cache for the IDATA)
+       -- Fixed GCM prior to release and re-enabled it.  It has not been optimized but it does conform when compiled with optimizations.
+       -- I've since optimized GCM and CCM.  They're close in speed but GCM is more flexible imho (though EAX is more flexible than both)
+       -- For kicks I optimized the ECC code to use projective points.  Gets between 3.21x (Prescott P4) to 4.53x (AMD64) times faster than before at 160-bit keys and the
+          speedup grows as the keysize grows.  Basically removing most practical reasons to "not use the ECC code".  Enjoy.
+       -- Added LTC_FAST support to OMAC/PMAC and doubled it's speed on my amd64 [faster on the P4 too I guess]
+       -- Added GCM to tv_gen
+       -- Removed "makefile.cygwin_dll" as it's not really used by anyone and not worth the effort (hell I hardly maintain the MSVC makefiles ...)
+       -- Updated a few files in the "misc" directory to have correct @file comments for doxygen
+       -- Removed "profile" target since it was slower anyways (go figure...)
+
+December 31st, 2004
+v1.00  
+       -- Added "r,s == 0" check to dsa_verify_hash()
+       -- Added "multi block" helpers for hash, hmac, pmac and omac routines so you can process multiple non-adjacent
+          blocks of data with one call (added demos/multi.c to make sure they work)
+          -- Note these are not documented but they do have doxygen comments inside them
+          -- Also I don't use them in other functions (like pkcs_5_2()) because I didn't have the time.  Job for the new LTC maintainer ;-)
+       -- Added tweaked Anubis test vectors and made it default (undefined ANUBIS_TWEAK to get original Anubis)
+       -- Merged in fix for mp_prime_random_ex() to deal with MSB and LSB "bugs"
+       -- Removed tim_exptmod() completely, updated several RSA functions (notably v15 and the decrypt/verify) so they 
+          don't require a prng now
+       -- This release brought to you by the fine tunes of Macy Gray.  We miss you.
+
+December 23rd, 2004
+v1.00rc1
+       -- Renamed "mycrypt_*" to "tomcrypt_*" to be more specific and professional
+          Now just include "tomcrypt.h" instead of "mycrypt.h" to get LTC ;-)
+       -- Cleaned up makefiles to ensure all headers are correctly installed
+       -- Added "rotate by constant" macros for portable, x86-32 and x86-64
+          You can disable this new code with LTC_NO_ROLC which is useful for older GCCs
+       -- Cleaned up detection of x86-64 so it works for ROL/ROR macros
+       -- Fixed rsa_import() so that it would detect multi-prime RSA keys and error appropriately
+       -- Sorted the source files by category and updated the makefiles appropriately
+       -- Added LTC_DER define so you can trim out DER code if not required
+       -- Fixed up RSA's decrypt functions changing "res" to "stat" to be more in sync
+          with the signature variables nomenclature. (no code change just renamed the arguments)
+       -- Removed all labels starting with __ and replaced with LBL_ to avoid namespace conflicts (Randy Howard)
+       -- Merged in LTM fix to mp_prime_random_ex() which zap'ed the most significant byte if the bit size
+          requested was a multiple of eight.
+       -- Made RSA_TIMING off by default as it's not terribly useful [and likely to be deprecated]
+       -- Renamed SMALL_CODE, CLEAN_STACK and NO_FILE to have a LTC_ prefix to avoid namespace collisions
+          with other programs.  e.g. SMALL_CODE => LTC_SMALL_CODE
+       -- Zed Shaw pointed out that on certain systems installing libs as "root" isn't possible as the super-user
+          is not root.  Now the makefiles allow this to be changed easily.
+       -- Renamed "struct _*_descriptor" to "struct ltc_*_descriptor" to avoid using a leading _
+          Also renamed _ARGCHK to LTC_ARGCHK
+       -- Zed Shaw pointed out that I still defined the prng structs in tomcrypt_prng.h even if they 
+          weren't defined.  This made undef'ing FORTUNA break the build.
+       -- Added LTC_NO_ASM to disable inline asm macros [ROL/ROR/etc]
+       -- Changed RSA decrypt functions to change the output length variable name from "keylen" to "outlen" to make 
+          it more consistent.
+       -- Added the 64-bit Khazad block cipher [NESSIE]
+       -- Added the 128-bit Anubis block cipher [with key support for 128...320 bit keys] [NESSIE]
+       -- Changes to several MAC functions to rename input arguments to more sensible names
+       -- Removed FAST_PK support from dh_sys.c
+       -- Declared deskey() from des.c as static instead of a global
+       -- Added pretty much all practical GCC warning tests to the GCC [related] makefiles.  These additional
+          warnings can easily be disabled for those with older copies of GCC [or even non GNU cc's]
+       -- Added doxygen @ tags to the code...  phew that was a hell of a lot of [repetitive] work
+       -- Also added pre-configured Doxygen script.
+       -- Cleaned up quite a few functions [ciphers, pk, etc] to make the parameters naming style consistent
+          E.g. ciphers keys are called "skey" consistently now.  The input to PK encryption is called "in", etc.
+          These changes require no code changes on the behalf of developers fortunately
+       -- Started a SAFER+ optimizer [does encrypt only] which shaves a good 30 or so cycles/byte on my AMD64
+          at an expense of huge code.  It's in notes/etc/saferp_optimizer.c
+       -- DSA sign/verify now uses DER encoded output/inputs and no LTC style headers.  
+       -- Matt Johnston found a missing semi-colon in mp_exptmod().  Fix has been merged in.  
+
 October 29th, 2004
 v0.99  -- Merged in the latest version of LTM which includes all of the recent bug fixes
        -- Deprecated LTMSSE and removed it (to be replaced with TFM later on)
