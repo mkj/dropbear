@@ -29,8 +29,8 @@ int mp_prime_is_divisible (mp_int * a, int *result)
   *result = MP_NO;
 
   for (ix = 0; ix < PRIME_SIZE; ix++) {
-    /* what is a mod __prime_tab[ix] */
-    if ((err = mp_mod_d (a, __prime_tab[ix], &res)) != MP_OKAY) {
+    /* what is a mod LBL_prime_tab[ix] */
+    if ((err = mp_mod_d (a, ltm_prime_tab[ix], &res)) != MP_OKAY) {
       return err;
     }
 

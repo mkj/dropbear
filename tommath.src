@@ -49,7 +49,7 @@
 \begin{document}
 \frontmatter
 \pagestyle{empty}
-\title{Implementing Multiple Precision Arithmetic \\ ~ \\ Draft Edition }
+\title{Multi--Precision Math}
 \author{\mbox{
 %\begin{small}
 \begin{tabular}{c}
@@ -66,7 +66,7 @@ QUALCOMM Australia \\
 }
 }
 \maketitle
-This text has been placed in the public domain.  This text corresponds to the v0.30 release of the 
+This text has been placed in the public domain.  This text corresponds to the v0.35 release of the 
 LibTomMath project.
 
 \begin{alltt}
@@ -85,66 +85,32 @@ This text is formatted to the international B5 paper size of 176mm wide by 250mm
 
 \tableofcontents
 \listoffigures
-\chapter*{Prefaces to the Draft Edition}
-I started this text in April 2003 to complement my LibTomMath library.  That is, explain how to implement the functions
-contained in LibTomMath.  The goal is to have a textbook that any Computer Science student can use when implementing their
-own multiple precision arithmetic.  The plan I wanted to follow was flesh out all the
-ideas and concepts I had floating around in my head and then work on it afterwards refining a little bit at a time.  Chance
-would have it that I ended up with my summer off from Algonquin College and I was given four months solid to work on the
-text.  
+\chapter*{Prefaces}
+When I tell people about my LibTom projects and that I release them as public domain they are often puzzled.  
+They ask why I did it and especially why I continue to work on them for free.  The best I can explain it is ``Because I can.''  
+Which seems odd and perhaps too terse for adult conversation. I often qualify it with ``I am able, I am willing.'' which 
+perhaps explains it better.  I am the first to admit there is not anything that special with what I have done.  Perhaps
+others can see that too and then we would have a society to be proud of.  My LibTom projects are what I am doing to give 
+back to society in the form of tools and knowledge that can help others in their endeavours.
 
-Choosing to not waste any time I dove right into the project even before my spring semester was finished.  I wrote a bit
-off and on at first.  The moment my exams were finished I jumped into long 12 to 16 hour days.  The result after only
-a couple of months was a ten chapter, three hundred page draft that I quickly had distributed to anyone who wanted
-to read it.  I had Jean-Luc Cooke print copies for me and I brought them to Crypto'03 in Santa Barbara.  So far I have
-managed to grab a certain level of attention having people from around the world ask me for copies of the text was certain
-rewarding.
+I started writing this book because it was the most logical task to further my goal of open academia.  The LibTomMath source
+code itself was written to be easy to follow and learn from.  There are times, however, where pure C source code does not
+explain the algorithms properly.  Hence this book.  The book literally starts with the foundation of the library and works
+itself outwards to the more complicated algorithms.  The use of both pseudo--code and verbatim source code provides a duality
+of ``theory'' and ``practice'' that the computer science students of the world shall appreciate.  I never deviate too far
+from relatively straightforward algebra and I hope that this book can be a valuable learning asset.
 
-Now we are past December 2003.  By this time I had pictured that I would have at least finished my second draft of the text.  
-Currently I am far off from this goal.  I've done partial re-writes of chapters one, two and three but they are not even
-finished yet.  I haven't given up on the project, only had some setbacks.  First O'Reilly declined to publish the text then
-Addison-Wesley and Greg is tried another which I don't know the name of.  However, at this point I want to focus my energy
-onto finishing the book not securing a contract.
+This book and indeed much of the LibTom projects would not exist in their current form if it was not for a plethora
+of kind people donating their time, resources and kind words to help support my work.  Writing a text of significant
+length (along with the source code) is a tiresome and lengthy process.  Currently the LibTom project is four years old,
+comprises of literally thousands of users and over 100,000 lines of source code, TeX and other material.  People like Mads and Greg 
+were there at the beginning to encourage me to work well.  It is amazing how timely validation from others can boost morale to 
+continue the project. Definitely my parents were there for me by providing room and board during the many months of work in 2003.  
 
-So why am I writing this text?  It seems like a lot of work right?  Most certainly it is a lot of work writing a textbook.  
-Even the simplest introductory material has to be lined with references and figures.  A lot of the text has to be re-written
-from point form to prose form to ensure an easier read.  Why am I doing all this work for free then?  Simple. My philosophy
-is quite simply ``Open Source.  Open Academia.  Open Minds'' which means that to achieve a goal of open minds, that is,
-people willing to accept new ideas and explore the unknown you have to make available material they can access freely 
-without hinderance.  
+To my many friends whom I have met through the years I thank you for the good times and the words of encouragement.  I hope I
+honour your kind gestures with this project.
 
-I've been writing free software since I was about sixteen but only recently have I hit upon software that people have come
-to depend upon.  I started LibTomCrypt in December 2001 and now several major companies use it as integral portions of their
-software.  Several educational institutions use it as a matter of course and many freelance developers use it as
-part of their projects.  To further my contributions I started the LibTomMath project in December 2002 aimed at providing
-multiple precision arithmetic routines that students could learn from.  That is write routines that are not only easy
-to understand and follow but provide quite impressive performance considering they are all in standard portable ISO C.  
-
-The second leg of my philosophy is ``Open Academia'' which is where this textbook comes in.  In the end, when all is
-said and done the text will be useable by educational institutions as a reference on multiple precision arithmetic.  
-
-At this time I feel I should share a little information about myself.  The most common question I was asked at 
-Crypto'03, perhaps just out of professional courtesy, was which school I either taught at or attended.  The unfortunate
-truth is that I neither teach at or attend a school of academic reputation.  I'm currently at Algonquin College which 
-is what I'd like to call ``somewhat academic but mostly vocational'' college.  In otherwords, job training.
-
-I'm a 21 year old computer science student mostly self-taught in the areas I am aware of (which includes a half-dozen
-computer science fields, a few fields of mathematics and some English).  I look forward to teaching someday but I am
-still far off from that goal.  
-
-Now it would be improper for me to not introduce the rest of the texts co-authors.  While they are only contributing 
-corrections and editorial feedback their support has been tremendously helpful in presenting the concepts laid out
-in the text so far.  Greg has always been there for me.  He has tracked my LibTom projects since their inception and even
-sent cheques to help pay tuition from time to time.  His background has provided a wonderful source to bounce ideas off
-of and improve the quality of my writing.  Mads is another fellow who has just ``been there''.  I don't even recall what
-his interest in the LibTom projects is but I'm definitely glad he has been around.  His ability to catch logical errors
-in my written English have saved me on several occasions to say the least.
-
-What to expect next?  Well this is still a rough draft.  I've only had the chance to update a few chapters.  However, I've
-been getting the feeling that people are starting to use my text and I owe them some updated material.  My current tenative
-plan is to edit one chapter every two weeks starting January 4th.  It seems insane but my lower course load at college
-should provide ample time.  By Crypto'04 I plan to have a 2nd draft of the text polished and ready to hand out to as many
-people who will take it.
+Open Source.  Open Academia.  Open Minds.
 
 \begin{flushright} Tom St Denis \end{flushright}
 
@@ -937,7 +903,7 @@ assumed to contain undefined values they are initially set to zero.
 
 EXAM,bn_mp_grow.c
 
-A quick optimization is to first determine if a memory re-allocation is required at all.  The if statement (line @23,if@) checks
+A quick optimization is to first determine if a memory re-allocation is required at all.  The if statement (line @24,alloc@) checks
 if the \textbf{alloc} member of the mp\_int is smaller than the requested digit count.  If the count is not larger than \textbf{alloc}
 the function skips the re-allocation part thus saving time.
 
@@ -1310,7 +1276,7 @@ After the function is completed, all of the digits are zeroed, the \textbf{used}
 With the mp\_int representation of an integer, calculating the absolute value is trivial.  The mp\_abs algorithm will compute
 the absolute value of an mp\_int.
 
-\newpage\begin{figure}[here]
+\begin{figure}[here]
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{mp\_abs}. \\
@@ -1334,6 +1300,9 @@ for instance, the developer to pass the same mp\_int as the source and destinati
 logic to handle it.
 
 EXAM,bn_mp_abs.c
+
+This fairly trivial algorithm first eliminates non--required duplications (line @27,a != b@) and then sets the
+\textbf{sign} flag to \textbf{MP\_ZPOS}.
 
 \subsection{Integer Negation}
 With the mp\_int representation of an integer, calculating the negation is also trivial.  The mp\_neg algorithm will compute
@@ -1368,11 +1337,15 @@ zero as negative.
 
 EXAM,bn_mp_neg.c
 
+Like mp\_abs() this function avoids non--required duplications (line @21,a != b@) and then sets the sign.  We
+have to make sure that only non--zero values get a \textbf{sign} of \textbf{MP\_NEG}.  If the mp\_int is zero
+than the \textbf{sign} is hard--coded to \textbf{MP\_ZPOS}.
+
 \section{Small Constants}
 \subsection{Setting Small Constants}
 Often a mp\_int must be set to a relatively small value such as $1$ or $2$.  For these cases the mp\_set algorithm is useful.
 
-\begin{figure}[here]
+\newpage\begin{figure}[here]
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{mp\_set}. \\
@@ -1397,11 +1370,14 @@ single digit is set (\textit{modulo $\beta$}) and the \textbf{used} count is adj
 
 EXAM,bn_mp_set.c
 
-Line @21,mp_zero@ calls mp\_zero() to clear the mp\_int and reset the sign.  Line @22,MP_MASK@ copies the digit 
-into the least significant location.  Note the usage of a new constant \textbf{MP\_MASK}.  This constant is used to quickly
-reduce an integer modulo $\beta$.  Since $\beta$ is of the form $2^k$ for any suitable $k$ it suffices to perform a binary AND with 
-$MP\_MASK = 2^k - 1$ to perform the reduction.  Finally line @23,a->used@ will set the \textbf{used} member with respect to the 
-digit actually set. This function will always make the integer positive.
+First we zero (line @21,mp_zero@) the mp\_int to make sure that the other members are initialized for a 
+small positive constant.  mp\_zero() ensures that the \textbf{sign} is positive and the \textbf{used} count
+is zero.  Next we set the digit and reduce it modulo $\beta$ (line @22,MP_MASK@).  After this step we have to 
+check if the resulting digit is zero or not.  If it is not then we set the \textbf{used} count to one, otherwise
+to zero.
+
+We can quickly reduce modulo $\beta$ since it is of the form $2^k$ and a quick binary AND operation with 
+$2^k - 1$ will perform the same operation.
 
 One important limitation of this function is that it will only set one digit.  The size of a digit is not fixed, meaning source that uses 
 this function should take that into account.  Only trivially small constants can be set using this function.
@@ -1503,10 +1479,12 @@ the zero'th digit.  If after all of the digits have been compared, no difference
 
 EXAM,bn_mp_cmp_mag.c
 
-The two if statements on lines @24,if@ and @28,if@ compare the number of digits in the two inputs.  These two are performed before all of the digits
-are compared since it is a very cheap test to perform and can potentially save considerable time.  The implementation given is also not valid 
-without those two statements.  $b.alloc$ may be smaller than $a.used$, meaning that undefined values will be read from $b$ past the end of the 
-array of digits.
+The two if statements (lines @24,if@ and @28,if@) compare the number of digits in the two inputs.  These two are 
+performed before all of the digits are compared since it is a very cheap test to perform and can potentially save 
+considerable time.  The implementation given is also not valid without those two statements.  $b.alloc$ may be 
+smaller than $a.used$, meaning that undefined values will be read from $b$ past the end of the array of digits.
+
+
 
 \subsection{Signed Comparisons}
 Comparing with sign considerations is also fairly critical in several routines (\textit{division for example}).  Based on an unsigned magnitude 
@@ -1539,9 +1517,9 @@ $\vert a \vert < \vert b \vert$.  Step number four will compare the two when the
 
 EXAM,bn_mp_cmp.c
 
-The two if statements on lines @22,if@ and @26,if@ perform the initial sign comparison.  If the signs are not the equal then which ever
-has the positive sign is larger.   At line @30,if@, the inputs are compared based on magnitudes.  If the signs were both negative then 
-the unsigned comparison is performed in the opposite direction (\textit{line @31,mp_cmp_mag@}).  Otherwise, the signs are assumed to 
+The two if statements (lines @22,if@ and @26,if@) perform the initial sign comparison.  If the signs are not the equal then which ever
+has the positive sign is larger.   The inputs are compared (line @30,if@) based on magnitudes.  If the signs were both 
+negative then the unsigned comparison is performed in the opposite direction (line @31,mp_cmp_mag@).  Otherwise, the signs are assumed to 
 be both positive and a forward direction unsigned comparison is performed.
 
 \section*{Exercises}
@@ -1664,19 +1642,21 @@ The final carry is stored in $c_{max}$ and digits above $max$ upto $oldused$ are
 
 EXAM,bn_s_mp_add.c
 
-Lines @27,if@ to @35,}@ perform the initial sorting of the inputs and determine the $min$ and $max$ variables.  Note that $x$ is a pointer to a 
-mp\_int assigned to the largest input, in effect it is a local alias.  Lines @37,init@ to @42,}@ ensure that the destination is grown to 
-accomodate the result of the addition. 
+We first sort (lines @27,if@ to @35,}@) the inputs based on magnitude and determine the $min$ and $max$ variables.
+Note that $x$ is a pointer to an mp\_int assigned to the largest input, in effect it is a local alias.  Next we
+grow the destination (@37,init@ to @42,}@) ensure that it can accomodate the result of the addition. 
 
 Similar to the implementation of mp\_copy this function uses the braced code and local aliases coding style.  The three aliases that are on 
 lines @56,tmpa@, @59,tmpb@ and @62,tmpc@ represent the two inputs and destination variables respectively.  These aliases are used to ensure the
 compiler does not have to dereference $a$, $b$ or $c$ (respectively) to access the digits of the respective mp\_int.
 
-The initial carry $u$ is cleared on line @65,u = 0@, note that $u$ is of type mp\_digit which ensures type compatibility within the 
-implementation.  The initial addition loop begins on line @66,for@ and ends on line @75,}@.  Similarly the conditional addition loop
-begins on line @81,for@ and ends on line @90,}@.  The addition is finished with the final carry being stored in $tmpc$ on line @94,tmpc++@.  
-Note the ``++'' operator on the same line.  After line @94,tmpc++@ $tmpc$ will point to the $c.used$'th digit of the mp\_int $c$.  This is useful
-for the next loop on lines @97,for@ to @99,}@ which set any old upper digits to zero.
+The initial carry $u$ will be cleared (line @65,u = 0@), note that $u$ is of type mp\_digit which ensures type 
+compatibility within the implementation.  The initial addition (line @66,for@ to @75,}@) adds digits from
+both inputs until the smallest input runs out of digits.  Similarly the conditional addition loop
+(line @81,for@ to @90,}@) adds the remaining digits from the larger of the two inputs.  The addition is finished 
+with the final carry being stored in $tmpc$ (line @94,tmpc++@).  Note the ``++'' operator within the same expression.
+After line @94,tmpc++@, $tmpc$ will point to the $c.used$'th digit of the mp\_int $c$.  This is useful
+for the next loop (line @97,for@ to @99,}@) which set any old upper digits to zero.
 
 \subsection{Low Level Subtraction}
 The low level unsigned subtraction algorithm is very similar to the low level unsigned addition algorithm.  The principle difference is that the
@@ -1692,7 +1672,7 @@ this algorithm we will assume that the variable $\gamma$ represents the number o
 mp\_digit (\textit{this implies $2^{\gamma} > \beta$}).  
 
 For example, the default for LibTomMath is to use a ``unsigned long'' for the mp\_digit ``type'' while $\beta = 2^{28}$.  In ISO C an ``unsigned long''
-data type must be able to represent $0 \le x < 2^{32}$ meaning that in this case $\gamma = 32$.
+data type must be able to represent $0 \le x < 2^{32}$ meaning that in this case $\gamma \ge 32$.
 
 \newpage\begin{figure}[!here]
 \begin{center}
@@ -1759,20 +1739,23 @@ If $b$ has a smaller magnitude than $a$ then step 9 will force the carry and cop
 
 EXAM,bn_s_mp_sub.c
 
-Line @24,min@ and @25,max@ perform the initial hardcoded sorting of the inputs.  In reality the $min$ and $max$ variables are only aliases and are only 
-used to make the source code easier to read.  Again the pointer alias optimization is used within this algorithm.  Lines @42,tmpa@, @43,tmpb@ and @44,tmpc@ initialize the aliases for 
-$a$, $b$ and $c$ respectively.
+Like low level addition we ``sort'' the inputs.  Except in this case the sorting is hardcoded 
+(lines @24,min@ and @25,max@).  In reality the $min$ and $max$ variables are only aliases and are only 
+used to make the source code easier to read.  Again the pointer alias optimization is used 
+within this algorithm.  The aliases $tmpa$, $tmpb$ and $tmpc$ are initialized
+(lines @42,tmpa@, @43,tmpb@ and @44,tmpc@) for $a$, $b$ and $c$ respectively.
 
-The first subtraction loop occurs on lines @47,u = 0@ through @61,}@.  The theory behind the subtraction loop is exactly the same as that for
-the addition loop.  As remarked earlier there is an implementation reason for using the ``awkward'' method of extracting the carry 
-(\textit{see line @57, >>@}).  The traditional method for extracting the carry would be to shift by $lg(\beta)$ positions and logically AND 
-the least significant bit.  The AND operation is required because all of the bits above the $\lg(\beta)$'th bit will be set to one after a carry
-occurs from subtraction.  This carry extraction requires two relatively cheap operations to extract the carry.  The other method is to simply 
-shift the most significant bit to the least significant bit thus extracting the carry with a single cheap operation.  This optimization only works on
-twos compliment machines which is a safe assumption to make.
+The first subtraction loop (lines @47,u = 0@ through @61,}@) subtract digits from both inputs until the smaller of
+the two inputs has been exhausted.  As remarked earlier there is an implementation reason for using the ``awkward'' 
+method of extracting the carry (line @57, >>@).  The traditional method for extracting the carry would be to shift 
+by $lg(\beta)$ positions and logically AND the least significant bit.  The AND operation is required because all of 
+the bits above the $\lg(\beta)$'th bit will be set to one after a carry occurs from subtraction.  This carry 
+extraction requires two relatively cheap operations to extract the carry.  The other method is to simply shift the 
+most significant bit to the least significant bit thus extracting the carry with a single cheap operation.  This 
+optimization only works on twos compliment machines which is a safe assumption to make.
 
-If $a$ has a larger magnitude than $b$ an additional loop (\textit{see lines @64,for@ through @73,}@}) is required to propagate the carry through
-$a$ and copy the result to $c$.  
+If $a$ has a larger magnitude than $b$ an additional loop (lines @64,for@ through @73,}@) is required to propagate 
+the carry through $a$ and copy the result to $c$.  
 
 \subsection{High Level Addition}
 Now that both lower level addition and subtraction algorithms have been established an effective high level signed addition algorithm can be
@@ -2098,10 +2081,11 @@ FIGU,sliding_window,Sliding Window Movement
 
 EXAM,bn_mp_lshd.c
 
-The if statement on line @24,if@ ensures that the $b$ variable is greater than zero.  The \textbf{used} count is incremented by $b$ before
-the copy loop begins.  This elminates the need for an additional variable in the for loop.  The variable $top$ on line @42,top@ is an alias
-for the leading digit while $bottom$ on line @45,bottom@ is an alias for the trailing edge.  The aliases form a window of exactly $b$ digits
-over the input.  
+The if statement (line @24,if@) ensures that the $b$ variable is greater than zero since we do not interpret negative
+shift counts properly.  The \textbf{used} count is incremented by $b$ before the copy loop begins.  This elminates 
+the need for an additional variable in the for loop.  The variable $top$ (line @42,top@) is an alias
+for the leading digit while $bottom$ (line @45,bottom@) is an alias for the trailing edge.  The aliases form a 
+window of exactly $b$ digits over the input.  
 
 \subsection{Division by $x$}
 
@@ -2151,9 +2135,9 @@ Once the window copy is complete the upper digits must be zeroed and the \textbf
 
 EXAM,bn_mp_rshd.c
 
-The only noteworthy element of this routine is the lack of a return type.  
-
--- Will update later to give it a return type...Tom
+The only noteworthy element of this routine is the lack of a return type since it cannot fail.  Like mp\_lshd() we
+form a sliding window except we copy in the other direction.  After the window (line @59,for (;@) we then zero
+the upper digits of the input to make sure the result is correct.
 
 \section{Powers of Two}
 
@@ -2214,7 +2198,15 @@ complete.  It is possible to optimize this algorithm down to a $O(n)$ algorithm 
 
 EXAM,bn_mp_mul_2d.c
 
-Notes to be revised when code is updated. -- Tom
+The shifting is performed in--place which means the first step (line @24,a != c@) is to copy the input to the 
+destination.  We avoid calling mp\_copy() by making sure the mp\_ints are different.  The destination then
+has to be grown (line @31,grow@) to accomodate the result.
+
+If the shift count $b$ is larger than $lg(\beta)$ then a call to mp\_lshd() is used to handle all of the multiples 
+of $lg(\beta)$.  Leaving only a remaining shift of $lg(\beta) - 1$ or fewer bits left.  Inside the actual shift 
+loop (lines @45,if@ to @76,}@) we make use of pre--computed values $shift$ and $mask$.   These are used to
+extract the carry bit(s) to pass into the next iteration of the loop.  The $r$ and $rr$ variables form a 
+chain between consecutive iterations to propagate the carry.  
 
 \subsection{Division by Power of Two}
 
@@ -2263,7 +2255,8 @@ ignored by passing \textbf{NULL} as the pointer to the mp\_int variable.    The 
 result of the remainder operation until the end.  This allows $d$ and $a$ to represent the same mp\_int without modifying $a$ before
 the quotient is obtained.
 
-The remainder of the source code is essentially the same as the source code for mp\_mul\_2d.  (-- Fix this paragraph up later, Tom).
+The remainder of the source code is essentially the same as the source code for mp\_mul\_2d.  The only significant difference is
+the direction of the shifts.
 
 \subsection{Remainder of Division by Power of Two}
 
@@ -2306,7 +2299,13 @@ is copied to $b$, leading digits are removed and the remaining leading digit is 
 
 EXAM,bn_mp_mod_2d.c
 
--- Add comments later, Tom.
+We first avoid cases of $b \le 0$ by simply mp\_zero()'ing the destination in such cases.  Next if $2^b$ is larger
+than the input we just mp\_copy() the input and return right away.  After this point we know we must actually
+perform some work to produce the remainder.
+
+Recalling that reducing modulo $2^k$ and a binary ``and'' with $2^k - 1$ are numerically equivalent we can quickly reduce 
+the number.  First we zero any digits above the last digit in $2^b$ (line @41,for@).  Next we reduce the 
+leading digit of both (line @45,&=@) and then mp\_clamp().
 
 \section*{Exercises}
 \begin{tabular}{cl}
@@ -2464,33 +2463,46 @@ exceed the precision requested.
 
 EXAM,bn_s_mp_mul_digs.c
 
-Lines @31,if@ to @35,}@ determine if the Comba method can be used first.  The conditions for using the Comba routine are that min$(a.used, b.used) < \delta$ and
-the number of digits of output is less than \textbf{MP\_WARRAY}.  This new constant is used to control 
-the stack usage in the Comba routines.  By default it is set to $\delta$ but can be reduced when memory is at a premium.
+First we determine (line @30,if@) if the Comba method can be used first since it's faster.  The conditions for 
+sing the Comba routine are that min$(a.used, b.used) < \delta$ and the number of digits of output is less than 
+\textbf{MP\_WARRAY}.  This new constant is used to control the stack usage in the Comba routines.  By default it is 
+set to $\delta$ but can be reduced when memory is at a premium.
 
-Of particular importance is the calculation of the $ix+iy$'th column on lines @64,mp_word@, @65,mp_word@ and @66,mp_word@.  Note how all of the
-variables are cast to the type \textbf{mp\_word}, which is also the type of variable $\hat r$.  That is to ensure that double precision operations 
-are used instead of single precision.  The multiplication on line @65,) * (@ makes use of a specific GCC optimizer behaviour.  On the outset it looks like 
-the compiler will have to use a double precision multiplication to produce the result required.  Such an operation would be horribly slow on most 
-processors and drag this to a crawl.  However, GCC is smart enough to realize that double wide output single precision multipliers can be used.  For 
-example, the instruction ``MUL'' on the x86 processor can multiply two 32-bit values and produce a 64-bit result.  
+If we cannot use the Comba method we proceed to setup the baseline routine.  We allocate the the destination mp\_int
+$t$ (line @36,init@) to the exact size of the output to avoid further re--allocations.  At this point we now 
+begin the $O(n^2)$ loop.
+
+This implementation of multiplication has the caveat that it can be trimmed to only produce a variable number of
+digits as output.  In each iteration of the outer loop the $pb$ variable is set (line @48,MIN@) to the maximum 
+number of inner loop iterations.  
+
+Inside the inner loop we calculate $\hat r$ as the mp\_word product of the two mp\_digits and the addition of the
+carry from the previous iteration.  A particularly important observation is that most modern optimizing 
+C compilers (GCC for instance) can recognize that a $N \times N \rightarrow 2N$ multiplication is all that 
+is required for the product.  In x86 terms for example, this means using the MUL instruction.
+
+Each digit of the product is stored in turn (line @68,tmpt@) and the carry propagated (line @71,>>@) to the 
+next iteration.
 
 \subsection{Faster Multiplication by the ``Comba'' Method}
 MARK,COMBA
 
-One of the huge drawbacks of the ``baseline'' algorithms is that at the $O(n^2)$ level the carry must be computed and propagated upwards.  This
-makes the nested loop very sequential and hard to unroll and implement in parallel.  The ``Comba'' \cite{COMBA} method is named after little known 
-(\textit{in cryptographic venues}) Paul G. Comba who described a method of implementing fast multipliers that do not require nested 
-carry fixup operations.  As an interesting aside it seems that Paul Barrett describes a similar technique in
-his 1986 paper \cite{BARRETT} written five years before.
+One of the huge drawbacks of the ``baseline'' algorithms is that at the $O(n^2)$ level the carry must be 
+computed and propagated upwards.  This makes the nested loop very sequential and hard to unroll and implement 
+in parallel.  The ``Comba'' \cite{COMBA} method is named after little known (\textit{in cryptographic venues}) Paul G. 
+Comba who described a method of implementing fast multipliers that do not require nested carry fixup operations.  As an 
+interesting aside it seems that Paul Barrett describes a similar technique in his 1986 paper \cite{BARRETT} written 
+five years before.
 
-At the heart of the Comba technique is once again the long-hand algorithm.  Except in this case a slight twist is placed on how
-the columns of the result are produced.  In the standard long-hand algorithm rows of products are produced then added together to form the 
-final result.  In the baseline algorithm the columns are added together after each iteration to get the result instantaneously.  
+At the heart of the Comba technique is once again the long-hand algorithm.  Except in this case a slight 
+twist is placed on how the columns of the result are produced.  In the standard long-hand algorithm rows of products 
+are produced then added together to form the final result.  In the baseline algorithm the columns are added together 
+after each iteration to get the result instantaneously.  
 
-In the Comba algorithm the columns of the result are produced entirely independently of each other.  That is at the $O(n^2)$ level a 
-simple multiplication and addition step is performed.  The carries of the columns are propagated after the nested loop to reduce the amount
-of work requiored. Succintly the first step of the algorithm is to compute the product vector $\vec x$ as follows. 
+In the Comba algorithm the columns of the result are produced entirely independently of each other.  That is at 
+the $O(n^2)$ level a simple multiplication and addition step is performed.  The carries of the columns are propagated 
+after the nested loop to reduce the amount of work requiored. Succintly the first step of the algorithm is to compute 
+the product vector $\vec x$ as follows. 
 
 \begin{equation}
 \vec x_n = \sum_{i+j = n} a_ib_j, \forall n \in \lbrace 0, 1, 2, \ldots, i + j \rbrace
@@ -2584,38 +2596,32 @@ $256$ digits would allow for numbers in the range of $0 \le x < 2^{7168}$ which,
 \textbf{Input}.   mp\_int $a$, mp\_int $b$ and an integer $digs$ \\
 \textbf{Output}.  $c \leftarrow \vert a \vert \cdot \vert b \vert \mbox{ (mod }\beta^{digs}\mbox{)}$. \\
 \hline \\
-Place an array of \textbf{MP\_WARRAY} double precision digits named $\hat W$ on the stack. \\
+Place an array of \textbf{MP\_WARRAY} single precision digits named $W$ on the stack. \\
 1.  If $c.alloc < digs$ then grow $c$ to $digs$ digits. (\textit{mp\_grow}) \\
 2.  If step 1 failed return(\textit{MP\_MEM}).\\
 \\
-Zero the temporary array $\hat W$. \\
-3.  for $n$ from $0$ to $digs - 1$ do \\
-\hspace{3mm}3.1  $\hat W_n \leftarrow 0$ \\
+3.  $pa \leftarrow \mbox{MIN}(digs, a.used + b.used)$ \\
 \\
-Compute the columns. \\
-4.  for $ix$ from $0$ to $a.used - 1$ do \\
-\hspace{3mm}4.1  $pb \leftarrow \mbox{min}(b.used, digs - ix)$ \\
-\hspace{3mm}4.2  If $pb < 1$ then goto step 5. \\
-\hspace{3mm}4.3  for $iy$ from $0$ to $pb - 1$ do \\
-\hspace{6mm}4.3.1  $\hat W_{ix+iy} \leftarrow \hat W_{ix+iy} + a_{ix}b_{iy}$ \\
+4.  $\_ \hat W \leftarrow 0$ \\
+5.  for $ix$ from 0 to $pa - 1$ do \\
+\hspace{3mm}5.1  $ty \leftarrow \mbox{MIN}(b.used - 1, ix)$ \\
+\hspace{3mm}5.2  $tx \leftarrow ix - ty$ \\
+\hspace{3mm}5.3  $iy \leftarrow \mbox{MIN}(a.used - tx, ty + 1)$ \\
+\hspace{3mm}5.4  for $iz$ from 0 to $iy - 1$ do \\
+\hspace{6mm}5.4.1  $\_ \hat W \leftarrow \_ \hat W + a_{tx+iy}b_{ty-iy}$ \\
+\hspace{3mm}5.5  $W_{ix} \leftarrow \_ \hat W (\mbox{mod }\beta)$\\
+\hspace{3mm}5.6  $\_ \hat W \leftarrow \lfloor \_ \hat W / \beta \rfloor$ \\
+6.  $W_{pa} \leftarrow \_ \hat W (\mbox{mod }\beta)$ \\
 \\
-Propagate the carries upwards. \\
-5.  $oldused \leftarrow c.used$ \\
-6.  $c.used \leftarrow digs$ \\
-7.  If $digs > 1$ then do \\
-\hspace{3mm}7.1.  for $ix$ from $1$ to $digs - 1$ do \\
-\hspace{6mm}7.1.1  $\hat W_{ix} \leftarrow \hat W_{ix} + \lfloor \hat W_{ix-1} / \beta \rfloor$ \\
-\hspace{6mm}7.1.2  $c_{ix - 1} \leftarrow \hat W_{ix - 1} \mbox{ (mod }\beta\mbox{)}$ \\
-8.  else do \\
-\hspace{3mm}8.1  $ix \leftarrow 0$ \\
-9.  $c_{ix} \leftarrow \hat W_{ix} \mbox{ (mod }\beta\mbox{)}$ \\
+7.  $oldused \leftarrow c.used$ \\
+8.  $c.used \leftarrow digs$ \\
+9.  for $ix$ from $0$ to $pa$ do \\
+\hspace{3mm}9.1  $c_{ix} \leftarrow W_{ix}$ \\
+10.  for $ix$ from $pa + 1$ to $oldused - 1$ do \\
+\hspace{3mm}10.1 $c_{ix} \leftarrow 0$ \\
 \\
-Zero excess digits. \\
-10.  If $digs < oldused$ then do \\
-\hspace{3mm}10.1  for $n$ from $digs$ to $oldused - 1$ do \\
-\hspace{6mm}10.1.1  $c_n \leftarrow 0$ \\
-11.  Clamp excessive digits of $c$.  (\textit{mp\_clamp}) \\
-12.  Return(\textit{MP\_OKAY}). \\
+11.  Clamp $c$. \\
+12.  Return MP\_OKAY. \\
 \hline
 \end{tabular}
 \end{center}
@@ -2625,15 +2631,24 @@ Zero excess digits. \\
 \end{figure}
 
 \textbf{Algorithm fast\_s\_mp\_mul\_digs.}
-This algorithm performs the unsigned multiplication of $a$ and $b$ using the Comba method limited to $digs$ digits of precision.  The algorithm
-essentially peforms the same calculation as algorithm s\_mp\_mul\_digs, just much faster.
+This algorithm performs the unsigned multiplication of $a$ and $b$ using the Comba method limited to $digs$ digits of precision.
 
-The array $\hat W$ is meant to be on the stack when the algorithm is used.  The size of the array does not change which is ideal.  Note also that 
-unlike algorithm s\_mp\_mul\_digs no temporary mp\_int is required since the result is calculated directly in $\hat W$.  
+The outer loop of this algorithm is more complicated than that of the baseline multiplier.  This is because on the inside of the 
+loop we want to produce one column per pass.  This allows the accumulator $\_ \hat W$ to be placed in CPU registers and
+reduce the memory bandwidth to two \textbf{mp\_digit} reads per iteration.
 
-The $O(n^2)$ loop on step four is where the Comba method's advantages begin to show through in comparison to the baseline algorithm.  The lack of
-a carry variable or propagation in this loop allows the loop to be performed with only single precision multiplication and additions.  Now that each
-iteration of the inner loop can be performed independent of the others the inner loop can be performed with a high level of parallelism.
+The $ty$ variable is set to the minimum count of $ix$ or the number of digits in $b$.  That way if $a$ has more digits than
+$b$ this will be limited to $b.used - 1$.  The $tx$ variable is set to the to the distance past $b.used$ the variable
+$ix$ is.  This is used for the immediately subsequent statement where we find $iy$.  
+
+The variable $iy$ is the minimum digits we can read from either $a$ or $b$ before running out.  Computing one column at a time
+means we have to scan one integer upwards and the other downwards.  $a$ starts at $tx$ and $b$ starts at $ty$.  In each
+pass we are producing the $ix$'th output column and we note that $tx + ty = ix$.  As we move $tx$ upwards we have to 
+move $ty$ downards so the equality remains valid.  The $iy$ variable is the number of iterations until 
+$tx \ge a.used$ or $ty < 0$ occurs.
+
+After every inner pass we store the lower half of the accumulator into $W_{ix}$ and then propagate the carry of the accumulator
+into the next round by dividing $\_ \hat W$ by $\beta$.
 
 To measure the benefits of the Comba method over the baseline method consider the number of operations that are required.  If the 
 cost in terms of time of a multiply and addition is $p$ and the cost of a carry propagation is $q$ then a baseline multiplication would require 
@@ -2643,20 +2658,20 @@ and addition operations in the nested loop in parallel.
 
 EXAM,bn_fast_s_mp_mul_digs.c
 
-The memset on line @47,memset@ clears the initial $\hat W$ array to zero in a single step. Like the slower baseline multiplication
-implementation a series of aliases (\textit{lines @67, tmpx@, @70, tmpy@ and @75,_W@}) are used to simplify the inner $O(n^2)$ loop.  
-In this case a new alias $\_\hat W$ has been added which refers to the double precision columns offset by $ix$ in each pass.  
+As per the pseudo--code we first calculate $pa$ (line @47,MIN@) as the number of digits to output.  Next we begin the outer loop
+to produce the individual columns of the product.  We use the two aliases $tmpx$ and $tmpy$ (lines @61,tmpx@, @62,tmpy@) to point
+inside the two multiplicands quickly.  
 
-The inner loop on lines @83,for@, @84,mp_word@ and @85,}@ is where the algorithm will spend the majority of the time, which is why it has been 
-stripped to the bones of any extra baggage\footnote{Hence the pointer aliases.}.  On x86 processors the multiplication and additions amount to at the 
-very least five instructions (\textit{two loads, two additions, one multiply}) while on the ARMv4 processors they amount to only three 
-(\textit{one load, one store, one multiply-add}).   For both of the x86 and ARMv4 processors the GCC compiler performs a good job at unrolling the loop 
-and scheduling the instructions so there are very few dependency stalls.
+The inner loop (lines @70,for@ to @72,}@) of this implementation is where the tradeoff come into play.  Originally this comba 
+implementation was ``row--major'' which means it adds to each of the columns in each pass.  After the outer loop it would then fix 
+the carries.  This was very fast except it had an annoying drawback.  You had to read a mp\_word and two mp\_digits and write 
+one mp\_word per iteration.  On processors such as the Athlon XP and P4 this did not matter much since the cache bandwidth 
+is very high and it can keep the ALU fed with data.  It did, however, matter on older and embedded cpus where cache is often 
+slower and also often doesn't exist.  This new algorithm only performs two reads per iteration under the assumption that the 
+compiler has aliased $\_ \hat W$ to a CPU register.
 
-In theory the difference between the baseline and comba algorithms is a mere $O(qn)$ time difference.  However, in the $O(n^2)$ nested loop of the
-baseline method there are dependency stalls as the algorithm must wait for the multiplier to finish before propagating the carry to the next 
-digit.  As a result fewer of the often multiple execution units\footnote{The AMD Athlon has three execution units and the Intel P4 has four.} can
-be simultaneously used.  
+After the inner loop we store the current accumulator in $W$ and shift $\_ \hat W$ (lines @75,W[ix]@, @78,>>@) to forward it as 
+a carry for the next pass.  After the outer loop we use the final carry (line @82,W[ix]@) as the last digit of the product.  
 
 \subsection{Polynomial Basis Multiplication}
 To break the $O(n^2)$ barrier in multiplication requires a completely different look at integer multiplication.  In the following algorithms
@@ -2976,13 +2991,26 @@ result $a \cdot b$ is produced.
 
 EXAM,bn_mp_toom_mul.c
 
--- Comments to be added during editing phase.
+The first obvious thing to note is that this algorithm is complicated.  The complexity is worth it if you are multiplying very 
+large numbers.  For example, a 10,000 digit multiplication takes approximaly 99,282,205 fewer single precision multiplications with
+Toom--Cook than a Comba or baseline approach (this is a savings of more than 99$\%$).  For most ``crypto'' sized numbers this
+algorithm is not practical as Karatsuba has a much lower cutoff point.
+
+First we split $a$ and $b$ into three roughly equal portions.  This has been accomplished (lines @40,mod@ to @69,rshd@) with 
+combinations of mp\_rshd() and mp\_mod\_2d() function calls.  At this point $a = a2 \cdot \beta^2 + a1 \cdot \beta + a0$ and similiarly
+for $b$.  
+
+Next we compute the five points $w0, w1, w2, w3$ and $w4$.  Recall that $w0$ and $w4$ can be computed directly from the portions so
+we get those out of the way first (lines @72,mul@ and @77,mul@).  Next we compute $w1, w2$ and $w3$ using Horners method.
+
+After this point we solve for the actual values of $w1, w2$ and $w3$ by reducing the $5 \times 5$ system which is relatively
+straight forward.  
 
 \subsection{Signed Multiplication}
 Now that algorithms to handle multiplications of every useful dimensions have been developed, a rather simple finishing touch is required.  So far all
 of the multiplication algorithms have been unsigned multiplications which leaves only a signed multiplication algorithm to be established.  
 
-\newpage\begin{figure}[!here]
+\begin{figure}[!here]
 \begin{small}
 \begin{center}
 \begin{tabular}{l}
@@ -3065,7 +3093,7 @@ Column two of row one is a square and column three is the first unique column.
 The baseline squaring algorithm is meant to be a catch-all squaring algorithm.  It will handle any of the input sizes that the faster routines
 will not handle.  
 
-\newpage\begin{figure}[!here]
+\begin{figure}[!here]
 \begin{small}
 \begin{center}
 \begin{tabular}{l}
@@ -3121,9 +3149,14 @@ results calculated so far.  This involves expensive carry propagation which will
 
 EXAM,bn_s_mp_sqr.c
 
-Inside the outer loop (\textit{see line @32,for@}) the square term is calculated on line @35,r =@.  Line @42,>>@ extracts the carry from the square
-term.  Aliases for $a_{ix}$ and $t_{ix+iy}$ are initialized on lines @45,tmpx@ and @48,tmpt@ respectively.  The doubling is performed using two
-additions (\textit{see line @57,r + r@}) since it is usually faster than shifting,if not at least as fast.  
+Inside the outer loop (line @32,for@) the square term is calculated on line @35,r =@.  The carry (line @42,>>@) has been
+extracted from the mp\_word accumulator using a right shift.  Aliases for $a_{ix}$ and $t_{ix+iy}$ are initialized 
+(lines @45,tmpx@ and @48,tmpt@) to simplify the inner loop.  The doubling is performed using two
+additions (line @57,r + r@) since it is usually faster than shifting, if not at least as fast.  
+
+The important observation is that the inner loop does not begin at $iy = 0$ like for multiplication.  As such the inner loops
+get progressively shorter as the algorithm proceeds.  This is what leads to the savings compared to using a multiplication to
+square a number. 
 
 \subsection{Faster Squaring by the ``Comba'' Method}
 A major drawback to the baseline method is the requirement for single precision shifting inside the $O(n^2)$ nested loop.  Squaring has an additional
@@ -3135,9 +3168,9 @@ propagation operations from the inner loop.  However, the inner product must sti
 that $2a + 2b + 2c = 2(a + b + c)$.  That is the sum of all of the double products is equal to double the sum of all the products.  For example,
 $ab + ba + ac + ca = 2ab + 2ac = 2(ab + ac)$.  
 
-However, we cannot simply double all of the columns, since the squares appear only once per row.  The most practical solution is to have two mp\_word
-arrays.  One array will hold the squares and the other array will hold the double products.  With both arrays the doubling and carry propagation can be 
-moved to a $O(n)$ work level outside the $O(n^2)$ level.  
+However, we cannot simply double all of the columns, since the squares appear only once per row.  The most practical solution is to have two 
+mp\_word arrays.  One array will hold the squares and the other array will hold the double products.  With both arrays the doubling and 
+carry propagation can be moved to a $O(n)$ work level outside the $O(n^2)$ level.  In this case, we have an even simpler solution in mind.
 
 \newpage\begin{figure}[!here]
 \begin{small}
@@ -3147,34 +3180,34 @@ moved to a $O(n)$ work level outside the $O(n^2)$ level.
 \textbf{Input}.   mp\_int $a$ \\
 \textbf{Output}.  $b \leftarrow a^2$ \\
 \hline \\
-Place two arrays of \textbf{MP\_WARRAY} mp\_words named $\hat W$ and $\hat {X}$ on the stack. \\
+Place an array of \textbf{MP\_WARRAY} mp\_digits named $W$ on the stack. \\
 1.  If $b.alloc < 2a.used + 1$ then grow $b$ to $2a.used + 1$ digits.  (\textit{mp\_grow}). \\
 2.  If step 1 failed return(\textit{MP\_MEM}). \\
-3.  for $ix$ from $0$ to $2a.used + 1$ do \\
-\hspace{3mm}3.1  $\hat W_{ix} \leftarrow 0$ \\
-\hspace{3mm}3.2  $\hat {X}_{ix} \leftarrow 0$ \\
-4.  for $ix$ from $0$ to $a.used - 1$ do \\
-\hspace{3mm}Compute the square.\\
-\hspace{3mm}4.1  $\hat {X}_{ix+ix} \leftarrow \left ( a_{ix} \right )^2$ \\
 \\
-\hspace{3mm}Compute the double products.\\
-\hspace{3mm}4.2  for $iy$ from $ix + 1$ to $a.used - 1$ do \\
-\hspace{6mm}4.2.1  $\hat W_{ix+iy} \leftarrow \hat W_{ix+iy} + a_{ix}a_{iy}$ \\
-5.  $oldused \leftarrow b.used$ \\
-6.  $b.used \leftarrow 2a.used + 1$ \\
+3.  $pa \leftarrow 2 \cdot a.used$ \\
+4.  $\hat W1 \leftarrow 0$ \\
+5.  for $ix$ from $0$ to $pa - 1$ do \\
+\hspace{3mm}5.1  $\_ \hat W \leftarrow 0$ \\
+\hspace{3mm}5.2  $ty \leftarrow \mbox{MIN}(a.used - 1, ix)$ \\
+\hspace{3mm}5.3  $tx \leftarrow ix - ty$ \\
+\hspace{3mm}5.4  $iy \leftarrow \mbox{MIN}(a.used - tx, ty + 1)$ \\
+\hspace{3mm}5.5  $iy \leftarrow \mbox{MIN}(iy, \lfloor \left (ty - tx + 1 \right )/2 \rfloor)$ \\
+\hspace{3mm}5.6  for $iz$ from $0$ to $iz - 1$ do \\
+\hspace{6mm}5.6.1  $\_ \hat W \leftarrow \_ \hat W + a_{tx + iz}a_{ty - iz}$ \\
+\hspace{3mm}5.7  $\_ \hat W \leftarrow 2 \cdot \_ \hat W  + \hat W1$ \\
+\hspace{3mm}5.8  if $ix$ is even then \\
+\hspace{6mm}5.8.1  $\_ \hat W \leftarrow \_ \hat W + \left ( a_{\lfloor ix/2 \rfloor}\right )^2$ \\
+\hspace{3mm}5.9  $W_{ix} \leftarrow \_ \hat W (\mbox{mod }\beta)$ \\
+\hspace{3mm}5.10  $\hat W1 \leftarrow \lfloor \_ \hat W / \beta \rfloor$ \\
 \\
-Double the products and propagate the carries simultaneously. \\
-7.  $\hat W_0 \leftarrow 2 \hat W_0 + \hat {X}_0$ \\
-8.  for $ix$ from $1$ to $2a.used$ do \\
-\hspace{3mm}8.1 $\hat W_{ix} \leftarrow 2 \hat W_{ix} + \hat {X}_{ix}$ \\
-\hspace{3mm}8.2 $\hat W_{ix} \leftarrow \hat W_{ix} + \lfloor \hat W_{ix - 1} / \beta \rfloor$ \\
-\hspace{3mm}8.3 $b_{ix-1} \leftarrow W_{ix-1} \mbox{ (mod }\beta\mbox{)}$ \\
-9.  $b_{2a.used} \leftarrow \hat W_{2a.used} \mbox{ (mod }\beta\mbox{)}$ \\
-10.  if $2a.used + 1 < oldused$ then do \\
-\hspace{3mm}10.1  for $ix$ from $2a.used + 1$ to $oldused$ do \\
-\hspace{6mm}10.1.1  $b_{ix} \leftarrow 0$ \\
-11.  Clamp excess digits from $b$.  (\textit{mp\_clamp}) \\
-12.  Return(\textit{MP\_OKAY}). \\ 
+6.  $oldused \leftarrow b.used$ \\
+7.  $b.used \leftarrow 2 \cdot a.used$ \\
+8.  for $ix$ from $0$ to $pa - 1$ do \\
+\hspace{3mm}8.1  $b_{ix} \leftarrow W_{ix}$ \\
+9.  for $ix$ from $pa$ to $oldused - 1$ do \\
+\hspace{3mm}9.1  $b_{ix} \leftarrow 0$ \\
+10.  Clamp excess digits from $b$.  (\textit{mp\_clamp}) \\
+11.  Return(\textit{MP\_OKAY}). \\ 
 \hline
 \end{tabular}
 \end{center}
@@ -3183,24 +3216,24 @@ Double the products and propagate the carries simultaneously. \\
 \end{figure}
 
 \textbf{Algorithm fast\_s\_mp\_sqr.}
-This algorithm computes the square of an input using the Comba technique.  It is designed to be a replacement for algorithm s\_mp\_sqr when
-the number of input digits is less than \textbf{MP\_WARRAY} and less than $\delta \over 2$.  
+This algorithm computes the square of an input using the Comba technique.  It is designed to be a replacement for algorithm 
+s\_mp\_sqr when the number of input digits is less than \textbf{MP\_WARRAY} and less than $\delta \over 2$.  
+This algorithm is very similar to the Comba multiplier except with a few key differences we shall make note of.
 
-This routine requires two arrays of mp\_words to be placed on the stack.  The first array $\hat W$ will hold the double products and the second
-array $\hat X$ will hold the squares.  Though only at most $MP\_WARRAY \over 2$ words of $\hat X$ are used, it has proven faster on most 
-processors to simply make it a full size array.
+First, we have an accumulator and carry variables $\_ \hat W$ and $\hat W1$ respectively.  This is because the inner loop
+products are to be doubled.  If we had added the previous carry in we would be doubling too much.  Next we perform an
+addition MIN condition on $iy$ (step 5.5) to prevent overlapping digits.  For example, $a_3 \cdot a_5$ is equal
+$a_5 \cdot a_3$.  Whereas in the multiplication case we would have $5 < a.used$ and $3 \ge 0$ is maintained since we double the sum
+of the products just outside the inner loop we have to avoid doing this.  This is also a good thing since we perform
+fewer multiplications and the routine ends up being faster.
 
-The loop on step 3 will zero the two arrays to prepare them for the squaring step.  Step 4.1 computes the squares of the product.  Note how 
-it simply assigns the value into the $\hat X$ array.  The nested loop on step 4.2 computes the doubles of the products.  This loop
-computes the sum of the products for each column.  They are not doubled until later.
-
-After the squaring loop, the products stored in $\hat W$ musted be doubled and the carries propagated forwards.  It makes sense to do both
-operations at the same time.  The expression $\hat W_{ix} \leftarrow 2 \hat W_{ix} + \hat {X}_{ix}$ computes the sum of the double product and the
-squares in place.  
+Finally the last difference is the addition of the ``square'' term outside the inner loop (step 5.8).  We add in the square
+only to even outputs and it is the square of the term at the $\lfloor ix / 2 \rfloor$ position.
 
 EXAM,bn_fast_s_mp_sqr.c
 
--- Write something deep and insightful later, Tom.
+This implementation is essentially a copy of Comba multiplication with the appropriate changes added to make it faster for 
+the special case of squaring.  
 
 \subsection{Polynomial Basis Squaring}
 The same algorithm that performs optimal polynomial basis multiplication can be used to perform polynomial basis squaring.  The minor exception
@@ -3312,14 +3345,13 @@ By inlining the copy and shift operations the cutoff point for Karatsuba multipl
 is exactly at the point where Comba squaring can no longer be used (\textit{128 digits}).  On slower processors such as the Intel P4
 it is actually below the Comba limit (\textit{at 110 digits}).
 
-This routine uses the same error trap coding style as mp\_karatsuba\_sqr.  As the temporary variables are initialized errors are redirected to
-the error trap higher up.  If the algorithm completes without error the error code is set to \textbf{MP\_OKAY} and mp\_clears are executed normally.
-
-\textit{Last paragraph sucks.  re-write! -- Tom}
+This routine uses the same error trap coding style as mp\_karatsuba\_sqr.  As the temporary variables are initialized errors are 
+redirected to the error trap higher up.  If the algorithm completes without error the error code is set to \textbf{MP\_OKAY} and 
+mp\_clears are executed normally.
 
 \subsection{Toom-Cook Squaring}
 The Toom-Cook squaring algorithm mp\_toom\_sqr is heavily based on the algorithm mp\_toom\_mul with the exception that squarings are used
-instead of multiplication to find the five relations..  The reader is encouraged to read the description of the latter algorithm and try to 
+instead of multiplication to find the five relations.  The reader is encouraged to read the description of the latter algorithm and try to 
 derive their own Toom-Cook squaring algorithm.  
 
 \subsection{High Level Squaring}
@@ -3362,18 +3394,23 @@ EXAM,bn_mp_sqr.c
 $\left [ 3 \right ] $ & Devise an efficient algorithm for selection of the radix point to handle inputs \\
                       & that have different number of digits in Karatsuba multiplication. \\
                       & \\
-$\left [ 3 \right ] $ & In ~SQUARE~ the fact that every column of a squaring is made up \\
+$\left [ 2 \right ] $ & In ~SQUARE~ the fact that every column of a squaring is made up \\
                       & of double products and at most one square is stated.  Prove this statement. \\
                       & \\                      
-$\left [ 2 \right ] $ & In the Comba squaring algorithm half of the $\hat X$ variables are not used. \\
-                      & Revise algorithm fast\_s\_mp\_sqr to shrink the $\hat X$ array. \\
-                      & \\
 $\left [ 3 \right ] $ & Prove the equation for Karatsuba squaring. \\
                       & \\
 $\left [ 1 \right ] $ & Prove that Karatsuba squaring requires $O \left (n^{lg(3)} \right )$ time. \\
                       & \\ 
 $\left [ 2 \right ] $ & Determine the minimal ratio between addition and multiplication clock cycles \\
                       & required for equation $6.7$ to be true.  \\
+                      & \\
+$\left [ 3 \right ] $ & Implement a threaded version of Comba multiplication (and squaring) where you \\
+                      & compute subsets of the columns in each thread.  Determine a cutoff point where \\
+                      & it is effective and add the logic to mp\_mul() and mp\_sqr(). \\
+                      &\\
+$\left [ 4 \right ] $ & Same as the previous but also modify the Karatsuba and Toom-Cook.  You must \\
+                      & increase the throughput of mp\_exptmod() for random odd moduli in the range \\
+                      & $512 \ldots 4096$ bits significantly ($> 2x$) to complete this challenge. \\
                       & \\
 \end{tabular}
 
@@ -3394,7 +3431,7 @@ other forms of residues.
 Modular reductions are normally used to create either finite groups, rings or fields.  The most common usage for performance driven modular reductions 
 is in modular exponentiation algorithms.  That is to compute $d = a^b \mbox{ (mod }c\mbox{)}$ as fast as possible.  This operation is used in the 
 RSA and Diffie-Hellman public key algorithms, for example.  Modular multiplication and squaring also appears as a fundamental operation in 
-Elliptic Curve cryptographic algorithms.  As will be discussed in the subsequent chapter there exist fast algorithms for computing modular 
+elliptic curve cryptographic algorithms.  As will be discussed in the subsequent chapter there exist fast algorithms for computing modular 
 exponentiations without having to perform (\textit{in this example}) $b - 1$ multiplications.  These algorithms will produce partial results in the 
 range $0 \le x < c^2$ which can be taken advantage of to create several efficient algorithms.   They have also been used to create redundancy check 
 algorithms known as CRCs, error correction codes such as Reed-Solomon and solve a variety of number theoeretic problems.  
@@ -3610,7 +3647,7 @@ safe to do so.
 In order to use algorithm mp\_reduce the value of $\mu$ must be calculated in advance.  Ideally this value should be computed once and stored for
 future use so that the Barrett algorithm can be used without delay.  
 
-\begin{figure}[!here]
+\newpage\begin{figure}[!here]
 \begin{small}
 \begin{center}
 \begin{tabular}{l}
@@ -5817,6 +5854,8 @@ EXAM,bn_mp_lcm.c
 To explain the Jacobi Symbol we shall first discuss the Legendre function\footnote{Arrg.  What is the name of this?} off which the Jacobi symbol is 
 defined.  The Legendre function computes whether or not an integer $a$ is a quadratic residue modulo an odd prime $p$.  Numerically it is
 equivalent to equation \ref{eqn:legendre}.
+
+\textit{-- Tom, don't be an ass, cite your source here...!}
 
 \begin{equation}
 a^{(p-1)/2} \equiv \begin{array}{rl}

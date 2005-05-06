@@ -61,25 +61,33 @@ int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
      return err;
 #else 
      /* no invmod */
-     return MP_VAL
+     return MP_VAL;
 #endif
   }
+
+/* modified diminished radix reduction */
+#if defined(BN_MP_REDUCE_IS_2K_L_C) && defined(BN_MP_REDUCE_2K_L_C)
+  if (mp_reduce_is_2k_l(P) == MP_YES) {
+     return s_mp_exptmod(G, X, P, Y, 1);
+  }
+#endif
 
 #ifdef BN_MP_DR_IS_MODULUS_C
   /* is it a DR modulus? */
   dr = mp_dr_is_modulus(P);
 #else
+  /* default to no */
   dr = 0;
 #endif
 
 #ifdef BN_MP_REDUCE_IS_2K_C
-  /* if not, is it a uDR modulus? */
+  /* if not, is it a unrestricted DR modulus? */
   if (dr == 0) {
      dr = mp_reduce_is_2k(P) << 1;
   }
 #endif
     
-  /* if the modulus is odd or dr != 0 use the fast method */
+  /* if the modulus is odd or dr != 0 use the montgomery method */
 #ifdef BN_MP_EXPTMOD_FAST_C
   if (mp_isodd (P) == 1 || dr !=  0) {
     return mp_exptmod_fast (G, X, P, Y, dr);
@@ -87,7 +95,7 @@ int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
 #endif
 #ifdef BN_S_MP_EXPTMOD_C
     /* otherwise use the generic Barrett reduction technique */
-    return s_mp_exptmod (G, X, P, Y);
+    return s_mp_exptmod (G, X, P, Y, 0);
 #else
     /* no exptmod for evens */
     return MP_VAL;

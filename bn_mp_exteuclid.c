@@ -59,6 +59,13 @@ int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3)
        if ((err = mp_copy(&t3, &v3)) != MP_OKAY)                                  { goto _ERR; }
    }
 
+   /* make sure U3 >= 0 */
+   if (u3.sign == MP_NEG) {
+      mp_neg(&u1, &u1);
+      mp_neg(&u2, &u2);
+      mp_neg(&u3, &u3);
+   }
+
    /* copy result out */
    if (U1 != NULL) { mp_exch(U1, &u1); }
    if (U2 != NULL) { mp_exch(U2, &u2); }

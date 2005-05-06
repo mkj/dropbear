@@ -1,5 +1,5 @@
 #include <tommath.h>
-#ifdef BN_MP_REDUCE_2K_C
+#ifdef BN_MP_REDUCE_2K_L_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -15,8 +15,11 @@
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
 
-/* reduces a modulo n where n is of the form 2**p - d */
-int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit d)
+/* reduces a modulo n where n is of the form 2**p - d 
+   This differs from reduce_2k since "d" can be larger
+   than a single digit.
+*/
+int mp_reduce_2k_l(mp_int *a, mp_int *n, mp_int *d)
 {
    mp_int q;
    int    p, res;
@@ -32,11 +35,9 @@ top:
       goto ERR;
    }
    
-   if (d != 1) {
-      /* q = q * d */
-      if ((res = mp_mul_d(&q, d, &q)) != MP_OKAY) { 
-         goto ERR;
-      }
+   /* q = q * d */
+   if ((res = mp_mul(&q, d, &q)) != MP_OKAY) { 
+      goto ERR;
    }
    
    /* a = a + q */

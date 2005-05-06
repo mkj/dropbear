@@ -43,7 +43,7 @@ int mp_gcd (mp_int * a, mp_int * b, mp_int * c)
   }
 
   if ((res = mp_init_copy (&v, b)) != MP_OKAY) {
-    goto __U;
+    goto LBL_U;
   }
 
   /* must be positive for the remainder of the algorithm */
@@ -57,24 +57,24 @@ int mp_gcd (mp_int * a, mp_int * b, mp_int * c)
   if (k > 0) {
      /* divide the power of two out */
      if ((res = mp_div_2d(&u, k, &u, NULL)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      }
 
      if ((res = mp_div_2d(&v, k, &v, NULL)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      }
   }
 
   /* divide any remaining factors of two out */
   if (u_lsb != k) {
      if ((res = mp_div_2d(&u, u_lsb - k, &u, NULL)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      }
   }
 
   if (v_lsb != k) {
      if ((res = mp_div_2d(&v, v_lsb - k, &v, NULL)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      }
   }
 
@@ -87,23 +87,23 @@ int mp_gcd (mp_int * a, mp_int * b, mp_int * c)
      
      /* subtract smallest from largest */
      if ((res = s_mp_sub(&v, &u, &v)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      }
      
      /* Divide out all factors of two */
      if ((res = mp_div_2d(&v, mp_cnt_lsb(&v), &v, NULL)) != MP_OKAY) {
-        goto __V;
+        goto LBL_V;
      } 
   } 
 
   /* multiply by 2**k which we divided out at the beginning */
   if ((res = mp_mul_2d (&u, k, c)) != MP_OKAY) {
-     goto __V;
+     goto LBL_V;
   }
   c->sign = MP_ZPOS;
   res = MP_OKAY;
-__V:mp_clear (&u);
-__U:mp_clear (&v);
+LBL_V:mp_clear (&u);
+LBL_U:mp_clear (&v);
   return res;
 }
 #endif

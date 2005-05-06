@@ -31,8 +31,7 @@
  * Based on Algorithm 14.12 on pp.595 of HAC.
  *
  */
-int
-fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
+int fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 {
   int     olduse, res, pa, ix, iz;
   mp_digit W[MP_WARRAY];
@@ -50,7 +49,7 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 
   /* clear the carry */
   _W = 0;
-  for (ix = 0; ix <= pa; ix++) { 
+  for (ix = 0; ix < pa; ix++) { 
       int      tx, ty;
       int      iy;
       mp_digit *tmpx, *tmpy;
@@ -63,7 +62,7 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
       tmpx = a->dp + tx;
       tmpy = b->dp + ty;
 
-      /* this is the number of times the loop will iterrate, essentially its 
+      /* this is the number of times the loop will iterrate, essentially 
          while (tx++ < a->used && ty-- >= 0) { ... }
        */
       iy = MIN(a->used-tx, ty+1);
@@ -80,14 +79,17 @@ fast_s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
       _W = _W >> ((mp_word)DIGIT_BIT);
   }
 
+  /* store final carry */
+  W[ix] = (mp_digit)(_W & MP_MASK);
+
   /* setup dest */
   olduse  = c->used;
-  c->used = digs;
+  c->used = pa;
 
   {
     register mp_digit *tmpc;
     tmpc = c->dp;
-    for (ix = 0; ix < digs; ix++) {
+    for (ix = 0; ix < pa+1; ix++) {
       /* now extract the previous digit [below the carry] */
       *tmpc++ = W[ix];
     }

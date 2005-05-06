@@ -189,7 +189,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
   }
 
   if ((res = mp_init (&v)) != MP_OKAY) {
-    goto __C;
+    goto LBL_C;
   }
 
   /* product of first 50 primes */
@@ -197,34 +197,34 @@ pprime (int k, int li, mp_int * p, mp_int * q)
        mp_read_radix (&v,
 		      "19078266889580195013601891820992757757219839668357012055907516904309700014933909014729740190",
 		      10)) != MP_OKAY) {
-    goto __V;
+    goto LBL_V;
   }
 
   if ((res = mp_init (&a)) != MP_OKAY) {
-    goto __V;
+    goto LBL_V;
   }
 
   /* set the prime */
   mp_set (&a, prime_digit ());
 
   if ((res = mp_init (&b)) != MP_OKAY) {
-    goto __A;
+    goto LBL_A;
   }
 
   if ((res = mp_init (&n)) != MP_OKAY) {
-    goto __B;
+    goto LBL_B;
   }
 
   if ((res = mp_init (&x)) != MP_OKAY) {
-    goto __N;
+    goto LBL_N;
   }
 
   if ((res = mp_init (&y)) != MP_OKAY) {
-    goto __X;
+    goto LBL_X;
   }
 
   if ((res = mp_init (&z)) != MP_OKAY) {
-    goto __Y;
+    goto LBL_Y;
   }
 
   /* now loop making the single digit */
@@ -236,25 +236,25 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
     /* now compute z = a * b * 2 */
     if ((res = mp_mul (&a, &b, &z)) != MP_OKAY) {	/* z = a * b */
-      goto __Z;
+      goto LBL_Z;
     }
 
     if ((res = mp_copy (&z, &c)) != MP_OKAY) {	/* c = a * b */
-      goto __Z;
+      goto LBL_Z;
     }
 
     if ((res = mp_mul_2 (&z, &z)) != MP_OKAY) {	/* z = 2 * a * b */
-      goto __Z;
+      goto LBL_Z;
     }
 
     /* n = z + 1 */
     if ((res = mp_add_d (&z, 1, &n)) != MP_OKAY) {	/* n = z + 1 */
-      goto __Z;
+      goto LBL_Z;
     }
 
     /* check (n, v) == 1 */
     if ((res = mp_gcd (&n, &v, &y)) != MP_OKAY) {	/* y = (n, v) */
-      goto __Z;
+      goto LBL_Z;
     }
 
     if (mp_cmp_d (&y, 1) != MP_EQ)
@@ -266,7 +266,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* compute x^a mod n */
       if ((res = mp_exptmod (&x, &a, &n, &y)) != MP_OKAY) {	/* y = x^a mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       /* if y == 1 loop */
@@ -275,7 +275,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* now x^2a mod n */
       if ((res = mp_sqrmod (&y, &n, &y)) != MP_OKAY) {	/* y = x^2a mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       if (mp_cmp_d (&y, 1) == MP_EQ)
@@ -283,7 +283,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* compute x^b mod n */
       if ((res = mp_exptmod (&x, &b, &n, &y)) != MP_OKAY) {	/* y = x^b mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       /* if y == 1 loop */
@@ -292,7 +292,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* now x^2b mod n */
       if ((res = mp_sqrmod (&y, &n, &y)) != MP_OKAY) {	/* y = x^2b mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       if (mp_cmp_d (&y, 1) == MP_EQ)
@@ -300,7 +300,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* compute x^c mod n == x^ab mod n */
       if ((res = mp_exptmod (&x, &c, &n, &y)) != MP_OKAY) {	/* y = x^ab mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       /* if y == 1 loop */
@@ -309,7 +309,7 @@ pprime (int k, int li, mp_int * p, mp_int * q)
 
       /* now compute (x^c mod n)^2 */
       if ((res = mp_sqrmod (&y, &n, &y)) != MP_OKAY) {	/* y = x^2ab mod n */
-	goto __Z;
+	goto LBL_Z;
       }
 
       /* y should be 1 */
@@ -346,14 +346,14 @@ pprime (int k, int li, mp_int * p, mp_int * q)
   mp_exch (&n, p);
 
   res = MP_OKAY;
-__Z:mp_clear (&z);
-__Y:mp_clear (&y);
-__X:mp_clear (&x);
-__N:mp_clear (&n);
-__B:mp_clear (&b);
-__A:mp_clear (&a);
-__V:mp_clear (&v);
-__C:mp_clear (&c);
+LBL_Z:mp_clear (&z);
+LBL_Y:mp_clear (&y);
+LBL_X:mp_clear (&x);
+LBL_N:mp_clear (&n);
+LBL_B:mp_clear (&b);
+LBL_A:mp_clear (&a);
+LBL_V:mp_clear (&v);
+LBL_C:mp_clear (&c);
   return res;
 }
 

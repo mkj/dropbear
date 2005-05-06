@@ -29,14 +29,14 @@ mp_rand (mp_int * a, int digits)
 
   /* first place a random non-zero digit */
   do {
-    d = ((mp_digit) abs (rand ()));
+    d = ((mp_digit) abs (rand ())) & MP_MASK;
   } while (d == 0);
 
   if ((res = mp_add_d (a, d, a)) != MP_OKAY) {
     return res;
   }
 
-  while (digits-- > 0) {
+  while (--digits > 0) {
     if ((res = mp_lshd (a, 1)) != MP_OKAY) {
       return res;
     }

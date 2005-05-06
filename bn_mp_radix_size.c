@@ -35,22 +35,29 @@ int mp_radix_size (mp_int * a, int radix, int *size)
     return MP_VAL;
   }
 
-  /* init a copy of the input */
-  if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
-    return res;
+  if (mp_iszero(a) == MP_YES) {
+     *size = 2;
+    return MP_OKAY;
   }
 
   /* digs is the digit count */
   digs = 0;
 
   /* if it's negative add one for the sign */
-  if (t.sign == MP_NEG) {
+  if (a->sign == MP_NEG) {
     ++digs;
-    t.sign = MP_ZPOS;
   }
 
+  /* init a copy of the input */
+  if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
+    return res;
+  }
+
+  /* force temp to positive */
+  t.sign = MP_ZPOS; 
+
   /* fetch out all of the digits */
-  while (mp_iszero (&t) == 0) {
+  while (mp_iszero (&t) == MP_NO) {
     if ((res = mp_div_d (&t, (mp_digit) radix, &t, &d)) != MP_OKAY) {
       mp_clear (&t);
       return res;

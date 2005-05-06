@@ -50,13 +50,13 @@ int mp_jacobi (mp_int * a, mp_int * p, int *c)
   }
 
   if ((res = mp_init (&p1)) != MP_OKAY) {
-    goto __A1;
+    goto LBL_A1;
   }
 
   /* divide out larger power of two */
   k = mp_cnt_lsb(&a1);
   if ((res = mp_div_2d(&a1, k, &a1, NULL)) != MP_OKAY) {
-     goto __P1;
+     goto LBL_P1;
   }
 
   /* step 4.  if e is even set s=1 */
@@ -84,18 +84,18 @@ int mp_jacobi (mp_int * a, mp_int * p, int *c)
   } else {
     /* n1 = n mod a1 */
     if ((res = mp_mod (p, &a1, &p1)) != MP_OKAY) {
-      goto __P1;
+      goto LBL_P1;
     }
     if ((res = mp_jacobi (&p1, &a1, &r)) != MP_OKAY) {
-      goto __P1;
+      goto LBL_P1;
     }
     *c = s * r;
   }
 
   /* done */
   res = MP_OKAY;
-__P1:mp_clear (&p1);
-__A1:mp_clear (&a1);
+LBL_P1:mp_clear (&p1);
+LBL_A1:mp_clear (&a1);
   return res;
 }
 #endif

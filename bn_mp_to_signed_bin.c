@@ -16,8 +16,7 @@
  */
 
 /* store in signed [big endian] format */
-int
-mp_to_signed_bin (mp_int * a, unsigned char *b)
+int mp_to_signed_bin (mp_int * a, unsigned char *b)
 {
   int     res;
 

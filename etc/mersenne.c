@@ -18,15 +18,15 @@ is_mersenne (long s, int *pp)
   }
 
   if ((res = mp_init (&u)) != MP_OKAY) {
-    goto __N;
+    goto LBL_N;
   }
 
   /* n = 2^s - 1 */
   if ((res = mp_2expt(&n, s)) != MP_OKAY) {
-     goto __MU;
+     goto LBL_MU;
   }
   if ((res = mp_sub_d (&n, 1, &n)) != MP_OKAY) {
-    goto __MU;
+    goto LBL_MU;
   }
 
   /* set u=4 */
@@ -36,22 +36,22 @@ is_mersenne (long s, int *pp)
   for (k = 1; k <= s - 2; k++) {
     /* u = u^2 - 2 mod n */
     if ((res = mp_sqr (&u, &u)) != MP_OKAY) {
-      goto __MU;
+      goto LBL_MU;
     }
     if ((res = mp_sub_d (&u, 2, &u)) != MP_OKAY) {
-      goto __MU;
+      goto LBL_MU;
     }
 
     /* make sure u is positive */
     while (u.sign == MP_NEG) {
       if ((res = mp_add (&u, &n, &u)) != MP_OKAY) {
-         goto __MU;
+         goto LBL_MU;
       }
     }
 
     /* reduce */
     if ((res = mp_reduce_2k (&u, &n, 1)) != MP_OKAY) {
-      goto __MU;
+      goto LBL_MU;
     }
   }
 
@@ -62,8 +62,8 @@ is_mersenne (long s, int *pp)
   }
 
   res = MP_OKAY;
-__MU:mp_clear (&u);
-__N:mp_clear (&n);
+LBL_MU:mp_clear (&u);
+LBL_N:mp_clear (&n);
   return res;
 }
 

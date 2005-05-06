@@ -26,11 +26,13 @@ bn_mp_prime_is_prime.obj bn_mp_prime_next_prime.obj bn_mp_dr_reduce.obj \
 bn_mp_dr_is_modulus.obj bn_mp_dr_setup.obj bn_mp_reduce_setup.obj \
 bn_mp_toom_mul.obj bn_mp_toom_sqr.obj bn_mp_div_3.obj bn_s_mp_exptmod.obj \
 bn_mp_reduce_2k.obj bn_mp_reduce_is_2k.obj bn_mp_reduce_2k_setup.obj \
+bn_mp_reduce_2k_l.obj bn_mp_reduce_is_2k_l.obj bn_mp_reduce_2k_setup_l.obj \
 bn_mp_radix_smap.obj bn_mp_read_radix.obj bn_mp_toradix.obj bn_mp_radix_size.obj \
 bn_mp_fread.obj bn_mp_fwrite.obj bn_mp_cnt_lsb.obj bn_error.obj \
 bn_mp_init_multi.obj bn_mp_clear_multi.obj bn_mp_exteuclid.obj bn_mp_toradix_n.obj \
 bn_mp_prime_random_ex.obj bn_mp_get_int.obj bn_mp_sqrt.obj bn_mp_is_square.obj \
-bn_mp_init_set.obj bn_mp_init_set_int.obj bn_mp_invmod_slow.obj bn_mp_prime_rabin_miller_trials.obj
+bn_mp_init_set.obj bn_mp_init_set_int.obj bn_mp_invmod_slow.obj bn_mp_prime_rabin_miller_trials.obj \
+bn_mp_to_signed_bin_n.obj bn_mp_to_unsigned_bin_n.obj
 
 library: $(OBJECTS)
 	lib /out:tommath.lib $(OBJECTS)

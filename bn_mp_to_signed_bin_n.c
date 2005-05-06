@@ -1,5 +1,5 @@
 #include <tommath.h>
-#ifdef BN_MP_UNSIGNED_BIN_SIZE_C
+#ifdef BN_MP_TO_SIGNED_BIN_N_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
  * LibTomMath is a library that provides multiple-precision
@@ -15,10 +15,13 @@
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
 
-/* get the size for an unsigned equivalent */
-int mp_unsigned_bin_size (mp_int * a)
+/* store in signed [big endian] format */
+int mp_to_signed_bin_n (mp_int * a, unsigned char *b, unsigned long *outlen)
 {
-  int     size = mp_count_bits (a);
-  return (size / 8 + ((size & 7) != 0 ? 1 : 0));
+   if (*outlen < (unsigned long)mp_signed_bin_size(a)) {
+      return MP_VAL;
+   }
+   *outlen = mp_signed_bin_size(a);
+   return mp_to_signed_bin(a, b);
 }
 #endif

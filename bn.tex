@@ -49,7 +49,7 @@
 \begin{document}
 \frontmatter
 \pagestyle{empty}
-\title{LibTomMath User Manual \\ v0.32}
+\title{LibTomMath User Manual \\ v0.35}
 \author{Tom St Denis \\ tomstdenis@iahu.ca}
 \maketitle
 This text, the library and the accompanying textbook are all hereby placed in the public domain.  This book has been 
@@ -263,12 +263,12 @@ are the pros and cons of LibTomMath by comparing it to the math routines from Gn
 \begin{center}
 \begin{tabular}{|l|c|c|l|}
 \hline \textbf{Criteria} & \textbf{Pro} & \textbf{Con} & \textbf{Notes} \\
-\hline Few lines of code per file & X & & GnuPG $ = 300.9$, LibTomMath  $ = 76.04$ \\
+\hline Few lines of code per file & X & & GnuPG $ = 300.9$, LibTomMath  $ = 71.97$ \\
 \hline Commented function prototypes & X && GnuPG function names are cryptic. \\
 \hline Speed && X & LibTomMath is slower.  \\
 \hline Totally free & X & & GPL has unfavourable restrictions.\\
 \hline Large function base & X & & GnuPG is barebones. \\
-\hline Four modular reduction algorithms & X & & Faster modular exponentiation. \\
+\hline Five modular reduction algorithms & X & & Faster modular exponentiation for a variety of moduli. \\
 \hline Portable & X & & GnuPG requires configuration to build. \\
 \hline
 \end{tabular}
@@ -284,9 +284,12 @@ would require when working with large integers.
 So it may feel tempting to just rip the math code out of GnuPG (or GnuMP where it was taken from originally) in your
 own application but I think there are reasons not to.  While LibTomMath is slower than libraries such as GnuMP it is
 not normally significantly slower.  On x86 machines the difference is normally a factor of two when performing modular
-exponentiations.
+exponentiations.  It depends largely on the processor, compiler and the moduli being used.
 
-Essentially the only time you wouldn't use LibTomMath is when blazing speed is the primary concern.
+Essentially the only time you wouldn't use LibTomMath is when blazing speed is the primary concern.  However,
+on the other side of the coin LibTomMath offers you a totally free (public domain) well structured math library
+that is very flexible, complete and performs well in resource contrained environments.  Fast RSA for example can
+be performed with as little as 8KB of ram for data (again depending on build options).  
 
 \chapter{Getting Started with LibTomMath}
 \section{Building Programs}
@@ -809,7 +812,7 @@ mp\_int variables based on their digits only.
 
 \index{mp\_cmp\_mag}
 \begin{alltt}
-int mp_cmp(mp_int * a, mp_int * b);
+int mp_cmp_mag(mp_int * a, mp_int * b);
 \end{alltt}
 This will compare $a$ to $b$ placing $a$ to the left of $b$.  This function cannot fail and will return one of the
 three compare codes listed in figure \ref{fig:CMP}.
@@ -1220,12 +1223,13 @@ int mp_sqr (mp_int * a, mp_int * b);
 \end{alltt}
 
 Will square $a$ and store it in $b$.  Like the case of multiplication there are four different squaring
-algorithms all which can be called from mp\_sqr().  It is ideal to use mp\_sqr over mp\_mul when squaring terms.
+algorithms all which can be called from mp\_sqr().  It is ideal to use mp\_sqr over mp\_mul when squaring terms because
+of the speed difference.  
 
 \section{Tuning Polynomial Basis Routines}
 
 Both of the Toom-Cook and Karatsuba multiplication algorithms are faster than the traditional $O(n^2)$ approach that
-the Comba and baseline algorithms use.  At $O(n^{1.464973})$ and $O(n^{1.584962})$ running times respectfully they require 
+the Comba and baseline algorithms use.  At $O(n^{1.464973})$ and $O(n^{1.584962})$ running times respectively they require 
 considerably less work.  For example, a 10000-digit multiplication would take roughly 724,000 single precision
 multiplications with Toom-Cook or 100,000,000 single precision multiplications with the standard Comba (a factor
 of 138).
@@ -1297,14 +1301,14 @@ of $b$.  This algorithm accepts an input $a$ of any range and is not limited by 
 \section{Barrett Reduction}
 
 Barrett reduction is a generic optimized reduction algorithm that requires pre--computation to achieve
-a decent speedup over straight division.  First a $mu$ value must be precomputed with the following function.
+a decent speedup over straight division.  First a $\mu$ value must be precomputed with the following function.
 
 \index{mp\_reduce\_setup}
 \begin{alltt}
 int mp_reduce_setup(mp_int *a, mp_int *b);
 \end{alltt}
 
-Given a modulus in $b$ this produces the required $mu$ value in $a$.  For any given modulus this only has to
+Given a modulus in $b$ this produces the required $\mu$ value in $a$.  For any given modulus this only has to
 be computed once.  Modular reduction can now be performed with the following.
 
 \index{mp\_reduce}
@@ -1312,7 +1316,7 @@ be computed once.  Modular reduction can now be performed with the following.
 int mp_reduce(mp_int *a, mp_int *b, mp_int *c);
 \end{alltt}
 
-This will reduce $a$ in place modulo $b$ with the precomputed $mu$ value in $c$.  $a$ must be in the range
+This will reduce $a$ in place modulo $b$ with the precomputed $\mu$ value in $c$.  $a$ must be in the range
 $0 \le a < b^2$.
 
 \begin{alltt}
@@ -1578,7 +1582,8 @@ will return $-2$.
 This algorithm uses the ``Newton Approximation'' method and will converge on the correct root fairly quickly.  Since
 the algorithm requires raising $a$ to the power of $b$ it is not ideal to attempt to find roots for large
 values of $b$.  If particularly large roots are required then a factor method could be used instead.  For example,
-$a^{1/16}$ is equivalent to $\left (a^{1/4} \right)^{1/4}$.
+$a^{1/16}$ is equivalent to $\left (a^{1/4} \right)^{1/4}$ or simply 
+$\left ( \left ( \left ( a^{1/2} \right )^{1/2} \right )^{1/2} \right )^{1/2}$
 
 \chapter{Prime Numbers}
 \section{Trial Division}

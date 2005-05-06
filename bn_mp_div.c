@@ -49,23 +49,23 @@ int mp_div(mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 
   mp_set(&tq, 1);
   n = mp_count_bits(a) - mp_count_bits(b);
-  if (((res = mp_copy(a, &ta)) != MP_OKAY) ||
-      ((res = mp_copy(b, &tb)) != MP_OKAY) || 
+  if (((res = mp_abs(a, &ta)) != MP_OKAY) ||
+      ((res = mp_abs(b, &tb)) != MP_OKAY) || 
       ((res = mp_mul_2d(&tb, n, &tb)) != MP_OKAY) ||
       ((res = mp_mul_2d(&tq, n, &tq)) != MP_OKAY)) {
-      goto __ERR;
+      goto LBL_ERR;
   }
 
   while (n-- >= 0) {
      if (mp_cmp(&tb, &ta) != MP_GT) {
         if (((res = mp_sub(&ta, &tb, &ta)) != MP_OKAY) ||
             ((res = mp_add(&q, &tq, &q)) != MP_OKAY)) {
-           goto __ERR;
+           goto LBL_ERR;
         }
      }
      if (((res = mp_div_2d(&tb, 1, &tb, NULL)) != MP_OKAY) ||
          ((res = mp_div_2d(&tq, 1, &tq, NULL)) != MP_OKAY)) {
-           goto __ERR;
+           goto LBL_ERR;
      }
   }
 
@@ -74,13 +74,13 @@ int mp_div(mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   n2 = (a->sign == b->sign ? MP_ZPOS : MP_NEG);
   if (c != NULL) {
      mp_exch(c, &q);
-     c->sign  = n2;
+     c->sign  = (mp_iszero(c) == MP_YES) ? MP_ZPOS : n2;
   }
   if (d != NULL) {
      mp_exch(d, &ta);
-     d->sign = n;
+     d->sign = (mp_iszero(d) == MP_YES) ? MP_ZPOS : n;
   }
-__ERR:
+LBL_ERR:
    mp_clear_multi(&ta, &tb, &tq, &q, NULL);
    return res;
 }
@@ -129,19 +129,19 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   q.used = a->used + 2;
 
   if ((res = mp_init (&t1)) != MP_OKAY) {
-    goto __Q;
+    goto LBL_Q;
   }
 
   if ((res = mp_init (&t2)) != MP_OKAY) {
-    goto __T1;
+    goto LBL_T1;
   }
 
   if ((res = mp_init_copy (&x, a)) != MP_OKAY) {
-    goto __T2;
+    goto LBL_T2;
   }
 
   if ((res = mp_init_copy (&y, b)) != MP_OKAY) {
-    goto __X;
+    goto LBL_X;
   }
 
   /* fix the sign */
@@ -153,10 +153,10 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   if (norm < (int)(DIGIT_BIT-1)) {
      norm = (DIGIT_BIT-1) - norm;
      if ((res = mp_mul_2d (&x, norm, &x)) != MP_OKAY) {
-       goto __Y;
+       goto LBL_Y;
      }
      if ((res = mp_mul_2d (&y, norm, &y)) != MP_OKAY) {
-       goto __Y;
+       goto LBL_Y;
      }
   } else {
      norm = 0;
@@ -168,13 +168,13 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 
   /* while (x >= y*b**n-t) do { q[n-t] += 1; x -= y*b**{n-t} } */
   if ((res = mp_lshd (&y, n - t)) != MP_OKAY) { /* y = y*b**{n-t} */
-    goto __Y;
+    goto LBL_Y;
   }
 
   while (mp_cmp (&x, &y) != MP_LT) {
     ++(q.dp[n - t]);
     if ((res = mp_sub (&x, &y, &x)) != MP_OKAY) {
-      goto __Y;
+      goto LBL_Y;
     }
   }
 
@@ -216,7 +216,7 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
       t1.dp[1] = y.dp[t];
       t1.used = 2;
       if ((res = mp_mul_d (&t1, q.dp[i - t - 1], &t1)) != MP_OKAY) {
-        goto __Y;
+        goto LBL_Y;
       }
 
       /* find right hand */
@@ -228,27 +228,27 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 
     /* step 3.3 x = x - q{i-t-1} * y * b**{i-t-1} */
     if ((res = mp_mul_d (&y, q.dp[i - t - 1], &t1)) != MP_OKAY) {
-      goto __Y;
+      goto LBL_Y;
     }
 
     if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) {
-      goto __Y;
+      goto LBL_Y;
     }
 
     if ((res = mp_sub (&x, &t1, &x)) != MP_OKAY) {
-      goto __Y;
+      goto LBL_Y;
     }
 
     /* if x < 0 then { x = x + y*b**{i-t-1}; q{i-t-1} -= 1; } */
     if (x.sign == MP_NEG) {
       if ((res = mp_copy (&y, &t1)) != MP_OKAY) {
-        goto __Y;
+        goto LBL_Y;
       }
       if ((res = mp_lshd (&t1, i - t - 1)) != MP_OKAY) {
-        goto __Y;
+        goto LBL_Y;
       }
       if ((res = mp_add (&x, &t1, &x)) != MP_OKAY) {
-        goto __Y;
+        goto LBL_Y;
       }
 
       q.dp[i - t - 1] = (q.dp[i - t - 1] - 1UL) & MP_MASK;
@@ -275,11 +275,11 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
 
   res = MP_OKAY;
 
-__Y:mp_clear (&y);
-__X:mp_clear (&x);
-__T2:mp_clear (&t2);
-__T1:mp_clear (&t1);
-__Q:mp_clear (&q);
+LBL_Y:mp_clear (&y);
+LBL_X:mp_clear (&x);
+LBL_T2:mp_clear (&t2);
+LBL_T1:mp_clear (&t1);
+LBL_Q:mp_clear (&q);
   return res;
 }
 

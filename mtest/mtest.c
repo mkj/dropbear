@@ -46,7 +46,7 @@ void rand_num(mp_int *a)
    int n, size;
    unsigned char buf[2048];
 
-   size = 1 + ((fgetc(rng)<<8) + fgetc(rng)) % 1031;
+   size = 1 + ((fgetc(rng)<<8) + fgetc(rng)) % 101;
    buf[0] = (fgetc(rng)&1)?1:0;
    fread(buf+1, 1, size, rng);
    while (buf[1] == 0) buf[1] = fgetc(rng);
@@ -58,7 +58,7 @@ void rand_num2(mp_int *a)
    int n, size;
    unsigned char buf[2048];
 
-   size = 10 + ((fgetc(rng)<<8) + fgetc(rng)) % 97;
+   size = 10 + ((fgetc(rng)<<8) + fgetc(rng)) % 101;
    buf[0] = (fgetc(rng)&1)?1:0;
    fread(buf+1, 1, size, rng);
    while (buf[1] == 0) buf[1] = fgetc(rng);

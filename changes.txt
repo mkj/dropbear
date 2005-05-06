@@ -1,3 +1,35 @@
+March 12th, 2005
+v0.35  -- Stupid XOR function missing line again... oops.
+       -- Fixed bug in invmod not handling negative inputs correctly [Wolfgang Ehrhardt]
+       -- Made exteuclid always give positive u3 output...[ Wolfgang Ehrhardt ]
+       -- [Wolfgang Ehrhardt] Suggested a fix for mp_reduce() which avoided underruns.  ;-)
+       -- mp_rand() would emit one too many digits and it was possible to get a 0 out of it ... oops
+       -- Added montgomery to the testing to make sure it handles 1..10 digit moduli correctly
+       -- Fixed bug in comba that would lead to possible erroneous outputs when "pa < digs" 
+       -- Fixed bug in mp_toradix_size for "0" [Kevin Kenny]
+       -- Updated chapters 1-5 of the textbook ;-) It now talks about the new comba code!
+
+February 12th, 2005
+v0.34  -- Fixed two more small errors in mp_prime_random_ex()
+       -- Fixed overflow in mp_mul_d() [Kevin Kenny]
+       -- Added mp_to_(un)signed_bin_n() functions which do bounds checking for ya [and report the size]
+       -- Added "large" diminished radix support.  Speeds up things like DSA where the moduli is of the form 2^k - P for some P < 2^(k/2) or so
+          Actually is faster than Montgomery on my AMD64 (and probably much faster on a P4)
+       -- Updated the manual a bit
+       -- Ok so I haven't done the textbook work yet... My current freelance gig has landed me in France till the 
+          end of Feb/05.  Once I get back I'll have tons of free time and I plan to go to town on the book.
+          As of this release the API will freeze.  At least until the book catches up with all the changes.  I welcome
+          bug reports but new algorithms will have to wait.
+
+December 23rd, 2004
+v0.33  -- Fixed "small" variant for mp_div() which would munge with negative dividends...
+       -- Fixed bug in mp_prime_random_ex() which would set the most significant byte to zero when
+          no special flags were set
+       -- Fixed overflow [minor] bug in fast_s_mp_sqr()
+       -- Made the makefiles easier to configure the group/user that ltm will install as
+       -- Fixed "final carry" bug in comba multipliers. (Volkan Ceylan)
+       -- Matt Johnston pointed out a missing semi-colon in mp_exptmod
+
 October 29th, 2004
 v0.32  -- Added "makefile.shared" for shared object support
        -- Added more to the build options/configs in the manual

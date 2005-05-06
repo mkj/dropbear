@@ -90,8 +90,11 @@
 #define BN_MP_READ_UNSIGNED_BIN_C
 #define BN_MP_REDUCE_C
 #define BN_MP_REDUCE_2K_C
+#define BN_MP_REDUCE_2K_L_C
 #define BN_MP_REDUCE_2K_SETUP_C
+#define BN_MP_REDUCE_2K_SETUP_L_C
 #define BN_MP_REDUCE_IS_2K_C
+#define BN_MP_REDUCE_IS_2K_L_C
 #define BN_MP_REDUCE_SETUP_C
 #define BN_MP_RSHD_C
 #define BN_MP_SET_C
@@ -105,7 +108,9 @@
 #define BN_MP_SUB_D_C
 #define BN_MP_SUBMOD_C
 #define BN_MP_TO_SIGNED_BIN_C
+#define BN_MP_TO_SIGNED_BIN_N_C
 #define BN_MP_TO_UNSIGNED_BIN_C
+#define BN_MP_TO_UNSIGNED_BIN_N_C
 #define BN_MP_TOOM_MUL_C
 #define BN_MP_TOOM_SQR_C
 #define BN_MP_TORADIX_C
@@ -132,7 +137,7 @@
    #define BN_MP_ISEVEN_C
    #define BN_MP_INIT_MULTI_C
    #define BN_MP_COPY_C
-   #define BN_MP_ABS_C
+   #define BN_MP_MOD_C
    #define BN_MP_SET_C
    #define BN_MP_DIV_2_C
    #define BN_MP_ISODD_C
@@ -242,6 +247,7 @@
    #define BN_MP_INIT_MULTI_C
    #define BN_MP_SET_C
    #define BN_MP_COUNT_BITS_C
+   #define BN_MP_ABS_C
    #define BN_MP_MUL_2D_C
    #define BN_MP_CMP_C
    #define BN_MP_SUB_C
@@ -323,11 +329,12 @@
    #define BN_MP_CLEAR_C
    #define BN_MP_ABS_C
    #define BN_MP_CLEAR_MULTI_C
+   #define BN_MP_REDUCE_IS_2K_L_C
+   #define BN_S_MP_EXPTMOD_C
    #define BN_MP_DR_IS_MODULUS_C
    #define BN_MP_REDUCE_IS_2K_C
    #define BN_MP_ISODD_C
    #define BN_MP_EXPTMOD_FAST_C
-   #define BN_S_MP_EXPTMOD_C
 #endif
 
 #if defined(BN_MP_EXPTMOD_FAST_C)
@@ -359,6 +366,7 @@
    #define BN_MP_DIV_C
    #define BN_MP_MUL_C
    #define BN_MP_SUB_C
+   #define BN_MP_NEG_C
    #define BN_MP_EXCH_C
    #define BN_MP_CLEAR_MULTI_C
 #endif
@@ -433,6 +441,7 @@
 #if defined(BN_MP_INVMOD_SLOW_C)
    #define BN_MP_ISZERO_C
    #define BN_MP_INIT_MULTI_C
+   #define BN_MP_MOD_C
    #define BN_MP_COPY_C
    #define BN_MP_ISEVEN_C
    #define BN_MP_SET_C
@@ -724,6 +733,17 @@
    #define BN_MP_CLEAR_C
 #endif
 
+#if defined(BN_MP_REDUCE_2K_L_C)
+   #define BN_MP_INIT_C
+   #define BN_MP_COUNT_BITS_C
+   #define BN_MP_DIV_2D_C
+   #define BN_MP_MUL_C
+   #define BN_S_MP_ADD_C
+   #define BN_MP_CMP_MAG_C
+   #define BN_S_MP_SUB_C
+   #define BN_MP_CLEAR_C
+#endif
+
 #if defined(BN_MP_REDUCE_2K_SETUP_C)
    #define BN_MP_INIT_C
    #define BN_MP_COUNT_BITS_C
@@ -732,9 +752,20 @@
    #define BN_S_MP_SUB_C
 #endif
 
+#if defined(BN_MP_REDUCE_2K_SETUP_L_C)
+   #define BN_MP_INIT_C
+   #define BN_MP_2EXPT_C
+   #define BN_MP_COUNT_BITS_C
+   #define BN_S_MP_SUB_C
+   #define BN_MP_CLEAR_C
+#endif
+
 #if defined(BN_MP_REDUCE_IS_2K_C)
    #define BN_MP_REDUCE_2K_C
    #define BN_MP_COUNT_BITS_C
+#endif
+
+#if defined(BN_MP_REDUCE_IS_2K_L_C)
 #endif
 
 #if defined(BN_MP_REDUCE_SETUP_C)
@@ -814,11 +845,21 @@
    #define BN_MP_TO_UNSIGNED_BIN_C
 #endif
 
+#if defined(BN_MP_TO_SIGNED_BIN_N_C)
+   #define BN_MP_SIGNED_BIN_SIZE_C
+   #define BN_MP_TO_SIGNED_BIN_C
+#endif
+
 #if defined(BN_MP_TO_UNSIGNED_BIN_C)
    #define BN_MP_INIT_COPY_C
    #define BN_MP_ISZERO_C
    #define BN_MP_DIV_2D_C
    #define BN_MP_CLEAR_C
+#endif
+
+#if defined(BN_MP_TO_UNSIGNED_BIN_N_C)
+   #define BN_MP_UNSIGNED_BIN_SIZE_C
+   #define BN_MP_TO_UNSIGNED_BIN_C
 #endif
 
 #if defined(BN_MP_TOOM_MUL_C)
@@ -901,10 +942,12 @@
    #define BN_MP_INIT_C
    #define BN_MP_CLEAR_C
    #define BN_MP_REDUCE_SETUP_C
+   #define BN_MP_REDUCE_C
+   #define BN_MP_REDUCE_2K_SETUP_L_C
+   #define BN_MP_REDUCE_2K_L_C
    #define BN_MP_MOD_C
    #define BN_MP_COPY_C
    #define BN_MP_SQR_C
-   #define BN_MP_REDUCE_C
    #define BN_MP_MUL_C
    #define BN_MP_SET_C
    #define BN_MP_EXCH_C

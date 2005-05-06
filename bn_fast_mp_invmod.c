@@ -21,8 +21,7 @@
  * Based on slow invmod except this is optimized for the case where b is 
  * odd as per HAC Note 14.64 on pp. 610
  */
-int
-fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
+int fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 {
   mp_int  x, y, u, v, B, D;
   int     res, neg;
@@ -39,20 +38,20 @@ fast_mp_invmod (mp_int * a, mp_int * b, mp_int * c)
 
   /* x == modulus, y == value to invert */
   if ((res = mp_copy (b, &x)) != MP_OKAY) {
-    goto __ERR;
+    goto LBL_ERR;
   }
 
   /* we need y = |a| */
-  if ((res = mp_abs (a, &y)) != MP_OKAY) {
-    goto __ERR;
+  if ((res = mp_mod (a, b, &y)) != MP_OKAY) {
+    goto LBL_ERR;
   }
 
   /* 3. u=x, v=y, A=1, B=0, C=0,D=1 */
   if ((res = mp_copy (&x, &u)) != MP_OKAY) {
-    goto __ERR;
+    goto LBL_ERR;
   }
   if ((res = mp_copy (&y, &v)) != MP_OKAY) {
-    goto __ERR;
+    goto LBL_ERR;
   }
   mp_set (&D, 1);
 
@@ -61,17 +60,17 @@ top:
   while (mp_iseven (&u) == 1) {
     /* 4.1 u = u/2 */
     if ((res = mp_div_2 (&u, &u)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
     /* 4.2 if B is odd then */
     if (mp_isodd (&B) == 1) {
       if ((res = mp_sub (&B, &x, &B)) != MP_OKAY) {
-        goto __ERR;
+        goto LBL_ERR;
       }
     }
     /* B = B/2 */
     if ((res = mp_div_2 (&B, &B)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
   }
 
@@ -79,18 +78,18 @@ top:
   while (mp_iseven (&v) == 1) {
     /* 5.1 v = v/2 */
     if ((res = mp_div_2 (&v, &v)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
     /* 5.2 if D is odd then */
     if (mp_isodd (&D) == 1) {
       /* D = (D-x)/2 */
       if ((res = mp_sub (&D, &x, &D)) != MP_OKAY) {
-        goto __ERR;
+        goto LBL_ERR;
       }
     }
     /* D = D/2 */
     if ((res = mp_div_2 (&D, &D)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
   }
 
@@ -98,20 +97,20 @@ top:
   if (mp_cmp (&u, &v) != MP_LT) {
     /* u = u - v, B = B - D */
     if ((res = mp_sub (&u, &v, &u)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
 
     if ((res = mp_sub (&B, &D, &B)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
   } else {
     /* v - v - u, D = D - B */
     if ((res = mp_sub (&v, &u, &v)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
 
     if ((res = mp_sub (&D, &B, &D)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
   }
 
@@ -125,21 +124,21 @@ top:
   /* if v != 1 then there is no inverse */
   if (mp_cmp_d (&v, 1) != MP_EQ) {
     res = MP_VAL;
-    goto __ERR;
+    goto LBL_ERR;
   }
 
   /* b is now the inverse */
   neg = a->sign;
   while (D.sign == MP_NEG) {
     if ((res = mp_add (&D, b, &D)) != MP_OKAY) {
-      goto __ERR;
+      goto LBL_ERR;
     }
   }
   mp_exch (&D, c);
   c->sign = neg;
   res = MP_OKAY;
 
-__ERR:mp_clear_multi (&x, &y, &u, &v, &B, &D, NULL);
+LBL_ERR:mp_clear_multi (&x, &y, &u, &v, &B, &D, NULL);
   return res;
 }
 #endif

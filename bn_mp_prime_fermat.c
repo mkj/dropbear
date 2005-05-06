@@ -43,7 +43,7 @@ int mp_prime_fermat (mp_int * a, mp_int * b, int *result)
 
   /* compute t = b**a mod a */
   if ((err = mp_exptmod (b, a, a, &t)) != MP_OKAY) {
-    goto __T;
+    goto LBL_T;
   }
 
   /* is it equal to b? */
@@ -52,7 +52,7 @@ int mp_prime_fermat (mp_int * a, mp_int * b, int *result)
   }
 
   err = MP_OKAY;
-__T:mp_clear (&t);
+LBL_T:mp_clear (&t);
   return err;
 }
 #endif

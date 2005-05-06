@@ -15,33 +15,14 @@
  * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
  */
 
-/* fast squaring
- *
- * This is the comba method where the columns of the product
- * are computed first then the carries are computed.  This
- * has the effect of making a very simple inner loop that
- * is executed the most
- *
- * W2 represents the outer products and W the inner.
- *
- * A further optimizations is made because the inner
- * products are of the form "A * B * 2".  The *2 part does
- * not need to be computed until the end which is good
- * because 64-bit shifts are slow!
- *
- * Based on Algorithm 14.16 on pp.597 of HAC.
- *
- */
 /* the jist of squaring...
-
-you do like mult except the offset of the tmpx [one that starts closer to zero]
-can't equal the offset of tmpy.  So basically you set up iy like before then you min it with
-(ty-tx) so that it never happens.  You double all those you add in the inner loop
+ * you do like mult except the offset of the tmpx [one that 
+ * starts closer to zero] can't equal the offset of tmpy.  
+ * So basically you set up iy like before then you min it with
+ * (ty-tx) so that it never happens.  You double all those 
+ * you add in the inner loop
 
 After that loop you do the squares and add them in.
-
-Remove W2 and don't memset W
-
 */
 
 int fast_s_mp_sqr (mp_int * a, mp_int * b)
@@ -60,7 +41,7 @@ int fast_s_mp_sqr (mp_int * a, mp_int * b)
 
   /* number of output digits to produce */
   W1 = 0;
-  for (ix = 0; ix <= pa; ix++) { 
+  for (ix = 0; ix < pa; ix++) { 
       int      tx, ty, iy;
       mp_word  _W;
       mp_digit *tmpy;
@@ -76,7 +57,7 @@ int fast_s_mp_sqr (mp_int * a, mp_int * b)
       tmpx = a->dp + tx;
       tmpy = a->dp + ty;
 
-      /* this is the number of times the loop will iterrate, essentially its 
+      /* this is the number of times the loop will iterrate, essentially
          while (tx++ < a->used && ty-- >= 0) { ... }
        */
       iy = MIN(a->used-tx, ty+1);
@@ -101,7 +82,7 @@ int fast_s_mp_sqr (mp_int * a, mp_int * b)
       }
 
       /* store it */
-      W[ix] = _W;
+      W[ix] = (mp_digit)(_W & MP_MASK);
 
       /* make next carry */
       W1 = _W >> ((mp_word)DIGIT_BIT);

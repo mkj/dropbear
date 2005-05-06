@@ -40,12 +40,12 @@ int mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
     return err;
   }
   if ((err = mp_sub_d (&n1, 1, &n1)) != MP_OKAY) {
-    goto __N1;
+    goto LBL_N1;
   }
 
   /* set 2**s * r = n1 */
   if ((err = mp_init_copy (&r, &n1)) != MP_OKAY) {
-    goto __N1;
+    goto LBL_N1;
   }
 
   /* count the number of least significant bits
@@ -55,15 +55,15 @@ int mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
 
   /* now divide n - 1 by 2**s */
   if ((err = mp_div_2d (&r, s, &r, NULL)) != MP_OKAY) {
-    goto __R;
+    goto LBL_R;
   }
 
   /* compute y = b**r mod a */
   if ((err = mp_init (&y)) != MP_OKAY) {
-    goto __R;
+    goto LBL_R;
   }
   if ((err = mp_exptmod (b, &r, a, &y)) != MP_OKAY) {
-    goto __Y;
+    goto LBL_Y;
   }
 
   /* if y != 1 and y != n1 do */
@@ -72,12 +72,12 @@ int mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
     /* while j <= s-1 and y != n1 */
     while ((j <= (s - 1)) && mp_cmp (&y, &n1) != MP_EQ) {
       if ((err = mp_sqrmod (&y, a, &y)) != MP_OKAY) {
-         goto __Y;
+         goto LBL_Y;
       }
 
       /* if y == 1 then composite */
       if (mp_cmp_d (&y, 1) == MP_EQ) {
-         goto __Y;
+         goto LBL_Y;
       }
 
       ++j;
@@ -85,15 +85,15 @@ int mp_prime_miller_rabin (mp_int * a, mp_int * b, int *result)
 
     /* if y != n1 then composite */
     if (mp_cmp (&y, &n1) != MP_EQ) {
-      goto __Y;
+      goto LBL_Y;
     }
   }
 
   /* probably prime now */
   *result = MP_YES;
-__Y:mp_clear (&y);
-__R:mp_clear (&r);
-__N1:mp_clear (&n1);
+LBL_Y:mp_clear (&y);
+LBL_R:mp_clear (&r);
+LBL_N1:mp_clear (&n1);
   return err;
 }
 #endif

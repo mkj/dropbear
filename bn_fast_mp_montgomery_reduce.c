@@ -23,8 +23,7 @@
  *
  * Based on Algorithm 14.32 on pp.601 of HAC.
 */
-int
-fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
+int fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 {
   int     ix, res, olduse;
   mp_word W[MP_WARRAY];

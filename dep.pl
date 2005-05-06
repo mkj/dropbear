@@ -13,6 +13,8 @@ print CLASS "#if !(defined(LTM1) && defined(LTM2) && defined(LTM3))\n#if defined
 foreach my $filename (glob "bn*.c") {
    my $define = $filename;
 
+print "Processing $filename\n";
+
    # convert filename to upper case so we can use it as a define 
    $define =~ tr/[a-z]/[A-Z]/;
    $define =~ tr/\./_/;

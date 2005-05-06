@@ -37,7 +37,7 @@ int mp_prime_is_prime (mp_int * a, int t, int *result)
 
   /* is the input equal to one of the primes in the table? */
   for (ix = 0; ix < PRIME_SIZE; ix++) {
-      if (mp_cmp_d(a, __prime_tab[ix]) == MP_EQ) {
+      if (mp_cmp_d(a, ltm_prime_tab[ix]) == MP_EQ) {
          *result = 1;
          return MP_OKAY;
       }
@@ -60,20 +60,20 @@ int mp_prime_is_prime (mp_int * a, int t, int *result)
 
   for (ix = 0; ix < t; ix++) {
     /* set the prime */
-    mp_set (&b, __prime_tab[ix]);
+    mp_set (&b, ltm_prime_tab[ix]);
 
     if ((err = mp_prime_miller_rabin (a, &b, &res)) != MP_OKAY) {
-      goto __B;
+      goto LBL_B;
     }
 
     if (res == MP_NO) {
-      goto __B;
+      goto LBL_B;
     }
   }
 
   /* passed the test */
   *result = MP_YES;
-__B:mp_clear (&b);
+LBL_B:mp_clear (&b);
   return err;
 }
 #endif

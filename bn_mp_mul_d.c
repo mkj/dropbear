@@ -57,8 +57,9 @@ mp_mul_d (mp_int * a, mp_digit b, mp_int * c)
     u       = (mp_digit) (r >> ((mp_word) DIGIT_BIT));
   }
 
-  /* store final carry [if any] */
+  /* store final carry [if any] and increment ix offset  */
   *tmpc++ = u;
+  ++ix;
 
   /* now zero digits above the top */
   while (ix++ < olduse) {

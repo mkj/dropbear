@@ -37,7 +37,7 @@ mp_xor (mp_int * a, mp_int * b, mp_int * c)
   }
 
   for (ix = 0; ix < px; ix++) {
-
+     t.dp[ix] ^= x->dp[ix];
   }
   mp_clamp (&t);
   mp_exch (c, &t);

@@ -35,10 +35,10 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
    a->sign = MP_ZPOS;
 
    /* simple algo if a is less than the largest prime in the table */
-   if (mp_cmp_d(a, __prime_tab[PRIME_SIZE-1]) == MP_LT) {
+   if (mp_cmp_d(a, ltm_prime_tab[PRIME_SIZE-1]) == MP_LT) {
       /* find which prime it is bigger than */
       for (x = PRIME_SIZE - 2; x >= 0; x--) {
-          if (mp_cmp_d(a, __prime_tab[x]) != MP_LT) {
+          if (mp_cmp_d(a, ltm_prime_tab[x]) != MP_LT) {
              if (bbs_style == 1) {
                 /* ok we found a prime smaller or
                  * equal [so the next is larger]
@@ -46,17 +46,17 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
                  * however, the prime must be
                  * congruent to 3 mod 4
                  */
-                if ((__prime_tab[x + 1] & 3) != 3) {
+                if ((ltm_prime_tab[x + 1] & 3) != 3) {
                    /* scan upwards for a prime congruent to 3 mod 4 */
                    for (y = x + 1; y < PRIME_SIZE; y++) {
-                       if ((__prime_tab[y] & 3) == 3) {
-                          mp_set(a, __prime_tab[y]);
+                       if ((ltm_prime_tab[y] & 3) == 3) {
+                          mp_set(a, ltm_prime_tab[y]);
                           return MP_OKAY;
                        }
                    }
                 }
              } else {
-                mp_set(a, __prime_tab[x + 1]);
+                mp_set(a, ltm_prime_tab[x + 1]);
                 return MP_OKAY;
              }
           }
@@ -94,7 +94,7 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
 
    /* generate the restable */
    for (x = 1; x < PRIME_SIZE; x++) {
-      if ((err = mp_mod_d(a, __prime_tab[x], res_tab + x)) != MP_OKAY) {
+      if ((err = mp_mod_d(a, ltm_prime_tab[x], res_tab + x)) != MP_OKAY) {
          return err;
       }
    }
@@ -120,8 +120,8 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
              res_tab[x] += kstep;
 
              /* subtract the modulus [instead of using division] */
-             if (res_tab[x] >= __prime_tab[x]) {
-                res_tab[x]  -= __prime_tab[x];
+             if (res_tab[x] >= ltm_prime_tab[x]) {
+                res_tab[x]  -= ltm_prime_tab[x];
              }
 
              /* set flag if zero */
@@ -133,7 +133,7 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
 
       /* add the step */
       if ((err = mp_add_d(a, step, a)) != MP_OKAY) {
-         goto __ERR;
+         goto LBL_ERR;
       }
 
       /* if didn't pass sieve and step == MAX then skip test */
@@ -143,9 +143,9 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
 
       /* is this prime? */
       for (x = 0; x < t; x++) {
-          mp_set(&b, __prime_tab[t]);
+          mp_set(&b, ltm_prime_tab[t]);
           if ((err = mp_prime_miller_rabin(a, &b, &res)) != MP_OKAY) {
-             goto __ERR;
+             goto LBL_ERR;
           }
           if (res == MP_NO) {
              break;
@@ -158,7 +158,7 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
    }
 
    err = MP_OKAY;
-__ERR:
+LBL_ERR:
    mp_clear(&b);
    return err;
 }
