@@ -47,10 +47,10 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{LibTomCrypt \\ Version 0.99}
+\title{LibTomCrypt \\ Version 1.02}
 \author{Tom St Denis \\
 \\
-tomstdenis@iahu.ca \\
+tomstdenis@gmail.com \\
 http://libtomcrypt.org
 }
 \maketitle
@@ -79,56 +79,22 @@ Canada
 \tableofcontents
 \chapter{Introduction}
 \section{What is the LibTomCrypt?}
-LibTomCrypt is a portable ANSI C cryptographic library that supports symmetric ciphers, one-way hashes, 
-pseudo-random number generators, public key cryptography (via RSA,DH or ECC/DH) and a plethora of support 
-routines.  It is designed to compile out of the box with the GNU C Compiler (GCC) version 2.95.3 (and higher) 
-and with MSVC version 6 in win32.
+LibTomCrypt is a portable ISO C cryptographic library that is meant to be a toolset for cryptographers who are 
+designing a cryptosystem.  It supports symmetric ciphers, one-way hashes, pseudo-random number generators, 
+public key cryptography (via PKCS \#1 RSA, DH or ECCDH) and a plethora of support 
+routines.  
 
-The library has been successfully tested on quite a few other platforms ranging from the ARM7TDMI in a 
-Gameboy Advanced to various PowerPC processors and even the MIPS processor in the PlayStation 2.  Suffice it
-to say the code is portable.
-
-The library is designed so new ciphers/hashes/PRNGs can be added at runtime and the existing API (and helper API functions) will 
-be able to use the new designs automatically.  There exist self-check functions for each cipher and hash to ensure that
-they compile and execute to the published design specifications.  The library also performs extensive parameter error checking
-and will give verbose error messages when possible.
-
-Essentially the library saves the time of having to implement the ciphers, hashes, prngs yourself.  Typically implementing
-useful cryptography is an error prone business which means anything that can save considerable time and effort is a good
-thing.
+The library was designed such that new ciphers/hashes/PRNGs can be added at runtime and the existing API 
+(and helper API functions) are able to use the new designs automatically.  There exists self-check functions for each 
+block cipher and hash function to ensure that they compile and execute to the published design specifications.  The library 
+also performs extensive parameter error checking to prevent any number of runtime exploits or errors.
 
 \subsection{What the library IS for?}
 
-The library typically serves as a basis for other protocols and message formats.  For example, it should be possible to 
-take the RSA routines out of this library, apply the appropriate message padding and get PKCS compliant RSA routines.  
-Similarly SSL protocols could be formed on top  of the low-level symmetric cipher functions.  The goal of this package is 
-to provide these low level core functions in a robust and easy to use fashion.
-
-The library also serves well as a toolkit for applications where they don't need to be OpenPGP, PKCS, etc. compliant.
-Included are fully operational public key routines for encryption, decryption, signature generation and verification.  
-These routines are fully portable but are not conformant to any known set of standards\footnote{With the exception of 
-the RSA code which is based on the PKCS \#1 standards.}.  They are all based on established
-number theory and cryptography.  
-
-\subsection{What the library IS NOT for?}
-
-The library is not designed to be in anyway an implementation of the SSL or OpenPGP standards.  The library 
-is not designed to be compliant with any known form of API or programming hierarchy.  It is not a port of any other 
-library and it is not platform specific (like the MS CSP).  So if you're looking to drop in some buzzword 
-compliant crypto library this is not for you.  The library has been written from scratch to provide basic functions as 
-well as non-standard higher level functions.  
-
-This is not to say that the library is a ``homebrew'' project.  All of the symmetric ciphers and one-way hash functions
-conform to published test vectors.  The public key functions are derived from publicly available material and the majority
-of the code has been reviewed by a growing community of developers.
-
-\subsubsection{Why not?}
-You may be asking why I didn't choose to go all out and support standards like P1363, PKCS and the whole lot.  The reason
-is quite simple too much money gets in the way.  When I tried to access the P1363 draft documents and was denied (it 
-requires a password) I realized that they're just a business anyways.  See what happens is a company will sit down and
-invent a ``standard''.  Then they try to sell it to as many people as they can.  All of a sudden this ``standard'' is 
-everywhere.  Then the standard is updated every so often to keep people dependent.  Then you become RSA.  If people are 
-supposed to support these standards they had better make them more accessible.
+The library serves as a toolkit for developers who have to solve cryptographic problems.  Out of the box LibTomCrypt
+does not process SSL or OpenPGP messages, it doesn't read x.591 certificates or write PEM encoded data.  It does, however,
+provide all of the tools required to build such functionality.  LibTomCrypt was designed to be a flexible library that 
+was not tied to any particular cryptographic problem.  
 
 \section{Why did I write it?}
 You may be wondering, ``Tom, why did you write a crypto library.  I already have one.''.  Well the reason falls into
@@ -143,24 +109,35 @@ The idea is that I am not striving to replace OpenSSL or Crypto++ or Cryptlib or
 
 With this library all core functions (ciphers, hashes, prngs) have the {\bf exact} same prototype definition.  They all load
 and store data in a format independent of the platform.  This means if you encrypt with Blowfish on a PPC it should decrypt
-on an x86 with zero problems.  The consistent API also means that if you learn how to use blowfish with my library you 
+on an x86 with zero problems.  The consistent API also means that if you learn how to use Blowfish with my library you 
 know how to use Safer+ or RC6 or Serpent or ... as well.  With all of the core functions there are central descriptor tables 
 that can be used to make a program automatically pick between ciphers, hashes and PRNGs at runtime.  That means your 
 application can support all ciphers/hashes/prngs without changing the source code.
 
+Not only did I strive to make a consistent and simple API to work with but I also strived to make the library
+configurable in terms of its build options.  Out of the box the library will build with any modern version of GCC
+without having to use configure scripts.  This means that the library will work with platforms where development
+tools may be limited (e.g. no autoconf).
+
+On top of making the build simple and the API approachable I've also strived for a reasonably high level of
+robustness and efficiency.  LibTomCrypt traps and returns a series of errors ranging from invalid
+arguments to buffer overflows/overruns.  It is mostly thread safe and has been clocked on various platforms
+with ``cycles per byte'' timings that are comparable (and often favourable) to other libraries such as OpenSSL and
+Crypto++.
+
 \subsection{Modular}
-The LibTomCrypt package has also been written to be very modular.  The block ciphers, one-way hashes and
-pseudo-random number generators (PRNG) are all used within the API through ``descriptor'' tables which 
+The LibTomCrypt package has also been written to be very modular.  The block ciphers, one--way hashes and
+pseudo--random number generators (PRNG) are all used within the API through ``descriptor'' tables which 
 are essentially structures with pointers to functions.  While you can still call particular functions
 directly (\textit{e.g. sha256\_process()}) this descriptor interface allows the developer to customize their
 usage of the library.
 
 For example, consider a hardware platform with a specialized RNG device.  Obviously one would like to tap
-that for the PRNG needs within the library (\textit{e.g. making a RSA key}).  All the developer has todo
+that for the PRNG needs within the library (\textit{e.g. making a RSA key}).  All the developer has to do
 is write a descriptor and the few support routines required for the device.  After that the rest of the 
-API can make use of it without change.  Similiarly imagine a few years down the road when AES2 (\textit{or whatever they call it}) is
-invented.  It can be added to the library and used within applications with zero modifications to the
-end applications provided they are written properly.
+API can make use of it without change.  Similiarly imagine a few years down the road when AES2 
+(\textit{or whatever they call it}) has been invented.  It can be added to the library and used within applications 
+with zero modifications to the end applications provided they are written properly.
 
 This flexibility within the library means it can be used with any combination of primitive algorithms and 
 unlike libraries like OpenSSL is not tied to direct routines.  For instance, in OpenSSL there are CBC block
@@ -170,7 +147,6 @@ are not directly tied to the ciphers.  That is a new cipher can be added to the 
 the key setup, ECB decrypt and encrypt and test vector routines.  After that all five chaining mode routines
 can make use of the cipher right away.
 
-
 \section{License}
 
 All of the source code except for the following files have been written by the author or donated to the project
@@ -178,14 +154,12 @@ under a public domain license:
 
 \begin{enumerate}
    \item rc2.c
-   \item safer.c
 \end{enumerate}
 
-`mpi.c'' was originally written by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with my LibTomMath
-library.
+`mpi.c'' was originally written by Michael Fromberger (sting@linguist.dartmouth.edu) but has since been replaced with 
+my LibTomMath library which is public domain.
 
-``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  ``safer.c''
-was written by Richard De Moliner (demoliner@isi.ee.ethz.ch) and seems to be free for use.
+``rc2.c'' is based on publicly available code that is not attributed to a person from the given source.  
 
 The project is hereby released as public domain.
 
@@ -193,7 +167,7 @@ The project is hereby released as public domain.
 
 The author (Tom St Denis) is not a patent lawyer so this section is not to be treated as legal advice.  To the best
 of the authors knowledge the only patent related issues within the library are the RC5 and RC6 symmetric block ciphers.  
-They can be removed from a build by simply commenting out the two appropriate lines in ``mycrypt\_custom.h''.  The rest
+They can be removed from a build by simply commenting out the two appropriate lines in ``tomcrypt\_custom.h''.  The rest
 of the ciphers and hashes are patent free or under patents that have since expired.
 
 The RC2 and RC4 symmetric ciphers are not under patents but are under trademark regulations.  This means you can use 
@@ -220,7 +194,6 @@ early on:
 
 There have been quite a few other people as well.  Please check the change log to see who else has contributed from
 time to time.
-
 
 \chapter{The Application Programming Interface (API)}
 \section{Introduction}
@@ -255,24 +228,23 @@ There is no initialization routine for the library and for the most part the cod
 related issue is if you use the same symmetric cipher, hash or public key state data in multiple threads.  Normally
 that is not an issue.
 
-To include the prototypes for ``LibTomCrypt.a'' into your own program simply include ``mycrypt.h'' like so:
+To include the prototypes for ``LibTomCrypt.a'' into your own program simply include ``tomcrypt.h'' like so:
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void) {
     return 0;
 }
 \end{verbatim}
 
-The header file ``mycrypt.h'' also includes ``stdio.h'', ``string.h'', ``stdlib.h'', ``time.h'', ``ctype.h'' and ``mpi.h''
-(the bignum library routines).
+The header file ``tomcrypt.h'' also includes ``stdio.h'', ``string.h'', ``stdlib.h'', ``time.h'', ``ctype.h'' and 
+``ltc\_tommath.h'' (the bignum library routines).
 
 \section{Macros}
 
 There are a few helper macros to make the coding process a bit easier.  The first set are related to loading and storing
 32/64-bit words in little/big endian format.  The macros are:
 
-\index{STORE32L} \index{STORE64L} \index{LOAD32L} \index{LOAD64L}
-\index{STORE32H} \index{STORE64H} \index{LOAD32H} \index{LOAD64H} \index{BSWAP}
+\index{STORE32L} \index{STORE64L} \index{LOAD32L} \index{LOAD64L} \index{STORE32H} \index{STORE64H} \index{LOAD32H} \index{LOAD64H} \index{BSWAP}
 \begin{small}
 \begin{center}
 \begin{tabular}{|c|c|c|}
@@ -284,18 +256,25 @@ There are a few helper macros to make the coding process a bit easier.  The firs
      \hline STORE64H(x, y) & {\bf unsigned long long} x, {\bf unsigned char} *y & $x \to y[7 \ldots 0]$ \\
      \hline LOAD32H(x, y) & {\bf unsigned long} x, {\bf unsigned char} *y & $y[3 \ldots 0] \to x$ \\
      \hline LOAD64H(x, y) & {\bf unsigned long long} x, {\bf unsigned char} *y & $y[7 \ldots 0] \to x$ \\
-     \hline BSWAP(x) & {\bf unsigned long} x & Swaps the byte order of x. \\
+     \hline BSWAP(x) & {\bf unsigned long} x & Swaps byte order (32--bits only) \\
      \hline
 \end{tabular}
 \end{center}
 \end{small}
 
-There are 32-bit cyclic rotations as well:
-\index{ROL} \index{ROR}
+There are 32 and 64-bit cyclic rotations as well:
+\index{ROL} \index{ROR} \index{ROL64} \index{ROR64} \index{ROLc} \index{RORc} \index{ROL64c} \index{ROR64c} 
 \begin{center}
 \begin{tabular}{|c|c|c|}
-     \hline ROL(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x << y$ \\
-     \hline ROR(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x >> y$ \\
+     \hline ROL(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x << y, 0 \le y \le 31$ \\
+     \hline ROLc(x, y) & {\bf unsigned long} x, {\bf const unsigned long} y & $x << y, 0 \le y \le 31$ \\
+     \hline ROR(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x >> y, 0 \le y \le 31$ \\
+     \hline RORc(x, y) & {\bf unsigned long} x, {\bf const unsigned long} y & $x >> y, 0 \le y \le 31$ \\
+     \hline && \\
+     \hline ROL64(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x << y, 0 \le y \le 63$ \\
+     \hline ROL64c(x, y) & {\bf unsigned long} x, {\bf const unsigned long} y & $x << y, 0 \le y \le 63$ \\
+     \hline ROR64(x, y) & {\bf unsigned long} x, {\bf unsigned long} y & $x >> y, 0 \le y \le 63$ \\
+     \hline ROR64c(x, y) & {\bf unsigned long} x, {\bf const unsigned long} y & $x >> y, 0 \le y \le 63$ \\
      \hline
 \end{tabular}
 \end{center}
@@ -306,14 +285,14 @@ must pass it the length of the buffer\footnote{Extensive error checking is not i
 the output will be stored.  For example:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void) {
     rsa_key key;
     unsigned char buffer[1024];
     unsigned long x;
     int err;
 
-    /* ... Make up the RSA key somehow */
+    /* ... Make up the RSA key somehow ... */
 
     /* lets export the key, set x to the size of the output buffer */
     x = sizeof(buffer);
@@ -331,13 +310,17 @@ int main(void) {
 }
 \end{verbatim}
 \end{small}
-In the above example if the size of the RSA public key was more than 1024 bytes this function would not store anything in
-either ``buffer'' or ``x'' and simply return an error code.  If the function suceeds it stores the length of the output
-back into ``x'' so that the calling application will know how many bytes used.
+In the above example if the size of the RSA public key was more than 1024 bytes this function would return an error code
+indicating a buffer overflow would have occurred.  If the function succeeds it stores the length of the output
+back into ``x'' so that the calling application will know how many bytes were used.
 
 \section{Functions that need a PRNG}
-Certain functions such as ``rsa\_make\_key()'' require a PRNG.  These functions do not setup the PRNG themselves so it is 
-the responsibility of the calling function to initialize the PRNG before calling them.
+\index{Pseudo Random Number Generator} \index{PRNG}
+Certain functions such as ``rsa\_make\_key()'' require a Pseudo Random Number Generator (PRNG).  These functions do not setup 
+the PRNG themselves so it is the responsibility of the calling function to initialize the PRNG before calling them.
+
+Certain PRNG algorithms do not require a ``prng\_state'' argument (sprng for example).  The ``prng\_state'' argument
+may be passed as \textbf{NULL} in such situations.
 
 \section{Functions that use Arrays of Octets}
 Most functions require inputs that are arrays of the data type ``unsigned char''.  Whether it is a symmetric key, IV
@@ -352,14 +335,16 @@ type ``byte'' will be synonymous with an array of type ``unsigned char''.
 \chapter{Symmetric Block Ciphers}
 \section{Core Functions}
 
-Libtomcrypt provides several block ciphers all in a plain vanilla ECB block mode.  Its important to first note that you 
+LibTomCrypt provides several block ciphers with an ECB block mode interface.  It's important to first note that you 
 should never use the ECB modes directly to encrypt data.  Instead you should use the ECB functions to make a chaining mode
 or use one of the provided chaining modes.  All of the ciphers are written as ECB interfaces since it allows the rest of
 the API to grow in a modular fashion.
 
+\subsection{Key Scheduling}
 All ciphers store their scheduled keys in a single data type called ``symmetric\_key''.  This allows all ciphers to 
-have the same prototype and store their keys as  naturally as possible.  All ciphers provide five visible functions which
-are (given that XXX is the name of the cipher):
+have the same prototype and store their keys as naturally as possible.  This also removes the need for dynamic memory
+allocation and allows you to allocate a fixed sized buffer for storing scheduled keys.  All ciphers provide five visible 
+functions which are (given that XXX is the name of the cipher):
 \index{Cipher Setup}
 \begin{verbatim}
 int XXX_setup(const unsigned char *key, int keylen, int rounds,
@@ -369,12 +354,13 @@ int XXX_setup(const unsigned char *key, int keylen, int rounds,
 The XXX\_setup() routine will setup the cipher to be used with a given number of rounds and a given key length (in bytes).
 The number of rounds can be set to zero to use the default, which is generally a good idea.
 
-If the function returns successfully the variable ``skey'' will have a scheduled key stored in it.  Its important to note
-that you should only used this scheduled key with the intended cipher.  For example, if you call 
-``blowfish\_setup()'' do not pass the scheduled key onto ``rc5\_ecb\_encrypt()''.  All setup functions do not allocate 
-memory off the heap so when you are done with a key you can simply discard it (e.g. they can be on the stack).
+If the function returns successfully the variable ``skey'' will have a scheduled key stored in it.  It's important to note
+that you should only used this scheduled key with the intended cipher.  For example, if you call ``blowfish\_setup()'' do not 
+pass the scheduled key onto ``rc5\_ecb\_encrypt()''.  All setup functions do not allocate memory off the heap so when you are 
+done with a key you can simply discard it (e.g. they can be on the stack).
 
-To encrypt or decrypt a block in ECB mode there are these two functions:
+\subsection{ECB Encryption and Decryption}
+To encrypt or decrypt a block in ECB mode there are these two function classes
 \index{Cipher Encrypt} \index{Cipher Decrypt}
 \begin{verbatim}
 void XXX_ecb_encrypt(const unsigned char *pt, unsigned char *ct,
@@ -385,13 +371,20 @@ void XXX_ecb_decrypt(const unsigned char *ct, unsigned char *pt,
 \end{verbatim}
 These two functions will encrypt or decrypt (respectively) a single block of text\footnote{The size of which depends on
 which cipher you are using.} and store the result where you want it.  It is possible that the input and output buffer are 
-the same buffer.  For the encrypt function ``pt''\footnote{pt stands for plaintext.} is the input and ``ct'' is the output.
-For the decryption function its the opposite.  To test a particular cipher against test vectors\footnote{As published in their design papers.} call: \index{Cipher Testing}
+the same buffer.  For the encrypt function ``pt''\footnote{pt stands for plaintext.} is the input and 
+``ct''\footnote{ct stands for ciphertext.} is the output.  For the decryption function it's the opposite.  To test a particular 
+cipher against test vectors\footnote{As published in their design papers.} call the self-test function
+ 
+\subsection{Self--Testing}
+\index{Cipher Testing}
 \begin{verbatim}
 int XXX_test(void);
 \end{verbatim}
 This function will return {\bf CRYPT\_OK} if the cipher matches the test vectors from the design publication it is 
-based upon.  Finally for each cipher there is a function which will help find a desired key size:
+based upon.  
+
+\subsection{Key Sizing}
+For each cipher there is a function which will help find a desired key size:
 \begin{verbatim}
 int XXX_keysize(int *keysize);
 \end{verbatim}
@@ -399,7 +392,7 @@ Essentially it will round the input keysize in ``keysize'' down to the next appr
 return {\bf CRYPT\_OK} if the key size specified is acceptable.  For example:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int keysize, err;
@@ -415,12 +408,23 @@ int main(void)
 }
 \end{verbatim}
 \end{small}
-This should indicate a keysize of sixteen bytes is suggested.  An example snippet that encodes a block with 
-Blowfish in ECB mode is below.
+This should indicate a keysize of sixteen bytes is suggested.  
+
+\subsection{Cipher Termination}
+When you are finished with a cipher you can de--initialize it with the done function.
+\begin{verbatim}
+void XXX_done(symmetric_key *skey);
+\end{verbatim}
+For the software based ciphers within LibTomCrypt this function will not do anything.  However, user supplied
+cipher descriptors may require calls to it for resource management.  To be compliant all functions which call a cipher
+setup function must also call the respective cipher done function when finished.
+
+\subsection{Simple Encryption Demonstration}
+An example snippet that encodes a block with Blowfish in ECB mode is below.
 
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 { 
    unsigned char pt[8], ct[8], key[8];
@@ -444,11 +448,18 @@ int main(void)
    blowfish_ecb_encrypt(pt,             /* encrypt this 8-byte array */
                         ct,             /* store encrypted data here */ 
                         &skey);         /* our previously scheduled key */
+                        
+   /* now ct holds the encrypted version of pt */                        
 
    /* decrypt the block */
    blowfish_ecb_decrypt(ct,             /* decrypt this 8-byte array */
                         pt,             /* store decrypted data here */
                         &skey);         /* our previously scheduled key */
+
+   /* now we have decrypted ct to the original plaintext in pt */                        
+
+   /* Terminate the cipher context */
+   blowfish_done(&skey);
 
    return 0;
 }
@@ -459,7 +470,7 @@ int main(void)
 \index{Symmetric Keys}
 As a general rule of thumb do not use symmetric keys under 80 bits if you can.  Only a few of the ciphers support smaller
 keys (mainly for test vectors anyways).  Ideally your application should be making at least 256 bit keys.  This is not
-because you're supposed to be paranoid.  Its because if your PRNG has a bias of any sort the more bits the better.  For
+because you're supposed to be paranoid.  It's because if your PRNG has a bias of any sort the more bits the better.  For
 example, if you have $\mbox{Pr}\left[X = 1\right] = {1 \over 2} \pm \gamma$ where $\vert \gamma \vert > 0$ then the
 total amount of entropy in N bits is $N \cdot -log_2\left ({1 \over 2} + \vert \gamma \vert \right)$.  So if $\gamma$
 were $0.25$ (a severe bias) a 256-bit string would have about 106 bits of entropy whereas a 128-bit string would have
@@ -467,31 +478,64 @@ only 53 bits of entropy.
 
 The number of rounds of most ciphers is not an option you can change.  Only RC5 allows you to change the number of
 rounds.  By passing zero as the number of rounds all ciphers will use their default number of rounds.  Generally the
-ciphers are configured such that the default number of rounds provide adequate security for the given block size.
+ciphers are configured such that the default number of rounds provide adequate security for the given block and key 
+size.
 
 \section{The Cipher Descriptors}
 \index{Cipher Descriptor}
 To facilitate automatic routines an array of cipher descriptors is provided in the array ``cipher\_descriptor''.  An element
 of this array has the following format:
 
+\begin{small}
 \begin{verbatim}
 struct _cipher_descriptor {
    char *name;
-   unsigned long min_key_length, max_key_length, 
-                 block_length, default_rounds;
-   int  (*setup)      (const unsigned char *key, int keylength, 
-                       int num_rounds, symmetric_key *skey);
-   void (*ecb_encrypt)(const unsigned char *pt, unsigned char *ct, 
-                       symmetric_key *key);
-   void (*ecb_decrypt)(const unsigned char *ct, unsigned char *pt,
-                       symmetric_key *key);
-   int  (*test)       (void);
-   int  (*keysize)    (int *desired_keysize);
+   unsigned char ID;
+   int  min_key_length, 
+        max_key_length, 
+        block_length, 
+        default_rounds;
+   int  (*setup)(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey);
+   void (*ecb_encrypt)(const unsigned char *pt, unsigned char *ct, symmetric_key *skey);
+   void (*ecb_decrypt)(const unsigned char *ct, unsigned char *pt, symmetric_key *skey);
+   int (*test)(void);
+   void (*done)(symmetric_key *skey);      
+   int  (*keysize)(int *keysize);
+
+   void (*accel_ecb_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, 
+                                   unsigned long blocks, symmetric_key *skey);
+   void (*accel_ecb_decrypt)(const unsigned char *ct, 
+                                   unsigned char *pt, 
+                                   unsigned long blocks, symmetric_key *skey);
+   void (*accel_cbc_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, 
+                                   unsigned long blocks, unsigned char *IV, 
+                                   symmetric_key *skey);
+   void (*accel_cbc_decrypt)(const unsigned char *ct, 
+                                   unsigned char *pt, 
+                                   unsigned long blocks, unsigned char *IV, 
+                                   symmetric_key *skey);
+   void (*accel_ctr_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, 
+                                   unsigned long blocks, unsigned char *IV, 
+                                   int mode, symmetric_key *skey);
+   void (*accel_ccm_memory)(
+       const unsigned char *key,    unsigned long keylen,
+       const unsigned char *nonce,  unsigned long noncelen,
+       const unsigned char *header, unsigned long headerlen,
+             unsigned char *pt,     unsigned long ptlen,
+             unsigned char *ct,
+             unsigned char *tag,    unsigned long *taglen,
+                       int  direction);
+
 };
 \end{verbatim}
+\end{small}
 
-Where ``name'' is the lower case ASCII version of the name.  The fields ``min\_key\_length'', ``max\_key\_length'' and
-``block\_length'' are all the number of bytes not bits.  As a good rule of thumb it is assumed that the cipher supports
+Where ``name'' is the lower case ASCII version of the name.  The fields ``min\_key\_length'' and ``max\_key\_length'' 
+are the minimum and maximum key sizes in bytes.  The ``block\_length'' member is the block size of the cipher
+in bytes.  As a good rule of thumb it is assumed that the cipher supports
 the min and max key lengths but not always everything in between.  The ``default\_rounds'' field is the default number
 of rounds that will be used.
 
@@ -511,10 +555,6 @@ As of this release the current cipher\_descriptors elements are
      \hline RC5-32/12/b & rc5\_desc & 8 & 8 $\ldots$ 128 & 12 $\ldots$ 24 \\
      \hline RC6-32/20/b & rc6\_desc & 16 & 8 $\ldots$ 128 & 20 \\
      \hline SAFER+ & saferp\_desc &16 & 16, 24, 32 & 8, 12, 16 \\
-     \hline Safer K64   & safer\_k64\_desc & 8 & 8 & 6 $\ldots$ 13 \\
-     \hline Safer SK64  & safer\_sk64\_desc & 8 & 8 & 6 $\ldots$ 13 \\
-     \hline Safer K128  & safer\_k128\_desc & 8 & 16 & 6 $\ldots$ 13 \\
-     \hline Safer SK128 & safer\_sk128\_desc & 8 & 16 & 6 $\ldots$ 13 \\
      \hline AES & aes\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
                 & aes\_enc\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
      \hline Twofish & twofish\_desc & 16 & 16, 24, 32 & 16 \\
@@ -523,6 +563,8 @@ As of this release the current cipher\_descriptors elements are
      \hline CAST5 (CAST-128) & cast5\_desc & 8 & 5 $\ldots$ 16 & 12, 16 \\
      \hline Noekeon & noekeon\_desc & 16 & 16 & 16 \\
      \hline Skipjack & skipjack\_desc & 8 & 10 & 32 \\
+     \hline Anubis & anubis\_desc & 16 & 16 $\ldots$ 40 & 12 $\ldots$ 18 \\
+     \hline Khazad & khazad\_desc & 8 & 16 & 8 \\
      \hline
 \end{tabular}
 \end{center}
@@ -545,18 +587,13 @@ as EAX, PMAC and OMAC only require the encryption function.  So far this ``encry
 Rijndael as it makes the most sense for this cipher.
 
 \item
-For the 64-bit SAFER famliy of ciphers (e.g K64, SK64, K128, SK128) the ecb\_encrypt() and ecb\_decrypt()
-functions are the same.  So if you want to use those functions directly just call safer\_ecb\_encrypt()
-or safer\_ecb\_decrypt() respectively.
-
-\item
 Note that for ``DES'' and ``3DES'' they use 8 and 24 byte keys but only 7 and 21 [respectively] bytes of the keys are in
 fact used for the purposes of encryption.  My suggestion is just to use random 8/24 byte keys instead of trying to make a 8/24
 byte string from the real 7/21 byte key.
 
 \item
 Note that ``Twofish'' has additional configuration options that take place at build time.  These options are found in
-the file ``mycrypt\_cfg.h''.  The first option is ``TWOFISH\_SMALL'' which when defined will force the Twofish code
+the file ``tomcrypt\_cfg.h''.  The first option is ``TWOFISH\_SMALL'' which when defined will force the Twofish code
 to not pre-compute the Twofish ``$g(X)$'' function as a set of four $8 \times 32$ s-boxes.  This means that a scheduled
 key will require less ram but the resulting cipher will be slower.  The second option is ``TWOFISH\_TABLES'' which when
 defined will force the Twofish code to use pre-computed tables for the two s-boxes $q_0, q_1$ as well as the multiplication
@@ -590,7 +627,7 @@ Which will search for a given name in the array.  It returns negative one if the
 the location in the array where the cipher was found.  For example, to indirectly setup Blowfish you can also use:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    unsigned char key[8];
@@ -631,7 +668,7 @@ int unregister_cipher(const struct _cipher_descriptor *cipher);
 Which returns {\bf CRYPT\_OK} if it removes it otherwise it returns {\bf CRYPT\_ERROR}.  Consider:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int err;
@@ -729,7 +766,7 @@ block of memory with either of the three modes.
 The ECB and CBC modes process blocks of the same size as the cipher at a time.  Therefore they are less flexible than the
 other modes.
 
-\subsection{Implementation}
+\subsection{Initialization}
 \index{CBC Mode} \index{CTR Mode}
 \index{OFB Mode} \index{CFB Mode}
 The library provides simple support routines for handling CBC, CTR, CFB, OFB and ECB encoded messages.  Assuming the mode 
@@ -752,30 +789,32 @@ of the cipher you choose.  It is important that the IV  be random for each uniqu
 parameters ``key'', ``keylen'' and ``num\_rounds'' are the same as in the XXX\_setup() function call.  The final parameter 
 is a pointer to the structure you want to hold the information for the mode of operation.
 
-Both routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise they return an error code.  To 
-actually encrypt or decrypt the following routines are provided:
+Both routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise they return an error code.  
+
+\subsection{Encryption and Decryption}
+To actually encrypt or decrypt the following routines are provided:
 \index{ecb\_encrypt()} \index{ecb\_decrypt()} \index{cfb\_encrypt()} \index{cfb\_decrypt()} 
 \index{cbc\_encrypt()} \index{cbc\_decrypt()} \index{ofb\_encrypt()} \index{ofb\_decrypt()} \index{ctr\_encrypt()} \index{ctr\_decrypt()}
 \begin{verbatim}
 int XXX_encrypt(const unsigned char *pt, unsigned char *ct, 
-                symmetric_XXX *XXX);
-int XXX_decrypt(const unsigned char *ct, unsigned char *pt,
-                symmetric_XXX *XXX);
-
-int YYY_encrypt(const unsigned char *pt, unsigned char *ct, 
                 unsigned long len, symmetric_YYY *YYY);
-int YYY_decrypt(const unsigned char *ct, unsigned char *pt, 
+int XXX_decrypt(const unsigned char *ct, unsigned char *pt, 
                 unsigned long len, symmetric_YYY *YYY);
 \end{verbatim}
-Where ``XXX'' is one of (ecb, cbc) and ``YYY'' is one of (ctr, ofb, cfb).  In the CTR, OFB and CFB cases ``len'' is the
-size of the buffer (as number of chars) to encrypt or decrypt.  The CTR, OFB and CFB modes are order sensitive but not
+Where ``XXX'' is one of $\lbrace ecb, cbc, ctr, cfb, ofb \rbrace$.  
+
+In all cases ``len'' is the size of the buffer (as number of octets) to encrypt or decrypt.  The CTR, OFB and CFB modes are order sensitive but not
 chunk sensitive.  That is you can encrypt ``ABCDEF'' in three calls like ``AB'', ``CD'', ``EF'' or two like ``ABCDE'' and ``F''
 and end up with the same ciphertext.  However, encrypting ``ABC'' and ``DABC'' will result in different ciphertexts.  All
 five of the modes will return {\bf CRYPT\_OK} on success from the encrypt or decrypt functions.
 
+In the ECB and CBC cases ``len'' must be a multiple of the ciphers block size.  In the CBC case you must manually pad the end of your message (either with
+zeroes or with whatever your protocol requires).
+
 To decrypt in either mode you simply perform the setup like before (recall you have to fetch the IV value you used)
 and use the decrypt routine on all of the blocks.
 
+\subsection{IV Manipulation}
 To change or read the IV of a previously initialized chaining mode use the following two functions.
 
 \index{cbc\_setiv()} \index{cbc\_getiv()} \index{ofb\_setiv()} \index{ofb\_getiv()} \index{cfb\_setiv()} \index{cfb\_getiv()}
@@ -785,16 +824,28 @@ int XXX_getiv(unsigned char *IV, unsigned long *len, symmetric_XXX *XXX);
 int XXX_setiv(const unsigned char *IV, unsigned long len, symmetric_XXX *XXX);
 \end{verbatim}
 
-The XXX\_getiv function will read the IV out of the chaining mode and store it into ``IV'' along with the length of the IV 
+The XXX\_getiv() functions will read the IV out of the chaining mode and store it into ``IV'' along with the length of the IV 
 stored in ``len''.  The XXX\_setiv will initialize the chaining mode state as if the original IV were the new IV specified.  The length
 of the IV passed in must be the size of the ciphers block size.
 
-The XXX\_setiv functions are handy if you wish to change the IV without re--keying the cipher.  
+The XXX\_setiv() functions are handy if you wish to change the IV without re--keying the cipher.  
+
+\subsection{Stream Termination}
+To terminate an open stream call the done function.
+
+\index{ecb\_done()} \index{cbc\_done()}\index{cfb\_done()}\index{ofb\_done()} \index{ctr\_done()}
+\begin{verbatim}
+int XXX_done(symmetric_XXX *XXX);
+\end{verbatim}
+
+This will terminate the stream (by terminating the cipher) and return \textbf{CRYPT\_OK} if successful.
+
+\subsection{Examples}
 
 \newpage
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    unsigned char key[16], IV[16], buffer[512];
@@ -849,6 +900,12 @@ int main(void)
                                    &ctr)  /* previously initialized CTR state */
       ) != CRYPT_OK) {
       printf("ctr_decrypt error: %s\n", error_to_string(err));
+      return -1;
+   }
+
+   /* terminate the stream */
+   if ((err = ctr_done(&ctr)) != CRYPT_OK) {
+      printf("ctr_done error: %s\n", error_to_string(err));
       return -1;
    }
 
@@ -944,7 +1001,7 @@ int eax_test(void);
 This requires that the AES (or Rijndael) block cipher be registered with the cipher\_descriptor table first.
 
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int           err;
@@ -1057,6 +1114,8 @@ They assume that ``pt'' and ``ct'' are the same size as the block cipher's block
 both functions given a single ``ocb'' state.  For bi-directional communication you will have to initialize two ``ocb''
 states (with different nonces).  Also ``pt'' and ``ct'' may point to the same location in memory.
 
+\subsubsection{State Termination}
+
 When you are finished encrypting the message you call the following function to compute the tag.
 
 \index{ocb\_done\_encrypt()}
@@ -1090,6 +1149,7 @@ tag of the message (internally) and then compare it against the ``taglen'' bytes
 ``res'' is set to zero.  If all ``taglen'' bytes of ``tag'' can be verified then ``res'' is set to one (authenticated
 message).
 
+\subsubsection{Packet Functions}
 To make life simpler the following two functions are provided for memory bound OCB.
 
 \index{ocb\_encrypt\_authenticate\_memory()}
@@ -1119,6 +1179,238 @@ int ocb_decrypt_verify_memory(int cipher,
 Similarly this will OCB decrypt and compare the internally computed tag against the tag provided. ``res'' is set 
 appropriately.
 
+\subsection{CCM Mode}
+CCM is a NIST proposal for Encrypt+Authenticate that is centered around using AES (or any 16--byte cipher) as a primitive.  Unlike EAX and OCB mode
+it is only meant for ``packet'' mode where the length of the input is known in advance.  Since it is a packet mode function CCM only has one 
+function that performs the protocol.
+
+\index{ccm\_memory()}
+\begin{verbatim}
+int ccm_memory(int cipher,
+    const unsigned char *key,    unsigned long keylen,
+    const unsigned char *nonce,  unsigned long noncelen,
+    const unsigned char *header, unsigned long headerlen,
+          unsigned char *pt,     unsigned long ptlen,
+          unsigned char *ct,
+          unsigned char *tag,    unsigned long *taglen,
+                    int  direction);
+\end{verbatim}
+
+This performs the ``CCM'' operation on the data.  The ``cipher'' variable indicates which cipher in the descriptor table to use.  It must have a 
+16--byte block size for CCM.  The key is ``key'' with a length of ``keylen'' octets.  The nonce or salt is ``nonce'' of
+length ``noncelen'' octets.  The header is meta--data you want to send with the message but not have encrypted, it is stored in ``header''
+of length ``headerlen'' octets.  The header can be zero octets long (if $headerlen = 0$ then you can pass ``header'' as \textbf{NULL}).  
+
+The plaintext is stored in ``pt'' and the ciphertext in ``ct''.  The length of both are expected to be equal and is passed in as ``ptlen''.  It is
+allowable that $pt = ct$.  The ``direction'' variable indicates whether encryption (direction $=$ \textbf{CCM\_ENCRYPT}) or 
+decryption (direction $=$ \textbf{CCM\_DECRYPT}) is to be performed.
+
+As implemented this copy of CCM cannot handle a header or plaintext longer than $2^{32} - 1$ octets long.  
+
+You can test the implementation of CCM with the following function.
+
+\index{ccm\_test()}
+\begin{verbatim}
+int ccm_test(void);
+\end{verbatim}
+
+This will return \textbf{CRYPT\_OK} if the CCM routine passes known test vectors.
+
+\subsection{GCM Mode}
+Galois counter mode is an IEEE proposal for authenticated encryption.  Like EAX and OCB it can be used in a streaming capacity however, unlike EAX it cannot
+accept ``additional authentication data'' (meta--data) after plaintext has been processed.  This mode also only works with block ciphers with a sixteen
+byte block.
+
+A GCM stream is meant to be processed in three modes each one sequential serial.  First the initial vector (per session) data is processed.  This should be 
+unique to every session.  Next the the optional additional authentication data is processed and finally the plaintext.  
+
+\subsubsection{Initialization}
+To initialize the GCM context with a secret key call the following function.
+
+\index{gcm\_init()}
+\begin{verbatim}
+int gcm_init(gcm_state *gcm, int cipher,
+             const unsigned char *key, int keylen);
+\end{verbatim}
+This initializes the GCM state ``gcm'' for the given cipher indexed by ``cipher'' with a secret key ``key'' of length ``keylen'' octets.  The cipher chosen
+must have a 16--byte block size (e.g. AES).  
+
+\subsubsection{Initial Vector}
+After the state has been initialized (or reset) the next step is to add the session (or packet) initial vector.  It should be unique per packet encrypted.
+
+\index{gcm\_add\_iv()}
+\begin{verbatim}
+int gcm_add_iv(gcm_state *gcm, 
+               const unsigned char *IV,     unsigned long IVlen);
+\end{verbatim}
+
+This adds the initial vector octets from ``IV'' of length ``IVlen'' to the GCM state ``gcm''.  You can call this function as many times as required
+to process the entire IV.  
+
+Note that the GCM protocols provides a ``shortcut'' for 12--byte IVs where no preprocessing is to be done.  If you want to minimize per packet latency it's ideal
+to only use 12--byte IVs.  You can just increment it like a counter for each packet and the CTR [privacy] will be ensured.
+
+\subsubsection{Additional Authentication Data}
+After the entire IV has been processed the additional authentication data can be processed.  Unlike the IV a packet/session does not require additional
+authentication data (AAD) for security.  The AAD is meant to be used as side--channel data you want to be authenticated with the packet.  Note that once
+you begin adding AAD to the GCM state you cannot return to adding IV data until the state is reset.
+
+\index{gcm\_add\_aad()}
+\begin{verbatim}
+int gcm_add_aad(gcm_state *gcm, 
+               const unsigned char *adata,     unsigned long adatalen);
+\end{verbatim}
+This adds the additional authentication data ``adata'' of length ``adatalen'' to the GCM state ``gcm''.
+
+\subsubsection{Plaintext Processing}
+After the AAD has been processed the plaintext (or ciphertext depending on the direction) can be processed.  
+
+\index{gcm\_process()}
+\begin{verbatim}
+int gcm_process(gcm_state *gcm,
+                     unsigned char *pt,     unsigned long ptlen,
+                     unsigned char *ct,
+                     int direction);
+\end{verbatim}
+This processes message data where ``pt'' is the plaintext and ``ct'' is the ciphertext.  The length of both are equal and stored in ``ptlen''.  Depending on the 
+mode ``pt'' is the input and ``ct'' is the output (or vice versa).  When ``direction'' equals \textbf{GCM\_ENCRYPT} the plaintext is read, encrypted and stored
+in the ciphertext buffer.  When ``direction'' equals \textbf{GCM\_DECRYPT} the opposite occurs.
+
+\subsubsection{State Termination}
+To terminate a GCM state and retrieve the message authentication tag call the following function.
+
+\index{gcm\_done()}
+\begin{verbatim}
+int gcm_done(gcm_state *gcm, 
+                     unsigned char *tag,    unsigned long *taglen);
+\end{verbatim}
+This terminates the GCM state ``gcm'' and stores the tag in ``tag'' of length ``taglen'' octets.
+
+\subsubsection{State Reset}
+The call to gcm\_init() will perform considerable pre--computation (when \textbf{GCM\_TABLES} is defined) and if you're going to be dealing with a lot of packets
+it is very costly to have to call it repeatedly.  To aid in this endeavour the reset function has been provided.
+
+\index{gcm\_reset()}
+\begin{verbatim}
+int gcm_reset(gcm_state *gcm);
+\end{verbatim}
+
+This will reset the GCM state ``gcm'' to the state that gcm\_init() left it.  The user would then call gcm\_add\_iv(), gcm\_add\_aad(), etc.
+
+\subsubsection{One--Shot Packet}
+To process a single packet under any given key the following helper function can be used.
+
+\index{gcm\_memory()}
+\begin{verbatim}
+int gcm_memory(      int           cipher,
+               const unsigned char *key,    unsigned long keylen,
+               const unsigned char *IV,     unsigned long IVlen,
+               const unsigned char *adata,  unsigned long adatalen,
+                     unsigned char *pt,     unsigned long ptlen,
+                     unsigned char *ct, 
+                     unsigned char *tag,    unsigned long *taglen,
+                               int direction);
+\end{verbatim}
+
+This will initialize the GCM state with the given key, IV and AAD value then proceed to encrypt or decrypt the message text and store the final
+message tag.  The definition of the variables is the same as it is for all the manual functions.
+
+If you are processing many packets under the same key you shouldn't use this function as it invokes the pre--computation with each call.
+
+\subsubsection{Example Usage}
+The following is an example usage of how to use GCM over multiple packets with a shared secret key.
+
+\begin{small}
+\begin{verbatim}
+#include <tomcrypt.h>
+
+int send_packet(const unsigned char *pt,  unsigned long ptlen,
+                const unsigned char *iv,  unsigned long ivlen,
+                const unsigned char *aad, unsigned long aadlen,
+                      gcm_state     *gcm)
+{
+   int           err;
+   unsigned long taglen;
+   unsigned char tag[16];
+
+   /* reset the state */
+   if ((err = gcm_reset(gcm)) != CRYPT_OK) {
+      return err;
+   }
+ 
+   /* Add the IV */
+   if ((err = gcm_add_iv(gcm, iv, ivlen)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* Add the AAD (note: aad can be NULL if aadlen == 0) */
+   if ((err = gcm_add_aad(gcm, aad, aadlen)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* process the plaintext */
+   if ((err = gcm_add_process(gcm, pt, ptlen, pt, GCM_ENCRYPT)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* Finish up and get the MAC tag */
+   taglen = sizeof(tag);
+   if ((err = gcm_done(gcm, tag, &taglen)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* depending on the protocol and how IV is generated you may have to send it too... */
+   send(socket, iv, ivlen, 0);
+
+   /* send the aad */
+   send(socket, aad, aadlen, 0);
+
+   /* send the ciphertext */
+   send(socket, pt, ptlen, 0);
+
+   /* send the tag */
+   send(socket, tag, taglen, 0);
+
+   return CRYPT_OK;
+}
+
+int main(void)
+{
+   gcm_state     gcm;
+   unsigned char key[16], IV[12], pt[PACKET_SIZE];
+   int           err, x;
+   unsigned long ptlen; 
+ 
+   /* somehow fill key/IV with random values */
+   
+   /* register AES */
+   register_cipher(&aes_desc);
+
+   /* init the GCM state */
+   if ((err = gcm_init(&gcm, find_cipher("aes"), key, 16)) != CRYPT_OK) {
+      whine_and_pout(err);
+   }
+
+   /* handle us some packets */
+   for (;;) {
+       ptlen = make_packet_we_want_to_send(pt);
+
+       /* use IV as counter (12 byte counter) */
+       for (x = 11; x >= 0; x--) {
+           if (++IV[x]) {
+              break;
+           }
+       }
+
+       if ((err = send_packet(pt, ptlen, iv, 12, NULL, 0, &gcm)) != CRYPT_OK) {
+           whine_and_pout(err);
+       }
+   }
+   return EXIT_SUCCESS;
+}
+\end{verbatim}
+\end{small}
+
 \chapter{One-Way Cryptographic Hash Functions}
 \section{Core Functions}
 
@@ -1132,7 +1424,7 @@ void XXX_init(hash_state *md);
 This simply sets up the hash to the default state governed by the specifications of the hash.  To add data to the 
 message being hashed call:
 \begin{verbatim}
-int XXX_process(hash_state *md, const unsigned char *in, unsigned long len);
+int XXX_process(hash_state *md, const unsigned char *in, unsigned long inlen);
 \end{verbatim}
 
 Essentially all hash messages are virtually infinitely\footnote{Most hashes are limited to $2^{64}$ bits or 2,305,843,009,213,693,952 bytes.} long message which 
@@ -1167,7 +1459,7 @@ This will return {\bf CRYPTO\_OK} if the hash matches the test vectors, otherwis
 example snippet that hashes a message with md5 is given below.
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
     hash_state md;
@@ -1195,9 +1487,10 @@ struct _hash_descriptor {
     char *name;
     unsigned long hashsize;    /* digest output size in bytes  */
     unsigned long blocksize;   /* the block size the hash uses */
-    void (*init)   (hash_state *);
-    int  (*process)(hash_state *, const unsigned char *, unsigned long);
-    int  (*done)   (hash_state *, unsigned char *);
+    void (*init)   (hash_state *hash);
+    int  (*process)(hash_state *hash, 
+                    const unsigned char *in, unsigned long inlen);
+    int  (*done)   (hash_state *hash, unsigned char *out);
     int  (*test)   (void);
 };
 \end{verbatim}
@@ -1210,7 +1503,7 @@ position in the descriptor table of the hash.
 You can use the table to indirectly call a hash function that is chosen at runtime.  For example:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    unsigned char buffer[100], hash[MAXBLOCKSIZE];
@@ -1258,29 +1551,27 @@ length.  This provides a simple size you can set your automatic arrays to that w
 There are three helper functions as well:
 \index{hash\_memory()} \index{hash\_file()}
 \begin{verbatim}
-int hash_memory(int hash, const unsigned char *data, 
-                unsigned long len, unsigned char *dst,
-                unsigned long *outlen);
+int hash_memory(int hash, 
+                const unsigned char *in,   unsigned long inlen, 
+                      unsigned char *out,  unsigned long *outlen);
 
 int hash_file(int hash, const char *fname, 
-              unsigned char *dst,
-              unsigned long *outlen);
+              unsigned char *out, unsigned long *outlen);
 
 int hash_filehandle(int hash, FILE *in, 
-                    unsigned char *dst, unsigned long *outlen);
+                    unsigned char *out, unsigned long *outlen);
 \end{verbatim}
 
 The ``hash'' parameter is the location in the descriptor table of the hash (\textit{e.g. the return of find\_hash()}).  
-The ``*outlen'' variable is used to keep track of the output size.  You
-must set it to the size of your output buffer before calling the functions.  When they complete succesfully they store
-the length of the message digest back in it.  The functions are otherwise straightforward.  The ``hash\_filehandle'' 
-function assumes that ``in'' is an file handle opened in binary mode.  It will hash to the end of file and not reset
-the file position when finished.
+The ``*outlen'' variable is used to keep track of the output size.  You must set it to the size of your output buffer before 
+calling the functions.  When they complete succesfully they store the length of the message digest back in it.  The functions 
+are otherwise straightforward.  The ``hash\_filehandle'' function assumes that ``in'' is an file handle opened in binary mode.  
+It will hash to the end of file and not reset the file position when finished.
 
 To perform the above hash with md5 the following code could be used:
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int idx, err;
@@ -1364,7 +1655,7 @@ be bound to the CHC hash at a time.  There are additional requirements for the s
 Example of using CHC with the AES block cipher.
 
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int err; 
@@ -1417,18 +1708,18 @@ to use to authenticate the message.  ``key'' is the pointer to the array of char
 length (in octets) of the key you want to use to authenticate the message.  To send octets of a message through the HMAC system you must use the following function:
 \index{hmac\_process()}
 \begin{verbatim}
-int hmac_process(hmac_state *hmac, const unsigned char *buf,
-                  unsigned long len);
+int hmac_process(hmac_state *hmac, 
+                 const unsigned char *in, unsigned long inlen);
 \end{verbatim}
 ``hmac'' is the HMAC state you are working with. ``buf'' is the array of octets to send into the HMAC process.  ``len'' is the
 number of octets to process.  Like the hash process routines you can send the data in arbitrarly sized chunks. When you 
 are finished with the HMAC process you must call the following function to get the HMAC code:
 \index{hmac\_done()}
 \begin{verbatim}
-int hmac_done(hmac_state *hmac, unsigned char *hashOut,
-              unsigned long *outlen);
+int hmac_done(hmac_state *hmac, 
+              unsigned char *out, unsigned long *outlen);
 \end{verbatim}
-``hmac'' is the HMAC state you are working with.  ``hashOut'' is the array of octets where the HMAC code should be stored.  You must
+``hmac'' is the HMAC state you are working with.  ``out'' is the array of octets where the HMAC code should be stored.  You must
 set ``outlen'' to the size of the destination buffer before calling this function.  It is updated with the length of the HMAC code
 produced (depending on which hash was picked).  If ``outlen'' is less than the size of the message digest (and ultimately
 the HMAC code) then the HMAC code is truncated as per FIPS-198 specifications (e.g. take the first ``outlen'' bytes).
@@ -1439,22 +1730,23 @@ calling the three step process yourself.
 
 \index{hmac\_memory()}
 \begin{verbatim}
-int hmac_memory(int hash, const unsigned char *key, unsigned long keylen,
-                const unsigned char *data, unsigned long len, 
-                unsigned char *dst, unsigned long *dstlen);
+int hmac_memory(int hash, 
+                const unsigned char *key, unsigned long  keylen,
+                const unsigned char *in,  unsigned long  inlen, 
+                      unsigned char *out, unsigned long *outlen);
 \end{verbatim}
-This will produce an HMAC code for the array of octets in ``data'' of length ``len''.  The index into the hash descriptor 
+This will produce an HMAC code for the array of octets in ``in'' of length ``inlen''.  The index into the hash descriptor 
 table must be provided in ``hash''.  It uses the key from ``key'' with a key length of ``keylen''.  
-The result is stored in the array of octets ``dst'' and the length in ``dstlen''.  The value of ``dstlen'' must be set
+The result is stored in the array of octets ``out'' and the length in ``outlen''.  The value of ``outlen'' must be set
 to the size of the destination buffer before calling this function.  Similarly for files there is the  following function:
 \index{hmac\_file()}
 \begin{verbatim}
-int hmac_file(int hash, const char *fname, const unsigned char *key,
-              unsigned long keylen, 
-              unsigned char *dst, unsigned long *dstlen);
+int hmac_file(int hash, const char *fname, 
+              const unsigned char *key, unsigned long  keylen, 
+                    unsigned char *out, unsigned long *outlen);
 \end{verbatim}
 ``hash'' is the index into the hash descriptor table of the hash you want to use.  ``fname'' is the filename to process.  
-``key'' is the array of octets to use as the key of length ``keylen''.  ``dst'' is the array of octets where the 
+``key'' is the array of octets to use as the key of length ``keylen''.  ``out'' is the array of octets where the 
 result should be stored.
 
 To test if the HMAC code is working there is the following function:
@@ -1467,7 +1759,7 @@ HMAC system is given below.
 
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int idx, err;
@@ -1531,9 +1823,9 @@ To send data through the algorithm call
 \index{omac\_process()}
 \begin{verbatim}
 int omac_process(omac_state *state, 
-                 const unsigned char *buf, unsigned long len);
+                 const unsigned char *in, unsigned long inlen);
 \end{verbatim}
-This will send ``len'' bytes from ``buf'' through the active OMAC state ``state''.  Returns \textbf{CRYPT\_OK} if the 
+This will send ``inlen'' bytes from ``in'' through the active OMAC state ``state''.  Returns \textbf{CRYPT\_OK} if the 
 function succeeds.  The function is not sensitive to the granularity of the data.  For example,
 
 \begin{verbatim}
@@ -1567,10 +1859,10 @@ following function.
 \begin{verbatim}
 int omac_memory(int cipher, 
                 const unsigned char *key, unsigned long keylen,
-                const unsigned char *msg, unsigned long msglen,
-                unsigned char *out, unsigned long *outlen);
+                const unsigned char *in,  unsigned long inlen,
+                      unsigned char *out, unsigned long *outlen);
 \end{verbatim}
-This will compute the OMAC of ``msglen'' bytes of ``msg'' using the key ``key'' of length ``keylen'' bytes and the cipher
+This will compute the OMAC of ``inlen'' bytes of ``in'' using the key ``key'' of length ``keylen'' bytes and the cipher
 specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will store the MAC in ``out'' with the same
 rules as omac\_done.
 
@@ -1580,7 +1872,7 @@ To OMAC a file use
 int omac_file(int cipher, 
               const unsigned char *key, unsigned long keylen,
               const char *filename, 
-              unsigned char *out, unsigned long *outlen);
+                    unsigned char *out, unsigned long *outlen);
 \end{verbatim}
 
 Which will OMAC the entire contents of the file specified by ``filename'' using the key ``key'' of length ``keylen'' bytes
@@ -1597,7 +1889,7 @@ OMAC system is given below.
 
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int idx, err;
@@ -1662,9 +1954,9 @@ To MAC data simply send it through the process function.
 \index{pmac\_process()}
 \begin{verbatim}
 int pmac_process(pmac_state *state, 
-                 const unsigned char *buf, unsigned long len);
+                 const unsigned char *in, unsigned long inlen);
 \end{verbatim}
-This will process ``len'' bytes of ``buf'' in the given ``state''.  The function is not sensitive to the granularity of the
+This will process ``inlen'' bytes of ``in'' in the given ``state''.  The function is not sensitive to the granularity of the
 data.  For example,
 
 \begin{verbatim}
@@ -1694,9 +1986,9 @@ following function.
 \index{pmac\_memory()}
 \begin{verbatim}
 int pmac_memory(int cipher, 
-                const unsigned char *key, unsigned long keylen,
-                const unsigned char *msg, unsigned long msglen,
-                unsigned char *out, unsigned long *outlen);
+                const unsigned char *key, unsigned long  keylen,
+                const unsigned char *in,  unsigned long  inlen,
+                      unsigned char *out, unsigned long *outlen);
 \end{verbatim}
 This will compute the PMAC of ``msglen'' bytes of ``msg'' using the key ``key'' of length ``keylen'' bytes and the cipher
 specified by the ``cipher'''th entry in the cipher\_descriptor table.  It will store the MAC in ``out'' with the same
@@ -1716,13 +2008,80 @@ and the cipher specified by the ``cipher'''th entry in the cipher\_descriptor ta
 the same rules as omac\_done.
 
 To test if the PMAC code is working there is the following function:
+\index{pmac\_test()}
 \begin{verbatim}
 int pmac_test(void);
 \end{verbatim}
 Which returns {\bf CRYPT\_OK} if the code passes otherwise it returns an error code.
 
+\section{Pelican MAC}
+Pelican MAC is a new (experimental) MAC by the AES team that uses four rounds of AES as a ``mixing function''.  It achieves a very high 
+rate of processing and is potentially very secure.  It requires AES to be enabled to function.  You do not have to register\_cipher() AES first though
+as it calls AES directly.
 
+\index{pelican\_init()}
+\begin{verbatim}
+int pelican_init(pelican_state *pelmac, const unsigned char *key, unsigned long keylen);
+\end{verbatim}
+This will initialize the Pelican state with the given AES key.  Once this has been done you can begin processing data.
 
+\index{pelican\_process()}
+\begin{verbatim}
+int pelican_process(pelican_state *pelmac, const unsigned char *in, unsigned long inlen);
+\end{verbatim}
+This will process ``inlen'' bytes of ``in'' through the Pelican MAC.  It's best that you pass in multiples of 16 bytes as it makes the
+routine more efficient but you may pass in any length of text.  You can call this function as many times as required to process
+an entire message.
+
+\index{pelican\_done()}
+\begin{verbatim}
+int pelican_done(pelican_state *pelmac, unsigned char *out);
+\end{verbatim}
+This terminates a Pelican MAC and writes the 16--octet tag to ``out''.
+
+\subsection{Example}
+
+\begin{verbatim}
+#include <tomcrypt.h>
+int main(void)
+{
+   pelican_state pelstate;
+   unsigned char key[32], tag[16];
+   int           err;
+
+   /* somehow initialize a key */
+
+   /* initialize pelican mac */
+   if ((err = pelican_init(&pelstate,          /* the state */
+                           key,                /* user key */
+                           32                  /* key length in octets */
+                          )) != CRYPT_OK) {
+      printf("Error initializing Pelican: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* MAC some data */
+   if ((err = pelican_process(&pelstate,       /* the state */
+                              "hello world",   /* data to mac */        
+                              11               /* length of data */
+                              )) != CRYPT_OK) {
+      printf("Error processing Pelican: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* Terminate the MAC */
+   if ((err = pelican_done(&pelstate,       /* the state */
+                           tag              /* where to store the tag */
+                           )) != CRYPT_OK) {
+      printf("Error terminating Pelican: %s", error_to_string(err));
+      return EXIT_FAILURE;
+   }
+
+   /* tag[0..15] has the MAC output now */
+
+   return EXIT_SUCCESS;
+}
+\end{verbatim}
 
 
 \chapter{Pseudo-Random Number Generators}
@@ -1735,12 +2094,11 @@ key generation.  There is a universal structure called ``prng\_state''.  To init
 int XXX_start(prng_state *prng);
 \end{verbatim}
 
-This will setup the PRNG for future use and not seed it.  In order 
-for the PRNG to be cryptographically useful you must give it entropy.  Ideally you'd have some OS level source to tap 
-like in UNIX (see section 5.3).  To add entropy to the PRNG call:
+This will setup the PRNG for future use and not seed it.  In order for the PRNG to be cryptographically useful you must give it 
+entropy.  Ideally you'd have some OS level source to tap like in UNIX.  To add entropy to the PRNG call:
 \index{PRNG add\_entropy}
 \begin{verbatim}
-int XXX_add_entropy(const unsigned char *in, unsigned long len, 
+int XXX_add_entropy(const unsigned char *in, unsigned long inlen, 
                     prng_state *prng);
 \end{verbatim}
 
@@ -1754,7 +2112,7 @@ int XXX_ready(prng_state *prng);
 Which returns {\bf CRYPTO\_OK} if it is ready.  Finally to actually read bytes call:
 \index{PRNG read}
 \begin{verbatim}
-unsigned long XXX_read(unsigned char *out, unsigned long len,
+unsigned long XXX_read(unsigned char *out, unsigned long outlen,
                        prng_state *prng);
 \end{verbatim}
 
@@ -1831,7 +2189,7 @@ Below is a simple snippet to read 10 bytes from yarrow.  Its important to note t
 {\bf NOT} secure since the entropy added is not random.
 
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    prng_state prng;
@@ -1961,7 +2319,7 @@ simulations which need a high quality (and fast) stream of bytes.
 \subsubsection{Example Usage}
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    prng_state prng;
@@ -2029,7 +2387,7 @@ platform where the RNG doesn't work well.  Example usage of this function is giv
 
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    ecc_key mykey;
@@ -2066,7 +2424,7 @@ the previous example using this PRNG.
 
 \begin{small}
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    ecc_key mykey;
@@ -2087,6 +2445,8 @@ int main(void)
 }
 \end{verbatim}
 \end{small}
+
+
 
 \chapter{RSA Public Key Cryptography}
 
@@ -2307,8 +2667,8 @@ To do raw work with the RSA function call:
 \index{rsa\_exptmod()}
 \begin{verbatim}
 int rsa_exptmod(const unsigned char *in,   unsigned long inlen,
-                      unsigned char *out,  unsigned long *outlen, int which,
-                      prng_state    *prng, int           prng_idx,
+                      unsigned char *out,  unsigned long *outlen, 
+                      int which, prng_state *prng, int prng_idx,
                       rsa_key *key);
 \end{verbatim}
 This loads the bignum from ``in'' as a big endian word in the format PKCS specifies, raises it to either ``e'' or ``d'' and stores the result
@@ -2324,26 +2684,26 @@ To facilitate encrypting short keys the following functions have been provided.
 
 \index{rsa\_encrypt\_key()}
 \begin{verbatim}
-int rsa_encrypt_key(const unsigned char *inkey,  unsigned long inlen,
-                          unsigned char *outkey, unsigned long *outlen,
+int rsa_encrypt_key(const unsigned char *in,  unsigned long inlen,
+                          unsigned char *out, unsigned long *outlen,
                     const unsigned char *lparam, unsigned long lparamlen,
                     prng_state *prng, int prng_idx, int hash_idx, rsa_key *key);
 \end{verbatim}
-This function will OAEP pad ``inkey'' of length inlen bytes then RSA encrypt it and store the ciphertext
-in ``outkey'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
+This function will OAEP pad ``in'' of length inlen bytes then RSA encrypt it and store the ciphertext
+in ``out'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
 to pkcs\_1\_oaep\_encode().
 
 \index{rsa\_decrypt\_key()}
 \begin{verbatim}
-int rsa_decrypt_key(const unsigned char *in,     unsigned long inlen,
-                          unsigned char *outkey, unsigned long *keylen, 
+int rsa_decrypt_key(const unsigned char *in,  unsigned long inlen,
+                          unsigned char *out, unsigned long *outlen, 
                     const unsigned char *lparam, unsigned long lparamlen,
                           prng_state    *prng,   int           prng_idx,
                           int            hash_idx, int *res,
                           rsa_key       *key);
 \end{verbatim}
 This function will RSA decrypt ``in'' of length ``inlen'' then OAEP depad the resulting data and store it in
-``outkey'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
+``out'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
 to pkcs\_1\_oaep\_decode().
 
 If the RSA decrypted data isn't a valid OAEP packet then ``res'' is set to $0$.  Otherwise, it is set to $1$.
@@ -2354,15 +2714,15 @@ process the following functions have been provided.
 
 \index{rsa\_sign\_hash()}
 \begin{verbatim}
-int rsa_sign_hash(const unsigned char *msghash,  unsigned long  msghashlen, 
-                        unsigned char *sig,      unsigned long *siglen, 
+int rsa_sign_hash(const unsigned char *in,   unsigned long  inlen, 
+                        unsigned char *out,  unsigned long *outlen, 
                         prng_state    *prng,     int            prng_idx,
                         int            hash_idx, unsigned long  saltlen,
                         rsa_key *key);
 \end{verbatim}
 
-This will PSS encode the message hash ``msghash'' of length ``msghashlen''.  Next the PSS encoded message is
-RSA ``signed'' and the output is stored in ``sig'' of length ``siglen''.  
+This will PSS encode the message hash ``in'' of length ``inlen''.  Next the PSS encoded message will be RSA ``signed'' and 
+the output is stored in ``out'' of length ``outlen''.  
 
 
 \index{rsa\_verify\_hash()}
@@ -2382,7 +2742,7 @@ the value ``res'' is set to $0$.  Otherwise, if the function succeeds and signat
 to $1$.
 
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    int           err, hash_idx, prng_idx, res;
@@ -2646,16 +3006,16 @@ Similar to the RSA related functions there are functions to encrypt or decrypt s
 algorithms.  
 \index{dh\_encrypt\_key()} \index{dh\_decrypt\_key()}
 \begin{verbatim}
-int dh_encrypt_key(const unsigned char *inkey, unsigned long keylen,
+int dh_encrypt_key(const unsigned char *in,   unsigned long  inlen,
                          unsigned char *out,  unsigned long *len, 
                          prng_state *prng, int wprng, int hash, 
                          dh_key *key);
 
-int dh_decrypt_key(const unsigned char *in, unsigned long inlen,
-                         unsigned char *outkey, unsigned long *keylen, 
+int dh_decrypt_key(const unsigned char *in,  unsigned long  inlen,
+                         unsigned char *out, unsigned long *outlen, 
                          dh_key *key);
 \end{verbatim}
-Where ``inkey'' is an input symmetric key of no more than 32 bytes.  Essentially these routines created a random public key
+Where ``in'' is an input symmetric key of no more than 32 bytes.  Essentially these routines created a random public key
 and find the hash of the shared secret.  The message digest is than XOR'ed against the symmetric key.  All of the 
 required data is placed in ``out'' by ``dh\_encrypt\_key()''.   The hash must produce a message digest at least as large
 as the symmetric key you are trying to share.
@@ -2759,17 +3119,17 @@ algorithms.
 
 \index{ecc\_encrypt\_key()} \index{ecc\_decrypt\_key()}
 \begin{verbatim}
-int ecc_encrypt_key(const unsigned char *inkey, unsigned long keylen,
-                          unsigned char *out,  unsigned long *len, 
+int ecc_encrypt_key(const unsigned char *in,   unsigned long  inlen,
+                          unsigned char *out,  unsigned long *outlen, 
                           prng_state *prng, int wprng, int hash, 
                           ecc_key *key);
 
-int ecc_decrypt_key(const unsigned char *in, unsigned long inlen,
-                          unsigned char *outkey, unsigned long *keylen, 
+int ecc_decrypt_key(const unsigned char *in,  unsigned long  inlen,
+                          unsigned char *out, unsigned long *outlen, 
                           ecc_key *key);
 \end{verbatim}
 
-Where ``inkey'' is an input symmetric key of no more than 32 bytes.  Essentially these routines created a random public key
+Where ``in'' is an input symmetric key of no more than 32 bytes.  Essentially these routines created a random public key
 and find the hash of the shared secret.  The message digest is than XOR'ed against the symmetric key.  All of the required
 data is placed in ``out'' by ``ecc\_encrypt\_key()''.   The hash chosen must produce a message digest at least as large
 as the symmetric key you are trying to share.
@@ -2975,7 +3335,7 @@ These will handle multiple encodings/decodings at once.  They work like their si
 except they handle a \textbf{NULL} terminated list of operands.
 
 \begin{verbatim}
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 {
    mp_int        a, b, c, d;
@@ -3047,7 +3407,7 @@ on the password.  The ``hash\_idx'' is the index of the hash you wish to use in 
 
 \begin{alltt}
 /* demo to show how to make session state material from a password */
-#include <mycrypt.h>
+#include <tomcrypt.h>
 int main(void)
 \{
     unsigned char password[100], salt[100],
@@ -3115,7 +3475,7 @@ for all uses and is distributed freely.
 At the heart of all the functions is the data type ``mp\_int'' (defined in tommath.h).  This data type is what 
 will hold all large integers.  In order to use an mp\_int one must initialize it first, for example:
 \begin{verbatim}
-#include <mycrypt.h> /* mycrypt.h includes mpi.h automatically */
+#include <tomcrypt.h> /* tomcrypt.h includes mpi.h automatically */
 int main(void)
 { 
    mp_int bignum;
@@ -3327,7 +3687,7 @@ make install_lib
 Which will build the library and install it in /usr/lib (as well as the headers in /usr/include).  The destination
 directory of the library and headers can be changed by editing ``makefile''.  The variable LIBNAME controls
 where the library is to be installed and INCNAME controls where the headers are to be installed.  A developer can 
-then use the library by including ``mycrypt.h'' in their program and linking against ``libtomcrypt.a''.
+then use the library by including ``tomcrypt.h'' in their program and linking against ``libtomcrypt.a''.
 
 A static library can also be built with the Intel C Compiler  (ICC) by issuing the following
 
@@ -3368,18 +3728,8 @@ This will use libtool and gcc to build a shared library ``libtomcrypt.la'' as we
 and install them into /usr/lib (and the headers into /usr/include).  To link your application you should use the 
 libtool program in ``--mode=link''.
 
-You can also build LibTomCrypt as a shared library (DLL) in Windows with Cygwin.  Issue the following
-
-\begin{alltt}
-make -f makefile.cygwin_dll
-\end{alltt}
-This will build ``libtomcrypt.dll.a'' which is an import library for ``libtomcrypt.dll''.  You must copy 
-``libtomcrypt.dll.a'' to your library directory, ``libtomcrypt.dll' to somewhere in your PATH and the header
-files to your include directory.  So long as ``libtomcrypt.dll'' is in your system path you can run any LibTomCrypt
-program that uses it.
-
-\section{mycrypt\_cfg.h}
-The file ``mycrypt\_cfg.h'' is what lets you control various high level macros which control the behaviour 
+\section{tomcrypt\_cfg.h}
+The file ``tomcrypt\_cfg.h'' is what lets you control various high level macros which control the behaviour 
 of the library. 
 
 \subsubsection{ARGTYPE}
@@ -3398,38 +3748,38 @@ which will work on all platforms.
 Currently LibTomCrypt will detect x86-32 and x86-64 running GCC as well as x86-32 running MSVC.  
 
 \section{The Configure Script}
-There are also options you can specify from the configure script or ``mycrypt\_custom.h''.  
+There are also options you can specify from the configure script or ``tomcrypt\_custom.h''.  
 
-\subsubsection{X memory routines}
-At the top of mycrypt\_custom.h are four macros denoted as XMALLOC, XCALLOC, XREALLOC and XFREE which resolve to 
+\subsection{X memory routines}
+At the top of tomcrypt\_custom.h are four macros denoted as XMALLOC, XCALLOC, XREALLOC and XFREE which resolve to 
 the name of the respective functions.  This lets you substitute in your own memory routines.  If you substitute in 
 your own functions they must behave like the standard C library functions in terms of what they expect as input and 
 output.  By default the library uses the standard C routines.
 
-\subsubsection{X clock routines}
+\subsection{X clock routines}
 The rng\_get\_bytes() function can call a function that requires the clock() function.  These macros let you override
 the default clock() used with a replacement.  By default the standard C library clock() function is used.
 
-\subsubsection{NO\_FILE}
+\subsection{NO\_FILE}
 During the build if NO\_FILE is defined then any function in the library that uses file I/O will not call the file I/O 
 functions and instead simply return CRYPT\_NOP.  This should help resolve any linker errors stemming from a lack of
 file I/O on embedded platforms.
 
-\subsubsection{CLEAN\_STACK}
+\subsection{CLEAN\_STACK}
 When this functions is defined the functions that store key material on the stack will clean up afterwards.  
 Assumes that you have no memory paging with the stack.
 
-\subsubsection{LTC\_TEST}
+\subsection{LTC\_TEST}
 When this has been defined the various self--test functions (for ciphers, hashes, prngs, etc) are included in the build.
 When this has been undefined the tests are removed and if called will return CRYPT\_NOP.
 
-\subsubsection{Symmetric Ciphers, One-way Hashes, PRNGS and Public Key Functions}
+\subsection{Symmetric Ciphers, One-way Hashes, PRNGS and Public Key Functions}
 There are a plethora of macros for the ciphers, hashes, PRNGs and public key functions which are fairly 
 self-explanatory.  When they are defined the functionality is included otherwise it is not.  There are some 
 dependency issues which are noted in the file.  For instance, Yarrow requires CTR chaining mode, a block 
 cipher and a hash function.
 
-\subsubsection{TWOFISH\_SMALL and TWOFISH\_TABLES}
+\subsection{TWOFISH\_SMALL and TWOFISH\_TABLES}
 Twofish is a 128-bit symmetric block cipher that is provided within the library.  The cipher itself is flexible enough
 to allow some tradeoffs in the implementation.  When TWOFISH\_SMALL is defined the scheduled symmetric key for Twofish 
 requires only 200 bytes of memory.  This is achieved by not pre-computing the substitution boxes.  Having this 
@@ -3441,9 +3791,38 @@ useful when TWOFISH\_SMALL is defined as the table values are computed on the fl
 will increase by approximately 500 bytes.  If this is defined but TWOFISH\_SMALL is not the cipher will still work but
 it will not speed up the encryption or decryption functions.
 
-\subsubsection{SMALL\_CODE}
+\subsection{GCM\_TABLES}
+When defined GCM will use a 64KB table (per GCM state) which will greatly lower up the per--packet latency.  
+It also increases the initialization time.  
+
+\subsection{SMALL\_CODE}
 When this is defined some of the code such as the Rijndael and SAFER+ ciphers are replaced with smaller code variants.
 These variants are slower but can save quite a bit of code space.
+
+\subsection{LTC\_FAST}
+This mode (autodetected with x86\_32,x86\_64 platforms with GCC or MSVC) configures various routines such as ctr\_encrypt() or 
+cbc\_encrypt() that it can safely XOR multiple octets in one step by using a larger data type.  This has the benefit of 
+cutting down the overhead of the respective functions.  
+
+This mode does have one downside.  It can cause unaligned reads from memory if you are not careful with the functions.  This is why
+it has been enabled by default only for the x86 class of processors where unaligned accesses are allowed.  Technically LTC\_FAST
+is not ``portable'' since unaligned accesses are not covered by the ISO C specifications.
+
+In practice however, you can use it on pretty much any platform (even MIPS) with care.
+
+By design the ``fast'' mode functions won't get unaligned on their own.  For instance, if you call ctr\_encrypt() right after calling
+ctr\_start() and all the inputs you gave are aligned than ctr\_encrypt() will perform aligned memory operations only.  However, if you 
+call ctr\_encrypt() with an odd amount of plaintext then call it again the CTR pad (the IV) will be partially used.  This will
+cause the ctr routine to first use up the remaining pad bytes.  Then if there are enough plaintext bytes left it will use 
+whole word XOR operations.  These operations will be unaligned.
+
+The simplest precaution is to make sure you process all data in power of two blocks and handle ``remainder'' at the end.  e.g. If you are 
+CTR'ing a long stream process it in blocks of (say) four kilobytes and handle any remaining incomplete blocks at the end of the stream.  
+
+If you do plan on using the ``LTC\_FAST'' mode you have to also define a ``LTC\_FAST\_TYPE'' macro which resolves to an optimal sized
+data type you can perform integer operations with.  Ideally it should be four or eight bytes since it must properly divide the size 
+of your block cipher (e.g. 16 bytes for AES).  This means sadly if you're on a platform with 57--bit words (or something) you can't 
+use this mode.  So sad.
 
 \section{MPI Tweaks}
 \subsection{RSA Only Tweak}
@@ -3451,13 +3830,423 @@ If you plan on only using RSA with moduli in the range of 1024 to 2560 bits you 
 to reduce the library size.  Follow these steps
 
 \begin{enumerate}
-   \item Undefine MDSA, MECC and MDH from mycrypt\_custom.h
+   \item Undefine MDSA, MECC and MDH from tomcrypt\_custom.h
    \item Undefine LTM\_ALL  from tommath\_superclass.h
    \item Define SC\_RSA\_1 from tommath\_superclass.h
    \item Rebuild the library.
 \end{enumerate}
 
+\chapter{Optimizations}
+\section{Introduction}
+The entire API was designed with plug and play in mind at the low level.  That is you can swap out any cipher, hash or PRNG and dependent API will not require
+updating.  This has the nice benefit that I can add ciphers not have to re--write large portions of the API.  For the most part LibTomCrypt has also been written
+to be highly portable and easy to build out of the box on pretty much any platform.  As such there are no assembler inlines throughout the code, I make no assumptions
+about the platform, etc...
 
+That works well for most cases but there are times where time is of the essence.  This API also allows optimized routines to be dropped in--place of the existing
+portable routines.  For instance, hand optimized assembler versions of AES could be provided and any existing function that uses the cipher could automatically use
+the optimized code without re--writing.  This also paves the way for hardware drivers that can access hardware accelerated cryptographic devices.
+
+At the heart of this flexibility is the ``descriptor'' system.  A descriptor is essentially just a C ``struct'' which describes the algorithm and provides pointers
+to functions that do the work.  For a given class of operation (e.g. cipher, hash, prng) the functions have identical prototypes which makes development simple.  In most
+dependent routines all a developer has to do is register\_XXX() the descriptor and they're set.
+
+\section{Ciphers}
+The ciphers in LibTomCrypt are accessed through the ltc\_cipher\_descriptor structure.
+
+\begin{small}
+\begin{verbatim}
+struct ltc_cipher_descriptor {
+   /** name of cipher */
+   char *name;
+   /** internal ID */
+   unsigned char ID;
+   /** min keysize (octets) */
+   int  min_key_length, 
+   /** max keysize (octets) */
+        max_key_length, 
+   /** block size (octets) */
+        block_length, 
+   /** default number of rounds */
+        default_rounds;
+   /** Setup the cipher 
+      @param key         The input symmetric key
+      @param keylen      The length of the input key (octets)
+      @param num_rounds  The requested number of rounds (0==default)
+      @param skey        [out] The destination of the scheduled key
+      @return CRYPT_OK if successful
+   */
+   int  (*setup)(const unsigned char *key, int keylen, 
+                 int num_rounds, symmetric_key *skey);
+   /** Encrypt a block
+      @param pt      The plaintext
+      @param ct      [out] The ciphertext
+      @param skey    The scheduled key
+   */
+   void (*ecb_encrypt)(const unsigned char *pt, 
+                             unsigned char *ct, symmetric_key *skey);
+   /** Decrypt a block
+      @param ct      The ciphertext
+      @param pt      [out] The plaintext
+      @param skey    The scheduled key
+   */
+   void (*ecb_decrypt)(const unsigned char *ct, 
+                             unsigned char *pt, symmetric_key *skey);
+   /** Test the block cipher
+       @return CRYPT_OK if successful, CRYPT_NOP if self-testing has been disabled
+   */
+   int (*test)(void);
+   /** Determine a key size
+       @param keysize    [in/out] The size of the key desired and the suggested size
+       @return CRYPT_OK if successful
+   */
+   int  (*keysize)(int *keysize);
+
+/** Accelerators **/
+   /** Accelerated ECB encryption 
+       @param pt      Plaintext
+       @param ct      Ciphertext
+       @param blocks  The number of complete blocks to process
+       @param skey    The scheduled key context
+   */
+   void (*accel_ecb_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, unsigned long blocks, 
+                             symmetric_key *skey);
+
+   /** Accelerated ECB decryption 
+       @param pt      Plaintext
+       @param ct      Ciphertext
+       @param blocks  The number of complete blocks to process
+       @param skey    The scheduled key context
+   */
+   void (*accel_ecb_decrypt)(const unsigned char *ct, 
+                                   unsigned char *pt, unsigned long blocks, 
+                             symmetric_key *skey);
+
+   /** Accelerated CBC encryption 
+       @param pt      Plaintext
+       @param ct      Ciphertext
+       @param blocks  The number of complete blocks to process
+       @param IV      The initial value (input/output)
+       @param skey    The scheduled key context
+   */
+   void (*accel_cbc_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, unsigned long blocks, 
+                                   unsigned char *IV, symmetric_key *skey);
+
+   /** Accelerated CBC decryption 
+       @param pt      Plaintext
+       @param ct      Ciphertext
+       @param blocks  The number of complete blocks to process
+       @param IV      The initial value (input/output)
+       @param skey    The scheduled key context
+   */
+   void (*accel_cbc_decrypt)(const unsigned char *ct, 
+                                   unsigned char *pt, unsigned long blocks, 
+                                   unsigned char *IV, symmetric_key *skey);
+
+   /** Accelerated CTR encryption 
+       @param pt      Plaintext
+       @param ct      Ciphertext
+       @param blocks  The number of complete blocks to process
+       @param IV      The initial value (input/output)
+       @param mode    little or big endian counter (mode=0 or mode=1)
+       @param skey    The scheduled key context
+   */
+   void (*accel_ctr_encrypt)(const unsigned char *pt, 
+                                   unsigned char *ct, unsigned long blocks, 
+                                   unsigned char *IV, int mode, symmetric_key *skey);
+
+   /** Accelerated CCM packet (one-shot)
+       @param key        The secret key to use
+       @param keylen     The length of the secret key (octets)
+       @param nonce      The session nonce [use once]
+       @param noncelen   The length of the nonce
+       @param header     The header for the session
+       @param headerlen  The length of the header (octets)
+       @param pt         [out] The plaintext
+       @param ptlen      The length of the plaintext (octets)
+       @param ct         [out] The ciphertext
+       @param tag        [out] The destination tag
+       @param taglen     [in/out] The max size and resulting size of the authentication tag
+       @param direction  Encrypt or Decrypt direction (0 or 1)
+       @return CRYPT_OK if successful
+   */
+   void (*accel_ccm_memory)(
+       const unsigned char *key,    unsigned long keylen,
+       const unsigned char *nonce,  unsigned long noncelen,
+       const unsigned char *header, unsigned long headerlen,
+             unsigned char *pt,     unsigned long ptlen,
+             unsigned char *ct,
+             unsigned char *tag,    unsigned long *taglen,
+                       int  direction);
+
+   /** Accelerated GCM packet (one shot)
+       @param key               The secret key
+       @param keylen            The length of the secret key
+       @param IV                The initial vector 
+       @param IVlen             The length of the initial vector
+       @param adata             The additional authentication data (header)
+       @param adatalen          The length of the adata
+       @param pt                The plaintext
+       @param ptlen             The length of the plaintext (ciphertext length is the same)
+       @param ct                The ciphertext
+       @param tag               [out] The MAC tag
+       @param taglen            [in/out] The MAC tag length
+       @param direction         Encrypt or Decrypt mode (GCM_ENCRYPT or GCM_DECRYPT)
+   */
+   void (*accel_gcm_memory)(
+       const unsigned char *key,    unsigned long keylen,
+       const unsigned char *IV,     unsigned long IVlen,
+       const unsigned char *adata,  unsigned long adatalen,
+             unsigned char *pt,     unsigned long ptlen,
+             unsigned char *ct, 
+             unsigned char *tag,    unsigned long *taglen,
+                       int direction);
+
+};
+\end{verbatim}
+\end{small}
+
+\subsection{Name}
+The ``name'' parameter specifies the name of the cipher.  This is what a developer would pass to find\_cipher() to find the cipher in the descriptor
+tables.
+
+\subsection{Internal ID}
+This is a single byte Internal ID you can use to distingish ciphers from each other.
+
+\subsection{Key Lengths}
+The minimum key length is ``min\_key\_length'' and is measured in octets.  Similarly the maximum key length is ``max\_key\_length''.  They can be equal
+and both must valid key sizes for the cipher.  Values in between are not assumed to be valid though they may be.
+
+\subsection{Block Length}
+The size of the ciphers plaintext or ciphertext is ``block\_length'' and is measured in octets.
+
+\subsection{Rounds}
+Some ciphers allow different number of rounds to be used.  Usually you just use the default.  The default round count is ``default\_rounds''.
+
+\subsection{Setup}
+To initialize a cipher (for ECB mode) the function setup() was provided.  It accepts an array of key octets ``key'' of length ``keylen'' octets.  The user
+can specify the number of rounds they want through ``num\_rounds'' where $num\_rounds = 0$ means use the default.  The destination of a scheduled key is stored
+in ``skey''.
+
+This is where things get tricky.  Currently there is no provision to allocate memory during initialization since there is no ``cipher done'' function.  So you have
+to either use an existing member of the symmetric\_key union or alias your own structure over top of it provided symmetric\_key is not smaller.
+
+\subsection{Single block ECB}
+To process a single block in ECB mode the ecb\_encrypt() and ecb\_decrypt() functions were provided.  The plaintext and ciphertext buffers are allowed to overlap so you 
+must make sure you do not overwrite the output before you are finished with the input.
+
+\subsection{Testing}
+The test() function is used to self--test the ``device''.  It takes no arguments and returns \textbf{CRYPT\_OK} if all is working properly.
+
+\subsection{Key Sizing}
+Occasionally a function will want to find a suitable key size to use since the input is oddly sized.  The keysize() function is for this case.  It accepts a 
+pointer to an integer which represents the desired size.  The function then has to match it to the exact or a lower key size that is valid for the cipher.  For
+example, if the input is $25$ and $24$ is valid then it stores $24$ back in the pointed to integer.  It must not round up and must return an error if the keysize
+ cannot be mapped to a valid key size for the cipher.
+
+\subsection{Acceleration}
+The next set of functions cover the accelerated functionality of the cipher descriptor.  Any combination of these functions may be set to \textbf{NULL} to indicate
+it is not supported.  In those cases the software fallbacks are used (using the single ECB block routines).
+
+\subsubsection{Accelerated ECB}
+These two functions are meant for cases where a user wants to encrypt (in ECB mode no less) an array of blocks.  These functions are accessed
+through the accel\_ecb\_encrypt and accel\_ecb\_decrypt pointers.  The ``blocks'' count is the number of complete blocks to process.
+
+\subsubsection{Accelerated CBC} 
+These two functions are meant for accelerated CBC encryption.  These functions are accessed through the accel\_cbc\_encrypt and accel\_cbc\_decrypt pointers.
+The ``blocks'' value is the number of complete blocks to process.  The ``IV'' is the CBC initial vector.  It is an input upon calling this function and must be
+updated by the function before returning.  
+
+\subsubsection{Accelerated CTR}
+This function is meant for accelerated CTR encryption.  It is accessible through the accel\_ctr\_encrypt pointer.
+The ``blocks'' value is the number of complete blocks to process.  The ``IV'' is the CTR counter vector.  It is an input upon calling this function and must be
+updated by the function before returning.  The ``mode'' value indicates whether the counter is big ($mode = 1$) or little ($mode = 0$) endian.
+
+This function (and the way it's called) differs from the other two since ctr\_encrypt() allows any size input plaintext.  The accelerator will only be
+called if the following conditions are met.
+
+\begin{enumerate}
+   \item The accelerator is present
+   \item The CTR pad is empty
+   \item The remaining length of the input to process is greater than or equal to the block size.
+\end{enumerate}
+
+The ``CTR pad'' is empty when a multiple (including zero) blocks of text have been processed.  That is, if you pass in seven bytes to AES--CTR mode you would have to 
+pass in a minimum of nine extra bytes before the accelerator could be called.  The CTR accelerator must increment the counter (and store it back into the 
+buffer provided) before encrypting it to create the pad.  
+
+The accelerator will only be used to encrypt whole blocks.  Partial blocks are always handled in software.
+
+\subsubsection{Accelerated CCM}
+This function is meant for accelerated CCM encryption or decryption.  It processes the entire packet in one call.  Note that the setup() function will not
+be called prior to this.  This function must handle scheduling the key provided on its own.
+
+\subsubsection{Accelerated GCM}
+This function is meant for accelerated GCM encryption or decryption.  It processes the entire packet in one call.  Note that the setup() function will not
+be called prior to this.  This function must handle scheduling the key provided on its own.
+
+\section{One--Way Hashes}
+The hash functions are accessed through the ltc\_hash\_descriptor structure.
+
+\begin{small}
+\begin{verbatim}
+struct ltc_hash_descriptor {
+    /** name of hash */
+    char *name;
+    /** internal ID */
+    unsigned char ID;
+    /** Size of digest in octets */
+    unsigned long hashsize;
+    /** Input block size in octets */
+    unsigned long blocksize;
+    /** ASN.1 DER identifier */
+    unsigned char DER[64];
+    /** Length of DER encoding */
+    unsigned long DERlen;
+    /** Init a hash state
+      @param hash   The hash to initialize
+      @return CRYPT_OK if successful
+    */
+    int (*init)(hash_state *hash);
+    /** Process a block of data 
+      @param hash   The hash state
+      @param in     The data to hash
+      @param inlen  The length of the data (octets)
+      @return CRYPT_OK if successful
+    */
+    int (*process)(hash_state *hash, const unsigned char *in, unsigned long inlen);
+    /** Produce the digest and store it
+      @param hash   The hash state
+      @param out    [out] The destination of the digest
+      @return CRYPT_OK if successful
+    */
+    int (*done)(hash_state *hash, unsigned char *out);
+    /** Self-test
+      @return CRYPT_OK if successful, CRYPT_NOP if self-tests have been disabled
+    */
+    int (*test)(void);
+};
+\end{verbatim}
+\end{small}
+
+\subsection{Name}
+This is the name the hash is known by and what find\_hash() will look for.
+
+\subsection{Internal ID}
+This is the internal ID byte used to distinguish the hash from other hashes.
+
+\subsection{Digest Size}
+The ``hashsize'' variable indicates the length of the output in octets.
+
+\subsection{Block Size}
+The `blocksize'' variable indicates the length of input (in octets) that the hash processes in a given
+invokation.
+
+\subsection{DER Identifier}
+This is the DER identifier (including the SEQUENCE header).  This is used solely for PKCS \#1 style signatures.  
+
+\subsection{Initialization}
+The init function initializes the hash and prepares it to process message bytes.
+
+\subsection{Process}
+This processes message bytes.  The algorithm must accept any length of input that the hash would allow.  The input is not
+guaranteed to be a multiple of the block size in length.
+
+\subsection{Done}
+The done function terminates the hash and returns the message digest.
+
+\subsection{Acceleration}
+A compatible accelerator must allow processing data in any granularity which may require internal padding on the driver side.  
+
+\section{Pseudo--Random Number Generators}
+The pseudo--random number generators are accessible through the ltc\_prng\_descriptor structure.
+
+\begin{small}
+\begin{verbatim}
+struct ltc_prng_descriptor {
+    /** Name of the PRNG */
+    char *name;
+    /** size in bytes of exported state */
+    int  export_size;
+    /** Start a PRNG state
+        @param prng   [out] The state to initialize
+        @return CRYPT_OK if successful
+    */
+    int (*start)(prng_state *prng);
+    /** Add entropy to the PRNG
+        @param in         The entropy
+        @param inlen      Length of the entropy (octets)\
+        @param prng       The PRNG state
+        @return CRYPT_OK if successful
+    */
+    int (*add_entropy)(const unsigned char *in, unsigned long inlen, prng_state *prng);
+    /** Ready a PRNG state to read from
+        @param prng       The PRNG state to ready
+        @return CRYPT_OK if successful
+    */
+    int (*ready)(prng_state *prng);
+    /** Read from the PRNG
+        @param out     [out] Where to store the data
+        @param outlen  Length of data desired (octets)
+        @param prng    The PRNG state to read from
+        @return Number of octets read
+    */
+    unsigned long (*read)(unsigned char *out, unsigned long outlen, prng_state *prng);
+    /** Terminate a PRNG state
+        @param prng   The PRNG state to terminate
+        @return CRYPT_OK if successful
+    */
+    int (*done)(prng_state *prng);
+    /** Export a PRNG state  
+        @param out     [out] The destination for the state
+        @param outlen  [in/out] The max size and resulting size of the PRNG state
+        @param prng    The PRNG to export
+        @return CRYPT_OK if successful
+    */
+    int (*pexport)(unsigned char *out, unsigned long *outlen, prng_state *prng);
+    /** Import a PRNG state
+        @param in      The data to import
+        @param inlen   The length of the data to import (octets)
+        @param prng    The PRNG to initialize/import
+        @return CRYPT_OK if successful
+    */
+    int (*pimport)(const unsigned char *in, unsigned long inlen, prng_state *prng);
+    /** Self-test the PRNG
+        @return CRYPT_OK if successful, CRYPT_NOP if self-testing has been disabled
+    */
+    int (*test)(void);
+};
+\end{verbatim}
+\end{small}
+
+\subsection{Name}
+The name by which find\_prng() will find the PRNG.
+
+\subsection{Export Size}
+When an PRNG state is to be exported for future use you specify the space required in this variable.
+
+\subsection{Start}
+Initialize the PRNG and make it ready to accept entropy.
+
+\subsection{Entropy Addition}
+Add entropy to the PRNG state.  The exact behaviour of this function depends on the particulars of the PRNG.
+
+\subsection{Ready}
+This function makes the PRNG ready to read from by processing the entropy added.  The behaviour of this function depends
+on the specific PRNG used.
+
+\subsection{Read}
+Read from the PRNG and return the number of bytes read.  This function does not have to fill the buffer but it is best 
+if it does as many protocols do not retry reads and will fail on the first try.
+
+\subsection{Done}
+Terminate a PRNG state.  The behaviour of this function depends on the particular PRNG used.
+
+\subsection{Exporting and Importing}
+An exported PRNG state is data that the PRNG can later import to resume activity.  They're not meant to resume ``the same session''
+but should at least maintain the same level of state entropy.
 
 \input{crypt.ind}
 

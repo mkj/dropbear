@@ -1,4 +1,4 @@
-#include <mycrypt.h>
+#include <tomcrypt.h>
 
 void reg_algs(void)
 {
@@ -46,6 +46,12 @@ void reg_algs(void)
 #endif
 #ifdef SKIPJACK
   register_cipher (&skipjack_desc);
+#endif
+#ifdef ANUBIS
+  register_cipher (&anubis_desc);
+#endif
+#ifdef KHAZAD
+  register_cipher (&khazad_desc);
 #endif
 
 #ifdef TIGER
@@ -495,6 +501,127 @@ void ocb_gen(void)
    fclose(out);
 }
 
+
+void ccm_gen(void)
+{
+   int err, kl, x, y1, z;
+   FILE *out;
+   unsigned char key[MAXBLOCKSIZE], nonce[MAXBLOCKSIZE*2], 
+                 plaintext[MAXBLOCKSIZE*2], tag[MAXBLOCKSIZE];
+   unsigned long len;
+
+   out = fopen("ccm_tv.txt", "w");
+   fprintf(out, "CCM Test Vectors.  Uses the 00010203...NN-1 pattern for nonce/header/plaintext/key.  The outputs\n"
+                "are of the form ciphertext,tag for a given NN.  The key for step N>1 is the tag of the previous\n"
+                "step repeated sufficiently.  The nonce is fixed throughout at 13 bytes 000102...\n\n");
+
+   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
+      kl = cipher_descriptor[x].block_length;
+
+      /* skip ciphers which do not have 128 bit block sizes */
+      if (kl != 16) continue;
+
+      if (cipher_descriptor[x].keysize(&kl) != CRYPT_OK) {
+         kl = cipher_descriptor[x].max_key_length;
+      }
+      fprintf(out, "CCM-%s (%d byte key)\n", cipher_descriptor[x].name, kl);
+
+      /* the key */
+      for (z = 0; z < kl; z++) {
+          key[z] = (z & 255);
+      }
+
+      /* fixed nonce */
+      for (z = 0; z < cipher_descriptor[x].block_length; z++) {
+          nonce[z] = z;
+      }
+      
+      for (y1 = 0; y1 <= (int)(cipher_descriptor[x].block_length*2); y1++){
+         for (z = 0; z < y1; z++) {
+            plaintext[z] = (unsigned char)(z & 255);
+         }
+         len = sizeof(tag);
+         if ((err = ccm_memory(x, key, kl, nonce, 13, plaintext, y1, plaintext, y1, plaintext, tag, &len, CCM_ENCRYPT)) != CRYPT_OK) {
+            printf("Error CCM'ing: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
+         fprintf(out, "%3d: ", y1);
+         for (z = 0; z < y1; z++) {
+            fprintf(out, "%02X", plaintext[z]);
+         }
+         fprintf(out, ", ");
+         for (z = 0; z <(int)len; z++) {
+            fprintf(out, "%02X", tag[z]);
+         }
+         fprintf(out, "\n");
+
+         /* forward the key */
+         for (z = 0; z < kl; z++) {
+             key[z] = tag[z % len];
+         }
+      }
+      fprintf(out, "\n");
+   }
+   fclose(out);
+}
+
+void gcm_gen(void)
+{
+   int err, kl, x, y1, z;
+   FILE *out;
+   unsigned char key[MAXBLOCKSIZE], plaintext[MAXBLOCKSIZE*2], tag[MAXBLOCKSIZE];
+   unsigned long len;
+
+   out = fopen("gcm_tv.txt", "w");
+   fprintf(out, "GCM Test Vectors.  Uses the 00010203...NN-1 pattern for nonce/header/plaintext/key.  The outputs\n"
+                "are of the form ciphertext,tag for a given NN.  The key for step N>1 is the tag of the previous\n"
+                "step repeated sufficiently.  The nonce is fixed throughout at 13 bytes 000102...\n\n");
+
+   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
+      kl = cipher_descriptor[x].block_length;
+
+      /* skip ciphers which do not have 128 bit block sizes */
+      if (kl != 16) continue;
+
+      if (cipher_descriptor[x].keysize(&kl) != CRYPT_OK) {
+         kl = cipher_descriptor[x].max_key_length;
+      }
+      fprintf(out, "GCM-%s (%d byte key)\n", cipher_descriptor[x].name, kl);
+
+      /* the key */
+      for (z = 0; z < kl; z++) {
+          key[z] = (z & 255);
+      }
+     
+      for (y1 = 0; y1 <= (int)(cipher_descriptor[x].block_length*2); y1++){
+         for (z = 0; z < y1; z++) {
+            plaintext[z] = (unsigned char)(z & 255);
+         }
+         len = sizeof(tag);
+         if ((err = gcm_memory(x, key, kl, plaintext, y1, plaintext, y1, plaintext, y1, plaintext, tag, &len, GCM_ENCRYPT)) != CRYPT_OK) {
+            printf("Error GCM'ing: %s\n", error_to_string(err));
+            exit(EXIT_FAILURE);
+         }
+         fprintf(out, "%3d: ", y1);
+         for (z = 0; z < y1; z++) {
+            fprintf(out, "%02X", plaintext[z]);
+         }
+         fprintf(out, ", ");
+         for (z = 0; z <(int)len; z++) {
+            fprintf(out, "%02X", tag[z]);
+         }
+         fprintf(out, "\n");
+
+         /* forward the key */
+         for (z = 0; z < kl; z++) {
+             key[z] = tag[z % len];
+         }
+      }
+      fprintf(out, "\n");
+   }
+   fclose(out);
+}
+
 void base64_gen(void)
 {
    FILE *out;
@@ -524,6 +651,8 @@ int main(void)
    printf("Generating PMAC   vectors..."); fflush(stdout); pmac_gen(); printf("done\n");
    printf("Generating EAX    vectors..."); fflush(stdout); eax_gen(); printf("done\n");
    printf("Generating OCB    vectors..."); fflush(stdout); ocb_gen(); printf("done\n");
+   printf("Generating CCM    vectors..."); fflush(stdout); ccm_gen(); printf("done\n");
+   printf("Generating GCM    vectors..."); fflush(stdout); gcm_gen(); printf("done\n");
    printf("Generating BASE64 vectors..."); fflush(stdout); base64_gen(); printf("done\n");
    return 0;
 }
