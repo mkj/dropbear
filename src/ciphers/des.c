@@ -1856,6 +1856,7 @@ int des3_test(void)
 void des_done(symmetric_key *skey)
 {
 }
+#endif
 
 /** Terminate the context 
    @param skey    The scheduled key
@@ -1865,6 +1866,7 @@ void des3_done(symmetric_key *skey)
 }
 
 
+#if 0
 /**
   Gets suitable key size
   @param keysize [in/out] The length of the recommended key (in bytes).  This function will store the suitable size back in this variable.

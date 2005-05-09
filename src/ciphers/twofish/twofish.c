@@ -578,7 +578,7 @@ void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
         b = RORc(b ^ (t2 + t1 + k[3]), 1);
 
         t2 = g1_func(b, skey);
-        t1 = g_func(a, key) + t2;
+        t1 = g_func(a, skey) + t2;
         c = ROLc(c, 1) ^ (t1 + k[0]);
         d = RORc(d ^ (t2 +  t1 + k[1]), 1);
         k -= 4;

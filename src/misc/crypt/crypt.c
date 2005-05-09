@@ -15,6 +15,7 @@
   Build strings, Tom St Denis
 */  
 
+/*
 const char *crypt_build_settings =
    "LibTomCrypt " SCRYPT " (Tom St Denis, tomstdenis@gmail.com)\n"
    "LibTomCrypt is public domain software.\n"
