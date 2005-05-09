@@ -125,7 +125,7 @@ algo_type sshkex[] = {
  * This should be run before using any of the ciphers/hashes */
 void crypto_init() {
 
-	const struct _cipher_descriptor *regciphers[] = {
+	const struct ltc_cipher_descriptor *regciphers[] = {
 #ifdef DROPBEAR_AES128_CBC
 		&aes_desc,
 #endif
@@ -141,7 +141,7 @@ void crypto_init() {
 		NULL
 	};
 
-	const struct _hash_descriptor *reghashes[] = {
+	const struct ltc_hash_descriptor *reghashes[] = {
 		/* we need sha1 for hostkey stuff regardless */
 		&sha1_desc,
 #ifdef DROPBEAR_MD5_HMAC

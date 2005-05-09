@@ -201,6 +201,7 @@ static void read_packet_init() {
 		/* decrypt it */
 		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
 					buf_getwriteptr(ses.decryptreadbuf,blocksize),
+					blocksize,
 					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
 			dropbear_exit("error decrypting");
 		}
@@ -254,6 +255,7 @@ void decrypt_packet() {
 		while (ses.readbuf->pos < ses.readbuf->len - macsize) {
 			if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
 						buf_getwriteptr(ses.decryptreadbuf, blocksize),
+						blocksize,
 						&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
 				dropbear_exit("error decrypting");
 			}
@@ -491,6 +493,7 @@ void encrypt_packet() {
 		while (clearwritebuf->pos < clearwritebuf->len) {
 			if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
 						buf_getwriteptr(writebuf, blocksize),
+						blocksize,
 						&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
 				dropbear_exit("error encrypting");
 			}

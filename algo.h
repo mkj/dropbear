@@ -51,13 +51,13 @@ extern const struct dropbear_cipher dropbear_nocipher;
 extern const struct dropbear_hash dropbear_nohash;
 
 struct dropbear_cipher {
-	const struct _cipher_descriptor *cipherdesc;
+	const struct ltc_cipher_descriptor *cipherdesc;
 	unsigned long keysize;
 	unsigned char blocksize;
 };
 
 struct dropbear_hash {
-	const struct _hash_descriptor *hashdesc;
+	const struct ltc_hash_descriptor *hashdesc;
 	unsigned long keysize;
 	unsigned char hashsize;
 };
