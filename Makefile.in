@@ -19,7 +19,7 @@ srcdir=@srcdir@
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
 # The rest of the flags come from the parent Dropbear makefile
-CFLAGS += -c -I$(srcdir)/src/headers/ -I$(srcdir)
+CFLAGS += -c -I$(srcdir)/src/headers/ -I$(srcdir)/../
 
 # additional warnings (newer GCC 3.4 and higher)
 #CFLAGS += -Wsystem-headers -Wdeclaration-after-statement -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wmissing-prototypes \
@@ -143,7 +143,9 @@ src/hashes/sha2/sha512.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha384.c
 src/hashes/sha2/sha256.o: src/hashes/sha2/sha256.c src/hashes/sha2/sha224.c
 
 #This rule makes the libtomcrypt library.
-library: $(LIBTEST) $(LIBNAME)
+#library: $(LIBTEST) $(LIBNAME)
+# Dropbear doesn't want test programs, since it relies on yarrow etc.
+library: $(LIBNAME)
 
 $(LIBTEST): 
 	cd testprof ; CFLAGS="$(CFLAGS)" make 
