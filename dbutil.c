@@ -430,10 +430,11 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 }
 
 #ifdef DEBUG_TRACE
-void printhex(unsigned char* buf, int len) {
+void printhex(const char * label, const unsigned char * buf, int len) {
 
 	int i;
 
+	fprintf(stderr, "%s\n", label);
 	for (i = 0; i < len; i++) {
 		fprintf(stderr, "%02x", buf[i]);
 		if (i % 16 == 15) {
