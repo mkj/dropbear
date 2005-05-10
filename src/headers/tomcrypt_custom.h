@@ -20,7 +20,7 @@
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
 
 #ifdef DROPBEAR_SMALL_CODE
-#define SMALL_CODE
+#define LTC_SMALL_CODE
 #endif
 
 /* Enable self-test test vector checking */
