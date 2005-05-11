@@ -2,32 +2,33 @@
 #
 #Tom St Denis
 
-#version of library 
-VERSION=0.35
+VPATH=@srcdir@
+srcdir=@srcdir@
 
-CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
+# Dropbear takes flags from the toplevel makefile
+CFLAGS += -I$(srcdir)
+
+#CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
 
 #for speed 
-CFLAGS += -O3 -funroll-all-loops
+#CFLAGS += -O3 -funroll-loops
 
 #for size 
 #CFLAGS += -Os
 
 #x86 optimizations [should be valid for any GCC install though]
-CFLAGS  += -fomit-frame-pointer
+#CFLAGS  += -fomit-frame-pointer
 
 #debug
 #CFLAGS += -g3
 
-#install as this user
-USER=root
-GROUP=root
+VERSION=0.32
 
 default: libtommath.a
 
 #default files to install
 LIBNAME=libtommath.a
-HEADERS=tommath.h tommath_class.h tommath_superclass.h
+HEADERS=tommath.h
 
 #LIBPATH-The directory for libtommath to be installed to.
 #INCPATH-The directory to install the header files for libtommath.
@@ -57,17 +58,16 @@ bn_mp_prime_is_prime.o bn_mp_prime_next_prime.o bn_mp_dr_reduce.o \
 bn_mp_dr_is_modulus.o bn_mp_dr_setup.o bn_mp_reduce_setup.o \
 bn_mp_toom_mul.o bn_mp_toom_sqr.o bn_mp_div_3.o bn_s_mp_exptmod.o \
 bn_mp_reduce_2k.o bn_mp_reduce_is_2k.o bn_mp_reduce_2k_setup.o \
-bn_mp_reduce_2k_l.o bn_mp_reduce_is_2k_l.o bn_mp_reduce_2k_setup_l.o \
 bn_mp_radix_smap.o bn_mp_read_radix.o bn_mp_toradix.o bn_mp_radix_size.o \
 bn_mp_fread.o bn_mp_fwrite.o bn_mp_cnt_lsb.o bn_error.o \
 bn_mp_init_multi.o bn_mp_clear_multi.o bn_mp_exteuclid.o bn_mp_toradix_n.o \
 bn_mp_prime_random_ex.o bn_mp_get_int.o bn_mp_sqrt.o bn_mp_is_square.o bn_mp_init_set.o \
-bn_mp_init_set_int.o bn_mp_invmod_slow.o bn_mp_prime_rabin_miller_trials.o \
-bn_mp_to_signed_bin_n.o bn_mp_to_unsigned_bin_n.o
+bn_mp_init_set_int.o bn_mp_invmod_slow.o bn_mp_prime_rabin_miller_trials.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
-	ranlib libtommath.a
+	$(RANLIB) libtommath.a
+
 
 #make a profiled library (takes a while!!!)
 #
@@ -93,19 +93,19 @@ profiled_single:
 	ranlib libtommath.a	
 
 install: libtommath.a
-	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
-	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(INCPATH)
-	install -g $(GROUP) -o $(USER) $(LIBNAME) $(DESTDIR)$(LIBPATH)
-	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
+	install -d -g root -o root $(DESTDIR)$(LIBPATH)
+	install -d -g root -o root $(DESTDIR)$(INCPATH)
+	install -g root -o root $(LIBNAME) $(DESTDIR)$(LIBPATH)
+	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
 
 test: libtommath.a demo/demo.o
-	$(CC) $(CFLAGS) demo/demo.o libtommath.a -o test
+	$(CC) demo/demo.o libtommath.a -o test
 	
 mtest: test	
-	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest
+	cd mtest ; $(CC) $(CFLAGS) mtest.c -o mtest -s
         
 timing: libtommath.a
-	$(CC) $(CFLAGS) -DTIMER demo/timing.c libtommath.a -o ltmtest
+	$(CC) $(CFLAGS) -DTIMER demo/timing.c libtommath.a -o ltmtest -s
 
 # makes the LTM book DVI file, requires tetex, perl and makeindex [part of tetex I think]
 docdvi: tommath.src
@@ -145,11 +145,11 @@ pretty:
 	perl pretty.build
 
 clean:
-	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
-        *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find -type f | grep [~] | xargs` *.lo *.la
-	rm -rf .libs
-	cd etc ; make clean
-	cd pics ; make clean
+	-rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
+        *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find . -type f | grep [~] | xargs` *.lo *.la
+	-rm -rf .libs
+	-cd etc && make clean
+	-cd pics && make clean
 
 zipup: clean manual poster docs
 	perl gen.pl ; mv mpi.c pre_gen/ ; \

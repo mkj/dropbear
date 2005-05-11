@@ -992,3 +992,9 @@
 #else
 #define LTM_LAST
 #endif
+
+/* Dropbear doesn't need these. */
+#undef BN_MP_KARATSUBA_MUL_C
+#undef BN_MP_KARATSUBA_SQR_C
+#undef BN_MP_TOOM_MUL_C
+#undef BN_MP_TOOM_SQR_C
