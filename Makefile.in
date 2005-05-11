@@ -5,16 +5,22 @@
 #version of library 
 VERSION=0.35
 
-CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
+VPATH=@srcdir@
+srcdir=@srcdir@
+
+# Dropbear takes flags from the toplevel makefile
+CFLAGS += -I$(srcdir)
+
+#CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
 
 #for speed 
-CFLAGS += -O3 -funroll-all-loops
+#CFLAGS += -O3 -funroll-all-loops
 
 #for size 
 #CFLAGS += -Os
 
 #x86 optimizations [should be valid for any GCC install though]
-CFLAGS  += -fomit-frame-pointer
+#CFLAGS  += -fomit-frame-pointer
 
 #debug
 #CFLAGS += -g3
@@ -67,7 +73,7 @@ bn_mp_to_signed_bin_n.o bn_mp_to_unsigned_bin_n.o
 
 libtommath.a:  $(OBJECTS)
 	$(AR) $(ARFLAGS) libtommath.a $(OBJECTS)
-	ranlib libtommath.a
+	$(RANLIB) libtommath.a
 
 #make a profiled library (takes a while!!!)
 #
@@ -148,8 +154,8 @@ clean:
 	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
         *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find -type f | grep [~] | xargs` *.lo *.la
 	rm -rf .libs
-	cd etc ; make clean
-	cd pics ; make clean
+	cd etc && make clean
+	cd pics && make clean
 
 zipup: clean manual poster docs
 	perl gen.pl ; mv mpi.c pre_gen/ ; \
