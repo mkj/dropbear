@@ -111,7 +111,7 @@
 #include <libgen.h>
 #endif
 
-#include "libtomcrypt/mycrypt.h"
+#include "libtomcrypt/src/headers/tomcrypt.h"
 #include "libtommath/tommath.h"
 
 #include "compat.h"

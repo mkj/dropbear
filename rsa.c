@@ -333,7 +333,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	mp_clear(&rsa_s);
 
 #if defined(DEBUG_RSA) && defined(DEBUG_TRACE)
-	printhex(buf->data, buf->len);
+	printhex("RSA sig", buf->data, buf->len);
 #endif
 	
 
@@ -357,10 +357,11 @@ static void rsa_pad_em(rsa_key * key,
 		mp_int * rsa_em) {
 
 	/* ASN1 designator (including the 0x00 preceding) */
-	const char rsa_asn1_magic[] = 
+	const unsigned char rsa_asn1_magic[] = 
 		{0x00, 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2b, 
 		 0x0e, 0x03, 0x02, 0x1a, 0x05, 0x00, 0x04, 0x14};
-#define RSA_ASN1_MAGIC_LEN 16
+	const unsigned int RSA_ASN1_MAGIC_LEN = 16;
+
 	buffer * rsa_EM = NULL;
 	hash_state hs;
 	unsigned int nsize;
