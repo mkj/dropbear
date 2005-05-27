@@ -862,8 +862,10 @@ static void execchild(struct ChanSess *chansess) {
 
 		if ((setgid(ses.authstate.pw->pw_gid) < 0) ||
 			(initgroups(ses.authstate.pw->pw_name, 
-						ses.authstate.pw->pw_gid) < 0) ||
-			(setuid(ses.authstate.pw->pw_uid) < 0)) {
+						ses.authstate.pw->pw_gid) < 0)) {
+			dropbear_exit("error changing user group");
+		}
+		if (setuid(ses.authstate.pw->pw_uid) < 0) {
 			dropbear_exit("error changing user");
 		}
 	} else {
