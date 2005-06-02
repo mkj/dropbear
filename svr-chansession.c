@@ -837,7 +837,7 @@ static void execchild(struct ChanSess *chansess) {
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
-	for (i = 3; i < (unsigned int)ses.maxfd; i++) {
+	for (i = 3; i <= (unsigned int)ses.maxfd; i++) {
 		if (m_close(i) == DROPBEAR_FAILURE) {
 			dropbear_exit("Error closing file desc");
 		}
