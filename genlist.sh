@@ -4,3 +4,7 @@ export a=`echo -n "src/ciphers/aes/aes_enc.o *(MPIOBJECT) " ; find . -type f | s
 perl ./parsenames.pl OBJECTS "$a"
 export a=`find . -type f | grep [.]/src | grep [.]h | sed -e 'se\./ee' | xargs`
 perl ./parsenames.pl HEADERS "$a"
+
+# $Source: /cvs/libtom/libtomcrypt/genlist.sh,v $   
+# $Revision: 1.3 $   
+# $Date: 2005/05/05 14:49:27 $ 

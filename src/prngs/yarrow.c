@@ -186,6 +186,7 @@ int yarrow_ready(prng_state *prng)
                         prng->yarrow.pool,       /* IV */
                         prng->yarrow.pool, ks,   /* KEY and key size */
                         0,                       /* number of rounds */
+                        CTR_COUNTER_LITTLE_ENDIAN, /* little endian counter */
                         &prng->yarrow.ctr)) != CRYPT_OK) {
       return err;
    }
@@ -310,3 +311,7 @@ int yarrow_test(void)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/prngs/yarrow.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

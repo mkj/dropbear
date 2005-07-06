@@ -53,3 +53,7 @@ int ecb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ecb/ecb_encrypt.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

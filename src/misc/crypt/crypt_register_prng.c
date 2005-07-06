@@ -27,8 +27,10 @@ int register_prng(const struct ltc_prng_descriptor *prng)
    LTC_ARGCHK(prng != NULL);
 
    /* is it already registered? */
+   LTC_MUTEX_LOCK(&ltc_prng_mutex);
    for (x = 0; x < TAB_SIZE; x++) {
        if (memcmp(&prng_descriptor[x], prng, sizeof(struct ltc_prng_descriptor)) == 0) {
+          LTC_MUTEX_UNLOCK(&ltc_prng_mutex);
           return x;
        }
    }
@@ -37,10 +39,16 @@ int register_prng(const struct ltc_prng_descriptor *prng)
    for (x = 0; x < TAB_SIZE; x++) {
        if (prng_descriptor[x].name == NULL) {
           XMEMCPY(&prng_descriptor[x], prng, sizeof(struct ltc_prng_descriptor));
+          LTC_MUTEX_UNLOCK(&ltc_prng_mutex);
           return x;
        }
    }
 
    /* no spot */
+   LTC_MUTEX_UNLOCK(&ltc_prng_mutex);
    return -1;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_register_prng.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/06/19 18:00:28 $ */

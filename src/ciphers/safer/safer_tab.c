@@ -62,3 +62,7 @@ const unsigned char safer_lbox[256] = {
 #endif
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/safer/safer_tab.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

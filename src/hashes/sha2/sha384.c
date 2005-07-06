@@ -20,11 +20,9 @@ const struct ltc_hash_descriptor sha384_desc =
     48,
     128,
 
-    /* DER identifier */
-    { 0x30, 0x41, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 
-      0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x02, 0x05, 
-      0x00, 0x04, 0x30 },
-    19,
+    /* OID */
+   { 2, 16, 840, 1, 101, 3, 4, 2, 2,  },
+   9,
 
     &sha384_init,
     &sha512_process,
@@ -130,3 +128,7 @@ int  sha384_test(void)
 
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha384.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

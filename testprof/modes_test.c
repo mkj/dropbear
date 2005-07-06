@@ -19,7 +19,7 @@ int modes_test(void)
    /* get idx of AES handy */
    cipher_idx = find_cipher("aes");
    if (cipher_idx == -1) {
-      printf("test requires AES");
+      fprintf(stderr, "test requires AES");
       return 1;
    }
    
@@ -30,7 +30,7 @@ int modes_test(void)
    l = sizeof(iv2);
    DO(cbc_getiv(iv2, &l, &cbc));
    if (l != 16 || memcmp(iv2, iv, 16)) {
-      printf("cbc_getiv failed");
+      fprintf(stderr, "cbc_getiv failed");
       return 1;
    }
    DO(cbc_encrypt(pt, ct, 64, &cbc));
@@ -40,7 +40,7 @@ int modes_test(void)
    zeromem(tmp, sizeof(tmp));
    DO(cbc_decrypt(ct, tmp, 64, &cbc));
    if (memcmp(tmp, pt, 64) != 0) {
-      printf("CBC failed");
+      fprintf(stderr, "CBC failed");
       return 1;
    }
 #endif
@@ -53,7 +53,7 @@ int modes_test(void)
    DO(cfb_getiv(iv2, &l, &cfb));
    /* note we don't memcmp iv2/iv since cfb_start processes the IV for the first block */
    if (l != 16) {
-      printf("cfb_getiv failed");
+      fprintf(stderr, "cfb_getiv failed");
       return 1;
    }
    DO(cfb_encrypt(pt, ct, 64, &cfb));
@@ -63,7 +63,7 @@ int modes_test(void)
    zeromem(tmp, sizeof(tmp));
    DO(cfb_decrypt(ct, tmp, 64, &cfb));
    if (memcmp(tmp, pt, 64) != 0) {
-      printf("CFB failed");
+      fprintf(stderr, "CFB failed");
       return 1;
    }
 #endif
@@ -75,7 +75,7 @@ int modes_test(void)
    l = sizeof(iv2);
    DO(ofb_getiv(iv2, &l, &ofb));
    if (l != 16 || memcmp(iv2, iv, 16)) {
-      printf("ofb_getiv failed");
+      fprintf(stderr, "ofb_getiv failed");
       return 1;
    }
    DO(ofb_encrypt(pt, ct, 64, &ofb));
@@ -85,7 +85,7 @@ int modes_test(void)
    zeromem(tmp, sizeof(tmp));
    DO(ofb_decrypt(ct, tmp, 64, &ofb));
    if (memcmp(tmp, pt, 64) != 0) {
-      printf("OFB failed");
+      fprintf(stderr, "OFB failed");
       return 1;
    }
 #endif
@@ -93,11 +93,11 @@ int modes_test(void)
 #ifdef CTR   
    /* test CTR mode */
    /* encode the block */
-   DO(ctr_start(cipher_idx, iv, key, 16, 0, &ctr));
+   DO(ctr_start(cipher_idx, iv, key, 16, 0, CTR_COUNTER_LITTLE_ENDIAN, &ctr));
    l = sizeof(iv2);
    DO(ctr_getiv(iv2, &l, &ctr));
    if (l != 16 || memcmp(iv2, iv, 16)) {
-      printf("ctr_getiv failed");
+      fprintf(stderr, "ctr_getiv failed");
       return 1;
    }
    DO(ctr_encrypt(pt, ct, 57, &ctr));
@@ -107,10 +107,14 @@ int modes_test(void)
    zeromem(tmp, sizeof(tmp));
    DO(ctr_decrypt(ct, tmp, 57, &ctr));
    if (memcmp(tmp, pt, 57) != 0) {
-      printf("CTR failed");
+      fprintf(stderr, "CTR failed");
       return 1;
    }
 #endif
          
    return 0;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/modes_test.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/21 12:51:25 $ */

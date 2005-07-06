@@ -39,3 +39,7 @@ int ofb_getiv(unsigned char *IV, unsigned long *len, symmetric_OFB *ofb)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ofb/ofb_getiv.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

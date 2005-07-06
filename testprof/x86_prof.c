@@ -21,10 +21,10 @@ void tally_results(int type)
    // qsort the results
    qsort(results, no_results, sizeof(struct list), &sorter);
 
-   printf("\n");
+   fprintf(stderr, "\n");
    if (type == 0) {
       for (x = 0; x < no_results; x++) {
-         printf("%-20s: Schedule at %6lu\n", cipher_descriptor[results[x].id].name, (unsigned long)results[x].spd1);
+         fprintf(stderr, "%-20s: Schedule at %6lu\n", cipher_descriptor[results[x].id].name, (unsigned long)results[x].spd1);
       } 
    } else if (type == 1) {
       for (x = 0; x < no_results; x++) {
@@ -42,7 +42,7 @@ void tally_results(int type)
 /* RDTSC from Scott Duplichan */
 ulong64 rdtsc (void)
    {
-   #if defined __GNUC__
+   #if defined __GNUC__ && !defined(LTC_NO_ASM)
       #ifdef INTEL_CC
 			ulong64 a;
 			asm ( " rdtsc ":"=A"(a));
@@ -62,11 +62,11 @@ ulong64 rdtsc (void)
       #endif
 
    // Microsoft and Intel Windows compilers
-   #elif defined _M_IX86
+   #elif defined _M_IX86 && !defined(LTC_NO_ASM)
      __asm rdtsc
-   #elif defined _M_AMD64
+   #elif defined _M_AMD64 && !defined(LTC_NO_ASM)
      return __rdtsc ();
-   #elif defined _M_IA64
+   #elif defined _M_IA64 && !defined(LTC_NO_ASM)
      #if defined __INTEL_COMPILER
        #include <ia64intrin.h>
      #endif
@@ -104,7 +104,7 @@ void init_timer(void)
       c2 = (t2 > c2) ? t2 : c2;
    }
    skew = c2 - c1;
-   printf("Clock Skew: %lu\n", (unsigned long)skew);
+   fprintf(stderr, "Clock Skew: %lu\n", (unsigned long)skew);
 }
 
 void reg_algs(void)
@@ -199,7 +199,7 @@ void reg_algs(void)
 #ifdef CHC_HASH
   register_hash(&chc_desc);
   if ((err = chc_register(register_cipher(&aes_desc))) != CRYPT_OK) {
-     printf("chc_register error: %s\n", error_to_string(err));
+     fprintf(stderr, "chc_register error: %s\n", error_to_string(err));
      exit(EXIT_FAILURE);
   }
 #endif
@@ -231,7 +231,7 @@ int time_keysched(void)
   int    (*func) (const unsigned char *, int , int , symmetric_key *);
   unsigned char key[MAXBLOCKSIZE];
 
-  printf ("\n\nKey Schedule Time Trials for the Symmetric Ciphers:\n(Times are cycles per key)\n");
+  fprintf(stderr, "\n\nKey Schedule Time Trials for the Symmetric Ciphers:\n(Times are cycles per key)\n");
   no_results = 0; 
  for (x = 0; cipher_descriptor[x].name != NULL; x++) {
 #define DO1(k)   func(k, kl, 0, &skey);
@@ -249,7 +249,7 @@ int time_keysched(void)
     t1 = c1 - skew;
     results[no_results].spd1 = results[no_results].avg = t1;
     results[no_results++].id = x;
-    printf("."); fflush(stdout);
+    fprintf(stderr, "."); fflush(stdout);
 
 #undef DO1
    }
@@ -266,7 +266,7 @@ int time_cipher(void)
   unsigned char key[MAXBLOCKSIZE], pt[4096];
   int err;
 
-  printf ("\n\nECB Time Trials for the Symmetric Ciphers:\n");
+  fprintf(stderr, "\n\nECB Time Trials for the Symmetric Ciphers:\n");
   no_results = 0;
   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
     ecb_start(x, key, cipher_descriptor[x].min_key_length, 0, &ecb);
@@ -318,7 +318,7 @@ int time_cipher(void)
     results[no_results].spd2 = a2/(sizeof(pt)/cipher_descriptor[x].block_length);
     results[no_results].avg = (results[no_results].spd1 + results[no_results].spd2+1)/2;
     ++no_results;
-    printf("."); fflush(stdout);
+    fprintf(stderr, "."); fflush(stdout);
     
 #undef DO2
 #undef DO1
@@ -337,7 +337,7 @@ int time_cipher2(void)
   unsigned char key[MAXBLOCKSIZE], pt[4096];
   int err;
 
-  printf ("\n\nCBC Time Trials for the Symmetric Ciphers:\n");
+  fprintf(stderr, "\n\nCBC Time Trials for the Symmetric Ciphers:\n");
   no_results = 0;
   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
     cbc_start(x, pt, key, cipher_descriptor[x].min_key_length, 0, &cbc);
@@ -389,7 +389,7 @@ int time_cipher2(void)
     results[no_results].spd2 = a2/(sizeof(pt)/cipher_descriptor[x].block_length);
     results[no_results].avg = (results[no_results].spd1 + results[no_results].spd2+1)/2;
     ++no_results;
-    printf("."); fflush(stdout);
+    fprintf(stderr, "."); fflush(stdout);
     
 #undef DO2
 #undef DO1
@@ -399,7 +399,7 @@ int time_cipher2(void)
    return 0;
 }
 #else
-int time_cipher2(void) { printf("NO CBC\n"); return 0; }
+int time_cipher2(void) { fprintf(stderr, "NO CBC\n"); return 0; }
 #endif
 
 #ifdef CTR
@@ -411,10 +411,10 @@ int time_cipher3(void)
   unsigned char key[MAXBLOCKSIZE], pt[4096];
   int err;
 
-  printf ("\n\nCTR Time Trials for the Symmetric Ciphers:\n");
+  fprintf(stderr, "\n\nCTR Time Trials for the Symmetric Ciphers:\n");
   no_results = 0;
   for (x = 0; cipher_descriptor[x].name != NULL; x++) {
-    ctr_start(x, pt, key, cipher_descriptor[x].min_key_length, 0, &ctr);
+    ctr_start(x, pt, key, cipher_descriptor[x].min_key_length, 0, CTR_COUNTER_LITTLE_ENDIAN, &ctr);
 
     /* sanity check on cipher */
     if ((err = cipher_descriptor[x].test()) != CRYPT_OK) {
@@ -463,7 +463,7 @@ int time_cipher3(void)
     results[no_results].spd2 = a2/(sizeof(pt)/cipher_descriptor[x].block_length);
     results[no_results].avg = (results[no_results].spd1 + results[no_results].spd2+1)/2;
     ++no_results;
-    printf("."); fflush(stdout);
+    fprintf(stderr, "."); fflush(stdout);
     
 #undef DO2
 #undef DO1
@@ -473,7 +473,7 @@ int time_cipher3(void)
    return 0;
 }
 #else
-int time_cipher3(void) { printf("NO CTR\n"); return 0; }
+int time_cipher3(void) { fprintf(stderr, "NO CTR\n"); return 0; }
 #endif
 
 int time_hash(void)
@@ -485,7 +485,7 @@ int time_hash(void)
   unsigned char pt[MAXBLOCKSIZE];
 
 
-  printf ("\n\nHASH Time Trials for:\n");
+  fprintf(stderr, "\n\nHASH Time Trials for:\n");
   no_results = 0;
   for (x = 0; hash_descriptor[x].name != NULL; x++) {
 
@@ -518,7 +518,7 @@ int time_hash(void)
     results[no_results].id = x;
     results[no_results].spd1 = results[no_results].avg = t1;
     ++no_results;
-    printf("."); fflush(stdout);
+    fprintf(stderr, "."); fflush(stdout);
 #undef DO2
 #undef DO1
    }
@@ -534,7 +534,7 @@ void time_mult(void)
    unsigned long x, y;
    mp_int  a, b, c;
 
-   printf("Timing Multiplying:\n");
+   fprintf(stderr, "Timing Multiplying:\n");
    mp_init_multi(&a,&b,&c,NULL);
    for (x = 128/DIGIT_BIT; x <= 1536/DIGIT_BIT; x += 128/DIGIT_BIT) {
        mp_rand(&a, x);
@@ -551,7 +551,7 @@ void time_mult(void)
            t1 = (t_read() - t1)>>1;
            if (t1 < t2) t2 = t1;
        }
-       printf("%4lu bits: %9llu cycles\n", x*DIGIT_BIT, t2);
+       fprintf(stderr, "%4lu bits: %9llu cycles\n", x*DIGIT_BIT, t2);
    }
    mp_clear_multi(&a,&b,&c,NULL);
 
@@ -565,7 +565,7 @@ void time_sqr(void)
    unsigned long x, y;
    mp_int  a, b;
 
-   printf("Timing Squaring:\n");
+   fprintf(stderr, "Timing Squaring:\n");
    mp_init_multi(&a,&b,NULL);
    for (x = 128/DIGIT_BIT; x <= 1536/DIGIT_BIT; x += 128/DIGIT_BIT) {
        mp_rand(&a, x);
@@ -581,7 +581,7 @@ void time_sqr(void)
            t1 = (t_read() - t1)>>1;
            if (t1 < t2) t2 = t1;
        }
-       printf("%4lu bits: %9llu cycles\n", x*DIGIT_BIT, t2);
+       fprintf(stderr, "%4lu bits: %9llu cycles\n", x*DIGIT_BIT, t2);
    }
    mp_clear_multi(&a,&b,NULL);
 
@@ -589,8 +589,8 @@ void time_sqr(void)
 #undef DO2
 }
 #else
-void time_mult(void) { printf("NO MULT\n"); }
-void time_sqr(void) { printf("NO SQR\n"); }
+void time_mult(void) { fprintf(stderr, "NO MULT\n"); }
+void time_sqr(void) { fprintf(stderr, "NO SQR\n"); }
 #endif
    
 void time_prng(void)
@@ -601,7 +601,7 @@ void time_prng(void)
    unsigned long x, y;
    int           err;
 
-   printf("Timing PRNGs (cycles/byte output, cycles add_entropy (32 bytes) :\n");
+   fprintf(stderr, "Timing PRNGs (cycles/byte output, cycles add_entropy (32 bytes) :\n");
    for (x = 0; prng_descriptor[x].name != NULL; x++) {
 
       /* sanity check on prng */
@@ -616,7 +616,7 @@ void time_prng(void)
       prng_descriptor[x].ready(&tprng);
       t2 = -1;
 
-#define DO1 if (prng_descriptor[x].read(buf, 4096, &tprng) != 4096) { printf("\n\nERROR READ != 4096\n\n"); exit(EXIT_FAILURE); }
+#define DO1 if (prng_descriptor[x].read(buf, 4096, &tprng) != 4096) { fprintf(stderr, "\n\nERROR READ != 4096\n\n"); exit(EXIT_FAILURE); }
 #define DO2 DO1 DO1
       for (y = 0; y < 10000; y++) {
          t_start();
@@ -625,7 +625,7 @@ void time_prng(void)
          t1 = (t_read() - t1)>>1;
          if (t1 < t2) t2 = t1;
       }
-      printf("%20s: %5llu ", prng_descriptor[x].name, t2>>12);
+      fprintf(stderr, "%20s: %5llu ", prng_descriptor[x].name, t2>>12);
 #undef DO2
 #undef DO1
 
@@ -638,7 +638,7 @@ void time_prng(void)
          t1 = (t_read() - t1)>>1;
          if (t1 < t2) t2 = t1;
       }
-      printf("%5llu\n", t2);
+      fprintf(stderr, "%5llu\n", t2);
 #undef DO2
 #undef DO1
 
@@ -672,7 +672,7 @@ void time_rsa(void)
            }
        }
        t2 >>= 4;
-       printf("RSA-%lu make_key    took %15llu cycles\n", x, t2);
+       fprintf(stderr, "RSA-%lu make_key    took %15llu cycles\n", x, t2);
 
        t2 = 0;
        for (y = 0; y < 16; y++) {
@@ -689,7 +689,7 @@ void time_rsa(void)
            t2 += t1;
        }
        t2 >>= 4;
-       printf("RSA-%lu encrypt_key took %15llu cycles\n", x, t2);
+       fprintf(stderr, "RSA-%lu encrypt_key took %15llu cycles\n", x, t2);
 
        t2 = 0;
        for (y = 0; y < 16; y++) {
@@ -705,14 +705,14 @@ void time_rsa(void)
            t2 += t1;
        }
        t2 >>= 4;
-       printf("RSA-%lu decrypt_key took %15llu cycles\n", x, t2);
+       fprintf(stderr, "RSA-%lu decrypt_key took %15llu cycles\n", x, t2);
 
 
        rsa_free(&key);
   }
 }
 #else
-void time_rsa(void) { printf("NO RSA\n"); }
+void time_rsa(void) { fprintf(stderr, "NO RSA\n"); }
 #endif
 
 #ifdef MECC
@@ -724,7 +724,7 @@ void time_ecc(void)
    unsigned char buf[2][4096];
    unsigned long i, x, y, z;
    int           err;
-   static unsigned long sizes[] = {160/8, 256/8, 521/8, 100000};
+   static unsigned long sizes[] = {192/8, 256/8, 384/8, 521/8, 100000};
 
    for (x = sizes[i=0]; x < 100000; x = sizes[++i]) {
        t2 = 0;
@@ -743,7 +743,7 @@ void time_ecc(void)
            }
        }
        t2 >>= 4;
-       printf("ECC-%lu make_key    took %15llu cycles\n", x*8, t2);
+       fprintf(stderr, "ECC-%lu make_key    took %15llu cycles\n", x*8, t2);
 
        t2 = 0;
        for (y = 0; y < 16; y++) {
@@ -759,12 +759,12 @@ void time_ecc(void)
            t2 += t1;
        }
        t2 >>= 4;
-       printf("ECC-%lu encrypt_key took %15llu cycles\n", x*8, t2);
+       fprintf(stderr, "ECC-%lu encrypt_key took %15llu cycles\n", x*8, t2);
        ecc_free(&key);
   }
 }
 #else
-void time_ecc(void) { printf("NO ECC\n"); }
+void time_ecc(void) { fprintf(stderr, "NO ECC\n"); }
 #endif
 
 #ifdef MDH
@@ -795,7 +795,7 @@ void time_dh(void)
            }
        }
        t2 >>= 4;
-       printf("DH-%4lu make_key    took %15llu cycles\n", x*8, t2);
+       fprintf(stderr, "DH-%4lu make_key    took %15llu cycles\n", x*8, t2);
 
        t2 = 0;
        for (y = 0; y < 16; y++) {
@@ -811,12 +811,12 @@ void time_dh(void)
            t2 += t1;
        }
        t2 >>= 4;
-       printf("DH-%4lu encrypt_key took %15llu cycles\n", x*8, t2);
+       fprintf(stderr, "DH-%4lu encrypt_key took %15llu cycles\n", x*8, t2);
        dh_free(&key);
   }
 }
 #else
-void time_dh(void) { printf("NO DH\n"); }
+void time_dh(void) { fprintf(stderr, "NO DH\n"); }
 #endif
 
 void time_macs_(unsigned long MAC_SIZE)
@@ -826,7 +826,7 @@ void time_macs_(unsigned long MAC_SIZE)
    unsigned long x, z;
    int err, cipher_idx, hash_idx;
 
-   printf("\nMAC Timings (cycles/byte on %dKB blocks):\n", MAC_SIZE);
+   fprintf(stderr, "\nMAC Timings (cycles/byte on %luKB blocks):\n", MAC_SIZE);
 
    buf = XMALLOC(MAC_SIZE*1024);
    if (buf == NULL) {
@@ -853,7 +853,7 @@ void time_macs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("OMAC-AES\t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "OMAC-AES\t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef PMAC
@@ -869,7 +869,7 @@ void time_macs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("PMAC-AES\t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "PMAC-AES\t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef PELICAN
@@ -885,7 +885,7 @@ void time_macs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("PELICAN \t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "PELICAN \t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef HMAC
@@ -901,7 +901,7 @@ void time_macs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("HMAC-MD5\t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "HMAC-MD5\t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
    XFREE(buf);
@@ -921,7 +921,7 @@ void time_encmacs_(unsigned long MAC_SIZE)
    unsigned long x, z;
    int err, cipher_idx;
 
-   printf("\nENC+MAC Timings (zero byte AAD, 16 byte IV, cycles/byte on %dKB blocks):\n", MAC_SIZE);
+   fprintf(stderr, "\nENC+MAC Timings (zero byte AAD, 16 byte IV, cycles/byte on %luKB blocks):\n", MAC_SIZE);
 
    buf = XMALLOC(MAC_SIZE*1024);
    if (buf == NULL) {
@@ -948,7 +948,7 @@ void time_encmacs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("EAX \t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "EAX \t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef OCB_MODE
@@ -964,7 +964,7 @@ void time_encmacs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("OCB \t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "OCB \t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef CCM_MODE
@@ -980,7 +980,7 @@ void time_encmacs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("CCM \t\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "CCM \t\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 #endif
 
 #ifdef GCM_MODE
@@ -996,12 +996,12 @@ void time_encmacs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("GCM (no-precomp)\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "GCM (no-precomp)\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
 
    {
    gcm_state gcm;
 
-   if ((err = gcm_init(&gcm, cipher_idx, key, 16)) != CRYPT_OK) { printf("gcm_init: %s\n", error_to_string(err)); exit(EXIT_FAILURE); }
+   if ((err = gcm_init(&gcm, cipher_idx, key, 16)) != CRYPT_OK) { fprintf(stderr, "gcm_init: %s\n", error_to_string(err)); exit(EXIT_FAILURE); }
    t2 = -1;
    for (x = 0; x < 10000; x++) {
         t_start();
@@ -1031,7 +1031,7 @@ void time_encmacs_(unsigned long MAC_SIZE)
         t1 = t_read() - t1;
         if (t1 < t2) t2 = t1;
    }
-   printf("GCM (precomp)\t%9llu\n", t2/(MAC_SIZE*1024));
+   fprintf(stderr, "GCM (precomp)\t%9llu\n", t2/(ulong64)(MAC_SIZE*1024));
    }
 
 #endif
@@ -1044,3 +1044,7 @@ void time_encmacs(void)
    time_encmacs_(4);
    time_encmacs_(32);
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/x86_prof.c,v $ */
+/* $Revision: 1.16 $ */
+/* $Date: 2005/06/14 20:44:23 $ */

@@ -18,7 +18,7 @@
 #ifdef MRSA
 
 /**
-  Import an RSAPublicKey or RSAPrivateKey [two-prime only, defined in PKCS #1 v2.1]
+  Import an RSAPublicKey or RSAPrivateKey [two-prime only, only support >= 1024-bit keys, defined in PKCS #1 v2.1]
   @param in      The packet to import from
   @param inlen   It's length (octets)
   @param key     [out] Destination for newly imported key
@@ -26,65 +26,39 @@
 */
 int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
 {
-   unsigned long x, y;
-   int err;
+   int           err;
+   mp_int        zero;
 
    LTC_ARGCHK(in  != NULL);
    LTC_ARGCHK(key != NULL);
 
    /* init key */
-   if ((err = mp_init_multi(&key->e, &key->d, &key->N, &key->dQ, &key->dP, &key->qP,
-                     &key->p, &key->q, NULL)) != MP_OKAY) {
+   if ((err = mp_init_multi(&zero, &key->e, &key->d, &key->N, &key->dQ, 
+                            &key->dP, &key->qP, &key->p, &key->q, NULL)) != MP_OKAY) {
       return mpi_to_ltc_error(err);
    }
 
-   /* check the header */
-   if (inlen < 4) {
-      return CRYPT_INVALID_PACKET;
-   }
-
-   /* should be 0x30 0x8{1|2} LL LL */
-   if ((in[0] != 0x30) || ((in[1] != 0x81) && (in[1] != 0x82))) {
-      return CRYPT_INVALID_PACKET;
-   }
-
-   /* ok all the ASN.1 params are fine so far, let's move up */
-   x = ((unsigned long)in[2]);
-   y = 0;
-   if ((in[1] & ~0x80) == 2) {
-      x   = (x << 8) + ((unsigned long)in[3]) + 1;
-      in += 1;
-      y   = 1;
-   }
-   in += 3; /* advance input */
-   x  += 3; /* size of packet according to header */
-   y  += 3; /* used input */
-
-   if (x != inlen) {
-      return CRYPT_INVALID_PACKET;
-   }
-   
-   /* decrement inlen by the header size */
-   inlen -= y;
-
-   /* read first number, it's either N or 0 [0 == private key] */
-   x = inlen;
-   if ((err = der_get_multi_integer(in, &x, &key->N, NULL)) != CRYPT_OK) {
+   if ((err = der_decode_sequence_multi(in, inlen, 
+                                  LTC_ASN1_INTEGER, 1UL, &key->N, 
+                                  LTC_ASN1_EOL,     0UL, NULL)) != CRYPT_OK) {
       goto LBL_ERR;
    }
 
-   /* advance */
-   inlen -= x;
-   in    += x;
-
    if (mp_cmp_d(&key->N, 0) == MP_EQ) {
       /* it's a private key */
-      if ((err = der_get_multi_integer(in, &inlen, &key->N, &key->e,
-                          &key->d, &key->p, &key->q, &key->dP,
-                          &key->dQ, &key->qP, NULL)) != CRYPT_OK) {
+      if ((err = der_decode_sequence_multi(in, inlen, 
+                          LTC_ASN1_INTEGER, 1UL, &zero, 
+                          LTC_ASN1_INTEGER, 1UL, &key->N, 
+                          LTC_ASN1_INTEGER, 1UL, &key->e,
+                          LTC_ASN1_INTEGER, 1UL, &key->d, 
+                          LTC_ASN1_INTEGER, 1UL, &key->p, 
+                          LTC_ASN1_INTEGER, 1UL, &key->q, 
+                          LTC_ASN1_INTEGER, 1UL, &key->dP,
+                          LTC_ASN1_INTEGER, 1UL, &key->dQ, 
+                          LTC_ASN1_INTEGER, 1UL, &key->qP, 
+                          LTC_ASN1_EOL,     0UL, NULL)) != CRYPT_OK) {
          goto LBL_ERR;
       }
-
       key->type = PK_PRIVATE;
    } else if (mp_cmp_d(&key->N, 1) == MP_EQ) {
       /* we don't support multi-prime RSA */
@@ -92,21 +66,27 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
       goto LBL_ERR;
    } else {
       /* it's a public key and we lack e */
-      if ((err = der_get_multi_integer(in, &inlen, &key->e, NULL)) != CRYPT_OK) {
+      if ((err = der_decode_sequence_multi(in, inlen, 
+                                     LTC_ASN1_INTEGER, 1UL, &key->N, 
+                                     LTC_ASN1_INTEGER, 1UL, &key->e, 
+                                     LTC_ASN1_EOL,     0UL, NULL)) != CRYPT_OK) {
          goto LBL_ERR;
       }
 
       /* free up some ram */
       mp_clear_multi(&key->p, &key->q, &key->qP, &key->dP, &key->dQ, NULL);
-
       key->type = PK_PUBLIC;
    }
    return CRYPT_OK;
 LBL_ERR:
-   mp_clear_multi(&key->d, &key->e, &key->N, &key->dQ, &key->dP,
+   mp_clear_multi(&zero, &key->d, &key->e, &key->N, &key->dQ, &key->dP,
                   &key->qP, &key->p, &key->q, NULL);
    return err;
 }
 
 #endif /* MRSA */
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_import.c,v $ */
+/* $Revision: 1.10 $ */
+/* $Date: 2005/06/03 18:48:28 $ */

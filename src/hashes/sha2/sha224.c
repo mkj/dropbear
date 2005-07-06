@@ -20,9 +20,9 @@ const struct ltc_hash_descriptor sha224_desc =
     28,
     64,
 
-    /* DER identifier (not supported) */
-    { 0x00 },
-    0,
+    /* OID */
+   { 2, 16, 840, 1, 101, 3, 4, 2, 4,  },
+   9,
 
     &sha224_init,
     &sha256_process,
@@ -118,3 +118,7 @@ int  sha224_test(void)
  #endif
 }
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha224.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

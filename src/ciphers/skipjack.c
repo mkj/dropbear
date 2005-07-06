@@ -329,3 +329,7 @@ int skipjack_keysize(int *keysize)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/skipjack.c,v $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

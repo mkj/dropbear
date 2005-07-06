@@ -113,3 +113,7 @@ void register_algs(void)
 #endif
 
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/demos/hashsum.c,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:56 $ */

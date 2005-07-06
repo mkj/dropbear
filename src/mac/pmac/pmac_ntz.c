@@ -33,3 +33,7 @@ int pmac_ntz(unsigned long x)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_ntz.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

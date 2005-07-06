@@ -1,4 +1,4 @@
-CFLAGS += -I../src/headers -I./ -O3 -xP -ip 
+CFLAGS += -I../src/headers -I./ 
 CC=icc
 
 OBJECTS = base64_test.o cipher_hash_test.o der_tests.o dh_tests.o                        \

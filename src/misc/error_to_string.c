@@ -68,3 +68,7 @@ const char *error_to_string(int err)
    }   
 }
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/error_to_string.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

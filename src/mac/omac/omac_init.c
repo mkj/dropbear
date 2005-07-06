@@ -39,7 +39,7 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
    }
 
 #ifdef LTC_FAST
-   if (16 % sizeof(LTC_FAST_TYPE)) {
+   if (cipher_descriptor[cipher].block_length % sizeof(LTC_FAST_TYPE)) {
        return CRYPT_INVALID_ARG;
    }
 #endif
@@ -93,3 +93,7 @@ int omac_init(omac_state *omac, int cipher, const unsigned char *key, unsigned l
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_init.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/06/06 10:22:44 $ */

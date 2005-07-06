@@ -36,3 +36,7 @@ int cbc_done(symmetric_CBC *cbc)
    
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_done.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

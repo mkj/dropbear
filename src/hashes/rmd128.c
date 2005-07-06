@@ -30,9 +30,9 @@ const struct ltc_hash_descriptor rmd128_desc =
     16,
     64,
 
-    /* DER identifier (not supported) */
-    { 0x00 },
-    0,
+    /* OID */
+   { 1, 0, 10118, 3, 0, 50 },
+   6,
 
     &rmd128_init,
     &rmd128_process,
@@ -403,3 +403,7 @@ int rmd128_test(void)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/rmd128.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

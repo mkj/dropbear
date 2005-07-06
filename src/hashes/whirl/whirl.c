@@ -25,9 +25,9 @@ const struct ltc_hash_descriptor whirlpool_desc =
     64,
     64,
 
-    /* DER encoding (not yet supported) */
-    { 0x00 },
-    0,
+   /* OID */
+   { 1, 0, 10118, 3, 0, 55 },
+   6,
 
     &whirlpool_init,
     &whirlpool_process,
@@ -307,3 +307,7 @@ int  whirlpool_test(void)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/whirl/whirl.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

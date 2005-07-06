@@ -4,7 +4,7 @@
 # Modified by Clay Culver
 
 # The version
-VERSION=1.02
+VERSION=1.05
 
 # Compiler and Linker Names
 #CC=gcc
@@ -21,6 +21,8 @@ CFLAGS += -c -I./testprof/ -I./src/headers/ -Wall -Wsign-compare -W -Wshadow -Wn
 #CFLAGS += -Wsystem-headers -Wdeclaration-after-statement -Wbad-function-cast -Wcast-align -Wstrict-prototypes -Wmissing-prototypes \
 #		  -Wmissing-declarations -Wpointer-arith 
 
+ifndef IGNORE_SPEED
+
 # optimize for SPEED
 CFLAGS += -O3 -funroll-loops
 
@@ -29,6 +31,8 @@ CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
 #CFLAGS += -Os -DLTC_SMALL_CODE
+
+endif
 
 # older GCCs can't handle the "rotate with immediate" ROLc/RORc/etc macros
 # define this to help
@@ -58,13 +62,24 @@ INCPATH=/usr/include
 DATAPATH=/usr/share/doc/libtomcrypt/pdf
 
 #Who do we install as?
+ifdef INSTALL_USER
+USER=$(INSTALL_USER)
+else
 USER=root
+endif
+
+ifdef INSTALL_GROUP
+GROUP=$(INSTALL_GROUP)
+else
 GROUP=wheel
+endif
 
 #List of objects to compile.
 
 #Leave MPI built-in or force developer to link against libtommath?
+ifndef IGNORE_MPI
 MPIOBJECT=src/misc/mpi/mpi.o
+endif
 
 OBJECTS=src/ciphers/aes/aes_enc.o $(MPIOBJECT) src/ciphers/aes/aes.o src/ciphers/anubis.o \
 src/ciphers/blowfish.o src/ciphers/cast5.o src/ciphers/des.o src/ciphers/khazad.o src/ciphers/noekeon.o \
@@ -115,29 +130,43 @@ src/modes/ctr/ctr_getiv.o src/modes/ctr/ctr_setiv.o src/modes/ctr/ctr_start.o \
 src/modes/ecb/ecb_decrypt.o src/modes/ecb/ecb_done.o src/modes/ecb/ecb_encrypt.o \
 src/modes/ecb/ecb_start.o src/modes/ofb/ofb_decrypt.o src/modes/ofb/ofb_done.o \
 src/modes/ofb/ofb_encrypt.o src/modes/ofb/ofb_getiv.o src/modes/ofb/ofb_setiv.o \
-src/modes/ofb/ofb_start.o src/pk/asn1/der/der_decode_integer.o src/pk/asn1/der/der_encode_integer.o \
-src/pk/asn1/der/der_get_multi_integer.o src/pk/asn1/der/der_length_integer.o \
-src/pk/asn1/der/der_put_multi_integer.o src/pk/dh/dh.o src/pk/dsa/dsa_export.o src/pk/dsa/dsa_free.o \
-src/pk/dsa/dsa_import.o src/pk/dsa/dsa_make_key.o src/pk/dsa/dsa_sign_hash.o \
-src/pk/dsa/dsa_verify_hash.o src/pk/dsa/dsa_verify_key.o src/pk/ecc/ecc.o src/pk/packet_store_header.o \
-src/pk/packet_valid_header.o src/pk/pkcs1/pkcs_1_i2osp.o src/pk/pkcs1/pkcs_1_mgf1.o \
-src/pk/pkcs1/pkcs_1_oaep_decode.o src/pk/pkcs1/pkcs_1_oaep_encode.o src/pk/pkcs1/pkcs_1_os2ip.o \
-src/pk/pkcs1/pkcs_1_pss_decode.o src/pk/pkcs1/pkcs_1_pss_encode.o src/pk/pkcs1/pkcs_1_v15_es_decode.o \
-src/pk/pkcs1/pkcs_1_v15_es_encode.o src/pk/pkcs1/pkcs_1_v15_sa_decode.o \
-src/pk/pkcs1/pkcs_1_v15_sa_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_encrypt_key.o \
+src/modes/ofb/ofb_start.o src/pk/asn1/der/bit/der_decode_bit_string.o \
+src/pk/asn1/der/bit/der_encode_bit_string.o src/pk/asn1/der/bit/der_length_bit_string.o \
+src/pk/asn1/der/choice/der_decode_choice.o src/pk/asn1/der/ia5/der_decode_ia5_string.o \
+src/pk/asn1/der/ia5/der_encode_ia5_string.o src/pk/asn1/der/ia5/der_length_ia5_string.o \
+src/pk/asn1/der/integer/der_decode_integer.o src/pk/asn1/der/integer/der_encode_integer.o \
+src/pk/asn1/der/integer/der_length_integer.o \
+src/pk/asn1/der/object_identifier/der_decode_object_identifier.o \
+src/pk/asn1/der/object_identifier/der_encode_object_identifier.o \
+src/pk/asn1/der/object_identifier/der_length_object_identifier.o \
+src/pk/asn1/der/octet/der_decode_octet_string.o src/pk/asn1/der/octet/der_encode_octet_string.o \
+src/pk/asn1/der/octet/der_length_octet_string.o \
+src/pk/asn1/der/printable_string/der_decode_printable_string.o \
+src/pk/asn1/der/printable_string/der_encode_printable_string.o \
+src/pk/asn1/der/printable_string/der_length_printable_string.o \
+src/pk/asn1/der/sequence/der_decode_sequence.o src/pk/asn1/der/sequence/der_decode_sequence_multi.o \
+src/pk/asn1/der/sequence/der_encode_sequence.o src/pk/asn1/der/sequence/der_encode_sequence_multi.o \
+src/pk/asn1/der/sequence/der_length_sequence.o \
+src/pk/asn1/der/short_integer/der_decode_short_integer.o \
+src/pk/asn1/der/short_integer/der_encode_short_integer.o \
+src/pk/asn1/der/short_integer/der_length_short_integer.o src/pk/asn1/der/utctime/der_decode_utctime.o \
+src/pk/asn1/der/utctime/der_encode_utctime.o src/pk/asn1/der/utctime/der_length_utctime.o \
+src/pk/dh/dh.o src/pk/dsa/dsa_export.o src/pk/dsa/dsa_free.o src/pk/dsa/dsa_import.o \
+src/pk/dsa/dsa_make_key.o src/pk/dsa/dsa_sign_hash.o src/pk/dsa/dsa_verify_hash.o \
+src/pk/dsa/dsa_verify_key.o src/pk/ecc/ecc.o src/pk/packet_store_header.o src/pk/packet_valid_header.o \
+src/pk/pkcs1/pkcs_1_i2osp.o src/pk/pkcs1/pkcs_1_mgf1.o src/pk/pkcs1/pkcs_1_oaep_decode.o \
+src/pk/pkcs1/pkcs_1_oaep_encode.o src/pk/pkcs1/pkcs_1_os2ip.o src/pk/pkcs1/pkcs_1_pss_decode.o \
+src/pk/pkcs1/pkcs_1_pss_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_encrypt_key.o \
 src/pk/rsa/rsa_export.o src/pk/rsa/rsa_exptmod.o src/pk/rsa/rsa_free.o src/pk/rsa/rsa_import.o \
-src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_v15_decrypt_key.o \
-src/pk/rsa/rsa_v15_encrypt_key.o src/pk/rsa/rsa_v15_sign_hash.o src/pk/rsa/rsa_v15_verify_hash.o \
-src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o src/prngs/rc4.o src/prngs/rng_get_bytes.o \
-src/prngs/rng_make_prng.o src/prngs/sober128.o src/prngs/sprng.o src/prngs/yarrow.o 
+src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o \
+src/prngs/rc4.o src/prngs/rng_get_bytes.o src/prngs/rng_make_prng.o src/prngs/sober128.o \
+src/prngs/sprng.o src/prngs/yarrow.o 
 
-HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h \
-src/headers/tomcrypt_mac.h src/headers/tomcrypt_macros.h \
-src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
-src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h \
-src/headers/tommath_class.h src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h \
-src/headers/tomcrypt_misc.h src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h \
-src/headers/tomcrypt_prng.h testprof/tomcrypt_test.h
+HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h src/headers/tomcrypt_mac.h \
+src/headers/tomcrypt_macros.h src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
+src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h src/headers/tommath_class.h \
+src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h src/headers/tomcrypt_misc.h \
+src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h src/headers/tomcrypt_prng.h testprof/tomcrypt_test.h
 
 TESTOBJECTS=demos/test.o
 HASHOBJECTS=demos/hashsum.o
@@ -171,7 +200,7 @@ src/hashes/sha2/sha512.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha384.c
 src/hashes/sha2/sha256.o: src/hashes/sha2/sha256.c src/hashes/sha2/sha224.c
 
 #This rule makes the libtomcrypt library.
-library: $(LIBTEST) $(LIBNAME)
+library: $(LIBNAME)
 
 $(LIBTEST): 
 	cd testprof ; CFLAGS="$(CFLAGS)" make 
@@ -193,15 +222,15 @@ small: library $(SMALLOBJECTS)
 	$(CC) $(SMALLOBJECTS) $(LIBNAME) -o $(SMALL) $(WARN)
 	
 tv_gen: library $(TVS)
-	$(CC) $(TVS) $(LIBNAME) $(EXTRALIBS) -o $(TV)
+	$(CC) $(TVS) $(LIBNAME) -o $(TV)
 
 multi: library $(MULTIS)
 	$(CC) $(MULTIS) $(LIBNAME) -o $(MULTI)
 
-timing: library $(TIMINGS)
-	$(CC) $(TIMINGS) $(LIBTEST) $(LIBNAME) -o $(TIMING)
+timing: library $(LIBTEST) $(TIMINGS)
+	$(CC) $(TIMINGS) $(LIBTEST) $(LIBNAME) $(EXTRALIBS) -o $(TIMING)
 
-test: library $(TESTS)
+test: library $(LIBTEST) $(TESTS)
 	$(CC) $(TESTS) $(LIBTEST) $(LIBNAME) -o $(TEST)
 
 
@@ -216,11 +245,17 @@ install: library docs
 	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
 	install -g $(GROUP) -o $(USER) doc/crypt.pdf $(DESTDIR)$(DATAPATH)
 
-install_lib: library
+install_test: $(LIBTEST)
 	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
 	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(INCPATH)
-	install -g $(GROUP) -o $(USER) $(LIBNAME) $(DESTDIR)$(LIBPATH)
-	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
+	install -g $(GROUP) -o $(USER) $(LIBTEST) $(DESTDIR)$(LIBPATH)
+
+profile:
+	CFLAGS="$(CFLAGS) -fprofile-generate" make timing EXTRALIBS=-lgcov
+	./timing
+	rm -f timing `find . -type f | grep [.][ao] | xargs`
+	CFLAGS="$(CFLAGS) -fprofile-use" make timing EXTRALIBS=-lgcov
+
 
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
@@ -242,6 +277,7 @@ clean:
 	rm -f $(TV) $(PROF) $(SMALL) $(CRYPT) $(HASHSUM) $(MULTI) $(TIMING) $(TEST)
 	rm -rf doc/doxygen
 	rm -f doc/*.pdf
+	rm -f *.txt
 
 #build the doxy files (requires Doxygen, tetex and patience)
 doxy:
@@ -274,6 +310,8 @@ docdvi: crypt.tex
 #zipup the project (take that!)
 no_oops: clean
 	cd .. ; cvs commit 
+	echo Scanning for scratch/dirty files
+	find . -type f | grep -v CVS | xargs -n 1 bash mess.sh
 
 zipup: no_oops docs
 	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION) ; mkdir libtomcrypt-$(VERSION) ; \
@@ -283,3 +321,8 @@ zipup: no_oops docs
 	zip -9r crypt-$(VERSION).zip libtomcrypt-$(VERSION) ; \
 	gpg -b -a crypt-$(VERSION).tar.bz2 ; gpg -b -a crypt-$(VERSION).zip ; \
 	mv -fv crypt* ~ ; rm -rf libtomcrypt-$(VERSION)
+
+
+# $Source: /cvs/libtom/libtomcrypt/makefile,v $ 
+# $Revision: 1.70 $ 
+# $Date: 2005/06/19 18:03:24 $ 

@@ -27,11 +27,18 @@ int unregister_hash(const struct ltc_hash_descriptor *hash)
    LTC_ARGCHK(hash != NULL);
 
    /* is it already registered? */
+   LTC_MUTEX_LOCK(&ltc_hash_mutex);
    for (x = 0; x < TAB_SIZE; x++) {
        if (memcmp(&hash_descriptor[x], hash, sizeof(struct ltc_hash_descriptor)) == 0) {
           hash_descriptor[x].name = NULL;
+          LTC_MUTEX_UNLOCK(&ltc_hash_mutex);
           return CRYPT_OK;
        }
    }
+   LTC_MUTEX_UNLOCK(&ltc_hash_mutex);
    return CRYPT_ERROR;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_unregister_hash.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/06/19 18:00:28 $ */

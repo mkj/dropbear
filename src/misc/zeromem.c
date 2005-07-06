@@ -28,3 +28,7 @@ void zeromem(void *out, size_t outlen)
       *mem++ = 0;
    }
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/zeromem.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

@@ -28,3 +28,7 @@ void burn_stack(unsigned long len)
 }
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/burn_stack.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

@@ -25,11 +25,9 @@ const struct ltc_hash_descriptor md5_desc =
     16,
     64,
 
-    /* DER identifier */
-    { 0x30, 0x20, 0x30, 0x0C, 0x06, 0x08, 0x2A, 0x86, 
-      0x48, 0x86, 0xF7, 0x0D, 0x02, 0x05, 0x05, 0x00, 
-      0x04, 0x10 },
-    18,
+    /* OID */
+   { 1, 2, 840, 113549, 2, 5,  },
+   6,
 
     &md5_init,
     &md5_process,
@@ -363,3 +361,7 @@ int  md5_test(void)
 #endif
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/md5.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

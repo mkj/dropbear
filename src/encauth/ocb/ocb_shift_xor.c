@@ -33,3 +33,7 @@ void ocb_shift_xor(ocb_state *ocb, unsigned char *Z)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_shift_xor.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

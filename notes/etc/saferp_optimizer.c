@@ -171,3 +171,7 @@ printf("   }\n}\n\n");
    return 0;
 }
 
+
+/* $Source: /cvs/libtom/libtomcrypt/notes/etc/saferp_optimizer.c,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -296,7 +296,20 @@ const char *crypt_build_settings =
 #if defined(LTC_NO_ASM)
     " LTC_NO_ASM "
 #endif
+#if defined(LTC_NO_TEST)
+    " LTC_NO_TEST "
+#endif
+#if defined(LTC_NO_TABLES)
+    " LTC_NO_TABLES "
+#endif
+#if defined(LTC_PTHREAD)
+    " LTC_PTHREAD "
+#endif
     "\n"
     "\n\n\n"
     ;
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt.c,v $ */
+/* $Revision: 1.11 $ */
+/* $Date: 2005/06/19 18:00:28 $ */

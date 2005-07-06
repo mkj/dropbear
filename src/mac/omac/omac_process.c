@@ -27,7 +27,8 @@
 */
 int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 {
-   int err, n, x;
+   unsigned long n, x;
+   int           err;
 
    LTC_ARGCHK(omac  != NULL);
    LTC_ARGCHK(in    != NULL);
@@ -57,7 +58,7 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
    while (inlen != 0) { 
        /* ok if the block is full we xor in prev, encrypt and replace prev */
        if (omac->buflen == omac->blklen) {
-          for (x = 0; x < omac->blklen; x++) {
+          for (x = 0; x < (unsigned long)omac->blklen; x++) {
               omac->block[x] ^= omac->prev[x];
           }
           cipher_descriptor[omac->cipher_idx].ecb_encrypt(omac->block, omac->prev, &omac->key);
@@ -77,3 +78,7 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_process.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -38,3 +38,7 @@ int cbc_setiv(const unsigned char *IV, unsigned long len, symmetric_CBC *cbc)
 
 #endif 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_setiv.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

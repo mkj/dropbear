@@ -9042,3 +9042,7 @@ int     KARATSUBA_MUL_CUTOFF = 74,      /* Min. number of digits before Karatsub
 
 
 /* EOF */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/mpi/mpi.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

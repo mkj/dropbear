@@ -73,3 +73,7 @@ int rsa_sign_hash(const unsigned char *in,       unsigned long  inlen,
 }
 
 #endif /* MRSA */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_sign_hash.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

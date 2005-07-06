@@ -88,3 +88,7 @@ int gcm_add_iv(gcm_state *gcm,
 
 #endif
    
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_add_iv.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -27,18 +27,13 @@
 */
 int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key)
 {
-   unsigned long y, z;
-   int err;
+   unsigned char flags[1];
 
    LTC_ARGCHK(out    != NULL);
    LTC_ARGCHK(outlen != NULL);
    LTC_ARGCHK(key    != NULL);
 
    /* can we store the static header?  */
-   if (*outlen < (PACKET_SIZE + 1 + 2)) {
-      return CRYPT_BUFFER_OVERFLOW;
-   }
-   
    if (type == PK_PRIVATE && key->type != PK_PRIVATE) {
       return CRYPT_PK_TYPE_MISMATCH;
    }
@@ -47,29 +42,31 @@ int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key
       return CRYPT_INVALID_ARG;
    }
 
-   /* store header */
-   packet_store_header(out, PACKET_SECT_DSA, PACKET_SUB_KEY);
-   y = PACKET_SIZE;
+   flags[0] = (type != PK_PUBLIC) ? 1 : 0;
 
-   /* store g, p, q, qord */
-   out[y++] = type;
-   out[y++] = (key->qord>>8)&255;
-   out[y++] = key->qord & 255;
-
-   OUTPUT_BIGNUM(&key->g,out,y,z);
-   OUTPUT_BIGNUM(&key->p,out,y,z);
-   OUTPUT_BIGNUM(&key->q,out,y,z);
-
-   /* public exponent */
-   OUTPUT_BIGNUM(&key->y,out,y,z);
-   
    if (type == PK_PRIVATE) {
-      OUTPUT_BIGNUM(&key->x,out,y,z);
+      return der_encode_sequence_multi(out, outlen,
+                                 LTC_ASN1_BIT_STRING,   1UL, flags,
+                                 LTC_ASN1_INTEGER,      1UL, &key->g,
+                                 LTC_ASN1_INTEGER,      1UL, &key->p,
+                                 LTC_ASN1_INTEGER,      1UL, &key->q,
+                                 LTC_ASN1_INTEGER,      1UL, &key->y,
+                                 LTC_ASN1_INTEGER,      1UL, &key->x,
+                                 LTC_ASN1_EOL,          0UL, NULL);
+   } else {
+      return der_encode_sequence_multi(out, outlen,
+                                 LTC_ASN1_BIT_STRING,   1UL, flags,
+                                 LTC_ASN1_INTEGER,      1UL, &key->g,
+                                 LTC_ASN1_INTEGER,      1UL, &key->p,
+                                 LTC_ASN1_INTEGER,      1UL, &key->q,
+                                 LTC_ASN1_INTEGER,      1UL, &key->y,
+                                 LTC_ASN1_EOL,          0UL, NULL);
    }
-
-   *outlen = y;
-   return CRYPT_OK;
 }
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_export.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/06/03 19:24:31 $ */

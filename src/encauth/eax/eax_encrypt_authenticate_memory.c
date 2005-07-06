@@ -76,3 +76,7 @@ LBL_ERR:
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/eax/eax_encrypt_authenticate_memory.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

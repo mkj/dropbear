@@ -8,3 +8,7 @@ int main(void)
    register_hash(&sha256_desc);
    return 0;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/demos/small.c,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:56 $ */

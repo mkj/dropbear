@@ -106,3 +106,7 @@ int   XMEMCMP(const void *s1, const void *s2, size_t n);
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_cfg.h,v $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

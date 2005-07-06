@@ -96,3 +96,7 @@ done : mp_clear_multi(&tmp, &tmp2, NULL);
    return err;
 }
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_verify_key.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

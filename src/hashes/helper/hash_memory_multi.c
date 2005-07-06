@@ -80,3 +80,7 @@ LBL_ERR:
     va_end(args);
     return err;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/helper/hash_memory_multi.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -60,7 +60,7 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
       /* is the pad empty? */
       if (ctr->padlen == ctr->blocklen) {
          /* increment counter */
-         if (ctr->mode == 0) {
+         if (ctr->mode == CTR_COUNTER_LITTLE_ENDIAN) {
             /* little-endian */
             for (x = 0; x < ctr->blocklen; x++) {
                ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
@@ -102,3 +102,7 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_encrypt.c,v $ */
+/* $Revision: 1.13 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

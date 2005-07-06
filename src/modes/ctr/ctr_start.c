@@ -21,19 +21,23 @@
 /**
    Initialize a CTR context
    @param cipher      The index of the cipher desired
-   @param count       The initial vector
+   @param IV          The initial vector
    @param key         The secret key 
    @param keylen      The length of the secret key (octets)
    @param num_rounds  Number of rounds in the cipher desired (0 for default)
+   @param ctr_mode    The counter mode (CTR_COUNTER_LITTLE_ENDIAN or CTR_COUNTER_BIG_ENDIAN)
    @param ctr         The CTR state to initialize
    @return CRYPT_OK if successful
 */
-int ctr_start(int cipher, const unsigned char *count, const unsigned char *key, int keylen, 
-              int num_rounds, symmetric_CTR *ctr)
+int ctr_start(               int   cipher, 
+              const unsigned char *IV, 
+              const unsigned char *key,       int keylen, 
+                             int  num_rounds, int ctr_mode,
+                   symmetric_CTR *ctr)
 {
    int x, err;
 
-   LTC_ARGCHK(count != NULL);
+   LTC_ARGCHK(IV  != NULL);
    LTC_ARGCHK(key != NULL);
    LTC_ARGCHK(ctr != NULL);
 
@@ -51,12 +55,16 @@ int ctr_start(int cipher, const unsigned char *count, const unsigned char *key, 
    ctr->blocklen = cipher_descriptor[cipher].block_length;
    ctr->cipher   = cipher;
    ctr->padlen   = 0;
-   ctr->mode     = 0;
+   ctr->mode     = ctr_mode;
    for (x = 0; x < ctr->blocklen; x++) {
-       ctr->ctr[x] = count[x];
+       ctr->ctr[x] = IV[x];
    }
    cipher_descriptor[ctr->cipher].ecb_encrypt(ctr->ctr, ctr->pad, &ctr->key);
    return CRYPT_OK;
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_start.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

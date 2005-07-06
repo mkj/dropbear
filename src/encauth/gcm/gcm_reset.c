@@ -38,3 +38,7 @@ int gcm_reset(gcm_state *gcm)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_reset.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

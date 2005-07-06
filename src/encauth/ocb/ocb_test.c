@@ -231,3 +231,7 @@ int ocb_test(void)
    -- hard to stream [you can't emit ciphertext until full block]
    -- The setup is somewhat complicated...
 */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_test.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

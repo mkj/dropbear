@@ -28,6 +28,7 @@
    x = find_hash(name);
    if (x != -1) return x;
 
+   LTC_MUTEX_LOCK(&ltc_hash_mutex);
    y = MAXBLOCKSIZE+1;
    z = -1;
    for (x = 0; x < TAB_SIZE; x++) {
@@ -39,5 +40,10 @@
           y = hash_descriptor[x].hashsize;
        }
    }
+   LTC_MUTEX_UNLOCK(&ltc_hash_mutex);
    return z;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_find_hash_any.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/06/19 18:00:28 $ */

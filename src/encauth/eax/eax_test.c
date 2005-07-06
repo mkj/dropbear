@@ -276,3 +276,7 @@ int eax_test(void)
 }
 
 #endif /* EAX_MODE */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/eax/eax_test.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

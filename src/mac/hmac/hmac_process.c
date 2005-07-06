@@ -37,3 +37,7 @@ int hmac_process(hmac_state *hmac, const unsigned char *in, unsigned long inlen)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/hmac/hmac_process.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

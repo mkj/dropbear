@@ -70,15 +70,15 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    }
 
    /* force magnitude */
-   buf[0] = 1;
+   buf[0] |= 0xC0;
 
    /* force even */
-   buf[modulus_size - group_size] &= ~1;
+   buf[modulus_size - group_size - 1] &= ~1;
 
-   if ((err = mp_read_unsigned_bin(&tmp2, buf, modulus_size - group_size+1)) != MP_OKAY) { goto error; }
+   if ((err = mp_read_unsigned_bin(&tmp2, buf, modulus_size - group_size)) != MP_OKAY) { goto error; }
    if ((err = mp_mul(&key->q, &tmp2, &key->p)) != MP_OKAY)                             { goto error; }
    if ((err = mp_add_d(&key->p, 1, &key->p)) != MP_OKAY)                               { goto error; }
-   
+
    /* now loop until p is prime */
    for (;;) {
        if ((err = is_prime(&key->p, &res)) != CRYPT_OK)                                { goto LBL_ERR; }
@@ -140,3 +140,7 @@ done:
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_make_key.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/06/11 05:45:35 $ */

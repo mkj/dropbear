@@ -108,11 +108,9 @@ int eax_init(eax_state *eax, int cipher,
    /* note we don't finish the headeromac, this allows us to add more header later */
 
    /* setup the CTR mode */
-   if ((err = ctr_start(cipher, eax->N, key, keylen, 0, &eax->ctr)) != CRYPT_OK) {
+   if ((err = ctr_start(cipher, eax->N, key, keylen, 0, CTR_COUNTER_BIG_ENDIAN, &eax->ctr)) != CRYPT_OK) {
       goto LBL_ERR; 
    }
-   /* use big-endian counter */
-   eax->ctr.mode = 1;
 
    /* setup the OMAC for the ciphertext */
    if ((err = omac_init(&eax->ctomac, cipher, key, keylen)) != CRYPT_OK) { 
@@ -140,3 +138,7 @@ LBL_ERR:
 }
 
 #endif 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/eax/eax_init.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

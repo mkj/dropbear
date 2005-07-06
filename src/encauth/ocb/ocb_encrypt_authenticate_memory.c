@@ -78,3 +78,7 @@ LBL_ERR:
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_encrypt_authenticate_memory.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

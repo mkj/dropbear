@@ -1,3 +1,79 @@
+June 27th, 2005
+v1.05
+      -- Added Technote #6 which covers the current PK compliance.  
+      -- Fixed buffer overflow in OAEP decoder
+      -- Added CHOICE to the list of ASN.1 types
+      -- Added UTCTIME to the list of ASN.1 types
+      -- Added MUTEX locks around descriptor table functions [but not on the functions that are dependent on them]
+         All functions call *_is_valid() before using a descriptor index which means the respective table must be unlocked before 
+         it can be accessed.  However, during the operation [e.g. CCM] if the descriptor has been altered the results will be 
+         undefined.  
+      -- Minor updates to the manual to reflect recent changes
+      -- Added a catch to for an error that should never come up in rsa_exptmod().  Just being thorough.
+
+June 15th, 2005
+v1.04
+      -- Fixed off by one [bit] error in dsa_make_key() it was too high by one bit [not a security problem just inconsistent]
+      -- ECC-224 curve was wrong [it was an ok curve just not NIST, so no security flaw just interoperability].
+      -- Removed point compression since it slows down ECC ops to save a measly couple bytes.
+         This makes the ecc export format incompatible with 1.03 [it shouldn't change in the future]
+      -- Removed ECC-160 from timing and added the other curves
+
+June 9th, 2005
+v1.03
+      -- Users may want to note that on a P4/GCC3.4 platform "-fno-regmove" greatly accelerates the ciphers/hashes.
+      --------------------------------------------------------------------------------------------------------------
+      -- Made it install the testing library in the icc/static makefiles
+      -- Found bug in ccm_memory.c which would fail to compile when LTC_CLEAN_STACK was enabled
+      -- Simon Johnson proposed I do a fully automated test suite.  Hence "testme.sh" was born
+      -- Added LTC_NO_TEST which forces test vectors off (regardless of what tomcrypt_custom.h has)
+      -- Added LTC_NO_TABLES which disables large tables (where possible, regardless of what tomcrypt_custom.h has)
+      -- New test script found a bug in twofish.c when TABLES was disabled.  Yeah testing!
+      -- Added a LTC_FAST specific test to the testing software.
+      -- Updated test driver to actually halt on errors and just print them out (useful for say... automated testing...)
+      -- Added bounds checking to Pelican MAC
+      -- Added BIT and OCTET STRING to the ASN.1 side of things.  
+      -- Pekka Riikonen pointed out that my ctr_start() function should accept the counter mode. 
+      -- Cleaned up warnings in testprof
+      -- Removed redundant mu and point mapping in ecc_verify_hash() so it should be a bit faster now
+      -- Pekka pointed out that the AES key structure was using 32 bytes more than it ought to.
+      -- Added quick defines to remove entire classes of algorithms.  This makes it easier if you want to build with just 
+         one algorithm (say AES or SHA-256).  Defines are LTC_NO_CIPHERS, LTC_NO_MODES, LTC_NO_HASHES, LTC_NO_MACS,
+         LTC_NO_PRNGS, LTC_NO_PK, LTC_NO_PKCS
+      -- As part of the move for ECC to X9.62 I've changed the signature algorithm to EC DSA.  No API changes.
+      -- Pekka helped me clean up the PKCS #1 v2.1 [OAEP/PSS] code
+      -- Wrote new DER SEQUENCE coder/decoder
+      -- RSA, DSA and ECDSA now use the DER SEQUENCE code (saves a lot of code!)
+      -- DSA output is now a DER SEQUENCE (so not compatible with previous releases).  
+      -- Added Technote #5 which shows how to build LTC on an AMD64 to have a variety of algorithms in only ~80KB of code.
+      -- Changed temp variable in LOAD/STORE macros to "ulong32" for 32-bit ops.  Makes it safer on Big endian platforms
+      -- Added INSTALL_GROUP and INSTALL_USER which you can specify on the build to override the default USER/GROUP the library 
+         is to be installed as
+      -- Removed "testprof" from the default build.  
+      -- Added IA5, NULL and Object Identifier to the list of ASN.1 DER supported types
+      -- The "no_oops" target (part of zipup) now scans for non-cvs files.  This helps prevent temp/scratch files from appearing in releases ;-)
+      -- Added DERs for missing hashes, but just the OID not the PKCS #1 v1.5 additions. 
+      -- Removed PKCS #1 v1.5 from the tree since it's taking up space and you ought to use v2.1 anyways
+      -- Kevin Kenny pointed out a few stray // comments
+      -- INTEGER code properly supports negatives and zero padding [Pekka!]
+      -- Sorted asn1/der/ directory ... less of a mess now ;-)
+      -- Added PRINTABLE STRING type
+      -- Removed ECC-160 as it wasn't a standard curve
+      -- Made ecc_shared_secret() ANSI X9.63 compliant
+      -- Changed "printf" to "fprintf(stderr, " in the testbench... ;-)
+      -- Optimized the GCM table creation.  On 1KB packets [with key switching] the new GCM is 12.7x faster than before.
+      -- Changed OID representation for hashes to be just a list of unsigned longs (so you can compare against them nicely after decoding a sequence)
+      -- ECC code now uses Montgomery reduction ... it's even faster [ECC-256 make key down from 37.4M to 4.6M cycles on an Athlon64]
+      -- Added SHORT_INTEGER so users can easily store DER encoded INTEGER types without using the bignum math library
+      -- Fixed OMAC code so that with LTC_FAST it doesn't require that LTC_FAST_TYPE divides 16 [it has to divide the block size instead]
+      -- ECC key export is now a simple [and documented] SEQUENCE, the "encrypt_key" also uses a new SEQUENCE format.
+      -- Thanks goes to the following testers
+            Michael Brown             - Solaris 10/uSPARCII
+            Richard Outerbridge       - MacOS
+            Martin Carpenter          - Solaris 8/uSPARCII [Thanks for cleaning up the scripts]
+            Greg Rose                 -  ... SunOS 5.8/SPARC [... what's with the SPARCS?]
+            Matt Johnston             - MacOS X  [Thanks for pointing out GCC 4 problems with -Os]
+
 April 19th, 2005
 v1.02
       -- Added LTC_TEST support to gcm_test()
@@ -1243,3 +1319,8 @@ v0.02  -- Changed RC5 to only allow 12 to 24 rounds
        -- Added more to the manual.
 
 v0.01  -- We will call this the first version.
+
+/* $Source: /cvs/libtom/libtomcrypt/changes,v $ */
+/* $Revision: 1.106 $ */
+/* $Date: 2005/06/27 12:37:06 $ */
+
