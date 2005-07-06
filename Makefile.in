@@ -4,7 +4,7 @@
 # Modified by Clay Culver
 
 # The version
-VERSION=1.02
+VERSION=1.05
 
 VPATH=@srcdir@
 srcdir=@srcdir@
@@ -29,7 +29,7 @@ CFLAGS += -c -I$(srcdir)/src/headers/ -I$(srcdir)/../
 #CFLAGS += -O3 -funroll-loops
 
 # add -fomit-frame-pointer.  hinders debugging!
-CFLAGS += -fomit-frame-pointer
+#CFLAGS += -fomit-frame-pointer
 
 # optimize for SIZE
 #CFLAGS += -Os -DLTC_SMALL_CODE
@@ -62,8 +62,17 @@ INCPATH=/usr/include
 DATAPATH=/usr/share/doc/libtomcrypt/pdf
 
 #Who do we install as?
+ifdef INSTALL_USER
+USER=$(INSTALL_USER)
+else
 USER=root
+endif
+
+ifdef INSTALL_GROUP
+GROUP=$(INSTALL_GROUP)
+else
 GROUP=wheel
+endif
 
 #List of objects to compile.
 
@@ -72,15 +81,33 @@ GROUP=wheel
 #Dropbear uses libtommath
 MPIOBJECT=
 
-OBJECTS=src/ciphers/aes/aes_enc.o $(MPIOBJECT) src/ciphers/aes/aes.o \
-src/ciphers/blowfish.o src/ciphers/des.o \
-src/ciphers/twofish/twofish.o \
-src/hashes/helper/hash_memory.o src/hashes/helper/hash_memory_multi.o \
-src/hashes/md5.o src/hashes/sha1.o src/hashes/sha2/sha256.o \
-src/hashes/sha2/sha512.o src/hashes/whirl/whirl.o src/mac/hmac/hmac_done.o \
+OBJECTS=src/ciphers/aes/aes_enc.o $(MPIOBJECT) src/ciphers/aes/aes.o src/ciphers/anubis.o \
+src/ciphers/blowfish.o src/ciphers/cast5.o src/ciphers/des.o src/ciphers/khazad.o src/ciphers/noekeon.o \
+src/ciphers/rc2.o src/ciphers/rc5.o src/ciphers/rc6.o src/ciphers/safer/safer.o \
+src/ciphers/safer/safer_tab.o src/ciphers/safer/saferp.o src/ciphers/skipjack.o \
+src/ciphers/twofish/twofish.o src/ciphers/xtea.o src/encauth/ccm/ccm_memory.o \
+src/encauth/ccm/ccm_test.o src/encauth/eax/eax_addheader.o src/encauth/eax/eax_decrypt.o \
+src/encauth/eax/eax_decrypt_verify_memory.o src/encauth/eax/eax_done.o src/encauth/eax/eax_encrypt.o \
+src/encauth/eax/eax_encrypt_authenticate_memory.o src/encauth/eax/eax_init.o \
+src/encauth/eax/eax_test.o src/encauth/gcm/gcm_add_aad.o src/encauth/gcm/gcm_add_iv.o \
+src/encauth/gcm/gcm_done.o src/encauth/gcm/gcm_gf_mult.o src/encauth/gcm/gcm_init.o \
+src/encauth/gcm/gcm_memory.o src/encauth/gcm/gcm_process.o src/encauth/gcm/gcm_reset.o \
+src/encauth/gcm/gcm_test.o src/encauth/ocb/ocb_decrypt.o src/encauth/ocb/ocb_decrypt_verify_memory.o \
+src/encauth/ocb/ocb_done_decrypt.o src/encauth/ocb/ocb_done_encrypt.o src/encauth/ocb/ocb_encrypt.o \
+src/encauth/ocb/ocb_encrypt_authenticate_memory.o src/encauth/ocb/ocb_init.o src/encauth/ocb/ocb_ntz.o \
+src/encauth/ocb/ocb_shift_xor.o src/encauth/ocb/ocb_test.o src/encauth/ocb/s_ocb_done.o \
+src/hashes/chc/chc.o src/hashes/helper/hash_file.o src/hashes/helper/hash_filehandle.o \
+src/hashes/helper/hash_memory.o src/hashes/helper/hash_memory_multi.o src/hashes/md2.o src/hashes/md4.o \
+src/hashes/md5.o src/hashes/rmd128.o src/hashes/rmd160.o src/hashes/sha1.o src/hashes/sha2/sha256.o \
+src/hashes/sha2/sha512.o src/hashes/tiger.o src/hashes/whirl/whirl.o src/mac/hmac/hmac_done.o \
 src/mac/hmac/hmac_file.o src/mac/hmac/hmac_init.o src/mac/hmac/hmac_memory.o \
 src/mac/hmac/hmac_memory_multi.o src/mac/hmac/hmac_process.o src/mac/hmac/hmac_test.o \
-src/misc/base64/base64_decode.o \
+src/mac/omac/omac_done.o src/mac/omac/omac_file.o src/mac/omac/omac_init.o src/mac/omac/omac_memory.o \
+src/mac/omac/omac_memory_multi.o src/mac/omac/omac_process.o src/mac/omac/omac_test.o \
+src/mac/pelican/pelican.o src/mac/pelican/pelican_memory.o src/mac/pelican/pelican_test.o \
+src/mac/pmac/pmac_done.o src/mac/pmac/pmac_file.o src/mac/pmac/pmac_init.o src/mac/pmac/pmac_memory.o \
+src/mac/pmac/pmac_memory_multi.o src/mac/pmac/pmac_ntz.o src/mac/pmac/pmac_process.o \
+src/mac/pmac/pmac_shift_xor.o src/mac/pmac/pmac_test.o src/misc/base64/base64_decode.o \
 src/misc/base64/base64_encode.o src/misc/burn_stack.o src/misc/crypt/crypt.o \
 src/misc/crypt/crypt_argchk.o src/misc/crypt/crypt_cipher_descriptor.o \
 src/misc/crypt/crypt_cipher_is_valid.o src/misc/crypt/crypt_find_cipher.o \
@@ -93,23 +120,23 @@ src/misc/crypt/crypt_register_cipher.o src/misc/crypt/crypt_register_hash.o \
 src/misc/crypt/crypt_register_prng.o src/misc/crypt/crypt_unregister_cipher.o \
 src/misc/crypt/crypt_unregister_hash.o src/misc/crypt/crypt_unregister_prng.o \
 src/misc/error_to_string.o src/misc/mpi/is_prime.o src/misc/mpi/mpi_to_ltc_error.o \
-src/misc/mpi/rand_prime.o src/misc/zeromem.o \
+src/misc/mpi/rand_prime.o src/misc/pkcs5/pkcs_5_1.o src/misc/pkcs5/pkcs_5_2.o src/misc/zeromem.o \
 src/modes/cbc/cbc_decrypt.o src/modes/cbc/cbc_done.o src/modes/cbc/cbc_encrypt.o \
 src/modes/cbc/cbc_getiv.o src/modes/cbc/cbc_setiv.o src/modes/cbc/cbc_start.o \
+src/modes/cfb/cfb_decrypt.o src/modes/cfb/cfb_done.o src/modes/cfb/cfb_encrypt.o \
+src/modes/cfb/cfb_getiv.o src/modes/cfb/cfb_setiv.o src/modes/cfb/cfb_start.o \
 src/modes/ctr/ctr_decrypt.o src/modes/ctr/ctr_done.o src/modes/ctr/ctr_encrypt.o \
 src/modes/ctr/ctr_getiv.o src/modes/ctr/ctr_setiv.o src/modes/ctr/ctr_start.o \
 src/modes/ecb/ecb_decrypt.o src/modes/ecb/ecb_done.o src/modes/ecb/ecb_encrypt.o \
-src/modes/ofb/ofb_start.o src/pk/asn1/der/der_decode_integer.o \
-src/prngs/rng_get_bytes.o \
-src/prngs/rng_make_prng.o src/prngs/sober128.o src/prngs/sprng.o src/prngs/yarrow.o 
+src/modes/ecb/ecb_start.o src/modes/ofb/ofb_decrypt.o src/modes/ofb/ofb_done.o \
+src/modes/ofb/ofb_encrypt.o src/modes/ofb/ofb_getiv.o src/modes/ofb/ofb_setiv.o \
+src/modes/ofb/ofb_start.o 
 
-HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h \
-src/headers/tomcrypt_mac.h src/headers/tomcrypt_macros.h \
-src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
-src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h \
-src/headers/tommath_class.h src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h \
-src/headers/tomcrypt_misc.h src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h \
-src/headers/tomcrypt_prng.h testprof/tomcrypt_test.h
+HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h src/headers/tomcrypt_mac.h \
+src/headers/tomcrypt_macros.h src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
+src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h src/headers/tommath_class.h \
+src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h src/headers/tomcrypt_misc.h \
+src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h src/headers/tomcrypt_prng.h testprof/tomcrypt_test.h
 
 TESTOBJECTS=demos/test.o
 HASHOBJECTS=demos/hashsum.o
@@ -143,8 +170,6 @@ src/hashes/sha2/sha512.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha384.c
 src/hashes/sha2/sha256.o: src/hashes/sha2/sha256.c src/hashes/sha2/sha224.c
 
 #This rule makes the libtomcrypt library.
-#library: $(LIBTEST) $(LIBNAME)
-# Dropbear doesn't want test programs, since it relies on yarrow etc.
 library: $(LIBNAME)
 
 $(LIBTEST): 
@@ -167,15 +192,15 @@ small: library $(SMALLOBJECTS)
 	$(CC) $(SMALLOBJECTS) $(LIBNAME) -o $(SMALL) $(WARN)
 	
 tv_gen: library $(TVS)
-	$(CC) $(TVS) $(LIBNAME) $(EXTRALIBS) -o $(TV)
+	$(CC) $(TVS) $(LIBNAME) -o $(TV)
 
 multi: library $(MULTIS)
 	$(CC) $(MULTIS) $(LIBNAME) -o $(MULTI)
 
-timing: library $(TIMINGS)
-	$(CC) $(TIMINGS) $(LIBTEST) $(LIBNAME) -o $(TIMING)
+timing: library $(LIBTEST) $(TIMINGS)
+	$(CC) $(TIMINGS) $(LIBTEST) $(LIBNAME) $(EXTRALIBS) -o $(TIMING)
 
-test: library $(TESTS)
+test: library $(LIBTEST) $(TESTS)
 	$(CC) $(TESTS) $(LIBTEST) $(LIBNAME) -o $(TEST)
 
 
@@ -190,11 +215,17 @@ install: library docs
 	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
 	install -g $(GROUP) -o $(USER) doc/crypt.pdf $(DESTDIR)$(DATAPATH)
 
-install_lib: library
+install_test: $(LIBTEST)
 	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
 	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(INCPATH)
-	install -g $(GROUP) -o $(USER) $(LIBNAME) $(DESTDIR)$(LIBPATH)
-	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
+	install -g $(GROUP) -o $(USER) $(LIBTEST) $(DESTDIR)$(LIBPATH)
+
+profile:
+	CFLAGS="$(CFLAGS) -fprofile-generate" make timing EXTRALIBS=-lgcov
+	./timing
+	rm -f timing `find . -type f | grep [.][ao] | xargs`
+	CFLAGS="$(CFLAGS) -fprofile-use" make timing EXTRALIBS=-lgcov
+
 
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
@@ -216,6 +247,7 @@ clean:
 	rm -f $(TV) $(PROF) $(SMALL) $(CRYPT) $(HASHSUM) $(MULTI) $(TIMING) $(TEST)
 	rm -rf doc/doxygen
 	rm -f doc/*.pdf
+	rm -f *.txt
 
 #build the doxy files (requires Doxygen, tetex and patience)
 doxy:
@@ -248,6 +280,8 @@ docdvi: crypt.tex
 #zipup the project (take that!)
 no_oops: clean
 	cd .. ; cvs commit 
+	echo Scanning for scratch/dirty files
+	find . -type f | grep -v CVS | xargs -n 1 bash mess.sh
 
 zipup: no_oops docs
 	cd .. ; rm -rf crypt* libtomcrypt-$(VERSION) ; mkdir libtomcrypt-$(VERSION) ; \
@@ -257,3 +291,8 @@ zipup: no_oops docs
 	zip -9r crypt-$(VERSION).zip libtomcrypt-$(VERSION) ; \
 	gpg -b -a crypt-$(VERSION).tar.bz2 ; gpg -b -a crypt-$(VERSION).zip ; \
 	mv -fv crypt* ~ ; rm -rf libtomcrypt-$(VERSION)
+
+
+# $Source: /cvs/libtom/libtomcrypt/makefile,v $ 
+# $Revision: 1.70 $ 
+# $Date: 2005/06/19 18:03:24 $ 
