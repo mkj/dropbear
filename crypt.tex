@@ -47,7 +47,7 @@
 \def\gap{\vspace{0.5ex}}
 \makeindex
 \begin{document}
-\title{LibTomCrypt \\ Version 1.02}
+\title{LibTomCrypt \\ Version 1.05}
 \author{Tom St Denis \\
 \\
 tomstdenis@gmail.com \\
@@ -57,7 +57,7 @@ http://libtomcrypt.org
 This text and source code library are both hereby placed in the public domain.  This book has been 
 formatted for A4 paper using the \LaTeX{} {\em book} macro package.
 
-\vspace{10cm}
+\vspace{15cm}
 
 \begin{flushright}Open Source.  Open Academia.  Open Minds.
 
@@ -771,12 +771,18 @@ other modes.
 \index{OFB Mode} \index{CFB Mode}
 The library provides simple support routines for handling CBC, CTR, CFB, OFB and ECB encoded messages.  Assuming the mode 
 you want is XXX there is a structure called ``symmetric\_XXX'' that will contain the information required to
-use that mode.  They have identical setup routines (except ECB mode for obvious reasons):
+use that mode.  They have identical setup routines (except CTR and ECB mode):
 \index{ecb\_start()} \index{cfb\_start()} \index{cbc\_start()} \index{ofb\_start()} \index{ctr\_start()}
 \begin{verbatim}
 int XXX_start(int cipher, const unsigned char *IV, 
               const unsigned char *key, int keylen, 
               int num_rounds, symmetric_XXX *XXX);
+
+int ctr_start(               int   cipher,
+              const unsigned char *IV,
+              const unsigned char *key,       int keylen,
+                             int  num_rounds, int ctr_mode,
+                   symmetric_CTR *ctr);
 
 int ecb_start(int cipher, const unsigned char *key, int keylen, 
               int num_rounds, symmetric_ECB *ecb);
@@ -789,7 +795,12 @@ of the cipher you choose.  It is important that the IV  be random for each uniqu
 parameters ``key'', ``keylen'' and ``num\_rounds'' are the same as in the XXX\_setup() function call.  The final parameter 
 is a pointer to the structure you want to hold the information for the mode of operation.
 
-Both routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise they return an error code.  
+
+In the case of CTR mode there is an additional parameter ``ctr\_mode'' which specifies the mode that the counter is to be used in.
+If \textbf{CTR\_COUNTER\_LITTLE\_ENDIAN} was specified then the counter will be treated as a little endian value.  Otherwise, if 
+\textbf{CTR\_COUNTER\_BIG\_ENDIAN} was specified the counter will be treated as a big endian value.
+
+The routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise they return an error code.  
 
 \subsection{Encryption and Decryption}
 To actually encrypt or decrypt the following routines are provided:
@@ -867,6 +878,7 @@ int main(void)
                            key, /* the secret key */
                             16, /* length of secret key (16 bytes, 128 bits) */
                              0, /* 0 == default # of rounds */
+     CTR_COUNTER_LITTLE_ENDIAN, /* Little endian counter */
                          &ctr)  /* where to store initialized CTR state */
       ) != CRYPT_OK) {
       printf("ctr_start error: %s\n", error_to_string(err));
@@ -1349,7 +1361,7 @@ int send_packet(const unsigned char *pt,  unsigned long ptlen,
    }
 
    /* process the plaintext */
-   if ((err = gcm_add_process(gcm, pt, ptlen, pt, GCM_ENCRYPT)) != CRYPT_OK) {
+   if ((err = gcm_process(gcm, pt, ptlen, pt, GCM_ENCRYPT)) != CRYPT_OK) {
       return err;
    }
 
@@ -1358,6 +1370,8 @@ int send_packet(const unsigned char *pt,  unsigned long ptlen,
    if ((err = gcm_done(gcm, tag, &taglen)) != CRYPT_OK) {
       return err;
    }
+
+   /* ... send a header describing the lengths ... */
 
    /* depending on the protocol and how IV is generated you may have to send it too... */
    send(socket, iv, ivlen, 0);
@@ -2452,8 +2466,8 @@ int main(void)
 
 \section{Introduction}
 RSA wrote the PKCS \#1 specifications which detail RSA Public Key Cryptography.  In the specifications are
-padding algorithms for encryption and signatures.  The standard includes ``v1.5'' and ``v2.0'' algorithms.
-To simplify matters a little the v2.0 encryption and signature padding algorithms are called OAEP and PSS 
+padding algorithms for encryption and signatures.  The standard includes the ``v2.1'' algorithms.
+To simplify matters a little the v2.1 encryption and signature padding algorithms are called OAEP and PSS 
 respectively.  
 
 \section{PKCS \#1 Encryption}
@@ -2509,33 +2523,6 @@ If the function succeeds it decodes the OAEP encoded message into ``out'' of len
 $1$ in ``res''.  If the packet is invalid it stores $0$ in ``res'' and if the function fails for another reason
 it returns an error code.  
 
-\subsection{PKCS \#1 v1.5 Encoding}
-
-\index{pkcs\_1\_v15\_es\_encode()}
-\begin{verbatim}
-int pkcs_1_v15_es_encode(const unsigned char *msg,    unsigned long msglen,
-                               unsigned long  modulus_bitlen, 
-                               prng_state    *prng,   int           prng_idx,
-                               unsigned char *out,    unsigned long *outlen);
-\end{verbatim}
-
-This will PKCS v1.5 encode the data in ``msg'' of length ``msglen''.  Pass the length (in bits) of your
-RSA modulus in ``modulus\_bitlen''.  The encoded data will be stored in ``out'' of length ``outlen''.
-
-\subsection{PKCS \#1 v1.5 Decoding}
-\index{pkcs\_1\_v15\_es\_decode()}
-\begin{verbatim}
-int pkcs_1_v15_es_decode(const unsigned char *msg,  unsigned long msglen,
-                               unsigned long modulus_bitlen,
-                               unsigned char *out,  unsigned long outlen,
-                               int           *res);
-\end{verbatim}
-
-This will PKCS v1.5 decode the message in ``msg'' of length ``msglen''.  It will store the output in ``out''. Note
-that the length of the output ``outlen'' is a constant.  This decoder cannot determine the original message 
-length.  If the data in ``msg'' is a valid packet then a $1$ is stored in ``res'', otherwise a $0$ is 
-stored.
-
 \section{PKCS \#1 Digital Signatures}
 
 \subsection{PSS Encoding}
@@ -2576,34 +2563,6 @@ This will decode the PSS encoded message in ``sig'' of length ``siglen'' and com
 it is set to zero.  The rest of the parameters are as in the PSS encode call.
 
 It's important to use the same ``saltlen'' and hash for both encoding and decoding as otherwise the procedure will not work.
-
-\subsection{PKCS \#1 v1.5 Encoding}
-
-\index{pkcs\_1\_v15\_sa\_encode()}
-\begin{verbatim}
-int pkcs_1_v15_sa_encode(const unsigned char *msghash,  unsigned long msghashlen,
-                               int            hash_idx, unsigned long modulus_bitlen,
-                               unsigned char *out,      unsigned long *outlen);
-\end{verbatim}
-
-This will PKCS \#1 v1.5 signature encode the message hash ``msghash''  of length ``msghashlen''.  You have
-to tell this routine which hash produced the message hash in ``hash\_idx''.  The encoded hash is stored
-in ``out'' of length ``outlen''.
-
-\subsection{PKCS \#1 v1.5 Decoding}
-
-\index{pkcs\_1\_v15\_sa\_decode()}
-\begin{verbatim}
-int pkcs_1_v15_sa_decode(const unsigned char *msghash, unsigned long msghashlen,
-                         const unsigned char *sig,     unsigned long siglen,
-                               int           hash_idx, unsigned long modulus_bitlen, 
-                               int          *res);
-\end{verbatim}
-
-This will PKCS \#1 v1.5 signature decode the data in ``sig'' of length ``siglen'' and compare the extracted
-hash against ``msghash'' of length ``msghashlen''.  You have to tell this routine which hash produced the
-message digest in ``hash\_idx''.  If the packet is valid and the hashes match ``res'' is set to $1$.  Otherwise,
-it is set to $0$.
 
 \section{RSA Operations}
 \subsection{Background}
@@ -2698,15 +2657,14 @@ to pkcs\_1\_oaep\_encode().
 int rsa_decrypt_key(const unsigned char *in,  unsigned long inlen,
                           unsigned char *out, unsigned long *outlen, 
                     const unsigned char *lparam, unsigned long lparamlen,
-                          prng_state    *prng,   int           prng_idx,
-                          int            hash_idx, int *res,
+                          int            hash_idx, int *stat,
                           rsa_key       *key);
 \end{verbatim}
 This function will RSA decrypt ``in'' of length ``inlen'' then OAEP depad the resulting data and store it in
 ``out'' of length ``outlen''.  The ``lparam'' and ``lparamlen'' are the same parameters you would pass
 to pkcs\_1\_oaep\_decode().
 
-If the RSA decrypted data isn't a valid OAEP packet then ``res'' is set to $0$.  Otherwise, it is set to $1$.
+If the RSA decrypted data isn't a valid OAEP packet then ``stat'' is set to $0$.  Otherwise, it is set to $1$.
 
 \subsection{RSA Hash Signatures}
 Similar to RSA key encryption RSA is also used to ``digitally sign'' message digests (hashes).  To facilitate this
@@ -2729,7 +2687,6 @@ the output is stored in ``out'' of length ``outlen''.
 \begin{verbatim}
 int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
                     const unsigned char *msghash,  unsigned long msghashlen,
-                          prng_state    *prng,     int           prng_idx,
                           int            hash_idx, unsigned long saltlen,
                           int           *stat,     rsa_key      *key);
 \end{verbatim}
@@ -2799,8 +2756,6 @@ int main(void)
                               &l2, /* plaintext length */
                         "TestApp", /* lparam for this program */
                                 7, /* lparam is 7 bytes long */
-                             NULL, /* PRNG state */
-                         prng_idx, /* prng idx */
                          hash_idx, /* hash idx */
                              &res, /* validity of data */
                              &key) /* our RSA key */ 
@@ -3060,6 +3015,33 @@ provided are very close to $p$ that is $\vert \vert \phi(\beta) \vert \vert \app
 range in order from $\approx 2^{192}$ points to $\approx 2^{521}$.  According to the source document any key size greater
 than or equal to 256-bits is sufficient for long term security.  
 
+\section{Key Format}
+LibTomCrypt uses it's own format for ECC public and private keys.  While ANSI X9.62 partially specifies key formats (it covers public keys) it does it in a less
+than ideally simple manner.  In the case of LibTomCrypt it is meant \textbf{solely} for NIST $GF(p)$ curves.  The format of the keys is as follows:
+
+\begin{small}
+\begin{verbatim}
+ECCPublicKey ::= SEQUENCE {
+    flags       BIT STRING(1), -- public/private flag (always zero), 
+    keySize     INTEGER,       -- Curve size (in bits) divided by eight 
+                               -- and rounded down, e.g. 521 => 65
+    pubkey.x    INTEGER,       -- The X co-ordinate of the public key point
+    pubkey.y    INTEGER,       -- The Y co-ordinate of the public key point
+}
+
+ECCPrivateKey ::= SEQUENCE {
+    flags       BIT STRING(1), -- public/private flag (always one), 
+    keySize     INTEGER,       -- Curve size (in bits) divided by eight 
+                               -- and rounded down, e.g. 521 => 65
+    pubkey.x    INTEGER,       -- The X co-ordinate of the public key point
+    pubkey.y    INTEGER,       -- The Y co-ordinate of the public key point
+    secret.k    INTEGER,       -- The secret key scalar
+}
+\end{verbatim}
+\end{small}
+
+The first flags bit denotes whether the key is public (zero) or private (one).  
+
 \section{Core Functions}
 
 Like the DH routines there is a key structure ``ecc\_key'' used by the functions.  There is a function to make a key:
@@ -3069,8 +3051,8 @@ int ecc_make_key(prng_state *prng, int wprng,
                  int keysize, ecc_key *key);
 \end{verbatim}
 
-The ``keysize'' is the size of the modulus in bytes desired.  Currently directly supported values are 20, 24, 28, 32, 48 and 65 bytes which
-correspond to key sizes of 160, 192, 224, 256, 384 and 521 bits respectively.  If you pass a key size that is between any key size
+The ``keysize'' is the size of the modulus in bytes desired.  Currently directly supported values are 24, 28, 32, 48 and 65 bytes which
+correspond to key sizes of 192, 224, 256, 384 and 521 bits respectively.  If you pass a key size that is between any key size
 it will round the keysize up to the next available one.  The rest of the parameters work like they do in the ``dh\_make\_key()'' function.  
 To free the ram allocated by a key call:
 \index{ecc\_free()}
@@ -3129,10 +3111,22 @@ int ecc_decrypt_key(const unsigned char *in,  unsigned long  inlen,
                           ecc_key *key);
 \end{verbatim}
 
-Where ``in'' is an input symmetric key of no more than 32 bytes.  Essentially these routines created a random public key
+Where ``in'' is an input symmetric key of no more than 64 bytes.  Essentially these routines created a random public key
 and find the hash of the shared secret.  The message digest is than XOR'ed against the symmetric key.  All of the required
 data is placed in ``out'' by ``ecc\_encrypt\_key()''.   The hash chosen must produce a message digest at least as large
 as the symmetric key you are trying to share.
+
+\subsection{Encrypt Packet Format}
+
+The packet format for the encrypted keys is the following ASN.1 SEQUENCE:
+
+\begin{verbatim}
+ECCEncrypt ::= SEQUENCE {
+   hashID        OBJECT IDENTIFIER, -- OID of hash used
+   pubkey        OCTET STRING     , -- Encapsulated ECCPublicKey (see above)
+   skey          OCTET STRING       -- xor of plaintext and "hash of shared secret"
+}
+\end{verbatim}
 
 There are also functions to sign and verify the hash of a message.
 \index{ecc\_sign\_hash()} \index{ecc\_verify\_hash()}
@@ -3150,12 +3144,14 @@ The ``ecc\_sign\_hash'' function signs the message hash in ``in'' of length ``in
 The ``ecc\_verify\_hash'' function verifies the ECC signature in ``sig'' against the hash in ``hash''.  It sets ``stat''
 to non-zero if the signature passes or zero if it fails.
 
+\subsection{Signature Format}
+The signature code is an implementation of X9.62 EC-DSA and the output is comformant for GF(p) curves.
 
 \section{ECC Keysizes}
 With ECC if you try and sign a hash that is bigger than your ECC key you can run into problems.  The math will still work
 and in effect the signature will still work.  With ECC keys the strength of the signature is limited by the size of
-the hash or the size of they key, whichever is smaller.  For example, if you sign with SHA256 and a ECC-160 key in effect
-you have 160-bits of security (e.g. as if you signed with SHA-1).  
+the hash or the size of they key, whichever is smaller.  For example, if you sign with SHA256 and an ECC-192 key in effect
+you have 192-bits of security.  
 
 The library will not warn you if you make this mistake so it is important to check yourself before using the 
 signatures.
@@ -3169,6 +3165,38 @@ would require at least 256 bytes where as the DSA signature would require only a
 
 The API for the DSA is essentially the same as the other PK algorithms.  Except in the case of DSA no encryption or
 decryption routines are provided.  
+
+\section{Key Format}
+Since no useful public standard for DSA key storage was presented to me during the course of this development I made my own ASN.1 SEQUENCE which I document
+now so that others can interoperate with this library.
+
+\begin{verbatim}
+DSAPublicKey ::= SEQUENCE {
+    publicFlags    BIT STRING(1), -- must be 0
+    g              INTEGER      , -- base generator, check that g^q mod p == 1
+                                  -- and that 1 < g < p - 1
+    p              INTEGER      , -- prime modulus 
+    q              INTEGER      , -- order of sub-group (must be prime)
+    y              INTEGER      , -- public key, specifically, g^x mod p, 
+                                  -- check that y^q mod p == 1
+                                  -- and that 1 < y < p - 1
+}
+
+DSAPrivateKey ::= SEQUENCE {
+    publicFlags    BIT STRING(1), -- must be 1
+    g              INTEGER      , -- base generator, check that g^q mod p == 1
+                                  -- and that 1 < g < p - 1
+    p              INTEGER      , -- prime modulus 
+    q              INTEGER      , -- order of sub-group (must be prime)
+    y              INTEGER      , -- public key, specifically, g^x mod p, 
+                                  -- check that y^q mod p == 1
+                                  -- and that 1 < y < p - 1
+    x              INTEGER        -- private key
+}
+\end{verbatim}
+
+The leading BIT STRING has a single bit in it which is zero for public keys and one for private keys.  This makes the structure uniquely decodable and easy
+to work with.
 
 \section{Key Generation}
 To make a DSA key you must call the following function
@@ -3291,79 +3319,351 @@ This will import the DSA key from the buffer ``in'' of length ``inlen'' to the `
 will automatically free all of the heap allocated in the process (you don't have to call dsa\_free()).  
 
 \chapter{Standards Support}
-\section{DER Support}
-DER or ``Distinguished Encoding Rules'' is a subset of the ASN.1 encoding rules that is fully deterministic and
-ideal for cryptography.  In particular ASN.1 specifies an INTEGER type for storing arbitrary sized integers.  DER
-further limits the ASN.1 specifications to a deterministic encoding.
+\section{ASN.1 Formats}
+LibTomCrypt supports a variety of ASN.1 data types encoded with the Distinguished Encoding Rules (DER) suitable for various cryptographic protocols.  The data types
+are all provided with three basic functions with \textit{similar} prototypes.  One function has been dedicated to calculate the length in octets of a given
+format and two functions have been dedicated to encoding and decoding the format.  
 
-\subsection{Storing INTEGER types}
-\index{der\_encode\_integer()}
-\begin{alltt}
-int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen);
-\end{alltt}
+On top of the basic data types are the SEQUENCE and\footnote{Planned for LTC 1.06} SET data types which are collections of other ASN.1 types.  They are provided 
+in the same manner as the other data types except they use list of objects known as the \textbf{ltc\_asn1\_list} structure.  It is defined as 
 
-This will store the integer in ``num'' to the output buffer ``out'' of length ``outlen''.  It only stores
-non--negative numbers.  It stores the number of octets used back in ``outlen''.
+\index{ltc\_asn1\_list structure}
+\begin{verbatim}
+typedef struct {
+   int           type;
+   void         *data;
+   unsigned long size;
+   int           used;
+} ltc_asn1_list;
+\end{verbatim}
 
-\subsection{Reading INTEGER types}
-\index{der\_decode\_integer()}
-\begin{alltt}
-int der_decode_integer(const unsigned char *in, unsigned long *inlen, mp_int *num);
-\end{alltt}
-This will decode the DER encoded INTEGER in ``in'' of length ``inlen'' and store the resulting integer
-in ``num''.  It will store the bytes read in ``inlen'' which is handy if you have to parse multiple
-data items out of a binary packet.
+The ``type'' field is one of the following ASN.1 field definitions.  The ``data'' pointer is a void pointer to the data to be encoded (or the destination) and the 
+``size'' field is specific to what you are encoding (e.g. number of bits in the BIT STRING data type).  The ``used'' field is primarily for the CHOICE decoder
+and reflects if the particular member of a list was the decoded data type.  To help build the lists in an orderly fashion the macro
+``LTC\_SET\_ASN1(list, index, Type, Data, Size)'' has been provided.
 
-\subsection{INTEGER length}
-\index{der\_length\_integer()}
-\begin{alltt}
-int der_length_integer(mp_int *num, unsigned long *len);
-\end{alltt}
-This will determine the length of the DER encoding of the integer ``num'' and store it in ``len''.
+It will assign to the ``index''th position in the ``list'' the tripplet (Type, Data, Size).  An example usage would be:
 
-\subsection{Multiple INTEGER types}
-To simplify the DER encoding/decoding there are two functions two handle multple types at once.
+\begin{small}
+\begin{verbatim}
+...
+ltc_asn1_list   sequence[3];
+unsigned long   three=3;
 
-\index{der\_put\_multi\_integer()}
-\index{der\_get\_multi\_integer()}
-\begin{alltt}
-int der_put_multi_integer(unsigned char *dst, unsigned long *outlen, mp_int *num, ...);
-int der_get_multi_integer(const unsigned char *src, unsigned long *inlen,  mp_int *num, ...);
-\end{alltt}
+LTC_SET_ASN1(sequence, 0, LTC_ASN1_IA5_STRING,    "hello", 5);
+LTC_SET_ASN1(sequence, 1, LTC_ASN1_SHORT_INTEGER, &three,  1);
+LTC_SET_ASN1(sequence, 2, LTC_ASN1_NULL,           NULL,   0);
+\end{verbatim}
+\end{small}
 
-These will handle multiple encodings/decodings at once.  They work like their single operand counterparts
-except they handle a \textbf{NULL} terminated list of operands.
+The macro is relatively safe with respect to modifying variables, for instance the following code is equivalent.
+
+\begin{small}
+\begin{verbatim}
+...
+ltc_asn1_list   sequence[3];
+unsigned long   three=3;
+int             x=0;
+LTC_SET_ASN1(sequence, x++, LTC_ASN1_IA5_STRING,    "hello", 5);
+LTC_SET_ASN1(sequence, x++, LTC_ASN1_SHORT_INTEGER, &three,  1);
+LTC_SET_ASN1(sequence, x++, LTC_ASN1_NULL,           NULL,   0);
+\end{verbatim}
+\end{small}
+
+\begin{figure}[here]
+\begin{center}
+\begin{small}
+\begin{tabular}{|l|l|}
+\hline \textbf{Definition}           & \textbf{ASN.1 Type} \\
+\hline LTC\_ASN1\_EOL                & End of a ASN.1 list structure. \\
+\hline LTC\_ASN1\_INTEGER            & INTEGER (uses mp\_int) \\
+\hline LTC\_ASN1\_SHORT\_INTEGER     & INTEGER (32--bit using unsigned long) \\
+\hline LTC\_ASN1\_BIT\_STRING        & BIT STRING (one bit per char) \\
+\hline LTC\_ASN1\_OCTET\_STRING      & OCTET STRING (one octet per char) \\
+\hline LTC\_ASN1\_NULL               & NULL \\
+\hline LTC\_ASN1\_OBJECT\_IDENTIFIER & OBJECT IDENTIFIER (words are in unsigned long) \\
+\hline LTC\_ASN1\_IA5\_STRING        & IA5 STRING (one octet per char) \\
+\hline LTC\_ASN1\_PRINTABLE\_STRING  & PRINTABLE STIRNG (one octet per char) \\
+\hline LTC\_ASN1\_UTCTIME            & UTCTIME (see ltc\_utctime structure) \\
+\hline LTC\_ASN1\_SEQUENCE           & SEQUENCE OF \\
+\hline LTC\_ASN1\_CHOICE             & CHOICE \\
+\hline
+\end{tabular}
+\caption{List of ASN.1 Supported Types}
+\end{small}
+\end{center}
+\end{figure}
+
+\subsection{SEQUENCE Type}
+The SEQUENCE data type is a collection of other ASN.1 data types encapsulated with a small header which is a useful way of sending multiple data types in one packet.
+
+\subsubsection{SEUQNECE Encoding}
+To encode a sequence a \textbf{ltc\_asn1\_list} array must be initialized with the members of the sequence and their respective pointers.  The encoding is performed
+with the following function.
+
+\index{der\_encode\_sequence()}
+\begin{verbatim}
+int der_encode_sequence(ltc_asn1_list *list, unsigned long inlen,
+                        unsigned char *out,  unsigned long *outlen);
+\end{verbatim}
+This encodes a sequence of items pointed to by ``list'' where the list has ``inlen'' items in it.  The SEQUENCE will be encoded to ``out'' and of length ``outlen''.  The
+function will terminate when it reads all the items out of the list (upto ``inlen'') or it encounters an item in the list with a type of \textbf{LTC\_ASN1\_EOL}.
+
+The ``data'' pointer in the list would be the same pointer you would pass to the respective ASN.1 encoder (e.g. der\_encode\_bit\_string()) and it is simply passed on
+verbatim to the dependent encoder.  The list can contain other SEQUENCE or SET types which enables you to have nested SEQUENCE and SET definitions.  In these cases
+the ``data'' pointer is simply a pointer to another \textbf{ltc\_asn1\_list}.
+
+\subsubsection{SEQUENCE Decoding}
+
+\index{der\_decode\_sequence()}
+
+Decoding a SEQUENCE is similar to encoding.  You set up an array of \textbf{ltc\_asn1\_list} where in this case the ``size'' member is the maximum size 
+(in certain cases).  For types such as IA5 STRING, BIT STRING, OCTET STRING (etc) the ``size'' field is updated after successful decoding to reflect how many
+units of the respective type has been loaded.  
 
 \begin{verbatim}
-#include <tomcrypt.h>
-int main(void)
-{
-   mp_int        a, b, c, d;
-   unsigned char buffer[1000];
-   unsigned long len;
-   int           err;
-
-   /* init a,b,c,d with some values ... */
-
-   /* ok we want to store them now... */
-   len = sizeof(buffer);
-   if ((err = der_put_multi_integer(buffer, &len, 
-                                    &a, &b, &c, &d, NULL)) != CRYPT_OK) {
-      // error
-   }
-   printf("I stored %lu bytes in buf\n", len);
-
-   /* ok say we want to get them back for fun */
-   /* len set previously...otherwise set it to the size of the packet */
-   if ((err = der_get_multi_integer(buffer, &len,
-                                    &a, &b, &c, &d, NULL)) != CRYPT_OK) {
-      // error
-   }
-   printf("I read %lu bytes from buf\n", len);
-}
+int der_decode_sequence(const unsigned char *in,   unsigned long  inlen,
+                              ltc_asn1_list *list, unsigned long  outlen);
 \end{verbatim}
+
+This will decode upto ``outlen'' items from the input buffer ``in'' of length ``inlen'' octets.  The function will stop (gracefully) when it runs out of items to decode.
+It will fail (for among other reasons) when it runs out of input bytes to read, a data type is invalid or a heap failure occured.
+
+For the following types the ``size'' field will be updated to reflect the number of units read of the given type.
+\begin{enumerate}
+   \item BIT STRING
+   \item OCTET STRING
+   \item OBJECT IDENTIFIER
+   \item IA5 STRING
+   \item PRINTABLE STRING
+\end{enumerate}
+
+\subsubsection{SEQUENCE Length}
+
+The length of a SEQUENCE can be determined with the following function.
+
+\index{der\_length\_sequence()}
+\begin{verbatim}
+int der_length_sequence(ltc_asn1_list *list, unsigned long inlen,
+                        unsigned long *outlen);
+\end{verbatim}
+
+This will get the encoding size for the given ``list'' of length ``inlen'' and store it in ``outlen''.  
+
+\subsubsection{SEQUENCE Multiple Argument Lists}
+
+For small or simple sequences an encoding or decoding can be performed with one of the following two functions.
+
+\index{der\_encode\_sequence\_multi()}
+\index{der\_decode\_sequence\_multi()}
+
+\begin{verbatim}
+int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...);
+int der_decode_sequence_multi(const unsigned char *in, unsigned long inlen, ...);
+\end{verbatim}
+
+These either encode or decode (respectively) a SEQUENCE data type where the items in the sequence are specified after the length parameter.
+
+The list of items are specified as a triple of the form ``(type, size, data)''  where ``type'' is an \textbf{int}, ``size'' is a \textbf{unsigned long}
+and ``data'' is \textbf{void} pointer.  The list of items must be terminated with an item with the type \textbf{LTC\_ASN1\_EOL}.
+
+It's ideal that you cast the ``size'' values to unsigned long to ensure that the proper data type is passed to the function.  Constants such as ``1'' without
+a cast or prototype are of type \textbf{int} by default.  Appending \textit{UL} or prepending \textit{(unsigned long)} is enough to cast it to the correct type.
+
+\subsection{ASN.1 INTEGER}
+
+To encode or decode INTEGER data types use the following functions.
+
+\index{der\_encode\_integer()}
+\index{der\_decode\_integer()}
+\index{der\_length\_integer()}
+\begin{verbatim}
+int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen);
+int der_decode_integer(const unsigned char *in, unsigned long inlen, mp_int *num);
+int der_length_integer(mp_int *num, unsigned long *len);
+\end{verbatim}
+
+These will encode or decode a signed INTEGER data type using the ``mp\_int'' data type to store the large INTEGER.  To encode smaller values without allocating
+an mp\_int to store the value the ``short'' INTEGER functions were made available.
+
+\index{der\_encode\_short\_integer()}
+\index{der\_decode\_short\_integer()}
+\index{der\_length\_short\_integer()}
+\begin{verbatim}
+int der_encode_short_integer(unsigned long  num, 
+                             unsigned char *out, unsigned long *outlen);
+
+int der_decode_short_integer(const unsigned char *in,  unsigned long inlen, 
+                                   unsigned long *num);
+
+int der_length_short_integer(unsigned long num, unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode an unsigned \textbf{unsigned long} type (only reads upto 32--bits).  For values in the range $0 \dots 2^{32} - 1$ the integer 
+and short integer functions can encode and decode each others outputs.  
+
+\subsection{ASN.1 BIT STRING}
+
+\index{der\_encode\_bit\_string()}
+\index{der\_decode\_bit\_string()}
+\index{der\_length\_bit\_string()}
+\begin{verbatim}
+int der_encode_bit_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_decode_bit_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_length_bit_string(unsigned long nbits, unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode a BIT STRING data type.  The bits are passed in (or read out) using one \textbf{char} per bit.  A non--zero value will be interpretted
+as a one bit and a zero value a zero bit.
+
+\subsection{ASN.1 OCTET STRING}
+
+\index{der\_encode\_octet\_string()}
+\index{der\_decode\_octet\_string()}
+\index{der\_length\_octet\_string()}
+\begin{verbatim}
+int der_encode_octet_string(const unsigned char *in, unsigned long inlen,
+                                  unsigned char *out, unsigned long *outlen);
+
+int der_decode_octet_string(const unsigned char *in, unsigned long inlen,
+                                  unsigned char *out, unsigned long *outlen);
+
+int der_length_octet_string(unsigned long noctets, unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode an OCTET STRING data type.  The octets are stored using one \textbf{char} each.  
+
+\subsection{ASN.1 OBJECT IDENTIFIER}
+
+\index{der\_encode\_object\_identifier()}
+\index{der\_decode\_object\_identifier()}
+\index{der\_length\_object\_identifier()}
+\begin{verbatim}
+int der_encode_object_identifier(unsigned long *words, unsigned long  nwords,
+                                 unsigned char *out,   unsigned long *outlen);
+
+int der_decode_object_identifier(const unsigned char *in,    unsigned long  inlen,
+                                       unsigned long *words, unsigned long *outlen);
+
+int der_length_object_identifier(unsigned long *words, unsigned long nwords, 
+                                 unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode an OBJECT IDENTIFIER object.  The words of the OID are stored in individual \textbf{unsigned long} elements and must be in the range
+$0 \ldots 2^{32} - 1$.  
+
+\subsection{ASN.1 IA5 STRING}
+
+\index{der\_encode\_ia5\_string()}
+\index{der\_decode\_ia5\_string()}
+\index{der\_length\_ia5\_string()}
+\begin{verbatim}
+int der_encode_ia5_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_decode_ia5_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_length_ia5_string(const unsigned char *octets, unsigned long noctets, 
+                                unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode an IA5 STRING.  The characters are read or stored in individual \textbf{char} elements.  This functions performs internal character
+to numerical conversions based on the conventions of the compiler being used.  For instance, on an x86\_32 machine 'A' == 65 but the same may not be true on 
+say a SPARC machine.  Internally these functions have a table of literal characters and their numerical ASCII values.  This provides a stable conversion provided
+that the build platform honours the runtime platforms character conventions.
+
+If you're worried try building the test suite and running it.  It has hard coded test vectors to ensure it is operating properly. 
+
+\subsection{ASN.1 PRINTABLE STRING}
+
+\index{der\_encode\_printable\_string()}
+\index{der\_decode\_printable\_string()}
+\index{der\_length\_printable\_string()}
+\begin{verbatim}
+int der_encode_printable_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_decode_printable_string(const unsigned char *in, unsigned long inlen,
+                                unsigned char *out, unsigned long *outlen);
+
+int der_length_printable_string(const unsigned char *octets, unsigned long noctets, 
+                                unsigned long *outlen);
+\end{verbatim}
+
+These will encode or decode an PRINTABLE STRING.  The characters are read or stored in individual \textbf{char} elements.  This functions performs internal character
+to numerical conversions based on the conventions of the compiler being used.  For instance, on an x86\_32 machine 'A' == 65 but the same may not be true on 
+say a SPARC machine.  Internally these functions have a table of literal characters and their numerical ASCII values.  This provides a stable conversion provided
+that the build platform honours the runtime platforms character conventions.
+
+If you're worried try building the test suite and running it.  It has hard coded test vectors to ensure it is operating properly. 
+
+\subsection{ASN.1 UTCTIME}
+
+The UTCTIME type is to store a date and time in ASN.1 format.  It uses the following structure to organize the time.
+
+\begin{verbatim}
+typedef struct {
+   unsigned YY, /* year    00--99 */
+            MM, /* month   01--12 */
+            DD, /* day     01--31 */
+            hh, /* hour    00--23 */
+            mm, /* minute  00--59 */
+            ss, /* second  00--59 */
+            off_dir, /* timezone offset direction 0 == +, 1 == - */
+            off_hh, /* timezone offset hours */
+            off_mm; /* timezone offset minutes */
+} ltc_utctime;
+\end{verbatim}
+
+The time can be offset plus or minus a set amount of hours (off\_hh) and minutes (off\_mm).  When ``off\_dir'' is zero the time will be added otherwise it 
+will be subtracted.  
+
+For instance, the array $\lbrace 5, 6, 20, 22, 4, 00, 0, 5, 0 \rbrace$ represents the current time of 2005, June 20th, 22:04:00 with a time offset of +05h00.  
+
+\index{der\_encode\_utctime()}
+\index{der\_decode\_utctime()}
+\index{der\_length\_utctime()}
+\begin{verbatim}
+int der_encode_utctime(ltc_utctime *utctime, 
+                       unsigned char *out,   unsigned long *outlen);
+
+int der_decode_utctime(const unsigned char *in, unsigned long *inlen,
+                             ltc_utctime   *out);
+
+int der_length_utctime(ltc_utctime *utctime, unsigned long *outlen);
+\end{verbatim}
+
+The encoder will store time in one of the two ASN.1 formats, either ``YYMMDDhhmmssZ'' or ``YYMMDDhhmmss$\pm$hhmm'' and perform minimal error checking on the 
+input.  The decoder will read all valid ASN.1 formats and perform range checking on the values (not complete but rational) useful for catching packet errors.
+
+It is suggested that decoded data be further scrutinized (e.g. days of month in particular).
+
+\subsection{ASN.1 CHOICE}
+
+The CHOICE ASN.1 type represents a union of ASN.1 types all of which are stored in a ``ltc\_asn1\_list''.  There is no encoder for the CHOICE type, only a 
+decoder.  The decoder will scan through the provided list attempting to use the appropriate decoder on the input packet.  The list can contain any ASN.1 data
+type\footnote{Except it cannot have LTC\_ASN1\_INTEGER and LTC\_ASN1\_SHORT\_INTEGER simultaneously.} except for other CHOICE types.  
+
+There is no encoder for the CHOICE type as the actual DER encoding is the encoding of the chosen type.  
+
+\index{der\_decode\_choice()}
+\begin{verbatim}
+int der_decode_choice(const unsigned char *in,   unsigned long *inlen,
+                            ltc_asn1_list *list, unsigned long  outlen);
+\end{verbatim}
+
+This will decode the input in the ``in'' field of length ``inlen''.  It uses the provided ASN.1 list specified in the ``list'' field which has ``outlen'' elements.  
+The ``inlen'' field will be updated with the length of the decoded data type as well as the respective entry in the ``list'' field will have the ``used'' flag 
+set to non--zero to reflect it was the data type decoded.
+
 \section{Password Based Cryptography}
 \subsection{PKCS \#5}
+\index{PKCS \#5}
 In order to securely handle user passwords for the purposes of creating session keys and chaining IVs the PKCS \#5 was drafted.   PKCS \#5
 is made up of two algorithms, Algorithm One and Algorithm Two.  Algorithm One is the older fairly limited algorithm which has been implemented
 for completeness.  Algorithm Two is a bit more modern and more flexible to work with.
@@ -3435,7 +3735,6 @@ int main(void)
     /* use material (recall to store the salt in the output) */
 \}
 \end{alltt}
-
 
 \chapter{Miscellaneous}
 \section{Base64 Encoding and Decoding}
@@ -3634,7 +3933,6 @@ $n$ it requires $\sqrt n$ work.  The following table sumarizes the work required
 \begin{center}
 \begin{tabular}{|c|c|}
     \hline ECC Key Size (bits) & Work Factor ($log_2$) \\
-    \hline 160 & 80  \\
     \hline 192 & 96  \\
     \hline 224 & 112 \\
     \hline 256 & 128 \\
@@ -3792,8 +4090,8 @@ will increase by approximately 500 bytes.  If this is defined but TWOFISH\_SMALL
 it will not speed up the encryption or decryption functions.
 
 \subsection{GCM\_TABLES}
-When defined GCM will use a 64KB table (per GCM state) which will greatly lower up the per--packet latency.  
-It also increases the initialization time.  
+When defined GCM will use a 64KB table (per GCM state) which will greatly speed up the per--packet latency.  
+It also increases the initialization time and isn't suitable when you are going to use a key a few times only.  
 
 \subsection{SMALL\_CODE}
 When this is defined some of the code such as the Rijndael and SAFER+ ciphers are replaced with smaller code variants.
@@ -3823,6 +4121,13 @@ If you do plan on using the ``LTC\_FAST'' mode you have to also define a ``LTC\_
 data type you can perform integer operations with.  Ideally it should be four or eight bytes since it must properly divide the size 
 of your block cipher (e.g. 16 bytes for AES).  This means sadly if you're on a platform with 57--bit words (or something) you can't 
 use this mode.  So sad.
+
+\subsection{LTC\_PTHREAD}
+When this is activated all of the descriptor table functions will use pthread locking to ensure thread safe updates to the tables.  Note that 
+it doesn't prevent a thread that is passively using a table from being messed up by another thread that updates the table.
+
+Generally the rule of thumb is to setup the tables once at startup and then leave them be.  This added build flag simply makes updating
+the tables safer.
 
 \section{MPI Tweaks}
 \subsection{RSA Only Tweak}
@@ -4030,8 +4335,8 @@ To initialize a cipher (for ECB mode) the function setup() was provided.  It acc
 can specify the number of rounds they want through ``num\_rounds'' where $num\_rounds = 0$ means use the default.  The destination of a scheduled key is stored
 in ``skey''.
 
-This is where things get tricky.  Currently there is no provision to allocate memory during initialization since there is no ``cipher done'' function.  So you have
-to either use an existing member of the symmetric\_key union or alias your own structure over top of it provided symmetric\_key is not smaller.
+Inside the ``symmetric\_key'' union there is a ``void *data'' which you can use to allocate data if you need a data structure that doesn't fit with the existing
+ones provided.  Just make sure in your ``done()'' function that you free the allocated memory.
 
 \subsection{Single block ECB}
 To process a single block in ECB mode the ecb\_encrypt() and ecb\_decrypt() functions were provided.  The plaintext and ciphertext buffers are allowed to overlap so you 
@@ -4062,7 +4367,8 @@ updated by the function before returning.
 \subsubsection{Accelerated CTR}
 This function is meant for accelerated CTR encryption.  It is accessible through the accel\_ctr\_encrypt pointer.
 The ``blocks'' value is the number of complete blocks to process.  The ``IV'' is the CTR counter vector.  It is an input upon calling this function and must be
-updated by the function before returning.  The ``mode'' value indicates whether the counter is big ($mode = 1$) or little ($mode = 0$) endian.
+updated by the function before returning.  The ``mode'' value indicates whether the counter is big (mode = CTR\_COUNTER\_BIG\_ENDIAN) or 
+little (mode = CTR\_COUNTER\_LITTLE\_ENDIAN) endian.
 
 This function (and the way it's called) differs from the other two since ctr\_encrypt() allows any size input plaintext.  The accelerator will only be
 called if the following conditions are met.
@@ -4101,10 +4407,10 @@ struct ltc_hash_descriptor {
     unsigned long hashsize;
     /** Input block size in octets */
     unsigned long blocksize;
-    /** ASN.1 DER identifier */
-    unsigned char DER[64];
+    /** ASN.1 OID */
+    unsigned long OID[16];
     /** Length of DER encoding */
-    unsigned long DERlen;
+    unsigned long OIDlen;
     /** Init a hash state
       @param hash   The hash to initialize
       @return CRYPT_OK if successful
@@ -4144,8 +4450,8 @@ The ``hashsize'' variable indicates the length of the output in octets.
 The `blocksize'' variable indicates the length of input (in octets) that the hash processes in a given
 invokation.
 
-\subsection{DER Identifier}
-This is the DER identifier (including the SEQUENCE header).  This is used solely for PKCS \#1 style signatures.  
+\subsection{OID Identifier}
+This is the universal ASN.1 Object Identifier for the hash.
 
 \subsection{Initialization}
 The init function initializes the hash and prepares it to process message bytes.
@@ -4251,3 +4557,7 @@ but should at least maintain the same level of state entropy.
 \input{crypt.ind}
 
 \end{document}
+
+% $Source: /cvs/libtom/libtomcrypt/crypt.tex,v $   
+% $Revision: 1.39 $   
+% $Date: 2005/06/27 13:08:28 $ 

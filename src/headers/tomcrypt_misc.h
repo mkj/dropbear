@@ -15,3 +15,7 @@ const char *error_to_string(int err);
 int mpi_to_ltc_error(int err);
 
 extern const char *crypt_build_settings;
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_misc.h,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -102,6 +102,12 @@ int pelican_process(pelican_state *pelmac, const unsigned char *in, unsigned lon
 
    LTC_ARGCHK(pelmac != NULL);
    LTC_ARGCHK(in     != NULL);
+
+   /* check range */
+   if (pelmac->buflen < 0 || pelmac->buflen > 15) {
+      return CRYPT_INVALID_ARG;
+   }
+
 #ifdef LTC_FAST
    if (pelmac->buflen == 0) {
       while (inlen & ~15) {
@@ -136,6 +142,12 @@ int pelican_done(pelican_state *pelmac, unsigned char *out)
 {
    LTC_ARGCHK(pelmac  != NULL);
    LTC_ARGCHK(out     != NULL);
+
+   /* check range */
+   if (pelmac->buflen < 0 || pelmac->buflen > 16) {
+      return CRYPT_INVALID_ARG;
+   }
+
    if  (pelmac->buflen == 16) {
        four_rounds(pelmac);
        pelmac->buflen = 0;
@@ -147,3 +159,7 @@ int pelican_done(pelican_state *pelmac, unsigned char *out)
 }                        
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pelican/pelican.c,v $ */
+/* $Revision: 1.16 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

@@ -21,26 +21,25 @@
   Sign a hash with DSA
   @param in       The hash to sign
   @param inlen    The length of the hash to sign
-  @param out      [out] Where to store the signature
-  @param outlen   [in/out] The max size and resulting size of the signature
+  @param r        The "r" integer of the signature (caller must initialize with mp_init() first)
+  @param s        The "s" integer of the signature (caller must initialize with mp_init() first)
   @param prng     An active PRNG state
   @param wprng    The index of the PRNG desired
   @param key      A private DSA key
   @return CRYPT_OK if successful
 */
-int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
-                        unsigned char *out, unsigned long *outlen,
-                        prng_state *prng, int wprng, dsa_key *key)
+int dsa_sign_hash_raw(const unsigned char *in,  unsigned long inlen,
+                                   mp_int *r,   mp_int *s,
+                               prng_state *prng, int wprng, dsa_key *key)
 {
-   mp_int         k, kinv, tmp, r, s;
+   mp_int         k, kinv, tmp;
    unsigned char *buf;
    int            err;
-   unsigned long  out1, out2;
 
-   LTC_ARGCHK(in     != NULL);
-   LTC_ARGCHK(out    != NULL);
-   LTC_ARGCHK(outlen != NULL);
-   LTC_ARGCHK(key    != NULL);
+   LTC_ARGCHK(in  != NULL);
+   LTC_ARGCHK(r   != NULL);
+   LTC_ARGCHK(s   != NULL);
+   LTC_ARGCHK(key != NULL);
 
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
       return err;
@@ -60,7 +59,7 @@ int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
    }
 
    /* Init our temps */
-   if ((err = mp_init_multi(&k, &kinv, &r, &s, &tmp, NULL)) != MP_OKAY)               { goto error; }
+   if ((err = mp_init_multi(&k, &kinv, &tmp, NULL)) != MP_OKAY)               { goto error; }
 
 retry:
 
@@ -85,37 +84,26 @@ retry:
    if ((err = mp_invmod(&k, &key->q, &kinv)) != MP_OKAY)                              { goto error; }
 
    /* now find r = g^k mod p mod q */
-   if ((err = mp_exptmod(&key->g, &k, &key->p, &r)) != MP_OKAY)                       { goto error; }
-   if ((err = mp_mod(&r, &key->q, &r)) != MP_OKAY)                                    { goto error; }
+   if ((err = mp_exptmod(&key->g, &k, &key->p, r)) != MP_OKAY)                        { goto error; }
+   if ((err = mp_mod(r, &key->q, r)) != MP_OKAY)                                      { goto error; }
 
-   if (mp_iszero(&r) == MP_YES)                                                       { goto retry; }
+   if (mp_iszero(r) == MP_YES)                                                        { goto retry; }
 
    /* now find s = (in + xr)/k mod q */
    if ((err = mp_read_unsigned_bin(&tmp, (unsigned char *)in, inlen)) != MP_OKAY)     { goto error; }
-   if ((err = mp_mul(&key->x, &r, &s)) != MP_OKAY)                                    { goto error; }
-   if ((err = mp_add(&s, &tmp, &s)) != MP_OKAY)                                       { goto error; }
-   if ((err = mp_mulmod(&s, &kinv, &key->q, &s)) != MP_OKAY)                          { goto error; }
+   if ((err = mp_mul(&key->x, r, s)) != MP_OKAY)                                      { goto error; }
+   if ((err = mp_add(s, &tmp, s)) != MP_OKAY)                                         { goto error; }
+   if ((err = mp_mulmod(s, &kinv, &key->q, s)) != MP_OKAY)                            { goto error; }
 
-   if (mp_iszero(&s) == MP_YES)                                                       { goto retry; }
+   if (mp_iszero(s) == MP_YES)                                                        { goto retry; }
 
-   /* now store em both */
-   
-   /* first check that we have enough room */
-   if ((err = der_length_integer(&s, &out1)) != CRYPT_OK)                             { goto LBL_ERR; }
-   if ((err = der_length_integer(&r, &out2)) != CRYPT_OK)                             { goto LBL_ERR; }
-   if (*outlen < (out1+out2)) {
-      err = CRYPT_BUFFER_OVERFLOW;
-      goto LBL_ERR;
-   }
-
-   /* store ints */
-   err = der_put_multi_integer(out, outlen, &r, &s, NULL);
+   err = CRYPT_OK;
    goto LBL_ERR;
 
 error: 
    err = mpi_to_ltc_error(err);
 LBL_ERR: 
-   mp_clear_multi(&k, &kinv, &r, &s, &tmp, NULL);
+   mp_clear_multi(&k, &kinv, &tmp, NULL);
 #ifdef LTC_CLEAN_STACK
    zeromem(buf, MDSA_MAX_GROUP);
 #endif
@@ -123,4 +111,49 @@ LBL_ERR:
    return err;
 }
 
+/**
+  Sign a hash with DSA
+  @param in       The hash to sign
+  @param inlen    The length of the hash to sign
+  @param out      [out] Where to store the signature
+  @param outlen   [in/out] The max size and resulting size of the signature
+  @param prng     An active PRNG state
+  @param wprng    The index of the PRNG desired
+  @param key      A private DSA key
+  @return CRYPT_OK if successful
+*/
+int dsa_sign_hash(const unsigned char *in,  unsigned long inlen,
+                        unsigned char *out, unsigned long *outlen,
+                        prng_state *prng, int wprng, dsa_key *key)
+{
+   mp_int        r, s;
+   int           err;
+
+   LTC_ARGCHK(in      != NULL);
+   LTC_ARGCHK(out     != NULL);
+   LTC_ARGCHK(outlen  != NULL);
+   LTC_ARGCHK(key     != NULL);
+
+   if (mp_init_multi(&r, &s, NULL) != MP_OKAY) {
+      return CRYPT_MEM;
+   }
+
+   if ((err = dsa_sign_hash_raw(in, inlen, &r, &s, prng, wprng, key)) != CRYPT_OK) {
+      goto LBL_ERR;
+   }
+
+   err = der_encode_sequence_multi(out, outlen, 
+                             LTC_ASN1_INTEGER, 1UL, &r, 
+                             LTC_ASN1_INTEGER, 1UL, &s, 
+                             LTC_ASN1_EOL,     0UL, NULL);
+
+LBL_ERR:
+   mp_clear_multi(&r, &s, NULL);
+   return err;
+}
+
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_sign_hash.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/15 21:48:59 $ */

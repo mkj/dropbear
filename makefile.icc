@@ -22,7 +22,7 @@ CC=icc
 #ARFLAGS=r
 
 # Compilation flags. Note the += does not write over the user's CFLAGS!
-CFLAGS += -c -I./src/headers/ -DINTEL_CC
+CFLAGS += -c -Isrc/headers/ -Itestprof/ -DINTEL_CC
 
 #The default rule for make builds the libtomcrypt library.
 default:library
@@ -41,7 +41,13 @@ default:library
 #	B - Blend of P4 and PM [mobile]
 #
 # Default to just generic max opts
+ifdef LTC_SMALL
+CFLAGS += -O2 -xP -ip
+endif
+
+ifndef IGNORE_SPEED
 CFLAGS += -O3 -xP -ip 
+endif
 
 # want to see stuff?
 #CFLAGS += -opt_report
@@ -122,29 +128,43 @@ src/modes/ctr/ctr_getiv.o src/modes/ctr/ctr_setiv.o src/modes/ctr/ctr_start.o \
 src/modes/ecb/ecb_decrypt.o src/modes/ecb/ecb_done.o src/modes/ecb/ecb_encrypt.o \
 src/modes/ecb/ecb_start.o src/modes/ofb/ofb_decrypt.o src/modes/ofb/ofb_done.o \
 src/modes/ofb/ofb_encrypt.o src/modes/ofb/ofb_getiv.o src/modes/ofb/ofb_setiv.o \
-src/modes/ofb/ofb_start.o src/pk/asn1/der/der_decode_integer.o src/pk/asn1/der/der_encode_integer.o \
-src/pk/asn1/der/der_get_multi_integer.o src/pk/asn1/der/der_length_integer.o \
-src/pk/asn1/der/der_put_multi_integer.o src/pk/dh/dh.o src/pk/dsa/dsa_export.o src/pk/dsa/dsa_free.o \
-src/pk/dsa/dsa_import.o src/pk/dsa/dsa_make_key.o src/pk/dsa/dsa_sign_hash.o \
-src/pk/dsa/dsa_verify_hash.o src/pk/dsa/dsa_verify_key.o src/pk/ecc/ecc.o src/pk/packet_store_header.o \
-src/pk/packet_valid_header.o src/pk/pkcs1/pkcs_1_i2osp.o src/pk/pkcs1/pkcs_1_mgf1.o \
-src/pk/pkcs1/pkcs_1_oaep_decode.o src/pk/pkcs1/pkcs_1_oaep_encode.o src/pk/pkcs1/pkcs_1_os2ip.o \
-src/pk/pkcs1/pkcs_1_pss_decode.o src/pk/pkcs1/pkcs_1_pss_encode.o src/pk/pkcs1/pkcs_1_v15_es_decode.o \
-src/pk/pkcs1/pkcs_1_v15_es_encode.o src/pk/pkcs1/pkcs_1_v15_sa_decode.o \
-src/pk/pkcs1/pkcs_1_v15_sa_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_encrypt_key.o \
+src/modes/ofb/ofb_start.o src/pk/asn1/der/bit/der_decode_bit_string.o \
+src/pk/asn1/der/bit/der_encode_bit_string.o src/pk/asn1/der/bit/der_length_bit_string.o \
+src/pk/asn1/der/choice/der_decode_choice.o src/pk/asn1/der/ia5/der_decode_ia5_string.o \
+src/pk/asn1/der/ia5/der_encode_ia5_string.o src/pk/asn1/der/ia5/der_length_ia5_string.o \
+src/pk/asn1/der/integer/der_decode_integer.o src/pk/asn1/der/integer/der_encode_integer.o \
+src/pk/asn1/der/integer/der_length_integer.o \
+src/pk/asn1/der/object_identifier/der_decode_object_identifier.o \
+src/pk/asn1/der/object_identifier/der_encode_object_identifier.o \
+src/pk/asn1/der/object_identifier/der_length_object_identifier.o \
+src/pk/asn1/der/octet/der_decode_octet_string.o src/pk/asn1/der/octet/der_encode_octet_string.o \
+src/pk/asn1/der/octet/der_length_octet_string.o \
+src/pk/asn1/der/printable_string/der_decode_printable_string.o \
+src/pk/asn1/der/printable_string/der_encode_printable_string.o \
+src/pk/asn1/der/printable_string/der_length_printable_string.o \
+src/pk/asn1/der/sequence/der_decode_sequence.o src/pk/asn1/der/sequence/der_decode_sequence_multi.o \
+src/pk/asn1/der/sequence/der_encode_sequence.o src/pk/asn1/der/sequence/der_encode_sequence_multi.o \
+src/pk/asn1/der/sequence/der_length_sequence.o \
+src/pk/asn1/der/short_integer/der_decode_short_integer.o \
+src/pk/asn1/der/short_integer/der_encode_short_integer.o \
+src/pk/asn1/der/short_integer/der_length_short_integer.o src/pk/asn1/der/utctime/der_decode_utctime.o \
+src/pk/asn1/der/utctime/der_encode_utctime.o src/pk/asn1/der/utctime/der_length_utctime.o \
+src/pk/dh/dh.o src/pk/dsa/dsa_export.o src/pk/dsa/dsa_free.o src/pk/dsa/dsa_import.o \
+src/pk/dsa/dsa_make_key.o src/pk/dsa/dsa_sign_hash.o src/pk/dsa/dsa_verify_hash.o \
+src/pk/dsa/dsa_verify_key.o src/pk/ecc/ecc.o src/pk/packet_store_header.o src/pk/packet_valid_header.o \
+src/pk/pkcs1/pkcs_1_i2osp.o src/pk/pkcs1/pkcs_1_mgf1.o src/pk/pkcs1/pkcs_1_oaep_decode.o \
+src/pk/pkcs1/pkcs_1_oaep_encode.o src/pk/pkcs1/pkcs_1_os2ip.o src/pk/pkcs1/pkcs_1_pss_decode.o \
+src/pk/pkcs1/pkcs_1_pss_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_encrypt_key.o \
 src/pk/rsa/rsa_export.o src/pk/rsa/rsa_exptmod.o src/pk/rsa/rsa_free.o src/pk/rsa/rsa_import.o \
-src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_v15_decrypt_key.o \
-src/pk/rsa/rsa_v15_encrypt_key.o src/pk/rsa/rsa_v15_sign_hash.o src/pk/rsa/rsa_v15_verify_hash.o \
-src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o src/prngs/rc4.o src/prngs/rng_get_bytes.o \
-src/prngs/rng_make_prng.o src/prngs/sober128.o src/prngs/sprng.o src/prngs/yarrow.o 
+src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o \
+src/prngs/rc4.o src/prngs/rng_get_bytes.o src/prngs/rng_make_prng.o src/prngs/sober128.o \
+src/prngs/sprng.o src/prngs/yarrow.o 
 
-HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h \
-src/headers/tomcrypt_mac.h src/headers/tomcrypt_macros.h \
-src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
-src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h \
-src/headers/tommath_class.h src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h \
-src/headers/tomcrypt_misc.h src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h \
-src/headers/tomcrypt_prng.h  testprof/tomcrypt_test.h
+HEADERS=src/headers/tommath_superclass.h src/headers/tomcrypt_cfg.h src/headers/tomcrypt_mac.h \
+src/headers/tomcrypt_macros.h src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h \
+src/headers/tomcrypt_cipher.h src/headers/tomcrypt_pk.h src/headers/tommath_class.h \
+src/headers/ltc_tommath.h src/headers/tomcrypt_hash.h src/headers/tomcrypt_misc.h \
+src/headers/tomcrypt.h src/headers/tomcrypt_pkcs.h src/headers/tomcrypt_prng.h testprof/tomcrypt_test.h
 
 #ciphers come in two flavours... enc+dec and enc 
 aes_enc.o: aes.c aes_tab.c
@@ -214,4 +234,9 @@ install: library
 	install -d -g root -o root $(DESTDIR)$(LIBPATH)
 	install -d -g root -o root $(DESTDIR)$(INCPATH)
 	install -g root -o root $(LIBNAME) $(DESTDIR)$(LIBPATH)
+	install -g root -o root $(LIBTEST) $(DESTDIR)$(LIBPATH)
 	install -g root -o root $(HEADERS) $(DESTDIR)$(INCPATH)
+
+# $Source: /cvs/libtom/libtomcrypt/makefile.icc,v $   
+# $Revision: 1.33 $   
+# $Date: 2005/06/19 18:22:31 $ 

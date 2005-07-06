@@ -87,3 +87,7 @@ LTC_ERR:
 }
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_memory.c,v $ */
+/* $Revision: 1.19 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

@@ -201,3 +201,7 @@ int xtea_keysize(int *keysize)
 
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/xtea.c,v $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

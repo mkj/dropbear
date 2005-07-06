@@ -22,11 +22,11 @@ int dh_tests (void)
   y = 4096;
   DO(dh_shared_secret (&userb, &usera, buf[1], &y));
   if (y != x) {
-    printf ("DH Shared keys are not same size.\n");
+    fprintf(stderr, "DH Shared keys are not same size.\n");
     return 1;
   }
   if (memcmp (buf[0], buf[1], x)) {
-    printf ("DH Shared keys not same contents.\n");
+    fprintf(stderr, "DH Shared keys not same contents.\n");
     return 1;
   }
 
@@ -41,11 +41,11 @@ int dh_tests (void)
   DO(dh_shared_secret (&usera, &userb, buf[2], &z));
 
   if (z != x) {
-    printf ("failed.  Size don't match?\n");
+    fprintf(stderr, "failed.  Size don't match?\n");
     return 1;
   }
   if (memcmp (buf[0], buf[2], x)) {
-    printf ("Failed.  Content didn't match.\n");
+    fprintf(stderr, "Failed.  Content didn't match.\n");
     return 1;
   }
   dh_free (&usera);
@@ -62,12 +62,12 @@ int dh_tests (void)
   x = sizeof (buf[0]);
   DO(dh_decrypt_key (buf[1], y, buf[0], &x, &usera));
   if (x != 16) {
-    printf ("Failed (length)\n");
+    fprintf(stderr, "Failed (length)\n");
     return 1;
   }
   for (x = 0; x < 16; x++)
     if (buf[0][x] != x) {
-      printf ("Failed (contents)\n");
+      fprintf(stderr, "Failed (contents)\n");
       return 1;
     }
 
@@ -81,7 +81,7 @@ int dh_tests (void)
   buf[0][0] ^= 1;
   DO(dh_verify_hash (buf[1], x, buf[0], 16, &stat2, &usera));
   if (!(stat == 1 && stat2 == 0)) { 
-     printf("dh_sign/verify_hash %d %d", stat, stat2);
+     fprintf(stderr, "dh_sign/verify_hash %d %d", stat, stat2);
      return 1;
   }
   dh_free (&usera);
@@ -92,8 +92,12 @@ int dh_tests (void)
 
 int dh_tests(void)
 {
-   printf("NOP");
+   fprintf(stderr, "NOP");
    return 0;
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/dh_tests.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/21 12:51:25 $ */

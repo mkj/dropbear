@@ -27,8 +27,11 @@
 int gcm_add_aad(gcm_state *gcm,
                const unsigned char *adata,  unsigned long adatalen)
 {
-   unsigned long x, y;
+   unsigned long x;
    int           err;
+#ifdef LTC_FAST
+   unsigned long y;
+#endif
 
    LTC_ARGCHK(gcm    != NULL);
    if (adatalen > 0) {
@@ -115,3 +118,7 @@ int gcm_add_aad(gcm_state *gcm,
 }
 #endif
    
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_add_aad.c,v $ */
+/* $Revision: 1.14 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

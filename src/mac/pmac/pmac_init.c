@@ -138,3 +138,7 @@ int pmac_init(pmac_state *pmac, int cipher, const unsigned char *key, unsigned l
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_init.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

@@ -168,3 +168,7 @@ int ccm_test(void)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ccm/ccm_test.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

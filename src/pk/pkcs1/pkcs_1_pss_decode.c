@@ -87,14 +87,13 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
    }
 
    /* copy out the DB */
-   for (x = 0; x < modulus_len - hLen - 1; x++) {
-      DB[x] = sig[x];
-   }
+   x = 0;
+   XMEMCPY(DB, sig + x, modulus_len - hLen - 1);
+   x += modulus_len - hLen - 1;
 
    /* copy out the hash */
-   for (y = 0; y < hLen; y++) {
-      hash[y] = sig[x++];
-   }
+   XMEMCPY(hash, sig + x, hLen);
+   x += hLen;
 
    /* check the MSB */
    if ((sig[0] & ~(0xFF >> ((modulus_len<<3) - (modulus_bitlen-1)))) != 0) {
@@ -172,3 +171,7 @@ LBL_ERR:
 }
 
 #endif /* PKCS_1 */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_pss_decode.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

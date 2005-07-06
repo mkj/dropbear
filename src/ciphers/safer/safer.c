@@ -481,3 +481,7 @@ int safer_sk128_test(void)
 
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/safer/safer.c,v $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

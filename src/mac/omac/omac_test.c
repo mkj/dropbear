@@ -104,3 +104,7 @@ int omac_test(void)
 }   
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_test.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

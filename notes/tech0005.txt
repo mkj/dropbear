@@ -1,0 +1,18 @@
+Tech Note 0005
+Minimizing Code Space
+Tom St Denis
+
+Introduction
+------------
+
+Tweaking...
+
+You can disable whole classes of algorithms on the command line with the LTC_NO_* defines.  From there you can manually turn on what you want to enable.  
+
+The following build with GCC 3.4.3 on an AMD64 box gets you AES, CTR mode, SHA-256, HMAC, Yarrow, full RSA PKCS #1, PKCS #5, ASN.1 DER and MPI in 
+roughly 80KB of code.
+
+CFLAGS="-DSC_RSA_1 -DLTC_NO_CIPHERS -DLTC_NO_HASHES -DLTC_NO_PRNGS -DLTC_NO_MACS -DLTC_NO_MODES -DLTC_NO_PK -DRIJNDAEL -DCTR -DSHA256 \
+-DHMAC -DYARROW -DMRSA -DMPI -Os -fomit-frame-pointer" make IGNORE_SPEED=1
+
+Neato eh?

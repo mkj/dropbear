@@ -66,7 +66,7 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
    /* allocate ram for DB/mask/salt of size modulus_len */
    DB   = XMALLOC(modulus_len);
    mask = XMALLOC(modulus_len);
-   seed = XMALLOC(modulus_len);
+   seed = XMALLOC(hLen);
    if (DB == NULL || mask == NULL || seed == NULL) {
       if (DB != NULL) {
          XFREE(DB);
@@ -97,16 +97,15 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
    /* append PS then 0x01 (to lhash)  */
    x = hLen;
    y = modulus_len - msglen - 2*hLen - 2;
-   while (y--) {
-      DB[x++] = 0x00;
-   }
+   XMEMSET(DB+x, 0, y);
+   x += y;
+
+   /* 0x01 byte */
    DB[x++] = 0x01;
 
-   /* message */
-   y = msglen;
-   while (y--) {
-     DB[x++] = *msg++;
-   }
+   /* message (length = msglen) */
+   XMEMCPY(DB+x, msg, msglen);
+   x += msglen;
 
    /* now choose a random seed */
    if (prng_descriptor[prng_idx].read(seed, hLen, prng) != hLen) {
@@ -143,19 +142,18 @@ int pkcs_1_oaep_encode(const unsigned char *msg,    unsigned long msglen,
    /* start output which is 0x00 || maskedSeed || maskedDB */
    x = 0;
    out[x++] = 0x00;
-   for (y = 0; y < hLen; y++) {
-      out[x++] = seed[y];
-   }
-   for (y = 0; y < modulus_len - hLen - 1; y++) {
-      out[x++] = DB[y];
-   }
+   XMEMCPY(out+x, seed, hLen);
+   x += hLen;
+   XMEMCPY(out+x, DB, modulus_len - hLen - 1);
+   x += modulus_len - hLen - 1;
+
    *outlen = x;
     
    err = CRYPT_OK;
 LBL_ERR:
 #ifdef LTC_CLEAN_STACK
    zeromem(DB,   modulus_len);
-   zeromem(seed, modulus_len);
+   zeromem(seed, hLen);
    zeromem(mask, modulus_len);
 #endif
 
@@ -168,3 +166,7 @@ LBL_ERR:
 
 #endif /* PKCS_1 */
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_oaep_encode.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

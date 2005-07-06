@@ -66,3 +66,7 @@ int pmac_done(pmac_state *state, unsigned char *out, unsigned long *outlen)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_done.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

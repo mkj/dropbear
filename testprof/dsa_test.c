@@ -14,7 +14,7 @@ int dsa_test(void)
 
    /* verify it */
    DO(dsa_verify_key(&key, &stat1));
-   if (stat1 == 0) { printf("dsa_verify_key "); return 1; }
+   if (stat1 == 0) { fprintf(stderr, "dsa_verify_key "); return 1; }
 
    /* sign the message */
    x = sizeof(out);
@@ -27,7 +27,7 @@ int dsa_test(void)
    msg[0] ^= 1;
    DO(dsa_verify_hash(out, x, msg, sizeof(msg), &stat2, &key));
    msg[0] ^= 1;
-   if (!(stat1 == 1 && stat2 == 0)) { printf("dsa_verify %d %d", stat1, stat2); return 1; }
+   if (!(stat1 == 1 && stat2 == 0)) { fprintf(stderr, "dsa_verify %d %d", stat1, stat2); return 1; }
 
    /* test exporting it */
    x = sizeof(out2);
@@ -36,16 +36,17 @@ int dsa_test(void)
 
    /* verify a signature with it */
    DO(dsa_verify_hash(out, x, msg, sizeof(msg), &stat1, &key2));
-   if (stat1 == 0) { printf("dsa_verify (import private) %d ", stat1); return 1; }
+   if (stat1 == 0) { fprintf(stderr, "dsa_verify (import private) %d ", stat1); return 1; }
    dsa_free(&key2);
 
    /* export as public now */
    x = sizeof(out2);
    DO(dsa_export(out2, &x, PK_PUBLIC, &key));
+
    DO(dsa_import(out2, x, &key2));
    /* verify a signature with it */
    DO(dsa_verify_hash(out, x, msg, sizeof(msg), &stat1, &key2));
-   if (stat1 == 0) { printf("dsa_verify (import public) %d ", stat1); return 1; }
+   if (stat1 == 0) { fprintf(stderr, "dsa_verify (import public) %d ", stat1); return 1; }
    dsa_free(&key2);
    dsa_free(&key);
 
@@ -56,8 +57,12 @@ int dsa_test(void)
 
 int dsa_test(void)
 {
-  printf("NOP");
+  fprintf(stderr, "NOP");
   return 0;
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/dsa_test.c,v $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2005/06/03 19:24:32 $ */

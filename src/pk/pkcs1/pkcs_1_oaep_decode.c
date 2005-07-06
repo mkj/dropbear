@@ -63,7 +63,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    /* allocate ram for DB/mask/salt of size modulus_len */
    DB   = XMALLOC(modulus_len);
    mask = XMALLOC(modulus_len);
-   seed = XMALLOC(modulus_len);
+   seed = XMALLOC(hLen);
    if (DB == NULL || mask == NULL || seed == NULL) {
       if (DB != NULL) {
          XFREE(DB);
@@ -92,14 +92,13 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    }
 
    /* now read the masked seed */
-   for (x = 1, y = 0; y < hLen; y++) {
-      seed[y] = msg[x++];
-   }
+   x = 1;
+   XMEMCPY(seed, msg + x, hLen);
+   x += hLen;
 
    /* now read the masked DB */
-   for (y = 0; y < modulus_len - hLen - 1; y++) {
-      DB[y] = msg[x++];
-   }
+   XMEMCPY(DB, msg + x, modulus_len - hLen - 1);
+   x += modulus_len - hLen - 1;
 
    /* compute MGF1 of maskedDB (hLen) */ 
    if ((err = pkcs_1_mgf1(DB, modulus_len - hLen - 1, hash_idx, mask, hLen)) != CRYPT_OK) {
@@ -161,9 +160,8 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* copy message */
    *outlen = (modulus_len - hLen - 1) - x;
-   for (y = 0; x != (modulus_len - hLen - 1); ) {
-       out[y++] = DB[x++];
-   }
+   XMEMCPY(out, DB + x, modulus_len - hLen - 1 - x);
+   x += modulus_len - hLen - 1;
 
    /* valid packet */
    *res = 1;
@@ -172,7 +170,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 LBL_ERR:
 #ifdef LTC_CLEAN_STACK
    zeromem(DB,   modulus_len);
-   zeromem(seed, modulus_len);
+   zeromem(seed, hLen);
    zeromem(mask, modulus_len);
 #endif
 
@@ -184,3 +182,7 @@ LBL_ERR:
 }
 
 #endif /* PKCS_1 */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_oaep_decode.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/06/18 02:37:06 $ */

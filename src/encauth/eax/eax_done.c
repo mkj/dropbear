@@ -88,3 +88,7 @@ LBL_ERR:
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/eax/eax_done.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

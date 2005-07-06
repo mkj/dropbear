@@ -490,3 +490,7 @@ static const ulong32 rs_tab7[256] = {
 #endif /* TWOFISH_ALL_TABLES */
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/twofish/twofish_tab.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

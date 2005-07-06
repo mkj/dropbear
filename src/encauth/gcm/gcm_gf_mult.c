@@ -31,6 +31,7 @@ static void gcm_rightshift(unsigned char *a)
 static const unsigned char mask[] = { 0x80, 0x40, 0x20, 0x10, 0x08, 0x04, 0x02, 0x01 };
 static const unsigned char poly[] = { 0x00, 0xE1 };
 
+     
 /**
   GCM GF multiplier (internal use only) 
   @param a   First value
@@ -87,3 +88,7 @@ void gcm_mult_h(gcm_state *gcm, unsigned char *I)
 
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_gf_mult.c,v $ */
+/* $Revision: 1.16 $ */
+/* $Date: 2005/05/21 14:33:42 $ */

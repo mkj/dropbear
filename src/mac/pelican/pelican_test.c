@@ -114,3 +114,7 @@ int pelican_test(void)
 
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pelican/pelican_test.c,v $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

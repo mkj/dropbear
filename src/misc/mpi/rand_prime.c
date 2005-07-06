@@ -64,3 +64,7 @@ int rand_prime(mp_int *N, long len, prng_state *prng, int wprng)
       
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/mpi/rand_prime.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

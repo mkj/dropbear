@@ -129,7 +129,7 @@ int SETUP(const unsigned char *key, int keylen, int num_rounds, symmetric_key *s
 #endif    
     LTC_ARGCHK(key  != NULL);
     LTC_ARGCHK(skey != NULL);
-    
+  
     if (keylen != 16 && keylen != 24 && keylen != 32) {
        return CRYPT_INVALID_KEYSIZE;
     }
@@ -749,3 +749,7 @@ int ECB_KS(int *keysize)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/aes/aes.c,v $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

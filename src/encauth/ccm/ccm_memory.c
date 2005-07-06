@@ -293,7 +293,6 @@ int ccm_memory(int cipher,
 
 #ifdef LTC_CLEAN_STACK
    zeromem(skey,   sizeof(*skey));
-   zeromem(B,      sizeof(B));
    zeromem(PAD,    sizeof(PAD));
    zeromem(CTRPAD, sizeof(CTRPAD));
 #endif
@@ -304,3 +303,7 @@ int ccm_memory(int cipher,
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ccm/ccm_memory.c,v $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

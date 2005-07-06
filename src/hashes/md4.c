@@ -24,9 +24,9 @@ const struct ltc_hash_descriptor md4_desc =
     16,
     64,
  
-    /* DER encoding (not yet supported) */
-    { 0x00 },
-    0,    
+    /* OID */
+   { 1, 2, 840, 113549, 2, 4,  },
+   6,
 
     &md4_init,
     &md4_process,
@@ -300,3 +300,7 @@ int md4_test(void)
 #endif
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/md4.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

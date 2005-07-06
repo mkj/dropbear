@@ -132,7 +132,7 @@ asm __volatile__ (             \
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32L(x, y)        \
-     { unsigned long __t = (x); memcpy(y, &__t, 4); }
+     { ulong32  __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
      memcpy(&(x), y, 4);
@@ -152,7 +152,7 @@ asm __volatile__ (             \
 #else /* 64-bit words then  */
 
 #define STORE32L(x, y)        \
-     { unsigned long __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
      { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
@@ -193,7 +193,7 @@ asm __volatile__ (             \
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32H(x, y)        \
-     { unsigned long __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
      memcpy(&(x), y, 4);
@@ -213,7 +213,7 @@ asm __volatile__ (             \
 #else /* 64-bit words then  */
 
 #define STORE32H(x, y)        \
-     { unsigned long __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); memcpy(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
      { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
@@ -371,3 +371,7 @@ static inline unsigned long ROR64c(unsigned long word, const int i)
 #else
    #define byte(x, n) (((x) >> (8 * (n))) & 255)
 #endif   
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_macros.h,v $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

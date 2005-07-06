@@ -80,3 +80,7 @@ int rsa_verify_hash(const unsigned char *sig,      unsigned long siglen,
 }
 
 #endif /* MRSA */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_verify_hash.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

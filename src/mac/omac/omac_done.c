@@ -78,3 +78,7 @@ int omac_done(omac_state *omac, unsigned char *out, unsigned long *outlen)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_done.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

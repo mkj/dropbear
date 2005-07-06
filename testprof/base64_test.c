@@ -12,9 +12,13 @@ int base64_test(void)
        l2 = sizeof(tmp);
        DO(base64_decode(out, l1, tmp, &l2));
        if (l2 != x || memcmp(tmp, in, x)) {
-           printf("base64  failed %lu %lu %lu", x, l1, l2);
+           fprintf(stderr, "base64  failed %lu %lu %lu", x, l1, l2);
            return 1;
        }
    }
    return 0;
 }
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/base64_test.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/21 12:51:25 $ */

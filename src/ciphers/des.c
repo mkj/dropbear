@@ -1900,3 +1900,7 @@ int des3_keysize(int *keysize)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/des.c,v $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

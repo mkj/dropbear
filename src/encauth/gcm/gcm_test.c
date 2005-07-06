@@ -281,7 +281,6 @@ int gcm_test(void)
 };
    int           idx, err;
    unsigned long x, y;
-   gcm_state     gcm;
    unsigned char out[2][64], T[2][16];
 
    /* find aes */
@@ -363,3 +362,7 @@ int gcm_test(void)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_test.c,v $ */
+/* $Revision: 1.15 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

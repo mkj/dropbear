@@ -24,3 +24,7 @@ void crypt_argchk(char *v, char *s, int d)
  (void)raise(SIGABRT);
 }
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_argchk.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

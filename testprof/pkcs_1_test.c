@@ -14,7 +14,7 @@ int pkcs_1_test(void)
    prng_idx = find_prng("yarrow");
    
    if (hash_idx == -1 || prng_idx == -1) {
-      printf("pkcs_1 tests require sha1/yarrow");
+      fprintf(stderr, "pkcs_1 tests require sha1/yarrow");
       return 1;
    }   
 
@@ -28,30 +28,6 @@ int pkcs_1_test(void)
 
       /* random modulus len (v1.5 must be multiple of 8 though arbitrary sizes seem to work) */
       modlen = 800 + 8 * (abs(rand()) % 28);
-
-      /* PKCS v1.5 testing (encryption) */
-      l1 = sizeof(buf[1]);
-      DO(pkcs_1_v15_es_encode(buf[0], l3, modlen, &yarrow_prng, prng_idx, buf[1], &l1));
-      DO(pkcs_1_v15_es_decode(buf[1], l1, modlen, buf[2], l3, &res1));
-      if (res1 != 1 || memcmp(buf[0], buf[2], l3)) {
-         printf("pkcs v1.5 encrypt failed %d, %lu, %lu ", res1, l1, l3);
-         return 1;
-      }
-
-      /* PKCS v1.5 testing (signatures) */
-      l1 = sizeof(buf[1]);
-      DO(pkcs_1_v15_sa_encode(buf[0], l3, hash_idx, modlen, buf[1], &l1));
-      DO(pkcs_1_v15_sa_decode(buf[0], l3, buf[1], l1, hash_idx, modlen, &res1));
-      buf[0][i1 = abs(rand()) % l3] ^= 1;
-      DO(pkcs_1_v15_sa_decode(buf[0], l3, buf[1], l1, hash_idx, modlen, &res2));
-      buf[0][i1] ^= 1;
-      buf[1][i2 = abs(rand()) % l1] ^= 1;
-      DO(pkcs_1_v15_sa_decode(buf[0], l3, buf[1], l1, hash_idx, modlen, &res3));
-
-      if (!(res1 == 1 && res2 == 0 && res3 == 0)) {
-         printf("pkcs v1.5 sign failed %d %d %d ", res1, res2, res3);
-         return 1;
-      }
 
       /* pick a random lparam len [0..16] */
       lparamlen = abs(rand()) % 17;
@@ -71,16 +47,16 @@ int pkcs_1_test(void)
       DO(pkcs_1_oaep_decode(buf[1], l1, lparam, lparamlen, modlen, hash_idx, buf[2], &l2, &res1));
 
       if (res1 != 1 || l2 != l3 || memcmp(buf[2], buf[0], l3) != 0) {
-         printf("Outsize == %lu, should have been %lu, res1 = %d, lparamlen = %lu, msg contents follow.\n", l2, l3, res1, lparamlen);
-         printf("ORIGINAL:\n");
+         fprintf(stderr, "Outsize == %lu, should have been %lu, res1 = %d, lparamlen = %lu, msg contents follow.\n", l2, l3, res1, lparamlen);
+         fprintf(stderr, "ORIGINAL:\n");
          for (x = 0; x < l3; x++) {
-             printf("%02x ", buf[0][x]);
+             fprintf(stderr, "%02x ", buf[0][x]);
          }
-         printf("\nRESULT:\n");
+         fprintf(stderr, "\nRESULT:\n");
          for (x = 0; x < l2; x++) {
-             printf("%02x ", buf[2][x]);
+             fprintf(stderr, "%02x ", buf[2][x]);
          }
-         printf("\n\n");
+         fprintf(stderr, "\n\n");
          return 1;
       }
 
@@ -97,7 +73,7 @@ int pkcs_1_test(void)
       DO(pkcs_1_pss_decode(buf[0], l3, buf[1], l1, saltlen, hash_idx, modlen, &res3));
 
       if (!(res1 == 1 && res2 == 0 && res3 == 0)) {
-         printf("PSS failed: %d, %d, %d, %lu, %lu\n", res1, res2, res3, l3, saltlen);
+         fprintf(stderr, "PSS failed: %d, %d, %d, %lu, %lu\n", res1, res2, res3, l3, saltlen);
          return 1;
       }
    }
@@ -108,9 +84,13 @@ int pkcs_1_test(void)
 
 int pkcs_1_test(void)
 {
-   printf("NOP");
+   fprintf(stderr, "NOP");
    return 0;
 }
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/testprof/pkcs_1_test.c,v $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2005/05/21 12:51:25 $ */

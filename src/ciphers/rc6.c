@@ -337,3 +337,7 @@ int rc6_keysize(int *keysize)
 #endif /*RC6*/
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/rc6.c,v $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

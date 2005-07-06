@@ -36,3 +36,7 @@ int ctr_done(symmetric_CTR *ctr)
    
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_done.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

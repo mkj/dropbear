@@ -89,3 +89,7 @@ int cbc_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_decrypt.c,v $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

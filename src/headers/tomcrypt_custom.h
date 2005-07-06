@@ -1,6 +1,3 @@
-/* This header is meant to be included before mycrypt.h in projects where
- * you don't want to throw all the defines in a makefile. 
- */
 #ifndef TOMCRYPT_CUSTOM_H_
 #define TOMCRYPT_CUSTOM_H_
 
@@ -81,7 +78,16 @@
 /* Various tidbits of modern neatoness */
 #define BASE64
 
+/* default no functions */
+#define LTC_MUTEX_GLOBAL(x)
+#define LTC_MUTEX_PROTO(x)
+#define LTC_MUTEX_LOCK(x)
+#define LTC_MUTEX_UNLOCK(x)
 #define FORTUNA_POOLS 0
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_custom.h,v $ */
+/* $Revision: 1.17 $ */
+/* $Date: 2005/06/19 18:00:28 $ */

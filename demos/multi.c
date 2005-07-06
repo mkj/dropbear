@@ -104,3 +104,7 @@ int main(void)
    return EXIT_SUCCESS;
 }
 
+
+/* $Source: /cvs/libtom/libtomcrypt/demos/multi.c,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:56 $ */

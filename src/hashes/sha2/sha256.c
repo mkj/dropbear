@@ -24,11 +24,9 @@ const struct ltc_hash_descriptor sha256_desc =
     32,
     64,
 
-    /* DER identifier */
-    { 0x30, 0x31, 0x30, 0x0D, 0x06, 0x09, 0x60, 0x86, 
-      0x48, 0x01, 0x65, 0x03, 0x04, 0x02, 0x01, 0x05, 
-      0x00, 0x04, 0x20 },
-    19,
+    /* OID */
+   { 2, 16, 840, 1, 101, 3, 4, 2, 1,  },
+   9,
     
     &sha256_init,
     &sha256_process,
@@ -335,3 +333,7 @@ int  sha256_test(void)
 #endif
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha256.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

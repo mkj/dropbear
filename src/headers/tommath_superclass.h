@@ -1,10 +1,14 @@
 /* super class file for PK algos */
 
 /* default ... include all MPI */
+#ifndef SC_RSA_1
+
 #define LTM_ALL
 
+#endif
+
 /* RSA only (does not support DH/DSA/ECC) */
-// #define SC_RSA_1
+/* #define SC_RSA_1 */
 
 /* For reference.... On an Athlon64 optimizing for speed...
 
@@ -70,3 +74,7 @@
 #endif
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tommath_superclass.h,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/14 13:27:20 $ */

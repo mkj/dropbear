@@ -25,9 +25,9 @@ const struct ltc_hash_descriptor sha1_desc =
     20,
     64,
 
-    { 0x30, 0x21, 0x30, 0x09, 0x06, 0x05, 0x2B, 0x0E, 
-      0x03, 0x02, 0x1A, 0x05, 0x00, 0x04, 0x14 },
-    15,
+    /* OID */
+   { 1, 3, 14, 3, 2, 26,  },
+   6,
 
     &sha1_init,
     &sha1_process,
@@ -281,3 +281,7 @@ int  sha1_test(void)
 #endif
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha1.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

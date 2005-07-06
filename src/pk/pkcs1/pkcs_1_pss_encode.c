@@ -110,13 +110,12 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    }
 
    /* generate DB = PS || 0x01 || salt, PS == modulus_len - saltlen - hLen - 2 zero bytes */
-   for (x = 0; x < (modulus_len - saltlen - hLen - 2); x++) {
-       DB[x] = 0x00;
-   }
+   x = 0;
+   XMEMSET(DB + x, 0, modulus_len - saltlen - hLen - 2);
+   x += modulus_len - saltlen - hLen - 2;
    DB[x++] = 0x01;
-   for (y = 0; y < saltlen; y++) {
-      DB[x++] = salt[y];
-   }
+   XMEMCPY(DB + x, salt, saltlen);
+   x += saltlen;
 
    /* generate mask of length modulus_len - hLen - 1 from hash */
    if ((err = pkcs_1_mgf1(hash, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
@@ -134,14 +133,15 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
       goto LBL_ERR;
    }
 
-   /* DB */
-   for (y = x = 0; x < modulus_len - hLen - 1; x++) {
-       out[y++] = DB[x];
-   }
+   /* DB len = modulus_len - hLen - 1 */
+   y = 0;
+   XMEMCPY(out + y, DB, modulus_len - hLen - 1);
+   y += modulus_len - hLen - 1;
+
    /* hash */
-   for (x = 0; x < hLen; x++) {
-       out[y++] = hash[x];
-   }
+   XMEMCPY(out + y, hash, hLen);
+   y += hLen;
+
    /* 0xBC */
    out[y] = 0xBC;
 
@@ -168,3 +168,7 @@ LBL_ERR:
 }
 
 #endif /* PKCS_1 */
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_pss_encode.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

@@ -25,11 +25,9 @@ const struct ltc_hash_descriptor tiger_desc =
     24,
     64,
 
-    /* DER identifier */
-    { 0x30, 0x29, 0x30, 0x0D, 0x06, 0x09, 0x2B, 0x06, 
-      0x01, 0x04, 0x01, 0xDA, 0x47, 0x0C, 0x02, 0x05, 
-      0x00, 0x04, 0x18 },
-    19,
+    /* OID */
+   { 1, 3, 6, 1, 4, 1, 11591, 12, 2,  },
+   9,
 
     &tiger_init,
     &tiger_process,
@@ -809,3 +807,7 @@ Hash of "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFG
 
 
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/hashes/tiger.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/23 02:42:07 $ */

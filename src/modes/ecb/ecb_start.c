@@ -42,3 +42,7 @@ int ecb_start(int cipher, const unsigned char *key, int keylen, int num_rounds, 
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ecb/ecb_start.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

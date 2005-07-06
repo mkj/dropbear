@@ -384,3 +384,7 @@ int fortuna_test(void)
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/prngs/fortuna.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

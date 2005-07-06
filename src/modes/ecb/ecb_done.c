@@ -18,7 +18,7 @@
 #ifdef ECB
 
 /** Terminate the chain
-  @param rcb    The ECB chain to terminate
+  @param ecb    The ECB chain to terminate
   @return CRYPT_OK on success
 */
 int ecb_done(symmetric_ECB *ecb)
@@ -36,3 +36,7 @@ int ecb_done(symmetric_ECB *ecb)
    
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/modes/ecb/ecb_done.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

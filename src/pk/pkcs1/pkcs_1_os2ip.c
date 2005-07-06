@@ -35,3 +35,7 @@ int pkcs_1_os2ip(mp_int *n, unsigned char *in, unsigned long inlen)
 
 #endif /* PKCS_1 */
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_os2ip.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

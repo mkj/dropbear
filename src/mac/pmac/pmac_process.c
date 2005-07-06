@@ -90,3 +90,7 @@ int pmac_process(pmac_state *pmac, const unsigned char *in, unsigned long inlen)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_process.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2005/05/05 14:35:59 $ */

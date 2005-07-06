@@ -19,3 +19,7 @@ void crypt_argchk(char *v, char *s, int d);
 
 #endif
 
+
+/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_argchk.h,v $ */
+/* $Revision: 1.2 $ */
+/* $Date: 2005/05/05 14:35:58 $ */

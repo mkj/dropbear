@@ -28,7 +28,7 @@
 */
 int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
 {  
-   unsigned long tmplen, x, y, z;
+   unsigned long tmplen, y;
    int           err, leading_zero;
 
    LTC_ARGCHK(num    != NULL);
@@ -44,48 +44,43 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
       return CRYPT_BUFFER_OVERFLOW;
    }
 
-   /* we only need a leading zero if the msb of the first byte is one */
-   if ((mp_count_bits(num) & 7) == 7 || mp_iszero(num) == MP_YES) {
-      leading_zero = 1;
+   if (mp_cmp_d(num, 0) != MP_LT) {
+      /* we only need a leading zero if the msb of the first byte is one */
+      if ((mp_count_bits(num) & 7) == 0 || mp_iszero(num) == MP_YES) {
+         leading_zero = 1;
+      } else {
+         leading_zero = 0;
+      }
+
+      /* get length of num in bytes (plus 1 since we force the msbyte to zero) */
+      y = mp_unsigned_bin_size(num) + leading_zero;
    } else {
       leading_zero = 0;
-   }
+      y            = mp_count_bits(num);
+      y            = y + (8 - (y & 7));
+      y            = y >> 3;
 
-   /* get length of num in bytes (plus 1 since we force the msbyte to zero) */
-   y = mp_unsigned_bin_size(num) + leading_zero;
+   }
 
    /* now store initial data */
    *out++ = 0x02;
    if (y < 128) {
       /* short form */
       *out++ = (unsigned char)y;
+   } else if (y < 256) {
+      *out++ = 0x81;
+      *out++ = y;
+   } else if (y < 65536UL) {
+      *out++ = 0x82;
+      *out++ = (y>>8)&255;
+      *out++ = y;
+   } else if (y < 16777216UL) {
+      *out++ = 0x83;
+      *out++ = (y>>16)&255;
+      *out++ = (y>>8)&255;
+      *out++ = y;
    } else {
-      /* long form (relies on y != 0) */
-
-      /* get length of length... ;-) */
-      x = y;
-      z = 0;
-      while (x) {
-         ++z;
-         x >>= 8;
-      }
-      
-      /* store length of length */
-      *out++ = 0x80 | ((unsigned char)z);
-
-      /* now store length */
-      
-      /* first shift length up so msbyte != 0 */
-      x = y;
-      while ((x & 0xFF000000) == 0) {
-          x <<= 8;
-      }
-
-      /* now store length */
-      while (z--) {
-         *out++ = (unsigned char)((x >> 24) & 0xFF);
-         x <<= 8;
-      }
+      return CRYPT_INVALID_ARG;
    }
 
    /* now store msbyte of zero if num is non-zero */
@@ -94,11 +89,31 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
    }
 
    /* if it's not zero store it as big endian */
-   if (mp_iszero(num) == MP_NO) {
+   if (mp_cmp_d(num, 0) == MP_GT) {
       /* now store the mpint */
       if ((err = mp_to_unsigned_bin(num, out)) != MP_OKAY) {
           return mpi_to_ltc_error(err);
       }
+   } else if (mp_iszero(num) != MP_YES) {
+      mp_int tmp;
+      /* negative */
+      if (mp_init(&tmp) != MP_OKAY) {
+         return CRYPT_MEM;
+      }
+
+      /* 2^roundup and subtract */
+      y = mp_count_bits(num);
+      y = y + (8 - (y & 7));
+      if (mp_2expt(&tmp, y) != MP_OKAY || mp_add(&tmp, num, &tmp) != MP_OKAY) {
+         mp_clear(&tmp);
+         return CRYPT_MEM;
+      }
+
+      if ((err = mp_to_unsigned_bin(&tmp, out)) != MP_OKAY) {
+         mp_clear(&tmp);
+         return mpi_to_ltc_error(err);
+      }
+      mp_clear(&tmp);
    }
 
    /* we good */
@@ -107,3 +122,7 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/integer/der_encode_integer.c,v $ */
+/* $Revision: 1.1 $ */
+/* $Date: 2005/05/16 15:08:11 $ */
