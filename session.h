@@ -211,19 +211,22 @@ struct clientsession {
 	mp_int *dh_e, *dh_x; /* Used during KEX */
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
-	int something; /* XXX */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
 	struct termios saved_tio;
 	int stdincopy;
 	int stdinflags;
+	int stdoutcopy;
+	int stdoutflags;
+	int stderrcopy;
+	int stderrflags;
 
 	int winchange; /* Set to 1 when a windowchange signal happens */
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
-	struct PubkeyList *lastpubkey;
+	struct SignKeyList *lastprivkey;
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0

@@ -52,7 +52,7 @@ int x11req(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	chansess->x11singleconn = buf_getbyte(ses.payload);
+	chansess->x11singleconn = buf_getbool(ses.payload);
 	chansess->x11authprot = buf_getstring(ses.payload, NULL);
 	chansess->x11authcookie = buf_getstring(ses.payload, NULL);
 	chansess->x11screennum = buf_getint(ses.payload);

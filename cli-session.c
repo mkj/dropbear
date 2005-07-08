@@ -113,16 +113,20 @@ static void cli_session_init() {
 	cli_ses.tty_raw_mode = 0;
 	cli_ses.winchange = 0;
 
-	/* We store stdin's flags, so we can set them back on exit (otherwise
-	 * busybox's ash isn't happy */
+	/* We store std{in,out,err}'s flags, so we can set them back on exit
+	 * (otherwise busybox's ash isn't happy */
 	cli_ses.stdincopy = dup(STDIN_FILENO);
 	cli_ses.stdinflags = fcntl(STDIN_FILENO, F_GETFL, 0);
+	cli_ses.stdoutcopy = dup(STDOUT_FILENO);
+	cli_ses.stdoutflags = fcntl(STDOUT_FILENO, F_GETFL, 0);
+	cli_ses.stderrcopy = dup(STDERR_FILENO);
+	cli_ses.stderrflags = fcntl(STDERR_FILENO, F_GETFL, 0);
 
 	cli_ses.retval = EXIT_SUCCESS; /* Assume it's clean if we don't get a
 									  specific exit status */
 
 	/* Auth */
-	cli_ses.lastpubkey = NULL;
+	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
 
 	/* For printing "remote host closed" for the user */
@@ -250,9 +254,11 @@ void cli_session_cleanup() {
 		return;
 	}
 
-	/* Set stdin back to non-blocking - busybox ash dies nastily
-	 * if we don't revert the flags */
+	/* Set std{in,out,err} back to non-blocking - busybox ash dies nastily if
+	 * we don't revert the flags */
 	fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+	fcntl(cli_ses.stdoutcopy, F_SETFL, cli_ses.stdoutflags);
+	fcntl(cli_ses.stderrcopy, F_SETFL, cli_ses.stderrflags);
 
 	cli_tty_cleanup();
 

@@ -52,9 +52,9 @@ void m_mp_init_multi(mp_int *mp, ...)
     va_end(args);
 }
 
-void bytestomp(mp_int *mp, unsigned char* bytes, unsigned int len) {
+void bytes_to_mp(mp_int *mp, const unsigned char* bytes, unsigned int len) {
 
-	if (mp_read_unsigned_bin(mp, bytes, len) != MP_OKAY) {
+	if (mp_read_unsigned_bin(mp, (unsigned char*)bytes, len) != MP_OKAY) {
 		dropbear_exit("mem alloc error");
 	}
 }

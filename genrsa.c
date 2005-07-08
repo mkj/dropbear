@@ -108,10 +108,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		genrandom(buf, size+1);
 		buf[0] |= 0x80; /* MSB set */
 
-		if (mp_read_unsigned_bin(prime, buf, size+1) != MP_OKAY) {
-			fprintf(stderr, "rsa generation failed\n");
-			exit(1);
-		}
+		bytes_to_mp(prime, buf, size+1);
 
 		/* find the next integer which is prime, 8 round of miller-rabin */
 		if (mp_prime_next_prime(prime, 8, 0) != MP_OKAY) {

@@ -41,7 +41,7 @@ void dropbear_close(const char* format, ...);
 void dropbear_log(int priority, const char* format, ...);
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...);
-void printhex(unsigned char* buf, int len);
+void printhex(const char * label, const unsigned char * buf, int len);
 extern int debug_trace;
 #endif
 char * stripcontrol(const char * text);

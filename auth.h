@@ -84,13 +84,13 @@ struct AuthState {
 
 };
 
-struct PubkeyList;
-/* A singly linked list of pubkeys */
-struct PubkeyList {
+struct SignKeyList;
+/* A singly linked list of signing keys */
+struct SignKeyList {
 
 	sign_key *key;
 	int type; /* The type of key */
-	struct PubkeyList *next;
+	struct SignKeyList *next;
 	/* filename? or the buffer? for encrypted keys, so we can later get
 	 * the private key portion */
 

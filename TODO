@@ -2,11 +2,11 @@ Current:
 
 Things which might need doing:
 
+- default private dbclient keys
+
 - Make options.h generated from configure perhaps?
 
 - Improved queueing of unauthed connections
-
-- fix agent fwd problems
 
 - handle /etc/environment in AIX
 
@@ -15,9 +15,9 @@ Things which might need doing:
 
 - Binding to different interfaces
 
-- possible RSA blinding? need to check whether this is vuln to timing attacks
 - check PRNG
-- CTR mode, SSH_MSG_IGNORE sending to improve CBC security
+- CTR mode
+- SSH_MSG_IGNORE sending to improve CBC security
 - DH Group Exchange possibly, or just add group14 (whatever it's called today)
 
 - fix scp.c for IRIX

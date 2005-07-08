@@ -90,6 +90,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
 
+/* RSA can be vulnerable to timing attacks which use the time required for
+ * signing to guess the private key. Blinding avoids this attack, though makes
+ * signing operations slightly slower. */
+#define RSA_BLINDING
+
 /* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
  * rather than just from the random byte source. Undefining this will save you
  * ~4k in binary size with static uclibc, but your DSS hostkey could be exposed
@@ -313,14 +318,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DISABLE_AGENTFWD
 #endif
 
-#ifndef ENABLE_LOCALTCPFWD
-#define DISABLE_TCPDIRECT
-#endif
-
-#ifndef ENABLE_REMOTETCPFWD
-#define DISABLE_REMOTETCPFWD
-#endif
-
 #if defined(ENABLE_CLI_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
 #define ENABLE_CLI_ANYTCPFWD 
 #endif
@@ -329,7 +326,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_TCP_ACCEPT
 #endif
 
-#if defined(ENABLE_REMOTETCPFWD) || defined(ENABLE_LOCALTCPFWD) || \
+#if defined(ENABLE_CLI_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD) || \
+	defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_SVR_LOCALTCPFWD) || \
 	defined(ENABLE_AGENTFWD) || defined(ENABLE_X11FWD)
 #define USING_LISTENERS
 #endif

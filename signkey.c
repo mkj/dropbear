@@ -279,7 +279,7 @@ static char * sign_key_md5_fingerprint(unsigned char* keyblob,
 	char * ret;
 	hash_state hs;
 	unsigned char hash[MD5_HASH_SIZE];
-	unsigned int h, i;
+	unsigned int i;
 	unsigned int buflen;
 
 	md5_init(&hs);
@@ -296,10 +296,11 @@ static char * sign_key_md5_fingerprint(unsigned char* keyblob,
 	memset(ret, 'Z', buflen);
 	strcpy(ret, "md5 ");
 
-	for (i = 4, h = 0; i < buflen; i+=3, h++) {
-		ret[i] = hexdig(hash[h] >> 4);
-		ret[i+1] = hexdig(hash[h] & 0x0f);
-		ret[i+2] = ':';
+	for (i = 0; i < MD5_HASH_SIZE; i++) {
+		unsigned int pos = 4 + i*3;
+		ret[pos] = hexdig(hash[i] >> 4);
+		ret[pos+1] = hexdig(hash[i] & 0x0f);
+		ret[pos+2] = ':';
 	}
 	ret[buflen-1] = 0x0;
 
@@ -313,7 +314,7 @@ static char * sign_key_sha1_fingerprint(unsigned char* keyblob,
 	char * ret;
 	hash_state hs;
 	unsigned char hash[SHA1_HASH_SIZE];
-	unsigned int h, i;
+	unsigned int i;
 	unsigned int buflen;
 
 	sha1_init(&hs);
@@ -329,10 +330,11 @@ static char * sign_key_sha1_fingerprint(unsigned char* keyblob,
 
 	strcpy(ret, "sha1 ");
 
-	for (i = 5, h = 0; i < buflen; i+=3, h++) {
-		ret[i] = hexdig(hash[h] >> 4);
-		ret[i+1] = hexdig(hash[h] & 0x0f);
-		ret[i+2] = ':';
+	for (i = 0; i < SHA1_HASH_SIZE; i++) {
+		unsigned int pos = 5 + 3*i;
+		ret[pos] = hexdig(hash[i] >> 4);
+		ret[pos+1] = hexdig(hash[i] & 0x0f);
+		ret[pos+2] = ':';
 	}
 	ret[buflen-1] = 0x0;
 

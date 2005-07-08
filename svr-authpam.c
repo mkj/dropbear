@@ -155,7 +155,7 @@ void svr_auth_pam() {
 	unsigned char changepw;
 
 	/* check if client wants to change password */
-	changepw = buf_getbyte(ses.payload);
+	changepw = buf_getbool(ses.payload);
 	if (changepw) {
 		/* not implemented by this server */
 		send_msg_userauth_failure(0, 1);

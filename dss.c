@@ -190,10 +190,8 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	/* create the signature - s' and r' are the received signatures in buf */
 	/* w = (s')-1 mod q */
 	/* let val1 = s' */
-	if (mp_read_unsigned_bin(&val1, &string[SHA1_HASH_SIZE], SHA1_HASH_SIZE)
-			!= MP_OKAY) {
-		goto out;
-	}
+	bytes_to_mp(&val1, &string[SHA1_HASH_SIZE], SHA1_HASH_SIZE);
+
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, s' >= q"))
 		goto out;
@@ -205,9 +203,8 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 
 	/* u1 = ((SHA(M')w) mod q */
 	/* let val1 = SHA(M') = msghash */
-	if (mp_read_unsigned_bin(&val1, msghash, SHA1_HASH_SIZE) != MP_OKAY) {
-		goto out;
-	}
+	bytes_to_mp(&val1, msghash, SHA1_HASH_SIZE);
+
 	/* let val3 = u1 = ((SHA(M')w) mod q */
 	if (mp_mulmod(&val1, &val2, key->q, &val3) != MP_OKAY) {
 		goto out;
@@ -215,10 +212,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 
 	/* u2 = ((r')w) mod q */
 	/* let val1 = r' */
-	if (mp_read_unsigned_bin(&val1, &string[0], SHA1_HASH_SIZE)
-			!= MP_OKAY) {
-		goto out;
-	}
+	bytes_to_mp(&val1, &string[0], SHA1_HASH_SIZE);
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, r' >= q"))
 		goto out;
@@ -261,6 +255,7 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
+#ifdef DSS_PROTOK	
 /* convert an unsigned mp into an array of bytes, malloced.
  * This array must be freed after use, len contains the length of the array,
  * if len != NULL */
@@ -279,6 +274,7 @@ static unsigned char* mptobytes(mp_int *mp, int *len) {
 	}
 	return ret;
 }
+#endif
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer
@@ -304,8 +300,6 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	unsigned char *privkeytmp;
 	unsigned char proto_k[SHA512_HASH_SIZE];
 	DEF_MP_INT(dss_protok);
-#else
-	unsigned char kbuf[SHA1_HASH_SIZE];
 #endif
 	DEF_MP_INT(dss_k);
 	DEF_MP_INT(dss_m);
@@ -343,22 +337,16 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 
 	/* generate k */
 	m_mp_init(&dss_protok);
-	bytestomp(&dss_protok, proto_k, SHA512_HASH_SIZE);
+	bytes_to_mp(&dss_protok, proto_k, SHA512_HASH_SIZE);
 	mp_mod(&dss_protok, key->q, &dss_k);
 	mp_clear(&dss_protok);
 	m_burn(proto_k, SHA512_HASH_SIZE);
 #else /* DSS_PROTOK not defined*/
-	do {
-		genrandom(kbuf, SHA1_HASH_SIZE);
-		if (mp_read_unsigned_bin(&dss_k, kbuf, SHA1_HASH_SIZE) != MP_OKAY) {
-			dropbear_exit("dss error");
-		}
-	} while (mp_cmp(&dss_k, key->q) == MP_GT || mp_cmp_d(&dss_k, 0) != MP_GT);
-	m_burn(kbuf, SHA1_HASH_SIZE);
+	gen_random_mpint(key->q, &dss_k);
 #endif
 
 	/* now generate the actual signature */
-	bytestomp(&dss_m, msghash, SHA1_HASH_SIZE);
+	bytes_to_mp(&dss_m, msghash, SHA1_HASH_SIZE);
 
 	/* g^k mod p */
 	if (mp_exptmod(key->g, &dss_k, key->p, &dss_temp1) !=  MP_OKAY) {
@@ -417,7 +405,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	mp_clear(&dss_s);
 	buf_incrwritepos(buf, writelen);
 
-	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp1, &dss_r, &dss_s,
+	mp_clear_multi(&dss_k, &dss_temp1, &dss_temp2, &dss_r, &dss_s,
 			&dss_m, NULL);
 	
 	/* create the signature to return */

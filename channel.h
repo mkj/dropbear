@@ -100,7 +100,7 @@ void chaninitialise();
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
-struct Channel* getchannel(unsigned int chan);
+struct Channel* getchannel();
 struct Channel* newchannel(unsigned int remotechan, 
 		const struct ChanType *type, 
 		unsigned int transwindow, unsigned int transmaxpacket);

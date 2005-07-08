@@ -94,7 +94,7 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 	TRACE(("enter cli_localtcp: %d %s %d", listenport, remoteaddr,
 				remoteport));
 
-	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener*));
+	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
 	tcpinfo->sendaddr = m_strdup(remoteaddr);
 	tcpinfo->sendport = remoteport;
 	tcpinfo->listenport = listenport;

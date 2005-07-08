@@ -305,7 +305,7 @@ static void chansessionrequest(struct Channel *channel) {
 	TRACE(("enter chansessionrequest"))
 
 	type = buf_getstring(ses.payload, &typelen);
-	wantreply = buf_getbyte(ses.payload);
+	wantreply = buf_getbool(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
 		TRACE(("leave chansessionrequest: type too long")) /* XXX send error?*/
@@ -837,7 +837,7 @@ static void execchild(struct ChanSess *chansess) {
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
-	for (i = 3; i < (unsigned int)ses.maxfd; i++) {
+	for (i = 3; i <= (unsigned int)ses.maxfd; i++) {
 		if (m_close(i) == DROPBEAR_FAILURE) {
 			dropbear_exit("Error closing file desc");
 		}
@@ -862,8 +862,10 @@ static void execchild(struct ChanSess *chansess) {
 
 		if ((setgid(ses.authstate.pw->pw_gid) < 0) ||
 			(initgroups(ses.authstate.pw->pw_name, 
-						ses.authstate.pw->pw_gid) < 0) ||
-			(setuid(ses.authstate.pw->pw_uid) < 0)) {
+						ses.authstate.pw->pw_gid) < 0)) {
+			dropbear_exit("error changing user group");
+		}
+		if (setuid(ses.authstate.pw->pw_uid) < 0) {
 			dropbear_exit("error changing user");
 		}
 	} else {

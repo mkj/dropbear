@@ -1,3 +1,24 @@
+0.46
+
+- Fix long-standing bug which caused connections to be closed if an ssh-agent
+  socket was no longer available
+
+- print a warning if we seem to be blocking on /dev/random 
+  (suggested by Paul Fox)
+
+- fixed a memory leak in DSS code (thanks to Boris Berezovsky for the patch)
+
+- dbclient -L no longer segfaults, allocate correct buffer size (thanks
+  to David Cook for reporting it)
+
+- added RSA blinding (recommended by Dan Kaminsky)
+
+- rearranged bignum reading/random generation code
+
+- Reset the non-blocking status on stderr and stdout as well as stdin,
+  fixes a problem where the shell running dbclient will exit (thanks to 
+  Brent Roman for reporting it)
+
 0.45 - Mon March 7 2005
 
 - Makefile no longer appends 'static' to statically linked binaries
