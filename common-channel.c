@@ -1019,6 +1019,7 @@ static void closechanfd(struct Channel *channel, int fd, int how) {
 
 	/* XXX server */
 	if (channel->type->sepfds) {
+		TRACE(("shutdown((%d), %d)", fd, how))
 		shutdown(fd, how);
 		if (how == 0) {
 			closeout = 1;
@@ -1042,5 +1043,12 @@ static void closechanfd(struct Channel *channel, int fd, int how) {
 	}
 	if (closein && (channel->extrabuf != NULL) && (fd == channel->errfd)) {
 		channel->errfd = FD_CLOSED;
+	}
+
+	/* if we called shutdown on it and all references are gone, then we 
+	 * need to close() it to stop it lingering */
+	if (channel->type->sepfds && channel->outfd == FD_CLOSED 
+		&& channel->infd == FD_CLOSED && channel->errfd == FD_CLOSED) {
+		close(fd);
 	}
 }
