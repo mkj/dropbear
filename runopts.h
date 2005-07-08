@@ -95,7 +95,7 @@ typedef struct cli_runopts {
 	char *cmd;
 	int wantpty;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	struct PubkeyList *pubkeys; /* Keys to use for public-key auth */
+	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	struct TCPFwdList * remotefwds;

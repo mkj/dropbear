@@ -126,7 +126,7 @@ static void cli_session_init() {
 									  specific exit status */
 
 	/* Auth */
-	cli_ses.lastpubkey = NULL;
+	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
 
 	/* For printing "remote host closed" for the user */

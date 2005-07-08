@@ -2,6 +2,8 @@ Current:
 
 Things which might need doing:
 
+- default private dbclient keys
+
 - Make options.h generated from configure perhaps?
 
 - Improved queueing of unauthed connections

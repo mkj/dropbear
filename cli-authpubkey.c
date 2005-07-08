@@ -38,29 +38,29 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign);
  * We use it to remove the key we tried from the list */
 void cli_pubkeyfail() {
 
-	struct PubkeyList *keyitem;
-	struct PubkeyList **previtem;
+	struct SignKeyList *keyitem;
+	struct SignKeyList **previtem;
 
 	TRACE(("enter cli_pubkeyfail"))
-	previtem = &cli_opts.pubkeys;
+	previtem = &cli_opts.privkeys;
 
 	/* Find the key we failed with, and remove it */
-	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
-		if (keyitem == cli_ses.lastpubkey) {
+	for (keyitem = cli_opts.privkeys; keyitem != NULL; keyitem = keyitem->next) {
+		if (keyitem == cli_ses.lastprivkey) {
 			*previtem = keyitem->next;
 		}
 		previtem = &keyitem;
 	}
 
-	sign_key_free(cli_ses.lastpubkey->key); /* It won't be used again */
-	m_free(cli_ses.lastpubkey);
+	sign_key_free(cli_ses.lastprivkey->key); /* It won't be used again */
+	m_free(cli_ses.lastprivkey);
 
 	TRACE(("leave cli_pubkeyfail"))
 }
 
 void recv_msg_userauth_pk_ok() {
 
-	struct PubkeyList *keyitem;
+	struct SignKeyList *keyitem;
 	buffer* keybuf;
 	char* algotype = NULL;
 	unsigned int algolen;
@@ -80,7 +80,7 @@ void recv_msg_userauth_pk_ok() {
 
 	/* Iterate through our keys, find which one it was that matched, and
 	 * send a real request with that key */
-	for (keyitem = cli_opts.pubkeys; keyitem != NULL; keyitem = keyitem->next) {
+	for (keyitem = cli_opts.privkeys; keyitem != NULL; keyitem = keyitem->next) {
 
 		if (keyitem->type != keytype) {
 			/* Types differed */
@@ -172,11 +172,11 @@ int cli_auth_pubkey() {
 
 	TRACE(("enter cli_auth_pubkey"))
 
-	if (cli_opts.pubkeys != NULL) {
+	if (cli_opts.privkeys != NULL) {
 		/* Send a trial request */
-		send_msg_userauth_pubkey(cli_opts.pubkeys->key,
-				cli_opts.pubkeys->type, 0);
-		cli_ses.lastpubkey = cli_opts.pubkeys;
+		send_msg_userauth_pubkey(cli_opts.privkeys->key,
+				cli_opts.privkeys->type, 0);
+		cli_ses.lastprivkey = cli_opts.privkeys;
 		TRACE(("leave cli_auth_pubkey-success"))
 		return 1;
 	} else {

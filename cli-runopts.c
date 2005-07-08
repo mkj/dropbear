@@ -89,7 +89,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.cmd = NULL;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	cli_opts.pubkeys = NULL;
+	cli_opts.privkeys = NULL;
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	cli_opts.localfwds = NULL;
@@ -271,7 +271,7 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename) {
 
-	struct PubkeyList * nextkey;
+	struct SignKeyList * nextkey;
 	sign_key *key;
 	int keytype;
 
@@ -284,11 +284,11 @@ static void loadidentityfile(const char* filename) {
 
 	} else {
 
-		nextkey = (struct PubkeyList*)m_malloc(sizeof(struct PubkeyList));
+		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
 		nextkey->key = key;
-		nextkey->next = cli_opts.pubkeys;
+		nextkey->next = cli_opts.privkeys;
 		nextkey->type = keytype;
-		cli_opts.pubkeys = nextkey;
+		cli_opts.privkeys = nextkey;
 	}
 }
 #endif
