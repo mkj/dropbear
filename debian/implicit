@@ -1,4 +1,4 @@
-# $Id: implicit,v 1.1 2004/06/16 05:08:32 matt Exp $
+# $Id: implicit,v 1.10 2004/07/03 15:20:00 pape Exp $
 
 .PHONY: deb-checkdir deb-checkuid
 
@@ -11,6 +11,10 @@ deb-checkuid:
 	@rm -f $*.deb $*.deb-checkdir $*.deb-docs $*.deb-docs-base \
 	  $*.deb-docs-docs $*.deb-docs-examples $*.deb-DEBIAN \
 	  $*.deb-DEBIAN-dir $*.deb-DEBIAN-scripts $*.deb-DEBIAN-md5sums
+
+%.udeb: %.deb-DEBIAN
+	@rm -f $*.deb $*.deb-checkdir $*.deb-DEBIAN $*.deb-DEBIAN-dir \
+	  $*.deb-DEBIAN-scripts $*.deb-DEBIAN-md5sums
 
 %.deb-checkdir:
 	@test -d debian/$* || sh -cx '! : directory debian/$* missing'
@@ -29,6 +33,8 @@ deb-checkuid:
 	@test -r debian/$*/usr/share/doc/$*/changelog || \
 	  sh -cx 'mv debian/$*/usr/share/doc/$*/changelog.Debian \
 	    debian/$*/usr/share/doc/$*/changelog'
+	@test -s debian/$*/usr/share/doc/$*/changelog || \
+	  sh -cx 'rm -f debian/$*/usr/share/doc/$*/changelog'
 	@gzip -9 debian/$*/usr/share/doc/$*/changelog*
 %.deb-docs-docs:
 	@for i in `cat debian/$*.docs 2>/dev/null || :`; do \
@@ -58,13 +64,13 @@ deb-checkuid:
 	@rm -rf debian/$*/DEBIAN
 	: debian/$*/DEBIAN/
 	@install -d -m0755 debian/$*/DEBIAN
-	@for i in conffiles shlibs; do \
+	@for i in conffiles shlibs templates; do \
 	  test ! -r debian/$*.$$i || \
 	    sh -cx "install -m0644 debian/$*.$$i debian/$*/DEBIAN/$$i" \
 	      || exit 1; \
 	done
 %.deb-DEBIAN-scripts:
-	@for i in preinst prerm postinst postrm; do \
+	@for i in preinst prerm postinst postrm config; do \
 	  test ! -r debian/$*.$$i || \
 	    sh -cx "install -m0755 debian/$*.$$i debian/$*/DEBIAN/$$i" \
 	      || exit 1; \

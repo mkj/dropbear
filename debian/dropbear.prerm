@@ -1,5 +1,5 @@
 #!/bin/sh
-set -u
+set -e
 
 test "$1" = 'remove' || test "$1" = 'deconfigure' || exit 0
 if test -x /etc/init.d/dropbear; then

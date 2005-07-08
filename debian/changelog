@@ -1,53 +1,54 @@
-dropbear (0.45-1) unstable; urgency=high
+dropbear (0.45-3) unstable; urgency=low
 
-  * New upstream release, various fixes.
+  * debian/dropbear.init: init script prints human readable message in case
+    it's disabled (closes: #309099).
+  * debian/dropbear.postinst: configure: restart service through init script
+    instead of start.
+  * debian/dropbear.prerm: set -u -> set -e.
 
- -- Matt Johnston <matt@ucc.asn.au>  Mon, 7 March 2005 00:44:54 +0800
+ -- Gerrit Pape <pape@smarden.org>  Wed, 25 May 2005 22:38:17 +0000
 
-dropbear (0.44+final-1) unstable; urgency=high
+dropbear (0.45-2) unstable; urgency=low
 
-  * New upstream release, various fixes.
+  * Matt Johnston:
+    * New upstream release, various fixes.
 
- -- Matt Johnston <matt@ucc.asn.au>  Mon, 3 January 2005 00:44:54 +0800
+ -- Gerrit Pape <pape@smarden.org>  Sat, 12 Mar 2005 15:17:55 +0000
 
-dropbear (0.44test4-1) unstable; urgency=medium
+dropbear (0.44-1) unstable; urgency=low
 
-  * New upstream beta, various useful fixes.
+  * New upstream release.
+  * debian/rules: install /usr/bin/dbclient; handle possible patches more
+    gracefully; install debian/dbclient.1 man page; enable target patch;
+    minor.
+  * debian/implicit: update to revision 1.10.
+  * debian/dbclient.1: new; man page.
+  * debian/diff/dbclient-usage-typo.diff: new; fix typo.
+  * debian/diff/manpages.diff: new; add references to dbclient man page.
 
- -- Matt Johnston <matt@ucc.asn.au>  Tues, 14 September 2004 21:20:00 +0800
+ -- Gerrit Pape <pape@smarden.org>  Sat,  8 Jan 2005 22:50:43 +0000
 
-dropbear (0.44test3-1) unstable; urgency=medium
+dropbear (0.43-2) unstable; urgency=high
 
-  * New upstream beta, various useful fixes.
+  * Matt Johnston:
+    * New upstream release 0.43
+    * SECURITY: Don't attempt to free uninitialised buffers in DSS verification
+      code
+    * Handle portforwarding to servers which don't send any initial data
+      (Closes: #258426)
+  * debian/dropbear.postinst: remove code causing bothersome warning on
+    package install (closes: #256752).
+  * debian/README.Debian.diet: new; how to build with the diet libc.
+  * debian/dropbear.docs: add debian/README.Debian.diet.
+  * debian/rules: support "diet" in DEB_BUILD_OPTIONS; minor cleanup.
 
- -- Matt Johnston <matt@ucc.asn.au>  Fri, 27 August 2004 22:20:00 +0800
-
-dropbear (0.44test2-1) unstable; urgency=low
-
-  * New upstream beta, various minor fixes.
-
- -- Matt Johnston <matt@ucc.asn.au>  Tues, 17 August 2004 19:00:00 +0800
-
-dropbear (0.44test1-1) unstable; urgency=low
-
-  * Upstream beta 0.44test1
-  * Huge changes to allow client functionality
-
- -- Matt Johnston <matt@ucc.asn.au>  Sat, 14 August 2004 23:00:00 +0800
-
-dropbear (0.43-1) unstable; urgency=high
-
-  * New upstream release 0.43
-  * SECURITY: Don't attempt to free uninitialised buffers in DSS verification
-    code
-  * Handle portforwarding to servers which don't send any initial data
-    (Closes: #258426)
-
- -- Matt Johnston <matt@ucc.asn.au>  Fri, 16 July 2004 17:44:54 +0800
+ -- Gerrit Pape <pape@smarden.org>  Sat, 17 Jul 2004 19:31:19 +0000
 
 dropbear (0.42-1) unstable; urgency=low
 
-  * New upstream release 0.42
+  * New upstream release 0.42.
+  * debian/diff/cvs-20040520.diff: remove; obsolete.
+  * debian/rules: disable target patch.
 
  -- Matt Johnston <matt@ucc.asn.au>  Wed, 16 June 2004 12:44:54 +0800
 

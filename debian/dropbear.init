@@ -14,10 +14,12 @@ NO_START=0
 
 set -e
 
+cancel() { echo "$1" >&2; exit 0; };
 test ! -r /etc/default/dropbear || . /etc/default/dropbear
-test "$NO_START" = "0" || exit 0
-test -x "$DAEMON" || exit 0
-test ! -h /var/service/dropbear || exit 0
+test "$NO_START" = "0" || cancel 'NO_START is not set to zero.'
+test -x "$DAEMON" || cancel "$DAEMON does not exist or is not executable."
+test ! -h /var/service/dropbear || \
+  cancel '/var/service/dropbear exists, service is controlled through runit.'
 
 test -z "$DROPBEAR_BANNER" || \
   DROPBEAR_EXTRA_ARGS="$DROPBEAR_EXTRA_ARGS -b $DROPBEAR_BANNER"
