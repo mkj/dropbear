@@ -275,7 +275,6 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 
 	/* the actual signing of the padded data */
 
-#define RSA_BLINDING
 #ifdef RSA_BLINDING
 
 	/* With blinding, s = (r^(-1))((em)*r^e)^d mod n */
