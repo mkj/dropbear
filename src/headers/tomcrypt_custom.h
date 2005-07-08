@@ -2,7 +2,7 @@
 #define TOMCRYPT_CUSTOM_H_
 
 /* this will sort out which stuff based on the user-config in options.h */
-#include "../options.h"
+#include "options.h"
 
 /* macros for various libc functions you can change for embedded targets */
 #define XMALLOC  malloc
@@ -19,6 +19,9 @@
 #ifdef DROPBEAR_SMALL_CODE
 #define LTC_SMALL_CODE
 #endif
+
+/* These spit out warnings etc */
+#define LTC_NO_ROLC
 
 /* Enable self-test test vector checking */
 /* Not for dropbear */
