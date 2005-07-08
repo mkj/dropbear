@@ -1,23 +1,31 @@
-0.46
+0.46 
 
 - Fix long-standing bug which caused connections to be closed if an ssh-agent
   socket was no longer available
 
-- print a warning if we seem to be blocking on /dev/random 
+- Print a warning if we seem to be blocking on /dev/random 
   (suggested by Paul Fox)
 
-- fixed a memory leak in DSS code (thanks to Boris Berezovsky for the patch)
+- Fixed a memory leak in DSS code (thanks to Boris Berezovsky for the patch)
 
 - dbclient -L no longer segfaults, allocate correct buffer size (thanks
-  to David Cook for reporting it)
+  to David Cook for reporting it, and Christopher Faylor for independently
+  sending in a patch)
 
-- added RSA blinding (recommended by Dan Kaminsky)
+- Added RSA blinding to signing code
 
-- rearranged bignum reading/random generation code
+- Rearranged bignum reading/random generation code
 
 - Reset the non-blocking status on stderr and stdout as well as stdin,
   fixes a problem where the shell running dbclient will exit (thanks to 
   Brent Roman for reporting it)
+
+- Fix so that all file descriptors are closed so that child shell doesn't
+  inherit descriptors (thanks to Linden May for the patch)
+
+- Change signkey.c so that it gcc 4 doesn't generate incorrect code
+
+- Update to LibTomCrypt 1.05 and LibTomMath 0.35
 
 0.45 - Mon March 7 2005
 

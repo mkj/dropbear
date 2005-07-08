@@ -1,3 +1,9 @@
+dropbear (0.46-0.1) unstable; urgency=medium
+
+  * New upstream release, various fixes.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Fri, 8 July 2005 21:32:55 +0800
+
 dropbear (0.45-3) unstable; urgency=low
 
   * debian/dropbear.init: init script prints human readable message in case

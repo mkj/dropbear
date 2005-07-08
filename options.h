@@ -194,7 +194,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.45"
+#define DROPBEAR_VERSION "0.46"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

@@ -85,7 +85,7 @@ install: deb-checkdir deb-checkuid build-stamp
 	done
 	gzip -9 '$(DIR)'/usr/share/man/man8/*.8
 	install -d -m0755 '$(DIR)'/usr/share/man/man1
-	install -m644 debian/dbclient.1 '$(DIR)'/usr/share/man/man1/
+	install -m644 dbclient.1 '$(DIR)'/usr/share/man/man1/
 	gzip -9 '$(DIR)'/usr/share/man/man1/*.1
 	# copyright, changelog
 	cat debian/copyright.in LICENSE >debian/copyright
