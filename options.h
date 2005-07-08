@@ -90,6 +90,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
 
+/* RSA can be vulnerable to timing attacks which use the time required for
+ * signing to guess the private key. Blinding avoids this attack, though makes
+ * signing operations slightly slower. */
+#define RSA_BLINDING
+
 /* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
  * rather than just from the random byte source. Undefining this will save you
  * ~4k in binary size with static uclibc, but your DSS hostkey could be exposed
