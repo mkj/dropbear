@@ -1,4 +1,4 @@
-0.46 
+0.46 - Sat July 9 2005
 
 - Fix long-standing bug which caused connections to be closed if an ssh-agent
   socket was no longer available
@@ -12,7 +12,7 @@
   to David Cook for reporting it, and Christopher Faylor for independently
   sending in a patch)
 
-- Added RSA blinding to signing code
+- Added RSA blinding to signing code (suggested by Dan Kaminsky)
 
 - Rearranged bignum reading/random generation code
 
@@ -20,10 +20,10 @@
   fixes a problem where the shell running dbclient will exit (thanks to 
   Brent Roman for reporting it)
 
-- Fix so that all file descriptors are closed so that child shell doesn't
+- Fix so that all file descriptors are closed so the child shell doesn't
   inherit descriptors (thanks to Linden May for the patch)
 
-- Change signkey.c so that it gcc 4 doesn't generate incorrect code
+- Change signkey.c to avoid gcc 4 generating incorrect code
 
 - Update to LibTomCrypt 1.05 and LibTomMath 0.35
 
