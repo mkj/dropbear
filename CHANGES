@@ -25,6 +25,9 @@
 
 - Change signkey.c to avoid gcc 4 generating incorrect code
 
+- After both sides of a file descriptor have been shutdown(), close()
+  it to avoid leaking descriptors (thanks to Ari Hyttinen for a patch)
+
 - Update to LibTomCrypt 1.05 and LibTomMath 0.35
 
 0.45 - Mon March 7 2005
