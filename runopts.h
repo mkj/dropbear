@@ -103,6 +103,11 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	struct TCPFwdList * localfwds;
 #endif
+#ifdef ENABLE_CLI_AGENTFWD
+	int agent_fwd;
+	int agent_keys_loaded; /* whether pubkeys has been populated with a 
+							  list of keys held by the agent */
+#endif
 	/* XXX TODO */
 
 } cli_runopts;

@@ -59,7 +59,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_SVR_REMOTETCPFWD
 
 /* Enable Authentication Agent Forwarding - server only for now */
-#define ENABLE_AGENTFWD
+#define ENABLE_SVR_AGENTFWD
+#define ENABLE_CLI_AGENTFWD
 
 /* Encryption - at least one required.
  * RFC Draft requires 3DES, and recommends Blowfish, AES128 & Twofish128 */
@@ -316,6 +317,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #ifndef ENABLE_AGENTFWD
 #define DISABLE_AGENTFWD
+#endif
+
+#if defined(DROPBEAR_PRNGD_SOCKET) || defined(ENABLE_CLI_AGENTFWD)
+#define ENABLE_CONNECT_UNIX
 #endif
 
 #if defined(ENABLE_CLI_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)

@@ -52,6 +52,9 @@ static void printhelp() {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
+#ifdef ENABLE_CLI_AGENTFWD
+					"-A    Enable agent auth forwarding\n"
+#endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 					"-L <listenport:remotehost:remoteport> Local port forwarding\n"
 #endif
@@ -96,6 +99,10 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	cli_opts.remotefwds = NULL;
+#endif
+#ifdef ENABLE_CLI_AGENTFWD
+	cli_opts.agent_fwd = 0;
+	cli_opts.agent_keys_loaded = 0;
 #endif
 	opts.nolocaltcp = 0;
 	opts.noremotetcp = 0;
@@ -180,6 +187,11 @@ void cli_getopts(int argc, char ** argv) {
 					printhelp();
 					exit(EXIT_SUCCESS);
 					break;
+#ifdef ENABLE_CLI_AGENTFWD
+				case 'A':
+					cli_opts.agent_fwd = 1;
+					break;
+#endif
 #ifdef DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -288,6 +300,7 @@ static void loadidentityfile(const char* filename) {
 		nextkey->key = key;
 		nextkey->next = cli_opts.privkeys;
 		nextkey->type = keytype;
+		nextkey->source = SIGNKEY_SOURCE_RAW_FILE;
 		cli_opts.privkeys = nextkey;
 	}
 }

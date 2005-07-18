@@ -84,6 +84,10 @@ struct AuthState {
 
 };
 
+/* Sources for signing keys */
+#define SIGNKEY_SOURCE_RAW_FILE 1
+#define SIGNKEY_SOURCE_AGENT 21
+
 struct SignKeyList;
 /* A singly linked list of signing keys */
 struct SignKeyList {
@@ -91,6 +95,7 @@ struct SignKeyList {
 	sign_key *key;
 	int type; /* The type of key */
 	struct SignKeyList *next;
+	int source;
 	/* filename? or the buffer? for encrypted keys, so we can later get
 	 * the private key portion */
 

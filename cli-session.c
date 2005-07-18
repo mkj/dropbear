@@ -73,6 +73,9 @@ static const struct ChanType *cli_chantypes[] = {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	&cli_chan_tcpremote,
 #endif
+#ifdef ENABLE_CLI_AGENTFWD
+	&cli_chan_agent,
+#endif
 	NULL /* Null termination */
 };
 
