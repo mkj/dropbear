@@ -119,7 +119,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		circbuffer * buf);
 
 #ifdef DROPBEAR_CLIENT
-const struct ChanType clichansess;
+extern const struct ChanType clichansess;
 #endif
 
 #if defined(USING_LISTENERS) || defined(DROPBEAR_CLIENT)
