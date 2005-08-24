@@ -33,19 +33,19 @@
    {&cipher_desc, keysize, blocksize} */
 
 #ifdef DROPBEAR_AES128_CBC
-const struct dropbear_cipher dropbear_aes128 = 
+static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
-const struct dropbear_cipher dropbear_blowfish = 
+static const struct dropbear_cipher dropbear_blowfish = 
 	{&blowfish_desc, 16, 8};
 #endif
 #ifdef DROPBEAR_TWOFISH128_CBC
-const struct dropbear_cipher dropbear_twofish128 = 
+static const struct dropbear_cipher dropbear_twofish128 = 
 	{&twofish_desc, 16, 16};
 #endif
 #ifdef DROPBEAR_3DES_CBC
-const struct dropbear_cipher dropbear_3des = 
+static const struct dropbear_cipher dropbear_3des = 
 	{&des3_desc, 24, 8};
 #endif
 
@@ -57,11 +57,11 @@ const struct dropbear_cipher dropbear_nocipher =
    {&hash_desc, keysize, hashsize} */
 
 #ifdef DROPBEAR_SHA1_HMAC
-const struct dropbear_hash dropbear_sha1 = 
+static const struct dropbear_hash dropbear_sha1 = 
 	{&sha1_desc, 20, 20};
 #endif
 #ifdef DROPBEAR_MD5_HMAC
-const struct dropbear_hash dropbear_md5 = 
+static const struct dropbear_hash dropbear_md5 = 
 	{&md5_desc, 16, 16};
 #endif
 
