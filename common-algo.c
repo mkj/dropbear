@@ -84,6 +84,13 @@ const struct dropbear_hash dropbear_nohash =
 /* The following map ssh names to internal values */
 
 algo_type sshciphers[] = {
+#ifdef DROPBEAR_TWOFISH256_CBC
+	{"twofish256-cbc", 0, (void*)&dropbear_twofish256, 1},
+	{"twofish-cbc", 0, (void*)&dropbear_twofish256, 1},
+#endif
+#ifdef DROPBEAR_TWOFISH128_CBC
+	{"twofish128-cbc", 0, (void*)&dropbear_twofish128, 1},
+#endif
 #ifdef DROPBEAR_AES128_CBC
 	{"aes128-cbc", 0, (void*)&dropbear_aes128, 1},
 #endif
@@ -95,12 +102,6 @@ algo_type sshciphers[] = {
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
-#endif
-#ifdef DROPBEAR_TWOFISH256_CBC
-	{"twofish256-cbc", 0, (void*)&dropbear_twofish256, 1},
-#endif
-#ifdef DROPBEAR_TWOFISH128_CBC
-	{"twofish128-cbc", 0, (void*)&dropbear_twofish128, 1},
 #endif
 	{NULL, 0, NULL, 0}
 };

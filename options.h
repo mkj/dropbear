@@ -278,7 +278,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_MAC_LEN SHA1_HASH_SIZE
 
 
-#define MAX_KEY_LEN 24 /* 3DES requires a 24 byte key */
+#define MAX_KEY_LEN 32 /* 256 bytes for aes256 etc */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 
 						 and >= SHA1_HASH_SIZE */
 #define MAX_MAC_KEY 20
