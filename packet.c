@@ -531,7 +531,7 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 
 	TRACE(("enter writemac"))
 
-	macsize = ses.keys->recv_algo_mac->hashsize;
+	macsize = ses.keys->trans_algo_mac->hashsize;
 	if (macsize > 0) {
 		/* calculate the mac */
 		if (hmac_init(&hmac, 
