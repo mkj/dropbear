@@ -148,13 +148,13 @@ algo_type sshkex[] = {
 void crypto_init() {
 
 	const struct ltc_cipher_descriptor *regciphers[] = {
-#ifdef DROPBEAR_AES128_CBC
+#ifdef DROPBEAR_AES_CBC
 		&aes_desc,
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 		&blowfish_desc,
 #endif
-#ifdef DROPBEAR_TWOFISH128_CBC
+#ifdef DROPBEAR_TWOFISH_CBC
 		&twofish_desc,
 #endif
 #ifdef DROPBEAR_3DES_CBC
