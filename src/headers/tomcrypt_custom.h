@@ -47,11 +47,11 @@
 #define BLOWFISH
 #endif
 
-#ifdef DROPBEAR_AES128_CBC
+#ifdef DROPBEAR_AES_CBC
 #define RIJNDAEL
 #endif
 
-#ifdef DROPBEAR_TWOFISH128_CBC
+#ifdef DROPBEAR_TWOFISH_CBC
 #define TWOFISH
 
 /* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
