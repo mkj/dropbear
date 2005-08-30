@@ -622,7 +622,7 @@ static void read_kex_algos() {
 		erralgo = "enc c->s";
 		goto error;
 	}
-	TRACE(("c2s is  %s", c2s_cipher_algo->name))
+	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
@@ -630,7 +630,7 @@ static void read_kex_algos() {
 		erralgo = "enc s->c";
 		goto error;
 	}
-	TRACE(("s2c is  %s", s2c_cipher_algo->name))
+	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -638,6 +638,7 @@ static void read_kex_algos() {
 		erralgo = "mac c->s";
 		goto error;
 	}
+	TRACE(("hash c2s is  %s", c2s_hash_algo->name))
 
 	/* mac_algorithms_server_to_client */
 	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -645,6 +646,7 @@ static void read_kex_algos() {
 		erralgo = "mac s->c";
 		goto error;
 	}
+	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
 	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -652,6 +654,7 @@ static void read_kex_algos() {
 		erralgo = "comp c->s";
 		goto error;
 	}
+	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
 	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -659,6 +662,7 @@ static void read_kex_algos() {
 		erralgo = "comp s->c";
 		goto error;
 	}
+	TRACE(("hash s2c is  %s", s2c_comp_algo->name))
 
 	/* languages_client_to_server */
 	buf_eatstring(ses.payload);
@@ -700,13 +704,6 @@ static void read_kex_algos() {
 		ses.newkeys->recv_algo_comp = c2s_comp_algo->val;
 		ses.newkeys->trans_algo_comp = s2c_comp_algo->val;
 	}
-
-	TRACE(("enc algo recv %s", algo->name))
-	TRACE(("enc algo trans %s", algo->name))
-	TRACE(("mac algo recv %s", algo->name))
-	TRACE(("mac algo trans %s", algo->name))
-	TRACE(("comp algo recv %s", algo->name))
-	TRACE(("comp algo trans %s", algo->name))
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);

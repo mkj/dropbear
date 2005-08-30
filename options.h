@@ -62,25 +62,30 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_AGENTFWD
 
 /* Encryption - at least one required.
- * RFC Draft requires 3DES, and recommends Blowfish, AES128 & Twofish128 */
+ * RFC Draft requires 3DES and recommends AES128 for interoperability.
+ * Including multiple keysize variants the same cipher 
+ * (eg AES256 as well as AES128) will result in a minimal size increase.*/
 #define DROPBEAR_AES128_CBC
-#define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH128_CBC
 #define DROPBEAR_3DES_CBC
+#define DROPBEAR_AES256_CBC
+#define DROPBEAR_BLOWFISH_CBC
+#define DROPBEAR_TWOFISH256_CBC
+#define DROPBEAR_TWOFISH128_CBC
 
-/* Integrity - at least one required.
- * RFC Draft requires sha1-hmac, and recommends md5-hmac.
+/* Message Integrity - at least one required.
+ * RFC Draft requires sha1 and recommends sha1-96.
+ * sha1-96 may be of use for slow links, as it has a smaller overhead.
  *
- * Note: there's no point disabling sha1 to save space, since it's used in the
+ * Note: there's no point disabling sha1 to save space, since it's used
  * for the random number generator and public-key cryptography anyway.
  * Disabling it here will just stop it from being used as the integrity portion
  * of the ssh protocol.
  *
- * These are also used for key fingerprints in logs (when pubkey auth is used),
- * MD5 fingerprints are printed if available, however SHA1 fingerprints will be
- * generated otherwise. This isn't exactly optimal, although SHA1 fingerprints
- * are not too hard to create from pubkeys if required. */
+ * These hashes are also used for public key fingerprints in logs.
+ * If you disable MD5, Dropbear will fall back to SHA1 fingerprints,
+ * which are not the standard form. */
 #define DROPBEAR_SHA1_HMAC
+#define DROPBEAR_SHA1_96_HMAC
 #define DROPBEAR_MD5_HMAC
 
 /* Hostkey/public key algorithms - at least one required, these are used
@@ -309,6 +314,14 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 								in a few years time.... */
 
 #define DROPBEAR_MAX_CLI_PASS 1024
+
+#if defined(DROPBEAR_AES256_CBC) || defined(DROPBEAR_AES128_CBC)
+#define DROPBEAR_AES_CBC
+#endif
+
+#if defined(DROPBEAR_TWOFISH256_CBC) || defined(DROPBEAR_TWOFISH128_CBC)
+#define DROPBEAR_TWOFISH_CBC
+#endif
 
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD

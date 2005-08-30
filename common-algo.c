@@ -32,6 +32,10 @@
 /* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
 
+#ifdef DROPBEAR_AES256_CBC
+static const struct dropbear_cipher dropbear_aes256 = 
+	{&aes_desc, 32, 16};
+#endif
 #ifdef DROPBEAR_AES128_CBC
 static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
@@ -39,6 +43,10 @@ static const struct dropbear_cipher dropbear_aes128 =
 #ifdef DROPBEAR_BLOWFISH_CBC
 static const struct dropbear_cipher dropbear_blowfish = 
 	{&blowfish_desc, 16, 8};
+#endif
+#ifdef DROPBEAR_TWOFISH256_CBC
+static const struct dropbear_cipher dropbear_twofish256 = 
+	{&twofish_desc, 32, 16};
 #endif
 #ifdef DROPBEAR_TWOFISH128_CBC
 static const struct dropbear_cipher dropbear_twofish128 = 
@@ -60,6 +68,10 @@ const struct dropbear_cipher dropbear_nocipher =
 static const struct dropbear_hash dropbear_sha1 = 
 	{&sha1_desc, 20, 20};
 #endif
+#ifdef DROPBEAR_SHA1_96_HMAC
+static const struct dropbear_hash dropbear_sha1_96 = 
+	{&sha1_desc, 20, 12};
+#endif
 #ifdef DROPBEAR_MD5_HMAC
 static const struct dropbear_hash dropbear_md5 = 
 	{&md5_desc, 16, 16};
@@ -75,19 +87,28 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_AES128_CBC
 	{"aes128-cbc", 0, (void*)&dropbear_aes128, 1},
 #endif
+#ifdef DROPBEAR_3DES_CBC
+	{"3des-cbc", 0, (void*)&dropbear_3des, 1},
+#endif
+#ifdef DROPBEAR_AES256_CBC
+	{"aes256-cbc", 0, (void*)&dropbear_aes256, 1},
+#endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
 #endif
-#ifdef DROPBEAR_TWOFISH128_CBC
-	{"twofish-cbc", 0, (void*)&dropbear_twofish128, 1},
+#ifdef DROPBEAR_TWOFISH256_CBC
+	{"twofish256-cbc", 0, (void*)&dropbear_twofish256, 1},
 #endif
-#ifdef DROPBEAR_3DES_CBC
-	{"3des-cbc", 0, (void*)&dropbear_3des, 1},
+#ifdef DROPBEAR_TWOFISH128_CBC
+	{"twofish128-cbc", 0, (void*)&dropbear_twofish128, 1},
 #endif
 	{NULL, 0, NULL, 0}
 };
 
 algo_type sshhashes[] = {
+#ifdef DROPBEAR_SHA1_96_HMAC
+	{"hmac-sha1-96", 0, (void*)&dropbear_sha1_96, 1},
+#endif
 #ifdef DROPBEAR_SHA1_HMAC
 	{"hmac-sha1", 0, (void*)&dropbear_sha1, 1},
 #endif
