@@ -209,21 +209,20 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 /* Output a comma separated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
-	unsigned int pos = 0, i, len;
-	char str[50]; /* enough for local algo storage */
+	unsigned int i, len;
+	unsigned int donefirst = 0;
+	buffer *algolist = NULL;
 
+	algolist = buf_new(100);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
-			/* Avoid generating a trailing comma */
-			if (pos)
-			    str[pos++] = ',';
+			if (donefirst)
+				buf_putbyte(algolist, ',');
+			donefirst = 1;
 			len = strlen(localalgos[i].name);
-			memcpy(&str[pos], localalgos[i].name, len);
-			pos += len;
+			buf_putbytes(algolist, localalgos[i].name, len);
 		}
 	}
-	str[pos]=0;
-	/* Debug this */
-	TRACE(("buf_put_algolist: %s", str))
-	buf_putstring(buf, str, pos);
+	buf_putstring(buf, algolist->data, algolist->len);
+	buf_free(algolist);
 }
