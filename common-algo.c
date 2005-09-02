@@ -210,7 +210,7 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
 	unsigned int pos = 0, i, len;
-	char str[MAX_ALGO_LIST_LEN];
+	char str[50]; /* enough for local algo storage */
 
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
