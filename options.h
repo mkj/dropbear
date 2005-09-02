@@ -289,6 +289,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define MAX_PROPOSED_ALGO 20
 
+#define MAX_ALGO_LIST_LEN 100 /* max length of our sent algorithm list
+								 (cipher is longest) */
+
 /* size/count limits */
 #define MAX_LISTEN_ADDR 10
 
