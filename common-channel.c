@@ -147,6 +147,7 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->outfd = FD_UNINIT;
 	newchan->errfd = FD_CLOSED; /* this isn't always set to start with */
 	newchan->initconn = 0;
+	newchan->await_open = 0;
 
 	newchan->writebuf = cbuf_new(RECV_MAXWINDOW);
 	newchan->extrabuf = NULL; /* The user code can set it up */
@@ -933,6 +934,8 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	chan->infd = chan->outfd = fd;
 	ses.maxfd = MAX(ses.maxfd, fd);
 
+	chan->await_open = 1;
+
 	/* now open the channel connection */
 	CHECKCLEARTOWRITE();
 
@@ -959,6 +962,11 @@ void recv_msg_channel_open_confirmation() {
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
+
+	if (!channel->await_open) {
+		dropbear_exit("unexpected channel reply");
+	}
+	channel->await_open = 0;
 
 	channel->remotechan =  buf_getint(ses.payload);
 	channel->transwindow = buf_getint(ses.payload);
@@ -989,6 +997,11 @@ void recv_msg_channel_open_failure() {
 	if (channel == NULL) {
 		dropbear_exit("Unknown channel");
 	}
+
+	if (!channel->await_open) {
+		dropbear_exit("unexpected channel reply");
+	}
+	channel->await_open = 0;
 
 	removechannel(channel);
 }

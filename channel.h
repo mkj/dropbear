@@ -81,6 +81,10 @@ struct Channel {
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
 
+	int await_open; /* flag indicating whether we've sent an open request
+					   for this channel (and are awaiting a confirmation
+					   or failure). */
+
 	const struct ChanType* type;
 
 };
