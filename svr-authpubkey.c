@@ -266,7 +266,6 @@ static int checkpubkeyperms() {
 
 	TRACE(("enter checkpubkeyperms"))
 
-	assert(ses.authstate.pw);
 	if (ses.authstate.pw->pw_dir == NULL) {
 		goto out;
 	}

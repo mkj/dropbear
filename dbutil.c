@@ -110,6 +110,10 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 	exit(exitcode);
 }
 
+void fail_assert(const char* expr, const char* file, int line) {
+	dropbear_exit("failed assertion (%s:%d): `%s'", file, line, expr);
+}
+
 static void generic_dropbear_log(int UNUSED(priority), const char* format, 
 		va_list param) {
 

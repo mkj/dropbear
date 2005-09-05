@@ -148,8 +148,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess) {
 
-	assert(chansess->exit.exitpid != -1);
-	assert(chansess->exit.exitsignal == -1);
+	dropbear_assert(chansess->exit.exitpid != -1);
+	dropbear_assert(chansess->exit.exitsignal == -1);
 
 	CHECKCLEARTOWRITE();
 
@@ -170,8 +170,8 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 	int i;
 	char* signame = NULL;
 
-	assert(chansess->exit.exitpid != -1);
-	assert(chansess->exit.exitsignal > 0);
+	dropbear_assert(chansess->exit.exitpid != -1);
+	dropbear_assert(chansess->exit.exitsignal > 0);
 
 	CHECKCLEARTOWRITE();
 
@@ -205,7 +205,7 @@ static int newchansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
 
-	assert(channel->typedata == NULL);
+	dropbear_assert(channel->typedata == NULL);
 
 	chansess = (struct ChanSess*)m_malloc(sizeof(struct ChanSess));
 	chansess->cmd = NULL;
@@ -279,7 +279,7 @@ static void closechansess(struct Channel *channel) {
 	/* clear child pid entries */
 	for (i = 0; i < svr_ses.childpidsize; i++) {
 		if (svr_ses.childpids[i].chansess == chansess) {
-			assert(svr_ses.childpids[i].pid > 0);
+			dropbear_assert(svr_ses.childpids[i].pid > 0);
 			TRACE(("closing pid %d", svr_ses.childpids[i].pid))
 			TRACE(("exitpid = %d", chansess->exit.exitpid))
 			svr_ses.childpids[i].pid = -1;
@@ -313,7 +313,7 @@ static void chansessionrequest(struct Channel *channel) {
 	}
 
 	chansess = (struct ChanSess*)channel->typedata;
-	assert(chansess != NULL);
+	dropbear_assert(chansess != NULL);
 	TRACE(("type is %s", type))
 
 	if (strcmp(type, "window-change") == 0) {

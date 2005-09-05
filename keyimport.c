@@ -203,7 +203,7 @@ static void base64_encode_fp(FILE * fp, unsigned char *data,
 	unsigned long outlen;
 	int rawcpl;
 	rawcpl = cpl * 3 / 4;
-	assert((unsigned int)cpl < sizeof(out));
+	dropbear_assert((unsigned int)cpl < sizeof(out));
 
     while (datalen > 0) {
 		n = (datalen < rawcpl ? datalen : rawcpl);
@@ -714,7 +714,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	}
 #endif
 
-	assert(keytype != -1);
+	dropbear_assert(keytype != -1);
 
 	/*
 	 * Fetch the key blobs.
@@ -913,7 +913,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	 * with the same value. Those are all removed and the rest is
 	 * returned.
 	 */
-	assert(pos == len);
+	dropbear_assert(pos == len);
 	while (pos < outlen) {
 		outblob[pos++] = outlen - len;
 	}
@@ -1491,7 +1491,7 @@ sign_key *sshcom_read(const char *filename, char *passphrase)
 		privlen = pos - publen;
 	}
 
-	assert(privlen > 0);			   /* should have bombed by now if not */
+	dropbear_assert(privlen > 0);			   /* should have bombed by now if not */
 
 	retkey = snew(struct ssh2_userkey);
 	retkey->alg = alg;
@@ -1557,7 +1557,7 @@ int sshcom_write(const char *filename, sign_key *key,
 		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &q);
 		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &iqmp);
 
-		assert(e.start && iqmp.start); /* can't go wrong */
+		dropbear_assert(e.start && iqmp.start); /* can't go wrong */
 
 		numbers[0] = e;
 		numbers[1] = d;
@@ -1581,7 +1581,7 @@ int sshcom_write(const char *filename, sign_key *key,
 		pos = 0;
 		pos += ssh2_read_mpint(privblob+pos, privlen-pos, &x);
 
-		assert(y.start && x.start); /* can't go wrong */
+		dropbear_assert(y.start && x.start); /* can't go wrong */
 
 		numbers[0] = p;
 		numbers[1] = g;
@@ -1593,7 +1593,7 @@ int sshcom_write(const char *filename, sign_key *key,
 		initial_zero = 1;
 		type = "dl-modp{sign{dsa-nist-sha1},dh{plain}}";
 	} else {
-		assert(0);					 /* zoinks! */
+		dropbear_assert(0);					 /* zoinks! */
 	}
 
 	/*
@@ -1637,13 +1637,13 @@ int sshcom_write(const char *filename, sign_key *key,
 	}
 	ciphertext = (char *)outblob+lenpos+4;
 	cipherlen = pos - (lenpos+4);
-	assert(!passphrase || cipherlen % 8 == 0);
+	dropbear_assert(!passphrase || cipherlen % 8 == 0);
 	/* Wrap up the encrypted blob string. */
 	PUT_32BIT(outblob+lenpos, cipherlen);
 	/* And finally fill in the total length field. */
 	PUT_32BIT(outblob+4, pos);
 
-	assert(pos < outlen);
+	dropbear_assert(pos < outlen);
 
 	/*
 	 * Encrypt the key.

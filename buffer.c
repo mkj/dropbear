@@ -153,7 +153,7 @@ void buf_incrpos(buffer* buf,  int incr) {
 unsigned char buf_getbyte(buffer* buf) {
 
 	/* This check is really just ==, but the >= allows us to check for the
-	 * assert()able case of pos > len, which should _never_ happen. */
+	 * bad case of pos > len, which should _never_ happen. */
 	if (buf->pos >= buf->len) {
 		dropbear_exit("bad buf_getbyte");
 	}
@@ -270,7 +270,7 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 	unsigned int len, pad = 0;
 	TRACE(("enter buf_putmpint"))
 
-	assert(mp != NULL);
+	dropbear_assert(mp != NULL);
 
 	if (SIGN(mp) == MP_NEG) {
 		dropbear_exit("negative bignum");

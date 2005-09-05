@@ -284,7 +284,7 @@ void main_noinetd() {
 								getaddrhostname(&remoteaddr),
 								addrstring);
 				/* don't return */
-				assert(0);
+				dropbear_assert(0);
 			}
 			
 			/* parent */

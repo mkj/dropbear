@@ -49,7 +49,7 @@ static void rsa_pad_em(rsa_key * key,
 int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	TRACE(("enter buf_get_rsa_pub_key"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	key->e = m_malloc(sizeof(mp_int));
 	key->n = m_malloc(sizeof(mp_int));
 	m_mp_init_multi(key->e, key->n, NULL);
@@ -80,7 +80,7 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	TRACE(("enter buf_get_rsa_priv_key"))
 
@@ -163,7 +163,7 @@ void rsa_key_free(rsa_key *key) {
 void buf_put_rsa_pub_key(buffer* buf, rsa_key *key) {
 
 	TRACE(("enter buf_put_rsa_pub_key"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	buf_putstring(buf, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
 	buf_putmpint(buf, key->e);
@@ -178,7 +178,7 @@ void buf_put_rsa_priv_key(buffer* buf, rsa_key *key) {
 
 	TRACE(("enter buf_put_rsa_priv_key"))
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	buf_put_rsa_pub_key(buf, key);
 	buf_putmpint(buf, key->d);
 
@@ -209,7 +209,7 @@ int buf_rsa_verify(buffer * buf, rsa_key *key, const unsigned char* data,
 
 	TRACE(("enter buf_rsa_verify"))
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	m_mp_init_multi(&rsa_mdash, &rsa_s, &rsa_em, NULL);
 
@@ -267,7 +267,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	unsigned char *tmpbuf;
 	
 	TRACE(("enter buf_put_rsa_sign"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	m_mp_init_multi(&rsa_s, &rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 
@@ -320,7 +320,7 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	buf_putint(buf, nsize);
 	/* pad out s to same length as n */
 	ssize = mp_unsigned_bin_size(&rsa_s);
-	assert(ssize <= nsize);
+	dropbear_assert(ssize <= nsize);
 	for (i = 0; i < nsize-ssize; i++) {
 		buf_putbyte(buf, 0x00);
 	}
@@ -365,8 +365,8 @@ static void rsa_pad_em(rsa_key * key,
 	hash_state hs;
 	unsigned int nsize;
 	
-	assert(key != NULL);
-	assert(data != NULL);
+	dropbear_assert(key != NULL);
+	dropbear_assert(data != NULL);
 	nsize = mp_unsigned_bin_size(key->n);
 
 	rsa_EM = buf_new(nsize-1);
@@ -387,7 +387,7 @@ static void rsa_pad_em(rsa_key * key,
 	sha1_done(&hs, buf_getwriteptr(rsa_EM, SHA1_HASH_SIZE));
 	buf_incrwritepos(rsa_EM, SHA1_HASH_SIZE);
 
-	assert(rsa_EM->pos == rsa_EM->size);
+	dropbear_assert(rsa_EM->pos == rsa_EM->size);
 
 	/* Create the mp_int from the encoded bytes */
 	buf_setpos(rsa_EM, 0);

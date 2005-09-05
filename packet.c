@@ -53,13 +53,13 @@ void write_packet() {
 	buffer * writebuf = NULL;
 	
 	TRACE(("enter write_packet"))
-	assert(!isempty(&ses.writequeue));
+	dropbear_assert(!isempty(&ses.writequeue));
 
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
 	len = writebuf->len - writebuf->pos;
-	assert(len > 0);
+	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock, buf_getptr(writebuf, len), len);
 
@@ -118,7 +118,7 @@ void read_packet() {
 
 	/* Attempt to read the remainder of the packet, note that there
 	 * mightn't be any available (EAGAIN) */
-	assert(ses.readbuf != NULL);
+	dropbear_assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
 	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
 
@@ -162,7 +162,7 @@ static void read_packet_init() {
 	if (ses.readbuf == NULL) {
 		/* start of a new packet */
 		ses.readbuf = buf_new(INIT_READBUF);
-		assert(ses.decryptreadbuf == NULL);
+		dropbear_assert(ses.decryptreadbuf == NULL);
 		ses.decryptreadbuf = buf_new(blocksize);
 	}
 
@@ -600,7 +600,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 			break;
 		}
 
-		assert(ses.keys->trans_zstream->avail_out == 0);
+		dropbear_assert(ses.keys->trans_zstream->avail_out == 0);
 
 		/* the buffer has been filled, we must extend. This only happens in
 		 * unusual circumstances where the data grows in size after deflate(),

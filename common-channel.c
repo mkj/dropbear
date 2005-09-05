@@ -409,9 +409,9 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 		channel->recvdonelen = 0;
 	}
 
-	assert(channel->recvwindow <= RECV_MAXWINDOW);
-	assert(channel->recvwindow <= cbuf_getavail(channel->writebuf));
-	assert(channel->extrabuf == NULL ||
+	dropbear_assert(channel->recvwindow <= RECV_MAXWINDOW);
+	dropbear_assert(channel->recvwindow <= cbuf_getavail(channel->writebuf));
+	dropbear_assert(channel->extrabuf == NULL ||
 			channel->recvwindow <= cbuf_getavail(channel->extrabuf));
 	
 	
@@ -603,14 +603,14 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 
 	CHECKCLEARTOWRITE();
 
-	assert(!channel->sentclosed);
+	dropbear_assert(!channel->sentclosed);
 
 	if (isextended) {
 		fd = channel->errfd;
 	} else {
 		fd = channel->outfd;
 	}
-	assert(fd >= 0);
+	dropbear_assert(fd >= 0);
 
 	maxlen = MIN(channel->transwindow, channel->transmaxpacket);
 	/* -(1+4+4) is SSH_MSG_CHANNEL_DATA, channel number, string length, and 
@@ -718,9 +718,9 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		len -= buflen;
 	}
 
-	assert(channel->recvwindow >= datalen);
+	dropbear_assert(channel->recvwindow >= datalen);
 	channel->recvwindow -= datalen;
-	assert(channel->recvwindow <= RECV_MAXWINDOW);
+	dropbear_assert(channel->recvwindow <= RECV_MAXWINDOW);
 
 	TRACE(("leave recv_msg_channel_data"))
 }

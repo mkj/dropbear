@@ -126,7 +126,7 @@ void session_loop(void(*loophandler)()) {
 		timeout.tv_usec = 0;
 		FD_ZERO(&writefd);
 		FD_ZERO(&readfd);
-		assert(ses.payload == NULL);
+		dropbear_assert(ses.payload == NULL);
 		if (ses.sock != -1) {
 			FD_SET(ses.sock, &readfd);
 			if (!isempty(&ses.writequeue)) {
