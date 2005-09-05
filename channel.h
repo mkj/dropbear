@@ -96,7 +96,7 @@ struct ChanType {
 
 };
 
-void chaninitialise();
+void chaninitialise(const struct ChanType *chantypes[]);
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);

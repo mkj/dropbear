@@ -62,7 +62,6 @@ void common_session_init(int sock, char* remotehost) {
 	ses.connecttimeout = 0;
 	
 	kexfirstinitialise(); /* initialise the kex state */
-	chaninitialise(); /* initialise the channel state */
 
 	ses.writepayload = buf_new(MAX_TRANS_PAYLOAD_LEN);
 	ses.transseq = 0;
