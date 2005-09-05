@@ -186,6 +186,10 @@ int dropbear_listen(const char* address, const char* port,
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
 		}
+		if (res0) {
+			freeaddrinfo(res0);
+			res0 = NULL;
+		}
 		TRACE(("leave dropbear_listen: failed resolving"))
 		return -1;
 	}
@@ -235,6 +239,11 @@ int dropbear_listen(const char* address, const char* port,
 		*maxfd = MAX(*maxfd, sock);
 
 		nsock++;
+	}
+
+	if (res0) {
+		freeaddrinfo(res0);
+		res0 = NULL;
 	}
 
 	if (nsock == 0) {
