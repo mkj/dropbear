@@ -404,6 +404,9 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 	if (bloblen == DSS_SIGNATURE_SIZE &&
 			memcmp(ident, SSH_SIGNKEY_DSS, identlen) == 0) {
 		m_free(ident);
+		if (key->dsskey == NULL) {
+			dropbear_exit("no dss key to verify signature");
+		}
 		return buf_dss_verify(buf, key->dsskey, data, len);
 	}
 #endif
@@ -411,6 +414,9 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 #ifdef DROPBEAR_RSA
 	if (memcmp(ident, SSH_SIGNKEY_RSA, identlen) == 0) {
 		m_free(ident);
+		if (key->rsakey == NULL) {
+			dropbear_exit("no rsa key to verify signature");
+		}
 		return buf_rsa_verify(buf, key->rsakey, data, len);
 	}
 #endif
