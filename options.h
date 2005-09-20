@@ -133,6 +133,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
+#define ENABLE_CLI_INTERACT_AUTH
 
 /* Define this (as well as ENABLE_CLI_PASSWORD_AUTH) to allow the use of
  * a helper program for the ssh client. The helper program should be
@@ -314,6 +315,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 								in a few years time.... */
 
 #define DROPBEAR_MAX_CLI_PASS 1024
+
+#define DROPBEAR_MAX_CLI_INTERACT_PROMPTS 80 /* The number of prompts we'll 
+												accept for keyb-interactive
+												auth */
 
 #if defined(DROPBEAR_AES256_CBC) || defined(DROPBEAR_AES128_CBC)
 #define DROPBEAR_AES_CBC

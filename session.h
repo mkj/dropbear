@@ -226,6 +226,13 @@ struct clientsession {
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
+#ifdef ENABLE_CLI_INTERACT_AUTH
+	int auth_interact_failed; /* flag whether interactive auth can still
+								 be used */
+	int interact_request_received; /* flag whether we've received an 
+									  info request from the server for
+									  interactive auth.*/
+#endif
 	struct SignKeyList *lastprivkey;
 
 	int retval; /* What the command exit status was - we emulate it */

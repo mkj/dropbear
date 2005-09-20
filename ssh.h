@@ -42,7 +42,18 @@
 #define SSH_MSG_USERAUTH_FAILURE            51
 #define SSH_MSG_USERAUTH_SUCCESS            52
 #define SSH_MSG_USERAUTH_BANNER             53
+
+/* packets 60-79 are method-specific, aren't one-one mapping */
+#define SSH_MSG_USERAUTH_SPECIFIC_60   60
+
+#define SSH_MSG_USERAUTH_PASSWD_CHANGEREQ   60
+
 #define SSH_MSG_USERAUTH_PK_OK				60
+
+/* keyboard interactive auth */
+#define SSH_MSG_USERAUTH_INFO_REQUEST           60
+#define SSH_MSG_USERAUTH_INFO_RESPONSE          61
+
 
 /* If adding numbers here, check MAX_UNAUTH_PACKET_TYPE in process-packet.c
  * is still valid */
