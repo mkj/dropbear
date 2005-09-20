@@ -114,7 +114,7 @@ void recv_msg_userauth_info_request() {
 
 		echo = buf_getbool(ses.payload);
 
-		if (echo) {
+		if (!echo) {
 			unsigned char* p = getpass(prompt);
 			response = m_strdup(p);
 			m_burn(p, strlen(p));
