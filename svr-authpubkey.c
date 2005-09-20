@@ -311,6 +311,7 @@ out:
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int checkfileperm(char * filename) {
 	struct stat filestat;
+	int badperm = 0;
 
 	TRACE(("enter checkfileperm(%s)", filename))
 
@@ -321,14 +322,23 @@ static int checkfileperm(char * filename) {
 	/* check ownership - user or root only*/
 	if (filestat.st_uid != ses.authstate.pw->pw_uid
 			&& filestat.st_uid != 0) {
-		TRACE(("leave checkfileperm: wrong ownership"))
-		return DROPBEAR_FAILURE;
+		badperm = 1;
+		TRACE(("wrong ownership"))
 	}
 	/* check permissions - don't want group or others +w */
 	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
-		TRACE(("leave checkfileperm: wrong perms"))
+		badperm = 1;
+		TRACE(("wrong perms"))
+	}
+	if (badperm) {
+		if (!ses.authstate.perm_warn) {
+			ses.authstate.perm_warn = 1;
+			dropbear_log(LOG_INFO, "%s must be owned by user or root, and not writable by others", filename);
+		}
+		TRACE(("leave checkfileperm: failure perms/owner"))
 		return DROPBEAR_FAILURE;
 	}
+
 	TRACE(("leave checkfileperm: success"))
 	return DROPBEAR_SUCCESS;
 }

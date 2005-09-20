@@ -77,6 +77,9 @@ struct AuthState {
 	unsigned authdone : 1; /* 0 if we haven't authed, 1 if we have. Applies for
 							  client and server (though has differing [obvious]
 							  meanings). */
+	unsigned perm_warn : 1; /* Server only, set if bad permissions on 
+							   ~/.ssh/authorized_keys have already been
+							   logged. */
 
 	/* These are only used for the server */
 	char *printableuser; /* stripped of control chars, used for logs etc */
