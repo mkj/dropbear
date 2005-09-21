@@ -153,6 +153,30 @@ void dropbear_trace(const char* format, ...) {
 }
 #endif /* DEBUG_TRACE */
 
+static void set_sock_priority(int sock) {
+
+	int val;
+
+	/* disable nagle */
+	val = 1;
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+
+	/* set the TOS bit. note that this will fail for ipv6, I can't find any
+	 * equivalent. */
+#ifdef IPTOS_LOWDELAY
+	val = IPTOS_LOWDELAY;
+	setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
+#endif
+
+#ifdef SO_PRIORITY
+	/* linux specific, sets QoS class.
+	 * 6 looks to be optimal for interactive traffic (see tc-prio(8) ). */
+	val = 6;
+	setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
+#endif
+
+}
+
 /* Listen on address:port. Unless address is NULL, in which case listen on
  * everything. If called with address == "", we'll listen on localhost/loopback.
  * Returns the number of sockets bound on success, or -1 on failure. On
@@ -223,8 +247,7 @@ int dropbear_listen(const char* address, const char* port,
 		linger.l_linger = 5;
 		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
 
-		/* disable nagle */
-		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+		set_sock_priority(sock);
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			err = errno;
@@ -347,8 +370,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		TRACE(("Error connecting: %s", strerror(err)))
 	} else {
 		/* Success */
-		/* (err is used as a dummy var here) */
-		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&err, sizeof(err));
+		set_sock_priority(sock);
 	}
 
 	freeaddrinfo(res0);

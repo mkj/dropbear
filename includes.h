@@ -45,6 +45,7 @@
 #include <grp.h>
 #include <limits.h>
 #include <netinet/in.h>
+#include <netinet/ip.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
