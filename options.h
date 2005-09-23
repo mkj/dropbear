@@ -65,12 +65,26 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * RFC Draft requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
  * (eg AES256 as well as AES128) will result in a minimal size increase.*/
+/*
 #define DROPBEAR_AES128_CBC
 #define DROPBEAR_3DES_CBC
 #define DROPBEAR_AES256_CBC
 #define DROPBEAR_BLOWFISH_CBC
 #define DROPBEAR_TWOFISH256_CBC
 #define DROPBEAR_TWOFISH128_CBC
+*/
+
+/* You can compile with no encryption if you want. In some circumstances
+ * this could be safe securitywise, though make sure you know what
+ * you're doing. Anyone can see everything that goes over the wire, so
+ * the only safe auth method is public key. You'll have to disable all other
+ * ciphers above in the client if you want to use this, or implement cipher
+ * prioritisation in cli-runopts.
+ *
+ * The best way to do things is probably make normal compile of dropbear with all
+ * ciphers including "none" as the server, then recompile a special 
+ * "dbclient-insecure" client. */
+#define DROPBEAR_NONE_CIPHER
 
 /* Message Integrity - at least one required.
  * RFC Draft requires sha1 and recommends sha1-96.
@@ -87,6 +101,12 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_SHA1_96_HMAC
 #define DROPBEAR_MD5_HMAC
+
+/* You can also disable integrity. Don't bother disabling this if you're
+ * still using a cipher, it's relatively cheap. Don't disable this if you're
+ * using 'none' cipher, since it's dead simple to run arbitrary commands
+ * on the remote host. Go ahead. Hang yourself with your own rope. */
+/*#define DROPBEAR_NONE_INTEGRITY*/
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
