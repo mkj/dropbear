@@ -65,9 +65,9 @@ struct Channel {
 	unsigned int recvdonelen;
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
-	int infd; /* data to send over the wire */
-	int outfd; /* data for consumption, what was in writebuf */
-	int errfd; /* used like infd or errfd, depending if it's client or server.
+	int writefd; /* read from wire, written to insecure side */
+	int readfd; /* read from insecure size, written to wire */
+	int errfd; /* used like writefd or readfd, depending if it's client or server.
 				  Doesn't exactly belong here, but is cleaner here */
 	circbuffer *writebuf; /* data from the wire, for local consumption */
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf

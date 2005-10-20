@@ -272,11 +272,9 @@ static int newtcpdirect(struct Channel * channel) {
 
 	ses.maxfd = MAX(ses.maxfd, sock);
 
-	/* Note that infd is actually the "outgoing" direction on the
-	 * tcp connection, vice versa for outfd.
-	 * We don't set outfd, that will get set after the connection's
+	 /* We don't set readfd, that will get set after the connection's
 	 * progress succeeds */
-	channel->infd = sock;
+	channel->writefd = sock;
 	channel->initconn = 1;
 	
 	err = SSH_OPEN_IN_PROGRESS;

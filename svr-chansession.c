@@ -673,15 +673,15 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);
 		close(errfds[FDOUT]);
-		channel->infd = infds[FDOUT];
-		channel->outfd = outfds[FDIN];
+		channel->writefd = infds[FDOUT];
+		channel->readfd = outfds[FDIN];
 		channel->errfd = errfds[FDIN];
-		ses.maxfd = MAX(ses.maxfd, channel->infd);
-		ses.maxfd = MAX(ses.maxfd, channel->outfd);
+		ses.maxfd = MAX(ses.maxfd, channel->writefd);
+		ses.maxfd = MAX(ses.maxfd, channel->readfd);
 		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-		setnonblocking(channel->outfd);
-		setnonblocking(channel->infd);
+		setnonblocking(channel->readfd);
+		setnonblocking(channel->writefd);
 		setnonblocking(channel->errfd);
 
 	}
@@ -784,8 +784,8 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		addchildpid(chansess, pid);
 
 		close(chansess->slave);
-		channel->infd = chansess->master;
-		channel->outfd = chansess->master;
+		channel->writefd = chansess->master;
+		channel->readfd = chansess->master;
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
 
