@@ -44,8 +44,6 @@
 #include <fcntl.h>
 #include <grp.h>
 #include <limits.h>
-#include <netinet/in.h>
-#include <netinet/ip.h>
 #include <pwd.h>
 #include <signal.h>
 #include <stdlib.h>
@@ -57,8 +55,6 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <dirent.h>
-
-#include <arpa/inet.h>
 
 #ifdef HAVE_UTMP_H
 #include <utmp.h>
@@ -76,9 +72,19 @@
 #include <lastlog.h>
 #endif
 
+#include <arpa/inet.h>
+
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+
+/* netbsd 1.6 needs this to be included before netinet/ip.h for some
+ * undocumented reason */
+#ifdef HAVE_NETINET_IN_SYSTM_H
+#include <netinet/in_systm.h>
+#endif
+
+#include <netinet/ip.h>
 
 #ifdef HAVE_NETINET_TCP_H
 #include <netinet/tcp.h>
