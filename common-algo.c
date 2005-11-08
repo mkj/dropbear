@@ -120,10 +120,10 @@ algo_type sshhashes[] = {
 };
 
 algo_type sshcompress[] = {
-	{"none", DROPBEAR_COMP_NONE, NULL, 1},
 #ifndef DISABLE_ZLIB
 	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1},
 #endif
+	{"none", DROPBEAR_COMP_NONE, NULL, 1},
 	{NULL, 0, NULL, 0}
 };
 
