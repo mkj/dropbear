@@ -173,6 +173,8 @@ static int dropbear_write(const char*filename, sign_key * key) {
 		buf_incrpos(buf, len);
 	} while (len > 0 && buf->len != buf->pos);
 
+	fclose(fp);
+
 	if (buf->pos != buf->len) {
 		ret = 0;
 	} else {
