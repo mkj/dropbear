@@ -306,10 +306,14 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
 
-/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
-#define MAX_PUBKEY_SIZE 1600
-/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
-#define MAX_PRIVKEY_SIZE 1600
+/* For a 4096 bit DSS key, empirically determined */
+#define MAX_PUBKEY_SIZE 1700
+/* For a 4096 bit DSS key, empirically determined */
+#define MAX_PRIVKEY_SIZE 1700
+
+/* The maximum size of the bignum portion of the kexhash buffer */
+/* Sect. 8 of the transport draft, K_S + e + f + K */
+#define KEXHASHBUF_MAX_INTS (1700 + 130 + 130 + 130)
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
 								in a few years time.... */

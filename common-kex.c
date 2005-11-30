@@ -394,18 +394,28 @@ static void gen_new_zstreams() {
 /* Belongs in common_kex.c where it should be moved after review */
 void recv_msg_kexinit() {
 	
+	unsigned int kexhashbuf_len = 0;
+	unsigned int remote_ident_len = 0;
+	unsigned int local_ident_len = 0;
+
 	TRACE(("<- KEXINIT"))
 	TRACE(("enter recv_msg_kexinit"))
 	
-	/* start the kex hash */
-	ses.kexhashbuf = buf_new(MAX_KEXHASHBUF);
-
 	if (!ses.kexstate.sentkexinit) {
 		/* we need to send a kex packet */
 		send_msg_kexinit();
 		TRACE(("continue recv_msg_kexinit: sent kexinit"))
 	}
 
+	/* start the kex hash */
+	local_ident_len = strlen(LOCAL_IDENT);
+	remote_ident_len = strlen((char*)ses.remoteident);
+
+	kexhashbuf_len = local_ident_len + remote_ident_len
+		+ ses.transkexinit->len + ses.payload->len
+		+ KEXHASHBUF_MAX_INTS;
+
+	ses.kexhashbuf = buf_new(kexhashbuf_len);
 
 	if (IS_DROPBEAR_CLIENT) {
 
@@ -414,20 +424,16 @@ void recv_msg_kexinit() {
 
 		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf,
-			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
+			(unsigned char*)LOCAL_IDENT, local_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, 
-			ses.remoteident, strlen((char*)ses.remoteident));
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.transkexinit, ses.transkexinit->len),
-			ses.transkexinit->len);
+			ses.transkexinit->data, ses.transkexinit->len);
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.payload, ses.payload->len),
-			ses.payload->len);
+	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
 
 	} else {
 		/* SERVER */
@@ -435,21 +441,19 @@ void recv_msg_kexinit() {
 		/* read the peer's choice of algos */
 		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, 
-			ses.remoteident, strlen((char*)ses.remoteident));
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf,
-			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
+	    buf_putstring(ses.kexhashbuf, 
+				(unsigned char*)LOCAL_IDENT, local_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.payload, ses.payload->len),
-			ses.payload->len);
+	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
+
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.transkexinit, ses.transkexinit->len),
-			ses.transkexinit->len);
+			ses.transkexinit->data, ses.transkexinit->len);
+
 		ses.requirenext = SSH_MSG_KEXDH_INIT;
 	}
 
