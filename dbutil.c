@@ -177,8 +177,9 @@ static void set_sock_priority(int sock) {
 
 }
 
-/* Listen on address:port. Unless address is NULL, in which case listen on
- * everything. If called with address == "", we'll listen on localhost/loopback.
+/* Listen on address:port. 
+ * Special cases are address of "" listening on everything,
+ * and address of NULL listening on localhost only.
  * Returns the number of sockets bound on success, or -1 on failure. On
  * failure, if errstring wasn't NULL, it'll be a newly malloced error
  * string.*/
@@ -198,11 +199,17 @@ int dropbear_listen(const char* address, const char* port,
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
-	if (address && address[0] == '\0') {
+	// for calling getaddrinfo:
+	// address == NULL and !AI_PASSIVE: local loopback
+	// address == NULL and AI_PASSIVE: all interfaces
+	// address != NULL: whatever the address says
+	if (!address) {
 		TRACE(("dropbear_listen: local loopback"))
-		address = NULL;
 	} else {
-		TRACE(("dropbear_listen: not local loopback"))
+		if (address[0] == '\0') {
+			TRACE(("dropbear_listen: all interfaces"))
+			address = NULL;
+		}
 		hints.ai_flags = AI_PASSIVE;
 	}
 	err = getaddrinfo(address, port, &hints, &res0);

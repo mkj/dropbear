@@ -95,9 +95,17 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 				remoteport));
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
+
 	tcpinfo->sendaddr = m_strdup(remoteaddr);
 	tcpinfo->sendport = remoteport;
+
+	if (opts.listen_fwd_all) {
+		tcpinfo->listenaddr = m_strdup("");
+	} else {
+		tcpinfo->listenaddr = m_strdup("localhost");
+	}
 	tcpinfo->listenport = listenport;
+
 	tcpinfo->chantype = &cli_chan_tcplocal;
 
 	ret = listen_tcpfwd(tcpinfo);
@@ -113,13 +121,20 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 #ifdef  ENABLE_CLI_REMOTETCPFWD
 static void send_msg_global_request_remotetcp(int port) {
 
+	char* listenspec = NULL;
 	TRACE(("enter send_msg_global_request_remotetcp"))
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
 	buf_putstring(ses.writepayload, "tcpip-forward", 13);
 	buf_putbyte(ses.writepayload, 0);
-	buf_putstring(ses.writepayload, "0.0.0.0", 7); /* TODO: IPv6? */
+	if (opts.listen_fwd_all) {
+		listenspec = "";
+	} else {
+		listenspec = "localhost";
+	}
+	/* TODO: IPv6? */;
+	buf_putstring(ses.writepayload, listenspec, strlen(listenspec));
 	buf_putint(ses.writepayload, port);
 
 	encrypt_packet();

@@ -375,7 +375,7 @@ static int listensockets(int *sock, int sockcount, int *maxfd) {
 
 		TRACE(("listening on '%s'", svr_opts.ports[i]))
 
-		nsock = dropbear_listen(NULL, svr_opts.ports[i], &sock[sockpos], 
+		nsock = dropbear_listen("", svr_opts.ports[i], &sock[sockpos], 
 				sockcount - sockpos,
 				&errstring, maxfd);
 

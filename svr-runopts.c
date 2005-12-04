@@ -63,13 +63,14 @@ static void printhelp(const char * progname) {
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
 #endif
-#ifndef DISABLE_LOCALTCPFWD
+#ifdef ENABLE_SVR_LOCALTCPFWD
 					"-j		Disable local port forwarding\n"
 #endif
-#ifndef DISABLE_REMOTETCPFWD
+#ifdef ENABLE_SVR_REMOTETCPFWD
 					"-k		Disable remote port forwarding\n"
+					"-a		Allow connections to forwarded ports from any host\n"
 #endif
-					"-p port	Listen on specified tcp port, up to %d can be specified\n"
+					"-p port		Listen on specified tcp port, up to %d can be specified\n"
 					"		(default %s if none specified)\n"
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
@@ -104,8 +105,8 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
-	opts.nolocaltcp = 0;
-	opts.noremotetcp = 0;
+	svr_opts.nolocaltcp = 0;
+	svr_opts.noremotetcp = 0;
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -115,6 +116,9 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #ifndef DISABLE_SYSLOG
 	svr_opts.usingsyslog = 1;
+#endif
+#ifdef ENABLE_SVR_REMOTETCPFWD
+	opts.listen_fwd_all = 0;
 #endif
 
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -152,12 +156,15 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #ifndef DISABLE_LOCALTCPFWD
 				case 'j':
-					opts.nolocaltcp = 1;
+					svr_opts.nolocaltcp = 1;
 					break;
 #endif
 #ifndef DISABLE_REMOTETCPFWD
 				case 'k':
-					opts.noremotetcp = 1;
+					svr_opts.noremotetcp = 1;
+					break;
+				case 'a':
+					opts.listen_fwd_all = 1;
 					break;
 #endif
 #ifdef INETD_MODE

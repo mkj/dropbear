@@ -28,16 +28,15 @@
 
 struct TCPListener {
 
-	/* sendaddr/sendport are what we send in the channel init request. For a 
-	 * forwarded-tcpip request, it's the addr/port we were binding to.
-	 * For a direct-tcpip request, it's the addr/port we want the other
+	/* For a direct-tcpip request, it's the addr/port we want the other
 	 * end to connect to */
-	
 	unsigned char *sendaddr;
 	unsigned int sendport;
 
-	/* This is for direct-tcpip (ie the client listening), and specifies the
-	 * port to listen on. Is unspecified for the server */
+	/* This is the address/port that we listen on. The address has special
+	 * meanings as per the rfc, "" for all interfaces, "localhost" for 
+	 * localhost, or a normal interface name. */
+	unsigned char *listenaddr;
 	unsigned int listenport;
 
 	const struct ChanType *chantype;

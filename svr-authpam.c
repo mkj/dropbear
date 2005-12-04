@@ -59,7 +59,7 @@ pamConvFunc(int num_msg,
 
 	const char* message = (*msg)->msg;
 
-	// make a copy we can strip
+	/* make a copy we can strip */
 	char * compare_message = m_strdup(message);
 
 	TRACE(("enter pamConvFunc"))
@@ -80,14 +80,14 @@ pamConvFunc(int num_msg,
 	}
 
 
-	// Make the string lowercase.
+	/* Make the string lowercase. */
 	msg_len = strlen(compare_message);
 	for (i = 0; i < msg_len; i++) {
 		compare_message[i] = tolower(compare_message[i]);
 	}
 
-	// If the string ends with ": ", remove the space.
-	// ie "login: " vs "login:"
+	/* If the string ends with ": ", remove the space. 
+	   ie "login: " vs "login:" */
 	if (msg_len > 2 
 			&& compare_message[msg_len-2] == ':' 
 			&& compare_message[msg_len-1] == ' ') {
@@ -99,9 +99,9 @@ pamConvFunc(int num_msg,
 		case PAM_PROMPT_ECHO_OFF:
 
 			if (!(strcmp(compare_message, "password:") == 0)) {
-				// We don't recognise the prompt as asking for a password,
-				// so can't handle it. Add more above as required for
-				// different pam modules/implementations
+				/* We don't recognise the prompt as asking for a password,
+				   so can't handle it. Add more above as required for
+				   different pam modules/implementations */
 				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (no echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;
@@ -125,9 +125,9 @@ pamConvFunc(int num_msg,
 
 			if (!((strcmp(compare_message, "login:" ) == 0) 
 				|| (strcmp(compare_message, "please enter username:") == 0))) {
-				// We don't recognise the prompt as asking for a username,
-				// so can't handle it. Add more above as required for
-				// different pam modules/implementations
+				/* We don't recognise the prompt as asking for a username,
+				   so can't handle it. Add more above as required for
+				   different pam modules/implementations */
 				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (with echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;

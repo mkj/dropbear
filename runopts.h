@@ -33,8 +33,9 @@
 
 typedef struct runopts {
 
-	int nolocaltcp;
-	int noremotetcp;
+#if defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
+	int listen_fwd_all;
+#endif
 
 } runopts;
 
@@ -73,6 +74,13 @@ typedef struct svr_runopts {
 	int noauthpass;
 	int norootpass;
 
+#ifdef ENABLE_SVR_REMOTETCPFWD
+	int noremotetcp;
+#endif
+#ifdef ENABLE_SVR_LOCALTCPFWD
+	int nolocaltcp;
+#endif
+
 	sign_key *hostkey;
 	buffer * banner;
 
@@ -83,7 +91,6 @@ extern svr_runopts svr_opts;
 void svr_getopts(int argc, char ** argv);
 void loadhostkeys();
 
-/* Uncompleted XXX matt */
 typedef struct cli_runopts {
 
 	char *progname;
@@ -103,7 +110,6 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	struct TCPFwdList * localfwds;
 #endif
-	/* XXX TODO */
 
 } cli_runopts;
 
