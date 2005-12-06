@@ -230,24 +230,8 @@ profile:
 #This rule cleans the source tree of all compiled code, not including the pdf
 #documentation.
 clean:
-	rm -f `find . -type f | grep "[.]o" | xargs`
-	rm -f `find . -type f | grep "[.]lo"  | xargs`
-	rm -f `find . -type f | grep "[.]a" | xargs`
-	rm -f `find . -type f | grep "[.]la"  | xargs`
-	rm -f `find . -type f | grep "[.]obj" | xargs`
-	rm -f `find . -type f | grep "[.]lib" | xargs`
-	rm -f `find . -type f | grep "[.]exe" | xargs`
-	rm -f `find . -type f | grep "[.]gcda" | xargs`
-	rm -f `find . -type f | grep "[.]gcno" | xargs`
-	rm -f `find . -type f | grep "[.]il" | xargs`
-	rm -f `find . -type f | grep "[.]dyn" | xargs`
-	rm -f `find . -type f | grep "[.]dpi" | xargs`
-	rm -rf `find . -type d | grep "[.]libs" | xargs`
-	rm -f crypt.aux  crypt.dvi  crypt.idx  crypt.ilg  crypt.ind  crypt.log crypt.toc
-	rm -f $(TV) $(PROF) $(SMALL) $(CRYPT) $(HASHSUM) $(MULTI) $(TIMING) $(TEST)
-	rm -rf doc/doxygen
-	rm -f doc/*.pdf
-	rm -f *.txt
+	-rm -f $(OBJECTS)
+	-rm -f libtomcrypt.a
 
 #build the doxy files (requires Doxygen, tetex and patience)
 doxy:
