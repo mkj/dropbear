@@ -40,7 +40,7 @@ struct TCPListener {
 	unsigned int listenport;
 
 	const struct ChanType *chantype;
-
+	enum {direct, forwarded} tcp_type;
 };
 
 /* A link in a list of forwards */

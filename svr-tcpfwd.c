@@ -208,6 +208,7 @@ static int svr_remotetcpreq() {
 	tcpinfo->listenaddr = bindaddr;
 	tcpinfo->listenport = port;
 	tcpinfo->chantype = &svr_chan_tcpremote;
+	tcpinfo->tcp_type = forwarded;
 
 	ret = listen_tcpfwd(tcpinfo);
 

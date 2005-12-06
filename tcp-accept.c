@@ -65,15 +65,28 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 	}
 
 	if (send_msg_channel_open_init(fd, tcpinfo->chantype) == DROPBEAR_SUCCESS) {
+		unsigned char* addr = NULL;
+		unsigned int port = 0;
 
-		// address that was connected
-		buf_putstring(ses.writepayload, tcpinfo->listenaddr, 
-				strlen(tcpinfo->listenaddr));
-		// port that was connected
-		buf_putint(ses.writepayload, tcpinfo->listenport);
-		// originator ip
+		if (tcpinfo->tcp_type == direct) {
+			/* "direct-tcpip" */
+			/* host to connect, port to connect */
+			addr = tcpinfo->sendaddr;
+			port = tcpinfo->sendport;
+		} else {
+			dropbear_assert(tcpinfo->tcp_type == forwarded);
+			/* "forwarded-tcpip" */
+			/* address that was connected, port that was connected */
+			addr = tcpinfo->listenaddr;
+			port = tcpinfo->listenport;
+		}
+
+		buf_putstring(ses.writepayload, addr, strlen(addr));
+		buf_putint(ses.writepayload, port);
+
+		/* originator ip */
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
-		// originator port
+		/* originator port */
 		buf_putint(ses.writepayload, atol(portstring));
 
 		encrypt_packet();

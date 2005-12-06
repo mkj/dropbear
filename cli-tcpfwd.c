@@ -107,6 +107,7 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 	tcpinfo->listenport = listenport;
 
 	tcpinfo->chantype = &cli_chan_tcplocal;
+	tcpinfo->tcp_type = direct;
 
 	ret = listen_tcpfwd(tcpinfo);
 
