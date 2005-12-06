@@ -339,8 +339,9 @@ AC_CHECK_MEMBERS([struct utmp.ut_host, struct utmp.ut_pid, struct utmp.ut_type, 
 #endif
 ])
 
-AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv],,,[
+AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv, struct sockaddr_storage.ss_family, struct sockadd_storage.__family],,,[
 #include <sys/types.h>
+#include <sys/socket.h>
 #if HAVE_UTMPX_H
 #include <utmpx.h>
 #endif
