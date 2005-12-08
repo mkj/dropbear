@@ -810,7 +810,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 	/* need to increase size */
 	if (i == svr_ses.childpidsize) {
 		svr_ses.childpids = (struct ChildPid*)m_realloc(svr_ses.childpids,
-				sizeof(struct ChildPid) * svr_ses.childpidsize+1);
+				sizeof(struct ChildPid) * (svr_ses.childpidsize+1));
 		svr_ses.childpidsize++;
 	}
 	
