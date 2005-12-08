@@ -16,7 +16,6 @@ set -e
 
 cancel() { echo "$1" >&2; exit 0; };
 test ! -r /etc/default/dropbear || . /etc/default/dropbear
-test "$NO_START" = "0" || cancel 'NO_START is not set to zero.'
 test -x "$DAEMON" || cancel "$DAEMON does not exist or is not executable."
 test ! -h /var/service/dropbear || \
   cancel '/var/service/dropbear exists, service is controlled through runit.'
@@ -30,6 +29,7 @@ test -n "$DROPBEAR_DSSKEY" || \
 
 case "$1" in
   start)
+	test "$NO_START" = "0" || cancel 'NO_START is not set to zero.'
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/"$NAME".pid \
 	  --exec "$DAEMON" -- -d "$DROPBEAR_DSSKEY" -r "$DROPBEAR_RSAKEY" \
@@ -42,6 +42,7 @@ case "$1" in
 	echo "$NAME."
 	;;
   restart|force-reload)
+	test "$NO_START" = "0" || cancel 'NO_START is not set to zero.'
 	echo -n "Restarting $DESC: "
 	start-stop-daemon --stop --quiet --oknodo --pidfile /var/run/"$NAME".pid
 	sleep 1

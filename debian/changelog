@@ -1,6 +1,18 @@
-dropbear (0.46-0.1) unstable; urgency=medium
+dropbear (0.46-2) unstable; urgency=low
+
+  * debian/control: Standards-Version: 3.6.2.1; update descriptions to
+    mention included server and client (thx Tino Keitel).
+  * debian/dropbear.init: allow '/etc/init.d/dropbear stop' even though
+    'NO_START is not set to zero.' (closes: #336723).
+
+ -- Gerrit Pape <pape@smarden.org>  Tue,  6 Dec 2005 13:30:49 +0000
+
+dropbear (0.46-1) unstable; urgency=medium
 
   * New upstream release, various fixes.
+  * debian/diff/dbclient-usage-typo.diff, debian/diff/manpages.diff: remove;
+    obsolete.
+  * debian/dbclient.1: move to ./dbclient.1.
 
  -- Matt Johnston <matt@ucc.asn.au>  Fri, 8 July 2005 21:32:55 +0800
 
