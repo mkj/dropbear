@@ -1,3 +1,10 @@
+dropbear (0.47-0.1) unstable; urgency=high
+
+  * New upstream release.
+  * SECURITY: Fix incorrect buffer sizing.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Thu, 8 Dec 2005 19:20:21 +0800
+
 dropbear (0.46-2) unstable; urgency=low
 
   * debian/control: Standards-Version: 3.6.2.1; update descriptions to

@@ -1,3 +1,39 @@
+0.47 - Thurs Dec 8 2005
+
+- SECURITY: fix for buffer allocation error in server code, could potentially
+  allow authenticated users to gain elevated privileges. All multi-user systems
+  running the server should upgrade (or apply the patch available on the
+  Dropbear webpage).
+
+- Fix channel handling code so that redirecting to /dev/null doesn't use
+  100% CPU.
+
+- Turn on zlib compression for dbclient.
+
+- Set "low delay" TOS bit, can significantly improve interactivity
+  over some links.
+
+- Added client keyboard-interactive mode support, allows operation with
+  newer OpenSSH servers in default config.
+
+- Log when pubkey auth fails because of bad ~/.ssh/authorized_keys permissions
+
+- Improve logging of assertions
+
+- Added aes-256 cipher and sha1-96 hmac.
+
+- Fix twofish so that it actually works.
+
+- Improve PAM prompt comparison.
+
+- Added -g (dbclient) and -a (dropbear server) options to allow
+  connections to listening forwarded ports from remote machines.
+
+- Various other minor fixes
+
+- Compile fixes for glibc 2.1 (ss_family vs __ss_family) and NetBSD
+  (netinet/in_systm.h needs to be included).
+
 0.46 - Sat July 9 2005
 
 - Fix long-standing bug which caused connections to be closed if an ssh-agent
