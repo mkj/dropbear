@@ -52,6 +52,7 @@ void cli_pubkeyfail();
 void cli_auth_password();
 int cli_auth_pubkey();
 void cli_auth_interactive();
+char* getpass_or_cancel();
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
