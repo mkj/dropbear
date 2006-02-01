@@ -105,8 +105,12 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
+#ifdef ENABLE_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
+#endif
+#ifdef ENABLE_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -154,12 +158,12 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.usingsyslog = 0;
 					break;
 #endif
-#ifndef DISABLE_LOCALTCPFWD
+#ifdef ENABLE_SVR_LOCALTCPFWD
 				case 'j':
 					svr_opts.nolocaltcp = 1;
 					break;
 #endif
-#ifndef DISABLE_REMOTETCPFWD
+#ifdef ENABLE_SVR_REMOTETCPFWD
 				case 'k':
 					svr_opts.noremotetcp = 1;
 					break;
