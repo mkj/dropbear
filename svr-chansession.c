@@ -833,7 +833,7 @@ static void execchild(struct ChanSess *chansess) {
 	svr_opts.hostkey = NULL;
 
 	/* overwrite the prng state */
-	seedrandom();
+	reseedrandom();
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
