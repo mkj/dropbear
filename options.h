@@ -252,6 +252,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define _PATH_TTY "/dev/tty"
 
+#define _PATH_CP "/bin/cp"
+
 /* Timeouts in seconds */
 #define SELECT_TIMEOUT 20
 
