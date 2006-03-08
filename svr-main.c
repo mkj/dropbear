@@ -83,7 +83,7 @@ static void main_inetd() {
 	int remoteaddrlen;
 	char * addrstring = NULL;
 
-	/* Set up handlers, syslog */
+	/* Set up handlers, syslog, seed random */
 	commonsetup();
 
 	remoteaddrlen = sizeof(remoteaddr);
@@ -359,6 +359,8 @@ static void commonsetup() {
 	/* Now we can setup the hostkeys - needs to be after logging is on,
 	 * otherwise we might end up blatting error messages to the socket */
 	loadhostkeys();
+
+    seedrandom();
 }
 
 /* Set up listening sockets for all the requested ports */

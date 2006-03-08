@@ -76,11 +76,13 @@ static const struct ChanType *cli_chantypes[] = {
 
 void cli_session(int sock, char* remotehost) {
 
+	seedrandom();
+
 	crypto_init();
+
 	common_session_init(sock, remotehost);
 
 	chaninitialise(cli_chantypes);
-
 
 	/* Set up cli_ses vars */
 	cli_session_init();
@@ -91,11 +93,7 @@ void cli_session(int sock, char* remotehost) {
 	/* Exchange identification */
 	session_identification();
 
-	seedrandom();
-
 	send_msg_kexinit();
-
-	/* XXX here we do stuff differently */
 
 	session_loop(cli_sessionloop);
 

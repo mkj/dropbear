@@ -278,3 +278,18 @@ void cli_auth_try() {
 
 	TRACE(("leave cli_auth_try"))
 }
+
+/* A helper for getpass() that exits if the user cancels. The returned
+ * password is statically allocated by getpass() */
+char* getpass_or_cancel()
+{
+	char* password = NULL;
+
+	password = getpass("Password: ");
+
+	/* 0x03 is a ctrl-c character in the buffer. */
+	if (password == NULL || strchr(password, '\3') != NULL) {
+		dropbear_close("Interrupted.");
+	}
+	return password;
+}

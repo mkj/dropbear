@@ -376,7 +376,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
 
-	if (fd == channel->writefd && len == maxlen && channel->recveof) { 
+	if (fd == channel->writefd && cbuf_getused(cbuf) == 0 && channel->recveof) { 
 		/* Check if we're closing up */
 		closewritefd(channel);
 		TRACE(("leave writechannel: recveof set"))

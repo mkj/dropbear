@@ -78,7 +78,9 @@ void svr_session(int sock, int childpipe,
 		char* remotehost, char *addrstring) {
 
 	struct timeval timeout;
-	
+
+    reseedrandom();
+
 	crypto_init();
 	common_session_init(sock, remotehost);
 
@@ -109,8 +111,6 @@ void svr_session(int sock, int childpipe,
 
 	/* exchange identification, version etc */
 	session_identification();
-
-	seedrandom();
 
 	/* start off with key exchange */
 	send_msg_kexinit();
