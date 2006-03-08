@@ -55,7 +55,7 @@ char* getaddrhostname(struct sockaddr_storage * addr);
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 
-int m_close(int fd);
+void m_close(int fd);
 void * m_malloc(size_t size);
 void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);

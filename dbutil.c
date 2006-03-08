@@ -588,20 +588,17 @@ out:
 }	
 #endif
 
-/* loop until the socket is closed (in case of EINTR) or
- * we get and error.
- * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int m_close(int fd) {
+/* make sure that the socket closes */
+void m_close(int fd) {
 
 	int val;
 	do {
 		val = close(fd);
 	} while (val < 0 && errno == EINTR);
 
-	if (val == 0 || errno == EBADF) {
-		return DROPBEAR_SUCCESS;
-	} else {
-		return DROPBEAR_FAILURE;
+	if (val < 0 && errno != EBADF) {
+		/* Linux says EIO can happen */
+		dropbear_exit("Error closing fd %d, %s", fd, strerror(errno));
 	}
 }
 	
