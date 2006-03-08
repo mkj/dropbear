@@ -1,0 +1,74 @@
+.TH dbclient 1
+.SH NAME
+dbclient \- lightweight SSH2 client
+.SH SYNOPSIS
+.B dbclient
+[\-Tt] [\-p
+.I port\fR] [\-i
+.I id\fR] [\-L
+.I l\fR:\fIh\fR:\fIr\fR] [\-R
+.I l\fR:\fIh\fR:\fIr\fR] [\-l
+.IR user ]
+.I host
+.SH DESCRIPTION
+.B dbclient
+is a SSH 2 client designed to be small enough to be used in small memory
+environments, while still being functional and secure enough for general use.
+.SH OPTIONS
+.TP
+.B \-p \fIport
+Remote port.
+Connect to port
+.I port
+on the remote host.
+Default is 22.
+.TP
+.B \-i \fIidfile
+Identity file.
+Read the identity from file
+.I idfile
+(multiple allowed).
+.TP
+.B \-L \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+Local port forwarding.
+Forward the port
+.I localport
+on the local host to port
+.I remoteport
+on the remote host
+.IR remotehost .
+.TP
+.B \-R \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+Remote port forwarding.
+Forward the port
+.I remoteport
+on the remote host
+.I remotehost
+to port
+.I localport
+on the local host.
+.TP
+.B \-l \fIuser
+Username.
+Login as
+.I user
+on the remote host.
+.TP
+.B \-t
+Allocate a pty.
+.TP
+.B \-T
+Don't allocate a pty.
+.TP
+.B \-g
+Allow non-local hosts to connect to forwarded ports. Applies to -L and -R
+forwarded ports, though remote connections to -R forwarded ports may be limited
+by the ssh server.
+.SH AUTHOR
+Matt Johnston (matt@ucc.asn.au).
+.br
+Gerrit Pape (pape@smarden.org) wrote this manual page.
+.SH SEE ALSO
+dropbear(8), dropbearkey(8)
+.P
+http://matt.ucc.asn.au/dropbear/dropbear.html

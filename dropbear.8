@@ -1,0 +1,84 @@
+.TH dropbear 8
+.SH NAME
+dropbear \- lightweight SSH2 server
+.SH SYNOPSIS
+.B dropbear
+[\-FEmwsgjki] [\-b
+.I banner\fR] [\-d
+.I dsskey\fR] [\-r
+.I rsakey\fR] [\-p
+.IR port ]
+.SH DESCRIPTION
+.B dropbear
+is a SSH 2 server designed to be small enough to be used in small memory
+environments, while still being functional and secure enough for general use.
+.SH OPTIONS
+.TP
+.B \-b \fIbanner
+bannerfile.
+Display the contents of the file
+.I banner
+before user login (default: none).
+.TP
+.B \-d \fIdsskey
+dsskeyfile.
+Use the contents of the file
+.I dsskey
+for the dss host key (default: /etc/dropbear/dropbear_dss_host_key).
+This file is generated with
+.BR dropbearkey (8).
+.TP
+.B \-r \fIrsakey
+rsakeyfile.
+Use the contents of the file
+.I rsakey
+for the rsa host key (default: /etc/dropbear/dropbear_rsa_host_key).
+This file is generated with
+.BR dropbearkey (8).
+.TP
+.B \-F
+Don't fork into background.
+.TP
+.B \-E
+Log to standard error rather than syslog.
+.TP
+.B \-m
+Don't display the message of the day on login.
+.TP
+.B \-w
+Disallow root logins.
+.TP
+.B \-s
+Disable password logins.
+.TP
+.B \-g
+Disable password logins for root.
+.TP
+.B \-j
+Disable local port forwarding.
+.TP
+.B \-k
+Disable remote port forwarding.
+.TP
+.B \-p \fIport
+Listen on specified tcp port
+.IR port ;
+up to 10 can be specified (default 22 if none specified).
+.TP
+.B \-i
+Service program mode.
+Use this option to run
+.B dropbear
+under TCP/IP servers like inetd, tcpsvd, or tcpserver.
+In program mode the \-F option is implied, and \-p options are ignored.
+.TP
+.B \-a
+Allow remote hosts to connect to forwarded ports.
+.SH AUTHOR
+Matt Johnston (matt@ucc.asn.au).
+.br
+Gerrit Pape (pape@smarden.org) wrote this manual page.
+.SH SEE ALSO
+dropbearkey(8), dbclient(1)
+.P
+http://matt.ucc.asn.au/dropbear/dropbear.html
