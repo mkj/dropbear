@@ -1,10 +1,30 @@
-For 1.06
+Current:
 
-1. export ECC functions globally [e.g. mulmod and the sets]
-   - goal is tv_gen module and test vectors
-2. ASN.1 SET and T61String
-3. phase out DH code [RSA/ECC/DSA is enough]
-4. Some ASN.1 demo programs [for now read the source code!]
-5. Start working towards making the bignum code plugable
-6. Look into other ECC point muls and consider a "precomp" interface 
-7. Add OID for ciphers and PRNGs to their descriptors
+Things which might need doing:
+
+- default private dbclient keys
+
+- Make options.h generated from configure perhaps?
+
+- Improved queueing of unauthed connections
+
+- handle /etc/environment in AIX
+
+- check that there aren't timing issues with valid/invalid user authentication
+  feedback.
+
+- Binding to different interfaces
+
+- check PRNG
+- CTR mode
+- SSH_MSG_IGNORE sending to improve CBC security
+- DH Group Exchange possibly, or just add group14 (whatever it's called today)
+
+- fix scp.c for IRIX
+
+- Be able to use OpenSSH keys for the client? or at least have some form of 
+  encrypted keys.
+
+- Client agent forwarding
+
+- Handle restrictions in ~/.ssh/authorized_keys ?
