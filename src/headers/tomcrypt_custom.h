@@ -1,6 +1,9 @@
 #ifndef TOMCRYPT_CUSTOM_H_
 #define TOMCRYPT_CUSTOM_H_
 
+/* this will sort out which stuff based on the user-config in options.h */
+#include "options.h"
+
 /* macros for various libc functions you can change for embedded targets */
 #define XMALLOC  malloc
 #define XREALLOC realloc
@@ -13,13 +16,16 @@
 #define XCLOCK   clock
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
 
-/* Use small code where possible */
-/* #define LTC_SMALL_CODE */
+#ifdef DROPBEAR_SMALL_CODE
+#define LTC_SMALL_CODE
+#endif
+
+/* These spit out warnings etc */
+#define LTC_NO_ROLC
 
 /* Enable self-test test vector checking */
-#ifndef LTC_NO_TEST
-   #define LTC_TEST
-#endif
+/* Not for dropbear */
+//#define LTC_TEST
 
 /* clean the stack of functions which put private information on stack */
 /* #define LTC_CLEAN_STACK */
@@ -36,217 +42,51 @@
 /* disable BSWAP on x86 */
 /* #define LTC_NO_BSWAP */
 
-/* ---> Symmetric Block Ciphers <--- */
-#ifndef LTC_NO_CIPHERS
 
+#ifdef DROPBEAR_BLOWFISH_CBC
 #define BLOWFISH
-#define RC2
-#define RC5
-#define RC6
-#define SAFERP
-#define RIJNDAEL
-#define XTEA
-/* _TABLES tells it to use tables during setup, _SMALL means to use the smaller scheduled key format
- * (saves 4KB of ram), _ALL_TABLES enables all tables during setup */
-#define TWOFISH
-#ifndef LTC_NO_TABLES
-   #define TWOFISH_TABLES
-   /* #define TWOFISH_ALL_TABLES */
-#else
-   #define TWOFISH_SMALL
 #endif
-/* #define TWOFISH_SMALL */
-/* DES includes EDE triple-DES */
+
+#ifdef DROPBEAR_AES_CBC
+#define RIJNDAEL
+#endif
+
+#ifdef DROPBEAR_TWOFISH_CBC
+#define TWOFISH
+
+/* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
+ * TWOFISH_TABLES will make it a few kB bigger, but perhaps reduces runtime
+ * memory usage? */
+#define TWOFISH_SMALL
+/*#define TWOFISH_TABLES*/
+#endif
+
+#ifdef DROPBEAR_3DES_CBC
 #define DES
-#define CAST5
-#define NOEKEON
-#define SKIPJACK
-#define SAFER
-#define KHAZAD
-#define ANUBIS
-#define ANUBIS_TWEAK
-
-#endif /* LTC_NO_CIPHERS */
-
-
-/* ---> Block Cipher Modes of Operation <--- */
-#ifndef LTC_NO_MODES
-
-#define CFB
-#define OFB
-#define ECB
+#endif
 #define CBC
-#define CTR
 
-#endif /* LTC_NO_MODES */
-
-/* ---> One-Way Hash Functions <--- */
-#ifndef LTC_NO_HASHES 
-
-#define CHC_HASH
-#define WHIRLPOOL
+#if defined(DROPBEAR_DSS) && defined(DSS_PROTOK)
 #define SHA512
-#define SHA384
-#define SHA256
-#define SHA224
-#define TIGER
+#endif
+
 #define SHA1
+
+#ifdef DROPBEAR_MD5_HMAC
 #define MD5
-#define MD4
-#define MD2
-#define RIPEMD128
-#define RIPEMD160
-
-#endif /* LTC_NO_HASHES */
-
-/* ---> MAC functions <--- */
-#ifndef LTC_NO_MACS
+#endif
 
 #define HMAC
-#define OMAC
-#define PMAC
-#define PELICAN
-
-#if defined(PELICAN) && !defined(RIJNDAEL)
-   #error Pelican-MAC requires RIJNDAEL
-#endif
-
-/* ---> Encrypt + Authenticate Modes <--- */
-
-#define EAX_MODE
-#if defined(EAX_MODE) && !(defined(CTR) && defined(OMAC))
-   #error EAX_MODE requires CTR and OMAC mode
-#endif
-
-#define OCB_MODE
-#define CCM_MODE
-
-#define GCM_MODE
-
-/* Use 64KiB tables */
-#ifndef LTC_NO_TABLES
-   #define GCM_TABLES 
-#endif
-
-#endif /* LTC_NO_MACS */
 
 /* Various tidbits of modern neatoness */
 #define BASE64
-
-/* --> Pseudo Random Number Generators <--- */
-#ifndef LTC_NO_PRNGS
-
-/* Yarrow */
-#define YARROW
-/* which descriptor of AES to use?  */
-/* 0 = rijndael_enc 1 = aes_enc, 2 = rijndael [full], 3 = aes [full] */
-#define YARROW_AES 0
-
-#if defined(YARROW) && !defined(CTR)
-   #error YARROW requires CTR chaining mode to be defined!
-#endif
-
-/* a PRNG that simply reads from an available system source */
-#define SPRNG
-
-/* The RC4 stream cipher */
-#define RC4
-
-/* Fortuna PRNG */
-#define FORTUNA
-/* reseed every N calls to the read function */
-#define FORTUNA_WD    10
-/* number of pools (4..32) can save a bit of ram by lowering the count */
-#define FORTUNA_POOLS 32
-
-/* Greg's SOBER128 PRNG ;-0 */
-#define SOBER128
-
-/* the *nix style /dev/random device */
-#define DEVRANDOM
-/* try /dev/urandom before trying /dev/random */
-#define TRY_URANDOM_FIRST
-
-#endif /* LTC_NO_PRNGS */
-
-/* ---> Public Key Crypto <--- */
-#ifndef LTC_NO_PK
-
-#define MRSA
-
-/* Digital Signature Algorithm */
-#define MDSA
-/* Max diff between group and modulus size in bytes */
-#define MDSA_DELTA     512
-/* Max DSA group size in bytes (default allows 4k-bit groups) */
-#define MDSA_MAX_GROUP 512
-
-/* Diffie-Hellman */
-#define MDH
-/* Supported Key Sizes */
-#define DH768
-#define DH1024
-#define DH1280
-#define DH1536
-#define DH1792
-#define DH2048
-#define DH2560
-#define DH3072
-#define DH4096
-
-/* ECC */
-#define MECC
-/* Supported Key Sizes */
-#define ECC192
-#define ECC224
-#define ECC256
-#define ECC384
-#define ECC521
-
-/* Include the MPI functionality?  (required by the PK algorithms) */
-#define MPI
-
-#endif /* LTC_NO_PK */
-
-/* PKCS #1 (RSA) and #5 (Password Handling) stuff */
-#ifndef LTC_NO_PKCS
-
-#define PKCS_1
-#define PKCS_5
-
-/* Include ASN.1 DER (required by DSA/RSA) */
-#define LTC_DER
-#if defined(LTC_DER) && !defined(MPI) 
-   #error ASN.1 DER requires MPI functionality
-#endif
-
-#if (defined(MDSA) || defined(MRSA)) && !defined(LTC_DER)
-   #error RSA/DSA requires ASN.1 DER functionality, make sure LTC_DER is enabled
-#endif
-
-#endif /* LTC_NO_PKCS */
-
-#endif
-
-
-/* THREAD management */
-
-#ifdef LTC_PTHREAD
-
-#include <pthread.h>
-
-#define LTC_MUTEX_GLOBAL(x)   pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER;
-#define LTC_MUTEX_PROTO(x)    extern pthread_mutex_t x;
-#define LTC_MUTEX_LOCK(x)     pthread_mutex_lock(x);
-#define LTC_MUTEX_UNLOCK(x)   pthread_mutex_unlock(x);
-
-#else 
 
 /* default no functions */
 #define LTC_MUTEX_GLOBAL(x)
 #define LTC_MUTEX_PROTO(x)
 #define LTC_MUTEX_LOCK(x)
 #define LTC_MUTEX_UNLOCK(x)
+#define FORTUNA_POOLS 0
 
 #endif
 

@@ -15,6 +15,7 @@
   Build strings, Tom St Denis
 */  
 
+/*
 const char *crypt_build_settings =
    "LibTomCrypt " SCRYPT " (Tom St Denis, tomstdenis@gmail.com)\n"
    "LibTomCrypt is public domain software.\n"
@@ -308,6 +309,7 @@ const char *crypt_build_settings =
     "\n"
     "\n\n\n"
     ;
+	*/
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt.c,v $ */

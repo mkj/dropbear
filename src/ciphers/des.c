@@ -20,6 +20,7 @@
 #define EN0 0 
 #define DE1 1
 
+#if 0
 const struct ltc_cipher_descriptor des_desc =
 {
     "des",
@@ -33,6 +34,7 @@ const struct ltc_cipher_descriptor des_desc =
     &des_keysize,
     NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
+#endif
 
 const struct ltc_cipher_descriptor des3_desc =
 {
@@ -1518,6 +1520,7 @@ static void desfunc(ulong32 *block, const ulong32 *keys)
 }
 #endif
 
+#if 0
  /**
     Initialize the DES block cipher
     @param key The symmetric key you wish to pass
@@ -1544,6 +1547,7 @@ int des_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 
     return CRYPT_OK;
 }
+#endif
 
  /**
     Initialize the 3DES-EDE block cipher
@@ -1577,6 +1581,7 @@ int des3_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_k
     return CRYPT_OK;
 }
 
+#if 0
 /**
   Encrypts a block of text with DES
   @param pt The input plaintext (8 bytes)
@@ -1614,6 +1619,7 @@ void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
     STORE32H(work[0],pt+0);
     STORE32H(work[1],pt+4);
 }
+#endif
 
 /**
   Encrypts a block of text with 3DES-EDE
@@ -1658,6 +1664,7 @@ void des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key 
     STORE32H(work[1],pt+4);
 }
 
+#if 0
 /**
   Performs a self-test of the DES block cipher
   @return CRYPT_OK if functional, CRYPT_NOP if self-test has been disabled
@@ -1804,6 +1811,7 @@ int des_test(void)
     return CRYPT_OK;
   #endif
 }
+#endif
 
 int des3_test(void)
 {
@@ -1841,12 +1849,14 @@ int des3_test(void)
  #endif
 }
 
+#if 0
 /** Terminate the context 
    @param skey    The scheduled key
 */
 void des_done(symmetric_key *skey)
 {
 }
+#endif
 
 /** Terminate the context 
    @param skey    The scheduled key
@@ -1856,6 +1866,7 @@ void des3_done(symmetric_key *skey)
 }
 
 
+#if 0
 /**
   Gets suitable key size
   @param keysize [in/out] The length of the recommended key (in bytes).  This function will store the suitable size back in this variable.
@@ -1870,6 +1881,7 @@ int des_keysize(int *keysize)
     *keysize = 8;
     return CRYPT_OK;
 }
+#endif
 
 /**
   Gets suitable key size
