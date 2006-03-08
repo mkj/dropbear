@@ -234,18 +234,18 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 #ifdef __uClinux__
 	/* clean up command */
 	/* pop cmd */
-	xfree(args->list[args->num-1]);
-	args->list[args->num-1]=NULL;
-	args->num--;
+	xfree(args.list[args.num-1]);
+	args.list[args.num-1]=NULL;
+	args.num--;
 	/* pop host */
-	xfree(args->list[args->num-1]);
-	args->list[args->num-1]=NULL;
-	args->num--;
+	xfree(args.list[args.num-1]);
+	args.list[args.num-1]=NULL;
+	args.num--;
 	/* pop user */
 	if (remuser != NULL) {
-		xfree(args->list[args->num-1]);
-		args->list[args->num-1]=NULL;
-		args->num--;
+		xfree(args.list[args.num-1]);
+		args.list[args.num-1]=NULL;
+		args.num--;
 	}
 #endif /* __uClinux__ */
 
