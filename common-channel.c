@@ -181,7 +181,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 	struct Channel *channel;
 	unsigned int i;
-	int ret;
 
 	/* iterate through all the possible channels */
 	for (i = 0; i < ses.chansize; i++) {
