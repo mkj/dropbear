@@ -166,8 +166,8 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 	close(reserved[0]);
 	close(reserved[1]);
 
-    // uClinux needs to build the args here before vforking,
-    // otherwise we do it later on.
+    /* uClinux needs to build the args here before vforking,
+       otherwise we do it later on. */
 #ifdef __uClinux__
 	args.list[0] = ssh_program;
 	if (remuser != NULL)
@@ -212,17 +212,17 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 #ifdef __uClinux__
 	/* clean up command */
 	/* pop cmd */
-	free(args->list[--args->num]);
+	xfree(args->list[--args->num]);
 	args->list[args->num]=NULL;
 	/* pop host */
-	free(args->list[--args->num-1]);
+	xfree(args->list[--args->num-1]);
 	args->list[args->num]=NULL;
 	/* pop user */
 	if (remuser != NULL) {
-		free(args->list[--args->num-1]);
+		xfree(args->list[--args->num-1]);
 		args->list[args->num]=NULL;
 	}
-#endif /* __uClinux__
+#endif /* __uClinux__ */
 	  
 	/* Parent.  Close the other side, and return the local side. */
 	close(pin[0]);
