@@ -1,7 +1,7 @@
 /*
  * Dropbear - a SSH2 server
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) 2002-2006 Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -48,8 +48,6 @@ int dropbear_main(int argc, char ** argv)
 int main(int argc, char ** argv)
 #endif
 {
-	
-
 	_dropbear_exit = svr_dropbear_exit;
 	_dropbear_log = svr_dropbear_log;
 
@@ -139,7 +137,6 @@ void main_noinetd() {
 
 	commonsetup();
 
-
 	/* should be done after syslog is working */
 	if (svr_opts.forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
@@ -161,7 +158,6 @@ void main_noinetd() {
 	bzero(preauth_addrs, sizeof(preauth_addrs));
 	
 	/* Set up the listening sockets */
-	/* XXX XXX ports */
 	listensockcount = listensockets(listensocks, MAX_LISTEN_ADDR, &maxsock);
 	if (listensockcount == 0)
 	{
