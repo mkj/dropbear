@@ -1,3 +1,10 @@
+dropbear (0.48-0.1) unstable; urgency=high
+
+  * New upstream release.
+  * SECURITY: Improve handling of denial of service attempts from a single IP.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Thu, 8 Mar 2006 19:20:21 +0800
+
 dropbear (0.47-0.1) unstable; urgency=high
 
   * New upstream release.
