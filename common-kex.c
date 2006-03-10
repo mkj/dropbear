@@ -298,27 +298,35 @@ void gen_new_keys() {
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
-	if (cbc_start(
-		find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
-			recv_IV, recv_key, 
-			ses.newkeys->recv_algo_crypt->keysize, 0, 
-			&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
-		dropbear_exit("crypto error");
+	if (ses.newkeys->recv_algo_crypt->cipherdesc != NULL) {
+		if (cbc_start(
+			find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
+				recv_IV, recv_key, 
+				ses.newkeys->recv_algo_crypt->keysize, 0, 
+				&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
+			dropbear_exit("crypto error");
+		}
 	}
 
-	if (cbc_start(
-		find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name),
-			trans_IV, trans_key, 
-			ses.newkeys->trans_algo_crypt->keysize, 0, 
-			&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
-		dropbear_exit("crypto error");
+	if (ses.newkeys->trans_algo_crypt->cipherdesc != NULL) {
+		if (cbc_start(
+			find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name),
+				trans_IV, trans_key, 
+				ses.newkeys->trans_algo_crypt->keysize, 0, 
+				&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
+			dropbear_exit("crypto error");
+		}
 	}
 	
 	/* MAC keys */
-	hashkeys(ses.newkeys->transmackey, 
-			ses.newkeys->trans_algo_mac->keysize, &hs, mactransletter);
-	hashkeys(ses.newkeys->recvmackey, 
-			ses.newkeys->recv_algo_mac->keysize, &hs, macrecvletter);
+	if (ses.newkeys->trans_algo_mac->hashdesc != NULL) {
+		hashkeys(ses.newkeys->transmackey, 
+				ses.newkeys->trans_algo_mac->keysize, &hs, mactransletter);
+	}
+	if (ses.newkeys->recv_algo_mac->hashdesc != NULL) {
+		hashkeys(ses.newkeys->recvmackey, 
+				ses.newkeys->recv_algo_mac->keysize, &hs, macrecvletter);
+	}
 
 #ifndef DISABLE_ZLIB
 	gen_new_zstreams();

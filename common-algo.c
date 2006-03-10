@@ -103,6 +103,9 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_BLOWFISH_CBC
 	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
 #endif
+#ifdef DROPBEAR_NONE_CIPHER
+	{"none", 0, (void*)&dropbear_nocipher, 1},
+#endif
 	{NULL, 0, NULL, 0}
 };
 
@@ -115,6 +118,9 @@ algo_type sshhashes[] = {
 #endif
 #ifdef DROPBEAR_MD5_HMAC
 	{"hmac-md5", 0, (void*)&dropbear_md5, 1},
+#endif
+#ifdef DROPBEAR_NONE_INTEGRITY
+	{"none", 0, (void*)&dropbear_nohash, 1},
 #endif
 	{NULL, 0, NULL, 0}
 };
