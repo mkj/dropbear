@@ -1,3 +1,7 @@
+0.48.1 - Sat 11 March 2006
+
+- Compile fix for scp
+
 0.48 - Thurs 9 March 2006
 
 - Check that the circular buffer is properly empty before
