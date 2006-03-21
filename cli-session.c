@@ -213,10 +213,10 @@ static void cli_sessionloop() {
 
 		case USERAUTH_SUCCESS_RCVD:
 #ifdef ENABLE_CLI_LOCALTCPFWD
-			setup_localtcp();
+			//setup_localtcp();
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-			setup_remotetcp();
+			//setup_remotetcp();
 #endif
 			cli_send_chansess_request();
 			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))

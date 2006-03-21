@@ -367,14 +367,55 @@ static int cli_initchansess(struct Channel *channel) {
 
 void cli_send_chansess_request() {
 
+	unsigned int port = 0;
+	unsigned char* addr = NULL;
+	unsigned char* ipstring = "127.0.0.1";
+	unsigned char* portstring = "22";
+
+	/* hack hack */
+	static const struct ChanType cli_chan_tcphack = {
+		0, /* sepfds */
+		"direct-tcpip",
+		NULL,
+		NULL,
+		NULL,
+		cli_closechansess
+	};
+
 	TRACE(("enter cli_send_chansess_request"))
-	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess) 
+	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_tcphack) 
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
 	}
 
-	/* No special channel request data */
+	if (cli_opts.localfwds == NULL) {
+		dropbear_exit("You need to give a \"-L ignored:host:port\" option with this hacked up dbclient.");
+	}
+
+	addr = cli_opts.localfwds->connectaddr;
+	port = cli_opts.localfwds->connectport;
+
+	buf_putstring(ses.writepayload, addr, strlen(addr));
+	buf_putint(ses.writepayload, port);
+
+	/* originator ip */
+	buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
+	/* originator port */
+	buf_putint(ses.writepayload, atol(portstring));
+
 	encrypt_packet();
 	TRACE(("leave cli_send_chansess_request"))
 
 }
+
+#if 0
+	while (cli_opts.localfwds != NULL) {
+		ret = cli_localtcp(cli_opts.localfwds->listenport,
+				cli_opts.localfwds->connectaddr,
+				cli_opts.localfwds->connectport);
+		if (ret == DROPBEAR_FAILURE) {
+			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
+					cli_opts.localfwds->listenport,
+					cli_opts.localfwds->connectaddr,
+					cli_opts.localfwds->connectport);
+#endif
