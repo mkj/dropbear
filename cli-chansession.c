@@ -340,10 +340,10 @@ static void send_chansess_shell_req(struct Channel *channel) {
 static int cli_initchansess(struct Channel *channel) {
 
 
-	channel->infd = STDOUT_FILENO;
+	channel->writefd = STDOUT_FILENO;
 	setnonblocking(STDOUT_FILENO);
 
-	channel->outfd = STDIN_FILENO;
+	channel->readfd = STDIN_FILENO;
 	setnonblocking(STDIN_FILENO);
 
 	channel->errfd = STDERR_FILENO;

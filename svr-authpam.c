@@ -54,34 +54,58 @@ pamConvFunc(int num_msg,
 	int rc = PAM_SUCCESS;
 	struct pam_response* resp = NULL;
 	struct UserDataS* userDatap = (struct UserDataS*) appdata_ptr;
+	unsigned int msg_len = 0;
+	unsigned int i = 0;
 
 	const char* message = (*msg)->msg;
+
+	/* make a copy we can strip */
+	char * compare_message = m_strdup(message);
 
 	TRACE(("enter pamConvFunc"))
 
 	if (num_msg != 1) {
 		/* If you're getting here - Dropbear probably can't support your pam
 		 * modules. This whole file is a bit of a hack around lack of
-		 * asynchronocity in PAM anyway */
+		 * asynchronocity in PAM anyway. */
 		dropbear_log(LOG_INFO, "pamConvFunc() called with >1 messages: not supported.");
 		return PAM_CONV_ERR;
 	}
 	
 	TRACE(("msg_style is %d", (*msg)->msg_style))
-	if (message) {
-		TRACE(("message is '%s'", message))
+	if (compare_message) {
+		TRACE(("message is '%s'", compare_message))
 	} else {
 		TRACE(("null message"))
+	}
+
+
+	/* Make the string lowercase. */
+	msg_len = strlen(compare_message);
+	for (i = 0; i < msg_len; i++) {
+		compare_message[i] = tolower(compare_message[i]);
+	}
+
+	/* If the string ends with ": ", remove the space. 
+	   ie "login: " vs "login:" */
+	if (msg_len > 2 
+			&& compare_message[msg_len-2] == ':' 
+			&& compare_message[msg_len-1] == ' ') {
+		compare_message[msg_len-1] = '\0';
 	}
 
 	switch((*msg)->msg_style) {
 
 		case PAM_PROMPT_ECHO_OFF:
 
-			if (strcmp(message, "Password:") != 0) {
-					TRACE(("PAM_PROMPT_ECHO_OFF: unrecognized prompt"))
-					rc = PAM_CONV_ERR;
-					break;
+			if (!(strcmp(compare_message, "password:") == 0)) {
+				/* We don't recognise the prompt as asking for a password,
+				   so can't handle it. Add more above as required for
+				   different pam modules/implementations */
+				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (no echo)",
+						compare_message);
+				rc = PAM_CONV_ERR;
+				break;
 			}
 
 			/* You have to read the PAM module-writers' docs (do we look like
@@ -99,10 +123,13 @@ pamConvFunc(int num_msg,
 
 		case PAM_PROMPT_ECHO_ON:
 
-			if ((strcmp(message, "login: " ) != 0) 
-					&& (strcmp(message, "login:" ) != 0)
-					&& (strcmp(message, "Please enter username: " ) != 0)) {
-				TRACE(("PAM_PROMPT_ECHO_ON: unrecognized prompt"))
+			if (!((strcmp(compare_message, "login:" ) == 0) 
+				|| (strcmp(compare_message, "please enter username:") == 0))) {
+				/* We don't recognise the prompt as asking for a username,
+				   so can't handle it. Add more above as required for
+				   different pam modules/implementations */
+				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (with echo)",
+						compare_message);
 				rc = PAM_CONV_ERR;
 				break;
 			}
@@ -125,6 +152,7 @@ pamConvFunc(int num_msg,
 			break;      
 	}
 
+	m_free(compare_message);
 	TRACE(("leave pamConvFunc, rc %d", rc))
 
 	return rc;

@@ -110,6 +110,10 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 	exit(exitcode);
 }
 
+void fail_assert(const char* expr, const char* file, int line) {
+	dropbear_exit("failed assertion (%s:%d): `%s'", file, line, expr);
+}
+
 static void generic_dropbear_log(int UNUSED(priority), const char* format, 
 		va_list param) {
 
@@ -149,8 +153,33 @@ void dropbear_trace(const char* format, ...) {
 }
 #endif /* DEBUG_TRACE */
 
-/* Listen on address:port. Unless address is NULL, in which case listen on
- * everything. If called with address == "", we'll listen on localhost/loopback.
+static void set_sock_priority(int sock) {
+
+	int val;
+
+	/* disable nagle */
+	val = 1;
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+
+	/* set the TOS bit. note that this will fail for ipv6, I can't find any
+	 * equivalent. */
+#ifdef IPTOS_LOWDELAY
+	val = IPTOS_LOWDELAY;
+	setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
+#endif
+
+#ifdef SO_PRIORITY
+	/* linux specific, sets QoS class.
+	 * 6 looks to be optimal for interactive traffic (see tc-prio(8) ). */
+	val = 6;
+	setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
+#endif
+
+}
+
+/* Listen on address:port. 
+ * Special cases are address of "" listening on everything,
+ * and address of NULL listening on localhost only.
  * Returns the number of sockets bound on success, or -1 on failure. On
  * failure, if errstring wasn't NULL, it'll be a newly malloced error
  * string.*/
@@ -170,11 +199,17 @@ int dropbear_listen(const char* address, const char* port,
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
-	if (address && address[0] == '\0') {
+	// for calling getaddrinfo:
+	// address == NULL and !AI_PASSIVE: local loopback
+	// address == NULL and AI_PASSIVE: all interfaces
+	// address != NULL: whatever the address says
+	if (!address) {
 		TRACE(("dropbear_listen: local loopback"))
-		address = NULL;
 	} else {
-		TRACE(("dropbear_listen: not local loopback"))
+		if (address[0] == '\0') {
+			TRACE(("dropbear_listen: all interfaces"))
+			address = NULL;
+		}
 		hints.ai_flags = AI_PASSIVE;
 	}
 	err = getaddrinfo(address, port, &hints, &res0);
@@ -185,6 +220,10 @@ int dropbear_listen(const char* address, const char* port,
 			len = 20 + strlen(gai_strerror(err));
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
+		}
+		if (res0) {
+			freeaddrinfo(res0);
+			res0 = NULL;
 		}
 		TRACE(("leave dropbear_listen: failed resolving"))
 		return -1;
@@ -215,8 +254,7 @@ int dropbear_listen(const char* address, const char* port,
 		linger.l_linger = 5;
 		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
 
-		/* disable nagle */
-		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+		set_sock_priority(sock);
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			err = errno;
@@ -235,6 +273,11 @@ int dropbear_listen(const char* address, const char* port,
 		*maxfd = MAX(*maxfd, sock);
 
 		nsock++;
+	}
+
+	if (res0) {
+		freeaddrinfo(res0);
+		res0 = NULL;
 	}
 
 	if (nsock == 0) {
@@ -343,8 +386,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		TRACE(("Error connecting: %s", strerror(err)))
 	} else {
 		/* Success */
-		/* (err is used as a dummy var here) */
-		setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&err, sizeof(err));
+		set_sock_priority(sock);
 	}
 
 	freeaddrinfo(res0);
@@ -555,20 +597,17 @@ out:
 }	
 #endif
 
-/* loop until the socket is closed (in case of EINTR) or
- * we get and error.
- * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int m_close(int fd) {
+/* make sure that the socket closes */
+void m_close(int fd) {
 
 	int val;
 	do {
 		val = close(fd);
 	} while (val < 0 && errno == EINTR);
 
-	if (val == 0 || errno == EBADF) {
-		return DROPBEAR_SUCCESS;
-	} else {
-		return DROPBEAR_FAILURE;
+	if (val < 0 && errno != EBADF) {
+		/* Linux says EIO can happen */
+		dropbear_exit("Error closing fd %d, %s", fd, strerror(errno));
 	}
 }
 	

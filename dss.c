@@ -46,7 +46,7 @@
 int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 
 	TRACE(("enter buf_get_dss_pub_key"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	key->p = m_malloc(sizeof(mp_int));
 	key->q = m_malloc(sizeof(mp_int));
 	key->g = m_malloc(sizeof(mp_int));
@@ -80,7 +80,7 @@ int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 
 	int ret = DROPBEAR_FAILURE;
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	ret = buf_get_dss_pub_key(buf, key);
 	if (ret == DROPBEAR_FAILURE) {
@@ -137,7 +137,7 @@ void dss_key_free(dss_key *key) {
  */
 void buf_put_dss_pub_key(buffer* buf, dss_key *key) {
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putmpint(buf, key->p);
 	buf_putmpint(buf, key->q);
@@ -149,7 +149,7 @@ void buf_put_dss_pub_key(buffer* buf, dss_key *key) {
 /* Same as buf_put_dss_pub_key, but with the private "x" key appended */
 void buf_put_dss_priv_key(buffer* buf, dss_key *key) {
 
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	buf_put_dss_pub_key(buf, key);
 	buf_putmpint(buf, key->x);
 
@@ -172,7 +172,7 @@ int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
 	int stringlen;
 
 	TRACE(("enter buf_dss_verify"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 
 	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
 
@@ -310,7 +310,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	hash_state hs;
 	
 	TRACE(("enter buf_put_dss_sign"))
-	assert(key != NULL);
+	dropbear_assert(key != NULL);
 	
 	/* hash the data */
 	sha1_init(&hs);
@@ -380,7 +380,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	buf_putint(buf, 2*SHA1_HASH_SIZE);
 
 	writelen = mp_unsigned_bin_size(&dss_r);
-	assert(writelen <= SHA1_HASH_SIZE);
+	dropbear_assert(writelen <= SHA1_HASH_SIZE);
 	/* need to pad to 160 bits with leading zeros */
 	for (i = 0; i < SHA1_HASH_SIZE - writelen; i++) {
 		buf_putbyte(buf, 0);
@@ -393,7 +393,7 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	buf_incrwritepos(buf, writelen);
 
 	writelen = mp_unsigned_bin_size(&dss_s);
-	assert(writelen <= SHA1_HASH_SIZE);
+	dropbear_assert(writelen <= SHA1_HASH_SIZE);
 	/* need to pad to 160 bits with leading zeros */
 	for (i = 0; i < SHA1_HASH_SIZE - writelen; i++) {
 		buf_putbyte(buf, 0);

@@ -113,7 +113,7 @@ static char *gui_getpass(const char *prompt) {
 }
 #endif /* ENABLE_CLI_ASKPASS_HELPER */
 
-int cli_auth_password() {
+void cli_auth_password() {
 
 	char* password = NULL;
 
@@ -125,10 +125,7 @@ int cli_auth_password() {
 		password = gui_getpass("Password: ");
 	else
 #endif
-		password = getpass("Password: ");
-
-	if (password == NULL)
-		return 0;
+		password = getpass_or_cancel("Password: ");
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
@@ -149,7 +146,5 @@ int cli_auth_password() {
 	m_burn(password, strlen(password));
 
 	TRACE(("leave cli_auth_password"))
-	return 1; /* Password auth can always be tried */
-
 }
 #endif	/* ENABLE_CLI_PASSWORD_AUTH */

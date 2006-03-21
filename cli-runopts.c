@@ -47,6 +47,7 @@ static void printhelp() {
 					"Usage: %s [options] [user@]host\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
+					"-l <username>\n"
 					"-t    Allocate a pty\n"
 					"-T    Don't allocate a pty\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
@@ -57,11 +58,11 @@ static void printhelp() {
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 					"-L <listenport:remotehost:remoteport> Local port forwarding\n"
+					"-g    Allow remote hosts to connect to forwarded ports\n"
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
-					"-l <username>\n"
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
 #endif
@@ -96,6 +97,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	cli_opts.localfwds = NULL;
+	opts.listen_fwd_all = 0;
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	cli_opts.remotefwds = NULL;
@@ -104,8 +106,6 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.agent_fwd = 0;
 	cli_opts.agent_keys_loaded = 0;
 #endif
-	opts.nolocaltcp = 0;
-	opts.noremotetcp = 0;
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -173,6 +173,9 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':
 					nextislocal = 1;
+					break;
+				case 'g':
+					opts.listen_fwd_all = 1;
 					break;
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD

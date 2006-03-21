@@ -41,28 +41,37 @@ void svr_auth_pam();
 /* Client functions */
 void recv_msg_userauth_failure();
 void recv_msg_userauth_success();
+void recv_msg_userauth_specific_60();
 void recv_msg_userauth_pk_ok();
+void recv_msg_userauth_info_request();
 void cli_get_user();
 void cli_auth_getmethods();
 void cli_auth_try();
 void recv_msg_userauth_banner();
 void cli_pubkeyfail();
-int cli_auth_password();
+void cli_auth_password();
 int cli_auth_pubkey();
+void cli_auth_interactive();
+char* getpass_or_cancel();
 
 
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
 
-#define AUTH_TYPE_PUBKEY	1 << 0
-#define AUTH_TYPE_PASSWORD	1 << 1
+#define AUTH_TYPE_NONE      1
+#define AUTH_TYPE_PUBKEY    1 << 1
+#define AUTH_TYPE_PASSWORD  1 << 2
+#define AUTH_TYPE_INTERACT  1 << 3
 
-/* auth types, "none" means we should return list of acceptable types */
-#define AUTH_METHOD_NONE	"none"
+#define AUTH_METHOD_NONE "none"
 #define AUTH_METHOD_NONE_LEN 4
 #define AUTH_METHOD_PUBKEY "publickey"
 #define AUTH_METHOD_PUBKEY_LEN 9
 #define AUTH_METHOD_PASSWORD "password"
 #define AUTH_METHOD_PASSWORD_LEN 8
+#define AUTH_METHOD_INTERACT "keyboard-interactive"
+#define AUTH_METHOD_INTERACT_LEN 20
+
+
 
 /* This structure is shared between server and client - it contains
  * relatively little extraneous bits when used for the client rather than the
@@ -77,6 +86,9 @@ struct AuthState {
 	unsigned authdone : 1; /* 0 if we haven't authed, 1 if we have. Applies for
 							  client and server (though has differing [obvious]
 							  meanings). */
+	unsigned perm_warn : 1; /* Server only, set if bad permissions on 
+							   ~/.ssh/authorized_keys have already been
+							   logged. */
 
 	/* These are only used for the server */
 	char *printableuser; /* stripped of control chars, used for logs etc */

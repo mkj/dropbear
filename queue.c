@@ -42,7 +42,7 @@ void* dequeue(struct Queue* queue) {
 
 	void* ret;
 	struct Link* oldhead;
-	assert(!isempty(queue));
+	dropbear_assert(!isempty(queue));
 	
 	ret = queue->head->item;
 	oldhead = queue->head;
@@ -62,7 +62,7 @@ void* dequeue(struct Queue* queue) {
 
 void *examine(struct Queue* queue) {
 
-	assert(!isempty(queue));
+	dropbear_assert(!isempty(queue));
 	return queue->head->item;
 }
 

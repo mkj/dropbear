@@ -39,6 +39,7 @@ extern void (*_dropbear_log)(int priority, const char* format, va_list param);
 void dropbear_exit(const char* format, ...);
 void dropbear_close(const char* format, ...);
 void dropbear_log(int priority, const char* format, ...);
+void fail_assert(const char* expr, const char* file, int line);
 #ifdef DEBUG_TRACE
 void dropbear_trace(const char* format, ...);
 void printhex(const char * label, const unsigned char * buf, int len);
@@ -57,7 +58,7 @@ char* getaddrhostname(struct sockaddr_storage * addr);
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 
-int m_close(int fd);
+void m_close(int fd);
 void * m_malloc(size_t size);
 void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);
@@ -68,5 +69,8 @@ void setnonblocking(int fd);
 
 /* Used to force mp_ints to be initialised */
 #define DEF_MP_INT(X) mp_int X = {0, 0, 0, NULL}
+
+/* Dropbear assertion */
+#define dropbear_assert(X) do { if (!(X)) { fail_assert(#X, __FILE__, __LINE__); } } while (0)
 
 #endif /* _DBUTIL_H_ */

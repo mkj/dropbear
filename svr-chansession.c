@@ -148,8 +148,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess) {
 
-	assert(chansess->exit.exitpid != -1);
-	assert(chansess->exit.exitsignal == -1);
+	dropbear_assert(chansess->exit.exitpid != -1);
+	dropbear_assert(chansess->exit.exitsignal == -1);
 
 	CHECKCLEARTOWRITE();
 
@@ -170,8 +170,8 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 	int i;
 	char* signame = NULL;
 
-	assert(chansess->exit.exitpid != -1);
-	assert(chansess->exit.exitsignal > 0);
+	dropbear_assert(chansess->exit.exitpid != -1);
+	dropbear_assert(chansess->exit.exitsignal > 0);
 
 	CHECKCLEARTOWRITE();
 
@@ -205,7 +205,7 @@ static int newchansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
 
-	assert(channel->typedata == NULL);
+	dropbear_assert(channel->typedata == NULL);
 
 	chansess = (struct ChanSess*)m_malloc(sizeof(struct ChanSess));
 	chansess->cmd = NULL;
@@ -279,7 +279,7 @@ static void closechansess(struct Channel *channel) {
 	/* clear child pid entries */
 	for (i = 0; i < svr_ses.childpidsize; i++) {
 		if (svr_ses.childpids[i].chansess == chansess) {
-			assert(svr_ses.childpids[i].pid > 0);
+			dropbear_assert(svr_ses.childpids[i].pid > 0);
 			TRACE(("closing pid %d", svr_ses.childpids[i].pid))
 			TRACE(("exitpid = %d", chansess->exit.exitpid))
 			svr_ses.childpids[i].pid = -1;
@@ -313,7 +313,7 @@ static void chansessionrequest(struct Channel *channel) {
 	}
 
 	chansess = (struct ChanSess*)channel->typedata;
-	assert(chansess != NULL);
+	dropbear_assert(chansess != NULL);
 	TRACE(("type is %s", type))
 
 	if (strcmp(type, "window-change") == 0) {
@@ -623,7 +623,12 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (pipe(errfds) != 0)
 		return DROPBEAR_FAILURE;
 
+#ifdef __uClinux__
+	pid = vfork();
+#else
 	pid = fork();
+#endif
+
 	if (pid < 0)
 		return DROPBEAR_FAILURE;
 
@@ -673,15 +678,15 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);
 		close(errfds[FDOUT]);
-		channel->infd = infds[FDOUT];
-		channel->outfd = outfds[FDIN];
+		channel->writefd = infds[FDOUT];
+		channel->readfd = outfds[FDIN];
 		channel->errfd = errfds[FDIN];
-		ses.maxfd = MAX(ses.maxfd, channel->infd);
-		ses.maxfd = MAX(ses.maxfd, channel->outfd);
+		ses.maxfd = MAX(ses.maxfd, channel->writefd);
+		ses.maxfd = MAX(ses.maxfd, channel->readfd);
 		ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-		setnonblocking(channel->outfd);
-		setnonblocking(channel->infd);
+		setnonblocking(channel->readfd);
+		setnonblocking(channel->writefd);
 		setnonblocking(channel->errfd);
 
 	}
@@ -714,7 +719,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
+#ifdef __uClinux__
+	pid = vfork();
+#else
 	pid = fork();
+#endif
 	if (pid < 0)
 		return DROPBEAR_FAILURE;
 
@@ -784,8 +793,8 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		addchildpid(chansess, pid);
 
 		close(chansess->slave);
-		channel->infd = chansess->master;
-		channel->outfd = chansess->master;
+		channel->writefd = chansess->master;
+		channel->readfd = chansess->master;
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
 
@@ -810,7 +819,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 	/* need to increase size */
 	if (i == svr_ses.childpidsize) {
 		svr_ses.childpids = (struct ChildPid*)m_realloc(svr_ses.childpids,
-				sizeof(struct ChildPid) * svr_ses.childpidsize+1);
+				sizeof(struct ChildPid) * (svr_ses.childpidsize+1));
 		svr_ses.childpidsize++;
 	}
 	
@@ -828,19 +837,21 @@ static void execchild(struct ChanSess *chansess) {
 	char * baseshell = NULL;
 	unsigned int i;
 
+    /* with uClinux we'll have vfork()ed, so don't want to overwrite the
+     * hostkey. can't think of a workaround to clear it */
+#ifndef __uClinux__
 	/* wipe the hostkey */
 	sign_key_free(svr_opts.hostkey);
 	svr_opts.hostkey = NULL;
 
 	/* overwrite the prng state */
-	seedrandom();
+	reseedrandom();
+#endif
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
 	for (i = 3; i <= (unsigned int)ses.maxfd; i++) {
-		if (m_close(i) == DROPBEAR_FAILURE) {
-			dropbear_exit("Error closing file desc");
-		}
+		m_close(i);
 	}
 
 	/* clear environment */

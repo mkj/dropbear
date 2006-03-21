@@ -59,6 +59,11 @@ Allocate a pty.
 .TP
 .B \-T
 Don't allocate a pty.
+.TP
+.B \-g
+Allow non-local hosts to connect to forwarded ports. Applies to -L and -R
+forwarded ports, though remote connections to -R forwarded ports may be limited
+by the ssh server.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br

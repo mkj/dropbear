@@ -28,6 +28,11 @@ Binaries can be strippd with "make strip"
 
 ============================================================================
 
+If you're compiling for a 386-class CPU, you will probably need to add
+CFLAGS=-DLTC_NO_BSWAP so that libtomcrypt doesn't use 486+ instructions.
+
+============================================================================
+
 Compiling with uClibc:
 
 Firstly, make sure you have at least uclibc 0.9.17, as getusershell() in prior

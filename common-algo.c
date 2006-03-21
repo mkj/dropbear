@@ -32,20 +32,28 @@
 /* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
 
+#ifdef DROPBEAR_AES256_CBC
+static const struct dropbear_cipher dropbear_aes256 = 
+	{&aes_desc, 32, 16};
+#endif
 #ifdef DROPBEAR_AES128_CBC
-const struct dropbear_cipher dropbear_aes128 = 
+static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
-const struct dropbear_cipher dropbear_blowfish = 
+static const struct dropbear_cipher dropbear_blowfish = 
 	{&blowfish_desc, 16, 8};
 #endif
+#ifdef DROPBEAR_TWOFISH256_CBC
+static const struct dropbear_cipher dropbear_twofish256 = 
+	{&twofish_desc, 32, 16};
+#endif
 #ifdef DROPBEAR_TWOFISH128_CBC
-const struct dropbear_cipher dropbear_twofish128 = 
+static const struct dropbear_cipher dropbear_twofish128 = 
 	{&twofish_desc, 16, 16};
 #endif
 #ifdef DROPBEAR_3DES_CBC
-const struct dropbear_cipher dropbear_3des = 
+static const struct dropbear_cipher dropbear_3des = 
 	{&des3_desc, 24, 8};
 #endif
 
@@ -57,11 +65,15 @@ const struct dropbear_cipher dropbear_nocipher =
    {&hash_desc, keysize, hashsize} */
 
 #ifdef DROPBEAR_SHA1_HMAC
-const struct dropbear_hash dropbear_sha1 = 
+static const struct dropbear_hash dropbear_sha1 = 
 	{&sha1_desc, 20, 20};
 #endif
+#ifdef DROPBEAR_SHA1_96_HMAC
+static const struct dropbear_hash dropbear_sha1_96 = 
+	{&sha1_desc, 20, 12};
+#endif
 #ifdef DROPBEAR_MD5_HMAC
-const struct dropbear_hash dropbear_md5 = 
+static const struct dropbear_hash dropbear_md5 = 
 	{&md5_desc, 16, 16};
 #endif
 
@@ -75,19 +87,29 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_AES128_CBC
 	{"aes128-cbc", 0, (void*)&dropbear_aes128, 1},
 #endif
-#ifdef DROPBEAR_BLOWFISH_CBC
-	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
-#endif
-#ifdef DROPBEAR_TWOFISH128_CBC
-	{"twofish-cbc", 0, (void*)&dropbear_twofish128, 1},
-#endif
 #ifdef DROPBEAR_3DES_CBC
 	{"3des-cbc", 0, (void*)&dropbear_3des, 1},
+#endif
+#ifdef DROPBEAR_AES256_CBC
+	{"aes256-cbc", 0, (void*)&dropbear_aes256, 1},
+#endif
+#ifdef DROPBEAR_TWOFISH256_CBC
+	{"twofish256-cbc", 0, (void*)&dropbear_twofish256, 1},
+	{"twofish-cbc", 0, (void*)&dropbear_twofish256, 1},
+#endif
+#ifdef DROPBEAR_TWOFISH128_CBC
+	{"twofish128-cbc", 0, (void*)&dropbear_twofish128, 1},
+#endif
+#ifdef DROPBEAR_BLOWFISH_CBC
+	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
 #endif
 	{NULL, 0, NULL, 0}
 };
 
 algo_type sshhashes[] = {
+#ifdef DROPBEAR_SHA1_96_HMAC
+	{"hmac-sha1-96", 0, (void*)&dropbear_sha1_96, 1},
+#endif
 #ifdef DROPBEAR_SHA1_HMAC
 	{"hmac-sha1", 0, (void*)&dropbear_sha1, 1},
 #endif
@@ -98,10 +120,10 @@ algo_type sshhashes[] = {
 };
 
 algo_type sshcompress[] = {
-	{"none", DROPBEAR_COMP_NONE, NULL, 1},
 #ifndef DISABLE_ZLIB
 	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1},
 #endif
+	{"none", DROPBEAR_COMP_NONE, NULL, 1},
 	{NULL, 0, NULL, 0}
 };
 
@@ -126,13 +148,13 @@ algo_type sshkex[] = {
 void crypto_init() {
 
 	const struct ltc_cipher_descriptor *regciphers[] = {
-#ifdef DROPBEAR_AES128_CBC
+#ifdef DROPBEAR_AES_CBC
 		&aes_desc,
 #endif
 #ifdef DROPBEAR_BLOWFISH_CBC
 		&blowfish_desc,
 #endif
-#ifdef DROPBEAR_TWOFISH128_CBC
+#ifdef DROPBEAR_TWOFISH_CBC
 		&twofish_desc,
 #endif
 #ifdef DROPBEAR_3DES_CBC
@@ -187,21 +209,20 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 /* Output a comma separated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
-	unsigned int pos = 0, i, len;
-	char str[50]; /* enough for local algo storage */
+	unsigned int i, len;
+	unsigned int donefirst = 0;
+	buffer *algolist = NULL;
 
+	algolist = buf_new(100);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
-			/* Avoid generating a trailing comma */
-			if (pos)
-			    str[pos++] = ',';
+			if (donefirst)
+				buf_putbyte(algolist, ',');
+			donefirst = 1;
 			len = strlen(localalgos[i].name);
-			memcpy(&str[pos], localalgos[i].name, len);
-			pos += len;
+			buf_putbytes(algolist, localalgos[i].name, len);
 		}
 	}
-	str[pos]=0;
-	/* Debug this */
-	TRACE(("buf_put_algolist: %s", str))
-	buf_putstring(buf, str, pos);
+	buf_putstring(buf, algolist->data, algolist->len);
+	buf_free(algolist);
 }

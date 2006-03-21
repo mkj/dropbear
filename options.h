@@ -63,25 +63,30 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_AGENTFWD
 
 /* Encryption - at least one required.
- * RFC Draft requires 3DES, and recommends Blowfish, AES128 & Twofish128 */
+ * RFC Draft requires 3DES and recommends AES128 for interoperability.
+ * Including multiple keysize variants the same cipher 
+ * (eg AES256 as well as AES128) will result in a minimal size increase.*/
 #define DROPBEAR_AES128_CBC
-#define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH128_CBC
 #define DROPBEAR_3DES_CBC
+#define DROPBEAR_AES256_CBC
+#define DROPBEAR_BLOWFISH_CBC
+#define DROPBEAR_TWOFISH256_CBC
+#define DROPBEAR_TWOFISH128_CBC
 
-/* Integrity - at least one required.
- * RFC Draft requires sha1-hmac, and recommends md5-hmac.
+/* Message Integrity - at least one required.
+ * RFC Draft requires sha1 and recommends sha1-96.
+ * sha1-96 may be of use for slow links, as it has a smaller overhead.
  *
- * Note: there's no point disabling sha1 to save space, since it's used in the
+ * Note: there's no point disabling sha1 to save space, since it's used
  * for the random number generator and public-key cryptography anyway.
  * Disabling it here will just stop it from being used as the integrity portion
  * of the ssh protocol.
  *
- * These are also used for key fingerprints in logs (when pubkey auth is used),
- * MD5 fingerprints are printed if available, however SHA1 fingerprints will be
- * generated otherwise. This isn't exactly optimal, although SHA1 fingerprints
- * are not too hard to create from pubkeys if required. */
+ * These hashes are also used for public key fingerprints in logs.
+ * If you disable MD5, Dropbear will fall back to SHA1 fingerprints,
+ * which are not the standard form. */
 #define DROPBEAR_SHA1_HMAC
+#define DROPBEAR_SHA1_96_HMAC
 #define DROPBEAR_MD5_HMAC
 
 /* Hostkey/public key algorithms - at least one required, these are used
@@ -124,11 +129,12 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
-/*#define ENABLE_SVR_PAM_AUTH*/
+/* #define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
+#define ENABLE_CLI_INTERACT_AUTH
 
 /* Define this (as well as ENABLE_CLI_PASSWORD_AUTH) to allow the use of
  * a helper program for the ssh client. The helper program should be
@@ -156,6 +162,13 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
+/* The first setting is per-IP, to avoid denial of service */
+#ifndef MAX_UNAUTH_PER_IP
+#define MAX_UNAUTH_PER_IP 5
+#endif
+
+/* And then a global limit to avoid chewing memory if connections 
+ * come from many IPs */
 #ifndef MAX_UNAUTH_CLIENTS
 #define MAX_UNAUTH_CLIENTS 30
 #endif
@@ -195,7 +208,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.46"
+#define DROPBEAR_VERSION "0.48"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -240,6 +253,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define _PATH_TTY "/dev/tty"
 
+#define _PATH_CP "/bin/cp"
+
 /* Timeouts in seconds */
 #define SELECT_TIMEOUT 20
 
@@ -274,7 +289,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_MAC_LEN SHA1_HASH_SIZE
 
 
-#define MAX_KEY_LEN 24 /* 3DES requires a 24 byte key */
+#define MAX_KEY_LEN 32 /* 256 bits for aes256 etc */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 
 						 and >= SHA1_HASH_SIZE */
 #define MAX_MAC_KEY 20
@@ -301,15 +316,31 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
 
-/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
-#define MAX_PUBKEY_SIZE 1600
-/* For a 4096 bit DSS key, empirically determined to be 1590 bytes */
-#define MAX_PRIVKEY_SIZE 1600
+/* For a 4096 bit DSS key, empirically determined */
+#define MAX_PUBKEY_SIZE 1700
+/* For a 4096 bit DSS key, empirically determined */
+#define MAX_PRIVKEY_SIZE 1700
+
+/* The maximum size of the bignum portion of the kexhash buffer */
+/* Sect. 8 of the transport draft, K_S + e + f + K */
+#define KEXHASHBUF_MAX_INTS (1700 + 130 + 130 + 130)
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
 								in a few years time.... */
 
 #define DROPBEAR_MAX_CLI_PASS 1024
+
+#define DROPBEAR_MAX_CLI_INTERACT_PROMPTS 80 /* The number of prompts we'll 
+												accept for keyb-interactive
+												auth */
+
+#if defined(DROPBEAR_AES256_CBC) || defined(DROPBEAR_AES128_CBC)
+#define DROPBEAR_AES_CBC
+#endif
+
+#if defined(DROPBEAR_TWOFISH256_CBC) || defined(DROPBEAR_TWOFISH128_CBC)
+#define DROPBEAR_TWOFISH_CBC
+#endif
 
 #ifndef ENABLE_X11FWD
 #define DISABLE_X11FWD

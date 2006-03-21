@@ -39,6 +39,7 @@ static void cleanup_tcp(struct Listener *listener) {
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 
 	m_free(tcpinfo->sendaddr);
+	m_free(tcpinfo->listenaddr);
 	m_free(tcpinfo);
 }
 
@@ -46,7 +47,7 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 
 	int fd;
 	struct sockaddr_storage addr;
-	int len;
+	socklen_t len;
 	char ipstring[NI_MAXHOST], portstring[NI_MAXSERV];
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 
@@ -64,11 +65,28 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 	}
 
 	if (send_msg_channel_open_init(fd, tcpinfo->chantype) == DROPBEAR_SUCCESS) {
+		unsigned char* addr = NULL;
+		unsigned int port = 0;
 
-		buf_putstring(ses.writepayload, tcpinfo->sendaddr, 
-				strlen(tcpinfo->sendaddr));
-		buf_putint(ses.writepayload, tcpinfo->sendport);
+		if (tcpinfo->tcp_type == direct) {
+			/* "direct-tcpip" */
+			/* host to connect, port to connect */
+			addr = tcpinfo->sendaddr;
+			port = tcpinfo->sendport;
+		} else {
+			dropbear_assert(tcpinfo->tcp_type == forwarded);
+			/* "forwarded-tcpip" */
+			/* address that was connected, port that was connected */
+			addr = tcpinfo->listenaddr;
+			port = tcpinfo->listenport;
+		}
+
+		buf_putstring(ses.writepayload, addr, strlen(addr));
+		buf_putint(ses.writepayload, port);
+
+		/* originator ip */
 		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
+		/* originator port */
 		buf_putint(ses.writepayload, atol(portstring));
 
 		encrypt_packet();
@@ -86,16 +104,21 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	struct Listener *listener = NULL;
 	int nsocks;
 	char* errstring = NULL;
+	// listen_spec = NULL indicates localhost
+	const char* listen_spec = NULL;
 
 	TRACE(("enter listen_tcpfwd"))
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->listenport);
 
-	/* XXX Note: we're just listening on localhost, no matter what they tell
-	 * us. If someone wants to make it listen otherways, then change
-	 * the "" argument. but that requires UI changes too */
-	nsocks = dropbear_listen("", portstring, socks, 
+	/* a listenaddr of "" will indicate all interfaces */
+	if (opts.listen_fwd_all 
+			&& (strcmp(tcpinfo->listenaddr, "localhost") != 0) ) {
+		listen_spec = tcpinfo->listenaddr;
+	}
+
+	nsocks = dropbear_listen(listen_spec, portstring, socks, 
 			DROPBEAR_MAX_SOCKS, &errstring, &ses.maxfd);
 	if (nsocks < 0) {
 		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);

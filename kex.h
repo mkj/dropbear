@@ -42,11 +42,6 @@ void recv_msg_kexdh_init(); /* server */
 void send_msg_kexdh_init(); /* client */
 void recv_msg_kexdh_reply(); /* client */
 
-extern const unsigned char dh_p_val[];
-#define DH_P_LEN 128 /* The length of the dh_p_val array */
-
-extern const int DH_G_VAL; /* == 2 */
-
 struct KEXState {
 
 	unsigned sentkexinit : 1; /*set when we've sent/recv kexinit packet */

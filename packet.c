@@ -53,13 +53,13 @@ void write_packet() {
 	buffer * writebuf = NULL;
 	
 	TRACE(("enter write_packet"))
-	assert(!isempty(&ses.writequeue));
+	dropbear_assert(!isempty(&ses.writequeue));
 
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
 	len = writebuf->len - writebuf->pos;
-	assert(len > 0);
+	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock, buf_getptr(writebuf, len), len);
 
@@ -118,7 +118,7 @@ void read_packet() {
 
 	/* Attempt to read the remainder of the packet, note that there
 	 * mightn't be any available (EAGAIN) */
-	assert(ses.readbuf != NULL);
+	dropbear_assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
 	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
 
@@ -162,7 +162,7 @@ static void read_packet_init() {
 	if (ses.readbuf == NULL) {
 		/* start of a new packet */
 		ses.readbuf = buf_new(INIT_READBUF);
-		assert(ses.decryptreadbuf == NULL);
+		dropbear_assert(ses.decryptreadbuf == NULL);
 		ses.decryptreadbuf = buf_new(blocksize);
 	}
 
@@ -215,7 +215,7 @@ static void read_packet_init() {
 	if ((len > MAX_PACKET_LEN) ||
 		(len < MIN_PACKET_LEN + macsize) ||
 		((len - macsize) % blocksize != 0)) {
-		dropbear_exit("bad packet size");
+		dropbear_exit("bad packet size %d", len);
 	}
 
 	buf_resize(ses.readbuf, len);
@@ -314,14 +314,13 @@ void decrypt_packet() {
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int checkmac(buffer* macbuf, buffer* sourcebuf) {
 
-	unsigned char macsize;
+	unsigned int macsize;
 	hmac_state hmac;
 	unsigned char tempbuf[MAX_MAC_LEN];
-	unsigned long hashsize;
-	int len;
+	unsigned long bufsize;
+	unsigned int len;
 
 	macsize = ses.keys->recv_algo_mac->hashsize;
-
 	if (macsize == 0) {
 		return DROPBEAR_SUCCESS;
 	}
@@ -347,8 +346,8 @@ static int checkmac(buffer* macbuf, buffer* sourcebuf) {
 		dropbear_exit("HMAC error");
 	}
 
-	hashsize = sizeof(tempbuf);
-	if (hmac_done(&hmac, tempbuf, &hashsize) != CRYPT_OK) {
+	bufsize = sizeof(tempbuf);
+	if (hmac_done(&hmac, tempbuf, &bufsize) != CRYPT_OK) {
 		dropbear_exit("HMAC error");
 	}
 
@@ -524,15 +523,15 @@ void encrypt_packet() {
 /* Create the packet mac, and append H(seqno|clearbuf) to the output */
 static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 
-	int macsize;
+	unsigned int macsize;
 	unsigned char seqbuf[4];
-	unsigned long hashsize;
+	unsigned char tempbuf[MAX_MAC_LEN];
+	unsigned long bufsize;
 	hmac_state hmac;
 
 	TRACE(("enter writemac"))
 
 	macsize = ses.keys->trans_algo_mac->hashsize;
-
 	if (macsize > 0) {
 		/* calculate the mac */
 		if (hmac_init(&hmac, 
@@ -557,12 +556,12 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 			dropbear_exit("HMAC error");
 		}
 	
-		hashsize = macsize;
-		if (hmac_done(&hmac, buf_getwriteptr(outputbuffer, macsize), &hashsize) 
+		bufsize = sizeof(tempbuf);
+		if (hmac_done(&hmac, tempbuf, &bufsize) 
 				!= CRYPT_OK) {
 			dropbear_exit("HMAC error");
 		}
-		buf_incrwritepos(outputbuffer, macsize);
+		buf_putbytes(outputbuffer, tempbuf, macsize);
 	}
 	TRACE(("leave writemac"))
 }
@@ -601,7 +600,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 			break;
 		}
 
-		assert(ses.keys->trans_zstream->avail_out == 0);
+		dropbear_assert(ses.keys->trans_zstream->avail_out == 0);
 
 		/* the buffer has been filled, we must extend. This only happens in
 		 * unusual circumstances where the data grows in size after deflate(),

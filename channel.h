@@ -65,9 +65,9 @@ struct Channel {
 	unsigned int recvdonelen;
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
-	int infd; /* data to send over the wire */
-	int outfd; /* data for consumption, what was in writebuf */
-	int errfd; /* used like infd or errfd, depending if it's client or server.
+	int writefd; /* read from wire, written to insecure side */
+	int readfd; /* read from insecure size, written to wire */
+	int errfd; /* used like writefd or readfd, depending if it's client or server.
 				  Doesn't exactly belong here, but is cleaner here */
 	circbuffer *writebuf; /* data from the wire, for local consumption */
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf
@@ -80,6 +80,10 @@ struct Channel {
 
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
+
+	int await_open; /* flag indicating whether we've sent an open request
+					   for this channel (and are awaiting a confirmation
+					   or failure). */
 
 	const struct ChanType* type;
 
@@ -96,7 +100,7 @@ struct ChanType {
 
 };
 
-void chaninitialise();
+void chaninitialise(const struct ChanType *chantypes[]);
 void chancleanup();
 void setchannelfds(fd_set *readfd, fd_set *writefd);
 void channelio(fd_set *readfd, fd_set *writefd);
@@ -119,7 +123,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		circbuffer * buf);
 
 #ifdef DROPBEAR_CLIENT
-const struct ChanType clichansess;
+extern const struct ChanType clichansess;
 #endif
 
 #if defined(USING_LISTENERS) || defined(DROPBEAR_CLIENT)

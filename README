@@ -25,7 +25,7 @@ the key entries in that file. They should be of the form:
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+ZAM9uGuewZBDoAqNKJxoIn0Hyd0Nk/yU99UVv6NWV/5YSHtnf35LKds56j7cuzoQpFIdjNwdxAN0PCET/MG8qyskG/2IE2DPNIaJ3Wy+Ws4IZEgdJgPlTYUBWWtCWOGc= someone@hostname
 
 You must make sure that ~/.ssh, and the key file, are only writable by the
-user.
+user. Beware of editors that split the key into multiple lines.
 
 NOTE: Dropbear ignores authorized_keys options such as those described in the
 OpenSSH sshd manpage, and will not allow a login for these keys. 

@@ -72,7 +72,7 @@ void recv_msg_global_request_remotetcp() {
 
 	TRACE(("enter recv_msg_global_request_remotetcp"))
 
-	if (opts.noremotetcp) {
+	if (svr_opts.noremotetcp) {
 		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"))
 		goto out;
 	}
@@ -80,7 +80,7 @@ void recv_msg_global_request_remotetcp() {
 	reqname = buf_getstring(ses.payload, &namelen);
 	wantreply = buf_getbool(ses.payload);
 
-	if (namelen > MAXNAMLEN) {
+	if (namelen > MAX_NAME_LEN) {
 		TRACE(("name len is wrong: %d", namelen))
 		goto out;
 	}
@@ -129,9 +129,9 @@ static int matchtcp(void* typedata1, void* typedata2) {
 	const struct TCPListener *info1 = (struct TCPListener*)typedata1;
 	const struct TCPListener *info2 = (struct TCPListener*)typedata2;
 
-	return (info1->sendport == info2->sendport)
+	return (info1->listenport == info2->listenport)
 			&& (info1->chantype == info2->chantype)
-			&& (strcmp(info1->sendaddr, info2->sendaddr) == 0);
+			&& (strcmp(info1->listenaddr, info2->listenaddr) == 0);
 }
 
 static int svr_cancelremotetcp() {
@@ -153,8 +153,10 @@ static int svr_cancelremotetcp() {
 
 	port = buf_getint(ses.payload);
 
-	tcpinfo.sendaddr = bindaddr;
-	tcpinfo.sendport = port;
+	tcpinfo.sendaddr = NULL;
+	tcpinfo.sendport = 0;
+	tcpinfo.listenaddr = bindaddr;
+	tcpinfo.listenport = port;
 	listener = get_listener(CHANNEL_ID_TCPFORWARDED, &tcpinfo, matchtcp);
 	if (listener) {
 		remove_listener( listener );
@@ -177,7 +179,6 @@ static int svr_remotetcpreq() {
 
 	TRACE(("enter remotetcpreq"))
 
-	/* NOTE: at this stage, we ignore bindaddr. see below and listen_tcpfwd */
 	bindaddr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
@@ -202,20 +203,20 @@ static int svr_remotetcpreq() {
 	}
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
-	tcpinfo->sendaddr = bindaddr;
-	tcpinfo->sendport = port;
+	tcpinfo->sendaddr = NULL;
+	tcpinfo->sendport = 0;
+	tcpinfo->listenaddr = bindaddr;
 	tcpinfo->listenport = port;
 	tcpinfo->chantype = &svr_chan_tcpremote;
+	tcpinfo->tcp_type = forwarded;
 
-	/* Note: bindaddr is actually ignored by listen_tcpfwd, since
-	 * we only want to bind to localhost */
 	ret = listen_tcpfwd(tcpinfo);
 
 out:
 	if (ret == DROPBEAR_FAILURE) {
 		/* we only free it if a listener wasn't created, since the listener
 		 * has to remember it if it's to be cancelled */
-		m_free(tcpinfo->sendaddr);
+		m_free(tcpinfo->listenaddr);
 		m_free(tcpinfo);
 	}
 	TRACE(("leave remotetcpreq"))
@@ -235,7 +236,7 @@ static int newtcpdirect(struct Channel * channel) {
 	int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
-	if (opts.nolocaltcp) {
+	if (svr_opts.nolocaltcp) {
 		TRACE(("leave newtcpdirect: local tcp forwarding disabled"))
 		goto out;
 	}
@@ -272,11 +273,9 @@ static int newtcpdirect(struct Channel * channel) {
 
 	ses.maxfd = MAX(ses.maxfd, sock);
 
-	/* Note that infd is actually the "outgoing" direction on the
-	 * tcp connection, vice versa for outfd.
-	 * We don't set outfd, that will get set after the connection's
+	 /* We don't set readfd, that will get set after the connection's
 	 * progress succeeds */
-	channel->infd = sock;
+	channel->writefd = sock;
 	channel->initconn = 1;
 	
 	err = SSH_OPEN_IN_PROGRESS;

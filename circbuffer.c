@@ -66,8 +66,8 @@ unsigned int cbuf_getavail(circbuffer * cbuf) {
 
 unsigned int cbuf_readlen(circbuffer *cbuf) {
 
-	assert(((2*cbuf->size)+cbuf->writepos-cbuf->readpos)%cbuf->size == cbuf->used%cbuf->size);
-	assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
+	dropbear_assert(((2*cbuf->size)+cbuf->writepos-cbuf->readpos)%cbuf->size == cbuf->used%cbuf->size);
+	dropbear_assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
 
 	if (cbuf->used == 0) {
 		TRACE(("cbuf_readlen: unused buffer"))
@@ -83,9 +83,9 @@ unsigned int cbuf_readlen(circbuffer *cbuf) {
 
 unsigned int cbuf_writelen(circbuffer *cbuf) {
 
-	assert(cbuf->used <= cbuf->size);
-	assert(((2*cbuf->size)+cbuf->writepos-cbuf->readpos)%cbuf->size == cbuf->used%cbuf->size);
-	assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
+	dropbear_assert(cbuf->used <= cbuf->size);
+	dropbear_assert(((2*cbuf->size)+cbuf->writepos-cbuf->readpos)%cbuf->size == cbuf->used%cbuf->size);
+	dropbear_assert(((2*cbuf->size)+cbuf->readpos-cbuf->writepos)%cbuf->size == (cbuf->size-cbuf->used)%cbuf->size);
 
 	if (cbuf->used == cbuf->size) {
 		TRACE(("cbuf_writelen: full buffer"))
@@ -122,7 +122,7 @@ void cbuf_incrwrite(circbuffer *cbuf, unsigned int len) {
 	}
 
 	cbuf->used += len;
-	assert(cbuf->used <= cbuf->size);
+	dropbear_assert(cbuf->used <= cbuf->size);
 	cbuf->writepos = (cbuf->writepos + len) % cbuf->size;
 }
 
@@ -132,7 +132,7 @@ void cbuf_incrread(circbuffer *cbuf, unsigned int len) {
 		dropbear_exit("bad cbuf read");
 	}
 
-	assert(cbuf->used >= len);
+	dropbear_assert(cbuf->used >= len);
 	cbuf->used -= len;
 	cbuf->readpos = (cbuf->readpos + len) % cbuf->size;
 }

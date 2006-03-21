@@ -63,9 +63,7 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
-#ifdef ENABLE_CLI_PUBKEY_AUTH
-	{SSH_MSG_USERAUTH_PK_OK, recv_msg_userauth_pk_ok}, /* client */
-#endif
+	{SSH_MSG_USERAUTH_SPECIFIC_60, recv_msg_userauth_specific_60}, /* client */
 	{0, 0} /* End */
 };
 
@@ -81,11 +79,13 @@ static const struct ChanType *cli_chantypes[] = {
 
 void cli_session(int sock, char* remotehost) {
 
+	seedrandom();
+
 	crypto_init();
+
 	common_session_init(sock, remotehost);
 
 	chaninitialise(cli_chantypes);
-
 
 	/* Set up cli_ses vars */
 	cli_session_init();
@@ -96,11 +96,7 @@ void cli_session(int sock, char* remotehost) {
 	/* Exchange identification */
 	session_identification();
 
-	seedrandom();
-
 	send_msg_kexinit();
-
-	/* XXX here we do stuff differently */
 
 	session_loop(cli_sessionloop);
 
@@ -288,7 +284,8 @@ static void cli_remoteclosed() {
 }
 
 /* Operates in-place turning dirty (untrusted potentially containing control
- * characters) text into clean text. */
+ * characters) text into clean text. 
+ * Note: this is safe only with ascii - other charsets could have problems. */
 void cleantext(unsigned char* dirtytext) {
 
 	unsigned int i, j;

@@ -35,7 +35,7 @@
 #include "random.h"
 
 /* diffie-hellman-group1-sha1 value for p */
-const unsigned char dh_p_val[] = {
+static const unsigned char dh_p_val[] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2,
     0x21, 0x68, 0xC2, 0x34, 0xC4, 0xC6, 0x62, 0x8B, 0x80, 0xDC, 0x1C, 0xD1,
 	0x29, 0x02, 0x4E, 0x08, 0x8A, 0x67, 0xCC, 0x74, 0x02, 0x0B, 0xBE, 0xA6,
@@ -47,8 +47,9 @@ const unsigned char dh_p_val[] = {
 	0xEE, 0x38, 0x6B, 0xFB, 0x5A, 0x89, 0x9F, 0xA5, 0xAE, 0x9F, 0x24, 0x11,
 	0x7C, 0x4B, 0x1F, 0xE6, 0x49, 0x28, 0x66, 0x51, 0xEC, 0xE6, 0x53, 0x81,
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
+#define DH_P_LEN sizeof(dh_p_val)
 
-const int DH_G_VAL = 2;
+static const int DH_G_VAL = 2;
 
 static void kexinitialise();
 void gen_new_keys();
@@ -393,18 +394,28 @@ static void gen_new_zstreams() {
 /* Belongs in common_kex.c where it should be moved after review */
 void recv_msg_kexinit() {
 	
+	unsigned int kexhashbuf_len = 0;
+	unsigned int remote_ident_len = 0;
+	unsigned int local_ident_len = 0;
+
 	TRACE(("<- KEXINIT"))
 	TRACE(("enter recv_msg_kexinit"))
 	
-	/* start the kex hash */
-	ses.kexhashbuf = buf_new(MAX_KEXHASHBUF);
-
 	if (!ses.kexstate.sentkexinit) {
 		/* we need to send a kex packet */
 		send_msg_kexinit();
 		TRACE(("continue recv_msg_kexinit: sent kexinit"))
 	}
 
+	/* start the kex hash */
+	local_ident_len = strlen(LOCAL_IDENT);
+	remote_ident_len = strlen((char*)ses.remoteident);
+
+	kexhashbuf_len = local_ident_len + remote_ident_len
+		+ ses.transkexinit->len + ses.payload->len
+		+ KEXHASHBUF_MAX_INTS;
+
+	ses.kexhashbuf = buf_new(kexhashbuf_len);
 
 	if (IS_DROPBEAR_CLIENT) {
 
@@ -413,20 +424,16 @@ void recv_msg_kexinit() {
 
 		/* V_C, the client's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf,
-			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
+			(unsigned char*)LOCAL_IDENT, local_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, 
-			ses.remoteident, strlen((char*)ses.remoteident));
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.transkexinit, ses.transkexinit->len),
-			ses.transkexinit->len);
+			ses.transkexinit->data, ses.transkexinit->len);
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.payload, ses.payload->len),
-			ses.payload->len);
+	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
 
 	} else {
 		/* SERVER */
@@ -434,21 +441,19 @@ void recv_msg_kexinit() {
 		/* read the peer's choice of algos */
 		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, 
-			ses.remoteident, strlen((char*)ses.remoteident));
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf,
-			(unsigned char*)LOCAL_IDENT, strlen(LOCAL_IDENT));
+	    buf_putstring(ses.kexhashbuf, 
+				(unsigned char*)LOCAL_IDENT, local_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.payload, ses.payload->len),
-			ses.payload->len);
+	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
+
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			buf_getptr(ses.transkexinit, ses.transkexinit->len),
-			ses.transkexinit->len);
+			ses.transkexinit->data, ses.transkexinit->len);
+
 		ses.requirenext = SSH_MSG_KEXDH_INIT;
 	}
 
@@ -621,7 +626,7 @@ static void read_kex_algos() {
 		erralgo = "enc c->s";
 		goto error;
 	}
-	TRACE(("c2s is  %s", c2s_cipher_algo->name))
+	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
@@ -629,7 +634,7 @@ static void read_kex_algos() {
 		erralgo = "enc s->c";
 		goto error;
 	}
-	TRACE(("s2c is  %s", s2c_cipher_algo->name))
+	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -637,6 +642,7 @@ static void read_kex_algos() {
 		erralgo = "mac c->s";
 		goto error;
 	}
+	TRACE(("hash c2s is  %s", c2s_hash_algo->name))
 
 	/* mac_algorithms_server_to_client */
 	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
@@ -644,6 +650,7 @@ static void read_kex_algos() {
 		erralgo = "mac s->c";
 		goto error;
 	}
+	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
 	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -651,6 +658,7 @@ static void read_kex_algos() {
 		erralgo = "comp c->s";
 		goto error;
 	}
+	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
 	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
@@ -658,6 +666,7 @@ static void read_kex_algos() {
 		erralgo = "comp s->c";
 		goto error;
 	}
+	TRACE(("hash s2c is  %s", s2c_comp_algo->name))
 
 	/* languages_client_to_server */
 	buf_eatstring(ses.payload);
@@ -699,13 +708,6 @@ static void read_kex_algos() {
 		ses.newkeys->recv_algo_comp = c2s_comp_algo->val;
 		ses.newkeys->trans_algo_comp = s2c_comp_algo->val;
 	}
-
-	TRACE(("enc algo recv %s", algo->name))
-	TRACE(("enc algo trans %s", algo->name))
-	TRACE(("mac algo recv %s", algo->name))
-	TRACE(("mac algo trans %s", algo->name))
-	TRACE(("comp algo recv %s", algo->name))
-	TRACE(("comp algo trans %s", algo->name))
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);

@@ -32,7 +32,6 @@
 #include "packet.h"
 #include "runopts.h"
 
-
 void cli_authinitialise() {
 
 	memset(&ses.authstate, 0, sizeof(ses.authstate));
@@ -99,6 +98,40 @@ out:
 	TRACE(("leave recv_msg_userauth_banner"))
 }
 
+/* This handles the message-specific types which
+ * all have a value of 60. These are
+ * SSH_MSG_USERAUTH_PASSWD_CHANGEREQ,
+ * SSH_MSG_USERAUTH_PK_OK, &
+ * SSH_MSG_USERAUTH_INFO_REQUEST. */
+void recv_msg_userauth_specific_60() {
+
+#ifdef ENABLE_CLI_PUBKEY_AUTH
+	if (cli_ses.lastauthtype == AUTH_TYPE_PUBKEY) {
+		recv_msg_userauth_pk_ok();
+		return;
+	}
+#endif
+
+#ifdef ENABLE_CLI_INTERACT_AUTH
+	if (cli_ses.lastauthtype == AUTH_TYPE_INTERACT) {
+		recv_msg_userauth_info_request();
+		return;
+	}
+#endif
+
+#ifdef ENABLE_CLI_PASSWORD_AUTH
+	if (cli_ses.lastauthtype == AUTH_TYPE_PASSWORD) {
+		/* Eventually there could be proper password-changing
+		 * support. However currently few servers seem to
+		 * implement it, and password auth is last-resort
+		 * regardless - keyboard-interactive is more likely
+		 * to be used anyway. */
+		dropbear_close("Your password has expired.");
+	}
+#endif
+
+	dropbear_exit("Unexpected userauth packet");
+}
 
 void recv_msg_userauth_failure() {
 
@@ -113,8 +146,7 @@ void recv_msg_userauth_failure() {
 
 	if (cli_ses.state != USERAUTH_REQ_SENT) {
 		/* Perhaps we should be more fatal? */
-		TRACE(("But we didn't send a userauth request!!!!!!"))
-		return;
+		dropbear_exit("Unexpected userauth failure");
 	}
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
@@ -124,6 +156,19 @@ void recv_msg_userauth_failure() {
 		cli_pubkeyfail();
 	}
 #endif
+
+#ifdef ENABLE_CLI_INTERACT_AUTH
+	/* If we get a failure message for keyboard interactive without
+	 * receiving any request info packet, then we don't bother trying
+	 * keyboard interactive again */
+	if (cli_ses.lastauthtype == AUTH_TYPE_INTERACT
+			&& !cli_ses.interact_request_received) {
+		TRACE(("setting auth_interact_failed = 1"))
+		cli_ses.auth_interact_failed = 1;
+	}
+#endif
+
+	cli_ses.lastauthtype = AUTH_TYPE_NONE;
 
 	methods = buf_getstring(ses.payload, &methlen);
 
@@ -157,6 +202,12 @@ void recv_msg_userauth_failure() {
 				ses.authstate.authtypes |= AUTH_TYPE_PUBKEY;
 			}
 #endif
+#ifdef ENABLE_CLI_INTERACT_AUTH
+			if (strncmp(AUTH_METHOD_INTERACT, tok,
+				AUTH_METHOD_INTERACT_LEN) == 0) {
+				ses.authstate.authtypes |= AUTH_TYPE_INTERACT;
+			}
+#endif
 #ifdef ENABLE_CLI_PASSWORD_AUTH
 			if (strncmp(AUTH_METHOD_PASSWORD, tok,
 				AUTH_METHOD_PASSWORD_LEN) == 0) {
@@ -180,6 +231,7 @@ void recv_msg_userauth_success() {
 	TRACE(("received msg_userauth_success"))
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;
+	cli_ses.lastauthtype = AUTH_TYPE_NONE;
 }
 
 void cli_auth_try() {
@@ -189,7 +241,8 @@ void cli_auth_try() {
 
 	CHECKCLEARTOWRITE();
 	
-	/* XXX We hardcode that we try a pubkey first */
+	/* Order to try is pubkey, interactive, password.
+	 * As soon as "finished" is set for one, we don't do any more. */
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
 		finished = cli_auth_pubkey();
@@ -197,16 +250,46 @@ void cli_auth_try() {
 	}
 #endif
 
+#ifdef ENABLE_CLI_INTERACT_AUTH
+	if (!finished && ses.authstate.authtypes & AUTH_TYPE_INTERACT) {
+		if (cli_ses.auth_interact_failed) {
+			finished = 0;
+		} else {
+			cli_auth_interactive();
+			cli_ses.lastauthtype = AUTH_TYPE_INTERACT;
+			finished = 1;
+		}
+	}
+#endif
+
 #ifdef ENABLE_CLI_PASSWORD_AUTH
 	if (!finished && ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
-		finished = cli_auth_password();
+		cli_auth_password();
+		finished = 1;
 		cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;
 	}
 #endif
+
+	TRACE(("cli_auth_try lastauthtype %d", cli_ses.lastauthtype))
 
 	if (!finished) {
 		dropbear_exit("No auth methods could be used.");
 	}
 
 	TRACE(("leave cli_auth_try"))
+}
+
+/* A helper for getpass() that exits if the user cancels. The returned
+ * password is statically allocated by getpass() */
+char* getpass_or_cancel()
+{
+	char* password = NULL;
+
+	password = getpass("Password: ");
+
+	/* 0x03 is a ctrl-c character in the buffer. */
+	if (password == NULL || strchr(password, '\3') != NULL) {
+		dropbear_close("Interrupted.");
+	}
+	return password;
 }
