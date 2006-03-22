@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "signkey.h"
 #include "runopts.h"
+#include "random.h"
 
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);

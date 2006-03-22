@@ -31,7 +31,8 @@ static int donerandinit = 0;
 
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
-#define MAX_COUNTER 1<<31 /* the max value for the counter, so it won't loop */
+/* the max value for the counter, so it won't integer overflow */
+#define MAX_COUNTER 1<<30 
 
 static unsigned char hashpool[SHA1_HASH_SIZE];
 
@@ -167,7 +168,6 @@ void reseedrandom() {
     gettimeofday(&tv, NULL);
 
 	hash_state hs;
-	unsigned char hash[SHA1_HASH_SIZE];
 	sha1_init(&hs);
 	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
 	sha1_process(&hs, (void*)&pid, sizeof(pid));
