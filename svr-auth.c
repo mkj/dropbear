@@ -315,13 +315,14 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	buf_setpos(typebuf, 0);
 	buf_putstring(ses.writepayload, buf_getptr(typebuf, typebuf->len),
 			typebuf->len);
+
+	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
+				buf_getptr(typebuf, typebuf->len)));
+
 	buf_free(typebuf);
 
 	buf_putbyte(ses.writepayload, partial ? 1 : 0);
 	encrypt_packet();
-
-	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
-				buf_getptr(typebuf, typebuf->len)));
 
 	if (incrfail) {
 		usleep(300000); /* XXX improve this */

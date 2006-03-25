@@ -236,8 +236,8 @@ void recv_msg_userauth_success() {
 
 void cli_auth_try() {
 
-	TRACE(("enter cli_auth_try"))
 	int finished = 0;
+	TRACE(("enter cli_auth_try"))
 
 	CHECKCLEARTOWRITE();
 	
