@@ -162,13 +162,13 @@ void cli_tty_cleanup() {
 
 static void put_termcodes() {
 
-	TRACE(("enter put_termcodes"))
-
 	struct termios tio;
 	unsigned int sshcode;
 	const struct TermCode *termcode;
 	unsigned int value;
 	unsigned int mapcode;
+
+	TRACE(("enter put_termcodes"))
 
 	unsigned int bufpos1, bufpos2;
 
