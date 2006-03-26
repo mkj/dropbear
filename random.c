@@ -134,7 +134,7 @@ void seedrandom() {
 	hash_state hs;
 
 	/* initialise so that things won't warn about
-     * hashing an undefined buffer */
+	 * hashing an undefined buffer */
 	if (!donerandinit) {
 		m_burn(hashpool, sizeof(hashpool));
 	}
@@ -157,17 +157,17 @@ void seedrandom() {
  * the random pools for fork()ed processes. */
 void reseedrandom() {
 
-    pid_t pid;
-    struct timeval tv;
+	pid_t pid;
+	hash_state hs;
+	struct timeval tv;
 
 	if (!donerandinit) {
 		dropbear_exit("seedrandom not done");
 	}
 
-    pid = getpid();
-    gettimeofday(&tv, NULL);
+	pid = getpid();
+	gettimeofday(&tv, NULL);
 
-	hash_state hs;
 	sha1_init(&hs);
 	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
 	sha1_process(&hs, (void*)&pid, sizeof(pid));

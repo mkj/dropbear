@@ -168,9 +168,9 @@ static void put_termcodes() {
 	unsigned int value;
 	unsigned int mapcode;
 
-	TRACE(("enter put_termcodes"))
-
 	unsigned int bufpos1, bufpos2;
+
+	TRACE(("enter put_termcodes"))
 
 	if (tcgetattr(STDIN_FILENO, &tio) == -1) {
 		dropbear_log(LOG_WARNING, "Failed reading termmodes");
