@@ -31,7 +31,8 @@ static int donerandinit = 0;
 
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
-#define MAX_COUNTER 1<<31 /* the max value for the counter, so it won't loop */
+/* the max value for the counter, so it won't integer overflow */
+#define MAX_COUNTER 1<<30 
 
 static unsigned char hashpool[SHA1_HASH_SIZE];
 
@@ -129,7 +130,7 @@ void seedrandom() {
 	hash_state hs;
 
 	/* initialise so that things won't warn about
-     * hashing an undefined buffer */
+	 * hashing an undefined buffer */
 	if (!donerandinit) {
 		m_burn(hashpool, sizeof(hashpool));
 	}
@@ -152,18 +153,17 @@ void seedrandom() {
  * the random pools for fork()ed processes. */
 void reseedrandom() {
 
-    pid_t pid;
-    struct timeval tv;
+	pid_t pid;
+	hash_state hs;
+	struct timeval tv;
 
 	if (!donerandinit) {
 		dropbear_exit("seedrandom not done");
 	}
 
-    pid = getpid();
-    gettimeofday(&tv, NULL);
+	pid = getpid();
+	gettimeofday(&tv, NULL);
 
-	hash_state hs;
-	unsigned char hash[SHA1_HASH_SIZE];
 	sha1_init(&hs);
 	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
 	sha1_process(&hs, (void*)&pid, sizeof(pid));

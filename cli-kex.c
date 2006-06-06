@@ -145,6 +145,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	FILE *hostsfile = NULL;
 	int readonly = 0;
 	struct passwd *pw = NULL;
+	char * homedir = NULL;
 	unsigned int hostlen, algolen;
 	unsigned long len;
 	const char *algoname = NULL;
@@ -153,41 +154,50 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	
 	pw = getpwuid(getuid());
 
-	if (pw == NULL) {
-		dropbear_exit("Failed to get homedir");
+	if (pw)
+		homedir = pw->pw_dir;
+	}
+	pw = NULL;
+
+	if (!homedir)
+		homedir = getenv("HOME");
 	}
 
-	len = strlen(pw->pw_dir);
-	filename = m_malloc(len + 18); /* "/.ssh/known_hosts" and null-terminator*/
+	if (homedir) {
 
-	snprintf(filename, len+18, "%s/.ssh", pw->pw_dir);
-	/* Check that ~/.ssh exists - easiest way is just to mkdir */
-	if (mkdir(filename, S_IRWXU) != 0) {
-		if (errno != EEXIST) {
-			dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
-					strerror(errno));
-			TRACE(("mkdir didn't work: %s", strerror(errno)))
-			ask_to_confirm(keyblob, keybloblen);
-			goto out; /* only get here on success */
+		len = strlen(homedir);
+		filename = m_malloc(len + 18); /* "/.ssh/known_hosts" and null-terminator*/
+
+		snprintf(filename, len+18, "%s/.ssh", homedir);
+		/* Check that ~/.ssh exists - easiest way is just to mkdir */
+		if (mkdir(filename, S_IRWXU) != 0) {
+			if (errno != EEXIST) {
+				dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
+						strerror(errno));
+				TRACE(("mkdir didn't work: %s", strerror(errno)))
+				ask_to_confirm(keyblob, keybloblen);
+				goto out; /* only get here on success */
+			}
 		}
-	}
 
-	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
-	hostsfile = fopen(filename, "a+");
-	
-	if (hostsfile != NULL) {
-		fseek(hostsfile, 0, SEEK_SET);
-	} else {
-		/* We mightn't have been able to open it if it was read-only */
-		if (errno == EACCES || errno == EROFS) {
-				TRACE(("trying readonly: %s", strerror(errno)))
-				readonly = 1;
-				hostsfile = fopen(filename, "r");
+		snprintf(filename, len+18, "%s/.ssh/known_hosts", homedir);
+		hostsfile = fopen(filename, "a+");
+		
+		if (hostsfile != NULL) {
+			fseek(hostsfile, 0, SEEK_SET);
+		} else {
+			/* We mightn't have been able to open it if it was read-only */
+			if (errno == EACCES || errno == EROFS) {
+					TRACE(("trying readonly: %s", strerror(errno)))
+					readonly = 1;
+					hostsfile = fopen(filename, "r");
+			}
 		}
 	}
 
 	if (hostsfile == NULL) {
 		TRACE(("hostsfile didn't open: %s", strerror(errno)))
+		dropbear_log(LOG_WARNING, "Failed to open ~/.ssh/known_hosts");
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}

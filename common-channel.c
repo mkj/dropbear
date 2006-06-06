@@ -236,7 +236,7 @@ static void checkclose(struct Channel *channel) {
 	TRACE(("checkclose: writefd %d, readfd %d, errfd %d, sentclosed %d, recvclosed %d",
 				channel->writefd, channel->readfd,
 				channel->errfd, channel->sentclosed, channel->recvclosed))
-	TRACE(("writebuf %d extrabuf %s extrabuf %d",
+	TRACE(("writebuf size %d extrabuf ptr 0x%x extrabuf size %d",
 				cbuf_getused(channel->writebuf),
 				channel->writebuf,
 				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)))

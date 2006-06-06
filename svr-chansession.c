@@ -410,7 +410,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	
 	pty_change_window_size(chansess->master, termr, termc, termw, termh);
 
-	return DROPBEAR_FAILURE;
+	return DROPBEAR_SUCCESS;
 }
 
 static void get_termmodes(struct ChanSess *chansess) {
