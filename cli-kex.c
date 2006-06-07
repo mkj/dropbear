@@ -152,15 +152,14 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	buffer * line = NULL;
 	int ret;
 	
-	pw = getpwuid(getuid());
+	homedir = getenv("HOME");
 
-	if (pw)
-		homedir = pw->pw_dir;
-	}
-	pw = NULL;
-
-	if (!homedir)
-		homedir = getenv("HOME");
+	if (!homedir) {
+		pw = getpwuid(getuid());
+		if (pw) {
+			homedir = pw->pw_dir;
+		}
+		pw = NULL;
 	}
 
 	if (homedir) {
@@ -172,8 +171,8 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		/* Check that ~/.ssh exists - easiest way is just to mkdir */
 		if (mkdir(filename, S_IRWXU) != 0) {
 			if (errno != EEXIST) {
-				dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
-						strerror(errno));
+				dropbear_log(LOG_INFO, "Warning: failed creating %s/.ssh: %s",
+						homedir, strerror(errno));
 				TRACE(("mkdir didn't work: %s", strerror(errno)))
 				ask_to_confirm(keyblob, keybloblen);
 				goto out; /* only get here on success */
@@ -197,7 +196,8 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 	if (hostsfile == NULL) {
 		TRACE(("hostsfile didn't open: %s", strerror(errno)))
-		dropbear_log(LOG_WARNING, "Failed to open ~/.ssh/known_hosts");
+		dropbear_log(LOG_WARNING, "Failed to open %s/.ssh/known_hosts",
+				homedir);
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}
