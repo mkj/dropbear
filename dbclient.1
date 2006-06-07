@@ -29,24 +29,23 @@ Read the identity from file
 .I idfile
 (multiple allowed).
 .TP
-.B \-L \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+.B \-L \fIlistenport\fR:\fIhost\fR:\fIport\fR
 Local port forwarding.
 Forward the port
-.I localport
-on the local host to port
-.I remoteport
-on the remote host
-.IR remotehost .
+.I listenport
+on the local host through the SSH connection to port
+.I port
+on the host
+.IR host .
 .TP
-.B \-R \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+.B \-R \fIlistenport\fR:\fIhost\fR:\fIport\fR
 Remote port forwarding.
 Forward the port
-.I remoteport
-on the remote host
-.I remotehost
-to port
-.I localport
-on the local host.
+.I listenport
+on the remote host through the SSH connection to port
+.I port
+on the host
+.IR host .
 .TP
 .B \-l \fIuser
 Username.
