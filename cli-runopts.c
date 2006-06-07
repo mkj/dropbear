@@ -51,6 +51,7 @@ static void printhelp() {
 					"-t    Allocate a pty\n"
 					"-T    Don't allocate a pty\n"
 					"-N    Don't run a remote command\n"
+					"-f    Run in background after auth\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
@@ -90,6 +91,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
 	cli_opts.no_cmd = 0;
+	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = NULL;
@@ -167,6 +169,9 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'N':
 					cli_opts.no_cmd = 1;
+					break;
+				case 'f':
+					cli_opts.backgrounded = 1;
 					break;
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':
@@ -273,6 +278,11 @@ void cli_getopts(int argc, char ** argv) {
 		} else {
 			cli_opts.wantpty = 0;
 		}
+	}
+
+	if (cli_opts.backgrounded && cli_opts.cmd == NULL
+			&& cli_opts.no_cmd == 0) {
+		dropbear_exit("command required for -f");
 	}
 }
 

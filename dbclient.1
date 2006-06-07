@@ -63,6 +63,10 @@ Don't allocate a pty.
 .B \-N
 Don't request a remote shell or run any commands. Any command arguments are ignored.
 .TP
+.B \-f
+Fork into the background after authentication. A command argument (or -N) is required.
+This is useful when using password authentication.
+.TP
 .B \-g
 Allow non-local hosts to connect to forwarded ports. Applies to -L and -R
 forwarded ports, though remote connections to -R forwarded ports may be limited
