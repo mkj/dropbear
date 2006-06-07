@@ -83,6 +83,7 @@ typedef struct svr_runopts {
 
 	sign_key *hostkey;
 	buffer * banner;
+	char * pidfile;
 
 } svr_runopts;
 
