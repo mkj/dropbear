@@ -19,9 +19,12 @@ fi
 AC_SUBST(LD)	
 
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
-	AC_MSG_RESULT(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
+	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
 	CFLAGS="-Os -W -Wall"
 fi
+
+# large file support is useful for scp
+AC_SYS_LARGEFILE
 
 # Host specific options
 # this isn't a definitive list of hosts, they are just added as required
@@ -75,7 +78,7 @@ dnl Can't use login() or logout() with uclibc
 AC_CHECK_DECL(__UCLIBC__, 
 	[
 	no_loginfunc_check=1
-	AC_MSG_RESULT(Using uClibc - login() and logout() probably don't work, so we won't use them.)
+	AC_MSG_NOTICE([Using uClibc - login() and logout() probably don't work, so we won't use them.])
 	],,,)
 
 # Checks for libraries.
@@ -104,16 +107,16 @@ AC_ARG_ENABLE(zlib,
 	[
 		if test "x$enableval" = "xno"; then
 			AC_DEFINE(DISABLE_ZLIB,, Use zlib)
-			AC_MSG_RESULT(Disabling zlib)
+			AC_MSG_NOTICE(Disabling zlib)
 		else
 			AC_CHECK_LIB(z, deflate, , AC_MSG_ERROR([*** zlib missing - install first or check config.log ***]))
-			AC_MSG_RESULT(Enabling zlib)
+			AC_MSG_NOTICE(Enabling zlib)
 		fi
 	],
 	[
 		# if not disabled, check for zlib
 		AC_CHECK_LIB(z, deflate, , AC_MSG_ERROR([*** zlib missing - install first or check config.log ***]))
-		AC_MSG_RESULT(Enabling zlib)
+		AC_MSG_NOTICE(Enabling zlib)
 	]
 )
 
@@ -141,16 +144,16 @@ AC_ARG_ENABLE(pam,
 	[
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
-			AC_MSG_RESULT(Enabling PAM)
+			AC_MSG_NOTICE(Enabling PAM)
 		else
 			AC_DEFINE(DISABLE_PAM,, Use PAM)
-			AC_MSG_RESULT(Disabling PAM)
+			AC_MSG_NOTICE(Disabling PAM)
 		fi
 	],
 	[
 		# disable it by default
 		AC_DEFINE(DISABLE_PAM,, Use PAM)
-		AC_MSG_RESULT(Disabling PAM)
+		AC_MSG_NOTICE(Disabling PAM)
 	]
 )
 
@@ -158,14 +161,14 @@ AC_ARG_ENABLE(openpty,
 	[  --disable-openpty       Don't use openpty, use alternative method],
 	[
 		if test "x$enableval" = "xno"; then
-			AC_MSG_RESULT(Not using openpty)
+			AC_MSG_NOTICE(Not using openpty)
 		else
-			AC_MSG_RESULT(Using openpty if available)
+			AC_MSG_NOTICE(Using openpty if available)
 			AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY,,Have openpty() function)])
 		fi
 	],
 	[
-		AC_MSG_RESULT(Using openpty if available)
+		AC_MSG_NOTICE(Using openpty if available)
 		AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY)])
 	]
 )
@@ -176,13 +179,13 @@ AC_ARG_ENABLE(syslog,
 	[
 		if test "x$enableval" = "xno"; then
 			AC_DEFINE(DISABLE_SYSLOG,, Using syslog)
-			AC_MSG_RESULT(Disabling syslog)
+			AC_MSG_NOTICE(Disabling syslog)
 		else
-			AC_MSG_RESULT(Enabling syslog)
+			AC_MSG_NOTICE(Enabling syslog)
 		fi
 	],
 	[
-		AC_MSG_RESULT(Enabling syslog)
+		AC_MSG_NOTICE(Enabling syslog)
 	]
 )
 
@@ -190,15 +193,15 @@ AC_ARG_ENABLE(shadow,
 	[  --disable-shadow        Don't use shadow passwords (if available)],
 	[
 		if test "x$enableval" = "xno"; then
-			AC_MSG_RESULT(Not using shadow passwords)
+			AC_MSG_NOTICE(Not using shadow passwords)
 		else
 			AC_CHECK_HEADERS([shadow.h])
-			AC_MSG_RESULT(Using shadow passwords if available)
+			AC_MSG_NOTICE(Using shadow passwords if available)
 		fi
 	],
 	[
 		AC_CHECK_HEADERS([shadow.h])
-		AC_MSG_RESULT(Using shadow passwords if available)
+		AC_MSG_NOTICE(Using shadow passwords if available)
 	]
 )
 			
@@ -379,7 +382,7 @@ AC_ARG_ENABLE(wtmpx,
 AC_ARG_ENABLE(loginfunc,
 	[  --disable-loginfunc     Disable use of login() etc. [no]],
 	[ no_loginfunc_check=1
-	AC_MSG_RESULT(Not using login() etc) ]
+	AC_MSG_NOTICE(Not using login() etc) ]
 )
 AC_ARG_ENABLE(pututline,
 	[  --disable-pututline     Disable use of pututline() etc. ([uw]tmp) [no]],
@@ -596,7 +599,7 @@ if test -z "$no_ptmx_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
 		AC_CHECK_FILE("/dev/ptmx", AC_DEFINE(USE_DEV_PTMX,,Use /dev/ptmx))
 	else
-		AC_MSG_RESULT(Not checking for /dev/ptmx, we're cross-compiling)
+		AC_MSG_NOTICE(Not checking for /dev/ptmx, we're cross-compiling)
 	fi
 fi
 
@@ -604,7 +607,7 @@ if test -z "$no_ptc_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
 		AC_CHECK_FILE("/dev/ptc", AC_DEFINE(HAVE_DEV_PTS_AND_PTC,,Use /dev/ptc & /dev/pts))
 	else
-		AC_MSG_RESULT(Not checking for /dev/ptc & /dev/pts\, we're cross-compiling)
+		AC_MSG_NOTICE(Not checking for /dev/ptc & /dev/pts\, we're cross-compiling)
 	fi
 fi
 
@@ -613,5 +616,5 @@ AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
 AC_OUTPUT(libtomcrypt/Makefile)
 AC_OUTPUT(libtommath/Makefile)
-AC_MSG_RESULT()
-AC_MSG_RESULT(Now edit options.h to choose features.)
+AC_MSG_NOTICE()
+AC_MSG_NOTICE(Now edit options.h to choose features.)
