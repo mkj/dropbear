@@ -321,8 +321,7 @@ static void printpubkey(sign_key * key, int keytype) {
 	/* a user@host comment is informative */
 	username = "";
 	pw = getpwuid(getuid());
-	if (pw)
-	{
+	if (pw) {
 		username = pw->pw_name;
 	}
 

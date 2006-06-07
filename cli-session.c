@@ -218,13 +218,15 @@ static void cli_sessionloop() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 			setup_remotetcp();
 #endif
-			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
+			if (!cli_opts.no_cmd) {
+				cli_send_chansess_request();
+			}
+			TRACE(("leave cli_sessionloop: running"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
 
 		case SESSION_RUNNING:
-			if (ses.chancount < 1) {
+			if (ses.chancount < 1 && !cli_opts.no_cmd) {
 				cli_finished();
 			}
 
