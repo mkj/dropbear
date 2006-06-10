@@ -128,7 +128,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
-/*#define ENABLE_SVR_PAM_AUTH*/
+/* #define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -161,6 +161,13 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
+/* The first setting is per-IP, to avoid denial of service */
+#ifndef MAX_UNAUTH_PER_IP
+#define MAX_UNAUTH_PER_IP 5
+#endif
+
+/* And then a global limit to avoid chewing memory if connections 
+ * come from many IPs */
 #ifndef MAX_UNAUTH_CLIENTS
 #define MAX_UNAUTH_CLIENTS 30
 #endif
@@ -200,7 +207,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.46"
+#define DROPBEAR_VERSION "0.48"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -243,7 +250,12 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
 								 ipv4 and ipv6 don't count twice */
 
+/* Each port might have at least a v4 and a v6 address */
+#define MAX_LISTEN_ADDR (DROPBEAR_MAX_PORTS*3)
+
 #define _PATH_TTY "/dev/tty"
+
+#define _PATH_CP "/bin/cp"
 
 /* Timeouts in seconds */
 #define SELECT_TIMEOUT 20
@@ -291,7 +303,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_PROPOSED_ALGO 20
 
 /* size/count limits */
-#define MAX_LISTEN_ADDR 10
 
 #define MAX_PACKET_LEN 35000
 #define MIN_PACKET_LEN 16

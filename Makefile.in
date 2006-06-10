@@ -69,7 +69,8 @@ AR=@AR@
 RANLIB=@RANLIB@
 STRIP=@STRIP@
 INSTALL=@INSTALL@
-CFLAGS=-I. -I$(srcdir)/libtomcrypt/src/headers/ @CFLAGS@
+CPPFLAGS=@CPPFLAGS@
+CFLAGS=-I. -I$(srcdir)/libtomcrypt/src/headers/ $(CPPFLAGS) @CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
 

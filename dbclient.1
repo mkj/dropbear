@@ -29,24 +29,23 @@ Read the identity from file
 .I idfile
 (multiple allowed).
 .TP
-.B \-L \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+.B \-L \fIlistenport\fR:\fIhost\fR:\fIport\fR
 Local port forwarding.
 Forward the port
-.I localport
-on the local host to port
-.I remoteport
-on the remote host
-.IR remotehost .
+.I listenport
+on the local host through the SSH connection to port
+.I port
+on the host
+.IR host .
 .TP
-.B \-R \fIlocalport\fR:\fIremotehost\fR:\fIremoteport\fR
+.B \-R \fIlistenport\fR:\fIhost\fR:\fIport\fR
 Remote port forwarding.
 Forward the port
-.I remoteport
-on the remote host
-.I remotehost
-to port
-.I localport
-on the local host.
+.I listenport
+on the remote host through the SSH connection to port
+.I port
+on the host
+.IR host .
 .TP
 .B \-l \fIuser
 Username.
@@ -59,6 +58,13 @@ Allocate a pty.
 .TP
 .B \-T
 Don't allocate a pty.
+.TP
+.B \-N
+Don't request a remote shell or run any commands. Any command arguments are ignored.
+.TP
+.B \-f
+Fork into the background after authentication. A command argument (or -N) is required.
+This is useful when using password authentication.
 .TP
 .B \-g
 Allow non-local hosts to connect to forwarded ports. Applies to -L and -R

@@ -47,7 +47,7 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 
 	int fd;
 	struct sockaddr_storage addr;
-	int len;
+	socklen_t len;
 	char ipstring[NI_MAXHOST], portstring[NI_MAXSERV];
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 

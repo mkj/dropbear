@@ -72,6 +72,8 @@ static void printhelp(const char * progname) {
 #endif
 					"-p port		Listen on specified tcp port, up to %d can be specified\n"
 					"		(default %s if none specified)\n"
+					"-P PidFile	Create pid file PidFile\n"
+					"		(default %s)\n"
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif
@@ -85,7 +87,7 @@ static void printhelp(const char * progname) {
 #ifdef DROPBEAR_RSA
 					RSA_PRIV_FILENAME,
 #endif
-					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT);
+					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE);
 }
 
 void svr_getopts(int argc, char ** argv) {
@@ -105,8 +107,13 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
+	svr_opts.pidfile = DROPBEAR_PIDFILE;
+#ifdef ENABLE_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
+#endif
+#ifdef ENABLE_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -154,12 +161,12 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.usingsyslog = 0;
 					break;
 #endif
-#ifndef DISABLE_LOCALTCPFWD
+#ifdef ENABLE_SVR_LOCALTCPFWD
 				case 'j':
 					svr_opts.nolocaltcp = 1;
 					break;
 #endif
-#ifndef DISABLE_REMOTETCPFWD
+#ifdef ENABLE_SVR_REMOTETCPFWD
 				case 'k':
 					svr_opts.noremotetcp = 1;
 					break;
@@ -180,6 +187,9 @@ void svr_getopts(int argc, char ** argv) {
 						 * decrement it after the loop */
 						svr_opts.portcount++;
 					}
+					break;
+				case 'P':
+					next = &svr_opts.pidfile;
 					break;
 #ifdef DO_MOTD
 				/* motd is displayed by default, -m turns it off */

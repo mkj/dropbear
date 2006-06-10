@@ -125,10 +125,7 @@ void cli_auth_password() {
 		password = gui_getpass("Password: ");
 	else
 #endif
-		password = getpass("Password: ");
-
-	if (password == NULL)
-		return 0;
+		password = getpass_or_cancel("Password: ");
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 

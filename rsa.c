@@ -264,7 +264,6 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	DEF_MP_INT(rsa_tmp1);
 	DEF_MP_INT(rsa_tmp2);
 	DEF_MP_INT(rsa_tmp3);
-	unsigned char *tmpbuf;
 	
 	TRACE(("enter buf_put_rsa_sign"))
 	dropbear_assert(key != NULL);
