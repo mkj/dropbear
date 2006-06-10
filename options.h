@@ -250,6 +250,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
 								 ipv4 and ipv6 don't count twice */
 
+/* Each port might have at least a v4 and a v6 address */
+#define MAX_LISTEN_ADDR (DROPBEAR_MAX_PORTS*3)
+
 #define _PATH_TTY "/dev/tty"
 
 #define _PATH_CP "/bin/cp"
@@ -300,7 +303,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_PROPOSED_ALGO 20
 
 /* size/count limits */
-#define MAX_LISTEN_ADDR 10
 
 #define MAX_PACKET_LEN 35000
 #define MIN_PACKET_LEN 16
