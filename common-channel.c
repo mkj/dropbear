@@ -273,14 +273,14 @@ static void checkclose(struct Channel *channel) {
 
 	if (!channel->senteof
 		&& channel->readfd == FD_CLOSED 
-		&& (channel->extrabuf == NULL || channel->errfd == FD_CLOSED)) {
+		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_eof(channel);
 	}
 
 	if (!channel->sentclosed
 		&& channel->writefd == FD_CLOSED
 		&& channel->readfd == FD_CLOSED
-		&& (channel->extrabuf == NULL || channel->errfd == FD_CLOSED)) {
+		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_close(channel);
 	}
 
