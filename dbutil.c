@@ -400,7 +400,10 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
-	 * of the specific structure. */
+	 * of the specific structure. Some older linux systems (glibc 2.1.3
+	 * such as debian potato) have sockaddr_storage.__ss_family instead
+	 * but we'll ignore them */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -408,6 +411,7 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf), 
@@ -448,6 +452,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
 	 * of the specific structure. */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -455,6 +460,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 
