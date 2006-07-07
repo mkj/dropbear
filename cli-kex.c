@@ -122,6 +122,7 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n)\n", 
 			cli_opts.remotehost, 
 			fp);
+	m_free(fp);
 
 	tty = fopen(_PATH_TTY, "r");
 	if (tty) {
@@ -132,7 +133,6 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	}
 
 	if (response == 'y') {
-		m_free(fp);
 		return;
 	}
 

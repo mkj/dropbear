@@ -285,18 +285,29 @@ void buf_put_rsa_sign(buffer* buf, rsa_key *key, const unsigned char* data,
 	/* rsa_tmp1 is em */
 	/* em' = em * r^e mod n */
 
-	mp_exptmod(&rsa_tmp2, key->e, key->n, &rsa_s); /* rsa_s used as a temp var*/
-	mp_invmod(&rsa_tmp2, key->n, &rsa_tmp3);
-	mp_mulmod(&rsa_tmp1, &rsa_s, key->n, &rsa_tmp2);
+	/* rsa_s used as a temp var*/
+	if (mp_exptmod(&rsa_tmp2, key->e, key->n, &rsa_s) != MP_OKAY) {
+		dropbear_exit("rsa error");
+	}
+	if (mp_invmod(&rsa_tmp2, key->n, &rsa_tmp3) != MP_OKAY) {
+		dropbear_exit("rsa error");
+	}
+	if (mp_mulmod(&rsa_tmp1, &rsa_s, key->n, &rsa_tmp2) != MP_OKAY) {
+		dropbear_exit("rsa error");
+	}
 
 	/* rsa_tmp2 is em' */
 	/* s' = (em')^d mod n */
-	mp_exptmod(&rsa_tmp2, key->d, key->n, &rsa_tmp1);
+	if (mp_exptmod(&rsa_tmp2, key->d, key->n, &rsa_tmp1) != MP_OKAY) {
+		dropbear_exit("rsa error");
+	}
 
 	/* rsa_tmp1 is s' */
 	/* rsa_tmp3 is r^(-1) mod n */
 	/* s = (s')r^(-1) mod n */
-	mp_mulmod(&rsa_tmp1, &rsa_tmp3, key->n, &rsa_s);
+	if (mp_mulmod(&rsa_tmp1, &rsa_tmp3, key->n, &rsa_s) != MP_OKAY) {
+		dropbear_exit("rsa error");
+	}
 
 #else
 

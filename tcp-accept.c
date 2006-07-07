@@ -131,7 +131,6 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 			tcp_acceptor, cleanup_tcp);
 
 	if (listener == NULL) {
-		m_free(tcpinfo);
 		TRACE(("leave listen_tcpfwd: listener failed"))
 		return DROPBEAR_FAILURE;
 	}

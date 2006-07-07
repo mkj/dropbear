@@ -338,7 +338,9 @@ void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
 	/* generate k */
 	m_mp_init(&dss_protok);
 	bytes_to_mp(&dss_protok, proto_k, SHA512_HASH_SIZE);
-	mp_mod(&dss_protok, key->q, &dss_k);
+	if (mp_mod(&dss_protok, key->q, &dss_k) != MP_OKAY) {
+		dropbear_exit("dss error");
+	}
 	mp_clear(&dss_protok);
 	m_burn(proto_k, SHA512_HASH_SIZE);
 #else /* DSS_PROTOK not defined*/

@@ -112,6 +112,7 @@ void recv_msg_userauth_pk_ok() {
 		/* Success */
 		break;
 	}
+	buf_free(keybuf);
 
 	if (keyitem != NULL) {
 		TRACE(("matching key"))

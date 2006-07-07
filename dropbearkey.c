@@ -283,8 +283,10 @@ out:
 	buf_burn(buf);
 	buf_free(buf);
 	buf = NULL;
-	sign_key_free(key);
-	key = NULL;
+	if (key) {
+		sign_key_free(key);
+		key = NULL;
+	}
 	exit(err);
 }
 
