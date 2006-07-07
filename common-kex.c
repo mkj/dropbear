@@ -262,6 +262,7 @@ void gen_new_keys() {
 	hash_state hs;
 	unsigned int C2S_keysize, S2C_keysize;
 	char mactransletter, macrecvletter; /* Client or server specific */
+	int recv_cipher = 0, trans_cipher = 0;
 
 	TRACE(("enter gen_new_keys"))
 	/* the dh_K and hash are the start of all hashes, we make use of that */
@@ -298,17 +299,20 @@ void gen_new_keys() {
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
-	if (cbc_start(
-		find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
-			recv_IV, recv_key, 
+	recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
+	if (recv_cipher < 0)
+	    dropbear_exit("crypto error");
+		
+	if (cbc_start(recv_cipher, recv_IV, recv_key, 
 			ses.newkeys->recv_algo_crypt->keysize, 0, 
 			&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
 		dropbear_exit("crypto error");
 	}
-
-	if (cbc_start(
-		find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name),
-			trans_IV, trans_key, 
+	trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
+	if (trans_cipher < 0)
+	    dropbear_exit("crypto error");
+		
+	if (cbc_start(trans_cipher, trans_IV, trans_key, 
 			ses.newkeys->trans_algo_crypt->keysize, 0, 
 			&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
 		dropbear_exit("crypto error");
@@ -517,7 +521,7 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 	hash_state hs;
 
 	/* read the prime and generator*/
-	mp_init(&dh_p);
+	m_mp_init(&dh_p);
 	bytes_to_mp(&dh_p, dh_p_val, DH_P_LEN);
 
 	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
