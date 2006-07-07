@@ -269,7 +269,9 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   }
 
   if (d != NULL) {
-    mp_div_2d (&x, norm, &x, NULL);
+    if ((res = mp_div_2d (&x, norm, &x, NULL)) != MP_OKAY) {
+		goto LBL_Y;
+	}
     mp_exch (&x, d);
   }
 
