@@ -88,6 +88,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+
+		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -99,7 +101,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (i == svr_ses.childpidsize) {
+		if (!exit) {
 			exit = &svr_ses.lastexit;
 		}
 
@@ -118,7 +120,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
-		exit = NULL;
 	}
 
 	
