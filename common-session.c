@@ -229,7 +229,7 @@ void session_identification() {
 	/* write our version string, this blocks */
 	if (atomicio(write, ses.sock, LOCAL_IDENT "\r\n",
 				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
-		dropbear_exit("Error writing ident string");
+		ses.remoteclosed();
 	}
 
     /* If they send more than 50 lines, something is wrong */
@@ -250,7 +250,7 @@ void session_identification() {
 
 	if (!done) {
 		TRACE(("err: %s for '%s'\n", strerror(errno), linebuf))
-		dropbear_exit("Failed to get remote version");
+		ses.remoteclosed();
 	} else {
 		/* linebuf is already null terminated */
 		ses.remoteident = m_malloc(len);
