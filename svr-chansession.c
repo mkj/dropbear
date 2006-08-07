@@ -588,6 +588,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 
+#ifdef LOG_COMMANDS
+	if (chansess->cmd) {
+		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+						ses.authstate.printableuser, chansess->cmd);
+	} else {
+		dropbear_log(LOG_INFO, "user %s executing login shell", 
+						ses.authstate.printableuser);
+	}
+#endif
+
 	if (chansess->term == NULL) {
 		/* no pty */
 		ret = noptycommand(channel, chansess);
