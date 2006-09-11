@@ -530,7 +530,7 @@ int buf_readfile(buffer* buf, const char* filename) {
 	int fd = -1;
 	int len;
 	int maxlen;
-	ret = DROPBEAR_FAILURE;
+	int ret = DROPBEAR_FAILURE;
 
 	fd = open(filename, O_RDONLY);
 
