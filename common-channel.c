@@ -47,14 +47,14 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 		unsigned int exttype);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
-static void removechannel(struct Channel *channel);
-static void deletechannel(struct Channel *channel);
-static void checkinitdone(struct Channel *channel);
-static void checkclose(struct Channel *channel);
+static void remove_channel(struct Channel *channel);
+static void delete_channel(struct Channel *channel);
+static void check_in_progress(struct Channel *channel);
+static void check_close(struct Channel *channel);
 
-static void closewritefd(struct Channel * channel);
-static void closereadfd(struct Channel * channel, int fd);
-static void closechanfd(struct Channel *channel, int fd, int how);
+static void close_write_fd(struct Channel * channel);
+static void close_read_fd(struct Channel * channel, int fd);
+static void close_chan_fd(struct Channel *channel, int fd, int how);
 
 #define FD_UNINIT (-2)
 #define FD_CLOSED (-1)
@@ -85,7 +85,7 @@ void chancleanup() {
 	for (i = 0; i < ses.chansize; i++) {
 		if (ses.channels[i] != NULL) {
 			TRACE(("channel %d closing", i))
-			removechannel(ses.channels[i]);
+			remove_channel(ses.channels[i]);
 		}
 	}
 	m_free(ses.channels);
@@ -135,8 +135,8 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan = (struct Channel*)m_malloc(sizeof(struct Channel));
 	newchan->type = type;
 	newchan->index = i;
-	newchan->sentclosed = newchan->recvclosed = 0;
-	newchan->senteof = newchan->recveof = 0;
+	newchan->sent_close = newchan->recv_close = 0;
+	newchan->sent_eof = newchan->recv_eof = 0;
 
 	newchan->remotechan = remotechan;
 	newchan->transwindow = transwindow;
@@ -203,31 +203,24 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 
-		/* if we can read from the writefd, it might be closed, so we try to
-		 * see if it has errors */
-		if (IS_DROPBEAR_SERVER && channel->writefd >= 0 
-				&& channel->writefd != channel->readfd
-				&& FD_ISSET(channel->writefd, readfds)) {
+#if 0
+		/* XXX where is this required? */
 			if (channel->initconn) {
 				/* Handling for "in progress" connection - this is needed
 				 * to avoid spinning 100% CPU when we connect to a server
 				 * which doesn't send anything (tcpfwding) */
-				checkinitdone(channel);
+				check_in_progress(channel);
 				continue; /* Important not to use the channel after 
-							 checkinitdone(), as it may be NULL */
+							 check_in_progress(), as it may be NULL */
 			}
-			ret = write(channel->writefd, NULL, 0); /* Fake write */
-			if (ret < 0 && errno != EINTR && errno != EAGAIN) {
-				closewritefd(channel);
-			}
-		}
+#endif
 
 		/* write to program/pipe stdin */
 		if (channel->writefd >= 0 && FD_ISSET(channel->writefd, writefds)) {
 			if (channel->initconn) {
-				checkinitdone(channel);
+				check_in_progress(channel);
 				continue; /* Important not to use the channel after
-							 checkinitdone(), as it may be NULL */
+							 check_in_progress(), as it may be NULL */
 			}
 			writechannel(channel, channel->writefd, channel->writebuf);
 		}
@@ -239,7 +232,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		}
 	
 		/* now handle any of the channel-closing type stuff */
-		checkclose(channel);
+		check_close(channel);
 
 	} /* foreach channel */
 
@@ -250,12 +243,12 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 }
 
 
-/* do all the EOF/close type stuff checking for a channel */
-static void checkclose(struct Channel *channel) {
+/* EOF/close handling */
+static void check_close(struct Channel *channel) {
 
-	TRACE(("checkclose: writefd %d, readfd %d, errfd %d, sentclosed %d, recvclosed %d",
+	TRACE(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
-				channel->errfd, channel->sentclosed, channel->recvclosed))
+				channel->errfd, channel->sent_close, channel->recv_close))
 	TRACE(("writebuf size %d extrabuf ptr 0x%x extrabuf size %d",
 				cbuf_getused(channel->writebuf),
 				channel->writebuf,
@@ -263,21 +256,21 @@ static void checkclose(struct Channel *channel) {
 
 	/* server chansession channels are special, since readfd mightn't
 	 * close in the case of "sleep 4 & echo blah" until the sleep is up */
-	if (channel->type->checkclose) {
-		if (channel->type->checkclose(channel)) {
-			closewritefd(channel);
-			closereadfd(channel, channel->readfd);
-			closereadfd(channel, channel->errfd);
+	if (channel->type->check_close) {
+		if (channel->type->check_close(channel)) {
+			close_write_fd(channel);
+			close_read_fd(channel, channel->readfd);
+			close_read_fd(channel, channel->errfd);
 		}
 	}
 
-	if (!channel->senteof
+	if (!channel->sent_eof
 		&& channel->readfd == FD_CLOSED 
 		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_eof(channel);
 	}
 
-	if (!channel->sentclosed
+	if (!channel->sent_close
 		&& channel->writefd == FD_CLOSED
 		&& channel->readfd == FD_CLOSED
 		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
@@ -294,12 +287,12 @@ static void checkclose(struct Channel *channel) {
 	 * SSH_MSG_CHANNEL_EOF. 
 	 * (from draft-ietf-secsh-connect)
 	 */
-	if (channel->recvclosed) {
-		if (! channel->sentclosed) {
+	if (channel->recv_close) {
+		if (! channel->sent_close) {
 			TRACE(("Sending MSG_CHANNEL_CLOSE in response to same."))
 			send_msg_channel_close(channel);
 		}
-		removechannel(channel);
+		remove_channel(channel);
 	}
 }
 
@@ -308,26 +301,26 @@ static void checkclose(struct Channel *channel) {
  * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
  * it is important that the channel reference isn't used after a call to this
  * function */
-static void checkinitdone(struct Channel *channel) {
+static void check_in_progress(struct Channel *channel) {
 
 	int val;
 	socklen_t vallen = sizeof(val);
 
-	TRACE(("enter checkinitdone"))
+	TRACE(("enter check_in_progress"))
 
 	if (getsockopt(channel->writefd, SOL_SOCKET, SO_ERROR, &val, &vallen)
 			|| val != 0) {
 		send_msg_channel_open_failure(channel->remotechan,
 				SSH_OPEN_CONNECT_FAILED, "", "");
 		close(channel->writefd);
-		deletechannel(channel);
-		TRACE(("leave checkinitdone: fail"))
+		delete_channel(channel);
+		TRACE(("leave check_in_progress: fail"))
 	} else {
 		send_msg_channel_open_confirmation(channel, channel->recvwindow,
 				channel->recvmaxpacket);
 		channel->readfd = channel->writefd;
 		channel->initconn = 0;
-		TRACE(("leave checkinitdone: success"))
+		TRACE(("leave check_in_progress: success"))
 	}
 }
 
@@ -337,7 +330,6 @@ static void checkinitdone(struct Channel *channel) {
 static void send_msg_channel_close(struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_close"))
-	/* XXX server */
 	if (channel->type->closehandler) {
 		channel->type->closehandler(channel);
 	}
@@ -349,8 +341,8 @@ static void send_msg_channel_close(struct Channel *channel) {
 
 	encrypt_packet();
 
-	channel->senteof = 1;
-	channel->sentclosed = 1;
+	channel->sent_eof = 1;
+	channel->sent_close = 1;
 	TRACE(("leave send_msg_channel_close"))
 }
 
@@ -365,7 +357,7 @@ static void send_msg_channel_eof(struct Channel *channel) {
 
 	encrypt_packet();
 
-	channel->senteof = 1;
+	channel->sent_eof = 1;
 
 	TRACE(("leave send_msg_channel_eof"))
 }
@@ -387,7 +379,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 		if (len < 0 && errno != EINTR) {
 			/* no more to write - we close it even if the fd was stderr, since
 			 * that's a nasty failure too */
-			closewritefd(channel);
+			close_write_fd(channel);
 		}
 		TRACE(("leave writechannel: len <= 0"))
 		return;
@@ -396,10 +388,10 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
 
-	if (fd == channel->writefd && cbuf_getused(cbuf) == 0 && channel->recveof) { 
+	if (fd == channel->writefd && cbuf_getused(cbuf) == 0 && channel->recv_eof) { 
 		/* Check if we're closing up */
-		closewritefd(channel);
-		TRACE(("leave writechannel: recveof set"))
+		close_write_fd(channel);
+		TRACE(("leave writechannel: recv_eof set"))
 		return;
 	}
 
@@ -446,19 +438,6 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 			}
 		}
 
-		TRACE(("writefd = %d, readfd %d, errfd %d, bufused %d", 
-					channel->writefd, channel->readfd,
-					channel->errfd,
-					cbuf_getused(channel->writebuf) ))
-
-		/* For checking FD status (ie closure etc) - we don't actually
-		 * read data from writefd. We don't want to do this for the client,
-		 * since redirection to /dev/null will make it spin in the select */
-		if (IS_DROPBEAR_SERVER && channel->writefd >= 0 
-				&& channel->writefd != channel->readfd) {
-			FD_SET(channel->writefd, readfds);
-		}
-
 		/* Stuff from the wire */
 		if ((channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0 )
 				|| channel->initconn) {
@@ -492,11 +471,11 @@ void recv_msg_channel_eof() {
 		dropbear_exit("EOF for unknown channel");
 	}
 
-	channel->recveof = 1;
+	channel->recv_eof = 1;
 	if (cbuf_getused(channel->writebuf) == 0
 			&& (channel->extrabuf == NULL 
 					|| cbuf_getused(channel->extrabuf) == 0)) {
-		closewritefd(channel);
+		close_write_fd(channel);
 	}
 
 	TRACE(("leave recv_msg_channel_eof"))
@@ -516,11 +495,11 @@ void recv_msg_channel_close() {
 		dropbear_exit("Close for unknown channel");
 	}
 
-	channel->recveof = 1;
-	channel->recvclosed = 1;
+	channel->recv_eof = 1;
+	channel->recv_close = 1;
 
-	if (channel->sentclosed) {
-		removechannel(channel);
+	if (channel->sent_close) {
+		remove_channel(channel);
 	}
 
 	TRACE(("leave recv_msg_channel_close"))
@@ -528,9 +507,9 @@ void recv_msg_channel_close() {
 
 /* Remove a channel entry, this is only executed after both sides have sent
  * channel close */
-static void removechannel(struct Channel * channel) {
+static void remove_channel(struct Channel * channel) {
 
-	TRACE(("enter removechannel"))
+	TRACE(("enter remove_channel"))
 	TRACE(("channel index is %d", channel->index))
 
 	cbuf_free(channel->writebuf);
@@ -550,13 +529,13 @@ static void removechannel(struct Channel * channel) {
 
 	channel->typedata = NULL;
 
-	deletechannel(channel);
+	delete_channel(channel);
 
-	TRACE(("leave removechannel"))
+	TRACE(("leave remove_channel"))
 }
 
 /* Remove a channel entry */
-static void deletechannel(struct Channel *channel) {
+static void delete_channel(struct Channel *channel) {
 
 	ses.channels[channel->index] = NULL;
 	m_free(channel);
@@ -607,7 +586,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 
 	CHECKCLEARTOWRITE();
 
-	dropbear_assert(!channel->sentclosed);
+	dropbear_assert(!channel->sent_close);
 
 	if (isextended) {
 		fd = channel->errfd;
@@ -634,7 +613,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended,
 	if (len <= 0) {
 		/* on error/eof, send eof */
 		if (len == 0 || errno != EINTR) {
-			closereadfd(channel, fd);
+			close_read_fd(channel, fd);
 		}
 		buf_free(buf);
 		buf = NULL;
@@ -687,10 +666,19 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 
 	TRACE(("enter recv_msg_channel_data"))
 
-	if (channel->recveof) {
+	if (channel->recv_eof) {
 		dropbear_exit("received data after eof");
 	}
 
+	/* XXX this is getting hit by people - maybe should be
+	 * made less fatal (or just fixed). 
+	 *
+	 * The most likely explanation is that the socket is being closed (due to
+	 * write failure etc) but the far end doesn't know yet, so keeps sending
+	 * packets.  We already know that the channel number that was given was
+	 * valid, so probably should skip out here. Maybe
+	 * assert(channel->sent_close), thuogh only if the close-on-failure code is
+	 * doing that */
  	if (fd < 0) {
 		dropbear_exit("received data with bad writefd");
 	}
@@ -767,7 +755,6 @@ static void send_msg_channel_window_adjust(struct Channel* channel,
 }
 	
 /* Handle a new channel request, performing any channel-type-specific setup */
-/* XXX server */
 void recv_msg_channel_open() {
 
 	unsigned char *type;
@@ -830,7 +817,7 @@ void recv_msg_channel_open() {
 				goto cleanup;
 			}
 			errtype = ret;
-			deletechannel(channel);
+			delete_channel(channel);
 			TRACE(("inithandler returned failure %d", ret))
 			goto failure;
 		}
@@ -982,7 +969,7 @@ void recv_msg_channel_open_confirmation() {
 	if (channel->type->inithandler) {
 		ret = channel->type->inithandler(channel);
 		if (ret > 0) {
-			removechannel(channel);
+			remove_channel(channel);
 			TRACE(("inithandler returned failure %d", ret))
 		}
 	}
@@ -1006,34 +993,33 @@ void recv_msg_channel_open_failure() {
 	}
 	channel->await_open = 0;
 
-	removechannel(channel);
+	remove_channel(channel);
 }
 #endif /* USING_LISTENERS */
 
 /* close a stdout/stderr fd */
-static void closereadfd(struct Channel * channel, int fd) {
+static void close_read_fd(struct Channel * channel, int fd) {
 
 	/* don't close it if it is the same as writefd,
 	 * unless writefd is already set -1 */
-	TRACE(("enter closereadfd"))
-	closechanfd(channel, fd, 0);
-	TRACE(("leave closereadfd"))
+	TRACE(("enter close_read_fd"))
+	close_chan_fd(channel, fd, 0);
+	TRACE(("leave close_read_fd"))
 }
 
 /* close a stdin fd */
-static void closewritefd(struct Channel * channel) {
+static void close_write_fd(struct Channel * channel) {
 
-	TRACE(("enter closewritefd"))
-	closechanfd(channel, channel->writefd, 1);
-	TRACE(("leave closewritefd"))
+	TRACE(("enter close_write_fd"))
+	close_chan_fd(channel, channel->writefd, 1);
+	TRACE(("leave close_write_fd"))
 }
 
 /* close a fd, how is 0 for stdout/stderr, 1 for stdin */
-static void closechanfd(struct Channel *channel, int fd, int how) {
+static void close_chan_fd(struct Channel *channel, int fd, int how) {
 
 	int closein = 0, closeout = 0;
 
-	/* XXX server */
 	if (channel->type->sepfds) {
 		TRACE(("shutdown((%d), %d)", fd, how))
 		shutdown(fd, how);
