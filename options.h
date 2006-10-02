@@ -81,8 +81,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * ciphers above in the client if you want to use this, or implement cipher
  * prioritisation in cli-runopts.
  *
- * The best way to do things is probably make normal compile of dropbear with all
- * ciphers including "none" as the server, then recompile a special 
+ * The best way to do things is probably make normal compile of dropbear with
+ * all ciphers including "none" as the server, then recompile a special
  * "dbclient-insecure" client. */
 #define DROPBEAR_NONE_CIPHER
 
@@ -105,7 +105,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* You can also disable integrity. Don't bother disabling this if you're
  * still using a cipher, it's relatively cheap. Don't disable this if you're
  * using 'none' cipher, since it's dead simple to run arbitrary commands
- * on the remote host. Go ahead. Hang yourself with your own rope. */
+ * on the remote host. Beware. */
 /*#define DROPBEAR_NONE_INTEGRITY*/
 
 /* Hostkey/public key algorithms - at least one required, these are used
