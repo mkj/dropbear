@@ -59,16 +59,11 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess);
 static void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
-static int sess_check_close(struct Channel *channel);
 static void get_termmodes(struct ChanSess *chansess);
 
 
 /* required to clear environment */
 extern char** environ;
-
-static int sess_check_close(struct Channel *channel) {
-	return channel->writefd == -1;
-}
 
 /* Handler for childs exiting, store the state for return to the client */
 
@@ -967,7 +962,7 @@ const struct ChanType svrchansess = {
 	0, /* sepfds */
 	"session", /* name */
 	newchansess, /* inithandler */
-	sess_check_close, /* checkclosehandler */
+	NULL, /* checkclosehandler */
 	chansessionrequest, /* reqhandler */
 	closechansess, /* closehandler */
 };
