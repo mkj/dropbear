@@ -65,6 +65,11 @@ static void get_termmodes(struct ChanSess *chansess);
 /* required to clear environment */
 extern char** environ;
 
+static int sesscheckclose(struct Channel *channel) {
+	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
+	return chansess->exit.exitpid != -1;
+}
+
 /* Handler for childs exiting, store the state for return to the client */
 
 /* There's a particular race we have to watch out for: if the forked child
@@ -962,7 +967,7 @@ const struct ChanType svrchansess = {
 	0, /* sepfds */
 	"session", /* name */
 	newchansess, /* inithandler */
-	NULL, /* checkclosehandler */
+	sesscheckclose, /* checkclosehandler */
 	chansessionrequest, /* reqhandler */
 	closechansess, /* closehandler */
 };

@@ -263,10 +263,12 @@ static void check_close(struct Channel *channel) {
 				channel->writebuf,
 				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)))
 
-	if (!channel->sent_close
-			&& channel->writefd == FD_CLOSED
-			&& (channel->errfd == FD_CLOSED || channel->extrabuf == NULL)) {
-		send_msg_channel_close(channel);
+	/* A bit of a hack for closing up server session channels */
+	if (channel->writefd >= 0 
+			&& channel->type->check_close 
+			&& channel->type->check_close(channel)) {
+		TRACE(("channel->type->check_close got hit"))
+		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
 
 	if (channel->recv_close && !write_pending(channel)) {
@@ -278,30 +280,14 @@ static void check_close(struct Channel *channel) {
 		return;
 	}
 
-#if 0
-	// The only use of check_close is "return channel->writefd == -1;" for a server
-	// chansession. Should be able to handle that with just the general
-	// socket close handling...?
-	if (channel->type->check_close) {
-		if (channel->type->check_close(channel)) {
-			close_write_fd(channel);
-			close_read_fd(channel, channel->readfd);
-			close_read_fd(channel, channel->errfd);
-		}
+	if (channel->recv_eof && !write_pending(channel)) {
+		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
-#endif
 
 	if (!channel->sent_eof
 		&& channel->readfd == FD_CLOSED 
 		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_eof(channel);
-	}
-
-	if (!channel->sent_close
-		&& channel->writefd == FD_CLOSED
-		&& channel->readfd == FD_CLOSED
-		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
-		send_msg_channel_close(channel);
 	}
 }
 
@@ -394,13 +380,6 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
-
-	/* We're closing out */
-	if (channel->recv_eof && cbuf_getused(cbuf) == 0) {
-	TRACE(("leave writechannel"))
-		close_chan_fd(channel, fd, SHUT_WR);
-		return;
-	}
 
 	/* Window adjust handling */
 	if (channel->recvdonelen >= RECV_WINDOWEXTEND) {
