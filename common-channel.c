@@ -285,10 +285,18 @@ static void check_close(struct Channel *channel) {
 	}
 
 	if (!channel->sent_eof
-		&& channel->readfd == FD_CLOSED 
-		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+			&& channel->readfd == FD_CLOSED 
+			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_eof(channel);
 	}
+
+	if (!channel->sent_close
+			&& channel->writefd == FD_CLOSED
+			&& channel->readfd == FD_CLOSED
+			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+		send_msg_channel_close(channel);
+	}
+
 }
 
 
@@ -335,7 +343,6 @@ static void send_msg_channel_close(struct Channel *channel) {
 
 	encrypt_packet();
 
-	/* XXX is setting sent_eof required? */
 	channel->sent_eof = 1;
 	channel->sent_close = 1;
 	TRACE(("leave send_msg_channel_close"))
@@ -469,7 +476,6 @@ void recv_msg_channel_close() {
 
 	channel = getchannel_msg("Close");
 
-	/* XXX eof required? */
 	channel->recv_eof = 1;
 	channel->recv_close = 1;
 
@@ -483,9 +489,6 @@ static void remove_channel(struct Channel * channel) {
 
 	TRACE(("enter remove_channel"))
 	TRACE(("channel index is %d", channel->index))
-
-	/* XXX shuold we assert for sent_closed and recv_closed?
-	 * but we also cleanup manually, maybe we need a flag. */
 
 	cbuf_free(channel->writebuf);
 	channel->writebuf = NULL;
@@ -630,21 +633,15 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		dropbear_exit("received data after eof");
 	}
 
-	/* XXX this is getting hit by people - maybe should be
-	 * made less fatal (or just fixed). 
-	 *
-	 * The most likely explanation is that the socket is being closed (due to
-	 * write failure etc) but the far end doesn't know yet, so keeps sending
-	 * packets.  We already know that the channel number that was given was
-	 * valid, so probably should skip out here. Maybe
-	 * assert(channel->sent_close), thuogh only if the close-on-failure code is
-	 * doing that */
  	if (fd < 0) {
-		dropbear_exit("received data with bad writefd");
+		/* If we have encountered failed write, the far side might still
+		 * be sending data without having yet received our close notification.
+		 * We just drop the data. */
+		return;
 	}
 
 	datalen = buf_getint(ses.payload);
-
+	TRACE(("length %d", datalen))
 
 	maxdata = cbuf_getavail(cbuf);
 
