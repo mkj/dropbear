@@ -39,9 +39,6 @@ void recv_msg_channel_extended_data() {
 	TRACE(("enter recv_msg_channel_extended_data"))
 
 	channel = getchannel();
-	if (channel == NULL) {
-		dropbear_exit("Unknown channel");
-	}
 
 	if (channel->type != &clichansess) {
 		TRACE(("leave recv_msg_channel_extended_data: chantype is wrong"))
