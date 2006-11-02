@@ -100,7 +100,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (i == svr_ses.childpidsize) {
+		if (exit == NULL) {
 			exit = &svr_ses.lastexit;
 		}
 
