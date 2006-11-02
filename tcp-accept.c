@@ -126,12 +126,13 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 		TRACE(("leave listen_tcpfwd: dropbear_listen failed"))
 		return DROPBEAR_FAILURE;
 	}
-
+	m_free(errstring);
+	
+	/* new_listener will close the socks if it fails */
 	listener = new_listener(socks, nsocks, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
 			tcp_acceptor, cleanup_tcp);
 
 	if (listener == NULL) {
-		m_free(tcpinfo);
 		TRACE(("leave listen_tcpfwd: listener failed"))
 		return DROPBEAR_FAILURE;
 	}
