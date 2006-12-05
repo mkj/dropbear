@@ -143,27 +143,21 @@ void session_loop(void(*loophandler)()) {
 			dropbear_exit("Terminated by signal");
 		}
 		
-		if (val < 0) {
-			if (errno == EINTR) {
-				/* This must happen even if we've been interrupted, so that
-				 * changed signal-handler vars can take effect etc */
-				if (loophandler) {
-					loophandler();
-				}
-				continue;
-			} else {
-				dropbear_exit("Error in select");
-			}
+		if (val < 0 && errno != EINTR) {
+			dropbear_exit("Error in select");
+		}
+
+		if (val <= 0) {
+			/* If we were interrupted or the select timed out, we still
+			 * want to iterate over channels etc for reading, to handle
+			 * server processes exiting etc. 
+			 * We don't want to read/write FDs. */
+			FD_ZERO(&writefd);
+			FD_ZERO(&readfd);
 		}
 
 		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
-		
-		if (val == 0) {
-			/* timeout */
-			TRACE(("select timeout"))
-			continue;
-		}
 
 		/* process session socket's incoming/outgoing data */
 		if (ses.sock != -1) {
