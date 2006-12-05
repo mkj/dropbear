@@ -56,6 +56,9 @@ static void close_chan_fd(struct Channel *channel, int fd, int how);
 #define FD_UNINIT (-2)
 #define FD_CLOSED (-1)
 
+#define ERRFD_IS_READ(channel) ((channel)->extrabuf == NULL)
+#define ERRFD_IS_WRITE(channel) (!ERRFD_IS_READ(channel))
+
 /* Initialise all the channels */
 void chaninitialise(const struct ChanType *chantypes[]) {
 
@@ -204,7 +207,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		}
 
 		/* read stderr data and send it over the wire */
-		if (channel->extrabuf == NULL &&
+		if (ERRFD_IS_READ(channel) &&
 				channel->errfd >= 0 && FD_ISSET(channel->errfd, readfds)) {
 				send_msg_channel_data(channel, 1);
 		}
@@ -221,7 +224,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		}
 		
 		/* stderr for client mode */
-		if (channel->extrabuf != NULL 
+		if (ERRFD_IS_WRITE(channel)
 				&& channel->errfd >= 0 && FD_ISSET(channel->errfd, writefds)) {
 			writechannel(channel, channel->errfd, channel->extrabuf);
 		}
@@ -245,7 +248,7 @@ static unsigned int write_pending(struct Channel * channel) {
 	if (channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0) {
 		return 1;
 	} else if (channel->errfd >= 0 && channel->extrabuf && 
-			cbuf_getused(channel->writebuf) > 0) {
+			cbuf_getused(channel->extrabuf) > 0) {
 		return 1;
 	}
 	return 0;
@@ -258,18 +261,9 @@ static void check_close(struct Channel *channel) {
 	TRACE(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
 				channel->errfd, channel->sent_close, channel->recv_close))
-	TRACE(("writebuf size %d extrabuf ptr 0x%x extrabuf size %d",
+	TRACE(("writebuf size %d extrabuf size %d",
 				cbuf_getused(channel->writebuf),
-				channel->writebuf,
-				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)))
-
-	/* A bit of a hack for closing up server session channels */
-	if (channel->writefd >= 0 
-			&& channel->type->check_close 
-			&& channel->type->check_close(channel)) {
-		TRACE(("channel->type->check_close got hit"))
-		close_chan_fd(channel, channel->writefd, SHUT_WR);
-	}
+				channel->extrabuf ? cbuf_getused(channel->extrabuf) : 0))
 
 	if (channel->recv_close && !write_pending(channel)) {
 		if (! channel->sent_close) {
@@ -284,16 +278,18 @@ static void check_close(struct Channel *channel) {
 		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
 
+	/* If we're not going to send any more data, send EOF */
 	if (!channel->sent_eof
 			&& channel->readfd == FD_CLOSED 
-			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+			&& (ERRFD_IS_WRITE(channel) || channel->errfd == FD_CLOSED)) {
 		send_msg_channel_eof(channel);
 	}
 
+	/* And if we can't receive any more data from them either, close up */
 	if (!channel->sent_close
 			&& channel->writefd == FD_CLOSED
 			&& channel->readfd == FD_CLOSED
-			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+			&& channel->errfd == FD_CLOSED) {
 		send_msg_channel_close(channel);
 	}
 
@@ -371,19 +367,21 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 
 	int len, maxlen;
 
-	TRACE(("enter writechannel"))
+	TRACE(("enter writechannel fd %d", fd))
 
 	maxlen = cbuf_readlen(cbuf);
 
 	/* Write the data out */
 	len = write(fd, cbuf_readptr(cbuf, maxlen), maxlen);
 	if (len <= 0) {
+		TRACE(("errno %d len %d", errno, len))
 		if (len < 0 && errno != EINTR) {
 			close_chan_fd(channel, fd, SHUT_WR);
 		}
 		TRACE(("leave writechannel: len <= 0"))
 		return;
 	}
+	TRACE(("writechannel wrote %d", len))
 
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
@@ -425,7 +423,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 				FD_SET(channel->readfd, readfds);
 			}
 			
-			if (channel->extrabuf == NULL && channel->errfd >= 0) {
+			if (ERRFD_IS_READ(channel) && channel->errfd >= 0) {
 					FD_SET(channel->errfd, readfds);
 			}
 		}
@@ -436,7 +434,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 				FD_SET(channel->writefd, writefds);
 		}
 
-		if (channel->extrabuf != NULL && channel->errfd >= 0 
+		if (ERRFD_IS_WRITE(channel) != NULL && channel->errfd >= 0 
 				&& cbuf_getused(channel->extrabuf) > 0 ) {
 				FD_SET(channel->errfd, writefds);
 		}
@@ -501,8 +499,11 @@ static void remove_channel(struct Channel * channel) {
 
 	/* close the FDs in case they haven't been done
 	 * yet (they might have been shutdown etc) */
+	TRACE(("CLOSE writefd %d", channel->writefd))
 	close(channel->writefd);
+	TRACE(("CLOSE readfd %d", channel->readfd))
 	close(channel->readfd);
+	TRACE(("CLOSE errfd %d", channel->errfd))
 	close(channel->errfd);
 
 	channel->typedata = NULL;
@@ -562,6 +563,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	} else {
 		fd = channel->readfd;
 	}
+	TRACE(("enter send_msg_channel_data isextended %d fd %d", isextended, fd))
 	dropbear_assert(fd >= 0);
 
 	maxlen = MIN(channel->transwindow, channel->transmaxpacket);
@@ -592,8 +594,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 			close_chan_fd(channel, fd, SHUT_RD);
 		}
 		ses.writepayload->len = ses.writepayload->pos = 0;
-		TRACE(("leave send_msg_channel_data: read err or EOF for fd %d", 
-					channel->index));
+		TRACE(("leave send_msg_channel_data: len %d read err or EOF for fd %d", 
+					len, channel->index));
 		return;
 	}
 	buf_incrwritepos(ses.writepayload, len);
@@ -740,7 +742,6 @@ void recv_msg_channel_open() {
 	/* Get the channel type. Client and server style invokation will set up a
 	 * different list for ses.chantypes at startup. We just iterate through
 	 * this list and find the matching name */
-	/* XXX fugly */
 	for (cp = &ses.chantypes[0], chantype = (*cp); 
 			chantype != NULL;
 			cp++, chantype = (*cp)) {
@@ -862,7 +863,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 	int closein = 0, closeout = 0;
 
 	if (channel->type->sepfds) {
-		TRACE(("shutdown((%d), %d)", fd, how))
+		TRACE(("SHUTDOWN(%d, %d)", fd, how))
 		shutdown(fd, how);
 		if (how == 0) {
 			closeout = 1;
@@ -870,21 +871,22 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 			closein = 1;
 		}
 	} else {
+		TRACE(("CLOSE some fd %d", fd))
 		close(fd);
 		closein = closeout = 1;
 	}
 
-	if (closeout && fd == channel->readfd) {
+	if (closeout && (fd == channel->readfd)) {
 		channel->readfd = FD_CLOSED;
 	}
-	if (closeout && (channel->extrabuf == NULL) && (fd == channel->errfd)) {
+	if (closeout && ERRFD_IS_READ(channel) && (fd == channel->errfd)) {
 		channel->errfd = FD_CLOSED;
 	}
 
 	if (closein && fd == channel->writefd) {
 		channel->writefd = FD_CLOSED;
 	}
-	if (closein && (channel->extrabuf != NULL) && (fd == channel->errfd)) {
+	if (closein && ERRFD_IS_WRITE(channel) && (fd == channel->errfd)) {
 		channel->errfd = FD_CLOSED;
 	}
 
@@ -892,6 +894,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 	 * need to close() it to stop it lingering */
 	if (channel->type->sepfds && channel->readfd == FD_CLOSED 
 		&& channel->writefd == FD_CLOSED && channel->errfd == FD_CLOSED) {
+		TRACE(("CLOSE (finally) of %d", fd))
 		close(fd);
 	}
 }
