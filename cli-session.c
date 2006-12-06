@@ -212,19 +212,38 @@ static void cli_sessionloop() {
 			*/
 
 		case USERAUTH_SUCCESS_RCVD:
+
+			if (cli_opts.backgrounded) {
+				int devnull;
+				// keeping stdin open steals input from the terminal and
+				// is confusing, though stdout/stderr could be useful.
+				devnull = open(_PATH_DEVNULL, O_RDONLY);
+				if (devnull < 0) {
+					dropbear_exit("opening /dev/null: %d %s",
+							errno, strerror(errno));
+				}
+				dup2(devnull, STDIN_FILENO);
+				if (daemon(0, 1) < 0) {
+					dropbear_exit("Backgrounding failed: %d %s", 
+							errno, strerror(errno));
+				}
+			}
+			
 #ifdef ENABLE_CLI_LOCALTCPFWD
 			setup_localtcp();
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 			setup_remotetcp();
 #endif
-			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
+			if (!cli_opts.no_cmd) {
+				cli_send_chansess_request();
+			}
+			TRACE(("leave cli_sessionloop: running"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
 
 		case SESSION_RUNNING:
-			if (ses.chancount < 1) {
+			if (ses.chancount < 1 && !cli_opts.no_cmd) {
 				cli_finished();
 			}
 

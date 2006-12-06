@@ -67,8 +67,7 @@ static void get_termmodes(struct ChanSess *chansess);
 extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
-	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
-	return chansess->exit.exitpid >= 0;
+	return channel->writefd == -1;
 }
 
 /* Handler for childs exiting, store the state for return to the client */
@@ -89,6 +88,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+
+		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -119,7 +120,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
-		exit = NULL;
 	}
 
 	
@@ -410,7 +410,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	
 	pty_change_window_size(chansess->master, termr, termc, termw, termh);
 
-	return DROPBEAR_FAILURE;
+	return DROPBEAR_SUCCESS;
 }
 
 static void get_termmodes(struct ChanSess *chansess) {
@@ -587,6 +587,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			}
 		}
 	}
+
+#ifdef LOG_COMMANDS
+	if (chansess->cmd) {
+		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+						ses.authstate.printableuser, chansess->cmd);
+	} else {
+		dropbear_log(LOG_INFO, "user %s executing login shell", 
+						ses.authstate.printableuser);
+	}
+#endif
 
 	if (chansess->term == NULL) {
 		/* no pty */

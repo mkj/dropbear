@@ -146,7 +146,7 @@ void main_noinetd() {
 	}
 
 	/* create a PID file so that we can be killed easily */
-	pidfile = fopen(DROPBEAR_PIDFILE, "w");
+	pidfile = fopen(svr_opts.pidfile, "w");
 	if (pidfile) {
 		fprintf(pidfile, "%d\n", getpid());
 		fclose(pidfile);
@@ -189,7 +189,7 @@ void main_noinetd() {
 		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
 
 		if (exitflag) {
-			unlink(DROPBEAR_PIDFILE);
+			unlink(svr_opts.pidfile);
 			dropbear_exit("Terminated by signal");
 		}
 		

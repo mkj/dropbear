@@ -1,3 +1,22 @@
+0.49 - Tues 13 June 2003
+
+- Return immediately for "sleep 10 & echo foo", rather than waiting
+  for the sleep to return (pointed out by Rob Landley)
+
+- Added -P pidfile argument to the server (from Swen Schillig)
+
+- Compile fixes, make sure that all variable definitions are at the start
+  of a scope.
+
+- Use $HOME in preference to that from /etc/passwd, so that it
+  dbclient can still work on systems with a broken setup.
+
+- Add -N dbclient option for "no command"
+
+- Add -f dbclient option for "background after auth"
+
+- Try to finally fix ss_family compilation problems
+
 0.48.1 - Sat 11 March 2006
 
 - Compile fix for scp

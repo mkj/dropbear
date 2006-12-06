@@ -181,6 +181,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 	struct Channel *channel;
 	unsigned int i;
+	int ret;
 
 	/* iterate through all the possible channels */
 	for (i = 0; i < ses.chansize; i++) {
@@ -200,6 +201,25 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		if (channel->extrabuf == NULL &&
 				channel->errfd >= 0 && FD_ISSET(channel->errfd, readfds)) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
+		}
+
+		/* if we can read from the writefd, it might be closed, so we try to
+		 * see if it has errors */
+		if (IS_DROPBEAR_SERVER && channel->writefd >= 0 
+				&& channel->writefd != channel->readfd
+				&& FD_ISSET(channel->writefd, readfds)) {
+			if (channel->initconn) {
+				/* Handling for "in progress" connection - this is needed
+				 * to avoid spinning 100% CPU when we connect to a server
+				 * which doesn't send anything (tcpfwding) */
+				checkinitdone(channel);
+				continue; /* Important not to use the channel after 
+							 checkinitdone(), as it may be NULL */
+			}
+			ret = write(channel->writefd, NULL, 0); /* Fake write */
+			if (ret < 0 && errno != EINTR && errno != EAGAIN) {
+				closewritefd(channel);
+			}
 		}
 
 		/* write to program/pipe stdin */
@@ -241,27 +261,27 @@ static void checkclose(struct Channel *channel) {
 				channel->writebuf,
 				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)))
 
-	if (!channel->sentclosed) {
-
-		/* check for exited - currently only used for server sessions,
-		 * if the shell has exited etc */
-		if (channel->type->checkclose) {
-			if (channel->type->checkclose(channel)) {
-				closewritefd(channel);
-			}
+	/* server chansession channels are special, since readfd mightn't
+	 * close in the case of "sleep 4 & echo blah" until the sleep is up */
+	if (channel->type->checkclose) {
+		if (channel->type->checkclose(channel)) {
+			closewritefd(channel);
+			closereadfd(channel, channel->readfd);
+			closereadfd(channel, channel->errfd);
 		}
+	}
 
-		if (!channel->senteof
-			&& channel->readfd == FD_CLOSED 
-			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
-			send_msg_channel_eof(channel);
-		}
+	if (!channel->senteof
+		&& channel->readfd == FD_CLOSED 
+		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+		send_msg_channel_eof(channel);
+	}
 
-		if (channel->writefd == FD_CLOSED
-			&& channel->readfd == FD_CLOSED
-			&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
-			send_msg_channel_close(channel);
-		}
+	if (!channel->sentclosed
+		&& channel->writefd == FD_CLOSED
+		&& channel->readfd == FD_CLOSED
+		&& (channel->extrabuf != NULL || channel->errfd == FD_CLOSED)) {
+		send_msg_channel_close(channel);
 	}
 
 	/* When either party wishes to terminate the channel, it sends
@@ -426,10 +446,22 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 			}
 		}
 
+		TRACE(("writefd = %d, readfd %d, errfd %d, bufused %d", 
+					channel->writefd, channel->readfd,
+					channel->errfd,
+					cbuf_getused(channel->writebuf) ))
+
+		/* For checking FD status (ie closure etc) - we don't actually
+		 * read data from writefd. We don't want to do this for the client,
+		 * since redirection to /dev/null will make it spin in the select */
+		if (IS_DROPBEAR_SERVER && channel->writefd >= 0 
+				&& channel->writefd != channel->readfd) {
+			FD_SET(channel->writefd, readfds);
+		}
+
 		/* Stuff from the wire */
 		if ((channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0 )
 				|| channel->initconn) {
-
 				FD_SET(channel->writefd, writefds);
 		}
 
