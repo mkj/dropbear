@@ -72,7 +72,7 @@
 
 /* Enable self-test test vector checking */
 /* Not for dropbear */
-//#define LTC_TEST
+/*#define LTC_TEST*/
 
 /* clean the stack of functions which put private information on stack */
 /* #define LTC_CLEAN_STACK */
