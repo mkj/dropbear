@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
  
  /** 
@@ -27,7 +27,7 @@ const struct ltc_cipher_descriptor cast5_desc = {
    &cast5_test,
    &cast5_done,
    &cast5_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const ulong32 S1[256] = {
@@ -536,9 +536,9 @@ INLINE static ulong32 FIII(ulong32 R, ulong32 Km, ulong32 Kr)
   @param skey The key as scheduled
 */
 #ifdef LTC_CLEAN_STACK
-static void _cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+static int _cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #else
-void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
    ulong32 R, L;
@@ -569,14 +569,16 @@ void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
    }
    STORE32H(R,&ct[0]);
    STORE32H(L,&ct[4]);
+   return CRYPT_OK;
 }
 
 
 #ifdef LTC_CLEAN_STACK
-void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
-   _cast5_ecb_encrypt(pt,ct,skey);
+   int err =_cast5_ecb_encrypt(pt,ct,skey);
    burn_stack(sizeof(ulong32)*3);
+   return err;
 }
 #endif
 
@@ -587,9 +589,9 @@ void cast5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
   @param skey The key as scheduled 
 */
 #ifdef LTC_CLEAN_STACK
-static void _cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+static int _cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #else
-void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
    ulong32 R, L;
@@ -620,13 +622,16 @@ void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key
    L ^= FI(R, skey->cast5.K[0], skey->cast5.K[16]);
    STORE32H(L,&pt[0]);
    STORE32H(R,&pt[4]);
+
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int cast5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
-   _cast5_ecb_decrypt(ct,pt,skey);
+   int err = _cast5_ecb_decrypt(ct,pt,skey);
    burn_stack(sizeof(ulong32)*3);
+   return err;
 }
 #endif
 
@@ -671,7 +676,7 @@ int cast5_test(void)
        }
        cast5_ecb_encrypt(tests[i].pt, tmp[0], &key);
        cast5_ecb_decrypt(tmp[0], tmp[1], &key);
-       if ((memcmp(tmp[0], tests[i].ct, 8) != 0) || (memcmp(tmp[1], tests[i].pt, 8) != 0)) {
+       if ((XMEMCMP(tmp[0], tests[i].ct, 8) != 0) || (XMEMCMP(tmp[1], tests[i].pt, 8) != 0)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
       /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
@@ -711,5 +716,5 @@ int cast5_keysize(int *keysize)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/cast5.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.12 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

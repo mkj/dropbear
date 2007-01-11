@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -28,7 +28,7 @@ const struct ltc_cipher_descriptor khazad_desc = {
    &khazad_test,
    &khazad_done,
    &khazad_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #define R      8 
@@ -741,13 +741,15 @@ static void khazad_crypt(const unsigned char *plaintext, unsigned char *cipherte
   @param pt The input plaintext (8 bytes)
   @param ct The output ciphertext (8 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
-void khazad_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int khazad_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
    LTC_ARGCHK(pt   != NULL);
    LTC_ARGCHK(ct   != NULL);
    LTC_ARGCHK(skey != NULL);
    khazad_crypt(pt, ct, skey->khazad.roundKeyEnc);
+   return CRYPT_OK;
 }
 
 /**
@@ -755,13 +757,15 @@ void khazad_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_ke
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
-void khazad_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int khazad_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
    LTC_ARGCHK(pt   != NULL);
    LTC_ARGCHK(ct   != NULL);
    LTC_ARGCHK(skey != NULL);
    khazad_crypt(ct, pt, skey->khazad.roundKeyDec);
+   return CRYPT_OK;
 }
 
 /**
@@ -806,13 +810,13 @@ int khazad_test(void)
        khazad_setup(tests[x].key, 16, 0, &skey);
        khazad_ecb_encrypt(tests[x].pt, buf[0], &skey);
        khazad_ecb_decrypt(buf[0], buf[1], &skey);
-       if (memcmp(buf[0], tests[x].ct, 8) || memcmp(buf[1], tests[x].pt, 8)) {
+       if (XMEMCMP(buf[0], tests[x].ct, 8) || XMEMCMP(buf[1], tests[x].pt, 8)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
 
        for (y = 0; y < 1000; y++) khazad_ecb_encrypt(buf[0], buf[0], &skey);
        for (y = 0; y < 1000; y++) khazad_ecb_decrypt(buf[0], buf[0], &skey);
-       if (memcmp(buf[0], tests[x].ct, 8)) {
+       if (XMEMCMP(buf[0], tests[x].ct, 8)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
 
@@ -847,5 +851,5 @@ int khazad_keysize(int *keysize)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/khazad.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.12 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

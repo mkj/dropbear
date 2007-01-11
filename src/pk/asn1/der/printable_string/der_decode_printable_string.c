@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -67,6 +67,7 @@ int der_decode_printable_string(const unsigned char *in, unsigned long inlen,
 
    /* is it too long? */
    if (len > *outlen) {
+      *outlen = len;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -91,5 +92,5 @@ int der_decode_printable_string(const unsigned char *in, unsigned long inlen,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/printable_string/der_decode_printable_string.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2005/05/21 02:29:54 $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/06/16 21:53:41 $ */

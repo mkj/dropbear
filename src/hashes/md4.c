@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -31,7 +31,8 @@ const struct ltc_hash_descriptor md4_desc =
     &md4_init,
     &md4_process,
     &md4_done,
-    &md4_test
+    &md4_test,
+    NULL
 };
 
 #define S11 3
@@ -288,7 +289,7 @@ int md4_test(void)
         md4_init(&md);
         md4_process(&md, (unsigned char *)cases[i].input, (unsigned long)strlen(cases[i].input));
         md4_done(&md, digest);
-        if (memcmp(digest, cases[i].digest, 16) != 0) {
+        if (XMEMCMP(digest, cases[i].digest, 16) != 0) {
            return CRYPT_FAIL_TESTVECTOR;
         }
 
@@ -302,5 +303,5 @@ int md4_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/md4.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

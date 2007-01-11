@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 /** 
     @file eax_addheader.c
@@ -34,5 +34,5 @@ int eax_addheader(eax_state *eax, const unsigned char *header,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/eax/eax_addheader.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

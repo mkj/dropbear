@@ -2,16 +2,105 @@
 #define TOMCRYPT_CUSTOM_H_
 
 /* macros for various libc functions you can change for embedded targets */
+#ifndef XMALLOC
+   #ifdef malloc 
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XMALLOC  malloc
+#endif
+#ifndef XREALLOC
+   #ifdef realloc 
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XREALLOC realloc
+#endif
+#ifndef XCALLOC
+   #ifdef calloc 
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XCALLOC  calloc
+#endif
+#ifndef XFREE
+   #ifdef free
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XFREE    free
+#endif
 
+#ifndef XMEMSET
+   #ifdef memset
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XMEMSET  memset
+#endif
+#ifndef XMEMCPY
+   #ifdef memcpy
+   #define LTC_NO_PROTOTYPES
+   #endif
 #define XMEMCPY  memcpy
+#endif
+#ifndef XMEMCMP
+   #ifdef memcmp 
+   #define LTC_NO_PROTOTYPES
+   #endif
+#define XMEMCMP  memcmp
+#endif
+#ifndef XSTRCMP
+   #ifdef strcmp
+   #define LTC_NO_PROTOTYPES
+   #endif
+#define XSTRCMP strcmp
+#endif
 
+#ifndef XCLOCK
 #define XCLOCK   clock
+#endif
+#ifndef XCLOCKS_PER_SEC
 #define XCLOCKS_PER_SEC CLOCKS_PER_SEC
+#endif
+
+#ifndef XQSORT
+   #ifdef qsort
+   #define LTC_NO_PROTOTYPES
+   #endif
+#define XQSORT qsort
+#endif
+
+/* Easy button? */
+#ifdef LTC_EASY
+   #define LTC_NO_CIPHERS
+   #define RIJNDAEL
+   #define BLOWFISH
+   #define DES
+   #define CAST5
+   
+   #define LTC_NO_MODES
+   #define LTC_ECB_MODE
+   #define LTC_CBC_MODE
+   #define LTC_CTR_MODE
+   
+   #define LTC_NO_HASHES
+   #define SHA1
+   #define SHA512
+   #define SHA384
+   #define SHA256
+   #define SHA224
+   
+   #define LTC_NO_MACS
+   #define HMAC
+   #define OMAC
+   #define CCM_MODE
+
+   #define LTC_NO_PRNGS
+   #define SPRNG
+   #define YARROW
+   #define DEVRANDOM
+   #define TRY_URANDOM_FIRST
+      
+   #define LTC_NO_PK
+   #define MRSA
+   #define MECC
+#endif   
 
 /* Use small code where possible */
 /* #define LTC_SMALL_CODE */
@@ -65,6 +154,8 @@
 #define KHAZAD
 #define ANUBIS
 #define ANUBIS_TWEAK
+#define KSEED
+#define LTC_KASUMI
 
 #endif /* LTC_NO_CIPHERS */
 
@@ -72,11 +163,23 @@
 /* ---> Block Cipher Modes of Operation <--- */
 #ifndef LTC_NO_MODES
 
-#define CFB
-#define OFB
-#define ECB
-#define CBC
-#define CTR
+#define LTC_CFB_MODE
+#define LTC_OFB_MODE
+#define LTC_ECB_MODE
+#define LTC_CBC_MODE
+#define LTC_CTR_MODE
+
+/* F8 chaining mode */
+#define LTC_F8_MODE
+
+/* LRW mode */
+#define LTC_LRW_MODE
+#ifndef LTC_NO_TABLES
+   /* like GCM mode this will enable 16 8x128 tables [64KB] that make
+    * seeking very fast.  
+    */
+   #define LRW_TABLES
+#endif
 
 #endif /* LTC_NO_MODES */
 
@@ -96,15 +199,19 @@
 #define MD2
 #define RIPEMD128
 #define RIPEMD160
+#define RIPEMD256
+#define RIPEMD320
 
 #endif /* LTC_NO_HASHES */
 
 /* ---> MAC functions <--- */
 #ifndef LTC_NO_MACS
 
-#define HMAC
-#define OMAC
-#define PMAC
+#define LTC_HMAC
+#define LTC_OMAC
+#define LTC_PMAC
+#define LTC_XCBC
+#define LTC_F9_MODE
 #define PELICAN
 
 #if defined(PELICAN) && !defined(RIJNDAEL)
@@ -114,18 +221,22 @@
 /* ---> Encrypt + Authenticate Modes <--- */
 
 #define EAX_MODE
-#if defined(EAX_MODE) && !(defined(CTR) && defined(OMAC))
+#if defined(EAX_MODE) && !(defined(LTC_CTR_MODE) && defined(LTC_OMAC))
    #error EAX_MODE requires CTR and OMAC mode
 #endif
 
 #define OCB_MODE
 #define CCM_MODE
-
 #define GCM_MODE
 
 /* Use 64KiB tables */
 #ifndef LTC_NO_TABLES
    #define GCM_TABLES 
+#endif
+
+/* USE SSE2? requires GCC works on x86_32 and x86_64*/
+#ifdef GCM_TABLES
+/* #define GCM_TABLES_SSE2 */
 #endif
 
 #endif /* LTC_NO_MACS */
@@ -142,8 +253,8 @@
 /* 0 = rijndael_enc 1 = aes_enc, 2 = rijndael [full], 3 = aes [full] */
 #define YARROW_AES 0
 
-#if defined(YARROW) && !defined(CTR)
-   #error YARROW requires CTR chaining mode to be defined!
+#if defined(YARROW) && !defined(LTC_CTR_MODE)
+   #error YARROW requires LTC_CTR_MODE chaining mode to be defined!
 #endif
 
 /* a PRNG that simply reads from an available system source */
@@ -169,42 +280,44 @@
 
 #endif /* LTC_NO_PRNGS */
 
+/* ---> math provider? <--- */
+#ifndef LTC_NO_MATH
+
+/* LibTomMath */
+/* #define LTM_DESC */
+
+/* TomsFastMath */
+/* #define TFM_DESC */
+
+#endif /* LTC_NO_MATH */
+
 /* ---> Public Key Crypto <--- */
 #ifndef LTC_NO_PK
 
+/* Include RSA support */
 #define MRSA
+
+/* Include Katja (a Rabin variant like RSA) */
+/* #define MKAT */ 
 
 /* Digital Signature Algorithm */
 #define MDSA
-/* Max diff between group and modulus size in bytes */
-#define MDSA_DELTA     512
-/* Max DSA group size in bytes (default allows 4k-bit groups) */
-#define MDSA_MAX_GROUP 512
-
-/* Diffie-Hellman */
-#define MDH
-/* Supported Key Sizes */
-#define DH768
-#define DH1024
-#define DH1280
-#define DH1536
-#define DH1792
-#define DH2048
-#define DH2560
-#define DH3072
-#define DH4096
 
 /* ECC */
 #define MECC
-/* Supported Key Sizes */
-#define ECC192
-#define ECC224
-#define ECC256
-#define ECC384
-#define ECC521
 
-/* Include the MPI functionality?  (required by the PK algorithms) */
-#define MPI
+/* use Shamir's trick for point mul (speeds up signature verification) */
+#define LTC_ECC_SHAMIR
+
+#if defined(TFM_DESC) && defined(MECC)
+   #define MECC_ACCEL
+#endif   
+
+/* do we want fixed point ECC */
+/* #define MECC_FP */
+
+/* Timing Resistant? */
+/* #define LTC_ECC_TIMING_RESISTANT */
 
 #endif /* LTC_NO_PK */
 
@@ -216,41 +329,75 @@
 
 /* Include ASN.1 DER (required by DSA/RSA) */
 #define LTC_DER
+
+#endif /* LTC_NO_PKCS */
+
+/* cleanup */
+
+#ifdef MECC
+/* Supported ECC Key Sizes */
+#ifndef LTC_NO_CURVES
+   #define ECC112
+   #define ECC128
+   #define ECC160
+   #define ECC192
+   #define ECC224
+   #define ECC256
+   #define ECC384
+   #define ECC521
+#endif
+#endif
+
+#if defined(MECC) || defined(MRSA) || defined(MDSA) || defined(MKATJA)
+   /* Include the MPI functionality?  (required by the PK algorithms) */
+   #define MPI
+#endif
+
+#ifdef MRSA
+   #define PKCS_1
+#endif   
+
 #if defined(LTC_DER) && !defined(MPI) 
    #error ASN.1 DER requires MPI functionality
 #endif
 
-#if (defined(MDSA) || defined(MRSA)) && !defined(LTC_DER)
-   #error RSA/DSA requires ASN.1 DER functionality, make sure LTC_DER is enabled
+#if (defined(MDSA) || defined(MRSA) || defined(MECC) || defined(MKATJA)) && !defined(LTC_DER)
+   #error PK requires ASN.1 DER functionality, make sure LTC_DER is enabled
 #endif
-
-#endif /* LTC_NO_PKCS */
-
-#endif
-
 
 /* THREAD management */
-
 #ifdef LTC_PTHREAD
 
 #include <pthread.h>
 
 #define LTC_MUTEX_GLOBAL(x)   pthread_mutex_t x = PTHREAD_MUTEX_INITIALIZER;
 #define LTC_MUTEX_PROTO(x)    extern pthread_mutex_t x;
+#define LTC_MUTEX_TYPE(x)     pthread_mutex_t x;
+#define LTC_MUTEX_INIT(x)     pthread_mutex_init(x, NULL);
 #define LTC_MUTEX_LOCK(x)     pthread_mutex_lock(x);
 #define LTC_MUTEX_UNLOCK(x)   pthread_mutex_unlock(x);
 
-#else 
+#else
 
 /* default no functions */
 #define LTC_MUTEX_GLOBAL(x)
 #define LTC_MUTEX_PROTO(x)
+#define LTC_MUTEX_TYPE(x)
+#define LTC_MUTEX_INIT(x)
 #define LTC_MUTEX_LOCK(x)
 #define LTC_MUTEX_UNLOCK(x)
 
 #endif
 
+/* Debuggers */
+
+/* define this if you use Valgrind, note: it CHANGES the way SOBER-128 and RC4 work (see the code) */
+/* #define LTC_VALGRIND */
+
+#endif
+
+
 
 /* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_custom.h,v $ */
-/* $Revision: 1.17 $ */
-/* $Date: 2005/06/19 18:00:28 $ */
+/* $Revision: 1.66 $ */
+/* $Date: 2006/12/04 02:50:11 $ */

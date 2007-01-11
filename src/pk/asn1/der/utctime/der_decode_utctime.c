@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -39,6 +39,13 @@ static int char_to_int(unsigned char x)
    if (y >= max) return CRYPT_INVALID_PACKET;           \
    x += 2;
 
+/**
+  Decodes a UTC time structure in DER format (reads all 6 valid encoding formats)
+  @param in     Input buffer
+  @param inlen  Length of input buffer in octets
+  @param out    [out] Destination of UTC time structure
+  @return CRYPT_OK   if successful
+*/
 int der_decode_utctime(const unsigned char *in, unsigned long *inlen,
                              ltc_utctime   *out)
 {
@@ -116,5 +123,5 @@ YYMMDDhhmmss-hh'mm'
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/utctime/der_decode_utctime.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2005/06/19 12:07:00 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/03/31 14:15:35 $ */
