@@ -988,11 +988,17 @@
 #ifdef LTM3
 #define LTM_LAST
 #endif
-#include <tommath_superclass.h>
-#include <tommath_class.h>
+#include "tommath_superclass.h"
+#include "tommath_class.h"
 #else
 #define LTM_LAST
 #endif
+
+/* Dropbear doesn't need these. */
+#undef BN_MP_KARATSUBA_MUL_C
+#undef BN_MP_KARATSUBA_SQR_C
+#undef BN_MP_TOOM_MUL_C
+#undef BN_MP_TOOM_SQR_C
 
 /* $Source: /cvs/libtom/libtommath/tommath_class.h,v $ */
 /* $Revision: 1.3 $ */
