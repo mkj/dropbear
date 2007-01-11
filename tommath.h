@@ -21,7 +21,7 @@
 #include <ctype.h>
 #include <limits.h>
 
-#include <tommath_class.h>
+#include "tommath_class.h"
 
 #undef MIN
 #define MIN(x,y) ((x)<(y)?(x):(y))
