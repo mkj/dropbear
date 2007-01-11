@@ -1,11 +1,27 @@
-stopped at ch12
--- needs examples for ecc/dsa!!! (and for asn.1)
+Current:
 
-must have for v1.16
-- document PK build flags
-- document makefile flags [INSTALL_* for instance]
-- prepare manual for printing (both soft and hard cover)
+Things which might need doing:
 
-Nice to have [in order of precedence]
-- add X9.63 IES
-- add CPP macros like OpenSSL has for ASN1 (e.g. encode/decode functions, etc) shameless ripoff :-)
+- default private dbclient keys
+
+- Make options.h generated from configure perhaps?
+
+- handle /etc/environment in AIX
+
+- check that there aren't timing issues with valid/invalid user authentication
+  feedback.
+
+- Binding to different interfaces
+
+- CTR mode
+- SSH_MSG_IGNORE sending to improve CBC security
+- DH Group Exchange possibly, or just add group14 (whatever it's called today)
+
+- fix scp.c for IRIX
+
+- Be able to use OpenSSH keys for the client? or at least have some form of 
+  encrypted keys.
+
+- Client agent forwarding
+
+- Handle restrictions in ~/.ssh/authorized_keys ?
