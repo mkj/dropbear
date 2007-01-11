@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -18,9 +18,8 @@
 
 #ifdef LTC_DER
 
-/* Exports a positive integer as DER format (upto 32-bits in size) */
 /**
-  Store a mp_int integer
+  Store a short integer in the range (0,2^32-1)
   @param num      The integer to encode
   @param out      [out] The destination for the DER encoded integers
   @param outlen   [in/out] The max size and resulting size of the DER encoded integers
@@ -43,6 +42,7 @@ int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned lon
    }
 
    if (*outlen < len) {
+      *outlen = len;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -70,7 +70,7 @@ int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned lon
    /* store header */
    x = 0;
    out[x++] = 0x02;
-   out[x++] = z;
+   out[x++] = (unsigned char)z;
 
    /* if 31st bit is set output a leading zero and decrement count */
    if (z == 5) {
@@ -80,7 +80,7 @@ int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned lon
 
    /* store values */
    for (y = 0; y < z; y++) {
-      out[x++] = (num >> 24) & 0xFF;
+      out[x++] = (unsigned char)((num >> 24) & 0xFF);
       num    <<= 8;
    }
 
@@ -93,5 +93,5 @@ int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned lon
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/short_integer/der_encode_short_integer.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/23 01:27:03 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

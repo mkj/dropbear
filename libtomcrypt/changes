@@ -1,3 +1,233 @@
+December 16th, 2006
+v1.16 -- Brian Gladman pointed out that a recent change to GCM broke how the IV was handled.  Currently the code complies against his test vectors
+         so the code should be considered frozen now.
+      -- Trevor from Cryptography Research Inc. submitted patches to convert the ECC code to be generic allowing curve parameters to be submitted
+         at runtime.  
+      -- Fixed various doxygen comments
+      -- Added UTF8 support to the ASN1 code
+      -- Fixed STOREXXH macros for x86 platforms (Fix found at Elliptic Inc.)
+      -- Added makefile.unix which is BSD compatible, you have to manually tweak it since well I don't use it normally
+      -- removed a few lingering memcpy's
+      -- Fixed memory free errors in ecc_sign_hash() that can arise if the mp_init_multi() fails
+      -- Fixed incorrect return value in pkcs_1_pss_decode() which would correctly set res to 0 (indicating an incorrect signature) but 
+         would return CRYPT_OK to the caller
+      -- ltc_ecc_mulmod() could leak memory if mp_init(&mu) failed, fixed.  Would you believe that ltc_ecc_mulmod_timing() had the same
+         bug?  Also fixed.  :-)
+      -- Added Shamir's trick to the ECC side (defined as LTC_ECC_SHAMIR, enabled by default), gets ~1.34x to ~1.40x faster ECC verifications
+      -- Added Brian's vector #46 to the GCM code.  It catches the ctr counter error from v1.15.  Originally I was going to add all of his vectors,
+         but they're not as easy to parse and I got a lot of other things to do.  Regression!
+      -- Various other small fixes to the ECC code to clean up error handling (I think most of that was from the move in 1.06 to the plugins)
+         All of the errors were in cleaning up from heap failures.  So they were not likely to be triggered in normal usage
+         Made similar fixes to the RSA and DSA code (my bad)
+      -- Cryptography Research Inc. contributed a bunch of fixes to silence warnings (with MSVC) w.r.t. assigned data to unsigned char types.
+      -- Martin Marko suggested some fixes to make the RNG build with WinCE.
+      -- Updates to the manual for print (some fixes thanks to Martin Marko)
+      
+
+November 17th, 2006
+v1.15 -- Andreas Lange found that if sha256_init DID fail in fortuna it wouldn't clean up the state correctly.  Thanks.
+         Fortunately sha256_init cannot fail (as of v1.14) :-)
+      -- Andreas Lange contributed RMD-256 and RMD-320 code.
+      -- Removed mutex locks from fortuna_import as they create a deadlock and aren't required anyways [Avi Zelmanovich]
+      -- Added LTC_NO_PROTOTYPES to avoid prototyping functions like memset/memcpy.  Required for fans of GCC 3.3.x
+      -- David Eder caught a off by one overrun bug in pmac_done() which can be exploited if your output tag buffer is 
+         smaller than the block size of the cipher, e.g. if you have a 4-byte buffer and you tell pmac_done that you want
+         a 4-byte TAG it will store 4 bytes but return an outlen of 5.
+      -- Added signatures to the ECC and RSA benchmarks
+      -- Added LTC_PROFILE to run the PK tests only once in the timing demo (so you can capture events properly)
+      -- Andreas contributed PKCS #1 v1.5 code that merged cleanly with the existing PKCS code.  w00t.
+         (update: I had to fix it to include the digestInfo and what not.  Bad Andreas, bad! hehehe)
+      -- Fixed a signed variable error in gcm_process() (hard to trigger bug fortunately)
+      -- Removed all memcmp/memset/memcpy from the source (replaced with X macros)
+      -- Renamed macros HMAC/OMAC/PMAC to have a LTC_ prefix.  If you pass these on the command line please update your makefiles
+      -- Added XCBC-MAC support [RFC 3566]
+      -- fixed LOAD32H and LOAD64H to stop putting out that darn warning :-)
+      -- Added the Korean SEED block cipher [RFC 4269]
+      -- Added LTC_VALGRIND define which makes SOBER-128 and RC4 a pure PRNG (and not a stream cipher).  Useful if you use 
+         Valgrind to debug your code (reported by Andreas Lange)
+      -- Made SOBER-128 more portable by removing the ASCII key in the test function (my bad, sorry).
+      -- Martin Mocko pointed out that if you have no PRNGs defined the lib won't build.  Fixed, also fixed for if you have no
+         hashes defined.
+      -- Sped up F8 mode with LTC_FAST
+      -- Made CTR mode RFC 3686 compliant (increment counter first), to enable, OR the value LTC_CTR_RFC3686 to the "mode"
+         parameter you pass to ctr_start(), otherwise it will be LTC compliant (e.g. encrypt then increment)
+      -- Added ctr_test() to test CTR mode against RFC 3686
+      -- Added crypt_fsa() ... O_o
+      -- Fixed LTC_ECC_TIMING_RESISTANT so it once again builds properly (pt add/dbl are through the plugin now)
+      -- Added ANSI X9.63 (sec 4.3.6) import/export of public keys (cannot export to compressed formats but will import 
+         hybrid compressed)
+      -- Added SECP curves for 112, 128, and 160 bits (only the 'r1' curves)
+      -- Added 3GPP-F9 MAC (thanks to Greg Rose for the test vectors)
+      -- Added the KASUMI block cipher
+      -- Added F9/XCBC/OMAC callbacks to the cipher plugin
+      -- Added RSA PKCS #1 v1.5 signature/encrypt tests to rsa_test.c
+      -- Fix to yarrow_test() to not call yarrow_done() which is invalid in that context (thanks Valgrind)
+      -- Christophe Devine pointed out that Anubis would fail on various 64-bit UNIX boxes when "x>>24" was used as an index, we needed 
+         to mask it with 0xFF.  Thanks.  Fixed.
+
+August 0x1E, 0x07D6
+v1.14 -- Renamed the chaining mode macros from XXX to LTC_XXX_MODE.  Should help avoid polluting the macro name space.
+      -- clean up of SHA-256
+      -- Chris Colman pointed out that der_decode_sequence_* allows LTC_ASN1_SETOF to accept SEQUENCEs and vice versa.
+         Decoder [non-flexi decoder that is] is more strict now and requires a match.
+      -- Steffen Jaeckel pointed out a typo in the user manual (re: rsa_exptmod).  Fixed.  This disproves the notion that
+         nobody reads it.  :-)
+      -- Made GCM a bit more portable w.r.t. handling the CTR IV (e.g. & with 255)
+      -- Add LTC_VERBOSE if you really want to see what test is doing :-)
+      -- Added SSE2 support to GCM [use GCM_TABLES_SSE2 to enable], shaves 2 cycles per byte on Opteron processors
+         Shaved 4 cycles on a Prescott (Intel P4)
+         Requires you align your gcm_state on a 16 byte boundary, see gcm_memory() for more info
+      -- Added missing prototype for f8_test_mode()
+      -- two fixes to CCM for corner cases [L+noncelen > 15] and fixing the CTR pad to encrypt the CBC-MAC tag
+      -- Franz Glasner pointed out the ARGTYPE=4 is not actually valid.  Fixed.
+      -- Fixed bug in f8_start() if your key < saltkey unspecified behaviour occurs.  :-(
+      -- Documented F8 mode.  Yeah, because you read the manual.  
+      -- Minor updates to the technotes.
+
+
+June 17th, 2006
+v1.13 -- Fixed to fortuna_start() to clean up state if an error occurs.  Not really useful at this stage (sha256 can't fail) but useful
+         if I ever make fortuna pluggable
+      -- Mike Marin submitted a whole bunch of patches for fixing up the libs on traditional UNIX platforms.  Go AIX!  Thanks!
+      -- One of bugs found in the multi demo highlights that at least with gcc you need to pass integers with a UL prefix to ensure
+         they're unsigned long
+      -- Updated the FP ECC code to use affine points.  It's teh fast.
+      -- Made it so many functions which return CRYPT_BUFFER_OVERFLOW now also indicate the required buffer size, note that not all functions
+         do this (most do though).
+      -- Added F8 chaining mode.  It's super neato.
+
+May 29th, 2006
+v1.12 -- Fixed OID encoder/decoder/length to properly handle the first two parts of an OID, matches 2002 X.690 now.
+      -- [Wesley Shields] Allows both GMP/LTM and TFM to be defined now.  
+      -- [Wesley Shields] GMP pluggin is cleaner now and doesn't use deprecated symbols. Yipee
+      -- Added count_lsb_bits to get the number of leading LSB zero bits there are.
+      -- Fixed a bug in the INTEGER encoders for values of -(256**k)/2
+      -- Added BOOLEAN type to ASN.1 thingy-ma-do-hicky
+      -- Testprof doesn't strictly require GMP ... oops [Nils Durner]
+      -- Added LTC_CALL and LTC_EXPORT macros in tomcrypt_cfg.h to support various calling and linker conventions
+         (Thanks to John Kirk from Demonware)
+      -- In what has to be the best thing since sliced bread I bring you MECC_FP which is the fixed point
+         ECC point multiplier.  It's fast, it's sexy and what's more it's hella fast [did I mention it's fast?]
+         You can tune it somewhat with FP_LUT (default to 8) for look-up width.
+         Read section 8.2 of the manual for more info.
+         It is disabled by default, you'll have to build LTC with it defined to get it.  
+      -- Fixed bug in ecc_test.c (from testprof) to include the 521 [not 512] bit curve.  :-)
+
+April 4th, 2006
+v1.11 -- Removed printf's from lrw_test ... whoops
+      -- lrw_process now checks the return of the cipher ecb encrypt/decrypt calls
+      -- lrw_start was not using num_rounds ...
+      -- Adam Miller reported a bug in the flexi decoder with elements past the end of a sequence.  Fixed.
+      -- Bruce Guenter suggested I use --tag=CC for libtool builds where the compiler may think it's C++.  (I applied this to LTM and TFM)
+      -- Optimized the ECC for TFM a bit by removing the useless "if" statements (most TFM functions don't return error codes)
+         Actually shaved a good chunk of time off and made the code smaller.  By default with TFM the stock LTC point add/dbl functions 
+         will be totally omitted (ECC-256 make key times on a Prescott for old vs. new are 11.03M vs. 9.59M cycles)
+      -- added missing CVS tags to ltc_ecc_mulmod.c
+      -- corrected typo in tomcrypt_cfg.h about what the file has been called 
+      -- corrected my address in the user manual.  A "bit" out of date.
+      -- added lrw_gen to tv_gen
+      -- added GMP plugin, only tested on a AMD64 and x86_32 Gentoo Linux box so be aware
+      -- made testme.sh runs diff case insensitivityly [whatever...] cuz GMP outputs lowercase satan text
+      -- added LDFLAGS to the makefile to allow cross porting linking options
+      -- added lrw_test() to the header file ... whoops
+      -- changed libtomcrypt.org to libtomcrypt.com .... mumble mumble
+      -- Updates to detect __STRICT_ANSI__ which is defined in --std=c99 modes (note -ansi is not supported as it lacks long long) so you can
+         build LTC out of the box with c99 (note: it'll be slower as there is no asm in this case)
+      -- Updated pelican.c and aes_tab.c to undef tables not-required.  The tables are static so both AES and Pelican MAC would have copies.  Save a few KB in the final binary.
+      -- Added LTC_NO_FAST to the makefile.icc to compensate for the fact ICC v9 can't handle it (Pelican MAC fails for instance)
+
+February 11th, 2006
+v1.10 -- Free ecb/cbc/ctr/lrw structures in timing code by calling the "done" function
+      -- fixed bug in lrw_process() which would always use the slow update ...
+      -- vastly sped up gcm_gf_mult() when LTC_FAST is defined.  This speeds up LRW and GCM state creation, useful for servers with GCM
+      -- Removed NLS since there are some attacks against it.  
+      -- fixed memory leak in rsa_import reported by John Kuhns
+      ++ re-released as the rsa fix was incorrect (bad John bad ... hehehe) and I missed some NULLs in the static descriptor entry for ciphers 
+
+January 26th, 2006
+v1.09 -- Added missing doxygen comments to some of the ASN.1 routines
+      -- Added "easy button" define LTC_EASY and LTC will build with a subset of all the algos.  Reduces build times for typical
+         configurations.  Tunable [see tomcrypt_custom.h]
+      -- Added some error detection to reg_algs() of the testprof.a library to detect when the PRNG is not setup correctly (took me 10 mins to figure out, PITA!)
+      -- Similar fixes to timing demo (MD5 not defined when EASY is defined)
+      -- Added the NLS enc+mac stream cipher from QUALCOMM, disabled for this release, waiting on test vectors
+      -- Finally added an auto-update script for the makefiles.  So when I add new files/dirs it can automatically fix up the makefiles [all four of them...]
+      -- Added LRW to the list of cipher modes supported
+      -- cleaned up ciphers definitions to remove cbc/cfb/ofb/ctr/etc from the namespace when not used.
+
+November 24th, 2005
+v1.08 -- Added SET and SET OF support to the ASN.1 side
+      -- Fixed up X macros, added QSORT to the mix [thanks SET/SETOF]
+      -- Added XMEMCMP to the list of X macros
+      -- In der_decode_sequence() the SHORT_INTEGER type was not being handled correctly [oddly enough it worked just enough to make RSA work ... go figure!]
+      -- Fixed bug in math descriptors where if you hadn't defined MECC (ECC support) you would get linker errors
+      -- Added RSA accelerators to the math descriptors to make it possible to not include the stock routines if you supply your own.
+      -- dsa_decrypt_key() was erroneously dependent on MECC not MDSA ... whoops
+      -- Moved DSA size limits to tomcrypt_pk.h so they're defined with LTC_NO_PK+MDSA
+      -- cleaned up tomcrypt_custom.h to make customizable PK easier (and also cleaned up the error traps so they're correctly reported)
+
+November 18th, 2005
+v1.07 -- Craig Schlenter pointed out the "encrypt" demo doesn't call ctr_start() correctly.  That's because as of a few releases ago
+         I added support to set the mode of the counter at init time
+      -- Fixed some "testprof" make issues
+      -- Added RSA keygen to the math descriptors
+      -- Fixed install_test target ... oops
+      -- made the "ranlib" program renamable useful for cross-compiling
+      -- Made the cipher accelerators return error codes.  :-)
+      -- Made CCM accept a pre-scheduled key to speed it up if you use the same key for multiple packets
+      -- Added "Katja" public key crypto.  It's based on the recent N = p^2q work by Katja.  I added OAEP padding
+         to it.  Note this code has been disabled not because it doesn't work but because it hasn't been thoroughly
+         analyzed.   It does carry some advantages over RSA (slightly smaller public key, faster decrypt) but also
+         some annoying "setup" issues like the primes are smaller which makes ECM factoring more plausible.
+      -- Made makefile accept a NODOCS flag to disable the requirement of tetex to install LTC for you no tetex people... all 3 of ya  :-)
+      -- Cleaned up rsa_export() since "zero" was handled with a SHORT_INTEGER
+      -- Cleaned up the LIBTEST_S definitions in both GNU makefiles.  A few minor touchups as well.
+      -- Made the cipher ecb encrypt/decrypt return an int as well, changed ALL dependent code to check for this.  
+      -- der_decode_choice() would fail to mark a NULL as "used" when decoding.  Fixed
+      -- ecc_decrypt_key() now uses find_hash_oid() to clean up the code ;-)
+      -- Added mp_neg() to the math descriptors.
+      -- Swapped arguments for the pkcs_1_mgf1() function so the hash_idx is the first param (to be more consistent)
+      -- Made the math descriptors buildable when RSA has been undefined
+      -- ECC timing demo now capable of detecting which curves have been defined
+      -- Refactored the ECC code so it's easier to maintain.  (note: the form of this code hasn't really changed since I first added ECC ... :-/)
+      -- Updated the documentation w.r.t. ECC and the accelerators to keep it current
+      -- Fixed bug in ltc_init_multi() which would fail to free all allocated memory on error.
+      -- Fixed bug in ecc_decrypt_key() which could possibly lead to overflows (if MAXBLOCKSIZE > ECC_BUF_SIZE and you have a hash that emits MAXBLOCKSIZE bytes)
+      -- Added encrypt/decrypt to the DSA side (basically DH with DSA parameters)
+      -- Updated makefiles to remove references to the old DH object files and the ecc_sys.o crap ... clean code ahead!
+      -- ecc_import() now checks if the point it reads in lies on the curve (to prevent degenerative points from being used)
+      -- ECC code now ALWAYS uses the accelerator interface.  This allows people who use the accelerators to not have the stock
+         ECC point add/dbl/mul code linked in.  Yeah space savings! Rah Rah Rah.
+      -- Added LTC_MUTEX_* support to Yarrow and Fortuna allowing you to use respective prng_state as a global PRNG state [e.g. thread-safe] if you define one of the LTC_* defines at
+         build time (e.g. LTC_PTHREAD == pthreads)
+      -- Added PPC32 support to the rotate macros (tested on an IBM PPC 405) and LTC_FAST macros (it aint fast but it's faster than stock)
+      -- Added ltc_mp checks in all *_make_key() and *_import() which will help catch newbs who don't register their bignum first :-)
+      -- the UTCTIME type was missing from der_length_sequence() [oops, oh like you've never done that]
+      -- the main makefile allows you to rename the make command [e.g. MAKE=gmake gmake install] so you can build LTC on platforms where the default make command sucks [e.g. BSD]
+      -- Added DER flexi decoder which allows the decoding of arbitrary DER encoded packets without knowing
+         their structure in advance (thanks to MSVC for finding 3 bugs in it just prior to release! ... don't ask)
+
+August 1st, 2005
+v1.06 -- Fixed rand_prime() to accept negative inputs as a signal for BBS primes. [Fredrik Olsson]
+      -- Added fourth ARGCHK type which outputs to stderr and continues.  Useful if you trap sigsegv.   [Valient Gough]
+      -- Removed the DH code from the tree
+      -- Made the ECC code fully public (you can access ecc_mulmod directly now) useful for debuging
+      -- Added ecc test to tv_gen
+      -- Added hmac callback to hash descriptors.
+      -- Fixed two doxy comment errors in the UTCTIME functions
+      -- rsa_import() can now read OpenSSL format DER public keys as well as the PKCS #1 RSAPublicKey format.
+         Note that rsa_export()  **ONLY** writes PKCS #1 formats
+      -- Changed MIN/MAX to only define if not already present.  -- Kirk J from Demonware ... 
+      -- Ported tv_gen to new framework (and yes, I made ecc vectors BEFORE changing the API and YES they match now :-))
+      -- ported testing scripts to support pluggable math.  yipee!
+      -- Wrote a TFM descriptor ... yipee
+      -- Cleaned up LTC_FAST in CBC mode a bit 
+      -- Merged in patches from Michael Brown for the sparc/sparc64 targets
+      -- Added find_hash_oid() to search for a hash by its OID
+      -- Cleaned up a few stray CLEAN_STACKs that should have been LTC_CLEAN_STACK
+      -- Added timing resistant ECC, enable by defining LTC_ECC_TIMING_RESISTANT then use ECC API as normal 
+      -- Updated the ECC documentation as it was a bit out of date
+
 June 27th, 2005
 v1.05
       -- Added Technote #6 which covers the current PK compliance.  
@@ -213,7 +443,7 @@ October 29th, 2004
 v0.99  -- Merged in the latest version of LTM which includes all of the recent bug fixes
        -- Deprecated LTMSSE and removed it (to be replaced with TFM later on)
        -- Stefan Arentz pointed out that mp_s_rmap should be extern
-       -- Kristian Gjøsteen pointed out that there are typos in the 
+       -- Kristian Gj?steen pointed out that there are typos in the 
           "test" makefile and minor issues in Yarrow and Sober [just cosmetics really]
        -- Matthew P. Cashdollar pointed out that "export" is a C++ keyword 
           so changed the PRNG api to use "pexport" and "pimport"
@@ -592,7 +822,7 @@ v0.81  -- Merged in new makefile from Clay Culver and Mike Frysinger
           as much as possible.  This sped the routine up quite a bit.
        -- Fixed a huge flaw in ecc_verify_hash() where it would return CRYPT_OK on error... Now fixed.
        -- Fixed up config.pl by fixing an invalid query and the file is saved in non-windows [e.g. not CR/LF] format
-          (fix due to Mika Boström)
+          (fix due to Mika Bostr?m)
        -- Merged in LibTomMath for kicks
        -- Changed the build process so that by default "mycrypt_custom.h" is included and provided
           The makefile doesn't include any build options anymore
@@ -1321,6 +1551,6 @@ v0.02  -- Changed RC5 to only allow 12 to 24 rounds
 v0.01  -- We will call this the first version.
 
 /* $Source: /cvs/libtom/libtomcrypt/changes,v $ */
-/* $Revision: 1.106 $ */
-/* $Date: 2005/06/27 12:37:06 $ */
+/* $Revision: 1.274 $ */
+/* $Date: 2006/12/16 19:08:17 $ */
 

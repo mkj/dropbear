@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /*******************************************************************************
@@ -42,7 +42,7 @@ const struct ltc_cipher_descriptor
    &safer_k64_test,
    &safer_done,
    &safer_64_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_sk64_desc = {
@@ -54,7 +54,7 @@ const struct ltc_cipher_descriptor
    &safer_sk64_test,
    &safer_done,
    &safer_64_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_k128_desc = {
@@ -66,7 +66,7 @@ const struct ltc_cipher_descriptor
    &safer_sk128_test,
    &safer_done,
    &safer_128_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_sk128_desc = {
@@ -78,7 +78,7 @@ const struct ltc_cipher_descriptor
    &safer_sk128_test,
    &safer_done,
    &safer_128_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    };
 
 /******************* Constants ************************************************/
@@ -246,11 +246,11 @@ int safer_sk128_setup(const unsigned char *key, int keylen, int numrounds, symme
 }
 
 #ifdef LTC_CLEAN_STACK
-static void _safer_ecb_encrypt(const unsigned char *block_in,
+static int _safer_ecb_encrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 #else
-void safer_ecb_encrypt(const unsigned char *block_in,
+int safer_ecb_encrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 #endif
@@ -285,24 +285,26 @@ void safer_ecb_encrypt(const unsigned char *block_in,
     block_out[2] = c & 0xFF; block_out[3] = d & 0xFF;
     block_out[4] = e & 0xFF; block_out[5] = f & 0xFF;
     block_out[6] = g & 0xFF; block_out[7] = h & 0xFF;
+    return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void safer_ecb_encrypt(const unsigned char *block_in,
+int safer_ecb_encrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 {
-    _safer_ecb_encrypt(block_in, block_out, skey);
+    int err = _safer_ecb_encrypt(block_in, block_out, skey);
     burn_stack(sizeof(unsigned char) * 9 + sizeof(unsigned int) + sizeof(unsigned char *));
+    return err;
 }
 #endif
 
 #ifdef LTC_CLEAN_STACK
-static void _safer_ecb_decrypt(const unsigned char *block_in,
+static int _safer_ecb_decrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 #else
-void safer_ecb_decrypt(const unsigned char *block_in,
+int safer_ecb_decrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 #endif
@@ -338,15 +340,17 @@ void safer_ecb_decrypt(const unsigned char *block_in,
     block_out[2] = c & 0xFF; block_out[3] = d & 0xFF;
     block_out[4] = e & 0xFF; block_out[5] = f & 0xFF;
     block_out[6] = g & 0xFF; block_out[7] = h & 0xFF;
+    return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void safer_ecb_decrypt(const unsigned char *block_in,
+int safer_ecb_decrypt(const unsigned char *block_in,
                              unsigned char *block_out,
                              symmetric_key *skey)
 {
-    _safer_ecb_decrypt(block_in, block_out, skey);
+    int err = _safer_ecb_decrypt(block_in, block_out, skey);
     burn_stack(sizeof(unsigned char) * 9 + sizeof(unsigned int) + sizeof(unsigned char *));
+    return err;
 }
 #endif
 
@@ -392,7 +396,7 @@ int safer_k64_test(void)
    safer_ecb_encrypt(k64_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (memcmp(buf[0], k64_ct, 8) != 0 || memcmp(buf[1], k64_pt, 8) != 0) {
+   if (XMEMCMP(buf[0], k64_ct, 8) != 0 || XMEMCMP(buf[1], k64_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
@@ -422,7 +426,7 @@ int safer_sk64_test(void)
    safer_ecb_encrypt(sk64_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (memcmp(buf[0], sk64_ct, 8) != 0 || memcmp(buf[1], sk64_pt, 8) != 0) {
+   if (XMEMCMP(buf[0], sk64_ct, 8) != 0 || XMEMCMP(buf[1], sk64_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
@@ -464,7 +468,7 @@ int safer_sk128_test(void)
    safer_ecb_encrypt(sk128_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (memcmp(buf[0], sk128_ct, 8) != 0 || memcmp(buf[1], sk128_pt, 8) != 0) {
+   if (XMEMCMP(buf[0], sk128_ct, 8) != 0 || XMEMCMP(buf[1], sk128_pt, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
@@ -483,5 +487,5 @@ int safer_sk128_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/safer/safer.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.13 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

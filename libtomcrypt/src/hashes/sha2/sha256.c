@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -31,12 +31,13 @@ const struct ltc_hash_descriptor sha256_desc =
     &sha256_init,
     &sha256_process,
     &sha256_done,
-    &sha256_test
+    &sha256_test,
+    NULL
 };
 
 #ifdef LTC_SMALL_CODE
 /* the K array */
-static const unsigned long K[64] = {
+static const ulong32 K[64] = {
     0x428a2f98UL, 0x71374491UL, 0xb5c0fbcfUL, 0xe9b5dba5UL, 0x3956c25bUL,
     0x59f111f1UL, 0x923f82a4UL, 0xab1c5ed5UL, 0xd807aa98UL, 0x12835b01UL,
     0x243185beUL, 0x550c7dc3UL, 0x72be5d74UL, 0x80deb1feUL, 0x9bdc06a7UL,
@@ -318,7 +319,7 @@ int  sha256_test(void)
       sha256_init(&md);
       sha256_process(&md, (unsigned char*)tests[i].msg, (unsigned long)strlen(tests[i].msg));
       sha256_done(&md, tmp);
-      if (memcmp(tmp, tests[i].hash, 32) != 0) {
+      if (XMEMCMP(tmp, tests[i].hash, 32) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
   }
@@ -335,5 +336,5 @@ int  sha256_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha256.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

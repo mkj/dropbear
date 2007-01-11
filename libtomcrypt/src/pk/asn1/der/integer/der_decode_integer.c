@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -25,7 +25,7 @@
   @param num      The first mp_int to decode
   @return CRYPT_OK if successful
 */
-int der_decode_integer(const unsigned char *in, unsigned long inlen, mp_int *num)
+int der_decode_integer(const unsigned char *in, unsigned long inlen, void *num)
 {
    unsigned long x, y, z;
    int           err;
@@ -56,7 +56,7 @@ int der_decode_integer(const unsigned char *in, unsigned long inlen, mp_int *num
       }
      
       /* no so read it */
-      if ((err = mpi_to_ltc_error(mp_read_unsigned_bin(num, (unsigned char *)in + x, z))) != CRYPT_OK) {
+      if ((err = mp_read_unsigned_bin(num, (unsigned char *)in + x, z)) != CRYPT_OK) {
          return err;
       }
    } else {
@@ -80,23 +80,23 @@ int der_decode_integer(const unsigned char *in, unsigned long inlen, mp_int *num
       }
 
       /* no so read it */
-      if ((err = mpi_to_ltc_error(mp_read_unsigned_bin(num, (unsigned char *)in + x, y))) != CRYPT_OK) {
+      if ((err = mp_read_unsigned_bin(num, (unsigned char *)in + x, y)) != CRYPT_OK) {
          return err;
       }
    }
 
    /* see if it's negative */
    if (in[x] & 0x80) {
-      mp_int tmp;
-      if (mp_init(&tmp) != MP_OKAY) {
+      void *tmp;
+      if (mp_init(&tmp) != CRYPT_OK) {
          return CRYPT_MEM;
       }
 
-      if (mp_2expt(&tmp, mp_count_bits(num)) != MP_OKAY || mp_sub(num, &tmp, num) != MP_OKAY) {
-         mp_clear(&tmp);
+      if (mp_2expt(tmp, mp_count_bits(num)) != CRYPT_OK || mp_sub(num, tmp, num) != CRYPT_OK) {
+         mp_clear(tmp);
          return CRYPT_MEM;
       }
-      mp_clear(&tmp);
+      mp_clear(tmp);
    } 
 
    return CRYPT_OK;
@@ -106,5 +106,5 @@ int der_decode_integer(const unsigned char *in, unsigned long inlen, mp_int *num
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/integer/der_decode_integer.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/06/01 00:06:05 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -19,11 +19,11 @@
 #ifdef LTC_DER
 /**
   Gets length of DER encoding of num 
-  @param num    The mp_int to get the size of 
+  @param num    The int to get the size of 
   @param outlen [out] The length of the DER encoding for the given integer
   @return CRYPT_OK if successful
 */
-int der_length_integer(mp_int *num, unsigned long *outlen)
+int der_length_integer(void *num, unsigned long *outlen)
 {
    unsigned long z, len;
    int           leading_zero;
@@ -31,11 +31,11 @@ int der_length_integer(mp_int *num, unsigned long *outlen)
    LTC_ARGCHK(num     != NULL);
    LTC_ARGCHK(outlen  != NULL);
 
-   if (mp_cmp_d(num, 0) != MP_LT) {
+   if (mp_cmp_d(num, 0) != LTC_MP_LT) {
       /* positive */
 
       /* we only need a leading zero if the msb of the first byte is one */
-      if ((mp_count_bits(num) & 7) == 0 || mp_iszero(num) == MP_YES) {
+      if ((mp_count_bits(num) & 7) == 0 || mp_iszero(num) == LTC_MP_YES) {
          leading_zero = 1;
       } else {
          leading_zero = 0;
@@ -49,6 +49,7 @@ int der_length_integer(mp_int *num, unsigned long *outlen)
       leading_zero = 0;
       z = mp_count_bits(num);
       z = z + (8 - (z & 7));
+      if (((mp_cnt_lsb(num)+1)==mp_count_bits(num)) && ((mp_count_bits(num)&7)==0)) --z;
       len = z = z >> 3;
    }
 
@@ -77,5 +78,5 @@ int der_length_integer(mp_int *num, unsigned long *outlen)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/integer/der_length_integer.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2005/05/16 15:08:11 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/04/22 01:22:55 $ */

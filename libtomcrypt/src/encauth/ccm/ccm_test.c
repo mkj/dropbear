@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -116,6 +116,7 @@ int ccm_test(void)
   unsigned long taglen, x;
   unsigned char buf[64], buf2[64], tag2[16], tag[16];
   int           err, idx;
+  symmetric_key skey;
 
   idx = find_cipher("aes");
   if (idx == -1) {
@@ -127,8 +128,13 @@ int ccm_test(void)
 
   for (x = 0; x < (sizeof(tests)/sizeof(tests[0])); x++) {
       taglen = tests[x].taglen;
+      if ((err = cipher_descriptor[idx].setup(tests[x].key, 16, 0, &skey)) != CRYPT_OK) {
+         return err;
+      }
+      
       if ((err = ccm_memory(idx,
                             tests[x].key, 16,
+                            &skey,
                             tests[x].nonce, tests[x].noncelen,
                             tests[x].header, tests[x].headerlen,
                             (unsigned char*)tests[x].pt, tests[x].ptlen,
@@ -137,31 +143,31 @@ int ccm_test(void)
          return err;
       }
 
-      if (memcmp(buf, tests[x].ct, tests[x].ptlen)) {
+      if (XMEMCMP(buf, tests[x].ct, tests[x].ptlen)) {
          return CRYPT_FAIL_TESTVECTOR;
       }
-      if (memcmp(tag, tests[x].tag, tests[x].taglen)) {
+      if (XMEMCMP(tag, tests[x].tag, tests[x].taglen)) {
          return CRYPT_FAIL_TESTVECTOR;
       }
 
       if ((err = ccm_memory(idx,
                             tests[x].key, 16,
+                            NULL,
                             tests[x].nonce, tests[x].noncelen,
                             tests[x].header, tests[x].headerlen,
                             buf2, tests[x].ptlen,
                             buf,
-                            tag2, &taglen, 1	)) != CRYPT_OK) {
+                            tag2, &taglen, 1   )) != CRYPT_OK) {
          return err;
       }
 
-     if (memcmp(buf2, tests[x].pt, tests[x].ptlen)) {
+      if (XMEMCMP(buf2, tests[x].pt, tests[x].ptlen)) {
          return CRYPT_FAIL_TESTVECTOR;
       }
-     if (memcmp(tag2, tests[x].tag, tests[x].taglen)) {
+      if (XMEMCMP(tag2, tests[x].tag, tests[x].taglen)) {
          return CRYPT_FAIL_TESTVECTOR;
-     }
- 
-
+      }
+      cipher_descriptor[idx].done(&skey);
   }
   return CRYPT_OK;
 #endif
@@ -170,5 +176,5 @@ int ccm_test(void)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/ccm/ccm_test.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/21 00:18:23 $ */

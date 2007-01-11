@@ -170,7 +170,7 @@ int main(int argc, char *argv[])
          exit(-1);
       }
    
-      if ((errno = ctr_start(cipher_idx,IV,key,ks,0,&ctr)) != CRYPT_OK) {
+      if ((errno = ctr_start(cipher_idx,IV,key,ks,0,CTR_COUNTER_LITTLE_ENDIAN,&ctr)) != CRYPT_OK) {
          printf("ctr_start error: %s\n",error_to_string(errno));
          exit(-1);
       }
@@ -212,7 +212,7 @@ int main(int argc, char *argv[])
          exit(-1);
       }
 
-      if ((errno = ctr_start(cipher_idx,IV,key,ks,0,&ctr)) != CRYPT_OK) {
+      if ((errno = ctr_start(cipher_idx,IV,key,ks,0,CTR_COUNTER_LITTLE_ENDIAN,&ctr)) != CRYPT_OK) {
          printf("ctr_start error: %s\n",error_to_string(errno));
          exit(-1);
       }
@@ -237,5 +237,5 @@ int main(int argc, char *argv[])
 }
 
 /* $Source: /cvs/libtom/libtomcrypt/demos/encrypt.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/05/05 14:35:56 $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/08/04 20:43:50 $ */

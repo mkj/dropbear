@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -42,6 +42,7 @@ int der_encode_printable_string(const unsigned char *in, unsigned long inlen,
 
    /* too big? */
    if (len > *outlen) {
+      *outlen = len;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -49,19 +50,19 @@ int der_encode_printable_string(const unsigned char *in, unsigned long inlen,
    x = 0;
    out[x++] = 0x13;
    if (inlen < 128) {
-      out[x++] = inlen;
+      out[x++] = (unsigned char)inlen;
    } else if (inlen < 256) {
       out[x++] = 0x81;
-      out[x++] = inlen;
+      out[x++] = (unsigned char)inlen;
    } else if (inlen < 65536UL) {
       out[x++] = 0x82;
-      out[x++] = (inlen>>8)&255;
-      out[x++] = inlen&255;
+      out[x++] = (unsigned char)((inlen>>8)&255);
+      out[x++] = (unsigned char)(inlen&255);
    } else if (inlen < 16777216UL) {
       out[x++] = 0x83;
-      out[x++] = (inlen>>16)&255;
-      out[x++] = (inlen>>8)&255;
-      out[x++] = inlen&255;
+      out[x++] = (unsigned char)((inlen>>16)&255);
+      out[x++] = (unsigned char)((inlen>>8)&255);
+      out[x++] = (unsigned char)(inlen&255);
    } else {
       return CRYPT_INVALID_ARG;
    }
@@ -80,5 +81,5 @@ int der_encode_printable_string(const unsigned char *in, unsigned long inlen,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/printable_string/der_encode_printable_string.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2005/05/21 02:29:54 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /** 
@@ -182,7 +182,7 @@ int ocb_test(void)
            return err;
         }
         
-        if (memcmp(outtag, tests[x].tag, len) || memcmp(outct, tests[x].ct, tests[x].ptlen)) {
+        if (XMEMCMP(outtag, tests[x].tag, len) || XMEMCMP(outct, tests[x].ct, tests[x].ptlen)) {
 #if 0
            unsigned long y;
            printf("\n\nFailure: \nCT:\n");
@@ -205,7 +205,7 @@ int ocb_test(void)
              outct, tests[x].tag, len, &res)) != CRYPT_OK) {
            return err;
         }
-        if ((res != 1) || memcmp(tests[x].pt, outct, tests[x].ptlen)) {
+        if ((res != 1) || XMEMCMP(tests[x].pt, outct, tests[x].ptlen)) {
 #if 0
            unsigned long y;
            printf("\n\nFailure-decrypt: \nPT:\n");
@@ -233,5 +233,5 @@ int ocb_test(void)
 */
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_test.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

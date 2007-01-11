@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -50,7 +50,7 @@ static unsigned long rng_nix(unsigned char *buf, unsigned long len,
 #endif /* DEVRANDOM */
 
 /* on ANSI C platforms with 100 < CLOCKS_PER_SEC < 10000 */
-#if defined(CLOCKS_PER_SEC)
+#if defined(CLOCKS_PER_SEC) && !defined(WINCE)
 
 #define ANSI_RNG
 
@@ -87,8 +87,12 @@ static unsigned long rng_ansic(unsigned char *buf, unsigned long len,
 #endif 
 
 /* Try the Microsoft CSP */
-#ifdef WIN32
+#if defined(WIN32) || defined(WINCE)
 #define _WIN32_WINNT 0x0400
+#ifdef WINCE
+   #define UNDER_CE
+   #define ARM
+#endif
 #include <windows.h>
 #include <wincrypt.h>
 
@@ -140,5 +144,5 @@ unsigned long rng_get_bytes(unsigned char *out, unsigned long outlen,
 }
 
 /* $Source: /cvs/libtom/libtomcrypt/src/prngs/rng_get_bytes.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/12/06 02:01:29 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -32,7 +32,7 @@ const struct ltc_cipher_descriptor des_desc =
     &des_test,
     &des_done,
     &des_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 #endif
 
@@ -47,7 +47,7 @@ const struct ltc_cipher_descriptor des3_desc =
     &des3_test,
     &des3_done,
     &des3_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const ulong32 bytebit[8] =
@@ -1587,8 +1587,9 @@ int des3_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_k
   @param pt The input plaintext (8 bytes)
   @param ct The output ciphertext (8 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
-void des_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int des_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
     ulong32 work[2];
     LTC_ARGCHK(pt   != NULL);
@@ -1599,6 +1600,7 @@ void des_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
     desfunc(work, skey->des.ek);
     STORE32H(work[0],ct+0);
     STORE32H(work[1],ct+4);
+    return CRYPT_OK;
 }
 
 /**
@@ -1606,8 +1608,9 @@ void des_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
-void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
     ulong32 work[2];
     LTC_ARGCHK(pt   != NULL);
@@ -1617,7 +1620,8 @@ void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
     LOAD32H(work[1], ct+4);
     desfunc(work, skey->des.dk);
     STORE32H(work[0],pt+0);
-    STORE32H(work[1],pt+4);
+    STORE32H(work[1],pt+4);  
+    return CRYPT_OK;
 }
 #endif
 
@@ -1626,8 +1630,9 @@ void des_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
   @param pt The input plaintext (8 bytes)
   @param ct The output ciphertext (8 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
-void des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
     ulong32 work[2];
     
@@ -1641,6 +1646,7 @@ void des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key 
     desfunc(work, skey->des3.ek[2]);
     STORE32H(work[0],ct+0);
     STORE32H(work[1],ct+4);
+    return CRYPT_OK;
 }
 
 /**
@@ -1648,8 +1654,9 @@ void des3_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key 
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
-void des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
     ulong32 work[2];
     LTC_ARGCHK(pt   != NULL);
@@ -1662,6 +1669,7 @@ void des3_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key 
     desfunc(work, skey->des3.dk[2]);
     STORE32H(work[0],pt+0);
     STORE32H(work[1],pt+4);
+    return CRYPT_OK;
 }
 
 #if 0
@@ -1797,7 +1805,7 @@ int des_test(void)
            des_ecb_decrypt(cases[i].txt, tmp, &des);
         }
 
-        if (memcmp(cases[i].out, tmp, sizeof(tmp)) != 0) {
+        if (XMEMCMP(cases[i].out, tmp, sizeof(tmp)) != 0) {
            return CRYPT_FAIL_TESTVECTOR;
         }
 
@@ -1841,7 +1849,7 @@ int des3_test(void)
    des3_ecb_encrypt(pt, ct, &skey);
    des3_ecb_decrypt(ct, tmp, &skey);
    
-   if (memcmp(pt, tmp, 8) != 0) {
+   if (XMEMCMP(pt, tmp, 8) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
    
@@ -1902,5 +1910,5 @@ int des3_keysize(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/des.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.13 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

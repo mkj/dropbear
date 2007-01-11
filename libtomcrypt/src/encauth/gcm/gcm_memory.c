@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /**
@@ -43,6 +43,7 @@ int gcm_memory(      int           cipher,
                      unsigned char *tag,    unsigned long *taglen,
                                int direction)
 {
+    void      *orig;
     gcm_state *gcm;
     int        err;
 
@@ -51,7 +52,8 @@ int gcm_memory(      int           cipher,
     }
  
     if (cipher_descriptor[cipher].accel_gcm_memory != NULL) {
-       cipher_descriptor[cipher].accel_gcm_memory
+       return 
+         cipher_descriptor[cipher].accel_gcm_memory
                                           (key,   keylen,
                                            IV,    IVlen,
                                            adata, adatalen,
@@ -59,14 +61,28 @@ int gcm_memory(      int           cipher,
                                            ct,
                                            tag,   taglen,
                                            direction);
-       return CRYPT_OK;
     }
 
 
-    gcm = XMALLOC(sizeof(*gcm));
+
+#ifndef GCM_TABLES_SSE2
+    orig = gcm = XMALLOC(sizeof(*gcm));
+#else
+    orig = gcm = XMALLOC(sizeof(*gcm) + 16);
+#endif
     if (gcm == NULL) {
         return CRYPT_MEM;
     }
+
+   /* Force GCM to be on a multiple of 16 so we can use 128-bit aligned operations
+    * note that we only modify gcm and keep orig intact.  This code is not portable
+    * but again it's only for SSE2 anyways, so who cares?
+    */
+#ifdef GCM_TABLES_SSE2
+   if ((unsigned long)gcm & 15) {
+      gcm = (gcm_state *)((unsigned long)gcm + (16 - ((unsigned long)gcm & 15)));
+   }
+#endif
 
     if ((err = gcm_init(gcm, cipher, key, keylen)) != CRYPT_OK) {
        goto LTC_ERR;
@@ -82,12 +98,12 @@ int gcm_memory(      int           cipher,
     }
     err = gcm_done(gcm, tag, taglen);
 LTC_ERR:
-    XFREE(gcm);
+    XFREE(orig);
     return err;
 }
 #endif
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_memory.c,v $ */
-/* $Revision: 1.19 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.23 $ */
+/* $Date: 2006/09/07 10:00:57 $ */
