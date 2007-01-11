@@ -389,8 +389,8 @@ printf("compare no compare!\n"); exit(EXIT_FAILURE); }
       sub_d_n = 0;
 
    /* force KARA and TOOM to enable despite cutoffs */
-   KARATSUBA_SQR_CUTOFF = KARATSUBA_MUL_CUTOFF = 110;
-   TOOM_SQR_CUTOFF = TOOM_MUL_CUTOFF = 150;
+   KARATSUBA_SQR_CUTOFF = KARATSUBA_MUL_CUTOFF = 8;
+   TOOM_SQR_CUTOFF = TOOM_MUL_CUTOFF = 16;
 
    for (;;) {
       /* randomly clear and re-init one variable, this has the affect of triming the alloc space */
@@ -734,3 +734,7 @@ printf("compare no compare!\n"); exit(EXIT_FAILURE); }
    }
    return 0;
 }
+
+/* $Source: /cvs/libtom/libtommath/demo/demo.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/06/24 11:32:07 $ */

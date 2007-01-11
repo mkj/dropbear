@@ -2,7 +2,7 @@
 #
 #Tom St Denis
 
-CFLAGS = /I. /Ox /DWIN32 /W4
+CFLAGS = /I. /Ox /DWIN32 /W3 /Fo$@
 
 default: library
 
@@ -33,6 +33,8 @@ bn_mp_init_multi.obj bn_mp_clear_multi.obj bn_mp_exteuclid.obj bn_mp_toradix_n.o
 bn_mp_prime_random_ex.obj bn_mp_get_int.obj bn_mp_sqrt.obj bn_mp_is_square.obj \
 bn_mp_init_set.obj bn_mp_init_set_int.obj bn_mp_invmod_slow.obj bn_mp_prime_rabin_miller_trials.obj \
 bn_mp_to_signed_bin_n.obj bn_mp_to_unsigned_bin_n.obj
+
+HEADERS=tommath.h tommath_class.h tommath_superclass.h
 
 library: $(OBJECTS)
 	lib /out:tommath.lib $(OBJECTS)

@@ -4,7 +4,7 @@
 #define LTM_ALL
 
 /* RSA only (does not support DH/DSA/ECC) */
-// #define SC_RSA_1
+/* #define SC_RSA_1 */
 
 /* For reference.... On an Athlon64 optimizing for speed...
 
@@ -70,3 +70,7 @@
 #endif
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/tommath_superclass.h,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2005/05/14 13:29:17 $ */

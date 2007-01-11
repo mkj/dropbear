@@ -66,7 +66,7 @@ QUALCOMM Australia \\
 }
 }
 \maketitle
-This text has been placed in the public domain.  This text corresponds to the v0.35 release of the 
+This text has been placed in the public domain.  This text corresponds to the v0.39 release of the 
 LibTomMath project.
 
 \begin{alltt}
@@ -77,7 +77,7 @@ K2L 1C3
 Canada
 
 Phone: 1-613-836-3160
-Email: tomstdenis@iahu.ca
+Email: tomstdenis@gmail.com
 \end{alltt}
 
 This text is formatted to the international B5 paper size of 176mm wide by 250mm tall using the \LaTeX{} 
@@ -268,7 +268,7 @@ and fast modular inversion, which we consider practical oversights.  These optim
 any form of useful performance in non-trivial applications.  
 
 To solve this problem the focus of this text is on the practical aspects of implementing a multiple precision integer
-package.  As a case study the ``LibTomMath''\footnote{Available at \url{http://math.libtomcrypt.org}} package is used 
+package.  As a case study the ``LibTomMath''\footnote{Available at \url{http://math.libtomcrypt.com}} package is used 
 to demonstrate algorithms with real implementations\footnote{In the ISO C programming language.} that have been field 
 tested and work very well.  The LibTomMath library is freely available on the Internet for all uses and this text 
 discusses a very large portion of the inner workings of the library.
@@ -2190,7 +2190,7 @@ left.
 
 After the digits have been shifted appropriately at most $lg(\beta) - 1$ shifts are left to perform.  Step 5 calculates the number of remaining shifts 
 required.  If it is non-zero a modified shift loop is used to calculate the remaining product.  
-Essentially the loop is a generic version of algorith mp\_mul2 designed to handle any shift count in the range $1 \le x < lg(\beta)$.  The $mask$
+Essentially the loop is a generic version of algorithm mp\_mul\_2 designed to handle any shift count in the range $1 \le x < lg(\beta)$.  The $mask$
 variable is used to extract the upper $d$ bits to form the carry for the next iteration.  
 
 This algorithm is loosely measured as a $O(2n)$ algorithm which means that if the input is $n$-digits that it takes $2n$ ``time'' to 
@@ -2611,17 +2611,16 @@ Place an array of \textbf{MP\_WARRAY} single precision digits named $W$ on the s
 \hspace{6mm}5.4.1  $\_ \hat W \leftarrow \_ \hat W + a_{tx+iy}b_{ty-iy}$ \\
 \hspace{3mm}5.5  $W_{ix} \leftarrow \_ \hat W (\mbox{mod }\beta)$\\
 \hspace{3mm}5.6  $\_ \hat W \leftarrow \lfloor \_ \hat W / \beta \rfloor$ \\
-6.  $W_{pa} \leftarrow \_ \hat W (\mbox{mod }\beta)$ \\
 \\
-7.  $oldused \leftarrow c.used$ \\
-8.  $c.used \leftarrow digs$ \\
-9.  for $ix$ from $0$ to $pa$ do \\
-\hspace{3mm}9.1  $c_{ix} \leftarrow W_{ix}$ \\
-10.  for $ix$ from $pa + 1$ to $oldused - 1$ do \\
-\hspace{3mm}10.1 $c_{ix} \leftarrow 0$ \\
+6.  $oldused \leftarrow c.used$ \\
+7.  $c.used \leftarrow digs$ \\
+8.  for $ix$ from $0$ to $pa$ do \\
+\hspace{3mm}8.1  $c_{ix} \leftarrow W_{ix}$ \\
+9.  for $ix$ from $pa + 1$ to $oldused - 1$ do \\
+\hspace{3mm}9.1 $c_{ix} \leftarrow 0$ \\
 \\
-11.  Clamp $c$. \\
-12.  Return MP\_OKAY. \\
+10.  Clamp $c$. \\
+11.  Return MP\_OKAY. \\
 \hline
 \end{tabular}
 \end{center}
@@ -2775,26 +2774,25 @@ general purpose multiplication.  Given two polynomial basis representations $f(x
 light algebra \cite{KARAP} that the following polynomial is equivalent to multiplication of the two integers the polynomials represent.
 
 \begin{equation}
-f(x) \cdot g(x) = acx^2 + ((a - b)(c - d) - (ac + bd))x + bd
+f(x) \cdot g(x) = acx^2 + ((a + b)(c + d) - (ac + bd))x + bd
 \end{equation}
 
 Using the observation that $ac$ and $bd$ could be re-used only three half sized multiplications would be required to produce the product.  Applying
 this algorithm recursively, the work factor becomes $O(n^{lg(3)})$ which is substantially better than the work factor $O(n^2)$ of the Comba technique.  It turns 
 out what Karatsuba did not know or at least did not publish was that this is simply polynomial basis multiplication with the points 
-$\zeta_0$, $\zeta_{\infty}$ and $-\zeta_{-1}$.  Consider the resultant system of equations.
+$\zeta_0$, $\zeta_{\infty}$ and $\zeta_{1}$.  Consider the resultant system of equations.
 
 \begin{center}
 \begin{tabular}{rcrcrcrc}
 $\zeta_{0}$ &      $=$ &  &  &  & & $w_0$ \\
-$-\zeta_{-1}$ &    $=$ & $-w_2$ & $+$ & $w_1$ & $-$ & $w_0$ \\
+$\zeta_{1}$ &      $=$ & $w_2$ & $+$ & $w_1$ & $+$ & $w_0$ \\
 $\zeta_{\infty}$ & $=$ & $w_2$ &  & &  & \\
 \end{tabular}
 \end{center}
 
 By adding the first and last equation to the equation in the middle the term $w_1$ can be isolated and all three coefficients solved for.  The simplicity
 of this system of equations has made Karatsuba fairly popular.  In fact the cutoff point is often fairly low\footnote{With LibTomMath 0.18 it is 70 and 109 digits for the Intel P4 and AMD Athlon respectively.}
-making it an ideal algorithm to speed up certain public key cryptosystems such as RSA and Diffie-Hellman.  It is worth noting that the point 
-$\zeta_1$ could be substituted for $-\zeta_{-1}$.  In this case the first and third row are subtracted instead of added to the second row.  
+making it an ideal algorithm to speed up certain public key cryptosystems such as RSA and Diffie-Hellman.  
 
 \newpage\begin{figure}[!here]
 \begin{small}
@@ -2817,13 +2815,13 @@ Split the input.  e.g. $a = x1 \cdot \beta^B + x0$ \\
 Calculate the three products. \\
 8.  $x0y0 \leftarrow x0 \cdot y0$ (\textit{mp\_mul}) \\
 9.  $x1y1 \leftarrow x1 \cdot y1$ \\
-10.  $t1 \leftarrow x1 - x0$ (\textit{mp\_sub}) \\
-11.  $x0 \leftarrow y1 - y0$ \\
+10.  $t1 \leftarrow x1 + x0$ (\textit{mp\_add}) \\
+11.  $x0 \leftarrow y1 + y0$ \\
 12.  $t1 \leftarrow t1 \cdot x0$ \\
 \\
 Calculate the middle term. \\
 13.  $x0 \leftarrow x0y0 + x1y1$ \\
-14.  $t1 \leftarrow x0 - t1$ \\
+14.  $t1 \leftarrow t1 - x0$ (\textit{s\_mp\_sub}) \\
 \\
 Calculate the final product. \\
 15.  $t1 \leftarrow t1 \cdot \beta^B$ (\textit{mp\_lshd}) \\
@@ -2850,7 +2848,7 @@ smallest input \textbf{used} count.  After the radix point is chosen the inputs 
 compute the lower halves.  Step 6 and 7 computer the upper halves.  
 
 After the halves have been computed the three intermediate half-size products must be computed.  Step 8 and 9 compute the trivial products
-$x0 \cdot y0$ and $x1 \cdot y1$.  The mp\_int $x0$ is used as a temporary variable after $x1 - x0$ has been computed.  By using $x0$ instead
+$x0 \cdot y0$ and $x1 \cdot y1$.  The mp\_int $x0$ is used as a temporary variable after $x1 + x0$ has been computed.  By using $x0$ instead
 of an additional temporary variable, the algorithm can avoid an addition memory allocation operation.
 
 The remaining steps 13 through 18 compute the Karatsuba polynomial through a variety of digit shifting and addition operations.
@@ -3246,10 +3244,10 @@ Let $h(x) = \left ( f(x) \right )^2$ represent the square of the polynomial.  Th
 number with the following equation.
 
 \begin{equation}
-h(x) = a^2x^2 + \left (a^2 + b^2 - (a - b)^2 \right )x + b^2
+h(x) = a^2x^2 + \left ((a + b)^2 - (a^2 + b^2) \right )x + b^2
 \end{equation}
 
-Upon closer inspection this equation only requires the calculation of three half-sized squares: $a^2$, $b^2$ and $(a - b)^2$.  As in 
+Upon closer inspection this equation only requires the calculation of three half-sized squares: $a^2$, $b^2$ and $(a + b)^2$.  As in 
 Karatsuba multiplication, this algorithm can be applied recursively on the input and will achieve an asymptotic running time of 
 $O \left ( n^{lg(3)} \right )$.
 
@@ -3281,12 +3279,12 @@ Split the input.  e.g. $a = x1\beta^B + x0$ \\
 Calculate the three squares. \\
 6.  $x0x0 \leftarrow x0^2$ (\textit{mp\_sqr}) \\
 7.  $x1x1 \leftarrow x1^2$ \\
-8.  $t1 \leftarrow x1 - x0$ (\textit{mp\_sub}) \\
+8.  $t1 \leftarrow x1 + x0$ (\textit{s\_mp\_add}) \\
 9.  $t1 \leftarrow t1^2$ \\
 \\
 Compute the middle term. \\
 10.  $t2 \leftarrow x0x0 + x1x1$ (\textit{s\_mp\_add}) \\
-11.  $t1 \leftarrow t2 - t1$ \\
+11.  $t1 \leftarrow t1 - t2$ \\
 \\
 Compute final product. \\
 12.  $t1 \leftarrow t1\beta^B$ (\textit{mp\_lshd}) \\
@@ -3309,7 +3307,7 @@ The radix point for squaring is simply placed exactly in the middle of the digit
 placed just below the middle.  Step 3, 4 and 5 compute the two halves required using $B$
 as the radix point.  The first two squares in steps 6 and 7 are rather straightforward while the last square is of a more compact form.
 
-By expanding $\left (x1 - x0 \right )^2$, the $x1^2$ and $x0^2$ terms in the middle disappear, that is $x1^2 + x0^2 - (x1 - x0)^2 = 2 \cdot x0 \cdot x1$.
+By expanding $\left (x1 + x0 \right )^2$, the $x1^2$ and $x0^2$ terms in the middle disappear, that is $(x0 - x1)^2 - (x1^2 + x0^2)  = 2 \cdot x0 \cdot x1$.
 Now if $5n$ single precision additions and a squaring of $n$-digits is faster than multiplying two $n$-digit numbers and doubling then
 this method is faster.  Assuming no further recursions occur, the difference can be estimated with the following inequality.
 
@@ -3732,6 +3730,7 @@ $0 \le r < \lfloor x/2^k \rfloor + n$.  As a result at most a single subtraction
 \hline $6$ & $x/2 = 139$ \\
 \hline $7$ & $x + n = 396$, $x/2 = 198$ \\
 \hline $8$ & $x/2 = 99$ \\
+\hline $9$ & $x + n = 356$, $x/2 = 178$ \\
 \hline
 \end{tabular}
 \end{center}
@@ -3740,8 +3739,8 @@ $0 \le r < \lfloor x/2^k \rfloor + n$.  As a result at most a single subtraction
 \label{fig:MONT1}
 \end{figure}
 
-Consider the example in figure~\ref{fig:MONT1} which reduces $x = 5555$ modulo $n = 257$ when $k = 8$.  The result of the algorithm $r = 99$ is
-congruent to the value of $2^{-8} \cdot 5555 \mbox{ (mod }257\mbox{)}$.  When $r$ is multiplied by $2^8$ modulo $257$ the correct residue 
+Consider the example in figure~\ref{fig:MONT1} which reduces $x = 5555$ modulo $n = 257$ when $k = 9$ (note $\beta^k = 512$ which is larger than $n$).  The result of 
+the algorithm $r = 178$ is congruent to the value of $2^{-9} \cdot 5555 \mbox{ (mod }257\mbox{)}$.  When $r$ is multiplied by $2^9$ modulo $257$ the correct residue 
 $r \equiv 158$ is produced.  
 
 Let $k = \lfloor lg(n) \rfloor + 1$ represent the number of bits in $n$.  The current algorithm requires $2k^2$ single precision shifts
@@ -3753,10 +3752,10 @@ Fortunately there exists an alternative representation of the algorithm.
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{Montgomery Reduction} (modified I). \\
-\textbf{Input}.   Integer $x$, $n$ and $k$ \\
+\textbf{Input}.   Integer $x$, $n$ and $k$ ($2^k > n$) \\
 \textbf{Output}.  $2^{-k}x \mbox{ (mod }n\mbox{)}$ \\
 \hline \\
-1.  for $t$ from $0$ to $k - 1$ do \\
+1.  for $t$ from $1$ to $k$ do \\
 \hspace{3mm}1.1  If the $t$'th bit of $x$ is one then \\
 \hspace{6mm}1.1.1  $x \leftarrow x + 2^tn$ \\
 2.  Return $x/2^k$. \\
@@ -3784,7 +3783,8 @@ precision shifts has now been reduced from $2k^2$ to $k^2 + k$ which is only a s
 \hline $6$ & $8896$ & $10001011000000$ \\
 \hline $7$ & $x + 2^{6}n = 25344$ & $110001100000000$ \\
 \hline $8$ & $25344$ & $110001100000000$ \\
-\hline -- & $x/2^k = 99$ & \\
+\hline $9$ & $x + 2^{7}n = 91136$ & $10110010000000000$ \\
+\hline -- & $x/2^k = 178$ & \\
 \hline
 \end{tabular}
 \end{center}
@@ -3793,7 +3793,7 @@ precision shifts has now been reduced from $2k^2$ to $k^2 + k$ which is only a s
 \label{fig:MONT2}
 \end{figure}
 
-Figure~\ref{fig:MONT2} demonstrates the modified algorithm reducing $x = 5555$ modulo $n = 257$ with $k = 8$. 
+Figure~\ref{fig:MONT2} demonstrates the modified algorithm reducing $x = 5555$ modulo $n = 257$ with $k = 9$. 
 With this algorithm a single shift right at the end is the only right shift required to reduce the input instead of $k$ right shifts inside the 
 loop.  Note that for the iterations $t = 2, 5, 6$ and $8$ where the result $x$ is not changed.  In those iterations the $t$'th bit of $x$ is 
 zero and the appropriate multiple of $n$ does not need to be added to force the $t$'th bit of the result to zero.  
@@ -3807,7 +3807,7 @@ previous algorithm re-written to compute the Montgomery reduction in this new fa
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{Montgomery Reduction} (modified II). \\
-\textbf{Input}.   Integer $x$, $n$ and $k$ \\
+\textbf{Input}.   Integer $x$, $n$ and $k$ ($\beta^k > n$) \\
 \textbf{Output}.  $\beta^{-k}x \mbox{ (mod }n\mbox{)}$ \\
 \hline \\
 1.  for $t$ from $0$ to $k - 1$ do \\
@@ -4035,7 +4035,7 @@ To calculate the variable $\rho$ a relatively simple algorithm will be required.
 \hline \\
 1.  $b \leftarrow n_0$ \\
 2.  If $b$ is even return(\textit{MP\_VAL}) \\
-3.  $x \leftarrow ((b + 2) \mbox{ AND } 4) << 1) + b$ \\
+3.  $x \leftarrow (((b + 2) \mbox{ AND } 4) << 1) + b$ \\
 4.  for $k$ from 0 to $\lceil lg(lg(\beta)) \rceil - 2$ do \\
 \hspace{3mm}4.1  $x \leftarrow x \cdot (2 - bx)$ \\
 5.  $\rho \leftarrow \beta - x \mbox{ (mod }\beta\mbox{)}$ \\
@@ -4939,15 +4939,15 @@ a Left-to-Right algorithm is used to process the remaining few bits.
 
 EXAM,bn_s_mp_exptmod.c
 
-Lines @26,if@ through @40,}@ determine the optimal window size based on the length of the exponent in bits.  The window divisions are sorted
+Lines @31,if@ through @45,}@ determine the optimal window size based on the length of the exponent in bits.  The window divisions are sorted
 from smallest to greatest so that in each \textbf{if} statement only one condition must be tested.  For example, by the \textbf{if} statement 
-on line @32,if@ the value of $x$ is already known to be greater than $140$.  
+on line @37,if@ the value of $x$ is already known to be greater than $140$.  
 
 The conditional piece of code beginning on line @42,ifdef@ allows the window size to be restricted to five bits.  This logic is used to ensure
 the table of precomputed powers of $G$ remains relatively small.  
 
-The for loop on line @49,for@ initializes the $M$ array while lines @59,mp_init@ and @62,mp_reduce@ compute the value of $\mu$ required for
-Barrett reduction.  
+The for loop on line @60,for@ initializes the $M$ array while lines @71,mp_init@ and @75,mp_reduce@ through @85,}@ initialize the reduction
+function that will be used for this modulus.
 
 -- More later.
 
@@ -5230,23 +5230,23 @@ algorithm with only the quotient is
 mp_div(&a, &b, &c, NULL);  /* c = [a/b] */
 \end{verbatim}
 
-Lines @37,if@ and @42,if@ handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
-respectively.  After the two trivial cases all of the temporary variables are initialized.  Line @76,neg@ determines the sign of 
-the quotient and line @77,sign@ ensures that both $x$ and $y$ are positive.  
+Lines @108,if@ and @113,if@ handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
+respectively.  After the two trivial cases all of the temporary variables are initialized.  Line @147,neg@ determines the sign of 
+the quotient and line @148,sign@ ensures that both $x$ and $y$ are positive.  
 
-The number of bits in the leading digit is calculated on line @80,norm@.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
+The number of bits in the leading digit is calculated on line @151,norm@.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
 of precision which when reduced modulo $lg(\beta)$ produces the value of $k$.  In this case $k$ is the number of bits in the leading digit which is
 exactly what is required.  For the algorithm to operate $k$ must equal $lg(\beta) - 1$ and when it does not the inputs must be normalized by shifting
 them to the left by $lg(\beta) - 1 - k$ bits.
 
 Throughout the variables $n$ and $t$ will represent the highest digit of $x$ and $y$ respectively.  These are first used to produce the 
-leading digit of the quotient.  The loop beginning on line @113,for@ will produce the remainder of the quotient digits.
+leading digit of the quotient.  The loop beginning on line @184,for@ will produce the remainder of the quotient digits.
 
-The conditional ``continue'' on line @114,if@ is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
+The conditional ``continue'' on line @186,continue@ is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
 algorithm eliminates multiple non-zero digits in a single iteration.  This ensures that $x_i$ is always non-zero since by definition the digits
 above the $i$'th position $x$ must be zero in order for the quotient to be precise\footnote{Precise as far as integer division is concerned.}.  
 
-Lines @142,t1@, @143,t1@ and @150,t2@ through @152,t2@ manually construct the high accuracy estimations by setting the digits of the two mp\_int 
+Lines @214,t1@, @216,t1@ and @222,t2@ through @225,t2@ manually construct the high accuracy estimations by setting the digits of the two mp\_int 
 variables directly.  
 
 \section{Single Digit Helpers}
@@ -5744,33 +5744,30 @@ and will produce the greatest common divisor.
 \textbf{Input}.   mp\_int $a$ and $b$ \\
 \textbf{Output}.  The greatest common divisor $c = (a, b)$.  \\
 \hline \\
-1.  If $a = 0$ and $b \ne 0$ then \\
-\hspace{3mm}1.1  $c \leftarrow b$ \\
+1.  If $a = 0$ then \\
+\hspace{3mm}1.1  $c \leftarrow \vert b \vert $ \\
 \hspace{3mm}1.2  Return(\textit{MP\_OKAY}). \\
-2.  If $a \ne 0$ and $b = 0$ then \\
-\hspace{3mm}2.1  $c \leftarrow a$ \\
+2.  If $b = 0$ then \\
+\hspace{3mm}2.1  $c \leftarrow \vert a \vert $ \\
 \hspace{3mm}2.2  Return(\textit{MP\_OKAY}). \\
-3.  If $a = b = 0$ then \\
-\hspace{3mm}3.1  $c \leftarrow 1$ \\
-\hspace{3mm}3.2  Return(\textit{MP\_OKAY}). \\
-4.  $u \leftarrow \vert a \vert, v \leftarrow \vert b \vert$ \\
-5.  $k \leftarrow 0$ \\
-6.  While $u.used > 0$ and $v.used > 0$ and $u_0 \equiv v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}6.1  $k \leftarrow k + 1$ \\
-\hspace{3mm}6.2  $u \leftarrow \lfloor u / 2 \rfloor$ \\
-\hspace{3mm}6.3  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-7.  While $u.used > 0$ and $u_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}7.1  $u \leftarrow \lfloor u / 2 \rfloor$ \\
-8.  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}8.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-9.  While $v.used > 0$ \\
-\hspace{3mm}9.1  If $\vert u \vert > \vert v \vert$ then \\
-\hspace{6mm}9.1.1  Swap $u$ and $v$. \\
-\hspace{3mm}9.2  $v \leftarrow \vert v \vert - \vert u \vert$ \\
-\hspace{3mm}9.3  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{6mm}9.3.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-10.  $c \leftarrow u \cdot 2^k$ \\
-11.  Return(\textit{MP\_OKAY}). \\
+3.  $u \leftarrow \vert a \vert, v \leftarrow \vert b \vert$ \\
+4.  $k \leftarrow 0$ \\
+5.  While $u.used > 0$ and $v.used > 0$ and $u_0 \equiv v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}5.1  $k \leftarrow k + 1$ \\
+\hspace{3mm}5.2  $u \leftarrow \lfloor u / 2 \rfloor$ \\
+\hspace{3mm}5.3  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+6.  While $u.used > 0$ and $u_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}6.1  $u \leftarrow \lfloor u / 2 \rfloor$ \\
+7.  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}7.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+8.  While $v.used > 0$ \\
+\hspace{3mm}8.1  If $\vert u \vert > \vert v \vert$ then \\
+\hspace{6mm}8.1.1  Swap $u$ and $v$. \\
+\hspace{3mm}8.2  $v \leftarrow \vert v \vert - \vert u \vert$ \\
+\hspace{3mm}8.3  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{6mm}8.3.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+9.  $c \leftarrow u \cdot 2^k$ \\
+10.  Return(\textit{MP\_OKAY}). \\
 \hline
 \end{tabular}
 \end{center}
@@ -5782,17 +5779,17 @@ This algorithm will produce the greatest common divisor of two mp\_ints $a$ and 
 Knuth \cite[pp. 338]{TAOCPV2} but has been modified to be simpler to explain.  In theory it achieves the same asymptotic working time as
 Algorithm B and in practice this appears to be true.  
 
-The first three steps handle the cases where either one of or both inputs are zero.  If either input is zero the greatest common divisor is the 
+The first two steps handle the cases where either one of or both inputs are zero.  If either input is zero the greatest common divisor is the 
 largest input or zero if they are both zero.  If the inputs are not trivial than $u$ and $v$ are assigned the absolute values of 
 $a$ and $b$ respectively and the algorithm will proceed to reduce the pair.
 
-Step six will divide out any common factors of two and keep track of the count in the variable $k$.  After this step two is no longer a
+Step five will divide out any common factors of two and keep track of the count in the variable $k$.  After this step, two is no longer a
 factor of the remaining greatest common divisor between $u$ and $v$ and can be safely evenly divided out of either whenever they are even.  Step 
-seven and eight ensure that the $u$ and $v$ respectively have no more factors of two.  At most only one of the while loops will iterate since 
+six and seven ensure that the $u$ and $v$ respectively have no more factors of two.  At most only one of the while--loops will iterate since 
 they cannot both be even.
 
-By step nine both of $u$ and $v$ are odd which is required for the inner logic.  First the pair are swapped such that $v$ is equal to
-or greater than $u$.  This ensures that the subtraction on step 9.2 will always produce a positive and even result.  Step 9.3 removes any
+By step eight both of $u$ and $v$ are odd which is required for the inner logic.  First the pair are swapped such that $v$ is equal to
+or greater than $u$.  This ensures that the subtraction on step 8.2 will always produce a positive and even result.  Step 8.3 removes any
 factors of two from the difference $u$ to ensure that in the next iteration of the loop both are once again odd.
 
 After $v = 0$ occurs the variable $u$ has the greatest common divisor of the pair $\left < u, v \right >$ just after step six.  The result
@@ -5803,17 +5800,17 @@ EXAM,bn_mp_gcd.c
 This function makes use of the macros mp\_iszero and mp\_iseven.  The former evaluates to $1$ if the input mp\_int is equivalent to the 
 integer zero otherwise it evaluates to $0$.  The latter evaluates to $1$ if the input mp\_int represents a non-zero even integer otherwise
 it evaluates to $0$.  Note that just because mp\_iseven may evaluate to $0$ does not mean the input is odd, it could also be zero.  The three 
-trivial cases of inputs are handled on lines @25,zero@ through @34,}@.  After those lines the inputs are assumed to be non-zero.
+trivial cases of inputs are handled on lines @23,zero@ through @29,}@.  After those lines the inputs are assumed to be non-zero.
 
-Lines @36,if@ and @40,if@ make local copies $u$ and $v$ of the inputs $a$ and $b$ respectively.  At this point the common factors of two 
-must be divided out of the two inputs.  The while loop on line @49,while@ iterates so long as both are even.  The local integer $k$ is used to
-keep track of how many factors of $2$ are pulled out of both values.  It is assumed that the number of factors will not exceed the maximum 
-value of a C ``int'' data type\footnote{Strictly speaking no array in C may have more than entries than are accessible by an ``int'' so this is not 
-a limitation.}.  
+Lines @32,if@ and @36,if@ make local copies $u$ and $v$ of the inputs $a$ and $b$ respectively.  At this point the common factors of two 
+must be divided out of the two inputs.  The block starting at line @43,common@ removes common factors of two by first counting the number of trailing
+zero bits in both.  The local integer $k$ is used to keep track of how many factors of $2$ are pulled out of both values.  It is assumed that 
+the number of factors will not exceed the maximum value of a C ``int'' data type\footnote{Strictly speaking no array in C may have more than 
+entries than are accessible by an ``int'' so this is not a limitation.}.  
 
-At this point there are no more common factors of two in the two values.  The while loops on lines @60,while@ and @65,while@ remove any independent
-factors of two such that both $u$ and $v$ are guaranteed to be an odd integer before hitting the main body of the algorithm.  The while loop
-on line @71, while@ performs the reduction of the pair until $v$ is equal to zero.  The unsigned comparison and subtraction algorithms are used in
+At this point there are no more common factors of two in the two values.  The divisions by a power of two on lines @60,div_2d@ and @67,div_2d@ remove 
+any independent factors of two such that both $u$ and $v$ are guaranteed to be an odd integer before hitting the main body of the algorithm.  The while loop
+on line @72, while@ performs the reduction of the pair until $v$ is equal to zero.  The unsigned comparison and subtraction algorithms are used in
 place of the full signed routines since both values are guaranteed to be positive and the result of the subtraction is guaranteed to be non-negative.
 
 \section{Least Common Multiple}

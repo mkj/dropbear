@@ -66,7 +66,7 @@ QUALCOMM Australia \\
 }
 }
 \maketitle
-This text has been placed in the public domain.  This text corresponds to the v0.35 release of the 
+This text has been placed in the public domain.  This text corresponds to the v0.39 release of the 
 LibTomMath project.
 
 \begin{alltt}
@@ -77,7 +77,7 @@ K2L 1C3
 Canada
 
 Phone: 1-613-836-3160
-Email: tomstdenis@iahu.ca
+Email: tomstdenis@gmail.com
 \end{alltt}
 
 This text is formatted to the international B5 paper size of 176mm wide by 250mm tall using the \LaTeX{} 
@@ -268,7 +268,7 @@ and fast modular inversion, which we consider practical oversights.  These optim
 any form of useful performance in non-trivial applications.  
 
 To solve this problem the focus of this text is on the practical aspects of implementing a multiple precision integer
-package.  As a case study the ``LibTomMath''\footnote{Available at \url{http://math.libtomcrypt.org}} package is used 
+package.  As a case study the ``LibTomMath''\footnote{Available at \url{http://math.libtomcrypt.com}} package is used 
 to demonstrate algorithms with real implementations\footnote{In the ISO C programming language.} that have been field 
 tested and work very well.  The LibTomMath library is freely available on the Internet for all uses and this text 
 discusses a very large portion of the inner workings of the library.
@@ -814,6 +814,7 @@ decrementally.
 039     return MP_OKAY;
 040   \}
 041   #endif
+042   
 \end{alltt}
 \end{small}
 
@@ -902,6 +903,7 @@ with the exception of algorithms mp\_init, mp\_init\_copy, mp\_init\_size and mp
 037     \}
 038   \}
 039   #endif
+040   
 \end{alltt}
 \end{small}
 
@@ -1008,6 +1010,7 @@ assumed to contain undefined values they are initially set to zero.
 050     return MP_OKAY;
 051   \}
 052   #endif
+053   
 \end{alltt}
 \end{small}
 
@@ -1096,6 +1099,7 @@ correct no further memory re-allocations are required to work with the mp\_int.
 041     return MP_OKAY;
 042   \}
 043   #endif
+044   
 \end{alltt}
 \end{small}
 
@@ -1183,6 +1187,7 @@ initialization which allows for quick recovery from runtime errors.
 052   \}
 053   
 054   #endif
+055   
 \end{alltt}
 \end{small}
 
@@ -1268,6 +1273,7 @@ when all of the digits are zero to ensure that the mp\_int is valid at all times
 037     \}
 038   \}
 039   #endif
+040   
 \end{alltt}
 \end{small}
 
@@ -1405,6 +1411,7 @@ implement the pseudo-code.
 061     return MP_OKAY;
 062   \}
 063   #endif
+064   
 \end{alltt}
 \end{small}
 
@@ -1519,6 +1526,7 @@ such this algorithm will perform two operations in one step.
 025     return mp_copy (b, a);
 026   \}
 027   #endif
+028   
 \end{alltt}
 \end{small}
 
@@ -1570,6 +1578,7 @@ This algorithm simply resets a mp\_int to the default state.
 029     \}
 030   \}
 031   #endif
+032   
 \end{alltt}
 \end{small}
 
@@ -1631,6 +1640,7 @@ logic to handle it.
 036     return MP_OKAY;
 037   \}
 038   #endif
+039   
 \end{alltt}
 \end{small}
 
@@ -1692,6 +1702,7 @@ zero as negative.
 033     return MP_OKAY;
 034   \}
 035   #endif
+036   
 \end{alltt}
 \end{small}
 
@@ -1739,6 +1750,7 @@ single digit is set (\textit{modulo $\beta$}) and the \textbf{used} count is adj
 022     a->used  = (a->dp[0] != 0) ? 1 : 0;
 023   \}
 024   #endif
+025   
 \end{alltt}
 \end{small}
 
@@ -1819,6 +1831,7 @@ Excess zero digits are trimmed in steps 2.1 and 3 by using higher level algorith
 041     return MP_OKAY;
 042   \}
 043   #endif
+044   
 \end{alltt}
 \end{small}
 
@@ -1921,6 +1934,7 @@ the zero'th digit.  If after all of the digits have been compared, no difference
 048     return MP_EQ;
 049   \}
 050   #endif
+051   
 \end{alltt}
 \end{small}
 
@@ -1987,6 +2001,7 @@ $\vert a \vert < \vert b \vert$.  Step number four will compare the two when the
 036     \}
 037   \}
 038   #endif
+039   
 \end{alltt}
 \end{small}
 
@@ -2205,6 +2220,7 @@ The final carry is stored in $c_{max}$ and digits above $max$ upto $oldused$ are
 102     return MP_OKAY;
 103   \}
 104   #endif
+105   
 \end{alltt}
 \end{small}
 
@@ -2376,6 +2392,7 @@ If $b$ has a smaller magnitude than $a$ then step 9 will force the carry and cop
 082   \}
 083   
 084   #endif
+085   
 \end{alltt}
 \end{small}
 
@@ -2511,6 +2528,7 @@ within algorithm s\_mp\_add will force $-0$ to become $0$.
 046   \}
 047   
 048   #endif
+049   
 \end{alltt}
 \end{small}
 
@@ -2623,6 +2641,7 @@ algorithm from producing $-a - -a = -0$ as a result.
 052   \}
 053   
 054   #endif
+055   
 \end{alltt}
 \end{small}
 
@@ -2757,6 +2776,7 @@ Step 8 clears any leading digits of $b$ in case it originally had a larger magni
 075     return MP_OKAY;
 076   \}
 077   #endif
+078   
 \end{alltt}
 \end{small}
 
@@ -2857,6 +2877,7 @@ least significant bit not the most significant bit.
 061     return MP_OKAY;
 062   \}
 063   #endif
+064   
 \end{alltt}
 \end{small}
 
@@ -2977,6 +2998,7 @@ step 8 sets the lower $b$ digits to zero.
 060     return MP_OKAY;
 061   \}
 062   #endif
+063   
 \end{alltt}
 \end{small}
 
@@ -3088,6 +3110,7 @@ Once the window copy is complete the upper digits must be zeroed and the \textbf
 065     a->used -= b;
 066   \}
 067   #endif
+068   
 \end{alltt}
 \end{small}
 
@@ -3146,7 +3169,7 @@ left.
 
 After the digits have been shifted appropriately at most $lg(\beta) - 1$ shifts are left to perform.  Step 5 calculates the number of remaining shifts 
 required.  If it is non-zero a modified shift loop is used to calculate the remaining product.  
-Essentially the loop is a generic version of algorith mp\_mul2 designed to handle any shift count in the range $1 \le x < lg(\beta)$.  The $mask$
+Essentially the loop is a generic version of algorithm mp\_mul\_2 designed to handle any shift count in the range $1 \le x < lg(\beta)$.  The $mask$
 variable is used to extract the upper $d$ bits to form the carry for the next iteration.  
 
 This algorithm is loosely measured as a $O(2n)$ algorithm which means that if the input is $n$-digits that it takes $2n$ ``time'' to 
@@ -3221,6 +3244,7 @@ complete.  It is possible to optimize this algorithm down to a $O(n)$ algorithm 
 078     return MP_OKAY;
 079   \}
 080   #endif
+081   
 \end{alltt}
 \end{small}
 
@@ -3357,6 +3381,7 @@ by using algorithm mp\_mod\_2d.
 090     return MP_OKAY;
 091   \}
 092   #endif
+093   
 \end{alltt}
 \end{small}
 
@@ -3448,6 +3473,7 @@ is copied to $b$, leading digits are removed and the remaining leading digit is 
 048     return MP_OKAY;
 049   \}
 050   #endif
+051   
 \end{alltt}
 \end{small}
 
@@ -3687,6 +3713,7 @@ exceed the precision requested.
 083     return MP_OKAY;
 084   \}
 085   #endif
+086   
 \end{alltt}
 \end{small}
 
@@ -3837,17 +3864,16 @@ Place an array of \textbf{MP\_WARRAY} single precision digits named $W$ on the s
 \hspace{6mm}5.4.1  $\_ \hat W \leftarrow \_ \hat W + a_{tx+iy}b_{ty-iy}$ \\
 \hspace{3mm}5.5  $W_{ix} \leftarrow \_ \hat W (\mbox{mod }\beta)$\\
 \hspace{3mm}5.6  $\_ \hat W \leftarrow \lfloor \_ \hat W / \beta \rfloor$ \\
-6.  $W_{pa} \leftarrow \_ \hat W (\mbox{mod }\beta)$ \\
 \\
-7.  $oldused \leftarrow c.used$ \\
-8.  $c.used \leftarrow digs$ \\
-9.  for $ix$ from $0$ to $pa$ do \\
-\hspace{3mm}9.1  $c_{ix} \leftarrow W_{ix}$ \\
-10.  for $ix$ from $pa + 1$ to $oldused - 1$ do \\
-\hspace{3mm}10.1 $c_{ix} \leftarrow 0$ \\
+6.  $oldused \leftarrow c.used$ \\
+7.  $c.used \leftarrow digs$ \\
+8.  for $ix$ from $0$ to $pa$ do \\
+\hspace{3mm}8.1  $c_{ix} \leftarrow W_{ix}$ \\
+9.  for $ix$ from $pa + 1$ to $oldused - 1$ do \\
+\hspace{3mm}9.1 $c_{ix} \leftarrow 0$ \\
 \\
-11.  Clamp $c$. \\
-12.  Return MP\_OKAY. \\
+10.  Clamp $c$. \\
+11.  Return MP\_OKAY. \\
 \hline
 \end{tabular}
 \end{center}
@@ -3942,39 +3968,38 @@ and addition operations in the nested loop in parallel.
 069         /* execute loop */
 070         for (iz = 0; iz < iy; ++iz) \{
 071            _W += ((mp_word)*tmpx++)*((mp_word)*tmpy--);
-072         \}
-073   
-074         /* store term */
-075         W[ix] = ((mp_digit)_W) & MP_MASK;
-076   
-077         /* make next carry */
-078         _W = _W >> ((mp_word)DIGIT_BIT);
-079     \}
-080   
-081     /* store final carry */
-082     W[ix] = (mp_digit)(_W & MP_MASK);
-083   
-084     /* setup dest */
-085     olduse  = c->used;
-086     c->used = pa;
-087   
-088     \{
-089       register mp_digit *tmpc;
-090       tmpc = c->dp;
-091       for (ix = 0; ix < pa+1; ix++) \{
-092         /* now extract the previous digit [below the carry] */
-093         *tmpc++ = W[ix];
-094       \}
-095   
-096       /* clear unused digits [that existed in the old copy of c] */
-097       for (; ix < olduse; ix++) \{
-098         *tmpc++ = 0;
-099       \}
-100     \}
-101     mp_clamp (c);
-102     return MP_OKAY;
-103   \}
-104   #endif
+072   
+073         \}
+074   
+075         /* store term */
+076         W[ix] = ((mp_digit)_W) & MP_MASK;
+077   
+078         /* make next carry */
+079         _W = _W >> ((mp_word)DIGIT_BIT);
+080    \}
+081   
+082     /* setup dest */
+083     olduse  = c->used;
+084     c->used = pa;
+085   
+086     \{
+087       register mp_digit *tmpc;
+088       tmpc = c->dp;
+089       for (ix = 0; ix < pa+1; ix++) \{
+090         /* now extract the previous digit [below the carry] */
+091         *tmpc++ = W[ix];
+092       \}
+093   
+094       /* clear unused digits [that existed in the old copy of c] */
+095       for (; ix < olduse; ix++) \{
+096         *tmpc++ = 0;
+097       \}
+098     \}
+099     mp_clamp (c);
+100     return MP_OKAY;
+101   \}
+102   #endif
+103   
 \end{alltt}
 \end{small}
 
@@ -3982,7 +4007,7 @@ As per the pseudo--code we first calculate $pa$ (line 47) as the number of digit
 to produce the individual columns of the product.  We use the two aliases $tmpx$ and $tmpy$ (lines 61, 62) to point
 inside the two multiplicands quickly.  
 
-The inner loop (lines 70 to 72) of this implementation is where the tradeoff come into play.  Originally this comba 
+The inner loop (lines 70 to 73) of this implementation is where the tradeoff come into play.  Originally this comba 
 implementation was ``row--major'' which means it adds to each of the columns in each pass.  After the outer loop it would then fix 
 the carries.  This was very fast except it had an annoying drawback.  You had to read a mp\_word and two mp\_digits and write 
 one mp\_word per iteration.  On processors such as the Athlon XP and P4 this did not matter much since the cache bandwidth 
@@ -3990,8 +4015,8 @@ is very high and it can keep the ALU fed with data.  It did, however, matter on 
 slower and also often doesn't exist.  This new algorithm only performs two reads per iteration under the assumption that the 
 compiler has aliased $\_ \hat W$ to a CPU register.
 
-After the inner loop we store the current accumulator in $W$ and shift $\_ \hat W$ (lines 75, 78) to forward it as 
-a carry for the next pass.  After the outer loop we use the final carry (line 82) as the last digit of the product.  
+After the inner loop we store the current accumulator in $W$ and shift $\_ \hat W$ (lines 76, 79) to forward it as 
+a carry for the next pass.  After the outer loop we use the final carry (line 76) as the last digit of the product.  
 
 \subsection{Polynomial Basis Multiplication}
 To break the $O(n^2)$ barrier in multiplication requires a completely different look at integer multiplication.  In the following algorithms
@@ -4095,26 +4120,25 @@ general purpose multiplication.  Given two polynomial basis representations $f(x
 light algebra \cite{KARAP} that the following polynomial is equivalent to multiplication of the two integers the polynomials represent.
 
 \begin{equation}
-f(x) \cdot g(x) = acx^2 + ((a - b)(c - d) - (ac + bd))x + bd
+f(x) \cdot g(x) = acx^2 + ((a + b)(c + d) - (ac + bd))x + bd
 \end{equation}
 
 Using the observation that $ac$ and $bd$ could be re-used only three half sized multiplications would be required to produce the product.  Applying
 this algorithm recursively, the work factor becomes $O(n^{lg(3)})$ which is substantially better than the work factor $O(n^2)$ of the Comba technique.  It turns 
 out what Karatsuba did not know or at least did not publish was that this is simply polynomial basis multiplication with the points 
-$\zeta_0$, $\zeta_{\infty}$ and $-\zeta_{-1}$.  Consider the resultant system of equations.
+$\zeta_0$, $\zeta_{\infty}$ and $\zeta_{1}$.  Consider the resultant system of equations.
 
 \begin{center}
 \begin{tabular}{rcrcrcrc}
 $\zeta_{0}$ &      $=$ &  &  &  & & $w_0$ \\
-$-\zeta_{-1}$ &    $=$ & $-w_2$ & $+$ & $w_1$ & $-$ & $w_0$ \\
+$\zeta_{1}$ &      $=$ & $w_2$ & $+$ & $w_1$ & $+$ & $w_0$ \\
 $\zeta_{\infty}$ & $=$ & $w_2$ &  & &  & \\
 \end{tabular}
 \end{center}
 
 By adding the first and last equation to the equation in the middle the term $w_1$ can be isolated and all three coefficients solved for.  The simplicity
 of this system of equations has made Karatsuba fairly popular.  In fact the cutoff point is often fairly low\footnote{With LibTomMath 0.18 it is 70 and 109 digits for the Intel P4 and AMD Athlon respectively.}
-making it an ideal algorithm to speed up certain public key cryptosystems such as RSA and Diffie-Hellman.  It is worth noting that the point 
-$\zeta_1$ could be substituted for $-\zeta_{-1}$.  In this case the first and third row are subtracted instead of added to the second row.  
+making it an ideal algorithm to speed up certain public key cryptosystems such as RSA and Diffie-Hellman.  
 
 \newpage\begin{figure}[!here]
 \begin{small}
@@ -4137,13 +4161,13 @@ Split the input.  e.g. $a = x1 \cdot \beta^B + x0$ \\
 Calculate the three products. \\
 8.  $x0y0 \leftarrow x0 \cdot y0$ (\textit{mp\_mul}) \\
 9.  $x1y1 \leftarrow x1 \cdot y1$ \\
-10.  $t1 \leftarrow x1 - x0$ (\textit{mp\_sub}) \\
-11.  $x0 \leftarrow y1 - y0$ \\
+10.  $t1 \leftarrow x1 + x0$ (\textit{mp\_add}) \\
+11.  $x0 \leftarrow y1 + y0$ \\
 12.  $t1 \leftarrow t1 \cdot x0$ \\
 \\
 Calculate the middle term. \\
 13.  $x0 \leftarrow x0y0 + x1y1$ \\
-14.  $t1 \leftarrow x0 - t1$ \\
+14.  $t1 \leftarrow t1 - x0$ (\textit{s\_mp\_sub}) \\
 \\
 Calculate the final product. \\
 15.  $t1 \leftarrow t1 \cdot \beta^B$ (\textit{mp\_lshd}) \\
@@ -4170,7 +4194,7 @@ smallest input \textbf{used} count.  After the radix point is chosen the inputs 
 compute the lower halves.  Step 6 and 7 computer the upper halves.  
 
 After the halves have been computed the three intermediate half-size products must be computed.  Step 8 and 9 compute the trivial products
-$x0 \cdot y0$ and $x1 \cdot y1$.  The mp\_int $x0$ is used as a temporary variable after $x1 - x0$ has been computed.  By using $x0$ instead
+$x0 \cdot y0$ and $x1 \cdot y1$.  The mp\_int $x0$ is used as a temporary variable after $x1 + x0$ has been computed.  By using $x0$ instead
 of an additional temporary variable, the algorithm can avoid an addition memory allocation operation.
 
 The remaining steps 13 through 18 compute the Karatsuba polynomial through a variety of digit shifting and addition operations.
@@ -4191,12 +4215,12 @@ The remaining steps 13 through 18 compute the Karatsuba polynomial through a var
 025    * b = b1 * B**n + b0
 026    *
 027    * Then, a * b => 
-028      a1b1 * B**2n + ((a1 - a0)(b1 - b0) + a0b0 + a1b1) * B + a0b0
+028      a1b1 * B**2n + ((a1 + a0)(b1 + b0) - (a0b0 + a1b1)) * B + a0b0
 029    *
 030    * Note that a1b1 and a0b0 are used twice and only need to be 
 031    * computed once.  So in total three half size (half # of 
 032    * digit) multiplications are performed, a0b0, a1b1 and 
-033    * (a1-b1)(a0-b0)
+033    * (a1+b1)(a0+b0)
 034    *
 035    * Note that a multiplication of half the digits requires
 036    * 1/4th the number of single precision multiplications so in 
@@ -4287,19 +4311,19 @@ The remaining steps 13 through 18 compute the Karatsuba polynomial through a var
 121     if (mp_mul (&x1, &y1, &x1y1) != MP_OKAY)
 122       goto X1Y1;          /* x1y1 = x1*y1 */
 123   
-124     /* now calc x1-x0 and y1-y0 */
-125     if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
+124     /* now calc x1+x0 and y1+y0 */
+125     if (s_mp_add (&x1, &x0, &t1) != MP_OKAY)
 126       goto X1Y1;          /* t1 = x1 - x0 */
-127     if (mp_sub (&y1, &y0, &x0) != MP_OKAY)
+127     if (s_mp_add (&y1, &y0, &x0) != MP_OKAY)
 128       goto X1Y1;          /* t2 = y1 - y0 */
 129     if (mp_mul (&t1, &x0, &t1) != MP_OKAY)
-130       goto X1Y1;          /* t1 = (x1 - x0) * (y1 - y0) */
+130       goto X1Y1;          /* t1 = (x1 + x0) * (y1 + y0) */
 131   
 132     /* add x0y0 */
 133     if (mp_add (&x0y0, &x1y1, &x0) != MP_OKAY)
 134       goto X1Y1;          /* t2 = x0y0 + x1y1 */
-135     if (mp_sub (&x0, &t1, &t1) != MP_OKAY)
-136       goto X1Y1;          /* t1 = x0y0 + x1y1 - (x1-x0)*(y1-y0) */
+135     if (s_mp_sub (&t1, &x0, &t1) != MP_OKAY)
+136       goto X1Y1;          /* t1 = (x1+x0)*(y1+y0) - (x1y1 + x0y0) */
 137   
 138     /* shift by B */
 139     if (mp_lshd (&t1, B) != MP_OKAY)
@@ -4326,6 +4350,7 @@ The remaining steps 13 through 18 compute the Karatsuba polynomial through a var
 160     return err;
 161   \}
 162   #endif
+163   
 \end{alltt}
 \end{small}
 
@@ -4729,6 +4754,7 @@ result $a \cdot b$ is produced.
 277   \}     
 278        
 279   #endif
+280   
 \end{alltt}
 \end{small}
 
@@ -4837,6 +4863,7 @@ s\_mp\_mul\_digs will clear it.
 059     return res;
 060   \}
 061   #endif
+062   
 \end{alltt}
 \end{small}
 
@@ -5006,6 +5033,7 @@ results calculated so far.  This involves expensive carry propagation which will
 077     return MP_OKAY;
 078   \}
 079   #endif
+080   
 \end{alltt}
 \end{small}
 
@@ -5188,6 +5216,7 @@ only to even outputs and it is the square of the term at the $\lfloor ix / 2 \rf
 107     return MP_OKAY;
 108   \}
 109   #endif
+110   
 \end{alltt}
 \end{small}
 
@@ -5205,10 +5234,10 @@ Let $h(x) = \left ( f(x) \right )^2$ represent the square of the polynomial.  Th
 number with the following equation.
 
 \begin{equation}
-h(x) = a^2x^2 + \left (a^2 + b^2 - (a - b)^2 \right )x + b^2
+h(x) = a^2x^2 + \left ((a + b)^2 - (a^2 + b^2) \right )x + b^2
 \end{equation}
 
-Upon closer inspection this equation only requires the calculation of three half-sized squares: $a^2$, $b^2$ and $(a - b)^2$.  As in 
+Upon closer inspection this equation only requires the calculation of three half-sized squares: $a^2$, $b^2$ and $(a + b)^2$.  As in 
 Karatsuba multiplication, this algorithm can be applied recursively on the input and will achieve an asymptotic running time of 
 $O \left ( n^{lg(3)} \right )$.
 
@@ -5240,12 +5269,12 @@ Split the input.  e.g. $a = x1\beta^B + x0$ \\
 Calculate the three squares. \\
 6.  $x0x0 \leftarrow x0^2$ (\textit{mp\_sqr}) \\
 7.  $x1x1 \leftarrow x1^2$ \\
-8.  $t1 \leftarrow x1 - x0$ (\textit{mp\_sub}) \\
+8.  $t1 \leftarrow x1 + x0$ (\textit{s\_mp\_add}) \\
 9.  $t1 \leftarrow t1^2$ \\
 \\
 Compute the middle term. \\
 10.  $t2 \leftarrow x0x0 + x1x1$ (\textit{s\_mp\_add}) \\
-11.  $t1 \leftarrow t2 - t1$ \\
+11.  $t1 \leftarrow t1 - t2$ \\
 \\
 Compute final product. \\
 12.  $t1 \leftarrow t1\beta^B$ (\textit{mp\_lshd}) \\
@@ -5268,7 +5297,7 @@ The radix point for squaring is simply placed exactly in the middle of the digit
 placed just below the middle.  Step 3, 4 and 5 compute the two halves required using $B$
 as the radix point.  The first two squares in steps 6 and 7 are rather straightforward while the last square is of a more compact form.
 
-By expanding $\left (x1 - x0 \right )^2$, the $x1^2$ and $x0^2$ terms in the middle disappear, that is $x1^2 + x0^2 - (x1 - x0)^2 = 2 \cdot x0 \cdot x1$.
+By expanding $\left (x1 + x0 \right )^2$, the $x1^2$ and $x0^2$ terms in the middle disappear, that is $(x0 - x1)^2 - (x1^2 + x0^2)  = 2 \cdot x0 \cdot x1$.
 Now if $5n$ single precision additions and a squaring of $n$-digits is faster than multiplying two $n$-digit numbers and doubling then
 this method is faster.  Assuming no further recursions occur, the difference can be estimated with the following inequality.
 
@@ -5363,8 +5392,8 @@ ratio of 1:7.  } than simpler operations such as addition.
 079     if (mp_sqr (&x1, &x1x1) != MP_OKAY)
 080       goto X1X1;           /* x1x1 = x1*x1 */
 081   
-082     /* now calc (x1-x0)**2 */
-083     if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
+082     /* now calc (x1+x0)**2 */
+083     if (s_mp_add (&x1, &x0, &t1) != MP_OKAY)
 084       goto X1X1;           /* t1 = x1 - x0 */
 085     if (mp_sqr (&t1, &t1) != MP_OKAY)
 086       goto X1X1;           /* t1 = (x1 - x0) * (x1 - x0) */
@@ -5372,8 +5401,8 @@ ratio of 1:7.  } than simpler operations such as addition.
 088     /* add x0y0 */
 089     if (s_mp_add (&x0x0, &x1x1, &t2) != MP_OKAY)
 090       goto X1X1;           /* t2 = x0x0 + x1x1 */
-091     if (mp_sub (&t2, &t1, &t1) != MP_OKAY)
-092       goto X1X1;           /* t1 = x0x0 + x1x1 - (x1-x0)*(x1-x0) */
+091     if (s_mp_sub (&t1, &t2, &t1) != MP_OKAY)
+092       goto X1X1;           /* t1 = (x1+x0)**2 - (x0x0 + x1x1) */
 093   
 094     /* shift by B */
 095     if (mp_lshd (&t1, B) != MP_OKAY)
@@ -5398,6 +5427,7 @@ ratio of 1:7.  } than simpler operations such as addition.
 114     return err;
 115   \}
 116   #endif
+117   
 \end{alltt}
 \end{small}
 
@@ -5494,6 +5524,7 @@ neither of the polynomial basis algorithms should be used then either the Comba 
 051     return res;
 052   \}
 053   #endif
+054   
 \end{alltt}
 \end{small}
 
@@ -5827,6 +5858,7 @@ performed at most twice, and on average once. However, if $a \ge b^2$ than it wi
 093     return res;
 094   \}
 095   #endif
+096   
 \end{alltt}
 \end{small}
 
@@ -5879,6 +5911,7 @@ is equivalent and much faster.  The final value is computed by taking the intege
 027     return mp_div (a, b, a, NULL);
 028   \}
 029   #endif
+030   
 \end{alltt}
 \end{small}
 
@@ -5943,6 +5976,7 @@ $0 \le r < \lfloor x/2^k \rfloor + n$.  As a result at most a single subtraction
 \hline $6$ & $x/2 = 139$ \\
 \hline $7$ & $x + n = 396$, $x/2 = 198$ \\
 \hline $8$ & $x/2 = 99$ \\
+\hline $9$ & $x + n = 356$, $x/2 = 178$ \\
 \hline
 \end{tabular}
 \end{center}
@@ -5951,8 +5985,8 @@ $0 \le r < \lfloor x/2^k \rfloor + n$.  As a result at most a single subtraction
 \label{fig:MONT1}
 \end{figure}
 
-Consider the example in figure~\ref{fig:MONT1} which reduces $x = 5555$ modulo $n = 257$ when $k = 8$.  The result of the algorithm $r = 99$ is
-congruent to the value of $2^{-8} \cdot 5555 \mbox{ (mod }257\mbox{)}$.  When $r$ is multiplied by $2^8$ modulo $257$ the correct residue 
+Consider the example in figure~\ref{fig:MONT1} which reduces $x = 5555$ modulo $n = 257$ when $k = 9$ (note $\beta^k = 512$ which is larger than $n$).  The result of 
+the algorithm $r = 178$ is congruent to the value of $2^{-9} \cdot 5555 \mbox{ (mod }257\mbox{)}$.  When $r$ is multiplied by $2^9$ modulo $257$ the correct residue 
 $r \equiv 158$ is produced.  
 
 Let $k = \lfloor lg(n) \rfloor + 1$ represent the number of bits in $n$.  The current algorithm requires $2k^2$ single precision shifts
@@ -5964,10 +5998,10 @@ Fortunately there exists an alternative representation of the algorithm.
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{Montgomery Reduction} (modified I). \\
-\textbf{Input}.   Integer $x$, $n$ and $k$ \\
+\textbf{Input}.   Integer $x$, $n$ and $k$ ($2^k > n$) \\
 \textbf{Output}.  $2^{-k}x \mbox{ (mod }n\mbox{)}$ \\
 \hline \\
-1.  for $t$ from $0$ to $k - 1$ do \\
+1.  for $t$ from $1$ to $k$ do \\
 \hspace{3mm}1.1  If the $t$'th bit of $x$ is one then \\
 \hspace{6mm}1.1.1  $x \leftarrow x + 2^tn$ \\
 2.  Return $x/2^k$. \\
@@ -5995,7 +6029,8 @@ precision shifts has now been reduced from $2k^2$ to $k^2 + k$ which is only a s
 \hline $6$ & $8896$ & $10001011000000$ \\
 \hline $7$ & $x + 2^{6}n = 25344$ & $110001100000000$ \\
 \hline $8$ & $25344$ & $110001100000000$ \\
-\hline -- & $x/2^k = 99$ & \\
+\hline $9$ & $x + 2^{7}n = 91136$ & $10110010000000000$ \\
+\hline -- & $x/2^k = 178$ & \\
 \hline
 \end{tabular}
 \end{center}
@@ -6004,7 +6039,7 @@ precision shifts has now been reduced from $2k^2$ to $k^2 + k$ which is only a s
 \label{fig:MONT2}
 \end{figure}
 
-Figure~\ref{fig:MONT2} demonstrates the modified algorithm reducing $x = 5555$ modulo $n = 257$ with $k = 8$. 
+Figure~\ref{fig:MONT2} demonstrates the modified algorithm reducing $x = 5555$ modulo $n = 257$ with $k = 9$. 
 With this algorithm a single shift right at the end is the only right shift required to reduce the input instead of $k$ right shifts inside the 
 loop.  Note that for the iterations $t = 2, 5, 6$ and $8$ where the result $x$ is not changed.  In those iterations the $t$'th bit of $x$ is 
 zero and the appropriate multiple of $n$ does not need to be added to force the $t$'th bit of the result to zero.  
@@ -6018,7 +6053,7 @@ previous algorithm re-written to compute the Montgomery reduction in this new fa
 \begin{center}
 \begin{tabular}{l}
 \hline Algorithm \textbf{Montgomery Reduction} (modified II). \\
-\textbf{Input}.   Integer $x$, $n$ and $k$ \\
+\textbf{Input}.   Integer $x$, $n$ and $k$ ($\beta^k > n$) \\
 \textbf{Output}.  $\beta^{-k}x \mbox{ (mod }n\mbox{)}$ \\
 \hline \\
 1.  for $t$ from $0$ to $k - 1$ do \\
@@ -6234,6 +6269,7 @@ multiplications.
 111     return MP_OKAY;
 112   \}
 113   #endif
+114   
 \end{alltt}
 \end{small}
 
@@ -6478,6 +6514,7 @@ stored in the destination $x$.
 165     return MP_OKAY;
 166   \}
 167   #endif
+168   
 \end{alltt}
 \end{small}
 
@@ -6505,7 +6542,7 @@ To calculate the variable $\rho$ a relatively simple algorithm will be required.
 \hline \\
 1.  $b \leftarrow n_0$ \\
 2.  If $b$ is even return(\textit{MP\_VAL}) \\
-3.  $x \leftarrow ((b + 2) \mbox{ AND } 4) << 1) + b$ \\
+3.  $x \leftarrow (((b + 2) \mbox{ AND } 4) << 1) + b$ \\
 4.  for $k$ from 0 to $\lceil lg(lg(\beta)) \rceil - 2$ do \\
 \hspace{3mm}4.1  $x \leftarrow x \cdot (2 - bx)$ \\
 5.  $\rho \leftarrow \beta - x \mbox{ (mod }\beta\mbox{)}$ \\
@@ -6559,11 +6596,13 @@ to calculate $1/n_0$ when $\beta$ is a power of two.
 047   #endif
 048   
 049     /* rho = -1/m mod b */
-050     *rho = (((mp_word)1 << ((mp_word) DIGIT_BIT)) - x) & MP_MASK;
+050     *rho = (unsigned long)(((mp_word)1 << ((mp_word) DIGIT_BIT)) - x) & MP_MAS
+      K;
 051   
 052     return MP_OKAY;
 053   \}
 054   #endif
+055   
 \end{alltt}
 \end{small}
 
@@ -6830,6 +6869,7 @@ at step 3.
 087     return MP_OKAY;
 088   \}
 089   #endif
+090   
 \end{alltt}
 \end{small}
 
@@ -6885,6 +6925,7 @@ completeness.
 025   \}
 026   
 027   #endif
+028   
 \end{alltt}
 \end{small}
 
@@ -6943,6 +6984,7 @@ step 3 then $n$ must be of Diminished Radix form.
 036   \}
 037   
 038   #endif
+039   
 \end{alltt}
 \end{small}
 
@@ -7027,6 +7069,7 @@ shift which makes the algorithm fairly inexpensive to use.
 054   \}
 055   
 056   #endif
+057   
 \end{alltt}
 \end{small}
 
@@ -7096,6 +7139,7 @@ is sufficient to solve for $k$.  Alternatively if $n$ has more than one digit th
 040      return MP_OKAY;
 041   \}
 042   #endif
+043   
 \end{alltt}
 \end{small}
 
@@ -7172,6 +7216,7 @@ This algorithm quickly determines if a modulus is of the form required for algor
 045   \}
 046   
 047   #endif
+048   
 \end{alltt}
 \end{small}
 
@@ -7381,6 +7426,7 @@ iteration of the loop moves the bits of the exponent $b$ upwards to the most sig
 050     return MP_OKAY;
 051   \}
 052   #endif
+053   
 \end{alltt}
 \end{small}
 
@@ -7620,7 +7666,8 @@ algorithm since their arguments are essentially the same (\textit{two mp\_ints a
 065     \}
 066   
 067   /* modified diminished radix reduction */
-068   #if defined(BN_MP_REDUCE_IS_2K_L_C) && defined(BN_MP_REDUCE_2K_L_C)
+068   #if defined(BN_MP_REDUCE_IS_2K_L_C) && defined(BN_MP_REDUCE_2K_L_C) && defin
+      ed(BN_S_MP_EXPTMOD_C)
 069     if (mp_reduce_is_2k_l(P) == MP_YES) \{
 070        return s_mp_exptmod(G, X, P, Y, 1);
 071     \}
@@ -7660,6 +7707,7 @@ algorithm since their arguments are essentially the same (\textit{two mp\_ints a
 105   \}
 106   
 107   #endif
+108   
 \end{alltt}
 \end{small}
 
@@ -7839,252 +7887,252 @@ a Left-to-Right algorithm is used to process the remaining few bits.
 \hspace{-5.1mm}{\bf File}: bn\_s\_mp\_exptmod.c
 \vspace{-3mm}
 \begin{alltt}
-016   
-017   #ifdef MP_LOW_MEM
-018      #define TAB_SIZE 32
-019   #else
-020      #define TAB_SIZE 256
-021   #endif
-022   
-023   int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmod
+016   #ifdef MP_LOW_MEM
+017      #define TAB_SIZE 32
+018   #else
+019      #define TAB_SIZE 256
+020   #endif
+021   
+022   int s_mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmod
       e)
-024   \{
-025     mp_int  M[TAB_SIZE], res, mu;
-026     mp_digit buf;
-027     int     err, bitbuf, bitcpy, bitcnt, mode, digidx, x, y, winsize;
-028     int (*redux)(mp_int*,mp_int*,mp_int*);
-029   
-030     /* find window size */
-031     x = mp_count_bits (X);
-032     if (x <= 7) \{
-033       winsize = 2;
-034     \} else if (x <= 36) \{
-035       winsize = 3;
-036     \} else if (x <= 140) \{
-037       winsize = 4;
-038     \} else if (x <= 450) \{
-039       winsize = 5;
-040     \} else if (x <= 1303) \{
-041       winsize = 6;
-042     \} else if (x <= 3529) \{
-043       winsize = 7;
-044     \} else \{
-045       winsize = 8;
-046     \}
-047   
-048   #ifdef MP_LOW_MEM
-049       if (winsize > 5) \{
-050          winsize = 5;
-051       \}
-052   #endif
-053   
-054     /* init M array */
-055     /* init first cell */
-056     if ((err = mp_init(&M[1])) != MP_OKAY) \{
-057        return err; 
-058     \}
-059   
-060     /* now init the second half of the array */
-061     for (x = 1<<(winsize-1); x < (1 << winsize); x++) \{
-062       if ((err = mp_init(&M[x])) != MP_OKAY) \{
-063         for (y = 1<<(winsize-1); y < x; y++) \{
-064           mp_clear (&M[y]);
-065         \}
-066         mp_clear(&M[1]);
-067         return err;
-068       \}
-069     \}
-070   
-071     /* create mu, used for Barrett reduction */
-072     if ((err = mp_init (&mu)) != MP_OKAY) \{
-073       goto LBL_M;
-074     \}
-075     
-076     if (redmode == 0) \{
-077        if ((err = mp_reduce_setup (&mu, P)) != MP_OKAY) \{
-078           goto LBL_MU;
-079        \}
-080        redux = mp_reduce;
-081     \} else \{
-082        if ((err = mp_reduce_2k_setup_l (P, &mu)) != MP_OKAY) \{
-083           goto LBL_MU;
-084        \}
-085        redux = mp_reduce_2k_l;
-086     \}    
-087   
-088     /* create M table
-089      *
-090      * The M table contains powers of the base, 
-091      * e.g. M[x] = G**x mod P
-092      *
-093      * The first half of the table is not 
-094      * computed though accept for M[0] and M[1]
-095      */
-096     if ((err = mp_mod (G, P, &M[1])) != MP_OKAY) \{
-097       goto LBL_MU;
-098     \}
-099   
-100     /* compute the value at M[1<<(winsize-1)] by squaring 
-101      * M[1] (winsize-1) times 
-102      */
-103     if ((err = mp_copy (&M[1], &M[1 << (winsize - 1)])) != MP_OKAY) \{
-104       goto LBL_MU;
-105     \}
-106   
-107     for (x = 0; x < (winsize - 1); x++) \{
-108       /* square it */
-109       if ((err = mp_sqr (&M[1 << (winsize - 1)], 
-110                          &M[1 << (winsize - 1)])) != MP_OKAY) \{
-111         goto LBL_MU;
-112       \}
-113   
-114       /* reduce modulo P */
-115       if ((err = redux (&M[1 << (winsize - 1)], P, &mu)) != MP_OKAY) \{
-116         goto LBL_MU;
-117       \}
-118     \}
-119   
-120     /* create upper table, that is M[x] = M[x-1] * M[1] (mod P)
-121      * for x = (2**(winsize - 1) + 1) to (2**winsize - 1)
-122      */
-123     for (x = (1 << (winsize - 1)) + 1; x < (1 << winsize); x++) \{
-124       if ((err = mp_mul (&M[x - 1], &M[1], &M[x])) != MP_OKAY) \{
-125         goto LBL_MU;
-126       \}
-127       if ((err = redux (&M[x], P, &mu)) != MP_OKAY) \{
-128         goto LBL_MU;
-129       \}
-130     \}
-131   
-132     /* setup result */
-133     if ((err = mp_init (&res)) != MP_OKAY) \{
-134       goto LBL_MU;
-135     \}
-136     mp_set (&res, 1);
-137   
-138     /* set initial mode and bit cnt */
-139     mode   = 0;
-140     bitcnt = 1;
-141     buf    = 0;
-142     digidx = X->used - 1;
-143     bitcpy = 0;
-144     bitbuf = 0;
-145   
-146     for (;;) \{
-147       /* grab next digit as required */
-148       if (--bitcnt == 0) \{
-149         /* if digidx == -1 we are out of digits */
-150         if (digidx == -1) \{
-151           break;
-152         \}
-153         /* read next digit and reset the bitcnt */
-154         buf    = X->dp[digidx--];
-155         bitcnt = (int) DIGIT_BIT;
-156       \}
-157   
-158       /* grab the next msb from the exponent */
-159       y     = (buf >> (mp_digit)(DIGIT_BIT - 1)) & 1;
-160       buf <<= (mp_digit)1;
-161   
-162       /* if the bit is zero and mode == 0 then we ignore it
-163        * These represent the leading zero bits before the first 1 bit
-164        * in the exponent.  Technically this opt is not required but it
-165        * does lower the # of trivial squaring/reductions used
-166        */
-167       if (mode == 0 && y == 0) \{
-168         continue;
-169       \}
-170   
-171       /* if the bit is zero and mode == 1 then we square */
-172       if (mode == 1 && y == 0) \{
-173         if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
-174           goto LBL_RES;
-175         \}
-176         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
-177           goto LBL_RES;
-178         \}
-179         continue;
-180       \}
-181   
-182       /* else we add it to the window */
-183       bitbuf |= (y << (winsize - ++bitcpy));
-184       mode    = 2;
-185   
-186       if (bitcpy == winsize) \{
-187         /* ok window is filled so square as required and multiply  */
-188         /* square first */
-189         for (x = 0; x < winsize; x++) \{
-190           if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
-191             goto LBL_RES;
-192           \}
-193           if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
-194             goto LBL_RES;
-195           \}
-196         \}
-197   
-198         /* then multiply */
-199         if ((err = mp_mul (&res, &M[bitbuf], &res)) != MP_OKAY) \{
-200           goto LBL_RES;
-201         \}
-202         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
-203           goto LBL_RES;
-204         \}
-205   
-206         /* empty window and reset */
-207         bitcpy = 0;
-208         bitbuf = 0;
-209         mode   = 1;
-210       \}
-211     \}
-212   
-213     /* if bits remain then square/multiply */
-214     if (mode == 2 && bitcpy > 0) \{
-215       /* square then multiply if the bit is set */
-216       for (x = 0; x < bitcpy; x++) \{
-217         if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
-218           goto LBL_RES;
-219         \}
-220         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
-221           goto LBL_RES;
-222         \}
-223   
-224         bitbuf <<= 1;
-225         if ((bitbuf & (1 << winsize)) != 0) \{
-226           /* then multiply */
-227           if ((err = mp_mul (&res, &M[1], &res)) != MP_OKAY) \{
-228             goto LBL_RES;
-229           \}
-230           if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
-231             goto LBL_RES;
-232           \}
-233         \}
-234       \}
-235     \}
-236   
-237     mp_exch (&res, Y);
-238     err = MP_OKAY;
-239   LBL_RES:mp_clear (&res);
-240   LBL_MU:mp_clear (&mu);
-241   LBL_M:
-242     mp_clear(&M[1]);
-243     for (x = 1<<(winsize-1); x < (1 << winsize); x++) \{
-244       mp_clear (&M[x]);
-245     \}
-246     return err;
-247   \}
-248   #endif
+023   \{
+024     mp_int  M[TAB_SIZE], res, mu;
+025     mp_digit buf;
+026     int     err, bitbuf, bitcpy, bitcnt, mode, digidx, x, y, winsize;
+027     int (*redux)(mp_int*,mp_int*,mp_int*);
+028   
+029     /* find window size */
+030     x = mp_count_bits (X);
+031     if (x <= 7) \{
+032       winsize = 2;
+033     \} else if (x <= 36) \{
+034       winsize = 3;
+035     \} else if (x <= 140) \{
+036       winsize = 4;
+037     \} else if (x <= 450) \{
+038       winsize = 5;
+039     \} else if (x <= 1303) \{
+040       winsize = 6;
+041     \} else if (x <= 3529) \{
+042       winsize = 7;
+043     \} else \{
+044       winsize = 8;
+045     \}
+046   
+047   #ifdef MP_LOW_MEM
+048       if (winsize > 5) \{
+049          winsize = 5;
+050       \}
+051   #endif
+052   
+053     /* init M array */
+054     /* init first cell */
+055     if ((err = mp_init(&M[1])) != MP_OKAY) \{
+056        return err; 
+057     \}
+058   
+059     /* now init the second half of the array */
+060     for (x = 1<<(winsize-1); x < (1 << winsize); x++) \{
+061       if ((err = mp_init(&M[x])) != MP_OKAY) \{
+062         for (y = 1<<(winsize-1); y < x; y++) \{
+063           mp_clear (&M[y]);
+064         \}
+065         mp_clear(&M[1]);
+066         return err;
+067       \}
+068     \}
+069   
+070     /* create mu, used for Barrett reduction */
+071     if ((err = mp_init (&mu)) != MP_OKAY) \{
+072       goto LBL_M;
+073     \}
+074     
+075     if (redmode == 0) \{
+076        if ((err = mp_reduce_setup (&mu, P)) != MP_OKAY) \{
+077           goto LBL_MU;
+078        \}
+079        redux = mp_reduce;
+080     \} else \{
+081        if ((err = mp_reduce_2k_setup_l (P, &mu)) != MP_OKAY) \{
+082           goto LBL_MU;
+083        \}
+084        redux = mp_reduce_2k_l;
+085     \}    
+086   
+087     /* create M table
+088      *
+089      * The M table contains powers of the base, 
+090      * e.g. M[x] = G**x mod P
+091      *
+092      * The first half of the table is not 
+093      * computed though accept for M[0] and M[1]
+094      */
+095     if ((err = mp_mod (G, P, &M[1])) != MP_OKAY) \{
+096       goto LBL_MU;
+097     \}
+098   
+099     /* compute the value at M[1<<(winsize-1)] by squaring 
+100      * M[1] (winsize-1) times 
+101      */
+102     if ((err = mp_copy (&M[1], &M[1 << (winsize - 1)])) != MP_OKAY) \{
+103       goto LBL_MU;
+104     \}
+105   
+106     for (x = 0; x < (winsize - 1); x++) \{
+107       /* square it */
+108       if ((err = mp_sqr (&M[1 << (winsize - 1)], 
+109                          &M[1 << (winsize - 1)])) != MP_OKAY) \{
+110         goto LBL_MU;
+111       \}
+112   
+113       /* reduce modulo P */
+114       if ((err = redux (&M[1 << (winsize - 1)], P, &mu)) != MP_OKAY) \{
+115         goto LBL_MU;
+116       \}
+117     \}
+118   
+119     /* create upper table, that is M[x] = M[x-1] * M[1] (mod P)
+120      * for x = (2**(winsize - 1) + 1) to (2**winsize - 1)
+121      */
+122     for (x = (1 << (winsize - 1)) + 1; x < (1 << winsize); x++) \{
+123       if ((err = mp_mul (&M[x - 1], &M[1], &M[x])) != MP_OKAY) \{
+124         goto LBL_MU;
+125       \}
+126       if ((err = redux (&M[x], P, &mu)) != MP_OKAY) \{
+127         goto LBL_MU;
+128       \}
+129     \}
+130   
+131     /* setup result */
+132     if ((err = mp_init (&res)) != MP_OKAY) \{
+133       goto LBL_MU;
+134     \}
+135     mp_set (&res, 1);
+136   
+137     /* set initial mode and bit cnt */
+138     mode   = 0;
+139     bitcnt = 1;
+140     buf    = 0;
+141     digidx = X->used - 1;
+142     bitcpy = 0;
+143     bitbuf = 0;
+144   
+145     for (;;) \{
+146       /* grab next digit as required */
+147       if (--bitcnt == 0) \{
+148         /* if digidx == -1 we are out of digits */
+149         if (digidx == -1) \{
+150           break;
+151         \}
+152         /* read next digit and reset the bitcnt */
+153         buf    = X->dp[digidx--];
+154         bitcnt = (int) DIGIT_BIT;
+155       \}
+156   
+157       /* grab the next msb from the exponent */
+158       y     = (buf >> (mp_digit)(DIGIT_BIT - 1)) & 1;
+159       buf <<= (mp_digit)1;
+160   
+161       /* if the bit is zero and mode == 0 then we ignore it
+162        * These represent the leading zero bits before the first 1 bit
+163        * in the exponent.  Technically this opt is not required but it
+164        * does lower the # of trivial squaring/reductions used
+165        */
+166       if (mode == 0 && y == 0) \{
+167         continue;
+168       \}
+169   
+170       /* if the bit is zero and mode == 1 then we square */
+171       if (mode == 1 && y == 0) \{
+172         if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
+173           goto LBL_RES;
+174         \}
+175         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
+176           goto LBL_RES;
+177         \}
+178         continue;
+179       \}
+180   
+181       /* else we add it to the window */
+182       bitbuf |= (y << (winsize - ++bitcpy));
+183       mode    = 2;
+184   
+185       if (bitcpy == winsize) \{
+186         /* ok window is filled so square as required and multiply  */
+187         /* square first */
+188         for (x = 0; x < winsize; x++) \{
+189           if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
+190             goto LBL_RES;
+191           \}
+192           if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
+193             goto LBL_RES;
+194           \}
+195         \}
+196   
+197         /* then multiply */
+198         if ((err = mp_mul (&res, &M[bitbuf], &res)) != MP_OKAY) \{
+199           goto LBL_RES;
+200         \}
+201         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
+202           goto LBL_RES;
+203         \}
+204   
+205         /* empty window and reset */
+206         bitcpy = 0;
+207         bitbuf = 0;
+208         mode   = 1;
+209       \}
+210     \}
+211   
+212     /* if bits remain then square/multiply */
+213     if (mode == 2 && bitcpy > 0) \{
+214       /* square then multiply if the bit is set */
+215       for (x = 0; x < bitcpy; x++) \{
+216         if ((err = mp_sqr (&res, &res)) != MP_OKAY) \{
+217           goto LBL_RES;
+218         \}
+219         if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
+220           goto LBL_RES;
+221         \}
+222   
+223         bitbuf <<= 1;
+224         if ((bitbuf & (1 << winsize)) != 0) \{
+225           /* then multiply */
+226           if ((err = mp_mul (&res, &M[1], &res)) != MP_OKAY) \{
+227             goto LBL_RES;
+228           \}
+229           if ((err = redux (&res, P, &mu)) != MP_OKAY) \{
+230             goto LBL_RES;
+231           \}
+232         \}
+233       \}
+234     \}
+235   
+236     mp_exch (&res, Y);
+237     err = MP_OKAY;
+238   LBL_RES:mp_clear (&res);
+239   LBL_MU:mp_clear (&mu);
+240   LBL_M:
+241     mp_clear(&M[1]);
+242     for (x = 1<<(winsize-1); x < (1 << winsize); x++) \{
+243       mp_clear (&M[x]);
+244     \}
+245     return err;
+246   \}
+247   #endif
+248   
 \end{alltt}
 \end{small}
 
-Lines 21 through 40 determine the optimal window size based on the length of the exponent in bits.  The window divisions are sorted
+Lines 31 through 45 determine the optimal window size based on the length of the exponent in bits.  The window divisions are sorted
 from smallest to greatest so that in each \textbf{if} statement only one condition must be tested.  For example, by the \textbf{if} statement 
-on line 32 the value of $x$ is already known to be greater than $140$.  
+on line 37 the value of $x$ is already known to be greater than $140$.  
 
-The conditional piece of code beginning on line 48 allows the window size to be restricted to five bits.  This logic is used to ensure
+The conditional piece of code beginning on line 47 allows the window size to be restricted to five bits.  This logic is used to ensure
 the table of precomputed powers of $G$ remains relatively small.  
 
-The for loop on line 61 initializes the $M$ array while lines 62 and 77 compute the value of $\mu$ required for
-Barrett reduction.  
+The for loop on line 60 initializes the $M$ array while lines 71 and 76 through 85 initialize the reduction
+function that will be used for this modulus.
 
 -- More later.
 
@@ -8146,6 +8194,7 @@ equivalent to $m \cdot 2^k$.  By this logic when $m = 1$ a quick power of two ca
 041     return MP_OKAY;
 042   \}
 043   #endif
+044   
 \end{alltt}
 \end{small}
 
@@ -8666,6 +8715,7 @@ respectively be replaced with a zero.
 285   #endif
 286   
 287   #endif
+288   
 \end{alltt}
 \end{small}
 
@@ -8677,23 +8727,23 @@ algorithm with only the quotient is
 mp_div(&a, &b, &c, NULL);  /* c = [a/b] */
 \end{verbatim}
 
-Lines 37 and 44 handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
-respectively.  After the two trivial cases all of the temporary variables are initialized.  Line 105 determines the sign of 
-the quotient and line 76 ensures that both $x$ and $y$ are positive.  
+Lines 108 and 113 handle the two trivial cases of inputs which are division by zero and dividend smaller than the divisor 
+respectively.  After the two trivial cases all of the temporary variables are initialized.  Line 147 determines the sign of 
+the quotient and line 148 ensures that both $x$ and $y$ are positive.  
 
-The number of bits in the leading digit is calculated on line 105.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
+The number of bits in the leading digit is calculated on line 151.  Implictly an mp\_int with $r$ digits will require $lg(\beta)(r-1) + k$ bits
 of precision which when reduced modulo $lg(\beta)$ produces the value of $k$.  In this case $k$ is the number of bits in the leading digit which is
 exactly what is required.  For the algorithm to operate $k$ must equal $lg(\beta) - 1$ and when it does not the inputs must be normalized by shifting
 them to the left by $lg(\beta) - 1 - k$ bits.
 
 Throughout the variables $n$ and $t$ will represent the highest digit of $x$ and $y$ respectively.  These are first used to produce the 
-leading digit of the quotient.  The loop beginning on line 183 will produce the remainder of the quotient digits.
+leading digit of the quotient.  The loop beginning on line 184 will produce the remainder of the quotient digits.
 
-The conditional ``continue'' on line 114 is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
+The conditional ``continue'' on line 186 is used to prevent the algorithm from reading past the leading edge of $x$ which can occur when the
 algorithm eliminates multiple non-zero digits in a single iteration.  This ensures that $x_i$ is always non-zero since by definition the digits
 above the $i$'th position $x$ must be zero in order for the quotient to be precise\footnote{Precise as far as integer division is concerned.}.  
 
-Lines 130, 130 and 134 through 134 manually construct the high accuracy estimations by setting the digits of the two mp\_int 
+Lines 214, 216 and 222 through 225 manually construct the high accuracy estimations by setting the digits of the two mp\_int 
 variables directly.  
 
 \section{Single Digit Helpers}
@@ -8757,69 +8807,73 @@ This algorithm initiates a temporary mp\_int with the value of the single digit 
 039        /* fix sign  */
 040        a->sign = c->sign = MP_NEG;
 041   
-042        return res;
-043     \}
+042        /* clamp */
+043        mp_clamp(c);
 044   
-045     /* old number of used digits in c */
-046     oldused = c->used;
+045        return res;
+046     \}
 047   
-048     /* sign always positive */
-049     c->sign = MP_ZPOS;
+048     /* old number of used digits in c */
+049     oldused = c->used;
 050   
-051     /* source alias */
-052     tmpa    = a->dp;
+051     /* sign always positive */
+052     c->sign = MP_ZPOS;
 053   
-054     /* destination alias */
-055     tmpc    = c->dp;
+054     /* source alias */
+055     tmpa    = a->dp;
 056   
-057     /* if a is positive */
-058     if (a->sign == MP_ZPOS) \{
-059        /* add digit, after this we're propagating
-060         * the carry.
-061         */
-062        *tmpc   = *tmpa++ + b;
-063        mu      = *tmpc >> DIGIT_BIT;
-064        *tmpc++ &= MP_MASK;
-065   
-066        /* now handle rest of the digits */
-067        for (ix = 1; ix < a->used; ix++) \{
-068           *tmpc   = *tmpa++ + mu;
-069           mu      = *tmpc >> DIGIT_BIT;
-070           *tmpc++ &= MP_MASK;
-071        \}
-072        /* set final carry */
-073        ix++;
-074        *tmpc++  = mu;
-075   
-076        /* setup size */
-077        c->used = a->used + 1;
-078     \} else \{
-079        /* a was negative and |a| < b */
-080        c->used  = 1;
-081   
-082        /* the result is a single digit */
-083        if (a->used == 1) \{
-084           *tmpc++  =  b - a->dp[0];
-085        \} else \{
-086           *tmpc++  =  b;
-087        \}
-088   
-089        /* setup count so the clearing of oldused
-090         * can fall through correctly
-091         */
-092        ix       = 1;
-093     \}
-094   
-095     /* now zero to oldused */
-096     while (ix++ < oldused) \{
-097        *tmpc++ = 0;
-098     \}
-099     mp_clamp(c);
-100   
-101     return MP_OKAY;
-102   \}
+057     /* destination alias */
+058     tmpc    = c->dp;
+059   
+060     /* if a is positive */
+061     if (a->sign == MP_ZPOS) \{
+062        /* add digit, after this we're propagating
+063         * the carry.
+064         */
+065        *tmpc   = *tmpa++ + b;
+066        mu      = *tmpc >> DIGIT_BIT;
+067        *tmpc++ &= MP_MASK;
+068   
+069        /* now handle rest of the digits */
+070        for (ix = 1; ix < a->used; ix++) \{
+071           *tmpc   = *tmpa++ + mu;
+072           mu      = *tmpc >> DIGIT_BIT;
+073           *tmpc++ &= MP_MASK;
+074        \}
+075        /* set final carry */
+076        ix++;
+077        *tmpc++  = mu;
+078   
+079        /* setup size */
+080        c->used = a->used + 1;
+081     \} else \{
+082        /* a was negative and |a| < b */
+083        c->used  = 1;
+084   
+085        /* the result is a single digit */
+086        if (a->used == 1) \{
+087           *tmpc++  =  b - a->dp[0];
+088        \} else \{
+089           *tmpc++  =  b;
+090        \}
+091   
+092        /* setup count so the clearing of oldused
+093         * can fall through correctly
+094         */
+095        ix       = 1;
+096     \}
+097   
+098     /* now zero to oldused */
+099     while (ix++ < oldused) \{
+100        *tmpc++ = 0;
+101     \}
+102     mp_clamp(c);
 103   
-104   #endif
+104     return MP_OKAY;
+105   \}
+106   
+107   #endif
+108   
 \end{alltt}
 \end{small}
 
@@ -8929,6 +8983,7 @@ Unlike the full multiplication algorithms this algorithm does not require any si
 072     return MP_OKAY;
 073   \}
 074   #endif
+075   
 \end{alltt}
 \end{small}
 
@@ -9074,6 +9129,7 @@ from chapter seven.
 103   \}
 104   
 105   #endif
+106   
 \end{alltt}
 \end{small}
 
@@ -9260,6 +9316,7 @@ root.  Ideally this algorithm is meant to find the $n$'th root of an input where
 125     return res;
 126   \}
 127   #endif
+128   
 \end{alltt}
 \end{small}
 
@@ -9336,6 +9393,7 @@ the integers from $0$ to $\beta - 1$.
 048     return MP_OKAY;
 049   \}
 050   #endif
+051   
 \end{alltt}
 \end{small}
 
@@ -9425,61 +9483,65 @@ as part of larger input without any significant problem.
 020     int     y, res, neg;
 021     char    ch;
 022   
-023     /* make sure the radix is ok */
-024     if (radix < 2 || radix > 64) \{
-025       return MP_VAL;
-026     \}
-027   
-028     /* if the leading digit is a 
-029      * minus set the sign to negative. 
-030      */
-031     if (*str == '-') \{
-032       ++str;
-033       neg = MP_NEG;
-034     \} else \{
-035       neg = MP_ZPOS;
-036     \}
-037   
-038     /* set the integer to the default of zero */
-039     mp_zero (a);
-040     
-041     /* process each digit of the string */
-042     while (*str) \{
-043       /* if the radix < 36 the conversion is case insensitive
-044        * this allows numbers like 1AB and 1ab to represent the same  value
-045        * [e.g. in hex]
-046        */
-047       ch = (char) ((radix < 36) ? toupper (*str) : *str);
-048       for (y = 0; y < 64; y++) \{
-049         if (ch == mp_s_rmap[y]) \{
-050            break;
-051         \}
-052       \}
-053   
-054       /* if the char was found in the map 
-055        * and is less than the given radix add it
-056        * to the number, otherwise exit the loop. 
-057        */
-058       if (y < radix) \{
-059         if ((res = mp_mul_d (a, (mp_digit) radix, a)) != MP_OKAY) \{
-060            return res;
-061         \}
-062         if ((res = mp_add_d (a, (mp_digit) y, a)) != MP_OKAY) \{
+023     /* zero the digit bignum */
+024     mp_zero(a);
+025   
+026     /* make sure the radix is ok */
+027     if (radix < 2 || radix > 64) \{
+028       return MP_VAL;
+029     \}
+030   
+031     /* if the leading digit is a 
+032      * minus set the sign to negative. 
+033      */
+034     if (*str == '-') \{
+035       ++str;
+036       neg = MP_NEG;
+037     \} else \{
+038       neg = MP_ZPOS;
+039     \}
+040   
+041     /* set the integer to the default of zero */
+042     mp_zero (a);
+043     
+044     /* process each digit of the string */
+045     while (*str) \{
+046       /* if the radix < 36 the conversion is case insensitive
+047        * this allows numbers like 1AB and 1ab to represent the same  value
+048        * [e.g. in hex]
+049        */
+050       ch = (char) ((radix < 36) ? toupper (*str) : *str);
+051       for (y = 0; y < 64; y++) \{
+052         if (ch == mp_s_rmap[y]) \{
+053            break;
+054         \}
+055       \}
+056   
+057       /* if the char was found in the map 
+058        * and is less than the given radix add it
+059        * to the number, otherwise exit the loop. 
+060        */
+061       if (y < radix) \{
+062         if ((res = mp_mul_d (a, (mp_digit) radix, a)) != MP_OKAY) \{
 063            return res;
 064         \}
-065       \} else \{
-066         break;
-067       \}
-068       ++str;
-069     \}
-070     
-071     /* set the sign only if a != 0 */
-072     if (mp_iszero(a) != 1) \{
-073        a->sign = neg;
-074     \}
-075     return MP_OKAY;
-076   \}
-077   #endif
+065         if ((res = mp_add_d (a, (mp_digit) y, a)) != MP_OKAY) \{
+066            return res;
+067         \}
+068       \} else \{
+069         break;
+070       \}
+071       ++str;
+072     \}
+073     
+074     /* set the sign only if a != 0 */
+075     if (mp_iszero(a) != 1) \{
+076        a->sign = neg;
+077     \}
+078     return MP_OKAY;
+079   \}
+080   #endif
+081   
 \end{alltt}
 \end{small}
 
@@ -9599,6 +9661,7 @@ are required instead of a series of $n \times k$ divisions.  One design flaw of 
 068   \}
 069   
 070   #endif
+071   
 \end{alltt}
 \end{small}
 
@@ -9728,33 +9791,30 @@ and will produce the greatest common divisor.
 \textbf{Input}.   mp\_int $a$ and $b$ \\
 \textbf{Output}.  The greatest common divisor $c = (a, b)$.  \\
 \hline \\
-1.  If $a = 0$ and $b \ne 0$ then \\
-\hspace{3mm}1.1  $c \leftarrow b$ \\
+1.  If $a = 0$ then \\
+\hspace{3mm}1.1  $c \leftarrow \vert b \vert $ \\
 \hspace{3mm}1.2  Return(\textit{MP\_OKAY}). \\
-2.  If $a \ne 0$ and $b = 0$ then \\
-\hspace{3mm}2.1  $c \leftarrow a$ \\
+2.  If $b = 0$ then \\
+\hspace{3mm}2.1  $c \leftarrow \vert a \vert $ \\
 \hspace{3mm}2.2  Return(\textit{MP\_OKAY}). \\
-3.  If $a = b = 0$ then \\
-\hspace{3mm}3.1  $c \leftarrow 1$ \\
-\hspace{3mm}3.2  Return(\textit{MP\_OKAY}). \\
-4.  $u \leftarrow \vert a \vert, v \leftarrow \vert b \vert$ \\
-5.  $k \leftarrow 0$ \\
-6.  While $u.used > 0$ and $v.used > 0$ and $u_0 \equiv v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}6.1  $k \leftarrow k + 1$ \\
-\hspace{3mm}6.2  $u \leftarrow \lfloor u / 2 \rfloor$ \\
-\hspace{3mm}6.3  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-7.  While $u.used > 0$ and $u_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}7.1  $u \leftarrow \lfloor u / 2 \rfloor$ \\
-8.  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{3mm}8.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-9.  While $v.used > 0$ \\
-\hspace{3mm}9.1  If $\vert u \vert > \vert v \vert$ then \\
-\hspace{6mm}9.1.1  Swap $u$ and $v$. \\
-\hspace{3mm}9.2  $v \leftarrow \vert v \vert - \vert u \vert$ \\
-\hspace{3mm}9.3  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
-\hspace{6mm}9.3.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
-10.  $c \leftarrow u \cdot 2^k$ \\
-11.  Return(\textit{MP\_OKAY}). \\
+3.  $u \leftarrow \vert a \vert, v \leftarrow \vert b \vert$ \\
+4.  $k \leftarrow 0$ \\
+5.  While $u.used > 0$ and $v.used > 0$ and $u_0 \equiv v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}5.1  $k \leftarrow k + 1$ \\
+\hspace{3mm}5.2  $u \leftarrow \lfloor u / 2 \rfloor$ \\
+\hspace{3mm}5.3  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+6.  While $u.used > 0$ and $u_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}6.1  $u \leftarrow \lfloor u / 2 \rfloor$ \\
+7.  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{3mm}7.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+8.  While $v.used > 0$ \\
+\hspace{3mm}8.1  If $\vert u \vert > \vert v \vert$ then \\
+\hspace{6mm}8.1.1  Swap $u$ and $v$. \\
+\hspace{3mm}8.2  $v \leftarrow \vert v \vert - \vert u \vert$ \\
+\hspace{3mm}8.3  While $v.used > 0$ and $v_0 \equiv 0 \mbox{ (mod }2\mbox{)}$ \\
+\hspace{6mm}8.3.1  $v \leftarrow \lfloor v / 2 \rfloor$ \\
+9.  $c \leftarrow u \cdot 2^k$ \\
+10.  Return(\textit{MP\_OKAY}). \\
 \hline
 \end{tabular}
 \end{center}
@@ -9766,17 +9826,17 @@ This algorithm will produce the greatest common divisor of two mp\_ints $a$ and 
 Knuth \cite[pp. 338]{TAOCPV2} but has been modified to be simpler to explain.  In theory it achieves the same asymptotic working time as
 Algorithm B and in practice this appears to be true.  
 
-The first three steps handle the cases where either one of or both inputs are zero.  If either input is zero the greatest common divisor is the 
+The first two steps handle the cases where either one of or both inputs are zero.  If either input is zero the greatest common divisor is the 
 largest input or zero if they are both zero.  If the inputs are not trivial than $u$ and $v$ are assigned the absolute values of 
 $a$ and $b$ respectively and the algorithm will proceed to reduce the pair.
 
-Step six will divide out any common factors of two and keep track of the count in the variable $k$.  After this step two is no longer a
+Step five will divide out any common factors of two and keep track of the count in the variable $k$.  After this step, two is no longer a
 factor of the remaining greatest common divisor between $u$ and $v$ and can be safely evenly divided out of either whenever they are even.  Step 
-seven and eight ensure that the $u$ and $v$ respectively have no more factors of two.  At most only one of the while loops will iterate since 
+six and seven ensure that the $u$ and $v$ respectively have no more factors of two.  At most only one of the while--loops will iterate since 
 they cannot both be even.
 
-By step nine both of $u$ and $v$ are odd which is required for the inner logic.  First the pair are swapped such that $v$ is equal to
-or greater than $u$.  This ensures that the subtraction on step 9.2 will always produce a positive and even result.  Step 9.3 removes any
+By step eight both of $u$ and $v$ are odd which is required for the inner logic.  First the pair are swapped such that $v$ is equal to
+or greater than $u$.  This ensures that the subtraction on step 8.2 will always produce a positive and even result.  Step 8.3 removes any
 factors of two from the difference $u$ to ensure that in the next iteration of the loop both are once again odd.
 
 After $v = 0$ occurs the variable $u$ has the greatest common divisor of the pair $\left < u, v \right >$ just after step six.  The result
@@ -9794,108 +9854,101 @@ must be adjusted by multiplying by the common factors of two ($2^k$) removed ear
 021     int     k, u_lsb, v_lsb, res;
 022   
 023     /* either zero than gcd is the largest */
-024     if (mp_iszero (a) == 1 && mp_iszero (b) == 0) \{
+024     if (mp_iszero (a) == MP_YES) \{
 025       return mp_abs (b, c);
 026     \}
-027     if (mp_iszero (a) == 0 && mp_iszero (b) == 1) \{
+027     if (mp_iszero (b) == MP_YES) \{
 028       return mp_abs (a, c);
 029     \}
 030   
-031     /* optimized.  At this point if a == 0 then
-032      * b must equal zero too
-033      */
-034     if (mp_iszero (a) == 1) \{
-035       mp_zero(c);
-036       return MP_OKAY;
-037     \}
-038   
-039     /* get copies of a and b we can modify */
-040     if ((res = mp_init_copy (&u, a)) != MP_OKAY) \{
-041       return res;
-042     \}
-043   
-044     if ((res = mp_init_copy (&v, b)) != MP_OKAY) \{
-045       goto LBL_U;
-046     \}
+031     /* get copies of a and b we can modify */
+032     if ((res = mp_init_copy (&u, a)) != MP_OKAY) \{
+033       return res;
+034     \}
+035   
+036     if ((res = mp_init_copy (&v, b)) != MP_OKAY) \{
+037       goto LBL_U;
+038     \}
+039   
+040     /* must be positive for the remainder of the algorithm */
+041     u.sign = v.sign = MP_ZPOS;
+042   
+043     /* B1.  Find the common power of two for u and v */
+044     u_lsb = mp_cnt_lsb(&u);
+045     v_lsb = mp_cnt_lsb(&v);
+046     k     = MIN(u_lsb, v_lsb);
 047   
-048     /* must be positive for the remainder of the algorithm */
-049     u.sign = v.sign = MP_ZPOS;
-050   
-051     /* B1.  Find the common power of two for u and v */
-052     u_lsb = mp_cnt_lsb(&u);
-053     v_lsb = mp_cnt_lsb(&v);
-054     k     = MIN(u_lsb, v_lsb);
-055   
-056     if (k > 0) \{
-057        /* divide the power of two out */
-058        if ((res = mp_div_2d(&u, k, &u, NULL)) != MP_OKAY) \{
-059           goto LBL_V;
-060        \}
-061   
-062        if ((res = mp_div_2d(&v, k, &v, NULL)) != MP_OKAY) \{
-063           goto LBL_V;
-064        \}
-065     \}
-066   
-067     /* divide any remaining factors of two out */
-068     if (u_lsb != k) \{
-069        if ((res = mp_div_2d(&u, u_lsb - k, &u, NULL)) != MP_OKAY) \{
-070           goto LBL_V;
-071        \}
-072     \}
-073   
-074     if (v_lsb != k) \{
-075        if ((res = mp_div_2d(&v, v_lsb - k, &v, NULL)) != MP_OKAY) \{
-076           goto LBL_V;
+048     if (k > 0) \{
+049        /* divide the power of two out */
+050        if ((res = mp_div_2d(&u, k, &u, NULL)) != MP_OKAY) \{
+051           goto LBL_V;
+052        \}
+053   
+054        if ((res = mp_div_2d(&v, k, &v, NULL)) != MP_OKAY) \{
+055           goto LBL_V;
+056        \}
+057     \}
+058   
+059     /* divide any remaining factors of two out */
+060     if (u_lsb != k) \{
+061        if ((res = mp_div_2d(&u, u_lsb - k, &u, NULL)) != MP_OKAY) \{
+062           goto LBL_V;
+063        \}
+064     \}
+065   
+066     if (v_lsb != k) \{
+067        if ((res = mp_div_2d(&v, v_lsb - k, &v, NULL)) != MP_OKAY) \{
+068           goto LBL_V;
+069        \}
+070     \}
+071   
+072     while (mp_iszero(&v) == 0) \{
+073        /* make sure v is the largest */
+074        if (mp_cmp_mag(&u, &v) == MP_GT) \{
+075           /* swap u and v to make sure v is >= u */
+076           mp_exch(&u, &v);
 077        \}
-078     \}
-079   
-080     while (mp_iszero(&v) == 0) \{
-081        /* make sure v is the largest */
-082        if (mp_cmp_mag(&u, &v) == MP_GT) \{
-083           /* swap u and v to make sure v is >= u */
-084           mp_exch(&u, &v);
-085        \}
-086        
-087        /* subtract smallest from largest */
-088        if ((res = s_mp_sub(&v, &u, &v)) != MP_OKAY) \{
-089           goto LBL_V;
-090        \}
-091        
-092        /* Divide out all factors of two */
-093        if ((res = mp_div_2d(&v, mp_cnt_lsb(&v), &v, NULL)) != MP_OKAY) \{
-094           goto LBL_V;
-095        \} 
-096     \} 
-097   
-098     /* multiply by 2**k which we divided out at the beginning */
-099     if ((res = mp_mul_2d (&u, k, c)) != MP_OKAY) \{
-100        goto LBL_V;
-101     \}
-102     c->sign = MP_ZPOS;
-103     res = MP_OKAY;
-104   LBL_V:mp_clear (&u);
-105   LBL_U:mp_clear (&v);
-106     return res;
-107   \}
-108   #endif
+078        
+079        /* subtract smallest from largest */
+080        if ((res = s_mp_sub(&v, &u, &v)) != MP_OKAY) \{
+081           goto LBL_V;
+082        \}
+083        
+084        /* Divide out all factors of two */
+085        if ((res = mp_div_2d(&v, mp_cnt_lsb(&v), &v, NULL)) != MP_OKAY) \{
+086           goto LBL_V;
+087        \} 
+088     \} 
+089   
+090     /* multiply by 2**k which we divided out at the beginning */
+091     if ((res = mp_mul_2d (&u, k, c)) != MP_OKAY) \{
+092        goto LBL_V;
+093     \}
+094     c->sign = MP_ZPOS;
+095     res = MP_OKAY;
+096   LBL_V:mp_clear (&u);
+097   LBL_U:mp_clear (&v);
+098     return res;
+099   \}
+100   #endif
+101   
 \end{alltt}
 \end{small}
 
 This function makes use of the macros mp\_iszero and mp\_iseven.  The former evaluates to $1$ if the input mp\_int is equivalent to the 
 integer zero otherwise it evaluates to $0$.  The latter evaluates to $1$ if the input mp\_int represents a non-zero even integer otherwise
 it evaluates to $0$.  Note that just because mp\_iseven may evaluate to $0$ does not mean the input is odd, it could also be zero.  The three 
-trivial cases of inputs are handled on lines 24 through 37.  After those lines the inputs are assumed to be non-zero.
+trivial cases of inputs are handled on lines 23 through 29.  After those lines the inputs are assumed to be non-zero.
 
-Lines 34 and 40 make local copies $u$ and $v$ of the inputs $a$ and $b$ respectively.  At this point the common factors of two 
-must be divided out of the two inputs.  The while loop on line 80 iterates so long as both are even.  The local integer $k$ is used to
-keep track of how many factors of $2$ are pulled out of both values.  It is assumed that the number of factors will not exceed the maximum 
-value of a C ``int'' data type\footnote{Strictly speaking no array in C may have more than entries than are accessible by an ``int'' so this is not 
-a limitation.}.  
+Lines 32 and 36 make local copies $u$ and $v$ of the inputs $a$ and $b$ respectively.  At this point the common factors of two 
+must be divided out of the two inputs.  The block starting at line 43 removes common factors of two by first counting the number of trailing
+zero bits in both.  The local integer $k$ is used to keep track of how many factors of $2$ are pulled out of both values.  It is assumed that 
+the number of factors will not exceed the maximum value of a C ``int'' data type\footnote{Strictly speaking no array in C may have more than 
+entries than are accessible by an ``int'' so this is not a limitation.}.  
 
-At this point there are no more common factors of two in the two values.  The while loops on lines 80 and 80 remove any independent
-factors of two such that both $u$ and $v$ are guaranteed to be an odd integer before hitting the main body of the algorithm.  The while loop
-on line 80 performs the reduction of the pair until $v$ is equal to zero.  The unsigned comparison and subtraction algorithms are used in
+At this point there are no more common factors of two in the two values.  The divisions by a power of two on lines 61 and 67 remove 
+any independent factors of two such that both $u$ and $v$ are guaranteed to be an odd integer before hitting the main body of the algorithm.  The while loop
+on line 72 performs the reduction of the pair until $v$ is equal to zero.  The unsigned comparison and subtraction algorithms are used in
 place of the full signed routines since both values are guaranteed to be positive and the result of the subtraction is guaranteed to be non-negative.
 
 \section{Least Common Multiple}
@@ -9974,6 +10027,7 @@ dividing the product of the two inputs by their greatest common divisor.
 053     return res;
 054   \}
 055   #endif
+056   
 \end{alltt}
 \end{small}
 
@@ -10218,6 +10272,7 @@ $\left ( {p' \over a'} \right )$ which is multiplied against the current Jacobi 
 098     return res;
 099   \}
 100   #endif
+101   
 \end{alltt}
 \end{small}
 
@@ -10366,6 +10421,7 @@ then only a couple of additions or subtractions will be required to adjust the i
 036     return MP_VAL;
 037   \}
 038   #endif
+039   
 \end{alltt}
 \end{small}
 
@@ -10467,6 +10523,7 @@ This algorithm attempts to determine if a candidate integer $n$ is composite by 
 043     return MP_OKAY;
 044   \}
 045   #endif
+046   
 \end{alltt}
 \end{small}
 
@@ -10518,6 +10575,7 @@ mp\_digit.  The table \_\_prime\_tab is defined in the following file.
 054   #endif
 055   \};
 056   #endif
+057   
 \end{alltt}
 \end{small}
 
@@ -10606,6 +10664,7 @@ determine the result.
 055     return err;
 056   \}
 057   #endif
+058   
 \end{alltt}
 \end{small}
 
@@ -10741,6 +10800,7 @@ composite then it is \textit{probably} prime.
 096     return err;
 097   \}
 098   #endif
+099   
 \end{alltt}
 \end{small}
 
