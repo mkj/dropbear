@@ -111,7 +111,8 @@
 #ifdef DROPBEAR_3DES_CBC
 #define DES
 #endif
-#define CBC
+
+#define LTC_CBC_MODE
 
 #if defined(DROPBEAR_DSS) && defined(DSS_PROTOK)
 #define SHA512
@@ -123,12 +124,12 @@
 #define MD5
 #endif
 
-#define HMAC
+#define LTC_HMAC
 
 /* Various tidbits of modern neatoness */
 #define BASE64
 
-/* default no functions */
+/* default no pthread functions */
 #define LTC_MUTEX_GLOBAL(x)
 #define LTC_MUTEX_PROTO(x)
 #define LTC_MUTEX_TYPE(x)
@@ -136,8 +137,6 @@
 #define LTC_MUTEX_LOCK(x)
 #define LTC_MUTEX_UNLOCK(x)
 #define FORTUNA_POOLS 0
-
-#endif
 
 /* Debuggers */
 
