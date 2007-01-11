@@ -27,6 +27,8 @@ ifndef IGNORE_SPEED
 #debug
 #CFLAGS += -g3
 
+endif
+
 #install as this user
 ifndef INSTALL_GROUP
    GROUP=wheel
