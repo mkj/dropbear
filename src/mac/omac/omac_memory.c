@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   OMAC1 support, process a block of memory, Tom St Denis
 */
 
-#ifdef OMAC
+#ifdef LTC_OMAC
 
 /**
    OMAC a block of memory 
@@ -40,6 +40,16 @@ int omac_memory(int cipher,
    LTC_ARGCHK(in     != NULL);
    LTC_ARGCHK(out    != NULL);
    LTC_ARGCHK(outlen != NULL);
+
+   /* is the cipher valid? */
+   if ((err = cipher_is_valid(cipher)) != CRYPT_OK) {
+      return err;
+   }
+
+   /* Use accelerator if found */
+   if (cipher_descriptor[cipher].omac_memory != NULL) {
+      return cipher_descriptor[cipher].omac_memory(key, keylen, in, inlen, out, outlen);
+   }
 
    /* allocate ram for omac state */
    omac = XMALLOC(sizeof(omac_state));
@@ -71,5 +81,5 @@ LBL_ERR:
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_memory.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

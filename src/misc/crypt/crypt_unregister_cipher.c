@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -29,7 +29,7 @@ int unregister_cipher(const struct ltc_cipher_descriptor *cipher)
    /* is it already registered? */
    LTC_MUTEX_LOCK(&ltc_cipher_mutex);
    for (x = 0; x < TAB_SIZE; x++) {
-       if (memcmp(&cipher_descriptor[x], cipher, sizeof(struct ltc_cipher_descriptor)) == 0) {
+       if (XMEMCMP(&cipher_descriptor[x], cipher, sizeof(struct ltc_cipher_descriptor)) == 0) {
           cipher_descriptor[x].name = NULL;
           cipher_descriptor[x].ID   = 255;
           LTC_MUTEX_UNLOCK(&ltc_cipher_mutex);
@@ -41,5 +41,5 @@ int unregister_cipher(const struct ltc_cipher_descriptor *cipher)
 }
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_unregister_cipher.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/06/19 18:00:28 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

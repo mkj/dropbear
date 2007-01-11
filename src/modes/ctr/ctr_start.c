@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef CTR
+#ifdef LTC_CTR_MODE
 
 /**
    Initialize a CTR context
@@ -55,16 +55,37 @@ int ctr_start(               int   cipher,
    ctr->blocklen = cipher_descriptor[cipher].block_length;
    ctr->cipher   = cipher;
    ctr->padlen   = 0;
-   ctr->mode     = ctr_mode;
+   ctr->mode     = ctr_mode & 1;
    for (x = 0; x < ctr->blocklen; x++) {
        ctr->ctr[x] = IV[x];
    }
-   cipher_descriptor[ctr->cipher].ecb_encrypt(ctr->ctr, ctr->pad, &ctr->key);
-   return CRYPT_OK;
+
+   if (ctr_mode & LTC_CTR_RFC3686) {
+      /* increment the IV as per RFC 3686 */
+      if (ctr->mode == CTR_COUNTER_LITTLE_ENDIAN) {
+         /* little-endian */
+         for (x = 0; x < ctr->blocklen; x++) {
+             ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
+             if (ctr->ctr[x] != (unsigned char)0) {
+                break;
+             }
+         }
+      } else {
+         /* big-endian */
+         for (x = ctr->blocklen-1; x >= 0; x--) {
+             ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
+             if (ctr->ctr[x] != (unsigned char)0) {
+                break;
+             }
+         }
+      }
+   }
+
+   return cipher_descriptor[ctr->cipher].ecb_encrypt(ctr->ctr, ctr->pad, &ctr->key); 
 }
 
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_start.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.11 $ */
+/* $Date: 2006/11/05 01:46:35 $ */

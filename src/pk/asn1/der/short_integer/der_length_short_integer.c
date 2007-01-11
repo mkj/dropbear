@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -39,7 +39,7 @@ int der_length_short_integer(unsigned long num, unsigned long *outlen)
      ++z;
      y >>= 8;
    }
-
+   
    /* handle zero */
    if (z == 0) {
       z = 1;
@@ -59,11 +59,12 @@ int der_length_short_integer(unsigned long num, unsigned long *outlen)
 
    /* return length */
    *outlen = len; 
+   
    return CRYPT_OK;
 }
 
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/short_integer/der_length_short_integer.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/23 01:35:38 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -32,7 +32,8 @@ const struct ltc_hash_descriptor md5_desc =
     &md5_init,
     &md5_process,
     &md5_done,
-    &md5_test
+    &md5_test,
+    NULL
 };
 
 #define F(x,y,z)  (z ^ (x & (y ^ z)))
@@ -350,7 +351,7 @@ int  md5_test(void)
       md5_init(&md);
       md5_process(&md, (unsigned char *)tests[i].msg, (unsigned long)strlen(tests[i].msg));
       md5_done(&md, tmp);
-      if (memcmp(tmp, tests[i].hash, 16) != 0) {
+      if (XMEMCMP(tmp, tests[i].hash, 16) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
   }
@@ -363,5 +364,5 @@ int  md5_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/md5.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

@@ -1,15 +1,24 @@
 CC=libtool --mode=compile gcc
 
-CFLAGS += -I../src/headers -I./ -O3 -fomit-frame-pointer -funroll-loops -Wall -W
+CFLAGS += -I../src/headers -I./ -Wall -W
 
-OBJECTS = base64_test.o cipher_hash_test.o der_tests.o dh_tests.o                        \
+# ranlib tools
+ifndef RANLIB
+   RANLIB=ranlib
+endif
+
+OBJECTS = base64_test.o cipher_hash_test.o der_tests.o                                   \
 dsa_test.o ecc_test.o mac_test.o modes_test.o pkcs_1_test.o rsa_test.o                   \
-store_test.o test.o x86_prof.o
+store_test.o test_driver.o x86_prof.o katja_test.o
 
-default: $(LIBNAME)
+ifndef LIBTEST
+   LIBTEST=libtomcrypt_prof.la
+endif
 
-$(LIBNAME): $(OBJECTS)
-	libtool --silent --mode=link gcc $(CFLAGS) `find . -type f | grep "[.]lo" |  xargs` -o libtomcrypt_prof.la -rpath $(LIBPATH) -version-info $(VERSION)
-	libtool --silent --mode=link gcc $(CFLAGS) `find . -type f | grep "[.]o" | xargs`  -o libtomcrypt_prof.a
-	ranlib libtomcrypt_prof.a
-	libtool --silent --mode=install install -c libtomcrypt_prof.la $(LIBPATH)/libtomcrypt_prof.la
+default: $(LIBTEST)
+
+$(LIBTEST): $(OBJECTS)
+	libtool --silent --mode=link gcc $(CFLAGS) `find . -type f | grep "[.]lo" |  xargs` -o $@ -rpath $(LIBPATH) -version-info $(VERSION)
+
+install: $(LIBTEST)
+	libtool --silent --mode=install install -c $(LIBTEST) $(DESTDIR)$(LIBPATH)/$(LIBTEST)

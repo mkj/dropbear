@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    ECB implementation, finish chain, Tom St Denis
 */
 
-#ifdef ECB
+#ifdef LTC_ECB_MODE
 
 /** Terminate the chain
   @param ecb    The ECB chain to terminate
@@ -38,5 +38,5 @@ int ecb_done(symmetric_ECB *ecb)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ecb/ecb_done.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/06/29 01:51:34 $ */

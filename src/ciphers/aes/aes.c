@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /* AES implementation by Tom St Denis
@@ -50,7 +50,7 @@ const struct ltc_cipher_descriptor rijndael_desc =
     6,
     16, 32, 16, 10,
     SETUP, ECB_ENC, ECB_DEC, ECB_TEST, ECB_DONE, ECB_KS,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 #endif
 
@@ -60,7 +60,7 @@ const struct ltc_cipher_descriptor aes_desc =
     6,
     16, 32, 16, 10,
     SETUP, ECB_ENC, ECB_DEC, ECB_TEST, ECB_DONE, ECB_KS,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #else
@@ -76,7 +76,7 @@ const struct ltc_cipher_descriptor rijndael_enc_desc =
     6,
     16, 32, 16, 10,
     SETUP, ECB_ENC, NULL, NULL, ECB_DONE, ECB_KS,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 const struct ltc_cipher_descriptor aes_enc_desc =
@@ -85,7 +85,7 @@ const struct ltc_cipher_descriptor aes_enc_desc =
     6,
     16, 32, 16, 10,
     SETUP, ECB_ENC, NULL, NULL, ECB_DONE, ECB_KS,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #endif
@@ -283,11 +283,12 @@ int SETUP(const unsigned char *key, int keylen, int num_rounds, symmetric_key *s
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
+static int _rijndael_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
 #else
-void ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
     ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
@@ -308,7 +309,6 @@ void ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
     LOAD32H(s1, pt  +  4); s1 ^= rk[1];
     LOAD32H(s2, pt  +  8); s2 ^= rk[2];
     LOAD32H(s3, pt  + 12); s3 ^= rk[3];
-
 
 #ifdef LTC_SMALL_CODE
 
@@ -442,13 +442,16 @@ void ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
         (Te4_0[byte(t2, 0)]) ^ 
         rk[3];
     STORE32H(s3, ct+12);
+
+    return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
+int ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey) 
 {
-   _rijndael_ecb_encrypt(pt, ct, skey);
+   int err = _rijndael_ecb_encrypt(pt, ct, skey);
    burn_stack(sizeof(unsigned long)*8 + sizeof(unsigned long*) + sizeof(int)*2);
+   return err;
 }
 #endif
 
@@ -459,11 +462,12 @@ void ECB_ENC(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
+static int _rijndael_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
 #else
-void ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
     ulong32 s0, s1, s2, s3, t0, t1, t2, t3, *rk;
@@ -617,14 +621,17 @@ void ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
         (Td4[byte(t0, 0)] & 0x000000ff) ^
         rk[3];
     STORE32H(s3, pt+12);
+
+    return CRYPT_OK;
 }
 
 
 #ifdef LTC_CLEAN_STACK
-void ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
+int ECB_DEC(const unsigned char *ct, unsigned char *pt, symmetric_key *skey) 
 {
-   _rijndael_ecb_decrypt(ct, pt, skey);
+   int err = _rijndael_ecb_decrypt(ct, pt, skey);
    burn_stack(sizeof(unsigned long)*8 + sizeof(unsigned long*) + sizeof(int)*2);
+   return err;
 }
 #endif
 
@@ -683,10 +690,10 @@ int ECB_TEST(void)
   
     rijndael_ecb_encrypt(tests[i].pt, tmp[0], &key);
     rijndael_ecb_decrypt(tmp[0], tmp[1], &key);
-    if (memcmp(tmp[0], tests[i].ct, 16) || memcmp(tmp[1], tests[i].pt, 16)) { 
+    if (XMEMCMP(tmp[0], tests[i].ct, 16) || XMEMCMP(tmp[1], tests[i].pt, 16)) { 
 #if 0
        printf("\n\nTest %d failed\n", i);
-       if (memcmp(tmp[0], tests[i].ct, 16)) {
+       if (XMEMCMP(tmp[0], tests[i].ct, 16)) {
           printf("CT: ");
           for (i = 0; i < 16; i++) {
              printf("%02x ", tmp[0][i]);
@@ -751,5 +758,5 @@ int ECB_KS(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/aes/aes.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.14 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

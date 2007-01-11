@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 /** 
    @param sha384.c
@@ -27,7 +27,8 @@ const struct ltc_hash_descriptor sha384_desc =
     &sha384_init,
     &sha512_process,
     &sha384_done,
-    &sha384_test
+    &sha384_test,
+    NULL
 };
 
 /**
@@ -116,7 +117,7 @@ int  sha384_test(void)
       sha384_init(&md);
       sha384_process(&md, (unsigned char*)tests[i].msg, (unsigned long)strlen(tests[i].msg));
       sha384_done(&md, tmp);
-      if (memcmp(tmp, tests[i].hash, 48) != 0) {
+      if (XMEMCMP(tmp, tests[i].hash, 48) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
   }
@@ -130,5 +131,5 @@ int  sha384_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha384.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

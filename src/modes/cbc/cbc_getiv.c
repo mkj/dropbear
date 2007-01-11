@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    CBC implementation, get IV, Tom St Denis
 */
 
-#ifdef CBC
+#ifdef LTC_CBC_MODE
 
 /**
    Get the current initial vector
@@ -30,6 +30,7 @@ int cbc_getiv(unsigned char *IV, unsigned long *len, symmetric_CBC *cbc)
    LTC_ARGCHK(len != NULL);
    LTC_ARGCHK(cbc != NULL);
    if ((unsigned long)cbc->blocklen > *len) {
+      *len = cbc->blocklen;
       return CRYPT_BUFFER_OVERFLOW;
    }
    XMEMCPY(IV, cbc->IV, cbc->blocklen);
@@ -41,5 +42,5 @@ int cbc_getiv(unsigned char *IV, unsigned long *len, symmetric_CBC *cbc)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_getiv.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/06/29 01:46:46 $ */

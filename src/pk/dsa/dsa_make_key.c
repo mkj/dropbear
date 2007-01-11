@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -28,11 +28,12 @@
 */
 int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, dsa_key *key)
 {
-   mp_int         tmp, tmp2;
+   void           *tmp, *tmp2;
    int            err, res;
    unsigned char *buf;
 
    LTC_ARGCHK(key  != NULL);
+   LTC_ARGCHK(ltc_mp.name != NULL);
 
    /* check prng */
    if ((err = prng_is_valid(wprng)) != CRYPT_OK) {
@@ -52,21 +53,21 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    }
 
    /* init mp_ints  */
-   if ((err = mp_init_multi(&tmp, &tmp2, &key->g, &key->q, &key->p, &key->x, &key->y, NULL)) != MP_OKAY) {
-      err = mpi_to_ltc_error(err);
-      goto LBL_ERR;
+   if ((err = mp_init_multi(&tmp, &tmp2, &key->g, &key->q, &key->p, &key->x, &key->y, NULL)) != CRYPT_OK) {
+      XFREE(buf);
+      return err;
    }
 
    /* make our prime q */
-   if ((err = rand_prime(&key->q, group_size*8, prng, wprng)) != CRYPT_OK)             { goto LBL_ERR; }
+   if ((err = rand_prime(key->q, group_size, prng, wprng)) != CRYPT_OK)                { goto error; }
 
    /* double q  */
-   if ((err = mp_mul_2(&key->q, &tmp)) != MP_OKAY)                                     { goto error; }
+   if ((err = mp_add(key->q, key->q, tmp)) != CRYPT_OK)                                { goto error; }
 
    /* now make a random string and multply it against q */
    if (prng_descriptor[wprng].read(buf+1, modulus_size - group_size, prng) != (unsigned long)(modulus_size - group_size)) {
       err = CRYPT_ERROR_READPRNG;
-      goto LBL_ERR;
+      goto error;
    }
 
    /* force magnitude */
@@ -75,30 +76,30 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    /* force even */
    buf[modulus_size - group_size - 1] &= ~1;
 
-   if ((err = mp_read_unsigned_bin(&tmp2, buf, modulus_size - group_size)) != MP_OKAY) { goto error; }
-   if ((err = mp_mul(&key->q, &tmp2, &key->p)) != MP_OKAY)                             { goto error; }
-   if ((err = mp_add_d(&key->p, 1, &key->p)) != MP_OKAY)                               { goto error; }
+   if ((err = mp_read_unsigned_bin(tmp2, buf, modulus_size - group_size)) != CRYPT_OK) { goto error; }
+   if ((err = mp_mul(key->q, tmp2, key->p)) != CRYPT_OK)                               { goto error; }
+   if ((err = mp_add_d(key->p, 1, key->p)) != CRYPT_OK)                                { goto error; }
 
    /* now loop until p is prime */
    for (;;) {
-       if ((err = is_prime(&key->p, &res)) != CRYPT_OK)                                { goto LBL_ERR; }
-       if (res == MP_YES) break;
+       if ((err = mp_prime_is_prime(key->p, 8, &res)) != CRYPT_OK)                     { goto error; }
+       if (res == LTC_MP_YES) break;
 
        /* add 2q to p and 2 to tmp2 */
-       if ((err = mp_add(&tmp, &key->p, &key->p)) != MP_OKAY)                          { goto error; }
-       if ((err = mp_add_d(&tmp2, 2, &tmp2)) != MP_OKAY)                               { goto error; }
+       if ((err = mp_add(tmp, key->p, key->p)) != CRYPT_OK)                            { goto error; }
+       if ((err = mp_add_d(tmp2, 2, tmp2)) != CRYPT_OK)                                { goto error; }
    }
 
    /* now p = (q * tmp2) + 1 is prime, find a value g for which g^tmp2 != 1 */
-   mp_set(&key->g, 1);
+   mp_set(key->g, 1);
 
    do {
-      if ((err = mp_add_d(&key->g, 1, &key->g)) != MP_OKAY)                            { goto error; }
-      if ((err = mp_exptmod(&key->g, &tmp2, &key->p, &tmp)) != MP_OKAY)                { goto error; }
-   } while (mp_cmp_d(&tmp, 1) == MP_EQ);
+      if ((err = mp_add_d(key->g, 1, key->g)) != CRYPT_OK)                             { goto error; }
+      if ((err = mp_exptmod(key->g, tmp2, key->p, tmp)) != CRYPT_OK)                   { goto error; }
+   } while (mp_cmp_d(tmp, 1) == LTC_MP_EQ);
 
    /* at this point tmp generates a group of order q mod p */
-   mp_exch(&tmp, &key->g);
+   mp_exch(tmp, key->g);
 
    /* so now we have our DH structure, generator g, order q, modulus p 
       Now we need a random exponent [mod q] and it's power g^x mod p 
@@ -106,21 +107,14 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    do {
       if (prng_descriptor[wprng].read(buf, group_size, prng) != (unsigned long)group_size) {
          err = CRYPT_ERROR_READPRNG;
-         goto LBL_ERR;
+         goto error;
       }
-      if ((err = mp_read_unsigned_bin(&key->x, buf, group_size)) != MP_OKAY)           { goto error; }
-   } while (mp_cmp_d(&key->x, 1) != MP_GT);
-   if ((err = mp_exptmod(&key->g, &key->x, &key->p, &key->y)) != MP_OKAY)              { goto error; }
-   
+      if ((err = mp_read_unsigned_bin(key->x, buf, group_size)) != CRYPT_OK)           { goto error; }
+   } while (mp_cmp_d(key->x, 1) != LTC_MP_GT);
+   if ((err = mp_exptmod(key->g, key->x, key->p, key->y)) != CRYPT_OK)                 { goto error; }
+  
    key->type = PK_PRIVATE;
    key->qord = group_size;
-
-   /* shrink the ram required */
-   if ((err = mp_shrink(&key->g)) != MP_OKAY)                                          { goto error; }
-   if ((err = mp_shrink(&key->p)) != MP_OKAY)                                          { goto error; }
-   if ((err = mp_shrink(&key->q)) != MP_OKAY)                                          { goto error; }
-   if ((err = mp_shrink(&key->x)) != MP_OKAY)                                          { goto error; }
-   if ((err = mp_shrink(&key->y)) != MP_OKAY)                                          { goto error; }
 
 #ifdef LTC_CLEAN_STACK
    zeromem(buf, MDSA_DELTA);
@@ -129,12 +123,9 @@ int dsa_make_key(prng_state *prng, int wprng, int group_size, int modulus_size, 
    err = CRYPT_OK;
    goto done;
 error: 
-    err = mpi_to_ltc_error(err);
-LBL_ERR: 
-    mp_clear_multi(&key->g, &key->q, &key->p, &key->x, &key->y, NULL);
+    mp_clear_multi(key->g, key->q, key->p, key->x, key->y, NULL);
 done: 
-    mp_clear_multi(&tmp, &tmp2, NULL);
-
+    mp_clear_multi(tmp, tmp2, NULL);
     XFREE(buf);
     return err;
 }
@@ -142,5 +133,5 @@ done:
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_make_key.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/06/11 05:45:35 $ */
+/* $Revision: 1.10 $ */
+/* $Date: 2006/12/04 03:18:43 $ */

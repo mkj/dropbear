@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   OFB implementation, encrypt data, Tom St Denis
 */
 
-#ifdef OFB
+#ifdef LTC_OFB_MODE
 
 /**
   OFB encrypt
@@ -43,10 +43,12 @@ int ofb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    
    while (len-- > 0) {
        if (ofb->padlen == ofb->blocklen) {
-          cipher_descriptor[ofb->cipher].ecb_encrypt(ofb->IV, ofb->IV, &ofb->key);
+          if ((err = cipher_descriptor[ofb->cipher].ecb_encrypt(ofb->IV, ofb->IV, &ofb->key)) != CRYPT_OK) {
+             return err;
+          }
           ofb->padlen = 0;
        }
-       *ct++ = *pt++ ^ ofb->IV[ofb->padlen++];
+       *ct++ = *pt++ ^ ofb->IV[(ofb->padlen)++];
    }
    return CRYPT_OK;
 }
@@ -54,5 +56,5 @@ int ofb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ofb/ofb_encrypt.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/11/26 01:45:14 $ */
