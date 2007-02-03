@@ -59,7 +59,6 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess);
 static void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
-static int sesscheckclose(struct Channel *channel);
 static void get_termmodes(struct ChanSess *chansess);
 
 
@@ -68,7 +67,7 @@ extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
-	return chansess->exit.exitpid >= 0;
+	return chansess->exit.exitpid != -1;
 }
 
 /* Handler for childs exiting, store the state for return to the client */
