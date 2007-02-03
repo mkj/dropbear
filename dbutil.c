@@ -286,9 +286,9 @@ int dropbear_listen(const char* address, const char* port,
 			len = 20 + strlen(strerror(err));
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error listening: %s", strerror(err));
-			TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
-			return -1;
 		}
+		TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
+		return -1;
 	}
 
 	TRACE(("leave dropbear_listen: success, %d socks bound", nsock))
