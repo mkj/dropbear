@@ -116,19 +116,19 @@ static char *gui_getpass(const char *prompt) {
 void cli_auth_password() {
 
 	char* password = NULL;
+	char prompt[80];
 
 	TRACE(("enter cli_auth_password"))
 	CHECKCLEARTOWRITE();
 
+	snprintf(prompt, sizeof(prompt), "%s@%s's password: ", 
+				cli_opts.username, cli_opts.remotehost);
 #ifdef ENABLE_CLI_ASKPASS_HELPER
 	if (want_askpass())
-		password = gui_getpass("Password: ");
+		password = gui_getpass(prompt);
 	else
 #endif
-		password = getpass("Password: ");
-
-	if (password == NULL)
-		return 0;
+		password = getpass_or_cancel(prompt);
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 

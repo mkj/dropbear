@@ -181,7 +181,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 	struct Channel *channel;
 	unsigned int i;
-	int ret;
 
 	/* iterate through all the possible channels */
 	for (i = 0; i < ses.chansize; i++) {
@@ -237,7 +236,7 @@ static void checkclose(struct Channel *channel) {
 	TRACE(("checkclose: writefd %d, readfd %d, errfd %d, sentclosed %d, recvclosed %d",
 				channel->writefd, channel->readfd,
 				channel->errfd, channel->sentclosed, channel->recvclosed))
-	TRACE(("writebuf %d extrabuf %s extrabuf %d",
+	TRACE(("writebuf size %d extrabuf ptr 0x%x extrabuf size %d",
 				cbuf_getused(channel->writebuf),
 				channel->writebuf,
 				channel->writebuf ? 0 : cbuf_getused(channel->extrabuf)))
@@ -377,7 +376,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
 
-	if (fd == channel->writefd && len == maxlen && channel->recveof) { 
+	if (fd == channel->writefd && cbuf_getused(cbuf) == 0 && channel->recveof) { 
 		/* Check if we're closing up */
 		closewritefd(channel);
 		TRACE(("leave writechannel: recveof set"))

@@ -83,6 +83,7 @@ typedef struct svr_runopts {
 
 	sign_key *hostkey;
 	buffer * banner;
+	char * pidfile;
 
 } svr_runopts;
 
@@ -101,6 +102,8 @@ typedef struct cli_runopts {
 
 	char *cmd;
 	int wantpty;
+	int no_cmd;
+	int backgrounded;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
 #endif

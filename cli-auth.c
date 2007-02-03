@@ -236,8 +236,8 @@ void recv_msg_userauth_success() {
 
 void cli_auth_try() {
 
-	TRACE(("enter cli_auth_try"))
 	int finished = 0;
+	TRACE(("enter cli_auth_try"))
 
 	CHECKCLEARTOWRITE();
 	
@@ -277,4 +277,19 @@ void cli_auth_try() {
 	}
 
 	TRACE(("leave cli_auth_try"))
+}
+
+/* A helper for getpass() that exits if the user cancels. The returned
+ * password is statically allocated by getpass() */
+char* getpass_or_cancel(char* prompt)
+{
+	char* password = NULL;
+
+	password = getpass(prompt);
+
+	/* 0x03 is a ctrl-c character in the buffer. */
+	if (password == NULL || strchr(password, '\3') != NULL) {
+		dropbear_close("Interrupted.");
+	}
+	return password;
 }

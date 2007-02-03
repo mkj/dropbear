@@ -99,13 +99,14 @@ void recv_msg_userauth_info_request() {
 	if (strlen(name) > 0) {
 		cleantext(name);
 		fprintf(stderr, "%s", name);
-		m_free(name);
 	}
+	m_free(name);
+
 	if (strlen(instruction) > 0) {
 		cleantext(instruction);
 		fprintf(stderr, "%s", instruction);
-		m_free(instruction);
 	}
+	m_free(instruction);
 
 	for (i = 0; i < num_prompts; i++) {
 		unsigned int response_len = 0;
@@ -115,7 +116,7 @@ void recv_msg_userauth_info_request() {
 		echo = buf_getbool(ses.payload);
 
 		if (!echo) {
-			unsigned char* p = getpass(prompt);
+			unsigned char* p = getpass_or_cancel(prompt);
 			response = m_strdup(p);
 			m_burn(p, strlen(p));
 		} else {

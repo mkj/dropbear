@@ -1,3 +1,85 @@
+0.49 - Tues 13 June 2003
+
+- Return immediately for "sleep 10 & echo foo", rather than waiting
+  for the sleep to return (pointed out by Rob Landley)
+
+- Added -P pidfile argument to the server (from Swen Schillig)
+
+- Compile fixes, make sure that all variable definitions are at the start
+  of a scope.
+
+- Use $HOME in preference to that from /etc/passwd, so that it
+  dbclient can still work on systems with a broken setup.
+
+- Add -N dbclient option for "no command"
+
+- Add -f dbclient option for "background after auth"
+
+- Try to finally fix ss_family compilation problems
+
+0.48.1 - Sat 11 March 2006
+
+- Compile fix for scp
+
+0.48 - Thurs 9 March 2006
+
+- Check that the circular buffer is properly empty before
+  closing a channel, which could cause truncated transfers
+  (thanks to Tomas Vanek for helping track it down)
+
+- Implement per-IP pre-authentication connection limits 
+  (after some poking from Pablo Fernandez)
+
+- Exit gracefully if trying to connect to as SSH v1 server 
+  (reported by Rushi Lala)
+
+- Only read /dev/random once at startup when in non-inetd mode
+
+- Allow ctrl-c to close a dbclient password prompt (may
+  still have to press enter on some platforms)
+
+- Merged in uClinux patch for inetd mode
+
+- Updated to scp from OpenSSH 4.3p2 - fixes a security issue
+  where use of system() could cause users to execute arbitrary
+  code through malformed filenames, ref CVE-2006-0225
+
+0.47 - Thurs Dec 8 2005
+
+- SECURITY: fix for buffer allocation error in server code, could potentially
+  allow authenticated users to gain elevated privileges. All multi-user systems
+  running the server should upgrade (or apply the patch available on the
+  Dropbear webpage).
+
+- Fix channel handling code so that redirecting to /dev/null doesn't use
+  100% CPU.
+
+- Turn on zlib compression for dbclient.
+
+- Set "low delay" TOS bit, can significantly improve interactivity
+  over some links.
+
+- Added client keyboard-interactive mode support, allows operation with
+  newer OpenSSH servers in default config.
+
+- Log when pubkey auth fails because of bad ~/.ssh/authorized_keys permissions
+
+- Improve logging of assertions
+
+- Added aes-256 cipher and sha1-96 hmac.
+
+- Fix twofish so that it actually works.
+
+- Improve PAM prompt comparison.
+
+- Added -g (dbclient) and -a (dropbear server) options to allow
+  connections to listening forwarded ports from remote machines.
+
+- Various other minor fixes
+
+- Compile fixes for glibc 2.1 (ss_family vs __ss_family) and NetBSD
+  (netinet/in_systm.h needs to be included).
+
 0.46 - Sat July 9 2005
 
 - Fix long-standing bug which caused connections to be closed if an ssh-agent

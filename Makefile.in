@@ -64,12 +64,12 @@ bindir=${exec_prefix}/bin
 sbindir=${exec_prefix}/sbin
 
 CC=@CC@
-LD=@LD@
 AR=@AR@
 RANLIB=@RANLIB@
 STRIP=@STRIP@
 INSTALL=@INSTALL@
-CFLAGS=-I. -I$(srcdir)/libtomcrypt/src/headers/ @CFLAGS@
+CPPFLAGS=@CPPFLAGS@
+CFLAGS=-I. -I$(srcdir) -I$(srcdir)/libtomcrypt/src/headers/ $(CPPFLAGS) @CFLAGS@
 LIBS=$(LTC) $(LTM) @LIBS@
 LDFLAGS=@LDFLAGS@
 
@@ -155,11 +155,11 @@ dropbearconvert: $(dropbearconvertobjs)
 
 dropbear dbclient dropbearkey dropbearconvert: $(HEADERS)  $(LTC) $(LTM) \
 													Makefile
-	$(LD) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBS)
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBS)
 
 # scp doesn't use the libs so is special.
 scp: $(SCPOBJS)  $(HEADERS) Makefile
-	$(LD) $(LDFLAGS) -o $@$(EXEEXT) $(SCPOBJS)
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $(SCPOBJS)
 
 
 # multi-binary compilation.
@@ -172,7 +172,7 @@ endif
 dropbearmulti: multilink 
 
 multibinary: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM) Makefile
-	$(LD) $(LDFLAGS) -o dropbearmulti$(EXEEXT) $(MULTIOBJS) $(LIBS)
+	$(CC) $(LDFLAGS) -o dropbearmulti$(EXEEXT) $(MULTIOBJS) $(LIBS)
 
 multilink: multibinary $(addprefix link, $(PROGRAMS))
 
@@ -185,6 +185,8 @@ $(LTC): options.h
 
 $(LTM): options.h
 	cd libtommath && $(MAKE)
+
+.PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean
 
 ltc-clean:
 	cd libtomcrypt && $(MAKE) clean

@@ -89,6 +89,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+
+		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -100,7 +102,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (i == svr_ses.childpidsize) {
+		if (exit == NULL) {
 			exit = &svr_ses.lastexit;
 		}
 
@@ -119,7 +121,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
-		exit = NULL;
 	}
 
 	
@@ -410,7 +411,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	
 	pty_change_window_size(chansess->master, termr, termc, termw, termh);
 
-	return DROPBEAR_FAILURE;
+	return DROPBEAR_SUCCESS;
 }
 
 static void get_termmodes(struct ChanSess *chansess) {
@@ -588,6 +589,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 
+#ifdef LOG_COMMANDS
+	if (chansess->cmd) {
+		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+						ses.authstate.printableuser, chansess->cmd);
+	} else {
+		dropbear_log(LOG_INFO, "user %s executing login shell", 
+						ses.authstate.printableuser);
+	}
+#endif
+
 	if (chansess->term == NULL) {
 		/* no pty */
 		ret = noptycommand(channel, chansess);
@@ -623,7 +634,12 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (pipe(errfds) != 0)
 		return DROPBEAR_FAILURE;
 
+#ifdef __uClinux__
+	pid = vfork();
+#else
 	pid = fork();
+#endif
+
 	if (pid < 0)
 		return DROPBEAR_FAILURE;
 
@@ -714,7 +730,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
+#ifdef __uClinux__
+	pid = vfork();
+#else
 	pid = fork();
+#endif
 	if (pid < 0)
 		return DROPBEAR_FAILURE;
 
@@ -810,7 +830,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 	/* need to increase size */
 	if (i == svr_ses.childpidsize) {
 		svr_ses.childpids = (struct ChildPid*)m_realloc(svr_ses.childpids,
-				sizeof(struct ChildPid) * svr_ses.childpidsize+1);
+				sizeof(struct ChildPid) * (svr_ses.childpidsize+1));
 		svr_ses.childpidsize++;
 	}
 	
@@ -828,19 +848,21 @@ static void execchild(struct ChanSess *chansess) {
 	char * baseshell = NULL;
 	unsigned int i;
 
+    /* with uClinux we'll have vfork()ed, so don't want to overwrite the
+     * hostkey. can't think of a workaround to clear it */
+#ifndef __uClinux__
 	/* wipe the hostkey */
 	sign_key_free(svr_opts.hostkey);
 	svr_opts.hostkey = NULL;
 
 	/* overwrite the prng state */
-	seedrandom();
+	reseedrandom();
+#endif
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
 	for (i = 3; i <= (unsigned int)ses.maxfd; i++) {
-		if (m_close(i) == DROPBEAR_FAILURE) {
-			dropbear_exit("Error closing file desc");
-		}
+		m_close(i);
 	}
 
 	/* clear environment */
@@ -986,6 +1008,7 @@ void addnewvar(const char* param, const char* var) {
 	newvar[plen] = '=';
 	memcpy(&newvar[plen+1], var, vlen);
 	newvar[plen+vlen+1] = '\0';
+	/* newvar is leaked here, but that's part of putenv()'s semantics */
 	if (putenv(newvar) < 0) {
 		dropbear_exit("environ error");
 	}

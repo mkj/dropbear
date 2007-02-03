@@ -72,11 +72,11 @@
 #include <lastlog.h>
 #endif
 
-#include <arpa/inet.h>
-
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+
+#include <arpa/inet.h>
 
 /* netbsd 1.6 needs this to be included before netinet/ip.h for some
  * undocumented reason */

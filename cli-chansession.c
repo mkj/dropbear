@@ -162,8 +162,6 @@ void cli_tty_cleanup() {
 
 static void put_termcodes() {
 
-	TRACE(("enter put_termcodes"))
-
 	struct termios tio;
 	unsigned int sshcode;
 	const struct TermCode *termcode;
@@ -171,6 +169,8 @@ static void put_termcodes() {
 	unsigned int mapcode;
 
 	unsigned int bufpos1, bufpos2;
+
+	TRACE(("enter put_termcodes"))
 
 	if (tcgetattr(STDIN_FILENO, &tio) == -1) {
 		dropbear_log(LOG_WARNING, "Failed reading termmodes");
