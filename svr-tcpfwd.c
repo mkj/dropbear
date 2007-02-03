@@ -216,8 +216,10 @@ out:
 	if (ret == DROPBEAR_FAILURE) {
 		/* we only free it if a listener wasn't created, since the listener
 		 * has to remember it if it's to be cancelled */
-		m_free(tcpinfo->listenaddr);
-		m_free(tcpinfo);
+		if (tcpinfo) {
+			m_free(tcpinfo->listenaddr);
+			m_free(tcpinfo);
+		}
 	}
 	TRACE(("leave remotetcpreq"))
 	return ret;
