@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   HMAC support, process a block of memory, Tom St Denis/Dobes Vandermeer
 */
 
-#ifdef HMAC
+#ifdef LTC_HMAC
 
 /**
    HMAC a block of memory to produce the authentication tag
@@ -34,13 +34,24 @@ int hmac_memory(int hash,
                       unsigned char *out,  unsigned long *outlen)
 {
     hmac_state *hmac;
-    int err;
+    int         err;
 
     LTC_ARGCHK(key    != NULL);
-    LTC_ARGCHK(in   != NULL);
+    LTC_ARGCHK(in     != NULL);
     LTC_ARGCHK(out    != NULL); 
     LTC_ARGCHK(outlen != NULL);
 
+    /* make sure hash descriptor is valid */
+    if ((err = hash_is_valid(hash)) != CRYPT_OK) {
+       return err;
+    }
+
+    /* is there a descriptor? */
+    if (hash_descriptor[hash].hmac_block != NULL) {
+        return hash_descriptor[hash].hmac_block(key, keylen, in, inlen, out, outlen);
+    }
+
+    /* nope, so call the hmac functions */
     /* allocate ram for hmac state */
     hmac = XMALLOC(sizeof(hmac_state));
     if (hmac == NULL) {
@@ -73,5 +84,5 @@ LBL_ERR:
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/hmac/hmac_memory.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/11/03 00:39:49 $ */

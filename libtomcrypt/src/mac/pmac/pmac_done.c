@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   PMAC implementation, terminate a session, by Tom St Denis 
 */
 
-#ifdef PMAC
+#ifdef LTC_PMAC
 
 int pmac_done(pmac_state *state, unsigned char *out, unsigned long *outlen)
 {
@@ -49,11 +49,13 @@ int pmac_done(pmac_state *state, unsigned char *out, unsigned long *outlen)
    }
 
    /* encrypt it */
-   cipher_descriptor[state->cipher_idx].ecb_encrypt(state->checksum, state->checksum, &state->key);
+   if ((err = cipher_descriptor[state->cipher_idx].ecb_encrypt(state->checksum, state->checksum, &state->key)) != CRYPT_OK) {
+      return err;
+   }
    cipher_descriptor[state->cipher_idx].done(&state->key);
 
    /* store it */
-   for (x = 0; x < state->block_len && x <= (int)*outlen; x++) {
+   for (x = 0; x < state->block_len && x < (int)*outlen; x++) {
        out[x] = state->checksum[x];
    }
    *outlen = x;
@@ -68,5 +70,5 @@ int pmac_done(pmac_state *state, unsigned char *out, unsigned long *outlen)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_done.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/03 00:39:49 $ */

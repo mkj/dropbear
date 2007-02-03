@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* Karatsuba squaring, computes b = a*a using three 
@@ -80,8 +80,8 @@ int mp_karatsuba_sqr (mp_int * a, mp_int * b)
   if (mp_sqr (&x1, &x1x1) != MP_OKAY)
     goto X1X1;           /* x1x1 = x1*x1 */
 
-  /* now calc (x1-x0)**2 */
-  if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
+  /* now calc (x1+x0)**2 */
+  if (s_mp_add (&x1, &x0, &t1) != MP_OKAY)
     goto X1X1;           /* t1 = x1 - x0 */
   if (mp_sqr (&t1, &t1) != MP_OKAY)
     goto X1X1;           /* t1 = (x1 - x0) * (x1 - x0) */
@@ -89,8 +89,8 @@ int mp_karatsuba_sqr (mp_int * a, mp_int * b)
   /* add x0y0 */
   if (s_mp_add (&x0x0, &x1x1, &t2) != MP_OKAY)
     goto X1X1;           /* t2 = x0x0 + x1x1 */
-  if (mp_sub (&t2, &t1, &t1) != MP_OKAY)
-    goto X1X1;           /* t1 = x0x0 + x1x1 - (x1-x0)*(x1-x0) */
+  if (s_mp_sub (&t1, &t2, &t1) != MP_OKAY)
+    goto X1X1;           /* t1 = (x1+x0)**2 - (x0x0 + x1x1) */
 
   /* shift by B */
   if (mp_lshd (&t1, B) != MP_OKAY)
@@ -115,3 +115,7 @@ ERR:
   return err;
 }
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_karatsuba_sqr.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

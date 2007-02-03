@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 #include <stdarg.h>
@@ -19,6 +19,13 @@
 
 #ifdef LTC_DER
 
+/**
+  Encode a SEQUENCE type using a VA list
+  @param out    [out] Destination for data
+  @param outlen [in/out] Length of buffer and resulting length of output
+  @remark <...> is of the form <type, size, data> (int, unsigned long, void*)
+  @return CRYPT_OK on success
+*/  
 int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...)
 {
    int           err, type;
@@ -43,6 +50,7 @@ int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...)
        }
 
        switch (type) {
+           case LTC_ASN1_BOOLEAN:
            case LTC_ASN1_INTEGER:
            case LTC_ASN1_SHORT_INTEGER:
            case LTC_ASN1_BIT_STRING:
@@ -51,8 +59,11 @@ int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...)
            case LTC_ASN1_OBJECT_IDENTIFIER:
            case LTC_ASN1_IA5_STRING:
            case LTC_ASN1_PRINTABLE_STRING:
+           case LTC_ASN1_UTF8_STRING:
            case LTC_ASN1_UTCTIME:
            case LTC_ASN1_SEQUENCE:
+           case LTC_ASN1_SET:
+           case LTC_ASN1_SETOF:
                 ++x; 
                 break;
           
@@ -86,6 +97,7 @@ int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...)
        }
 
        switch (type) {
+           case LTC_ASN1_BOOLEAN:
            case LTC_ASN1_INTEGER:
            case LTC_ASN1_SHORT_INTEGER:
            case LTC_ASN1_BIT_STRING:
@@ -94,8 +106,11 @@ int der_encode_sequence_multi(unsigned char *out, unsigned long *outlen, ...)
            case LTC_ASN1_OBJECT_IDENTIFIER:
            case LTC_ASN1_IA5_STRING:
            case LTC_ASN1_PRINTABLE_STRING:
+           case LTC_ASN1_UTF8_STRING:
            case LTC_ASN1_UTCTIME:
            case LTC_ASN1_SEQUENCE:
+           case LTC_ASN1_SET:
+           case LTC_ASN1_SETOF:
                 list[x].type   = type;
                 list[x].size   = size;
                 list[x++].data = data;
@@ -119,5 +134,5 @@ LBL_ERR:
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/sequence/der_encode_sequence_multi.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2005/06/18 19:20:23 $ */
+/* $Revision: 1.11 $ */
+/* $Date: 2006/11/26 02:25:18 $ */

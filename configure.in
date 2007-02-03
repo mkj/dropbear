@@ -342,12 +342,17 @@ AC_CHECK_MEMBERS([struct utmp.ut_host, struct utmp.ut_pid, struct utmp.ut_type, 
 #endif
 ])
 
-AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv, struct sockaddr_storage.ss_family, struct sockadd_storage.__family],,,[
+AC_CHECK_MEMBERS([struct utmpx.ut_host, struct utmpx.ut_syslen, struct utmpx.ut_type, struct utmpx.ut_id, struct utmpx.ut_addr, struct utmpx.ut_addr_v6, struct utmpx.ut_time, struct utmpx.ut_tv],,,[
 #include <sys/types.h>
 #include <sys/socket.h>
 #if HAVE_UTMPX_H
 #include <utmpx.h>
 #endif
+])
+
+AC_CHECK_MEMBERS([struct sockaddr_storage.ss_family],,,[
+#include <sys/types.h>
+#include <sys/socket.h>
 ])
 
 AC_CHECK_FUNCS(endutent getutent getutid getutline pututline setutent)
@@ -612,6 +617,49 @@ if test -z "$no_ptc_check" ; then
 fi
 
 AC_EXEEXT
+
+# XXX there must be a nicer way to do this
+AS_MKDIR_P(libtomcrypt/src/ciphers/aes)
+AS_MKDIR_P(libtomcrypt/src/ciphers/safer)
+AS_MKDIR_P(libtomcrypt/src/ciphers/twofish)
+AS_MKDIR_P(libtomcrypt/src/encauth/ccm)
+AS_MKDIR_P(libtomcrypt/src/encauth/eax)
+AS_MKDIR_P(libtomcrypt/src/encauth/gcm)
+AS_MKDIR_P(libtomcrypt/src/encauth/ocb)
+AS_MKDIR_P(libtomcrypt/src/hashes)
+AS_MKDIR_P(libtomcrypt/src/hashes/chc)
+AS_MKDIR_P(libtomcrypt/src/hashes/helper)
+AS_MKDIR_P(libtomcrypt/src/hashes/sha2)
+AS_MKDIR_P(libtomcrypt/src/hashes/whirl)
+AS_MKDIR_P(libtomcrypt/src/mac/hmac)
+AS_MKDIR_P(libtomcrypt/src/mac/omac)
+AS_MKDIR_P(libtomcrypt/src/mac/pelican)
+AS_MKDIR_P(libtomcrypt/src/mac/pmac)
+AS_MKDIR_P(libtomcrypt/src/misc/base64)
+AS_MKDIR_P(libtomcrypt/src/misc/crypt)
+AS_MKDIR_P(libtomcrypt/src/misc/mpi)
+AS_MKDIR_P(libtomcrypt/src/misc/pkcs5)
+AS_MKDIR_P(libtomcrypt/src/modes/cbc)
+AS_MKDIR_P(libtomcrypt/src/modes/cfb)
+AS_MKDIR_P(libtomcrypt/src/modes/ctr)
+AS_MKDIR_P(libtomcrypt/src/modes/ecb)
+AS_MKDIR_P(libtomcrypt/src/modes/ofb)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/bit)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/choice)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/ia5)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/integer)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/object_identifier)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/octet)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/printable_string)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/sequence)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/short_integer)
+AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/utctime)
+AS_MKDIR_P(libtomcrypt/src/pk/dh)
+AS_MKDIR_P(libtomcrypt/src/pk/dsa)
+AS_MKDIR_P(libtomcrypt/src/pk/ecc)
+AS_MKDIR_P(libtomcrypt/src/pk/pkcs1)
+AS_MKDIR_P(libtomcrypt/src/pk/rsa)
+AS_MKDIR_P(libtomcrypt/src/prng)
 AC_CONFIG_HEADER(config.h)
 AC_OUTPUT(Makefile)
 AC_OUTPUT(libtomcrypt/Makefile)

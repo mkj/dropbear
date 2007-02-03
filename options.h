@@ -128,7 +128,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
-/* #define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
+/*#define ENABLE_SVR_PAM_AUTH */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -199,15 +199,17 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * not using the Dropbear client, you'll need to change it */
 #define _PATH_SSH_PROGRAM "/usr/bin/dbclient"
 
-/* Multi-purpose binary configuration has now moved. Look at the top
- * of the Makefile for instructions, or INSTALL */
+/* Whether to log commands executed by a client. This only logs the 
+ * (single) command sent to the server, not what a user did in a 
+ * shell/sftp session etc. */
+/* #define LOG_COMMANDS */
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.48"
+#define DROPBEAR_VERSION "0.49"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

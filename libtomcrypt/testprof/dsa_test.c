@@ -5,7 +5,7 @@
 int dsa_test(void)
 {
    unsigned char msg[16], out[1024], out2[1024];
-   unsigned long x;
+   unsigned long x, y;
    int stat1, stat2;
    dsa_key key, key2;
 
@@ -15,6 +15,20 @@ int dsa_test(void)
    /* verify it */
    DO(dsa_verify_key(&key, &stat1));
    if (stat1 == 0) { fprintf(stderr, "dsa_verify_key "); return 1; }
+   
+   /* encrypt a message */
+   for (x = 0; x < 16; x++) { msg[x] = x; }
+   x = sizeof(out);
+   DO(dsa_encrypt_key(msg, 16, out, &x, &yarrow_prng, find_prng("yarrow"), find_hash("sha1"), &key));
+   
+   /* decrypt */
+   y = sizeof(out2);
+   DO(dsa_decrypt_key(out, x, out2, &y, &key));
+   
+   if (y != 16 || memcmp(out2, msg, 16)) {
+      fprintf(stderr, "dsa_decrypt failed, y == %lu\n", y);
+      return 1;
+   }
 
    /* sign the message */
    x = sizeof(out);
@@ -64,5 +78,5 @@ int dsa_test(void)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/testprof/dsa_test.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/06/03 19:24:32 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2005/10/30 18:49:14 $ */

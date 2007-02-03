@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -23,19 +23,14 @@
   @param inlen      The length of the binary string
   @return CRYPT_OK if successful
 */
-int pkcs_1_os2ip(mp_int *n, unsigned char *in, unsigned long inlen)
+int pkcs_1_os2ip(void *n, unsigned char *in, unsigned long inlen)
 {
-   int err;
-   /* read it */
-   if ((err = mp_read_unsigned_bin(n, in, inlen)) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
-   }
-   return CRYPT_OK;
+   return mp_read_unsigned_bin(n, in, inlen);
 }
 
 #endif /* PKCS_1 */
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_os2ip.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

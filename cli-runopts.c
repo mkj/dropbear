@@ -44,7 +44,7 @@ static void addforward(char* str, struct TCPFwdList** fwdlist);
 static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
-					"Usage: %s [options] [user@]host\n"
+					"Usage: %s [options] [user@]host [command]\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
 					"-l <username>\n"

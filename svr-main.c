@@ -123,6 +123,10 @@ void main_noinetd() {
 	int childsock;
 	int childpipe[2];
 
+	// Note: commonsetup() must happen before we daemon()ise. Otherwise
+	// daemon() will chdir("/"), and we won't be able to find local-dir hostkeys.
+	commonsetup();
+
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;
@@ -135,8 +139,6 @@ void main_noinetd() {
 			dropbear_exit("Failed to daemonize: %s", strerror(errno));
 		}
 	}
-
-	commonsetup();
 
 	/* should be done after syslog is working */
 	if (svr_opts.forkbg) {

@@ -89,6 +89,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+
+		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
@@ -100,7 +102,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (i == svr_ses.childpidsize) {
+		if (exit == NULL) {
 			exit = &svr_ses.lastexit;
 		}
 
@@ -119,7 +121,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
-		exit = NULL;
 	}
 
 	
@@ -588,6 +589,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 
+#ifdef LOG_COMMANDS
+	if (chansess->cmd) {
+		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+						ses.authstate.printableuser, chansess->cmd);
+	} else {
+		dropbear_log(LOG_INFO, "user %s executing login shell", 
+						ses.authstate.printableuser);
+	}
+#endif
+
 	if (chansess->term == NULL) {
 		/* no pty */
 		ret = noptycommand(channel, chansess);
@@ -997,6 +1008,7 @@ void addnewvar(const char* param, const char* var) {
 	newvar[plen] = '=';
 	memcpy(&newvar[plen+1], var, vlen);
 	newvar[plen+vlen+1] = '\0';
+	/* newvar is leaked here, but that's part of putenv()'s semantics */
 	if (putenv(newvar) < 0) {
 		dropbear_exit("environ error");
 	}

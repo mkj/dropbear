@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -130,6 +130,10 @@ unsigned long rc4_read(unsigned char *out, unsigned long outlen, prng_state *prn
    LTC_ARGCHK(out != NULL);
    LTC_ARGCHK(prng != NULL);
 
+#ifdef LTC_VALGRIND
+   zeromem(out, outlen);
+#endif
+
    n = outlen;
    x = prng->rc4.x;
    y = prng->rc4.y;
@@ -171,6 +175,7 @@ int rc4_export(unsigned char *out, unsigned long *outlen, prng_state *prng)
    LTC_ARGCHK(prng   != NULL);
 
    if (*outlen < 32) {
+      *outlen = 32;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -211,7 +216,7 @@ int rc4_import(const unsigned char *in, unsigned long inlen, prng_state *prng)
 */  
 int rc4_test(void)
 {
-#ifndef LTC_TEST
+#if !defined(LTC_TEST) || defined(LTC_VALGRIND)
    return CRYPT_NOP;
 #else
    static const struct {
@@ -242,7 +247,7 @@ int rc4_test(void)
           return CRYPT_ERROR_READPRNG;
        }
        rc4_done(&prng);
-       if (memcmp(dst, tests[x].ct, 8)) {
+       if (XMEMCMP(dst, tests[x].ct, 8)) {
 #if 0
           int y;
           printf("\n\nRC4 failed, I got:\n"); 
@@ -260,5 +265,5 @@ int rc4_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/prngs/rc4.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2006/11/16 00:32:18 $ */

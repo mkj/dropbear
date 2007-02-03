@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /**
@@ -28,7 +28,7 @@ const struct ltc_cipher_descriptor rc6_desc =
     &rc6_test,
     &rc6_done,
     &rc6_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const ulong32 stab[44] = {
@@ -120,9 +120,9 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
   @param skey The key as scheduled
 */
 #ifdef LTC_CLEAN_STACK
-static void _rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+static int _rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #else
-void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
    ulong32 a,b,c,d,t,u, *K;
@@ -155,13 +155,15 @@ void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
    a += skey->rc6.K[42];
    c += skey->rc6.K[43];
    STORE32L(a,&ct[0]);STORE32L(b,&ct[4]);STORE32L(c,&ct[8]);STORE32L(d,&ct[12]);
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
-   _rc6_ecb_encrypt(pt, ct, skey);
+   int err = _rc6_ecb_encrypt(pt, ct, skey);
    burn_stack(sizeof(ulong32) * 6 + sizeof(int));
+   return err;
 }
 #endif
 
@@ -172,9 +174,9 @@ void rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *
   @param skey The key as scheduled 
 */
 #ifdef LTC_CLEAN_STACK
-static void _rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+static int _rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #else
-void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
    ulong32 a,b,c,d,t,u, *K;
@@ -208,13 +210,16 @@ void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *
    b -= skey->rc6.K[0];
    d -= skey->rc6.K[1];
    STORE32L(a,&pt[0]);STORE32L(b,&pt[4]);STORE32L(c,&pt[8]);STORE32L(d,&pt[12]);
+
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
-   _rc6_ecb_decrypt(ct, pt, skey);
+   int err = _rc6_ecb_decrypt(ct, pt, skey);
    burn_stack(sizeof(ulong32) * 6 + sizeof(int));
+   return err;
 }
 #endif
 
@@ -280,17 +285,17 @@ int rc6_test(void)
       rc6_ecb_decrypt(tmp[0], tmp[1], &key);
 
       /* compare */
-      if (memcmp(tmp[0], tests[x].ct, 16) || memcmp(tmp[1], tests[x].pt, 16)) {
+      if (XMEMCMP(tmp[0], tests[x].ct, 16) || XMEMCMP(tmp[1], tests[x].pt, 16)) {
 #if 0
          printf("\n\nFailed test %d\n", x);
-         if (memcmp(tmp[0], tests[x].ct, 16)) {
+         if (XMEMCMP(tmp[0], tests[x].ct, 16)) {
             printf("Ciphertext:  ");
             for (y = 0; y < 16; y++) printf("%02x ", tmp[0][y]);
             printf("\nExpected  :  ");
             for (y = 0; y < 16; y++) printf("%02x ", tests[x].ct[y]);
             printf("\n");
          }
-         if (memcmp(tmp[1], tests[x].pt, 16)) {
+         if (XMEMCMP(tmp[1], tests[x].pt, 16)) {
             printf("Plaintext:  ");
             for (y = 0; y < 16; y++) printf("%02x ", tmp[0][y]);
             printf("\nExpected :  ");
@@ -339,5 +344,5 @@ int rc6_keysize(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/rc6.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.12 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

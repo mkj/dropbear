@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* c = |a| * |b| using Karatsuba Multiplication using 
@@ -26,12 +26,12 @@
  * b = b1 * B**n + b0
  *
  * Then, a * b => 
-   a1b1 * B**2n + ((a1 - a0)(b1 - b0) + a0b0 + a1b1) * B + a0b0
+   a1b1 * B**2n + ((a1 + a0)(b1 + b0) - (a0b0 + a1b1)) * B + a0b0
  *
  * Note that a1b1 and a0b0 are used twice and only need to be 
  * computed once.  So in total three half size (half # of 
  * digit) multiplications are performed, a0b0, a1b1 and 
- * (a1-b1)(a0-b0)
+ * (a1+b1)(a0+b0)
  *
  * Note that a multiplication of half the digits requires
  * 1/4th the number of single precision multiplications so in 
@@ -122,19 +122,19 @@ int mp_karatsuba_mul (mp_int * a, mp_int * b, mp_int * c)
   if (mp_mul (&x1, &y1, &x1y1) != MP_OKAY)
     goto X1Y1;          /* x1y1 = x1*y1 */
 
-  /* now calc x1-x0 and y1-y0 */
-  if (mp_sub (&x1, &x0, &t1) != MP_OKAY)
+  /* now calc x1+x0 and y1+y0 */
+  if (s_mp_add (&x1, &x0, &t1) != MP_OKAY)
     goto X1Y1;          /* t1 = x1 - x0 */
-  if (mp_sub (&y1, &y0, &x0) != MP_OKAY)
+  if (s_mp_add (&y1, &y0, &x0) != MP_OKAY)
     goto X1Y1;          /* t2 = y1 - y0 */
   if (mp_mul (&t1, &x0, &t1) != MP_OKAY)
-    goto X1Y1;          /* t1 = (x1 - x0) * (y1 - y0) */
+    goto X1Y1;          /* t1 = (x1 + x0) * (y1 + y0) */
 
   /* add x0y0 */
   if (mp_add (&x0y0, &x1y1, &x0) != MP_OKAY)
     goto X1Y1;          /* t2 = x0y0 + x1y1 */
-  if (mp_sub (&x0, &t1, &t1) != MP_OKAY)
-    goto X1Y1;          /* t1 = x0y0 + x1y1 - (x1-x0)*(y1-y0) */
+  if (s_mp_sub (&t1, &x0, &t1) != MP_OKAY)
+    goto X1Y1;          /* t1 = (x1+x0)*(y1+y0) - (x1y1 + x0y0) */
 
   /* shift by B */
   if (mp_lshd (&t1, B) != MP_OKAY)
@@ -161,3 +161,7 @@ ERR:
   return err;
 }
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_karatsuba_mul.c,v $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/03/31 14:18:44 $ */
