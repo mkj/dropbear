@@ -67,7 +67,8 @@ static void get_termmodes(struct ChanSess *chansess);
 extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
-	return channel->writefd == -1;
+	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
+	return chansess->exit.exitpid >= 0;
 }
 
 /* Handler for childs exiting, store the state for return to the client */
