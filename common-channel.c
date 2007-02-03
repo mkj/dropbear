@@ -203,24 +203,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 				send_msg_channel_data(channel, 1, SSH_EXTENDED_DATA_STDERR);
 		}
 
-		/* if we can read from the writefd, it might be closed, so we try to
-		 * see if it has errors */
-		if (channel->writefd >= 0 && channel->writefd != channel->readfd
-				&& FD_ISSET(channel->writefd, readfds)) {
-			if (channel->initconn) {
-				/* Handling for "in progress" connection - this is needed
-				 * to avoid spinning 100% CPU when we connect to a server
-				 * which doesn't send anything (tcpfwding) */
-				checkinitdone(channel);
-				continue; /* Important not to use the channel after 
-							 checkinitdone(), as it may be NULL */
-			}
-			ret = write(channel->writefd, NULL, 0); /* Fake write */
-			if (ret < 0 && errno != EINTR && errno != EAGAIN) {
-				closewritefd(channel);
-			}
-		}
-
 		/* write to program/pipe stdin */
 		if (channel->writefd >= 0 && FD_ISSET(channel->writefd, writefds)) {
 			if (channel->initconn) {
@@ -445,17 +427,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 			}
 		}
 
-		/* For checking FD status (ie closure etc) - we don't actually
-		 * read data from writefd */
-		TRACE(("writefd = %d, readfd %d, errfd %d, bufused %d", 
-					channel->writefd, channel->readfd,
-					channel->errfd,
-					cbuf_getused(channel->writebuf) ))
-		if (channel->writefd >= 0 && channel->writefd != channel->readfd) {
-			FD_SET(channel->writefd, readfds);
-		}
-
-		/* Stuff from the wire, to local program/shell/user etc */
+		/* Stuff from the wire */
 		if ((channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0 )
 				|| channel->initconn) {
 
