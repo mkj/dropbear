@@ -348,7 +348,8 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	TRACE(("enter addforward"))
 
-	/* We probably don't want to be editing argvs */
+	/* We need to split the original argument up. This var
+	   is never free()d. */ 
 	str = m_strdup(origstr);
 
 	listenport = str;
@@ -399,8 +400,6 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	newfwd->next = *fwdlist;
 	*fwdlist = newfwd;
-
-	m_free(str);
 
 	TRACE(("leave addforward: done"))
 	return;
