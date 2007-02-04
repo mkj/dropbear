@@ -234,8 +234,7 @@ void gen_random_mpint(mp_int *max, mp_int *rand) {
 
 		/* keep regenerating until we get one satisfying
 		 * 0 < rand < max    */
-	} while ( ( (max != NULL) && (mp_cmp(rand, max) != MP_LT) )
-			|| (mp_cmp_d(rand, 0) != MP_GT) );
+	} while (mp_cmp(rand, max) != MP_LT);
 	m_burn(randbuf, len);
 	m_free(randbuf);
 }

@@ -373,8 +373,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 		TRACE(("connectaddr == NULL"))
 		goto fail;
 	}
-
-	connectaddr[0] = '\0';
+	*connectaddr = '\0';
 	connectaddr++;
 
 	connectport = strchr(connectaddr, ':');
@@ -382,8 +381,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 		TRACE(("connectport == NULL"))
 		goto fail;
 	}
-
-	connectport[0] = '\0';
+	*connectport = '\0';
 	connectport++;
 
 	newfwd = (struct TCPFwdList*)m_malloc(sizeof(struct TCPFwdList));
@@ -416,6 +414,8 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	newfwd->next = *fwdlist;
 	*fwdlist = newfwd;
+
+	m_free(str);
 
 	TRACE(("leave addforward: done"))
 	return;
