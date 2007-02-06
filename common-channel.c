@@ -186,29 +186,6 @@ struct Channel* getchannel() {
 	return getchannel_msg(NULL);
 }
 
-/* In order to tell if a writefd is closed, we put it in the readfd FD_SET.
-   We then just try reading a single byte from it. It'll give EAGAIN or something
-   if the socket is still alive (but the FD probably shouldn't be set anyway?)*/
-static void check_closed_writefd(struct Channel* channel, int fd) {
-	char c;
-	int ret;
-	TRACE(("enter check_closed_writefd fd %d", fd))
-	if (fd < 0)	{
-		TRACE(("leave check_closed_writefd."))
-		return;
-	}
-
-	/* Read something. doing read(fd,x,0) seems to become a NOP on some platforms */
-	ret = read(fd, &c, 1);
-	TRACE(("ret %d errno %d", ret, errno))
-	if (ret > 0 || (ret < 0 && (errno == EINTR || errno == EAGAIN)))	{
-		TRACE(("leave check_closed_writefd"))
-		return;
-	}
-	close_chan_fd(channel, fd, SHUT_WR);
-	TRACE(("leave check_closed_writefd after closing %d", fd))
-}
-
 /* Iterate through the channels, performing IO if available */
 void channelio(fd_set *readfds, fd_set *writefds) {
 
@@ -251,16 +228,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 				&& channel->errfd >= 0 && FD_ISSET(channel->errfd, writefds)) {
 			writechannel(channel, channel->errfd, channel->extrabuf);
 		}
-	
-		/* Check writefds for close, even if we don't have anything 
-		   to write into them. */
-		if (channel->writefd >= 0) {
-			check_closed_writefd(channel, channel->writefd);
-		}
-		if (ERRFD_IS_WRITE(channel) && channel->errfd >= 0) {
-			check_closed_writefd(channel, channel->errfd);
-		}
-	
 	
 		/* handle any channel closing etc */
 		check_close(channel);
@@ -471,16 +438,6 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 				&& cbuf_getused(channel->extrabuf) > 0 ) {
 				FD_SET(channel->errfd, writefds);
 		}
-
-		/* We also set the writefds for reading, so that we will be notified of close */
-		if (channel->writefd >= 0) {
-			FD_SET(channel->writefd, readfds);
-		}		
-		if (ERRFD_IS_WRITE(channel) && channel->errfd >= 0) {
-			FD_SET(channel->errfd, readfds);
-		}
-		
-		
 
 	} /* foreach channel */
 
