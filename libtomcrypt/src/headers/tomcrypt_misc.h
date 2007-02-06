@@ -12,10 +12,12 @@ void zeromem(void *dst, size_t len);
 void burn_stack(unsigned long len);
 
 const char *error_to_string(int err);
-int mpi_to_ltc_error(int err);
 
 extern const char *crypt_build_settings;
 
+/* ---- HMM ---- */
+int crypt_fsa(void *mp, ...);
+
 /* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_misc.h,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/11/06 03:03:01 $ */

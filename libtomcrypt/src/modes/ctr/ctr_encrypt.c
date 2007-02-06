@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef CTR
+#ifdef LTC_CTR_MODE
 
 /**
   CTR encrypt
@@ -39,7 +39,7 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    }
    
    /* is blocklen/padlen valid? */
-   if (ctr->blocklen < 0 || ctr->blocklen > (int)sizeof(ctr->ctr) ||
+   if (ctr->blocklen < 1 || ctr->blocklen > (int)sizeof(ctr->ctr) ||
        ctr->padlen   < 0 || ctr->padlen   > (int)sizeof(ctr->pad)) {
       return CRYPT_INVALID_ARG;
    }
@@ -52,7 +52,9 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
    
    /* handle acceleration only if pad is empty, accelerator is present and length is >= a block size */
    if ((ctr->padlen == ctr->blocklen) && cipher_descriptor[ctr->cipher].accel_ctr_encrypt != NULL && (len >= (unsigned long)ctr->blocklen)) {
-      cipher_descriptor[ctr->cipher].accel_ctr_encrypt(pt, ct, len/ctr->blocklen, ctr->ctr, ctr->mode, &ctr->key);
+      if ((err = cipher_descriptor[ctr->cipher].accel_ctr_encrypt(pt, ct, len/ctr->blocklen, ctr->ctr, ctr->mode, &ctr->key)) != CRYPT_OK) {
+         return err;
+      }
       len %= ctr->blocklen;
    }
 
@@ -79,7 +81,9 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
          }
 
          /* encrypt it */
-         cipher_descriptor[ctr->cipher].ecb_encrypt(ctr->ctr, ctr->pad, &ctr->key);
+         if ((err = cipher_descriptor[ctr->cipher].ecb_encrypt(ctr->ctr, ctr->pad, &ctr->key)) != CRYPT_OK) {
+            return err;
+         }
          ctr->padlen = 0;
       }
 #ifdef LTC_FAST
@@ -88,15 +92,15 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
             *((LTC_FAST_TYPE*)((unsigned char *)ct + x)) = *((LTC_FAST_TYPE*)((unsigned char *)pt + x)) ^
                                                            *((LTC_FAST_TYPE*)((unsigned char *)ctr->pad + x));
          }
-	    pt         += ctr->blocklen;
-	    ct         += ctr->blocklen;
-	    len        -= ctr->blocklen;
-	    ctr->padlen = ctr->blocklen;
-	    continue;
-	 }
-#endif	 
-    *ct++ = *pt++ ^ ctr->pad[ctr->padlen++];
-	 --len;
+       pt         += ctr->blocklen;
+       ct         += ctr->blocklen;
+       len        -= ctr->blocklen;
+       ctr->padlen = ctr->blocklen;
+       continue;
+      }
+#endif    
+      *ct++ = *pt++ ^ ctr->pad[ctr->padlen++];
+      --len;
    }
    return CRYPT_OK;
 }
@@ -104,5 +108,5 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_encrypt.c,v $ */
-/* $Revision: 1.13 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.20 $ */
+/* $Date: 2006/11/21 00:18:23 $ */

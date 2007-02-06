@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    PMAC implementation, internal function, by Tom St Denis 
 */
 
-#ifdef PMAC
+#ifdef LTC_PMAC
 
 /**
   Internal PMAC function
@@ -35,5 +35,5 @@ int pmac_ntz(unsigned long x)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_ntz.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/11/03 00:39:49 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef ECB
+#ifdef LTC_ECB_MODE
 
 /**
    Initialize a ECB context
@@ -44,5 +44,5 @@ int ecb_start(int cipher, const unsigned char *key, int keylen, int num_rounds, 
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ecb/ecb_start.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/06/29 01:51:34 $ */

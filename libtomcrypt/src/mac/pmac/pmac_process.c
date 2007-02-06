@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef PMAC
+#ifdef LTC_PMAC
 
 /**
   Process data in a PMAC stream
@@ -50,7 +50,9 @@ int pmac_process(pmac_state *pmac, const unsigned char *in, unsigned long inlen)
           for (y = 0; y < 16; y += sizeof(LTC_FAST_TYPE)) {
               *((LTC_FAST_TYPE*)(&Z[y])) = *((LTC_FAST_TYPE*)(&in[y])) ^ *((LTC_FAST_TYPE*)(&pmac->Li[y]));
           }
-          cipher_descriptor[pmac->cipher_idx].ecb_encrypt(Z, Z, &pmac->key);
+          if ((err = cipher_descriptor[pmac->cipher_idx].ecb_encrypt(Z, Z, &pmac->key)) != CRYPT_OK) {
+             return err;
+          }
           for (y = 0; y < 16; y += sizeof(LTC_FAST_TYPE)) {
               *((LTC_FAST_TYPE*)(&pmac->checksum[y])) ^= *((LTC_FAST_TYPE*)(&Z[y]));
           }
@@ -67,7 +69,9 @@ int pmac_process(pmac_state *pmac, const unsigned char *in, unsigned long inlen)
           for (x = 0; x < (unsigned long)pmac->block_len; x++) {
                Z[x] = pmac->Li[x] ^ pmac->block[x];
           }
-          cipher_descriptor[pmac->cipher_idx].ecb_encrypt(Z, Z, &pmac->key);
+          if ((err = cipher_descriptor[pmac->cipher_idx].ecb_encrypt(Z, Z, &pmac->key)) != CRYPT_OK) {
+             return err;
+           }
           for (x = 0; x < (unsigned long)pmac->block_len; x++) {
               pmac->checksum[x] ^= Z[x];
           }
@@ -92,5 +96,5 @@ int pmac_process(pmac_state *pmac, const unsigned char *in, unsigned long inlen)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/pmac/pmac_process.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/03 00:39:49 $ */

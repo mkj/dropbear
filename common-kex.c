@@ -217,12 +217,10 @@ static void kexinitialise() {
  * already initialised hash_state hs, which should already have processed
  * the dh_K and hash, since these are common. X is the letter 'A', 'B' etc.
  * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
- * The output will only be expanded once, since that is all that is required
- * (for 3DES and SHA, with 24 and 20 bytes respectively). 
+ * The output will only be expanded once, as we are assured that
+ * outlen <= 2*SHA1_HASH_SIZE for all known hashes.
  *
- * See Section 5.2 of the IETF secsh Transport Draft for details */
-
-/* Duplicated verbatim from kex.c --mihnea */
+ * See Section 7.2 of rfc4253 (ssh transport) for details */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, const unsigned char X) {
 

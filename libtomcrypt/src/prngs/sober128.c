@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -294,6 +294,10 @@ unsigned long sober128_read(unsigned char *out, unsigned long outlen, prng_state
    LTC_ARGCHK(out  != NULL);
    LTC_ARGCHK(prng != NULL);
 
+#ifdef LTC_VALGRIND
+   zeromem(out, outlen);
+#endif
+
    c = &(prng->sober128);
    t = 0;
    tlen = outlen;
@@ -381,6 +385,7 @@ int sober128_export(unsigned char *out, unsigned long *outlen, prng_state *prng)
    LTC_ARGCHK(prng   != NULL);
 
    if (*outlen < 64) {
+      *outlen = 64;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -436,11 +441,11 @@ int sober128_test(void)
    16, 4, 20,
 
    /* key */
-   { 't', 'e', 's', 't', ' ', 'k', 'e', 'y', 
-     ' ', '1', '2', '8', 'b', 'i', 't', 's' },
+   { 0x74, 0x65, 0x73, 0x74, 0x20, 0x6b, 0x65, 0x79, 
+     0x20, 0x31, 0x32, 0x38, 0x62, 0x69, 0x74, 0x73 },
 
    /* IV */
-   { 0x00, 0x00, 0x00, 0x0 },
+   { 0x00, 0x00, 0x00, 0x00 },
 
    /* expected output */
    { 0x43, 0x50, 0x0c, 0xcf, 0x89, 0x91, 0x9f, 0x1d,
@@ -469,12 +474,12 @@ int sober128_test(void)
        if ((err = sober128_ready(&prng)) != CRYPT_OK) {
           return err;
        }
-       memset(dst, 0, tests[x].len);
+       XMEMSET(dst, 0, tests[x].len);
        if (sober128_read(dst, tests[x].len, &prng) != (unsigned long)tests[x].len) {
           return CRYPT_ERROR_READPRNG;
        }
        sober128_done(&prng);
-       if (memcmp(dst, tests[x].out, tests[x].len)) {
+       if (XMEMCMP(dst, tests[x].out, tests[x].len)) {
 #if 0
           printf("\n\nSOBER128 failed, I got:\n"); 
           for (y = 0; y < tests[x].len; y++) printf("%02x ", dst[y]);
@@ -491,5 +496,5 @@ int sober128_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/prngs/sober128.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/05 00:11:36 $ */

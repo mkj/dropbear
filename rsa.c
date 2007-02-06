@@ -48,6 +48,7 @@ static void rsa_pad_em(rsa_key * key,
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 
+    int ret = DROPBEAR_FAILURE;
 	TRACE(("enter buf_get_rsa_pub_key"))
 	dropbear_assert(key != NULL);
 	key->e = m_malloc(sizeof(mp_int));
@@ -62,44 +63,51 @@ int buf_get_rsa_pub_key(buffer* buf, rsa_key *key) {
 	if (buf_getmpint(buf, key->e) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->n) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_rsa_pub_key: failure"))
-		return DROPBEAR_FAILURE;
+	    goto out;
 	}
 
 	if (mp_count_bits(key->n) < MIN_RSA_KEYLEN) {
 		dropbear_log(LOG_WARNING, "rsa key too short");
-		return DROPBEAR_FAILURE;
+	    goto out;
 	}
 
 	TRACE(("leave buf_get_rsa_pub_key: success"))
-	return DROPBEAR_SUCCESS;
-
+    ret = DROPBEAR_SUCCESS;
+out:
+    if (ret == DROPBEAR_FAILURE) {
+        m_free(key->e);
+        m_free(key->n);
+    }
+	return ret;
 }
 
-/* Same as buf_get_rsa_pub_key, but reads a private "x" key at the end.
+/* Same as buf_get_rsa_pub_key, but reads private bits at the end.
  * Loads a private rsa key from a buffer
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
-
-	dropbear_assert(key != NULL);
+    int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter buf_get_rsa_priv_key"))
+	dropbear_assert(key != NULL);
 
 	if (buf_get_rsa_pub_key(buf, key) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_rsa_priv_key: pub: ret == DROPBEAR_FAILURE"))
 		return DROPBEAR_FAILURE;
 	}
+	
+	key->d = NULL;
+	key->p = NULL;
+	key->q = NULL;
 
 	key->d = m_malloc(sizeof(mp_int));
 	m_mp_init(key->d);
 	if (buf_getmpint(buf, key->d) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_rsa_priv_key: d: ret == DROPBEAR_FAILURE"))
-		return DROPBEAR_FAILURE;
+	    goto out;
 	}
 
-	/* old Dropbear private keys didn't keep p and q, so we will ignore them*/
 	if (buf->pos == buf->len) {
-		key->p = NULL;
-		key->q = NULL;
+    	/* old Dropbear private keys didn't keep p and q, so we will ignore them*/
 	} else {
 		key->p = m_malloc(sizeof(mp_int));
 		key->q = m_malloc(sizeof(mp_int));
@@ -107,17 +115,24 @@ int buf_get_rsa_priv_key(buffer* buf, rsa_key *key) {
 
 		if (buf_getmpint(buf, key->p) == DROPBEAR_FAILURE) {
 			TRACE(("leave buf_get_rsa_priv_key: p: ret == DROPBEAR_FAILURE"))
-			return DROPBEAR_FAILURE;
+		    goto out;
 		}
 
 		if (buf_getmpint(buf, key->q) == DROPBEAR_FAILURE) {
 			TRACE(("leave buf_get_rsa_priv_key: q: ret == DROPBEAR_FAILURE"))
-			return DROPBEAR_FAILURE;
+		    goto out;
 		}
 	}
 
+    ret = DROPBEAR_SUCCESS;
+out:
+    if (ret == DROPBEAR_FAILURE) {
+        m_free(key->d);
+        m_free(key->p);
+        m_free(key->q);
+    }
 	TRACE(("leave buf_get_rsa_priv_key"))
-	return DROPBEAR_SUCCESS;
+    return ret;
 }
 	
 

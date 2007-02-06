@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -37,7 +37,8 @@ const struct ltc_hash_descriptor rmd128_desc =
     &rmd128_init,
     &rmd128_process,
     &rmd128_done,
-    &rmd128_test
+    &rmd128_test,
+    NULL
 };
 
 /* the four basic functions F(), G() and H() */
@@ -390,7 +391,7 @@ int rmd128_test(void)
        rmd128_init(&md);
        rmd128_process(&md, (unsigned char *)tests[x].msg, strlen(tests[x].msg));
        rmd128_done(&md, buf);
-       if (memcmp(buf, tests[x].md, 16) != 0) {
+       if (XMEMCMP(buf, tests[x].md, 16) != 0) {
        #if 0
           printf("Failed test %d\n", x);
        #endif
@@ -405,5 +406,5 @@ int rmd128_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/rmd128.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

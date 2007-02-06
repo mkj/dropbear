@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* stores a bignum as a ASCII string in a given radix (2..64) */
@@ -69,3 +69,7 @@ int mp_toradix (mp_int * a, char *str, int radix)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_toradix.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

@@ -39,6 +39,6 @@ TARGET = libtommath.lib
 
 $(TARGET): $(OBJECTS)
 
-.c.objbjbjbj:
+.c.obj:
 	$(CC) $(CFLAGS) $<
 	$(LIB) $(TARGET) -+$@

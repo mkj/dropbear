@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 #include "tomcrypt.h"
@@ -32,7 +32,8 @@ const struct ltc_hash_descriptor tiger_desc =
     &tiger_init,
     &tiger_process,
     &tiger_done,
-    &tiger_test
+    &tiger_test,
+    NULL
 };
 
 #define t1 (table)
@@ -774,7 +775,7 @@ int  tiger_test(void)
       tiger_init(&md);
       tiger_process(&md, (unsigned char *)tests[i].msg, (unsigned long)strlen(tests[i].msg));
       tiger_done(&md, tmp);
-      if (memcmp(tmp, tests[i].hash, 24) != 0) {
+      if (XMEMCMP(tmp, tests[i].hash, 24) != 0) {
           return CRYPT_FAIL_TESTVECTOR;
       }
   }
@@ -809,5 +810,5 @@ Hash of "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFG
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/tiger.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /**
@@ -31,9 +31,9 @@ int gcm_process(gcm_state *gcm,
                      unsigned char *ct,
                      int direction)
 {
-   unsigned long x, y;
+   unsigned long x;
+   int           y, err;
    unsigned char b;
-   int           err;
 
    LTC_ARGCHK(gcm != NULL);
    if (ptlen > 0) {
@@ -59,10 +59,12 @@ int gcm_process(gcm_state *gcm,
 
       /* increment counter */
       for (y = 15; y >= 12; y--) {
-          if (++gcm->Y[y]) { break; }
+          if (++gcm->Y[y] & 255) { break; }
       }
       /* encrypt the counter */
-      cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K);     
+      if ((err = cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K)) != CRYPT_OK) {
+         return err;
+      }
 
       gcm->buflen = 0;
       gcm->mode   = GCM_MODE_TEXT;
@@ -87,9 +89,11 @@ int gcm_process(gcm_state *gcm,
              gcm_mult_h(gcm, gcm->X);
              /* increment counter */
              for (y = 15; y >= 12; y--) {
-                 if (++gcm->Y[y]) { break; }
+                 if (++gcm->Y[y] & 255) { break; }
              }
-             cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K);
+             if ((err = cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K)) != CRYPT_OK) {
+                return err;
+             }
          }
       } else {
          for (x = 0; x < (ptlen & ~15); x += 16) {
@@ -103,9 +107,11 @@ int gcm_process(gcm_state *gcm,
              gcm_mult_h(gcm, gcm->X);
              /* increment counter */
              for (y = 15; y >= 12; y--) {
-                 if (++gcm->Y[y]) { break; }
+                 if (++gcm->Y[y] & 255) { break; }
              }
-             cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K);
+             if ((err = cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K)) != CRYPT_OK) {
+                return err;
+             }
          }
      }
    }
@@ -119,9 +125,11 @@ int gcm_process(gcm_state *gcm,
           
           /* increment counter */
           for (y = 15; y >= 12; y--) {
-              if (++gcm->Y[y]) { break; }
+              if (++gcm->Y[y] & 255) { break; }
           }
-          cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K);
+          if ((err = cipher_descriptor[gcm->cipher].ecb_encrypt(gcm->Y, gcm->buf, &gcm->K)) != CRYPT_OK) {
+             return err;
+          }
           gcm->buflen = 0;
        }
 
@@ -137,11 +145,8 @@ int gcm_process(gcm_state *gcm,
    return CRYPT_OK;
 }
 
-
-
 #endif
-   
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_process.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.14 $ */
+/* $Date: 2006/11/19 19:33:36 $ */

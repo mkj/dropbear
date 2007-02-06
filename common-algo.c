@@ -31,6 +31,8 @@
 
 /* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
+/* NOTE: if keysize > 2*SHA1_HASH_SIZE, code such as hashkeys()
+   needs revisiting */
 
 #ifdef DROPBEAR_AES256_CBC
 static const struct dropbear_cipher dropbear_aes256 = 

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -42,6 +42,7 @@ int base64_encode(const unsigned char *in,  unsigned long inlen,
    /* valid output size ? */
    len2 = 4 * ((inlen + 2) / 3);
    if (*outlen < len2 + 1) {
+      *outlen = len2 + 1;
       return CRYPT_BUFFER_OVERFLOW;
    }
    p = out;
@@ -76,5 +77,5 @@ int base64_encode(const unsigned char *in,  unsigned long inlen,
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/base64/base64_encode.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/06/16 21:53:41 $ */

@@ -19,7 +19,7 @@ CFLAGS  +=  -I./
 #   B - Blend of P4 and PM [mobile]
 #
 # Default to just generic max opts
-CFLAGS += -O3 -xN
+CFLAGS += -O3 -xP -ip
 
 #install as this user
 USER=root

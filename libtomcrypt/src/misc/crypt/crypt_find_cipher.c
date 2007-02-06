@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -26,7 +26,7 @@ int find_cipher(const char *name)
    LTC_ARGCHK(name != NULL);
    LTC_MUTEX_LOCK(&ltc_cipher_mutex);
    for (x = 0; x < TAB_SIZE; x++) {
-       if (cipher_descriptor[x].name != NULL && !strcmp(cipher_descriptor[x].name, name)) {
+       if (cipher_descriptor[x].name != NULL && !XSTRCMP(cipher_descriptor[x].name, name)) {
           LTC_MUTEX_UNLOCK(&ltc_cipher_mutex);
           return x;
        }
@@ -37,5 +37,5 @@ int find_cipher(const char *name)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_find_cipher.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/06/19 18:00:28 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/11/29 23:43:57 $ */

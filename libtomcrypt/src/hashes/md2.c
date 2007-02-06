@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -31,7 +31,8 @@ const struct ltc_hash_descriptor md2_desc =
     &md2_init,
     &md2_process,
     &md2_done,
-    &md2_test
+    &md2_test,
+    NULL
 };
 
 static const unsigned char PI_SUBST[256] = {
@@ -234,7 +235,7 @@ int md2_test(void)
        md2_init(&md);
        md2_process(&md, (unsigned char*)tests[i].msg, (unsigned long)strlen(tests[i].msg));
        md2_done(&md, buf);
-       if (memcmp(buf, tests[i].md, 16) != 0) {
+       if (XMEMCMP(buf, tests[i].md, 16) != 0) {
           return CRYPT_FAIL_TESTVECTOR;
        }
    }
@@ -246,5 +247,5 @@ int md2_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/md2.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

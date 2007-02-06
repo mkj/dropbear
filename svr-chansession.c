@@ -101,7 +101,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (!exit) {
+		if (exit == NULL) {
 			exit = &svr_ses.lastexit;
 		}
 
@@ -1007,6 +1007,7 @@ void addnewvar(const char* param, const char* var) {
 	newvar[plen] = '=';
 	memcpy(&newvar[plen+1], var, vlen);
 	newvar[plen+vlen+1] = '\0';
+	/* newvar is leaked here, but that's part of putenv()'s semantics */
 	if (putenv(newvar) < 0) {
 		dropbear_exit("environ error");
 	}

@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 static int s_is_power_of_two(mp_digit b, int *p)
@@ -104,3 +104,7 @@ int mp_div_d (mp_int * a, mp_digit b, mp_int * c, mp_digit * d)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_div_d.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/03/31 14:18:44 $ */
