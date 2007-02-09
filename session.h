@@ -123,7 +123,8 @@ struct sshsession {
 
 	unsigned char lastpacket; /* What the last received packet type was */
 	
-
+    int signal_pipe[2]; /* stores endpoints of a self-pipe used for
+						   race-free signal handling */
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;

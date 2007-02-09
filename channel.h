@@ -84,6 +84,8 @@ struct Channel {
 					   for this channel (and are awaiting a confirmation
 					   or failure). */
 
+	int flushing;
+
 	const struct ChanType* type;
 
 };

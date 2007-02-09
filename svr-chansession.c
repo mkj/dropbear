@@ -120,9 +120,21 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
+		
+		/* Make sure that the main select() loop wakes up */
+		while (1) {
+			/* EAGAIN means the pipe's full, so don't need to write anything */
+			/* isserver is just a random byte to write */
+			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1 || errno == EAGAIN) {
+				break;
+			}
+			if (errno == EINTR) {
+				continue;
+			}
+			dropbear_exit("error writing signal pipe");
+		}
 	}
 
-	
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	sigaction(SIGCHLD, &sa_chld, NULL);
@@ -244,15 +256,16 @@ static void closechansess(struct Channel *channel) {
 	unsigned int i;
 	struct logininfo *li;
 
+	TRACE(("enter closechansess"))
+
 	chansess = (struct ChanSess*)channel->typedata;
 
-	send_exitsignalstatus(channel);
-
-	TRACE(("enter closechansess"))
 	if (chansess == NULL) {
 		TRACE(("leave closechansess: chansess == NULL"))
 		return;
 	}
+
+	send_exitsignalstatus(channel);
 
 	m_free(chansess->cmd);
 	m_free(chansess->term);

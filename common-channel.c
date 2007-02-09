@@ -148,6 +148,7 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->errfd = FD_CLOSED; /* this isn't always set to start with */
 	newchan->initconn = 0;
 	newchan->await_open = 0;
+	newchan->flushing = 0;
 
 	newchan->writebuf = cbuf_new(RECV_MAXWINDOW);
 	newchan->extrabuf = NULL; /* The user code can set it up */
@@ -203,12 +204,14 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 		/* read data and send it over the wire */
 		if (channel->readfd >= 0 && FD_ISSET(channel->readfd, readfds)) {
+			TRACE(("send normal readfd"))
 			send_msg_channel_data(channel, 0);
 		}
 
 		/* read stderr data and send it over the wire */
-		if (ERRFD_IS_READ(channel) &&
-				channel->errfd >= 0 && FD_ISSET(channel->errfd, readfds)) {
+		if (ERRFD_IS_READ(channel) && channel->errfd >= 0 
+			&& FD_ISSET(channel->errfd, readfds)) {
+				TRACE(("send normal errfd"))
 				send_msg_channel_data(channel, 1);
 		}
 
@@ -265,8 +268,14 @@ static void check_close(struct Channel *channel) {
 				cbuf_getused(channel->writebuf),
 				channel->extrabuf ? cbuf_getused(channel->extrabuf) : 0))
 
+	if (!channel->flushing && channel->type->check_close
+		&& channel->type->check_close(channel))
+	{
+		channel->flushing = 1;
+	}
+
 	if (channel->recv_close && !write_pending(channel)) {
-		if (! channel->sent_close) {
+		if (!channel->sent_close) {
 			TRACE(("Sending MSG_CHANNEL_CLOSE in response to same."))
 			send_msg_channel_close(channel);
 		}
@@ -278,6 +287,22 @@ static void check_close(struct Channel *channel) {
 		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
 
+	/* Special handling for flushing read data after an exit. We
+	   read regardless of whether the select FD was set,
+	   and if there isn't data available, the channel will get closed. */
+	if (channel->flushing) {
+		TRACE(("might send data, flushing"))
+		if (channel->readfd >= 0 && channel->transwindow > 0) {
+			TRACE(("send data readfd"))
+			send_msg_channel_data(channel, 0);
+		}
+		if (ERRFD_IS_READ(channel) && channel->readfd >= 0 
+			&& channel->transwindow > 0) {
+			TRACE(("send data errfd"))
+			send_msg_channel_data(channel, 1);
+		}
+	}
+
 	/* If we're not going to send any more data, send EOF */
 	if (!channel->sent_eof
 			&& channel->readfd == FD_CLOSED 
@@ -287,14 +312,12 @@ static void check_close(struct Channel *channel) {
 
 	/* And if we can't receive any more data from them either, close up */
 	if (!channel->sent_close
-			&& channel->writefd == FD_CLOSED
 			&& channel->readfd == FD_CLOSED
-			&& channel->errfd == FD_CLOSED) {
+			&& !write_pending(channel)) {
+		TRACE(("sending close, readfd is closed"))
 		send_msg_channel_close(channel);
 	}
-
 }
-
 
 /* Check whether a deferred (EINPROGRESS) connect() was successful, and
  * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
@@ -341,6 +364,9 @@ static void send_msg_channel_close(struct Channel *channel) {
 
 	channel->sent_eof = 1;
 	channel->sent_close = 1;
+	close_chan_fd(channel, channel->readfd, SHUT_RD);
+	close_chan_fd(channel, channel->errfd, SHUT_RDWR);
+	close_chan_fd(channel, channel->writefd, SHUT_WR);
 	TRACE(("leave send_msg_channel_close"))
 }
 
@@ -556,6 +582,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 
 	CHECKCLEARTOWRITE();
 
+	TRACE(("enter send_msg_channel_data"))
 	dropbear_assert(!channel->sent_close);
 
 	if (isextended) {
@@ -591,6 +618,9 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	len = read(fd, buf_getwriteptr(ses.writepayload, maxlen), maxlen);
 	if (len <= 0) {
 		if (len == 0 || errno != EINTR) {
+			/* This will also get hit in the case of EAGAIN. The only
+			time we expect to receive EAGAIN is when we're flushing a FD,
+			in which case it can be treated the same as EOF */
 			close_chan_fd(channel, fd, SHUT_RD);
 		}
 		ses.writepayload->len = ses.writepayload->pos = 0;
@@ -606,6 +636,14 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	channel->transwindow -= len;
 
 	encrypt_packet();
+	
+	/* If we receive less data than we requested when flushing, we've
+	   reached the equivalent of EOF */
+	if (channel->flushing && len < maxlen)
+	{
+		TRACE(("closing from channel, flushing out."))
+		close_chan_fd(channel, fd, SHUT_RD);
+	}
 	TRACE(("leave send_msg_channel_data"))
 }
 
