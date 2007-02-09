@@ -612,7 +612,7 @@ if test -z "$no_ptc_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
 		AC_CHECK_FILE("/dev/ptc", AC_DEFINE(HAVE_DEV_PTS_AND_PTC,,Use /dev/ptc & /dev/pts))
 	else
-		AC_MSG_NOTICE(Not checking for /dev/ptc & /dev/pts\, we're cross-compiling)
+		AC_MSG_NOTICE(Not checking for /dev/ptc & /dev/pts since we're cross-compiling)
 	fi
 fi
 
