@@ -61,6 +61,12 @@ void common_session_init(int sock, char* remotehost) {
 
 	ses.connecttimeout = 0;
 	
+	if (pipe(ses.signal_pipe) < 0) {
+		dropbear_exit("signal pipe failed");
+	}
+	setnonblocking(ses.signal_pipe[0]);
+	setnonblocking(ses.signal_pipe[1]);
+	
 	kexfirstinitialise(); /* initialise the kex state */
 
 	ses.writepayload = buf_new(MAX_TRANS_PAYLOAD_LEN);
@@ -108,7 +114,6 @@ void common_session_init(int sock, char* remotehost) {
 
 	ses.allowprivport = 0;
 
-
 	TRACE(("leave session_init"))
 }
 
@@ -132,6 +137,10 @@ void session_loop(void(*loophandler)()) {
 				FD_SET(ses.sock, &writefd);
 			}
 		}
+		
+		/* We get woken up when signal handlers write to this pipe.
+		   SIGCHLD in svr-chansession is the only one currently. */
+		FD_SET(ses.signal_pipe[0], &readfd);
 
 		/* set up for channels which require reading/writing */
 		if (ses.dataallowed) {
@@ -143,27 +152,29 @@ void session_loop(void(*loophandler)()) {
 			dropbear_exit("Terminated by signal");
 		}
 		
-		if (val < 0) {
-			if (errno == EINTR) {
-				/* This must happen even if we've been interrupted, so that
-				 * changed signal-handler vars can take effect etc */
-				if (loophandler) {
-					loophandler();
-				}
-				continue;
-			} else {
-				dropbear_exit("Error in select");
-			}
+		if (val < 0 && errno != EINTR) {
+			dropbear_exit("Error in select");
+		}
+
+		if (val <= 0) {
+			/* If we were interrupted or the select timed out, we still
+			 * want to iterate over channels etc for reading, to handle
+			 * server processes exiting etc. 
+			 * We don't want to read/write FDs. */
+			FD_ZERO(&writefd);
+			FD_ZERO(&readfd);
+		}
+		
+		/* We'll just empty out the pipe if required. We don't do
+		any thing with the data, since the pipe's purpose is purely to
+		wake up the select() above. */
+		if (FD_ISSET(ses.signal_pipe[0], &readfd)) {
+			char x;
+			while (read(ses.signal_pipe[0], &x, 1) > 0) {}
 		}
 
 		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
-		
-		if (val == 0) {
-			/* timeout */
-			TRACE(("select timeout"))
-			continue;
-		}
 
 		/* process session socket's incoming/outgoing data */
 		if (ses.sock != -1) {

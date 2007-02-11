@@ -73,10 +73,9 @@ struct Channel {
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf
 					     but for stderr */
 
-	int sentclosed, recvclosed;
-
-	/* this is set when we receive/send a channel eof packet */
-	int recveof, senteof;
+	/* whether close/eof messages have been exchanged */
+	int sent_close, recv_close;
+	int recv_eof, sent_eof;
 
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
@@ -84,6 +83,8 @@ struct Channel {
 	int await_open; /* flag indicating whether we've sent an open request
 					   for this channel (and are awaiting a confirmation
 					   or failure). */
+
+	int flushing;
 
 	const struct ChanType* type;
 
@@ -94,7 +95,7 @@ struct ChanType {
 	int sepfds; /* Whether this channel has seperate pipes for in/out or not */
 	char *name;
 	int (*inithandler)(struct Channel*);
-	int (*checkclose)(struct Channel*);
+	int (*check_close)(struct Channel*);
 	void (*reqhandler)(struct Channel*);
 	void (*closehandler)(struct Channel*);
 
