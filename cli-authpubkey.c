@@ -123,8 +123,6 @@ void recv_msg_userauth_pk_ok() {
 		TRACE(("That was whacky. We got told that a key was valid, but it didn't match our list. Sounds like dodgy code on Dropbear's part"))
 	}
 	
-	buf_free(keybuf);
-
 	TRACE(("leave recv_msg_userauth_pk_ok"))
 }
 
