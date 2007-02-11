@@ -52,6 +52,7 @@ static void printhelp() {
 					"-T    Don't allocate a pty\n"
 					"-N    Don't run a remote command\n"
 					"-f    Run in background after auth\n"
+					"-y    Always accept remote host key if unknown\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
@@ -93,6 +94,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.no_cmd = 0;
 	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
+	cli_opts.always_accept_key = 0;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = NULL;
 #endif
@@ -148,6 +150,9 @@ void cli_getopts(int argc, char ** argv) {
 			/* A flag *waves* */
 
 			switch (argv[i][1]) {
+				case 'y': /* always accept the remote hostkey */
+					cli_opts.always_accept_key = 1;
+					break;
 				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
 					break;

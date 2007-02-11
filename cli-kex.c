@@ -119,6 +119,13 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	char response = 'z';
 
 	fp = sign_key_fingerprint(keyblob, keybloblen);
+	if (cli_opts.always_accept_key) {
+		fprintf(stderr, "\nHost '%s' key accepted unconditionally.\n(fingerprint %s)\n",
+				cli_opts.remotehost,
+				fp);
+		m_free(fp);
+		return;
+	}
 	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n)\n", 
 			cli_opts.remotehost, 
 			fp);
@@ -268,24 +275,26 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		goto out;
 	}
 
-	/* put the new entry in the file */
-	fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
-	buf_setpos(line, 0);
-	buf_setlen(line, 0);
-	buf_putbytes(line, ses.remotehost, hostlen);
-	buf_putbyte(line, ' ');
-	buf_putbytes(line, algoname, algolen);
-	buf_putbyte(line, ' ');
-	len = line->size - line->pos;
-	TRACE(("keybloblen %d, len %d", keybloblen, len))
-	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
-	 * will die horribly in the case anyway */
-	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
-	buf_incrwritepos(line, len);
-	buf_putbyte(line, '\n');
-	buf_setpos(line, 0);
-	fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
-	/* We ignore errors, since there's not much we can do about them */
+	if (!cli_opts.always_accept_key) {
+		/* put the new entry in the file */
+		fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
+		buf_setpos(line, 0);
+		buf_setlen(line, 0);
+		buf_putbytes(line, ses.remotehost, hostlen);
+		buf_putbyte(line, ' ');
+		buf_putbytes(line, algoname, algolen);
+		buf_putbyte(line, ' ');
+		len = line->size - line->pos;
+		TRACE(("keybloblen %d, len %d", keybloblen, len))
+		/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
+		 * will die horribly in the case anyway */
+		base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
+		buf_incrwritepos(line, len);
+		buf_putbyte(line, '\n');
+		buf_setpos(line, 0);
+		fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
+		/* We ignore errors, since there's not much we can do about them */
+	}
 
 out:
 	if (hostsfile != NULL) {
