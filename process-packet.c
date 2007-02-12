@@ -119,7 +119,6 @@ void process_packet() {
 	recv_unimplemented();
 
 out:
-	buf_burn(ses.payload); /* Clear the memory to avoid swapping it out */
 	buf_free(ses.payload);
 	ses.payload = NULL;
 

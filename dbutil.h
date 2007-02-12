@@ -63,6 +63,7 @@ void * m_realloc(void* ptr, size_t size);
 void __m_free(void* ptr);
 void m_burn(void* data, unsigned int len);
 void setnonblocking(int fd);
+void disallow_core();
 
 /* Used to force mp_ints to be initialised */
 #define DEF_MP_INT(X) mp_int X = {0, 0, 0, NULL}
