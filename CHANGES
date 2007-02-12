@@ -1,21 +1,50 @@
-0.49 - Tues 13 June 2003
-
-- Return immediately for "sleep 10 & echo foo", rather than waiting
-  for the sleep to return (pointed out by Rob Landley)
-
-- Added -P pidfile argument to the server (from Swen Schillig)
+0.49test1 - Mon 12 February 2007
 
 - Compile fixes, make sure that all variable definitions are at the start
   of a scope.
 
-- Use $HOME in preference to that from /etc/passwd, so that it
-  dbclient can still work on systems with a broken setup.
+- Added -P pidfile argument to the server (from Swen Schillig)
 
 - Add -N dbclient option for "no command"
 
 - Add -f dbclient option for "background after auth"
 
-- Try to finally fix ss_family compilation problems
+- Try to finally fix ss_family compilation problems (for old
+  glibc systems)
+
+- Fix finding relative-path server hostkeys when running daemonized
+
+- Use $HOME in preference to that from /etc/passwd, so that
+  dbclient can still work on broken systems.
+
+- Fix various issues found by Klocwork defect analysis, mostly memory leaks
+  and error-handling. Thanks to Klocwork for their service.
+
+- Improve building in a separate directory
+
+- Add compile-time LOG_COMMANDS option to log user commands
+
+- Add '-y' flag to dbclient to unconditionally accept host keys,
+  patch from Luciano Miguel Ferreira Rocha
+
+- Return immediately for "sleep 10 & echo foo", rather than waiting
+  for the sleep to return (pointed out by Rob Landley).
+  
+- Avoid hanging after exit in certain cases (such as scp)
+
+- Various minor fixes, in particular various leaks reported by
+  Erik Hovland
+  
+- Disable core dumps on startup
+
+- Don't erase over every single buffer, since it was a bottleneck.
+  On systems where it really matters, encrypted swap should be utilised.
+
+- Read /dev/[u]random only once at startup to conserve kernel entropy
+
+- Upgrade to LibTomCrypt 1.16 and LibTomMath 0.40
+
+- Upgrade config.status and config.guess 
 
 0.48.1 - Sat 11 March 2006
 
