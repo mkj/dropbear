@@ -67,6 +67,7 @@ extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
+	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
 	return chansess->exit.exitpid != -1;
 }
 
@@ -88,12 +89,13 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		TRACE(("sigchld handler: pid %d", pid))
 
 		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
-
+				TRACE(("found match session"));
 				exit = &svr_ses.childpids[i].chansess->exit;
 				break;
 			}
@@ -102,6 +104,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
 		if (exit == NULL) {
+			TRACE(("using lastexit"));
 			exit = &svr_ses.lastexit;
 		}
 
@@ -125,7 +128,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 		while (1) {
 			/* EAGAIN means the pipe's full, so don't need to write anything */
 			/* isserver is just a random byte to write */
-			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1 || errno == EAGAIN) {
+			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1 
+					|| errno == EAGAIN) {
 				break;
 			}
 			if (errno == EINTR) {
@@ -142,7 +146,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 }
 
 /* send the exit status or the signal causing termination for a session */
-/* XXX server */
 static void send_exitsignalstatus(struct Channel *channel) {
 
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
@@ -181,9 +184,10 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	int i;
 	char* signame = NULL;
-
 	dropbear_assert(chansess->exit.exitpid != -1);
 	dropbear_assert(chansess->exit.exitsignal > 0);
+
+	TRACE(("send_msg_chansess_exitsignal %d", chansess->exit.exitsignal))
 
 	CHECKCLEARTOWRITE();
 
@@ -294,7 +298,7 @@ static void closechansess(struct Channel *channel) {
 		if (svr_ses.childpids[i].chansess == chansess) {
 			dropbear_assert(svr_ses.childpids[i].pid > 0);
 			TRACE(("closing pid %d", svr_ses.childpids[i].pid))
-			TRACE(("exitpid = %d", chansess->exit.exitpid))
+			TRACE(("exitpid is %d", chansess->exit.exitpid))
 			svr_ses.childpids[i].pid = -1;
 			svr_ses.childpids[i].chansess = NULL;
 		}
@@ -682,21 +686,23 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* parent */
 		TRACE(("continue noptycommand: parent"))
 		chansess->pid = pid;
+		TRACE(("child pid is %d", pid))
 
 		addchildpid(chansess, pid);
 
 		if (svr_ses.lastexit.exitpid != -1) {
+			TRACE(("parent side: lastexitpid is %d", svr_ses.lastexit.exitpid))
 			/* The child probably exited and the signal handler triggered
 			 * possibly before we got around to adding the childpid. So we fill
-			 * out it's data manually */
+			 * out its data manually */
 			for (i = 0; i < svr_ses.childpidsize; i++) {
-				if (svr_ses.childpids[i].pid == pid) {
+				if (svr_ses.childpids[i].pid == svr_ses.lastexit.exitpid) {
+					TRACE(("found match for lastexitpid"))
 					svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
 					svr_ses.lastexit.exitpid = -1;
 				}
 			}
 		}
-
 
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);
