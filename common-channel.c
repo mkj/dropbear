@@ -313,6 +313,7 @@ static void check_close(struct Channel *channel) {
 	/* And if we can't receive any more data from them either, close up */
 	if (!channel->sent_close
 			&& channel->readfd == FD_CLOSED
+			&& (ERRFD_IS_WRITE(channel) || channel->errfd == FD_CLOSED)
 			&& !write_pending(channel)) {
 		TRACE(("sending close, readfd is closed"))
 		send_msg_channel_close(channel);
@@ -624,8 +625,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 			close_chan_fd(channel, fd, SHUT_RD);
 		}
 		ses.writepayload->len = ses.writepayload->pos = 0;
-		TRACE(("leave send_msg_channel_data: len %d read err or EOF for fd %d", 
-					len, channel->index));
+		TRACE(("leave send_msg_channel_data: len %d read err %d or EOF for fd %d", 
+					len, errno, fd))
 		return;
 	}
 	buf_incrwritepos(ses.writepayload, len);
