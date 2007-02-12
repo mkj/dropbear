@@ -126,16 +126,12 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 		
 		/* Make sure that the main select() loop wakes up */
 		while (1) {
-			/* EAGAIN means the pipe's full, so don't need to write anything */
-			/* isserver is just a random byte to write */
-			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1 
-					|| errno == EAGAIN) {
+			/* isserver is just a random byte to write. We can't do anything
+			about an error so should just ignore it */
+			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
+					|| errno != EINTR) {
 				break;
 			}
-			if (errno == EINTR) {
-				continue;
-			}
-			dropbear_exit("error writing signal pipe");
 		}
 	}
 
@@ -662,6 +658,12 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (!pid) {
 		/* child */
 
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
+
 		/* redirect stdin/stdout */
 #define FDIN 0
 #define FDOUT 1
@@ -758,6 +760,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	if (pid == 0) {
 		/* child */
+		
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
 		
 		/* redirect stdin/stdout/stderr */
 		close(chansess->master);
