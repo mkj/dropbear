@@ -38,6 +38,7 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 #include <stdio.h>
 #include <errno.h>

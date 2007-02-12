@@ -47,6 +47,8 @@ int main(int argc, char ** argv) {
 	_dropbear_exit = cli_dropbear_exit;
 	_dropbear_log = cli_dropbear_log;
 
+	disallow_core();
+
 	cli_getopts(argc, argv);
 
 	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,

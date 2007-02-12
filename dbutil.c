@@ -693,3 +693,9 @@ void setnonblocking(int fd) {
 	}
 	TRACE(("leave setnonblocking"))
 }
+
+void disallow_core() {
+	struct rlimit lim;
+	lim.rlim_cur = lim.rlim_max = 0;
+	setrlimit(RLIMIT_CORE, &lim);
+}
