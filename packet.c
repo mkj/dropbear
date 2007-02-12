@@ -446,10 +446,6 @@ void encrypt_packet() {
 	}
 
 	/* finished with payload */
-	buf_burn(ses.writepayload); /* XXX This is probably a good idea, and isn't
-								   _that_ likely to hurt performance too badly.
-								   Buffers can have cleartext passwords etc, or
-								   other sensitive data */
 	buf_setpos(ses.writepayload, 0);
 	buf_setlen(ses.writepayload, 0);
 
