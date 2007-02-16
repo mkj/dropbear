@@ -190,8 +190,7 @@ typedef enum {
 	KEX_NOTHING,
 	KEXINIT_RCVD,
 	KEXDH_INIT_SENT,
-	KEXDONE,
-
+	KEXDONE
 } cli_kex_state;
 
 typedef enum {
@@ -203,8 +202,7 @@ typedef enum {
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
-	SESSION_RUNNING,
-
+	SESSION_RUNNING
 } cli_state;
 
 struct clientsession {

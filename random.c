@@ -214,7 +214,7 @@ void gen_random_mpint(mp_int *max, mp_int *rand) {
 
 	unsigned char *randbuf = NULL;
 	unsigned int len = 0;
-	const char masks[] = {0xff, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f};
+	const unsigned char masks[] = {0xff, 0x01, 0x03, 0x07, 0x0f, 0x1f, 0x3f, 0x7f};
 
 	const int size_bits = mp_count_bits(max);
 

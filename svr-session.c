@@ -188,7 +188,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
 						localtime(&timesec)) == 0)
 		{
-			// upon failure, just print the epoch-seconds time.
+			/* upon failure, just print the epoch-seconds time. */
 			snprintf(datestr, sizeof(datestr), "%d", timesec);
 		}
 		fprintf(stderr, "[%d] %s %s\n", getpid(), datestr, printbuf);

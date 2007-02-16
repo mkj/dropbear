@@ -199,10 +199,10 @@ int dropbear_listen(const char* address, const char* port,
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
-	// for calling getaddrinfo:
-	// address == NULL and !AI_PASSIVE: local loopback
-	// address == NULL and AI_PASSIVE: all interfaces
-	// address != NULL: whatever the address says
+	/* for calling getaddrinfo:
+	 address == NULL and !AI_PASSIVE: local loopback
+	 address == NULL and AI_PASSIVE: all interfaces
+	 address != NULL: whatever the address says */
 	if (!address) {
 		TRACE(("dropbear_listen: local loopback"))
 	} else {

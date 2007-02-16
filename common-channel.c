@@ -461,7 +461,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 				FD_SET(channel->writefd, writefds);
 		}
 
-		if (ERRFD_IS_WRITE(channel) != NULL && channel->errfd >= 0 
+		if (ERRFD_IS_WRITE(channel) && channel->errfd >= 0 
 				&& cbuf_getused(channel->extrabuf) > 0 ) {
 				FD_SET(channel->errfd, writefds);
 		}
@@ -640,7 +640,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	
 	/* If we receive less data than we requested when flushing, we've
 	   reached the equivalent of EOF */
-	if (channel->flushing && len < maxlen)
+	if (channel->flushing && len < (ssize_t)maxlen)
 	{
 		TRACE(("closing from channel, flushing out."))
 		close_chan_fd(channel, fd, SHUT_RD);

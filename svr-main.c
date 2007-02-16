@@ -125,8 +125,9 @@ void main_noinetd() {
 	int childsock;
 	int childpipe[2];
 
-	// Note: commonsetup() must happen before we daemon()ise. Otherwise
-	// daemon() will chdir("/"), and we won't be able to find local-dir hostkeys.
+	/* Note: commonsetup() must happen before we daemon()ise. Otherwise
+	   daemon() will chdir("/"), and we won't be able to find local-dir
+	   hostkeys. */
 	commonsetup();
 
 	/* fork */

@@ -104,7 +104,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	struct Listener *listener = NULL;
 	int nsocks;
 	char* errstring = NULL;
-	// listen_spec = NULL indicates localhost
+	/* listen_spec = NULL indicates localhost */
 	const char* listen_spec = NULL;
 
 	TRACE(("enter listen_tcpfwd"))

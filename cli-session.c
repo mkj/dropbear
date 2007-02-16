@@ -215,8 +215,8 @@ static void cli_sessionloop() {
 
 			if (cli_opts.backgrounded) {
 				int devnull;
-				// keeping stdin open steals input from the terminal and
-				// is confusing, though stdout/stderr could be useful.
+				/* keeping stdin open steals input from the terminal and
+				   is confusing, though stdout/stderr could be useful. */
 				devnull = open(_PATH_DEVNULL, O_RDONLY);
 				if (devnull < 0) {
 					dropbear_exit("opening /dev/null: %d %s",
