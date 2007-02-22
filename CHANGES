@@ -1,4 +1,8 @@
-0.49test1 - Mon 12 February 2007
+0.49 - Fri 23 February 2007
+
+- Security: dbclient previously would prompt to confirm a 
+  mismatching hostkey but wouldn't warn loudly. It will now
+  exit upon a mismatch.
 
 - Compile fixes, make sure that all variable definitions are at the start
   of a scope.
@@ -8,6 +12,9 @@
 - Add -N dbclient option for "no command"
 
 - Add -f dbclient option for "background after auth"
+
+- Add ability to limit binding to particular addresses, use 
+  -p [address:]port, patch from Max-Gerd Retzlaff.
 
 - Try to finally fix ss_family compilation problems (for old
   glibc systems)

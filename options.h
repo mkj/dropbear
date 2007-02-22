@@ -133,7 +133,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
-/*#define ENABLE_SVR_PAM_AUTH */
+/*#define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -182,7 +182,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_AUTH_TRIES 10
 #endif
 
-/* The file to store the daemon's process ID, for shutdown scripts etc */
+/* The default file to store the daemon's process ID, for shutdown
+   scripts etc. This can be overridden with the -P flag */
 #ifndef DROPBEAR_PIDFILE
 #define DROPBEAR_PIDFILE "/var/run/dropbear.pid"
 #endif
@@ -214,7 +215,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.49test1"
+#define DROPBEAR_VERSION "0.49"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION

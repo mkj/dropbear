@@ -70,6 +70,10 @@ This is useful when using password authentication.
 Allow non-local hosts to connect to forwarded ports. Applies to -L and -R
 forwarded ports, though remote connections to -R forwarded ports may be limited
 by the ssh server.
+.TP
+.B \-y
+Always accept hostkeys if they are unknown. If a hostkey mismatch occurs the
+connection will abort as normal.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br
