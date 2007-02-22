@@ -64,16 +64,17 @@ static void cli_chansessreq(struct Channel *channel) {
 	type = buf_getstring(ses.payload, NULL);
 	wantreply = buf_getbool(ses.payload);
 
-	if (strcmp(type, "exit-status") != 0) {
+	if (strcmp(type, "exit-status") == 0) {
+		cli_ses.retval = buf_getint(ses.payload);
+		TRACE(("got exit-status of '%d'", cli_ses.retval))
+	} else if (strcmp(type, "exit-signal") == 0) {
+		TRACE(("got exit-signal, ignoring it"))
+	} else {
 		TRACE(("unknown request '%s'", type))
 		send_msg_channel_failure(channel);
 		goto out;
 	}
 		
-	/* We'll just trust what they tell us */
-	cli_ses.retval = buf_getint(ses.payload);
-	TRACE(("got exit-status of '%d'", cli_ses.retval))
-
 out:
 	m_free(type);
 }
@@ -162,8 +163,6 @@ void cli_tty_cleanup() {
 
 static void put_termcodes() {
 
-	TRACE(("enter put_termcodes"))
-
 	struct termios tio;
 	unsigned int sshcode;
 	const struct TermCode *termcode;
@@ -171,6 +170,8 @@ static void put_termcodes() {
 	unsigned int mapcode;
 
 	unsigned int bufpos1, bufpos2;
+
+	TRACE(("enter put_termcodes"))
 
 	if (tcgetattr(STDIN_FILENO, &tio) == -1) {
 		dropbear_log(LOG_WARNING, "Failed reading termmodes");

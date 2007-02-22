@@ -283,8 +283,10 @@ out:
 	buf_burn(buf);
 	buf_free(buf);
 	buf = NULL;
-	sign_key_free(key);
-	key = NULL;
+	if (key) {
+		sign_key_free(key);
+		key = NULL;
+	}
 	exit(err);
 }
 
@@ -297,6 +299,9 @@ static void printpubkey(sign_key * key, int keytype) {
 	const char * typestring = NULL;
 	char *fp = NULL;
 	int len;
+	struct passwd * pw = NULL;
+	char * username = NULL;
+	char hostname[100];
 
 	buf = buf_new(MAX_PUBKEY_SIZE);
 	buf_put_pub_key(buf, key, keytype);
@@ -315,8 +320,18 @@ static void printpubkey(sign_key * key, int keytype) {
 
 	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
 
-	printf("Public key portion is:\n%s %s\nFingerprint: %s\n",
-			typestring, base64key, fp);
+	/* a user@host comment is informative */
+	username = "";
+	pw = getpwuid(getuid());
+	if (pw) {
+		username = pw->pw_name;
+	}
+
+	gethostname(hostname, sizeof(hostname));
+	hostname[sizeof(hostname)-1] = '\0';
+
+	printf("Public key portion is:\n%s %s %s@%s\nFingerprint: %s\n",
+			typestring, base64key, username, hostname, fp);
 
 	m_free(fp);
 	buf_free(buf);

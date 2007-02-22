@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef CBC
+#ifdef LTC_CBC_MODE
 
 /**
   CBC decrypt
@@ -45,7 +45,7 @@ int cbc_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
    }
    
    /* is blocklen valid? */
-   if (cbc->blocklen < 0 || cbc->blocklen > (int)sizeof(cbc->IV)) {
+   if (cbc->blocklen < 1 || cbc->blocklen > (int)sizeof(cbc->IV)) {
       return CRYPT_INVALID_ARG;
    }    
 
@@ -53,32 +53,34 @@ int cbc_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
       return CRYPT_INVALID_ARG;
    }
 #ifdef LTC_FAST
-   if (len % sizeof(LTC_FAST_TYPE)) {   
+   if (cbc->blocklen % sizeof(LTC_FAST_TYPE)) {   
       return CRYPT_INVALID_ARG;
    }
 #endif
    
    if (cipher_descriptor[cbc->cipher].accel_cbc_decrypt != NULL) {
-      cipher_descriptor[cbc->cipher].accel_cbc_decrypt(ct, pt, len / cbc->blocklen, cbc->IV, &cbc->key);
+      return cipher_descriptor[cbc->cipher].accel_cbc_decrypt(ct, pt, len / cbc->blocklen, cbc->IV, &cbc->key);
    } else {
       while (len) {
          /* decrypt */
-         cipher_descriptor[cbc->cipher].ecb_decrypt(ct, tmp, &cbc->key);
+         if ((err = cipher_descriptor[cbc->cipher].ecb_decrypt(ct, tmp, &cbc->key)) != CRYPT_OK) {
+            return err;
+         }
 
          /* xor IV against plaintext */
          #if defined(LTC_FAST)
-	     for (x = 0; x < cbc->blocklen; x += sizeof(LTC_FAST_TYPE)) {
-	         tmpy = *((LTC_FAST_TYPE*)((unsigned char *)cbc->IV + x)) ^ *((LTC_FAST_TYPE*)((unsigned char *)tmp + x));
-		 *((LTC_FAST_TYPE*)((unsigned char *)cbc->IV + x)) = *((LTC_FAST_TYPE*)((unsigned char *)ct + x));
-		 *((LTC_FAST_TYPE*)((unsigned char *)pt + x)) = tmpy;
-	     }
-	 #else 
+        for (x = 0; x < cbc->blocklen; x += sizeof(LTC_FAST_TYPE)) {
+            tmpy = *((LTC_FAST_TYPE*)((unsigned char *)cbc->IV + x)) ^ *((LTC_FAST_TYPE*)((unsigned char *)tmp + x));
+       *((LTC_FAST_TYPE*)((unsigned char *)cbc->IV + x)) = *((LTC_FAST_TYPE*)((unsigned char *)ct + x));
+       *((LTC_FAST_TYPE*)((unsigned char *)pt + x)) = tmpy;
+        }
+    #else 
             for (x = 0; x < cbc->blocklen; x++) {
                tmpy       = tmp[x] ^ cbc->IV[x];
                cbc->IV[x] = ct[x];
                pt[x]      = tmpy;
             }
-	 #endif
+    #endif
        
          ct  += cbc->blocklen;
          pt  += cbc->blocklen;
@@ -91,5 +93,5 @@ int cbc_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_decrypt.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.15 $ */
+/* $Date: 2006/11/21 00:18:23 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -26,7 +26,7 @@
   @param outlen   [in/out] The max size and resulting size of the DER encoded integers
   @return CRYPT_OK if successful
 */
-int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
+int der_encode_integer(void *num, unsigned char *out, unsigned long *outlen)
 {  
    unsigned long tmplen, y;
    int           err, leading_zero;
@@ -41,12 +41,13 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
    }
 
    if (*outlen < tmplen) {
+      *outlen = tmplen;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
-   if (mp_cmp_d(num, 0) != MP_LT) {
+   if (mp_cmp_d(num, 0) != LTC_MP_LT) {
       /* we only need a leading zero if the msb of the first byte is one */
-      if ((mp_count_bits(num) & 7) == 0 || mp_iszero(num) == MP_YES) {
+      if ((mp_count_bits(num) & 7) == 0 || mp_iszero(num) == LTC_MP_YES) {
          leading_zero = 1;
       } else {
          leading_zero = 0;
@@ -59,7 +60,7 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
       y            = mp_count_bits(num);
       y            = y + (8 - (y & 7));
       y            = y >> 3;
-
+      if (((mp_cnt_lsb(num)+1)==mp_count_bits(num)) && ((mp_count_bits(num)&7)==0)) --y;
    }
 
    /* now store initial data */
@@ -69,16 +70,16 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
       *out++ = (unsigned char)y;
    } else if (y < 256) {
       *out++ = 0x81;
-      *out++ = y;
+      *out++ = (unsigned char)y;
    } else if (y < 65536UL) {
       *out++ = 0x82;
-      *out++ = (y>>8)&255;
-      *out++ = y;
+      *out++ = (unsigned char)((y>>8)&255);
+      *out++ = (unsigned char)y;
    } else if (y < 16777216UL) {
       *out++ = 0x83;
-      *out++ = (y>>16)&255;
-      *out++ = (y>>8)&255;
-      *out++ = y;
+      *out++ = (unsigned char)((y>>16)&255);
+      *out++ = (unsigned char)((y>>8)&255);
+      *out++ = (unsigned char)y;
    } else {
       return CRYPT_INVALID_ARG;
    }
@@ -89,31 +90,32 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
    }
 
    /* if it's not zero store it as big endian */
-   if (mp_cmp_d(num, 0) == MP_GT) {
+   if (mp_cmp_d(num, 0) == LTC_MP_GT) {
       /* now store the mpint */
-      if ((err = mp_to_unsigned_bin(num, out)) != MP_OKAY) {
-          return mpi_to_ltc_error(err);
+      if ((err = mp_to_unsigned_bin(num, out)) != CRYPT_OK) {
+          return err;
       }
-   } else if (mp_iszero(num) != MP_YES) {
-      mp_int tmp;
+   } else if (mp_iszero(num) != LTC_MP_YES) {
+      void *tmp;
+         
       /* negative */
-      if (mp_init(&tmp) != MP_OKAY) {
+      if (mp_init(&tmp) != CRYPT_OK) {
          return CRYPT_MEM;
       }
 
       /* 2^roundup and subtract */
       y = mp_count_bits(num);
       y = y + (8 - (y & 7));
-      if (mp_2expt(&tmp, y) != MP_OKAY || mp_add(&tmp, num, &tmp) != MP_OKAY) {
-         mp_clear(&tmp);
+      if (((mp_cnt_lsb(num)+1)==mp_count_bits(num)) && ((mp_count_bits(num)&7)==0)) y -= 8;
+      if (mp_2expt(tmp, y) != CRYPT_OK || mp_add(tmp, num, tmp) != CRYPT_OK) {
+         mp_clear(tmp);
          return CRYPT_MEM;
       }
-
-      if ((err = mp_to_unsigned_bin(&tmp, out)) != MP_OKAY) {
-         mp_clear(&tmp);
-         return mpi_to_ltc_error(err);
+      if ((err = mp_to_unsigned_bin(tmp, out)) != CRYPT_OK) {
+         mp_clear(tmp);
+         return err;
       }
-      mp_clear(&tmp);
+      mp_clear(tmp);
    }
 
    /* we good */
@@ -124,5 +126,5 @@ int der_encode_integer(mp_int *num, unsigned char *out, unsigned long *outlen)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/integer/der_encode_integer.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2005/05/16 15:08:11 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

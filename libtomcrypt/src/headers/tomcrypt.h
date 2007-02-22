@@ -16,8 +16,8 @@ extern "C" {
 #endif
 
 /* version */
-#define CRYPT   0x0105
-#define SCRYPT  "1.05"
+#define CRYPT   0x0116
+#define SCRYPT  "1.16"
 
 /* max size of either a cipher/hash block or symmetric key [largest of the two] */
 #define MAXBLOCKSIZE  128
@@ -60,7 +60,8 @@ enum {
    CRYPT_PK_NOT_FOUND,     /* Key not found in keyring */
    CRYPT_PK_INVALID_SIZE,  /* Invalid size input for PK parameters */
 
-   CRYPT_INVALID_PRIME_SIZE/* Invalid size of prime requested */
+   CRYPT_INVALID_PRIME_SIZE,/* Invalid size of prime requested */
+   CRYPT_PK_INVALID_PADDING /* Invalid padding on input */
 };
 
 #include <tomcrypt_cfg.h>
@@ -70,6 +71,7 @@ enum {
 #include <tomcrypt_mac.h>
 #include <tomcrypt_prng.h>
 #include <tomcrypt_pk.h>
+#include <tomcrypt_math.h>
 #include <tomcrypt_misc.h>
 #include <tomcrypt_argchk.h>
 #include <tomcrypt_pkcs.h>
@@ -82,5 +84,5 @@ enum {
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt.h,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/06/19 18:03:25 $ */
+/* $Revision: 1.20 $ */
+/* $Date: 2006/11/26 01:45:14 $ */

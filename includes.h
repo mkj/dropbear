@@ -38,6 +38,7 @@
 #include <sys/time.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <sys/resource.h>
 
 #include <stdio.h>
 #include <errno.h>
@@ -72,11 +73,11 @@
 #include <lastlog.h>
 #endif
 
-#include <arpa/inet.h>
-
 #ifdef HAVE_NETINET_IN_H
 #include <netinet/in.h>
 #endif
+
+#include <arpa/inet.h>
 
 /* netbsd 1.6 needs this to be included before netinet/ip.h for some
  * undocumented reason */
@@ -133,13 +134,6 @@ typedef u_int16_t uint16_t;
 
 #ifndef LOG_AUTHPRIV
 #define LOG_AUTHPRIV LOG_AUTH
-#endif
-
-/* glibc 2.1.3 systems have sockaddr_storage.__ss_family rather than
- * sockaddr_storage.ss_family */
-#if !defined(HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY) \
-    && defined(HAVE_STRUCT_SOCKADDR_STORAGE___SS_FAMILY)
-#define ss_family __ss_family
 #endif
 
 /* so we can avoid warnings about unused params (ie in signal handlers etc) */

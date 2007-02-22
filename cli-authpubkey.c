@@ -60,8 +60,8 @@ void cli_pubkeyfail() {
 
 void recv_msg_userauth_pk_ok() {
 
-	struct SignKeyList *keyitem;
-	buffer* keybuf;
+	struct SignKeyList *keyitem = NULL;
+	buffer* keybuf = NULL;
 	char* algotype = NULL;
 	unsigned int algolen;
 	int keytype;
@@ -112,6 +112,7 @@ void recv_msg_userauth_pk_ok() {
 		/* Success */
 		break;
 	}
+	buf_free(keybuf);
 
 	if (keyitem != NULL) {
 		TRACE(("matching key"))
@@ -121,7 +122,7 @@ void recv_msg_userauth_pk_ok() {
 	} else {
 		TRACE(("That was whacky. We got told that a key was valid, but it didn't match our list. Sounds like dodgy code on Dropbear's part"))
 	}
-
+	
 	TRACE(("leave recv_msg_userauth_pk_ok"))
 }
 

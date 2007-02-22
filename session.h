@@ -123,7 +123,8 @@ struct sshsession {
 
 	unsigned char lastpacket; /* What the last received packet type was */
 	
-
+    int signal_pipe[2]; /* stores endpoints of a self-pipe used for
+						   race-free signal handling */
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;
@@ -189,8 +190,7 @@ typedef enum {
 	KEX_NOTHING,
 	KEXINIT_RCVD,
 	KEXDH_INIT_SENT,
-	KEXDONE,
-
+	KEXDONE
 } cli_kex_state;
 
 typedef enum {
@@ -202,8 +202,7 @@ typedef enum {
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
-	SESSION_RUNNING,
-
+	SESSION_RUNNING
 } cli_state;
 
 struct clientsession {

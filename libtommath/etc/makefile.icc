@@ -16,7 +16,7 @@ CFLAGS += -I../
 #   B - Blend of P4 and PM [mobile]
 #
 # Default to just generic max opts
-CFLAGS += -O3 -xN -ip
+CFLAGS += -O3 -xP -ip
 
 # default lib name (requires install with root)
 # LIBNAME=-ltommath

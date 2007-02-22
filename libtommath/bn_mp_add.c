@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* high level addition (handles signs) */
@@ -47,3 +47,7 @@ int mp_add (mp_int * a, mp_int * b, mp_int * c)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_add.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

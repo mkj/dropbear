@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -82,7 +82,7 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
 
    /* ensure the 0xBC byte */
    if (sig[siglen-1] != 0xBC) {
-      err = CRYPT_OK;
+      err = CRYPT_INVALID_PACKET;
       goto LBL_ERR;
    }
 
@@ -97,12 +97,12 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
 
    /* check the MSB */
    if ((sig[0] & ~(0xFF >> ((modulus_len<<3) - (modulus_bitlen-1)))) != 0) {
-      err = CRYPT_OK;
+      err = CRYPT_INVALID_PACKET;
       goto LBL_ERR;
    }
 
    /* generate mask of length modulus_len - hLen - 1 from hash */
-   if ((err = pkcs_1_mgf1(hash, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
+   if ((err = pkcs_1_mgf1(hash_idx, hash, hLen, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
       goto LBL_ERR;
    }
 
@@ -119,14 +119,14 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
    /* check for zeroes and 0x01 */
    for (x = 0; x < modulus_len - saltlen - hLen - 2; x++) {
        if (DB[x] != 0x00) {
-          err = CRYPT_OK;
+          err = CRYPT_INVALID_PACKET;
           goto LBL_ERR;
        }
    }
 
    /* check for the 0x01 */
    if (DB[x++] != 0x01) {
-      err = CRYPT_OK;
+      err = CRYPT_INVALID_PACKET;
       goto LBL_ERR;
    }
 
@@ -149,7 +149,7 @@ int pkcs_1_pss_decode(const unsigned char *msghash, unsigned long msghashlen,
    }
 
    /* mask == hash means valid signature */
-   if (memcmp(mask, hash, hLen) == 0) {
+   if (XMEMCMP(mask, hash, hLen) == 0) {
       *res = 1;
    }
 
@@ -173,5 +173,5 @@ LBL_ERR:
 #endif /* PKCS_1 */
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_pss_decode.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2006/11/30 02:37:21 $ */

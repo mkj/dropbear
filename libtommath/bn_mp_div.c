@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 #ifdef BN_MP_DIV_SMALL
@@ -269,7 +269,9 @@ int mp_div (mp_int * a, mp_int * b, mp_int * c, mp_int * d)
   }
 
   if (d != NULL) {
-    mp_div_2d (&x, norm, &x, NULL);
+    if ((res = mp_div_2d (&x, norm, &x, NULL)) != MP_OKAY) {
+		goto LBL_Y;
+	}
     mp_exch (&x, d);
   }
 
@@ -286,3 +288,7 @@ LBL_Q:mp_clear (&q);
 #endif
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_div.c,v $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

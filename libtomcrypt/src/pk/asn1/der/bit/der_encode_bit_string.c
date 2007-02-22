@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -29,7 +29,8 @@
 int der_encode_bit_string(const unsigned char *in, unsigned long inlen,
                                 unsigned char *out, unsigned long *outlen)
 {
-   unsigned long len, x, y, buf;
+   unsigned long len, x, y;
+   unsigned char buf;
    int           err;
 
    LTC_ARGCHK(in     != NULL);
@@ -42,6 +43,7 @@ int der_encode_bit_string(const unsigned char *in, unsigned long inlen,
    }
 
    if (len > *outlen) {
+      *outlen = len;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -51,18 +53,18 @@ int der_encode_bit_string(const unsigned char *in, unsigned long inlen,
 
    out[x++] = 0x03;
    if (y < 128) {
-      out[x++] = y;
+      out[x++] = (unsigned char)y;
    } else if (y < 256) {
       out[x++] = 0x81;
-      out[x++] = y;
+      out[x++] = (unsigned char)y;
    } else if (y < 65536) {
       out[x++] = 0x82;
-      out[x++] = (y>>8)&255;
-      out[x++] = y&255;
+      out[x++] = (unsigned char)((y>>8)&255);
+      out[x++] = (unsigned char)(y&255);
    }
 
    /* store number of zero padding bits */
-   out[x++] = (8 - inlen) & 7;
+   out[x++] = (unsigned char)((8 - inlen) & 7);
 
    /* store the bits in big endian format */
    for (y = buf = 0; y < inlen; y++) {
@@ -83,5 +85,5 @@ int der_encode_bit_string(const unsigned char *in, unsigned long inlen,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/bit/der_encode_bit_string.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2005/05/16 15:08:11 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

@@ -181,10 +181,15 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 
 	if (!svr_opts.usingsyslog || havetrace)
 	{
+		struct tm * local_tm = NULL;
 		timesec = time(NULL);
-		if (strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
-					localtime(&timesec)) == 0) {
-			datestr[0] = '?'; datestr[1] = '\0';
+		local_tm = localtime(&timesec);
+		if (local_tm == NULL
+			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
+						localtime(&timesec)) == 0)
+		{
+			/* upon failure, just print the epoch-seconds time. */
+			snprintf(datestr, sizeof(datestr), "%d", timesec);
 		}
 		fprintf(stderr, "[%d] %s %s\n", getpid(), datestr, printbuf);
 	}

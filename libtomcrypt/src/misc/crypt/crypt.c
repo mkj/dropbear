@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -111,6 +111,12 @@ const char *crypt_build_settings =
    " (tweaked)"
 #endif
    "\n"
+#if defined(KSEED)
+   "   KSEED\n"
+#endif
+#if defined(LTC_KASUMI)
+   "   KASUMI\n"
+#endif
 
     "\nHashes built-in:\n"
 #if defined(SHA512)
@@ -154,34 +160,54 @@ const char *crypt_build_settings =
 #endif
 
     "\nBlock Chaining Modes:\n"
-#if defined(CFB)
+#if defined(LTC_CFB_MODE)
     "   CFB\n"
 #endif
-#if defined(OFB)
+#if defined(LTC_OFB_MODE)
     "   OFB\n"
 #endif
-#if defined(ECB)
+#if defined(LTC_ECB_MODE)
     "   ECB\n"
 #endif
-#if defined(CBC)
+#if defined(LTC_CBC_MODE)
     "   CBC\n"
 #endif
-#if defined(CTR)
-    "   CTR\n"
+#if defined(LTC_CTR_MODE)
+    "   CTR "
 #endif
+#if defined(LTC_CTR_OLD)
+    " (CTR_OLD) "
+#endif
+    "\n"
+#if defined(LRW_MODE)
+    "   LRW_MODE"
+#if defined(LRW_TABLES)
+    " (LRW_TABLES) "
+#endif
+    "\n"
+#endif
+#if defined(LTC_F8_MODE)
+    "   F8 MODE\n"
+#endif    
 
     "\nMACs:\n"
-#if defined(HMAC)
+#if defined(LTC_HMAC)
     "   HMAC\n"
 #endif
-#if defined(OMAC)
+#if defined(LTC_OMAC)
     "   OMAC\n"
 #endif
-#if defined(PMAC)
+#if defined(LTC_PMAC)
     "   PMAC\n"
 #endif
 #if defined(PELICAN)
     "   PELICAN\n"
+#endif
+#if defined(LTC_XCBC)
+    "   XCBC-MAC\n"
+#endif
+#if defined(LTC_F9_MODE)
+    "   F9-MAC\n"
 #endif
 
     "\nENC + AUTH modes:\n"
@@ -201,7 +227,6 @@ const char *crypt_build_settings =
     " (GCM_TABLES) "
 #endif
    "\n"
-
 
     "\nPRNG:\n"
 #if defined(YARROW)
@@ -224,24 +249,24 @@ const char *crypt_build_settings =
 #if defined(MRSA)
     "   RSA \n"
 #endif
-#if defined(MDH)
-    "   DH\n"
-#endif
 #if defined(MECC)
     "   ECC\n"
 #endif
 #if defined(MDSA)
     "   DSA\n"
 #endif
+#if defined(MKAT)
+    "   Katja\n"
+#endif    
 
     "\nCompiler:\n"
 #if defined(WIN32)
     "   WIN32 platform detected.\n"
 #endif
-#if defined(LBL_CYGWIN__)
+#if defined(__CYGWIN__)
     "   CYGWIN Detected.\n"
 #endif
-#if defined(LBL_DJGPP__)
+#if defined(__DJGPP__)
     "   DJGPP Detected.\n"
 #endif
 #if defined(_MSC_VER)
@@ -253,9 +278,12 @@ const char *crypt_build_settings =
 #if defined(INTEL_CC)
     "   Intel C Compiler detected.\n"
 #endif
-#if defined(LBL_x86_64__)
+#if defined(__x86_64__)
     "   x86-64 detected.\n"
 #endif
+#if defined(LTC_PPC32)
+    "   LTC_PPC32 defined \n"
+#endif    
 
     "\nVarious others: "
 #if defined(BASE64)
@@ -306,6 +334,27 @@ const char *crypt_build_settings =
 #if defined(LTC_PTHREAD)
     " LTC_PTHREAD "
 #endif
+#if defined(LTM_DESC)
+    " LTM_DESC "
+#endif
+#if defined(TFM_DESC)
+    " TFM_DESC "
+#endif
+#if defined(MECC_ACCEL)
+    " MECC_ACCEL "
+#endif
+#if defined(GMP_DESC)
+    " GMP_DESC "
+#endif
+#if defined(LTC_EASY)
+    " (easy) "
+#endif    
+#if defined(MECC_FP)
+   " MECC_FP "
+#endif
+#if defined(LTC_ECC_SHAMIR)
+   " LTC_ECC_SHAMIR "
+#endif
     "\n"
     "\n\n\n"
     ;
@@ -313,5 +362,5 @@ const char *crypt_build_settings =
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt.c,v $ */
-/* $Revision: 1.11 $ */
-/* $Date: 2005/06/19 18:00:28 $ */
+/* $Revision: 1.27 $ */
+/* $Date: 2006/12/03 03:50:45 $ */

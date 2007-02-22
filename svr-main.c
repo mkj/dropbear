@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "signkey.h"
 #include "runopts.h"
+#include "random.h"
 
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
@@ -50,6 +51,8 @@ int main(int argc, char ** argv)
 {
 	_dropbear_exit = svr_dropbear_exit;
 	_dropbear_log = svr_dropbear_log;
+
+	disallow_core();
 
 	/* get commandline options */
 	svr_getopts(argc, argv);
@@ -122,6 +125,11 @@ void main_noinetd() {
 	int childsock;
 	int childpipe[2];
 
+	/* Note: commonsetup() must happen before we daemon()ise. Otherwise
+	   daemon() will chdir("/"), and we won't be able to find local-dir
+	   hostkeys. */
+	commonsetup();
+
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;
@@ -135,8 +143,6 @@ void main_noinetd() {
 		}
 	}
 
-	commonsetup();
-
 	/* should be done after syslog is working */
 	if (svr_opts.forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
@@ -145,7 +151,7 @@ void main_noinetd() {
 	}
 
 	/* create a PID file so that we can be killed easily */
-	pidfile = fopen(DROPBEAR_PIDFILE, "w");
+	pidfile = fopen(svr_opts.pidfile, "w");
 	if (pidfile) {
 		fprintf(pidfile, "%d\n", getpid());
 		fclose(pidfile);
@@ -188,7 +194,7 @@ void main_noinetd() {
 		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
 
 		if (exitflag) {
-			unlink(DROPBEAR_PIDFILE);
+			unlink(svr_opts.pidfile);
 			dropbear_exit("Terminated by signal");
 		}
 		

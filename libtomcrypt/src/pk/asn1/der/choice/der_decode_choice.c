@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -96,6 +96,7 @@ int der_decode_choice(const unsigned char *in,   unsigned long *inlen,
            case LTC_ASN1_NULL:
                if (*inlen == 2 && in[x] == 0x05 && in[x+1] == 0x00) {
                   *inlen = 2;
+                  list[x].used   = 1;
                   return CRYPT_OK;
                }
                break;
@@ -134,6 +135,17 @@ int der_decode_choice(const unsigned char *in,   unsigned long *inlen,
                }
                break;
 
+           case LTC_ASN1_UTF8_STRING:
+               if (der_decode_utf8_string(in, *inlen, data, &size) == CRYPT_OK) {
+                  if (der_length_utf8_string(data, size, &z) == CRYPT_OK) {
+                     list[x].used = 1;
+                     list[x].size = size;
+                     *inlen       = z;
+                     return CRYPT_OK;
+                  }
+               }
+               break;
+
            case LTC_ASN1_UTCTIME:
                z = *inlen;
                if (der_decode_utctime(in, &z, data) == CRYPT_OK) {
@@ -143,6 +155,8 @@ int der_decode_choice(const unsigned char *in,   unsigned long *inlen,
                }
                break;
 
+           case LTC_ASN1_SET:
+           case LTC_ASN1_SETOF:
            case LTC_ASN1_SEQUENCE:
                if (der_decode_sequence(in, *inlen, data, size) == CRYPT_OK) {
                   if (der_length_sequence(data, size, &z) == CRYPT_OK) {
@@ -164,5 +178,5 @@ int der_decode_choice(const unsigned char *in,   unsigned long *inlen,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/choice/der_decode_choice.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/06/19 11:25:01 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/12/06 02:23:49 $ */

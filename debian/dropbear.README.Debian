@@ -39,3 +39,14 @@ by following these steps:
 See the Dropbear homepage for more information:
   http://matt.ucc.asn.au/dropbear/dropbear.html
 
+
+Entropy from /dev/random
+------------------------
+
+The dropbear binary package is configured at compile time to read
+entropy from /dev/random. If /dev/random on a system blocks when
+reading data from it, client logins may be delayed until the client
+times out. The dropbear server writes a notice to the logs when it
+sees /dev/random blocking.  A workaround for such systems is to
+re-compile the package with DROPBEAR_RANDOM_DEV set to /dev/urandom
+in options.h.

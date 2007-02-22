@@ -119,9 +119,17 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	char response = 'z';
 
 	fp = sign_key_fingerprint(keyblob, keybloblen);
+	if (cli_opts.always_accept_key) {
+		fprintf(stderr, "\nHost '%s' key accepted unconditionally.\n(fingerprint %s)\n",
+				cli_opts.remotehost,
+				fp);
+		m_free(fp);
+		return;
+	}
 	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n)\n", 
 			cli_opts.remotehost, 
 			fp);
+	m_free(fp);
 
 	tty = fopen(_PATH_TTY, "r");
 	if (tty) {
@@ -132,7 +140,6 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	}
 
 	if (response == 'y') {
-		m_free(fp);
 		return;
 	}
 
@@ -145,49 +152,59 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	FILE *hostsfile = NULL;
 	int readonly = 0;
 	struct passwd *pw = NULL;
+	char * homedir = NULL;
 	unsigned int hostlen, algolen;
 	unsigned long len;
 	const char *algoname = NULL;
 	buffer * line = NULL;
 	int ret;
 	
-	pw = getpwuid(getuid());
+	homedir = getenv("HOME");
 
-	if (pw == NULL) {
-		dropbear_exit("Failed to get homedir");
-	}
-
-	len = strlen(pw->pw_dir);
-	filename = m_malloc(len + 18); /* "/.ssh/known_hosts" and null-terminator*/
-
-	snprintf(filename, len+18, "%s/.ssh", pw->pw_dir);
-	/* Check that ~/.ssh exists - easiest way is just to mkdir */
-	if (mkdir(filename, S_IRWXU) != 0) {
-		if (errno != EEXIST) {
-			dropbear_log(LOG_INFO, "Warning: failed creating ~/.ssh: %s",
-					strerror(errno));
-			TRACE(("mkdir didn't work: %s", strerror(errno)))
-			ask_to_confirm(keyblob, keybloblen);
-			goto out; /* only get here on success */
+	if (!homedir) {
+		pw = getpwuid(getuid());
+		if (pw) {
+			homedir = pw->pw_dir;
 		}
+		pw = NULL;
 	}
 
-	snprintf(filename, len+18, "%s/.ssh/known_hosts", pw->pw_dir);
-	hostsfile = fopen(filename, "a+");
-	
-	if (hostsfile != NULL) {
-		fseek(hostsfile, 0, SEEK_SET);
-	} else {
-		/* We mightn't have been able to open it if it was read-only */
-		if (errno == EACCES || errno == EROFS) {
-				TRACE(("trying readonly: %s", strerror(errno)))
-				readonly = 1;
-				hostsfile = fopen(filename, "r");
+	if (homedir) {
+
+		len = strlen(homedir);
+		filename = m_malloc(len + 18); /* "/.ssh/known_hosts" and null-terminator*/
+
+		snprintf(filename, len+18, "%s/.ssh", homedir);
+		/* Check that ~/.ssh exists - easiest way is just to mkdir */
+		if (mkdir(filename, S_IRWXU) != 0) {
+			if (errno != EEXIST) {
+				dropbear_log(LOG_INFO, "Warning: failed creating %s/.ssh: %s",
+						homedir, strerror(errno));
+				TRACE(("mkdir didn't work: %s", strerror(errno)))
+				ask_to_confirm(keyblob, keybloblen);
+				goto out; /* only get here on success */
+			}
+		}
+
+		snprintf(filename, len+18, "%s/.ssh/known_hosts", homedir);
+		hostsfile = fopen(filename, "a+");
+		
+		if (hostsfile != NULL) {
+			fseek(hostsfile, 0, SEEK_SET);
+		} else {
+			/* We mightn't have been able to open it if it was read-only */
+			if (errno == EACCES || errno == EROFS) {
+					TRACE(("trying readonly: %s", strerror(errno)))
+					readonly = 1;
+					hostsfile = fopen(filename, "r");
+			}
 		}
 	}
 
 	if (hostsfile == NULL) {
 		TRACE(("hostsfile didn't open: %s", strerror(errno)))
+		dropbear_log(LOG_WARNING, "Failed to open %s/.ssh/known_hosts",
+				homedir);
 		ask_to_confirm(keyblob, keybloblen);
 		goto out; /* We only get here on success */
 	}
@@ -258,24 +275,26 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		goto out;
 	}
 
-	/* put the new entry in the file */
-	fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
-	buf_setpos(line, 0);
-	buf_setlen(line, 0);
-	buf_putbytes(line, ses.remotehost, hostlen);
-	buf_putbyte(line, ' ');
-	buf_putbytes(line, algoname, algolen);
-	buf_putbyte(line, ' ');
-	len = line->size - line->pos;
-	TRACE(("keybloblen %d, len %d", keybloblen, len))
-	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
-	 * will die horribly in the case anyway */
-	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
-	buf_incrwritepos(line, len);
-	buf_putbyte(line, '\n');
-	buf_setpos(line, 0);
-	fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
-	/* We ignore errors, since there's not much we can do about them */
+	if (!cli_opts.always_accept_key) {
+		/* put the new entry in the file */
+		fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
+		buf_setpos(line, 0);
+		buf_setlen(line, 0);
+		buf_putbytes(line, ses.remotehost, hostlen);
+		buf_putbyte(line, ' ');
+		buf_putbytes(line, algoname, algolen);
+		buf_putbyte(line, ' ');
+		len = line->size - line->pos;
+		TRACE(("keybloblen %d, len %d", keybloblen, len))
+		/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
+		 * will die horribly in the case anyway */
+		base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
+		buf_incrwritepos(line, len);
+		buf_putbyte(line, '\n');
+		buf_setpos(line, 0);
+		fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
+		/* We ignore errors, since there's not much we can do about them */
+	}
 
 out:
 	if (hostsfile != NULL) {
