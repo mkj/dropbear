@@ -397,9 +397,9 @@ static size_t listensockets(int *sock, size_t sockcount, int *maxfd) {
 
 	for (i = 0; i < svr_opts.portcount; i++) {
 
-		TRACE(("listening on '%s'", svr_opts.ports[i]))
+		TRACE(("listening on '%s:%s'", svr_opts.addresses[i], svr_opts.ports[i]))
 
-		nsock = dropbear_listen("", svr_opts.ports[i], &sock[sockpos], 
+		nsock = dropbear_listen(svr_opts.addresses[i], svr_opts.ports[i], &sock[sockpos], 
 				sockcount - sockpos,
 				&errstring, maxfd);
 

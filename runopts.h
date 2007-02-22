@@ -55,6 +55,7 @@ typedef struct svr_runopts {
 	/* ports is an array of the portcount listening ports */
 	char *ports[DROPBEAR_MAX_PORTS];
 	unsigned int portcount;
+	char *addresses[DROPBEAR_MAX_PORTS];
 
 	int inetdmode;
 

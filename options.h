@@ -14,6 +14,11 @@
 #define DROPBEAR_DEFPORT "22"
 #endif
 
+#ifndef DROPBEAR_DEFADDRESS
+/* Listen on all interfaces */
+#define DROPBEAR_DEFADDRESS ""
+#endif
+
 /* Default hostkey paths - these can be specified on the command line */
 #ifndef DSS_PRIV_FILENAME
 #define DSS_PRIV_FILENAME "/etc/dropbear/dropbear_dss_host_key"
