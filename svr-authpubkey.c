@@ -231,7 +231,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
 
-		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line);
+		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line, NULL);
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}

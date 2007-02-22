@@ -58,6 +58,6 @@ char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen);
 #endif
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
 					const unsigned char* algoname, unsigned int algolen, 
-					buffer * line);
+					buffer * line, char ** fingerprint);
 
 #endif /* _SIGNKEY_H_ */

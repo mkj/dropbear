@@ -146,31 +146,24 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 	dropbear_exit("Didn't validate host key");
 }
 
-static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
-
+static FILE* open_known_hosts_file(int * readonly)
+{
+	FILE * hostsfile = NULL;
 	char * filename = NULL;
-	FILE *hostsfile = NULL;
-	int readonly = 0;
-	struct passwd *pw = NULL;
 	char * homedir = NULL;
-	unsigned int hostlen, algolen;
-	unsigned long len;
-	const char *algoname = NULL;
-	buffer * line = NULL;
-	int ret;
 	
 	homedir = getenv("HOME");
 
 	if (!homedir) {
+		struct passwd * pw = NULL;
 		pw = getpwuid(getuid());
 		if (pw) {
 			homedir = pw->pw_dir;
 		}
-		pw = NULL;
 	}
 
 	if (homedir) {
-
+		unsigned int len;
 		len = strlen(homedir);
 		filename = m_malloc(len + 18); /* "/.ssh/known_hosts" and null-terminator*/
 
@@ -181,8 +174,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 				dropbear_log(LOG_INFO, "Warning: failed creating %s/.ssh: %s",
 						homedir, strerror(errno));
 				TRACE(("mkdir didn't work: %s", strerror(errno)))
-				ask_to_confirm(keyblob, keybloblen);
-				goto out; /* only get here on success */
+				goto out;
 			}
 		}
 
@@ -190,12 +182,13 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		hostsfile = fopen(filename, "a+");
 		
 		if (hostsfile != NULL) {
+			*readonly = 0;
 			fseek(hostsfile, 0, SEEK_SET);
 		} else {
 			/* We mightn't have been able to open it if it was read-only */
 			if (errno == EACCES || errno == EROFS) {
 					TRACE(("trying readonly: %s", strerror(errno)))
-					readonly = 1;
+					*readonly = 1;
 					hostsfile = fopen(filename, "r");
 			}
 		}
@@ -205,10 +198,32 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		TRACE(("hostsfile didn't open: %s", strerror(errno)))
 		dropbear_log(LOG_WARNING, "Failed to open %s/.ssh/known_hosts",
 				homedir);
-		ask_to_confirm(keyblob, keybloblen);
-		goto out; /* We only get here on success */
-	}
+		goto out;
+	}	
 
+out:
+	m_free(filename);
+	return hostsfile;
+}
+
+static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
+
+	FILE *hostsfile = NULL;
+	int readonly = 0;
+	unsigned int hostlen, algolen;
+	unsigned long len;
+	const char *algoname = NULL;
+	char * fingerprint = NULL;
+	buffer * line = NULL;
+	int ret;
+
+	hostsfile = open_known_hosts_file(&readonly);
+	if (!hostsfile)	{
+		ask_to_confirm(keyblob, keybloblen);
+		/* ask_to_confirm will exit upon failure */
+		return;
+	}
+	
 	line = buf_new(MAX_KNOWNHOSTS_LINE);
 	hostlen = strlen(cli_opts.remotehost);
 	algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &algolen);
@@ -242,7 +257,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 			continue;
 		}
 
-		if ( strncmp(buf_getptr(line, algolen), algoname, algolen) != 0) {
+		if (strncmp(buf_getptr(line, algolen), algoname, algolen) != 0) {
 			TRACE(("algo doesn't match"))
 			continue;
 		}
@@ -254,7 +269,8 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		}
 
 		/* Now we're at the interesting hostkey */
-		ret = cmp_base64_key(keyblob, keybloblen, algoname, algolen, line);
+		ret = cmp_base64_key(keyblob, keybloblen, algoname, algolen,
+						line, &fingerprint);
 
 		if (ret == DROPBEAR_SUCCESS) {
 			/* Good matching key */
@@ -262,7 +278,15 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 			goto out;
 		}
 
-		/* The keys didn't match. eep. */
+		/* The keys didn't match. eep. Note that we're "leaking"
+		   the fingerprint strings here, but we're exiting anyway */
+		dropbear_exit("\n\nHost key mismatch for %s !\n"
+					"Fingerprint is %s\n"
+					"Expected %s\n"
+					"If you know that the host key is correct you can\nremove the bad entry from ~/.ssh/known_hosts", 
+					cli_opts.remotehost,
+					sign_key_fingerprint(keyblob, keybloblen),
+					fingerprint ? fingerprint : "UNKNOWN");
 	} while (1); /* keep going 'til something happens */
 
 	/* Key doesn't exist yet */
@@ -300,7 +324,6 @@ out:
 	if (hostsfile != NULL) {
 		fclose(hostsfile);
 	}
-	m_free(filename);
 	if (line != NULL) {
 		buf_free(line);
 	}
