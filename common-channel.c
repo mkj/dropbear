@@ -296,7 +296,7 @@ static void check_close(struct Channel *channel) {
 			TRACE(("send data readfd"))
 			send_msg_channel_data(channel, 0);
 		}
-		if (ERRFD_IS_READ(channel) && channel->readfd >= 0 
+		if (ERRFD_IS_READ(channel) && channel->errfd >= 0 
 			&& channel->transwindow > 0) {
 			TRACE(("send data errfd"))
 			send_msg_channel_data(channel, 1);
