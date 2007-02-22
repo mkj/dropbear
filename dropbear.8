@@ -60,9 +60,13 @@ Disable local port forwarding.
 .B \-k
 Disable remote port forwarding.
 .TP
-.B \-p \fIport
-Listen on specified tcp port
-.IR port ;
+.B \-p \fI[address:]port
+Listen on specified 
+.I address
+and TCP
+.I port.
+If just a port is given listen
+on all addresses.
 up to 10 can be specified (default 22 if none specified).
 .TP
 .B \-i
