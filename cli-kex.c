@@ -126,7 +126,7 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 		m_free(fp);
 		return;
 	}
-	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n)\n", 
+	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n) ", 
 			cli_opts.remotehost, 
 			fp);
 	m_free(fp);
