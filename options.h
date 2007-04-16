@@ -169,6 +169,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * doing if you change this. */
 #define DROPBEAR_RANDOM_DEV "/dev/random"
 
+/* The -u flag on the commandline can also be used */
+#define DROPBEAR_URANDOM_DEV "/dev/urandom"
+
 /* prngd must be manually set up to produce output */
 /*#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"*/
 

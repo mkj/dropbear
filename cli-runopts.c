@@ -29,6 +29,7 @@
 #include "dbutil.h"
 #include "algo.h"
 #include "tcpfwd.h"
+#include "random.h"
 
 cli_runopts cli_opts; /* GLOBAL */
 
@@ -53,6 +54,7 @@ static void printhelp() {
 					"-N    Don't run a remote command\n"
 					"-f    Run in background after auth\n"
 					"-y    Always accept remote host key if unknown\n"
+					"-u    Use /dev/urandom - use with caution\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
@@ -86,6 +88,7 @@ void cli_getopts(int argc, char ** argv) {
 	char* dummy = NULL; /* Not used for anything real */
 
 	/* see printhelp() for options */
+	opts.listen_fwd_all = 0;
 	cli_opts.progname = argv[0];
 	cli_opts.remotehost = NULL;
 	cli_opts.remoteport = NULL;
@@ -100,7 +103,6 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	cli_opts.localfwds = NULL;
-	opts.listen_fwd_all = 0;
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	cli_opts.remotefwds = NULL;
@@ -197,6 +199,9 @@ void cli_getopts(int argc, char ** argv) {
 				case 'h':
 					printhelp();
 					exit(EXIT_SUCCESS);
+					break;
+				case 'u':
+					random_dev = DROPBEAR_URANDOM_DEV;
 					break;
 #ifdef DEBUG_TRACE
 				case 'v':

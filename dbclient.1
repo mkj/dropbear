@@ -74,6 +74,9 @@ by the ssh server.
 .B \-y
 Always accept hostkeys if they are unknown. If a hostkey mismatch occurs the
 connection will abort as normal.
+.B \-u
+Use /dev/urandom rather than /dev/random. This should only be used if the
+/dev/urandom device is known to have sufficient entropy.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br
