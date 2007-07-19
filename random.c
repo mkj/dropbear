@@ -27,13 +27,6 @@
 #include "dbutil.h"
 #include "bignum.h"
 
-#ifdef DROPBEAR_RANDOM_DEV
-const char* random_dev = DROPBEAR_RANDOM_DEV;	
-#else
-const char* random_dev = NULL;
-#endif
-
-
 static int donerandinit = 0;
 
 /* this is used to generate unique output from the same hashpool */
@@ -69,9 +62,9 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 #endif
 
 #ifdef DROPBEAR_RANDOM_DEV
-	readfd = open(random_dev, O_RDONLY);		
+	readfd = open(DROPBEAR_RANDOM_DEV, O_RDONLY);
 	if (readfd < 0) {
-		dropbear_exit("couldn't open %s", random_dev);
+		dropbear_exit("couldn't open random device");
 	}
 #endif
 

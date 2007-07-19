@@ -28,7 +28,6 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "algo.h"
-#include "random.h"
 
 svr_runopts svr_opts; /* GLOBAL */
 
@@ -81,7 +80,6 @@ static void printhelp(const char * progname) {
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif
-					"-u		Use /dev/urandom - use with caution\n"
 #ifdef DEBUG_TRACE
 					"-v		verbose\n"
 #endif
@@ -219,7 +217,7 @@ void svr_getopts(int argc, char ** argv) {
 					exit(EXIT_FAILURE);
 					break;
 				case 'u':
-					random_dev = DROPBEAR_URANDOM_DEV;
+					/* backwards compatibility with old urandom option */
 					break;
 #ifdef DEBUG_TRACE
 				case 'v':

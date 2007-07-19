@@ -162,15 +162,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * The device will be queried for a few dozen bytes of seed a couple of times
  * per session (or more for very long-lived sessions). */
 
-/* If you are lacking entropy on the system then using /dev/urandom
- * will prevent Dropbear from blocking on the device. This could
- * however significantly reduce the security of your ssh connections
- * if the PRNG state becomes guessable - make sure you know what you are
- * doing if you change this. */
-#define DROPBEAR_RANDOM_DEV "/dev/random"
-
-/* The -u flag on the commandline can also be used */
-#define DROPBEAR_URANDOM_DEV "/dev/urandom"
+/* We'll use /dev/urandom by default, since /dev/random is too much hassle.
+ * If system developers aren't keeping seeds between boots nor getting
+ * any entropy from somewhere it's their own fault. */
+#define DROPBEAR_RANDOM_DEV "/dev/urandom"
 
 /* prngd must be manually set up to produce output */
 /*#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"*/
