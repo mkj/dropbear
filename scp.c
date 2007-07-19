@@ -200,7 +200,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 #endif /* __uClinux__ */
 
 	/* Fork a child to execute the command on the remote host using ssh. */
-#ifndef __uClinux__
+#ifdef __uClinux__
 	do_cmd_pid = vfork();
 #else
 	do_cmd_pid = fork();
