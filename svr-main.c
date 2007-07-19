@@ -147,7 +147,7 @@ void main_noinetd() {
 	if (svr_opts.forkbg) {
 		dropbear_log(LOG_INFO, "Running in background");
 	} else {
-		dropbear_log(LOG_INFO, "Not forking");
+		dropbear_log(LOG_INFO, "Not backgrounding");
 	}
 
 	/* create a PID file so that we can be killed easily */
