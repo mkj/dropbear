@@ -130,6 +130,19 @@ void main_noinetd() {
 	   hostkeys. */
 	commonsetup();
 
+	/* sockets to identify pre-authenticated clients */
+	for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
+		childpipes[i] = -1;
+	}
+	bzero(preauth_addrs, sizeof(preauth_addrs));
+	
+	/* Set up the listening sockets */
+	listensockcount = listensockets(listensocks, MAX_LISTEN_ADDR, &maxsock);
+	if (listensockcount == 0)
+	{
+		dropbear_exit("No listening ports available.");
+	}
+
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;
@@ -155,19 +168,6 @@ void main_noinetd() {
 	if (pidfile) {
 		fprintf(pidfile, "%d\n", getpid());
 		fclose(pidfile);
-	}
-
-	/* sockets to identify pre-authenticated clients */
-	for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
-		childpipes[i] = -1;
-	}
-	bzero(preauth_addrs, sizeof(preauth_addrs));
-	
-	/* Set up the listening sockets */
-	listensockcount = listensockets(listensocks, MAX_LISTEN_ADDR, &maxsock);
-	if (listensockcount == 0)
-	{
-		dropbear_exit("No listening ports available.");
 	}
 
 	/* incoming connection select loop */
