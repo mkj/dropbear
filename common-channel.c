@@ -150,11 +150,11 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->await_open = 0;
 	newchan->flushing = 0;
 
-	newchan->writebuf = cbuf_new(RECV_MAXWINDOW);
+	newchan->writebuf = cbuf_new(RECV_MAX_WINDOW);
 	newchan->extrabuf = NULL; /* The user code can set it up */
-	newchan->recvwindow = RECV_MAXWINDOW;
+	newchan->recvwindow = RECV_MAX_WINDOW;
 	newchan->recvdonelen = 0;
-	newchan->recvmaxpacket = RECV_MAXPACKET;
+	newchan->recvmaxpacket = RECV_MAX_PAYLOAD_LEN;
 
 	ses.channels[i] = newchan;
 	ses.chancount++;
@@ -421,7 +421,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 		channel->recvdonelen = 0;
 	}
 
-	dropbear_assert(channel->recvwindow <= RECV_MAXWINDOW);
+	dropbear_assert(channel->recvwindow <= RECV_MAX_WINDOW);
 	dropbear_assert(channel->recvwindow <= cbuf_getavail(channel->writebuf));
 	dropbear_assert(channel->extrabuf == NULL ||
 			channel->recvwindow <= cbuf_getavail(channel->extrabuf));
@@ -710,7 +710,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 
 	dropbear_assert(channel->recvwindow >= datalen);
 	channel->recvwindow -= datalen;
-	dropbear_assert(channel->recvwindow <= RECV_MAXWINDOW);
+	dropbear_assert(channel->recvwindow <= RECV_MAX_WINDOW);
 
 	TRACE(("leave recv_msg_channel_data"))
 }
@@ -727,10 +727,10 @@ void recv_msg_channel_window_adjust() {
 	
 	incr = buf_getint(ses.payload);
 	TRACE(("received window increment %d", incr))
-	incr = MIN(incr, MAX_TRANS_WIN_INCR);
+	incr = MIN(incr, TRANS_MAX_WIN_INCR);
 	
 	channel->transwindow += incr;
-	channel->transwindow = MIN(channel->transwindow, MAX_TRANS_WINDOW);
+	channel->transwindow = MIN(channel->transwindow, TRANS_MAX_WINDOW);
 
 }
 
@@ -769,9 +769,9 @@ void recv_msg_channel_open() {
 
 	remotechan = buf_getint(ses.payload);
 	transwindow = buf_getint(ses.payload);
-	transwindow = MIN(transwindow, MAX_TRANS_WINDOW);
+	transwindow = MIN(transwindow, TRANS_MAX_WINDOW);
 	transmaxpacket = buf_getint(ses.payload);
-	transmaxpacket = MIN(transmaxpacket, MAX_TRANS_PAYLOAD_LEN);
+	transmaxpacket = MIN(transmaxpacket, TRANS_MAX_PAYLOAD_LEN);
 
 	/* figure what type of packet it is */
 	if (typelen > MAX_NAME_LEN) {
@@ -970,8 +970,8 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
 	buf_putstring(ses.writepayload, type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
-	buf_putint(ses.writepayload, RECV_MAXWINDOW);
-	buf_putint(ses.writepayload, RECV_MAXPACKET);
+	buf_putint(ses.writepayload, RECV_MAX_WINDOW);
+	buf_putint(ses.writepayload, RECV_MAX_PAYLOAD_LEN);
 
 	TRACE(("leave send_msg_channel_open_init()"))
 	return DROPBEAR_SUCCESS;

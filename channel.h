@@ -45,15 +45,7 @@
 /* Not a real type */
 #define SSH_OPEN_IN_PROGRESS					99
 
-#define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
-							connection, so can't be _too_ small */
-
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
-
-#define RECV_MAXWINDOW 8000 /* tweak */
-#define RECV_WINDOWEXTEND 1000 /* We send a "window extend" every
-								RECV_WINDOWEXTEND bytes */
-#define RECV_MAXPACKET RECV_MAXWINDOW /* tweak */
 
 struct ChanType;
 

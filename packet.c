@@ -212,7 +212,7 @@ static void read_packet_init() {
 	buf_setpos(ses.readbuf, blocksize);
 
 	/* check packet length */
-	if ((len > MAX_PACKET_LEN) ||
+	if ((len > RECV_MAX_PACKET_LEN) ||
 		(len < MIN_PACKET_LEN + macsize) ||
 		((len - macsize) % blocksize != 0)) {
 		dropbear_exit("bad packet size %d", len);
@@ -281,7 +281,7 @@ void decrypt_packet() {
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
 	len = ses.decryptreadbuf->len - padlen - 4 - 1;
-	if ((len > MAX_PAYLOAD_LEN) || (len < 1)) {
+	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
 		dropbear_exit("bad packet size");
 	}
 

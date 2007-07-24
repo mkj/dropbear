@@ -69,7 +69,7 @@ void common_session_init(int sock, char* remotehost) {
 	
 	kexfirstinitialise(); /* initialise the kex state */
 
-	ses.writepayload = buf_new(MAX_TRANS_PAYLOAD_LEN);
+	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
 
 	ses.readbuf = NULL;

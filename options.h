@@ -216,6 +216,20 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * shell/sftp session etc. */
 /* #define LOG_COMMANDS */
 
+/* Window size limits. These tend to be a trade-off between memory
+   usage and network performance: */
+/* Size of the network receive window. This amount of memory is allocated
+   as a per-channel receive buffer. Increasing this value can make a
+   significant difference to network performance. */
+#define RECV_MAX_WINDOW 8192
+/* Maximum size of a received SSH data packet - this _MUST_ be >= 32768
+   in order to interoperate with other implementations */
+#define RECV_MAX_PAYLOAD_LEN 32768
+/* Maximum size of a transmitted data packet - this can be any value,
+   though increasing it may not make a significant difference. */
+#define TRANS_MAX_PAYLOAD_LEN 16384
+
+
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
  *******************************************************************/
@@ -317,16 +331,19 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define MAX_PROPOSED_ALGO 20
 
 /* size/count limits */
-
-#define MAX_PACKET_LEN 35000
 #define MIN_PACKET_LEN 16
-#define MAX_PAYLOAD_LEN 32768
 
-#define MAX_TRANS_PAYLOAD_LEN 32768
-#define MAX_TRANS_PACKET_LEN (MAX_TRANS_PAYLOAD_LEN+50)
+#define RECV_MAX_PACKET_LEN (MAX(35000, ((RECV_MAX_PAYLOAD_LEN)+100)))
 
-#define MAX_TRANS_WINDOW 500000000 /* 500MB is sufficient, stopping overflow */
-#define MAX_TRANS_WIN_INCR 500000000 /* overflow prevention */
+/* for channel code */
+#define TRANS_MAX_WINDOW 500000000 /* 500MB is sufficient, stopping overflow */
+#define TRANS_MAX_WIN_INCR 500000000 /* overflow prevention */
+
+#define RECV_WINDOWEXTEND (RECV_MAX_WINDOW / 3) /* We send a "window extend" every
+								RECV_WINDOWEXTEND bytes */
+
+#define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
+							connection, so can't be _too_ small */
 
 #define MAX_STRING_LEN 1400 /* ~= MAX_PROPOSED_ALGO * MAX_NAME_LEN, also
 							   is the max length for a password etc */
