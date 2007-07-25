@@ -54,6 +54,10 @@ DROPBEAR_BANNER=""
 
 # DSS hostkey file (default: /etc/dropbear/dropbear_dss_host_key)
 #DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+
+# Receive window size - this is a tradeoff between memory and
+# network performance
+DROPBEAR_RECEIVE_WINDOW=65536
 EOT
 fi
 

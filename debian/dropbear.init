@@ -48,7 +48,7 @@ case "$1" in
 	sleep 1
 	start-stop-daemon --start --quiet --pidfile /var/run/"$NAME".pid \
 	  --exec "$DAEMON" -- -d "$DROPBEAR_DSSKEY" -r "$DROPBEAR_RSAKEY" \
-	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
+	    -p "$DROPBEAR_PORT" -W "$DROPBEAR_RECEIVE_WINDOW" $DROPBEAR_EXTRA_ARGS
 	echo "$NAME."
 	;;
   *)
