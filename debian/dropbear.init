@@ -26,6 +26,8 @@ test -n "$DROPBEAR_RSAKEY" || \
   DROPBEAR_RSAKEY="/etc/dropbear/dropbear_rsa_host_key"
 test -n "$DROPBEAR_DSSKEY" || \
   DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+test -n "$DROPBEAR_RECEIVE_WINDOW" || \
+  DROPBEAR_RECEIVE_WINDOW="65536"
 
 case "$1" in
   start)
@@ -33,7 +35,7 @@ case "$1" in
 	echo -n "Starting $DESC: "
 	start-stop-daemon --start --quiet --pidfile /var/run/"$NAME".pid \
 	  --exec "$DAEMON" -- -d "$DROPBEAR_DSSKEY" -r "$DROPBEAR_RSAKEY" \
-	    -p "$DROPBEAR_PORT" $DROPBEAR_EXTRA_ARGS
+	    -p "$DROPBEAR_PORT" -W "$DROPBEAR_RECEIVE_WINDOW" $DROPBEAR_EXTRA_ARGS
 	echo "$NAME."
 	;;
   stop)
