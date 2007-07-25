@@ -63,10 +63,11 @@ static void printhelp() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
+					"-W <receive_window_buffer> (default %d, larger may be faster)\n"
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
 #endif
-					,DROPBEAR_VERSION, cli_opts.progname);
+					,DROPBEAR_VERSION, cli_opts.progname, DEFAULT_RECV_WINDOW);
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -109,6 +110,8 @@ void cli_getopts(int argc, char ** argv) {
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
 	*/
+	opts.recv_window = DEFAULT_RECV_WINDOW;
+	char* recv_window_arg = NULL;
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -201,6 +204,9 @@ void cli_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
+				case 'W':
+					next = &recv_window_arg;
+					break;
 #ifdef DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -291,6 +297,15 @@ void cli_getopts(int argc, char ** argv) {
 	if (cli_opts.backgrounded && cli_opts.cmd == NULL
 			&& cli_opts.no_cmd == 0) {
 		dropbear_exit("command required for -f");
+	}
+	
+	if (recv_window_arg)
+	{
+		opts.recv_window = atol(recv_window_arg);
+		if (opts.recv_window == 0)
+		{
+			dropbear_exit("Bad recv window '%s'", recv_window_arg);
+		}
 	}
 }
 

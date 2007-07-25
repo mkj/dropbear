@@ -82,6 +82,11 @@ default is /var/run/dropbear.pid
 .TP
 .B \-a
 Allow remote hosts to connect to forwarded ports.
+.TP
+.B \-W \fIwindowsize
+Specify the per-channel receive window buffer size. Increasing this 
+may improve network performance at the expense of memory use. Use -h to see the
+default buffer size.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br

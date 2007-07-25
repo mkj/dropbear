@@ -80,6 +80,7 @@ static void printhelp(const char * progname) {
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif
+					"-W <receive_window_buffer> (default %d, larger may be faster)\n"
 #ifdef DEBUG_TRACE
 					"-v		verbose\n"
 #endif
@@ -90,7 +91,7 @@ static void printhelp(const char * progname) {
 #ifdef DROPBEAR_RSA
 					RSA_PRIV_FILENAME,
 #endif
-					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE);
+					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE, DEFAULT_RECV_WINDOW);
 }
 
 void svr_getopts(int argc, char ** argv) {
@@ -128,6 +129,8 @@ void svr_getopts(int argc, char ** argv) {
 #ifndef DISABLE_SYSLOG
 	svr_opts.usingsyslog = 1;
 #endif
+	opts.recv_window = DEFAULT_RECV_WINDOW;
+	char* recv_window_arg = NULL;
 #ifdef ENABLE_SVR_REMOTETCPFWD
 	opts.listen_fwd_all = 0;
 #endif
@@ -204,6 +207,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'w':
 					svr_opts.norootlogin = 1;
 					break;
+				case 'W':
+					next = &recv_window_arg;
+					break;
 #if defined(ENABLE_SVR_PASSWORD_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 				case 's':
 					svr_opts.noauthpass = 1;
@@ -265,8 +271,17 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.bannerfile);
 		}
 		buf_setpos(svr_opts.banner, 0);
-	}
 
+	}
+	
+	if (recv_window_arg)
+	{
+		opts.recv_window = atol(recv_window_arg);
+		if (opts.recv_window == 0)
+		{
+			dropbear_exit("Bad recv window '%s'", recv_window_arg);
+		}
+	}
 }
 
 static void addportandaddress(char* spec) {

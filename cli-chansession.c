@@ -350,7 +350,7 @@ static int cli_initchansess(struct Channel *channel) {
 	channel->errfd = STDERR_FILENO;
 	setnonblocking(STDERR_FILENO);
 
-	channel->extrabuf = cbuf_new(RECV_MAX_WINDOW);
+	channel->extrabuf = cbuf_new(opts.recv_window);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);

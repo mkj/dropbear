@@ -220,8 +220,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
    usage and network performance: */
 /* Size of the network receive window. This amount of memory is allocated
    as a per-channel receive buffer. Increasing this value can make a
-   significant difference to network performance. */
-#define RECV_MAX_WINDOW 8192
+   significant difference to network performance. 24kB was empirically
+   chosen for a 100mbit ethernet network. The value can be altered at
+   runtime with the -W argument. */
+#define DEFAULT_RECV_WINDOW 24576
 /* Maximum size of a received SSH data packet - this _MUST_ be >= 32768
    in order to interoperate with other implementations */
 #define RECV_MAX_PAYLOAD_LEN 32768
@@ -339,7 +341,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define TRANS_MAX_WINDOW 500000000 /* 500MB is sufficient, stopping overflow */
 #define TRANS_MAX_WIN_INCR 500000000 /* overflow prevention */
 
-#define RECV_WINDOWEXTEND (RECV_MAX_WINDOW / 3) /* We send a "window extend" every
+#define RECV_WINDOWEXTEND (opts.recv_window / 3) /* We send a "window extend" every
 								RECV_WINDOWEXTEND bytes */
 
 #define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11

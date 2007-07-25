@@ -34,6 +34,7 @@
 #include "channel.h"
 #include "ssh.h"
 #include "listener.h"
+#include "runopts.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -150,9 +151,9 @@ struct Channel* newchannel(unsigned int remotechan,
 	newchan->await_open = 0;
 	newchan->flushing = 0;
 
-	newchan->writebuf = cbuf_new(RECV_MAX_WINDOW);
+	newchan->writebuf = cbuf_new(opts.recv_window);
 	newchan->extrabuf = NULL; /* The user code can set it up */
-	newchan->recvwindow = RECV_MAX_WINDOW;
+	newchan->recvwindow = opts.recv_window;
 	newchan->recvdonelen = 0;
 	newchan->recvmaxpacket = RECV_MAX_PAYLOAD_LEN;
 
@@ -421,7 +422,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 		channel->recvdonelen = 0;
 	}
 
-	dropbear_assert(channel->recvwindow <= RECV_MAX_WINDOW);
+	dropbear_assert(channel->recvwindow <= opts.recv_window);
 	dropbear_assert(channel->recvwindow <= cbuf_getavail(channel->writebuf));
 	dropbear_assert(channel->extrabuf == NULL ||
 			channel->recvwindow <= cbuf_getavail(channel->extrabuf));
@@ -710,7 +711,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 
 	dropbear_assert(channel->recvwindow >= datalen);
 	channel->recvwindow -= datalen;
-	dropbear_assert(channel->recvwindow <= RECV_MAX_WINDOW);
+	dropbear_assert(channel->recvwindow <= opts.recv_window);
 
 	TRACE(("leave recv_msg_channel_data"))
 }
@@ -970,7 +971,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
 	buf_putstring(ses.writepayload, type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
-	buf_putint(ses.writepayload, RECV_MAX_WINDOW);
+	buf_putint(ses.writepayload, opts.recv_window);
 	buf_putint(ses.writepayload, RECV_MAX_PAYLOAD_LEN);
 
 	TRACE(("leave send_msg_channel_open_init()"))
