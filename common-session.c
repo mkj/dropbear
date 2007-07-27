@@ -80,9 +80,12 @@ void common_session_init(int sock, char* remotehost) {
 	initqueue(&ses.writequeue);
 
 	ses.requirenext = SSH_MSG_KEXINIT;
-	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
+	ses.dataallowed = 1; /* we can send data until we actually 
+							send the SSH_MSG_KEXINIT */
 	ses.ignorenext = 0;
 	ses.lastpacket = 0;
+	ses.reply_queue_head = NULL;
+	ses.reply_queue_tail = NULL;
 
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));
@@ -192,6 +195,10 @@ void session_loop(void(*loophandler)()) {
 				process_packet();
 			}
 		}
+		
+		/* if required, flush out any queued reply packets that
+		were being held up during a KEX */
+		maybe_flush_reply_queue();
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
