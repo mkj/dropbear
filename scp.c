@@ -308,10 +308,6 @@ main(int argc, char **argv)
 	memset(&args, '\0', sizeof(args));
 	args.list = NULL;
 	addargs(&args, "%s", ssh_program);
-	addargs(&args, "-x");
-	addargs(&args, "-oForwardAgent no");
-	addargs(&args, "-oPermitLocalCommand no");
-	addargs(&args, "-oClearAllForwardings yes");
 
 	fflag = tflag = 0;
 	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:q1246S:o:F:")) != -1)
