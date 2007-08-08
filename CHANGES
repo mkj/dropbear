@@ -21,6 +21,10 @@
 - Add -K <keepalive_time> argument, ensuring that data is transmitted
   over the connection at least every N seconds.
 
+- dropbearkey will no longer generate DSS keys of sizes other than 1024
+  bits, as required by the DSS specification. (Other sizes are still
+  accepted for use to provide backwards compatibility).
+
 0.49 - Fri 23 February 2007
 
 - Security: dbclient previously would prompt to confirm a 
