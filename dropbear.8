@@ -87,6 +87,13 @@ Allow remote hosts to connect to forwarded ports.
 Specify the per-channel receive window buffer size. Increasing this 
 may improve network performance at the expense of memory use. Use -h to see the
 default buffer size.
+.TP
+.B \-K \fItimeout_seconds
+Ensure that traffic is transmitted at a certain interval in seconds. This is
+useful for working around firewalls or routers that drop connections after
+a certain period of inactivity. The trade-off is that a session may be
+closed if there is a temporary lapse of network connectivity. A setting
+if 0 disables keepalives.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br

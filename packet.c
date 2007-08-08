@@ -71,6 +71,8 @@ void write_packet() {
 			dropbear_exit("error writing");
 		}
 	} 
+	
+	ses.last_packet_time = time(NULL);
 
 	if (written == 0) {
 		ses.remoteclosed();

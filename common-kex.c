@@ -188,8 +188,6 @@ void kexfirstinitialise() {
 /* Reset the kex state, ready for a new negotiation */
 static void kexinitialise() {
 
-	struct timeval tv;
-
 	TRACE(("kexinitialise()"))
 
 	/* sent/recv'd MSG_KEXINIT */
@@ -206,10 +204,7 @@ static void kexinitialise() {
 	ses.kexstate.datatrans = 0;
 	ses.kexstate.datarecv = 0;
 
-	if (gettimeofday(&tv, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-	ses.kexstate.lastkextime = tv.tv_sec;
+	ses.kexstate.lastkextime = time(NULL);
 
 }
 

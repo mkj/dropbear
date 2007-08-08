@@ -111,7 +111,6 @@ static void main_inetd() {
 #ifdef NON_INETD_MODE
 void main_noinetd() {
 	fd_set fds;
-	struct timeval seltimeout;
 	unsigned int i, j;
 	int val;
 	int maxsock = -1;
@@ -175,9 +174,6 @@ void main_noinetd() {
 
 		FD_ZERO(&fds);
 		
-		seltimeout.tv_sec = 60;
-		seltimeout.tv_usec = 0;
-		
 		/* listening sockets */
 		for (i = 0; i < listensockcount; i++) {
 			FD_SET(listensocks[i], &fds);
@@ -191,7 +187,7 @@ void main_noinetd() {
 			}
 		}
 
-		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
+		val = select(maxsock+1, &fds, NULL, NULL, NULL);
 
 		if (exitflag) {
 			unlink(svr_opts.pidfile);
@@ -199,7 +195,7 @@ void main_noinetd() {
 		}
 		
 		if (val == 0) {
-			/* timeout reached */
+			/* timeout reached - shouldn't happen. eh */
 			continue;
 		}
 

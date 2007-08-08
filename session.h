@@ -45,6 +45,7 @@ void common_session_init(int sock, char* remotehost);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
 void session_identification();
+void send_msg_ignore();
 
 
 /* Server */
@@ -92,8 +93,9 @@ struct sshsession {
 	/* Is it a client or server? */
 	unsigned char isserver;
 
-	long connecttimeout; /* time to disconnect if we have a timeout (for
-							userauth etc), or 0 for no timeout */
+	time_t connect_time; /* time the connection was established
+							(cleared after auth once we're not
+							respecting AUTH_TIMEOUT any more) */
 
 	int sock;
 
@@ -131,6 +133,9 @@ struct sshsession {
 	
     int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
+						
+	time_t last_packet_time; /* time of the last packet transmission, for
+							keepalive purposes */
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;

@@ -77,8 +77,6 @@ static const struct ChanType *svr_chantypes[] = {
 void svr_session(int sock, int childpipe, 
 		char* remotehost, char *addrstring) {
 
-	struct timeval timeout;
-
     reseedrandom();
 
 	crypto_init();
@@ -91,11 +89,7 @@ void svr_session(int sock, int childpipe,
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
-	if (gettimeofday(&timeout, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-
-	ses.connecttimeout = timeout.tv_sec + AUTH_TIMEOUT;
+	ses.connect_time = time(NULL);
 
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;

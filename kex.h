@@ -53,7 +53,7 @@ struct KEXState {
 	unsigned donefirstkex : 1; /* Set to 1 after the first kex has completed,
 								  ie the transport layer has been set up */
 
-	long lastkextime; /* time of the last kex */
+	time_t lastkextime; /* time of the last kex */
 	unsigned int datatrans; /* data transmitted since last kex */
 	unsigned int datarecv; /* data received since last kex */
 

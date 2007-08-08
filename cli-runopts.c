@@ -63,11 +63,14 @@ static void printhelp() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
-					"-W <receive_window_buffer> (default %d, larger may be faster)\n"
+					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
 #endif
-					,DROPBEAR_VERSION, cli_opts.progname, DEFAULT_RECV_WINDOW);
+					,DROPBEAR_VERSION, cli_opts.progname,
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE);
+					
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -112,6 +115,7 @@ void cli_getopts(int argc, char ** argv) {
 	*/
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	char* recv_window_arg = NULL;
+	char* keepalive_arg = NULL;
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -206,6 +210,9 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'W':
 					next = &recv_window_arg;
+					break;
+				case 'K':
+					next = &keepalive_arg;
 					break;
 #ifdef DEBUG_TRACE
 				case 'v':
@@ -302,11 +309,19 @@ void cli_getopts(int argc, char ** argv) {
 	if (recv_window_arg)
 	{
 		opts.recv_window = atol(recv_window_arg);
-		if (opts.recv_window == 0)
+		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW)
 		{
 			dropbear_exit("Bad recv window '%s'", recv_window_arg);
 		}
 	}
+	if (keepalive_arg) {
+		opts.keepalive_secs = strtoul(keepalive_arg, NULL, 10);
+		if (opts.keepalive_secs == 0 && errno == EINVAL)
+		{
+			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
+		}
+	}
+	
 }
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH

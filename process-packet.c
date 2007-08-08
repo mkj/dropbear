@@ -56,8 +56,8 @@ void process_packet() {
 	switch(type) {
 
 		case SSH_MSG_IGNORE:
+			goto out;
 		case SSH_MSG_DEBUG:
-			TRACE(("received SSH_MSG_IGNORE or SSH_MSG_DEBUG"))
 			goto out;
 
 		case SSH_MSG_UNIMPLEMENTED:

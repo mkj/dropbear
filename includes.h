@@ -56,6 +56,7 @@
 #include <ctype.h>
 #include <stdarg.h>
 #include <dirent.h>
+#include <time.h>
 
 #ifdef HAVE_UTMP_H
 #include <utmp.h>

@@ -231,6 +231,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
    though increasing it may not make a significant difference. */
 #define TRANS_MAX_PAYLOAD_LEN 16384
 
+/* Ensure that data is transmitted every KEEPALIVE seconds. This can
+be overridden at runtime with -K. 0 disables keepalives */
+#define DEFAULT_KEEPALIVE 0
 
 /*******************************************************************
  * You shouldn't edit below here unless you know you need to.
@@ -287,9 +290,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define _PATH_CP "/bin/cp"
 
-/* Timeouts in seconds */
-#define SELECT_TIMEOUT 20
-
 /* success/failure defines */
 #define DROPBEAR_SUCCESS 0
 #define DROPBEAR_FAILURE -1
@@ -343,6 +343,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define RECV_WINDOWEXTEND (opts.recv_window / 3) /* We send a "window extend" every
 								RECV_WINDOWEXTEND bytes */
+#define MAX_RECV_WINDOW (1024*1024) /* 1 MB should be enough */
 
 #define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
 							connection, so can't be _too_ small */
