@@ -433,8 +433,8 @@ static void enqueue_reply_packet() {
 		ses.reply_queue_tail->next = new_item;
 	} else {
 		ses.reply_queue_head = new_item;
-		ses.reply_queue_tail = new_item;
 	}
+	ses.reply_queue_tail = new_item;
 	TRACE(("leave enqueue_reply_packet"))
 }
 
