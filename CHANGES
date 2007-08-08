@@ -1,3 +1,26 @@
+0.50 - Wed 8 August 2007
+
+- Add DROPBEAR_PASSWORD environment variable to specify a dbclient password
+
+- Use /dev/urandom by default, since that's what everyone does anyway
+
+- Correct vfork() use for uClinux in scp
+  (thanks to Alex Landau)
+
+- Exit with an exit code of 1 if dropbear can't bind to any ports
+  (thanks to Nicolai Ehemann)
+
+- Improve network performance and add a -W <receive_window> argument for
+  adjusting the tradeoff between network performance and memory consumption.
+
+- Fix a problem where reply packets could be sent during key exchange,
+  in violation of the SSH spec. This could manifest itself with connections
+  being terminated after 8 hours with new TCP-forward connections being
+  established.
+
+- Add -K <keepalive_time> argument, ensuring that data is transmitted
+  over the connection at least every N seconds.
+
 0.49 - Fri 23 February 2007
 
 - Security: dbclient previously would prompt to confirm a 
