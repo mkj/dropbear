@@ -49,6 +49,9 @@ char * stripcontrol(const char * text);
 unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport);
 int dropbear_listen(const char* address, const char* port,
 		int *socks, unsigned int sockcount, char **errstring, int *maxfd);
+#ifdef ENABLE_CONNECT_UNIX
+int connect_unix(const char* addr);
+#endif
 int connect_remote(const char* remotehost, const char* remoteport,
 		int nonblocking, char ** errstring);
 char* getaddrhostname(struct sockaddr_storage * addr);

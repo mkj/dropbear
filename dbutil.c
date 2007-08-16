@@ -295,6 +295,23 @@ int dropbear_listen(const char* address, const char* port,
 	return nsock;
 }
 
+/* Connect to a given unix socket. The socket is not non-blocking */
+#ifdef ENABLE_CONNECT_UNIX
+int connect_unix(const char* addr)
+{
+	struct sockaddr_un egdsock;
+	int fd = -1;
+
+	memset((void*)&egdsock, 0x0, sizeof(egdsock));
+	egdsock.sun_family = AF_UNIX;
+	strlcpy(egdsock.sun_path, addr, sizeof(egdsock.sun_path));
+
+	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+
+	return fd;
+}
+#endif
+
 /* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
  * return immediately if nonblocking is set. On failure, if errstring
  * wasn't null, it will be a newly malloced error message */
@@ -340,15 +357,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		}
 
 		if (nonblocking) {
-			if (fcntl(sock, F_SETFL, O_NONBLOCK) < 0) {
-				close(sock);
-				sock = -1;
-				if (errstring != NULL && *errstring == NULL) {
-					*errstring = m_strdup("Failed non-blocking");
-				}
-				TRACE(("Failed non-blocking: %s", strerror(errno)))
-				continue;
-			}
+			setnonblocking(sock);
 		}
 
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
