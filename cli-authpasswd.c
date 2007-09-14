@@ -38,7 +38,9 @@ static int want_askpass()
 	char* askpass_prog = NULL;
 
 	askpass_prog = getenv("SSH_ASKPASS");
-	return askpass_prog && !isatty(STDIN_FILENO) && getenv("DISPLAY");
+	return askpass_prog && 
+		((!isatty(STDIN_FILENO) && getenv("DISPLAY") )
+		 	|| getenv("SSH_ASKPASS_ALWAYS"));
 }
 
 /* returns a statically allocated password from a helper app, or NULL
@@ -125,10 +127,16 @@ void cli_auth_password() {
 				cli_opts.username, cli_opts.remotehost);
 #ifdef ENABLE_CLI_ASKPASS_HELPER
 	if (want_askpass())
+	{
 		password = gui_getpass(prompt);
-	else
+		if (!password) {
+			dropbear_exit("No password");
+		}
+	} else
 #endif
+	{
 		password = getpass_or_cancel(prompt);
+	}
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
