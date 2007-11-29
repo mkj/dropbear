@@ -92,6 +92,9 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 	char* dummy = NULL; /* Not used for anything real */
 
+	char* recv_window_arg = NULL;
+	char* keepalive_arg = NULL;
+
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
 	cli_opts.remotehost = NULL;
@@ -121,8 +124,6 @@ void cli_getopts(int argc, char ** argv) {
 	opts.ipv6 = 1;
 	*/
 	opts.recv_window = DEFAULT_RECV_WINDOW;
-	char* recv_window_arg = NULL;
-	char* keepalive_arg = NULL;
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
