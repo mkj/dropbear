@@ -798,11 +798,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if (svr_opts.domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
 
-			/* 11 == strlen("/hushlogin\0") */
-			len = strlen(ses.authstate.pw_dir) + 11; 
+			/* 12 == strlen("/.hushlogin\0") */
+			len = strlen(ses.authstate.pw->pw_dir) + 12; 
 
 			hushpath = m_malloc(len);
-			snprintf(hushpath, len, "%s/hushlogin", ses.authstate.pw_dir);
+			snprintf(hushpath, len, "%s/.hushlogin", ses.authstate.pw->pw_dir);
 
 			if (stat(hushpath, &sb) < 0) {
 				/* more than a screenful is stupid IMHO */
