@@ -130,12 +130,12 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
 				"exit after auth (%s): %s", 
-				ses.authstate.printableuser, format);
-	} else if (ses.authstate.printableuser) {
+				ses.authstate.pw_name, format);
+	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
 				"exit before auth (user '%s', %d fails): %s",
-				ses.authstate.printableuser, ses.authstate.failcount, format);
+				ses.authstate.pw_name, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 

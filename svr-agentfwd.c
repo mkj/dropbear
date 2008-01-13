@@ -150,8 +150,8 @@ void agentcleanup(struct ChanSess * chansess) {
 		 * for themselves */
 		uid = getuid();
 		gid = getgid();
-		if ((setegid(ses.authstate.pw->pw_gid)) < 0 ||
-			(seteuid(ses.authstate.pw->pw_uid)) < 0) {
+		if ((setegid(ses.authstate.pw_gid)) < 0 ||
+			(seteuid(ses.authstate.pw_uid)) < 0) {
 			dropbear_exit("failed to set euid");
 		}
 
@@ -213,8 +213,8 @@ static int bindagent(int fd, struct ChanSess * chansess) {
 	/* drop to user privs to make the dir/file */
 	uid = getuid();
 	gid = getgid();
-	if ((setegid(ses.authstate.pw->pw_gid)) < 0 ||
-		(seteuid(ses.authstate.pw->pw_uid)) < 0) {
+	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+		(seteuid(ses.authstate.pw_uid)) < 0) {
 		dropbear_exit("failed to set euid");
 	}
 

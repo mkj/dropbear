@@ -524,6 +524,7 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
 	unsigned char namebuf[65];
+	struct passwd * pw = NULL;
 
 	TRACE(("enter sessionpty"))
 	chansess->term = buf_getstring(ses.payload, &termlen);
@@ -547,7 +548,10 @@ static int sessionpty(struct ChanSess * chansess) {
 		dropbear_exit("out of memory"); /* TODO disconnect */
 	}
 
-	pty_setowner(ses.authstate.pw, chansess->tty);
+	pw = getpwnam(ses.authstate.pw_name);
+	if (!pw)
+		dropbear_exit("getpwnam failed after succeeding previously");
+	pty_setowner(pw, chansess->tty);
 
 	/* Set up the rows/col counts */
 	sessionwinchange(chansess);
@@ -604,10 +608,10 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 #ifdef LOG_COMMANDS
 	if (chansess->cmd) {
 		dropbear_log(LOG_INFO, "user %s executing '%s'", 
-						ses.authstate.printableuser, chansess->cmd);
+						ses.authstate.pw_name, chansess->cmd);
 	} else {
 		dropbear_log(LOG_INFO, "user %s executing login shell", 
-						ses.authstate.printableuser);
+						ses.authstate.pw_name);
 	}
 #endif
 
@@ -795,10 +799,10 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			/* don't show the motd if ~/.hushlogin exists */
 
 			/* 11 == strlen("/hushlogin\0") */
-			len = strlen(ses.authstate.pw->pw_dir) + 11; 
+			len = strlen(ses.authstate.pw_dir) + 11; 
 
 			hushpath = m_malloc(len);
-			snprintf(hushpath, len, "%s/hushlogin", ses.authstate.pw->pw_dir);
+			snprintf(hushpath, len, "%s/hushlogin", ses.authstate.pw_dir);
 
 			if (stat(hushpath, &sb) < 0) {
 				/* more than a screenful is stupid IMHO */
@@ -908,12 +912,12 @@ static void execchild(struct ChanSess *chansess) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if ((setgid(ses.authstate.pw->pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw->pw_name, 
-						ses.authstate.pw->pw_gid) < 0)) {
+		if ((setgid(ses.authstate.pw_gid) < 0) ||
+			(initgroups(ses.authstate.pw_name, 
+						ses.authstate.pw_gid) < 0)) {
 			dropbear_exit("error changing user group");
 		}
-		if (setuid(ses.authstate.pw->pw_uid) < 0) {
+		if (setuid(ses.authstate.pw_uid) < 0) {
 			dropbear_exit("error changing user");
 		}
 	} else {
@@ -924,29 +928,29 @@ static void execchild(struct ChanSess *chansess) {
 		 * usernames with the same uid, but differing groups, then the
 		 * differing groups won't be set (as with initgroups()). The solution
 		 * is for the sysadmin not to give out the UID twice */
-		if (getuid() != ses.authstate.pw->pw_uid) {
+		if (getuid() != ses.authstate.pw_uid) {
 			dropbear_exit("couldn't	change user as non-root");
 		}
 	}
 
 	/* an empty shell should be interpreted as "/bin/sh" */
-	if (ses.authstate.pw->pw_shell[0] == '\0') {
+	if (ses.authstate.pw_shell[0] == '\0') {
 		usershell = "/bin/sh";
 	} else {
-		usershell = ses.authstate.pw->pw_shell;
+		usershell = ses.authstate.pw_shell;
 	}
 
 	/* set env vars */
-	addnewvar("USER", ses.authstate.pw->pw_name);
-	addnewvar("LOGNAME", ses.authstate.pw->pw_name);
-	addnewvar("HOME", ses.authstate.pw->pw_dir);
+	addnewvar("USER", ses.authstate.pw_name);
+	addnewvar("LOGNAME", ses.authstate.pw_name);
+	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", usershell);
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
 
 	/* change directory */
-	if (chdir(ses.authstate.pw->pw_dir) < 0) {
+	if (chdir(ses.authstate.pw_dir) < 0) {
 		dropbear_exit("error changing directory");
 	}
 
