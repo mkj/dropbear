@@ -261,6 +261,7 @@ static unsigned int write_pending(struct Channel * channel) {
 
 /* EOF/close handling */
 static void check_close(struct Channel *channel) {
+	int close_allowed = 0;
 
 	TRACE(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
@@ -274,8 +275,17 @@ static void check_close(struct Channel *channel) {
 	{
 		channel->flushing = 1;
 	}
+	
+	// if a type-specific check_close is defined we will only exit
+	// once that has been triggered. this is only used for a server "session"
+	// channel, to ensure that the shell has exited (and the exit status 
+	// retrieved) before we close things up.	
+	if (!channel->type->check_close	
+			|| channel->type->check_close(channel)) {
+		close_allowed = 1;
+	}
 
-	if (channel->recv_close && !write_pending(channel)) {
+	if (channel->recv_close && !write_pending(channel) && close_allowed) {
 		if (!channel->sent_close) {
 			TRACE(("Sending MSG_CHANNEL_CLOSE in response to same."))
 			send_msg_channel_close(channel);
@@ -312,9 +322,10 @@ static void check_close(struct Channel *channel) {
 	}
 
 	/* And if we can't receive any more data from them either, close up */
-	if (!channel->sent_close
-			&& channel->readfd == FD_CLOSED
+	if (channel->readfd == FD_CLOSED
 			&& (ERRFD_IS_WRITE(channel) || channel->errfd == FD_CLOSED)
+			&& !channel->sent_close
+			&& close_allowed
 			&& !write_pending(channel)) {
 		TRACE(("sending close, readfd is closed"))
 		send_msg_channel_close(channel);
