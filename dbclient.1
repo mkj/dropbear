@@ -86,6 +86,19 @@ useful for working around firewalls or routers that drop connections after
 a certain period of inactivity. The trade-off is that a session may be
 closed if there is a temporary lapse of network connectivity. A setting
 if 0 disables keepalives.
+.SH ENVIRONMENT
+.TP
+.B SSH_ASKPASS
+dbclient can use an external program to request a password from a user.
+SSH_ASKPASS should be set to the path of a program that will return a password
+on standard output. This program will only be used if either DISPLAY is set and
+standard input is not a TTY, or the environment variable SSH_ASKPASS_ALWAYS is
+set.
+.TP
+.B DROPBEAR_PASSWORD
+A password to use for remote authentication can be specified in the environment
+variable DROPBEAR_PASSWORD. Care should be taken that the password is not
+exposed to other users on a multi-user system, or stored in accessible files.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br
