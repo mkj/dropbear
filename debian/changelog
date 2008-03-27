@@ -1,14 +1,69 @@
-dropbear (0.50-0.1) unstable; urgency=low
+dropbear (0.50-4) unstable; urgency=low
 
-  * New upstream release.
+  * debian/dropbear.init: apply patch from Petter Reinholdtsen: add LSB
+    formatted dependency info in init.d script (closes: #466257).
+  * debian/rules: no longer include symlinks for ./supervise/ subdirectories.
+  * debian/dropbear.postinst: upgrade from << 0.50-4: if dropbear is managed
+    by runit, remove service, and re-add using update-service(8).
+  * debian/control: Standards-Version: 3.7.3.0.
+  * debian/rules: target clean: don't ignore errors but check for readable
+    ./Makefile.
 
- -- Matt Johnston <matt@ucc.asn.au>  Wed, 8 Aug 2007 11:22:33 +0800
+ -- Gerrit Pape <pape@smarden.org>  Thu, 06 Mar 2008 19:06:58 +0000
 
-dropbear (0.49-0.1) unstable; urgency=low
+dropbear (0.50-3) unstable; urgency=low
 
-  * New upstream release.
+  * debian/dropbear.init: use the update-service(8) program from the runit
+    package instead of directly checking for the symlink in /var/service/.
+  * debian/README.runit: talk about update-service(8) instead of symlinks
+    in /var/service/.
 
- -- Matt Johnston <matt@ucc.asn.au>  Fri, 23 Feb 2007 00:44:00 +0900
+ -- Gerrit Pape <pape@smarden.org>  Fri, 15 Feb 2008 00:32:37 +0000
+
+dropbear (0.50-2) unstable; urgency=low
+
+  * debian/dropbear.README.Debian: no longer talk about entropy from
+    /dev/random, /dev/urandom is now used by default (thx Joey Hess,
+    closes: #441515).
+
+ -- Gerrit Pape <pape@smarden.org>  Mon, 24 Sep 2007 16:49:17 +0000
+
+dropbear (0.50-1) unstable; urgency=low
+
+  * debian/README.runit: minor.
+  * new upstream version.
+  * debian/diff/0001-options.h-use-dev-urandom-instead-of-dev-random-a.diff:
+    remove; fixed upstream.
+
+ -- Gerrit Pape <pape@smarden.org>  Thu, 09 Aug 2007 23:01:01 +0000
+
+dropbear (0.49-2) unstable; urgency=low
+
+  * debian/rules: apply diffs from debian/diff/ with patch -p1 instead of
+    -p0.
+  * debian/diff/0001-options.h-use-dev-urandom-instead-of-dev-random-a.diff:
+    new; options.h: use /dev/urandom instead of /dev/random as
+    DROPBEAR_RANDOM_DEV (closes: #386976).
+  * debian/rules: target clean: remove libtomcrypt/Makefile,
+    libtommath/Makefile.
+
+ -- Gerrit Pape <pape@smarden.org>  Sat, 09 Jun 2007 08:59:59 +0000
+
+dropbear (0.49-1) unstable; urgency=high
+
+  * new upstream release, fixes
+    * CVE-2007-1099: dropbear dbclient insufficient warning on hostkey
+      mismatch (closes: #412899).
+    * dbclient uses static "Password:" prompt instead of using the server's
+      prompt (closes: #394996).
+  * debian/control: Suggests: openssh-client, not ssh (closes: #405686);
+    Standards-Version: 3.7.2.2.
+  * debian/README.Debian: ssh -> openssh-server, openssh-client; remove
+    'Replacing OpenSSH "sshd" with Dropbear' part, this is simply done by not
+    installing the openssh-server package.
+  * debian/README.runit: runsvstat -> sv status.
+
+ -- Gerrit Pape <pape@smarden.org>  Fri,  2 Mar 2007 20:48:18 +0000
 
 dropbear (0.48.1-1) unstable; urgency=medium
 
