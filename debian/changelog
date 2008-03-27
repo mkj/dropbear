@@ -1,3 +1,9 @@
+dropbear (0.51-0.1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Thu, 27 Mar 2008 19:14:00 +0900
+
 dropbear (0.50-4) unstable; urgency=low
 
   * debian/dropbear.init: apply patch from Petter Reinholdtsen: add LSB
