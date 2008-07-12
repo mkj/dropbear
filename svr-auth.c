@@ -203,7 +203,7 @@ out:
 	m_free(methodname);
 }
 
-static int fill_passwd(const char* username) {
+static void fill_passwd(const char* username) {
 	struct passwd *pw = NULL;
 	if (ses.authstate.pw_name)
 		m_free(ses.authstate.pw_name);
