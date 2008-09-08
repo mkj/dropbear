@@ -144,6 +144,9 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
+	/* free potential public key options */
+	svr_pubkey_options_cleanup();
+
 	/* must be after we've done with username etc */
 	common_session_cleanup();
 

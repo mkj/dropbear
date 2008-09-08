@@ -136,6 +136,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /*#define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
 #define ENABLE_SVR_PUBKEY_AUTH
 
+/* Wether to ake public key options in authorized_keys file into account */
+#ifdef ENABLE_SVR_PUBKEY_AUTH
+#define ENABLE_SVR_PUBKEY_OPTIONS
+#endif
+
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
 #define ENABLE_CLI_INTERACT_AUTH
