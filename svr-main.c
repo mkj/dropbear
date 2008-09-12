@@ -266,7 +266,11 @@ void main_noinetd() {
 				goto out;
 			}
 
+#ifdef DEBUG_NOFORK
+			fork_ret = 0;
+#else
 			fork_ret = fork();
+#endif
 			if (fork_ret < 0) {
 				dropbear_log(LOG_WARNING, "error forking: %s", strerror(errno));
 				goto out;
@@ -292,9 +296,11 @@ void main_noinetd() {
 				addrstring = getaddrstring(&remoteaddr, 1);
 				dropbear_log(LOG_INFO, "Child connection from %s", addrstring);
 
+#ifndef DEBUG_NOFORK
 				if (setsid() < 0) {
 					dropbear_exit("setsid: %s", strerror(errno));
 				}
+#endif
 
 				/* make sure we close sockets */
 				for (i = 0; i < listensockcount; i++) {

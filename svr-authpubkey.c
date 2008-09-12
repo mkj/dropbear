@@ -189,8 +189,9 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	char * filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
-	unsigned int len, pos, quoted;
-	const char *options = NULL;
+	unsigned int len, pos;
+	buffer * options_buf = NULL;
+	int line_num;
 
 	TRACE(("enter checkpubkey"))
 
@@ -225,17 +226,22 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	TRACE(("checkpubkey: opened authorized_keys OK"))
 
 	line = buf_new(MAX_AUTHKEYS_LINE);
+	line_num = 0;
 
 	/* iterate through the lines */
 	do {
 		/* new line : potentially new options */
-		options = NULL;
+		if (options_buf) {
+			buf_free(options_buf);
+			options_buf = NULL;
+		}
 
 		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
 			TRACE(("checkpubkey: authorized_keys EOF reached"))
 			break;
 		}
+		line_num++;
 
 		if (line->len < MIN_AUTHKEYS_LINE) {
 			TRACE(("checkpubkey: line too short"))
@@ -243,38 +249,59 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		}
 
 		/* check the key type - will fail if there are options */
-		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
-			/* there may be options or a commented line */
-			if ('#' == line->data[line->pos]) continue;
-			/* no comment, skip to next space character */
-			len = 0;
-			pos = line->pos;
-			options = buf_getptr(line, 1);
-			quoted = 0;
-			while (line->data[pos] 
-				&& (quoted || (line->data[pos] != ' '
-						&& line->data[pos] != '\t'
-						&& line->data[pos] != '\n'
-						&& line->data[pos] != '\r'))) { 
-				pos++;
-				if (line->data[pos] == '\\' 
-					&& line->data[pos+1] == '"') { 
-					pos++;	/* skip both */ 
-				} else if (line->data[pos] == '"') 
-					quoted = !quoted; 
-			} /* line->data[pos] == ['\0'|' '|'\t'] */
+		TRACE(("a line!"))
 
-			/* skip line if there is nothing left */
-			if (pos >= line->len) continue;
-			/* skip line if it begins with a space or tab character */
-			if (pos == line->pos) continue;
-			/* set the position of the line after what we have read */
-			buf_setpos(line, pos+1);
-			/* give a second chance to the algo */
-			if (line->pos + algolen > line->len) continue;
+		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
+			int is_comment = 0;
+			char *options_start = NULL;
+			int options_len = 0;
+			int escape, quoted;
+			
+			/* skip over any comments or leading whitespace */
+			while (line->pos < line->len) {
+				const char c = buf_getbyte(line);
+				if (c == ' ' || c == '\t') {
+					continue;
+				} else if (c == '#') {
+					is_comment = 1;
+					break;
+				}
+				buf_incrpos(line, -1);
+				break;
+			}
+			if (is_comment) {
+				/* next line */
+				continue;
+			}
+
+			/* remember start of options */
+			options_start = buf_getptr(line, 1);
+			quoted = 0;
+			escape = 0;
+			options_len = 0;
+			
+			/* figure out where the options are */
+			while (line->pos < line->len) {
+				const char c = buf_getbyte(line);
+				if (!quoted && (c == ' ' || c == '\t')) {
+					break;
+				}
+				escape = (!escape && c == '\\');
+				if (!escape && c == '"') {
+					quoted = !quoted;
+				}
+				options_len++;
+			}
+			options_buf = buf_new(options_len);
+			buf_putbytes(options_buf, options_start, options_len);
+
+			/* compare the algorithm */
+			if (line->pos + algolen > line->len) {
+				continue;
+			}
 			if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) { 
 				continue;
-			 }
+			}
 		}
 		buf_incrpos(line, algolen);
 		
@@ -296,8 +323,8 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line, NULL);
 
-		if (ret == DROPBEAR_SUCCESS) {
-			ret = svr_add_pubkey_options(options);
+		if (ret == DROPBEAR_SUCCESS && options_buf) {
+			ret = svr_add_pubkey_options(options_buf, line_num, filename);
 		}
 
 		if (ret == DROPBEAR_SUCCESS) {
@@ -316,6 +343,9 @@ out:
 		buf_free(line);
 	}
 	m_free(filename);
+	if (options_buf) {
+		buf_free(options_buf);
+	}
 	TRACE(("leave checkpubkey: ret=%d", ret))
 	return ret;
 }

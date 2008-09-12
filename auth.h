@@ -46,7 +46,7 @@ int svr_pubkey_allows_x11fwd();
 int svr_pubkey_allows_pty();
 void svr_pubkey_set_forced_command(struct ChanSess *chansess);
 void svr_pubkey_options_cleanup();
-int svr_add_pubkey_options(const char* opts);
+int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filename);
 #else
 /* no option : success */
 #define svr_pubkey_allows_agentfwd() 1
@@ -55,7 +55,7 @@ int svr_add_pubkey_options(const char* opts);
 #define svr_pubkey_allows_pty() 1
 static inline void svr_pubkey_set_forced_command(struct ChanSess *chansess) { }
 static inline void svr_pubkey_options_cleanup() { }
-#define svr_add_pubkey_options(x) DROPBEAR_SUCCESS
+#define svr_add_pubkey_options(x,y,z) DROPBEAR_SUCCESS
 #endif
 
 /* Client functions */

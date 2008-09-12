@@ -102,106 +102,86 @@ void svr_pubkey_options_cleanup() {
 	}
 }
 
+/* helper for svr_add_pubkey_options. returns DROPBEAR_SUCCESS if the option is matched,
+   and increments the options_buf */
+static int match_option(buffer *options_buf, const char *opt_name) {
+	const int len = strlen(opt_name);
+	if (options_buf->len - options_buf->pos < len) {
+		return DROPBEAR_FAILURE;
+	}
+	if (strncasecmp(buf_getptr(options_buf, len), opt_name, len) == 0) {
+		buf_incrpos(options_buf, len);
+		return DROPBEAR_SUCCESS;
+	}
+	return DROPBEAR_FAILURE;
+}
+
 /* Parse pubkey options and set ses.authstate.pubkey_options accordingly.
  * Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
-int svr_add_pubkey_options(const char* opts) {
-	const char *cp;
-	int i;
+int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filename) {
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter addpubkeyoptions"))
 
-	if (!opts || *opts == ' ') {
-		/* no option, success */
-		ret = DROPBEAR_SUCCESS;
-		goto end;
-	}
-	
 	ses.authstate.pubkey_options = (struct PubKeyOptions*)m_malloc(sizeof( struct PubKeyOptions ));
+	memset(ses.authstate.pubkey_options, '\0', sizeof(*ses.authstate.pubkey_options));
 
-	while (*opts && *opts != ' ' && *opts != '\t') {
-		cp = "no-port-forwarding";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
+	buf_setpos(options_buf, 0);
+	while (options_buf->pos < options_buf->len) {
+		if (match_option(options_buf, "no-port-forwarding") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "Port forwarding disabled.");
 			ses.authstate.pubkey_options->no_port_forwarding_flag = 1;
-			opts += strlen(cp);
 			goto next_option;
 		}
 #ifdef ENABLE_AGENTFWD
-		cp = "no-agent-forwarding";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
+		if (match_option(options_buf, "no-agent-forwarding") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "Agent forwarding disabled.");
 			ses.authstate.pubkey_options->no_agent_forwarding_flag = 1;
-			opts += strlen(cp);
 			goto next_option;
 		}
 #endif
 #ifdef ENABLE_X11FWD
-		cp = "no-X11-forwarding";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
+		if (match_option(options_buf, "no-X11-forwarding") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "X11 forwarding disabled.");
 			ses.authstate.pubkey_options->no_x11_forwarding_flag = 1;
-			opts += strlen(cp);
 			goto next_option;
 		}
 #endif
-		cp = "no-pty";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
+		if (match_option(options_buf, "no-pty") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "Pty allocation disabled.");
 			ses.authstate.pubkey_options->no_pty_flag = 1;
-			opts += strlen(cp);
 			goto next_option;
 		}
-		cp = "command=\"";
-		if (strncasecmp(opts, cp, strlen(cp)) == 0) {
-			opts += strlen(cp);
-			ses.authstate.pubkey_options->forced_command = (char*)m_malloc(strlen(opts) + 1);
-			i = 0;
-			while (*opts) {
-				if (*opts == '"')
-					break;
-				if (*opts == '\\' && opts[1] == '"') {
-					opts += 2;
-					ses.authstate.pubkey_options->forced_command[i++] = '"';
-					continue;
+		if (match_option(options_buf, "command=\"") == DROPBEAR_SUCCESS) {
+			int escaped = 0;
+			const unsigned char* command_start = buf_getptr(options_buf, 0);
+			while (options_buf->pos < options_buf->len) {
+				const char c = buf_getbyte(options_buf);
+				if (!escaped && c == '"') {
+					const int command_len = buf_getptr(options_buf, 0) - command_start;
+					ses.authstate.pubkey_options->forced_command = m_malloc(command_len);
+					memcpy(ses.authstate.pubkey_options->forced_command,
+							command_start, command_len-1);
+					ses.authstate.pubkey_options->forced_command[command_len-1] = '\0';
+					dropbear_log(LOG_WARNING, "Forced command '%s'", 
+						ses.authstate.pubkey_options->forced_command);
+					goto next_option;
 				}
-				ses.authstate.pubkey_options->forced_command[i++] = *opts++;
+				escaped = (!escaped && c == '\\');
 			}
-			if (!*opts) {
-				dropbear_log(LOG_WARNING, 
-						"Missing end quote in public key command option");
-				m_free(ses.authstate.pubkey_options->forced_command);
-				ses.authstate.pubkey_options->forced_command = NULL;
-				goto bad_option;
-			}
-			ses.authstate.pubkey_options->forced_command[i] = '\0';
-			if (strlen(ses.authstate.pubkey_options->forced_command) > MAX_CMD_LEN) {
-				dropbear_log(LOG_WARNING, 
-						"Public key option command too long (>MAX_CMD_LEN).");
-				m_free(ses.authstate.pubkey_options->forced_command);
-				ses.authstate.pubkey_options->forced_command = NULL;
-				goto bad_option;
-			}
-			dropbear_log(LOG_WARNING, "Forced command '%s'", 
-				ses.authstate.pubkey_options->forced_command);
-			opts++;
-			goto next_option;
+			dropbear_log(LOG_WARNING, "Badly formatted command= authorized_keys option");
+			goto bad_option;
 		}
-		next_option:
+
+next_option:
 		/*
 		 * Skip the comma, and move to the next option
 		 * (or break out if there are no more).
 		 */
-		if (!*opts) {
-			TRACE(("Bugs in svr-chansession.c pubkey option processing."))
-		}
-		if (*opts == ' ' || *opts == '\t') {
-			break;		/* End of options. */
-		}
-		if (*opts != ',') {
+		if (options_buf->pos < options_buf->len 
+				&& buf_getbyte(options_buf) != ',') {
 			goto bad_option;
 		}
-		opts++;
 		/* Process the next option. */
 	}
 	/* parsed all options with no problem */
@@ -212,12 +192,11 @@ bad_option:
 	ret = DROPBEAR_FAILURE;
 	m_free(ses.authstate.pubkey_options);
 	ses.authstate.pubkey_options = NULL;
-	dropbear_log(LOG_WARNING, "Bad public key options : '%.50s'", opts);
+	dropbear_log(LOG_WARNING, "Bad public key options at %s:%d", filename, line_num);
 
 end:
 	TRACE(("leave addpubkeyoptions"))
 	return ret;
-
 }
 
 #endif
