@@ -71,6 +71,8 @@ void write_packet() {
 			dropbear_exit("error writing");
 		}
 	} 
+	
+	ses.last_packet_time = time(NULL);
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -212,7 +214,7 @@ static void read_packet_init() {
 	buf_setpos(ses.readbuf, blocksize);
 
 	/* check packet length */
-	if ((len > MAX_PACKET_LEN) ||
+	if ((len > RECV_MAX_PACKET_LEN) ||
 		(len < MIN_PACKET_LEN + macsize) ||
 		((len - macsize) % blocksize != 0)) {
 		dropbear_exit("bad packet size %d", len);
@@ -281,7 +283,7 @@ void decrypt_packet() {
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
 	len = ses.decryptreadbuf->len - padlen - 4 - 1;
-	if ((len > MAX_PAYLOAD_LEN) || (len < 1)) {
+	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
 		dropbear_exit("bad packet size");
 	}
 
@@ -403,7 +405,60 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 #endif
 
 
+/* returns 1 if the packet is a valid type during kex (see 7.1 of rfc4253) */
+static int packet_is_okay_kex(unsigned char type) {
+	if (type >= SSH_MSG_USERAUTH_REQUEST) {
+		return 0;
+	}
+	if (type == SSH_MSG_SERVICE_REQUEST || type == SSH_MSG_SERVICE_ACCEPT) {
+		return 0;
+	}
+	if (type == SSH_MSG_KEXINIT) {
+		/* XXX should this die horribly if !dataallowed ?? */
+		return 0;
+	}
+	return 1;
+}
 
+static void enqueue_reply_packet() {
+	struct packetlist * new_item = NULL;
+	new_item = m_malloc(sizeof(struct packetlist));
+	new_item->next = NULL;
+	
+	new_item->payload = buf_newcopy(ses.writepayload);
+	buf_setpos(ses.writepayload, 0);
+	buf_setlen(ses.writepayload, 0);
+	
+	if (ses.reply_queue_tail) {
+		ses.reply_queue_tail->next = new_item;
+	} else {
+		ses.reply_queue_head = new_item;
+	}
+	ses.reply_queue_tail = new_item;
+	TRACE(("leave enqueue_reply_packet"))
+}
+
+void maybe_flush_reply_queue() {
+	struct packetlist *tmp_item = NULL, *curr_item = NULL;
+	if (!ses.dataallowed)
+	{
+		TRACE(("maybe_empty_reply_queue - no data allowed"))
+		return;
+	}
+		
+	for (curr_item = ses.reply_queue_head; curr_item; ) {
+		CHECKCLEARTOWRITE();
+		buf_putbytes(ses.writepayload,
+			curr_item->payload->data, curr_item->payload->len);
+			
+		buf_free(curr_item->payload);
+		tmp_item = curr_item;
+		curr_item = curr_item->next;
+		m_free(tmp_item);
+		encrypt_packet();
+	}
+	ses.reply_queue_head = ses.reply_queue_tail = NULL;
+}
 	
 /* encrypt the writepayload, putting into writebuf, ready for write_packet()
  * to put on the wire */
@@ -413,9 +468,20 @@ void encrypt_packet() {
 	unsigned char blocksize, macsize;
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
+	unsigned char type;
 	
+	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
-	TRACE(("encrypt_packet type is %d", ses.writepayload->data[0]))
+	TRACE(("encrypt_packet type is %d", type))
+	
+	if (!ses.dataallowed && !packet_is_okay_kex(type)) {
+		/* During key exchange only particular packets are allowed.
+			Since this type isn't OK we just enqueue it to send 
+			after the KEX, see maybe_flush_reply_queue */
+		enqueue_reply_packet();
+		return;
+	}
+		
 	blocksize = ses.keys->trans_algo_crypt->blocksize;
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
@@ -446,10 +512,6 @@ void encrypt_packet() {
 	}
 
 	/* finished with payload */
-	buf_burn(ses.writepayload); /* XXX This is probably a good idea, and isn't
-								   _that_ likely to hurt performance too badly.
-								   Buffers can have cleartext passwords etc, or
-								   other sensitive data */
 	buf_setpos(ses.writepayload, 0);
 	buf_setlen(ses.writepayload, 0);
 

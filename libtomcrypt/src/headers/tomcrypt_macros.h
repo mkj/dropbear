@@ -10,7 +10,7 @@
 /* this is the "32-bit at least" data type 
  * Re-define it to suit your platform but it must be at least 32-bits 
  */
-#if defined(__x86_64__)
+#if defined(__x86_64__) || (defined(__sparc__) && defined(__arch64__))
    typedef unsigned ulong32;
 #else
    typedef unsigned long ulong32;
@@ -72,15 +72,15 @@
 #define STORE32H(x, y)           \
 asm __volatile__ (               \
    "bswapl %0     \n\t"          \
-   "movl   %0,(%2)\n\t"          \
+   "movl   %0,(%1)\n\t"          \
    "bswapl %0     \n\t"          \
-      :"=r"(x):"0"(x), "r"(y));
+      ::"r"(x), "r"(y));
 
 #define LOAD32H(x, y)          \
 asm __volatile__ (             \
-   "movl (%2),%0\n\t"          \
+   "movl (%1),%0\n\t"          \
    "bswapl %0\n\t"             \
-   :"=r"(x): "0"(x), "r"(y));
+   :"=r"(x): "r"(y));
 
 #else
 
@@ -103,15 +103,15 @@ asm __volatile__ (             \
 #define STORE64H(x, y)           \
 asm __volatile__ (               \
    "bswapq %0     \n\t"          \
-   "movq   %0,(%2)\n\t"          \
+   "movq   %0,(%1)\n\t"          \
    "bswapq %0     \n\t"          \
-      :"=r"(x):"0"(x), "r"(y):"0");
+      ::"r"(x), "r"(y));
 
 #define LOAD64H(x, y)          \
 asm __volatile__ (             \
-   "movq (%2),%0\n\t"          \
+   "movq (%1),%0\n\t"          \
    "bswapq %0\n\t"             \
-   :"=r"(x): "0"(x), "r"(y));
+   :"=r"(x): "r"(y));
 
 #else
 
@@ -132,10 +132,10 @@ asm __volatile__ (             \
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32L(x, y)        \
-     { ulong32  __t = (x); memcpy(y, &__t, 4); }
+     { ulong32  __t = (x); XMEMCPY(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
-     memcpy(&(x), y, 4);
+     XMEMCPY(&(x), y, 4);
 
 #define STORE64L(x, y)                                                                     \
      { (y)[7] = (unsigned char)(((x)>>56)&255); (y)[6] = (unsigned char)(((x)>>48)&255);   \
@@ -152,16 +152,16 @@ asm __volatile__ (             \
 #else /* 64-bit words then  */
 
 #define STORE32L(x, y)        \
-     { ulong32 __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); XMEMCPY(y, &__t, 4); }
 
 #define LOAD32L(x, y)         \
-     { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
+     { XMEMCPY(&(x), y, 4); x &= 0xFFFFFFFF; }
 
 #define STORE64L(x, y)        \
-     { ulong64 __t = (x); memcpy(y, &__t, 8); }
+     { ulong64 __t = (x); XMEMCPY(y, &__t, 8); }
 
 #define LOAD64L(x, y)         \
-    { memcpy(&(x), y, 8); }
+    { XMEMCPY(&(x), y, 8); }
 
 #endif /* ENDIAN_64BITWORD */
 
@@ -193,10 +193,10 @@ asm __volatile__ (             \
 #ifdef ENDIAN_32BITWORD 
 
 #define STORE32H(x, y)        \
-     { ulong32 __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); XMEMCPY(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
-     memcpy(&(x), y, 4);
+     XMEMCPY(&(x), y, 4);
 
 #define STORE64H(x, y)                                                                     \
      { (y)[0] = (unsigned char)(((x)>>56)&255); (y)[1] = (unsigned char)(((x)>>48)&255);   \
@@ -213,16 +213,16 @@ asm __volatile__ (             \
 #else /* 64-bit words then  */
 
 #define STORE32H(x, y)        \
-     { ulong32 __t = (x); memcpy(y, &__t, 4); }
+     { ulong32 __t = (x); XMEMCPY(y, &__t, 4); }
 
 #define LOAD32H(x, y)         \
-     { memcpy(&(x), y, 4); x &= 0xFFFFFFFF; }
+     { XMEMCPY(&(x), y, 4); x &= 0xFFFFFFFF; }
 
 #define STORE64H(x, y)        \
-     { ulong64 __t = (x); memcpy(y, &__t, 8); }
+     { ulong64 __t = (x); XMEMCPY(y, &__t, 8); }
 
 #define LOAD64H(x, y)         \
-    { memcpy(&(x), y, 8); }
+    { XMEMCPY(&(x), y, 8); }
 
 #endif /* ENDIAN_64BITWORD */
 #endif /* ENDIAN_BIG */
@@ -242,7 +242,7 @@ asm __volatile__ (             \
 #define RORc(x,n) _lrotr(x,n)
 #define ROLc(x,n) _lrotl(x,n)
 
-#elif defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && !defined(INTEL_CC) && !defined(LTC_NO_ASM)
+#elif !defined(__STRICT_ANSI__) && defined(__GNUC__) && (defined(__i386__) || defined(__x86_64__)) && !defined(INTEL_CC) && !defined(LTC_NO_ASM)
 
 static inline unsigned ROL(unsigned word, int i)
 {
@@ -285,6 +285,50 @@ static inline unsigned RORc(unsigned word, const int i)
 
 #endif
 
+#elif !defined(__STRICT_ANSI__) && defined(LTC_PPC32)
+
+static inline unsigned ROL(unsigned word, int i)
+{
+   asm ("rotlw %0,%0,%2"
+      :"=r" (word)
+      :"0" (word),"r" (i));
+   return word;
+}
+
+static inline unsigned ROR(unsigned word, int i)
+{
+   asm ("rotlw %0,%0,%2"
+      :"=r" (word)
+      :"0" (word),"r" (32-i));
+   return word;
+}
+
+#ifndef LTC_NO_ROLC
+
+static inline unsigned ROLc(unsigned word, const int i)
+{
+   asm ("rotlwi %0,%0,%2"
+      :"=r" (word)
+      :"0" (word),"I" (i));
+   return word;
+}
+
+static inline unsigned RORc(unsigned word, const int i)
+{
+   asm ("rotrwi %0,%0,%2"
+      :"=r" (word)
+      :"0" (word),"I" (i));
+   return word;
+}
+
+#else
+
+#define ROLc ROL
+#define RORc ROR
+
+#endif
+
+
 #else
 
 /* rotates the hard way */
@@ -297,7 +341,7 @@ static inline unsigned RORc(unsigned word, const int i)
 
 
 /* 64-bit Rotates */
-#if defined(__GNUC__) && defined(__x86_64__) && !defined(LTC_NO_ASM)
+#if !defined(__STRICT_ANSI__) && defined(__GNUC__) && defined(__x86_64__) && !defined(LTC_NO_ASM)
 
 static inline unsigned long ROL64(unsigned long word, int i)
 {
@@ -360,10 +404,13 @@ static inline unsigned long ROR64c(unsigned long word, const int i)
 
 #endif
 
-#undef MAX
-#undef MIN
-#define MAX(x, y) ( ((x)>(y))?(x):(y) )
-#define MIN(x, y) ( ((x)<(y))?(x):(y) )
+#ifndef MAX
+   #define MAX(x, y) ( ((x)>(y))?(x):(y) )
+#endif
+
+#ifndef MIN
+   #define MIN(x, y) ( ((x)<(y))?(x):(y) )
+#endif
 
 /* extract a byte portably */
 #ifdef _MSC_VER
@@ -373,5 +420,5 @@ static inline unsigned long ROR64c(unsigned long word, const int i)
 #endif   
 
 /* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_macros.h,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.15 $ */
+/* $Date: 2006/11/29 23:43:57 $ */

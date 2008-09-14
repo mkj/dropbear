@@ -5,7 +5,7 @@
 #include <tomcrypt.h>
 
 /* enable stack testing */
-// #define STACK_TEST
+/* #define STACK_TEST */
 
 /* stack testing, define this if stack usage goes downwards [e.g. x86] */
 #define STACK_DOWN
@@ -18,7 +18,12 @@ typedef struct {
 extern prng_state yarrow_prng;
 
 void run_cmd(int res, int line, char *file, char *cmd);
-#define DO(x) { run_cmd((x), __LINE__, __FILE__, #x); }
+
+#ifdef LTC_VERBOSE
+#define DO(x) do { fprintf(stderr, "%s:\n", #x); run_cmd((x), __LINE__, __FILE__, #x); } while (0);
+#else
+#define DO(x) do { run_cmd((x), __LINE__, __FILE__, #x); } while (0);
+#endif
 
 /* TESTS */
 int cipher_hash_test(void);
@@ -27,9 +32,9 @@ int mac_test(void);
 int pkcs_1_test(void);
 int store_test(void);
 int rsa_test(void);
+int katja_test(void);
 int ecc_tests(void);
 int dsa_test(void);
-int dh_tests(void);
 int der_tests(void);
 
 /* timing */
@@ -62,8 +67,9 @@ void time_mult(void);
 void time_sqr(void);
 void time_prng(void);
 void time_rsa(void);
+void time_dsa(void);
+void time_katja(void);
 void time_ecc(void);
-void time_dh(void);
 void time_macs_(unsigned long MAC_SIZE);
 void time_macs(void);
 void time_encmacs(void);
@@ -73,5 +79,5 @@ void time_encmacs(void);
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/testprof/tomcrypt_test.h,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.14 $ */
+/* $Date: 2006/10/18 03:36:34 $ */

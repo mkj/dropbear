@@ -56,8 +56,8 @@ void process_packet() {
 	switch(type) {
 
 		case SSH_MSG_IGNORE:
+			goto out;
 		case SSH_MSG_DEBUG:
-			TRACE(("received SSH_MSG_IGNORE or SSH_MSG_DEBUG"))
 			goto out;
 
 		case SSH_MSG_UNIMPLEMENTED:
@@ -119,7 +119,6 @@ void process_packet() {
 	recv_unimplemented();
 
 out:
-	buf_burn(ses.payload); /* Clear the memory to avoid swapping it out */
 	buf_free(ses.payload);
 	ses.payload = NULL;
 

@@ -1,10 +1,13 @@
 #Makefile for GCC
 #
 #Tom St Denis
-VERSION=0:35
+VERSION=0:40
 
-CC = libtool --mode=compile gcc
+CC = libtool --mode=compile --tag=CC gcc
+
 CFLAGS  +=  -I./ -Wall -W -Wshadow -Wsign-compare
+
+ifndef IGNORE_SPEED
 
 #for speed 
 CFLAGS += -O3 -funroll-loops
@@ -15,14 +18,30 @@ CFLAGS += -O3 -funroll-loops
 #x86 optimizations [should be valid for any GCC install though]
 CFLAGS  += -fomit-frame-pointer
 
+endif
+
 #install as this user
-USER=root
-GROUP=root
+ifndef INSTALL_GROUP
+   GROUP=wheel
+else
+   GROUP=$(INSTALL_GROUP)
+endif
+
+ifndef INSTALL_USER
+   USER=root
+else
+   USER=$(INSTALL_USER)
+endif
 
 default: libtommath.la
 
 #default files to install
-LIBNAME=libtommath.la
+ifndef LIBNAME
+   LIBNAME=libtommath.la
+endif
+ifndef LIBNAME_S
+   LIBNAME_S=libtommath.a
+endif
 HEADERS=tommath.h tommath_class.h tommath_superclass.h
 
 #LIBPATH-The directory for libtommath to be installed to.
@@ -61,20 +80,23 @@ bn_mp_prime_random_ex.o bn_mp_get_int.o bn_mp_sqrt.o bn_mp_is_square.o bn_mp_ini
 bn_mp_init_set_int.o bn_mp_invmod_slow.o bn_mp_prime_rabin_miller_trials.o \
 bn_mp_to_signed_bin_n.o bn_mp_to_unsigned_bin_n.o
 
+objs: $(OBJECTS)
 
-libtommath.la:  $(OBJECTS)
-	libtool --mode=link gcc *.lo -o libtommath.la -rpath $(LIBPATH) -version-info $(VERSION)
-	libtool --mode=link gcc *.o -o libtommath.a 
-	libtool --mode=install install -c libtommath.la $(LIBPATH)/libtommath.la
+$(LIBNAME):  $(OBJECTS)
+	libtool --mode=link gcc *.lo -o $(LIBNAME) -rpath $(LIBPATH) -version-info $(VERSION)
+
+install: $(LIBNAME)
+	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(LIBPATH)
+	libtool --mode=install install -c $(LIBNAME) $(DESTDIR)$(LIBPATH)/$(LIBNAME)
 	install -d -g $(GROUP) -o $(USER) $(DESTDIR)$(INCPATH)
 	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
 
-test: libtommath.a demo/demo.o
+test: $(LIBNAME) demo/demo.o
 	gcc $(CFLAGS) -c demo/demo.c -o demo/demo.o
-	libtool --mode=link gcc -o test demo/demo.o libtommath.la
+	libtool --mode=link gcc -o test demo/demo.o $(LIBNAME_S)
 	
 mtest: test	
-	cd mtest ; gcc $(CFLAGS) mtest.c -o mtest -s
+	cd mtest ; gcc $(CFLAGS) mtest.c -o mtest
         
-timing: libtommath.la
-	gcc $(CFLAGS) -DTIMER demo/timing.c libtommath.a -o ltmtest -s
+timing: $(LIBNAME)
+	gcc $(CFLAGS) -DTIMER demo/timing.c $(LIBNAME_S) -o ltmtest

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
  /** 
@@ -35,7 +35,7 @@ const struct ltc_cipher_descriptor twofish_desc =
     &twofish_test,
     &twofish_done,
     &twofish_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /* the two polynomials */
@@ -414,8 +414,8 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
    /* make the sboxes (large ram variant) */
    if (k == 2) {
         for (x = 0; x < 256; x++) {
-           tmpx0 = sbox(0, x);
-           tmpx1 = sbox(1, x);
+           tmpx0 = (unsigned char)sbox(0, x);
+           tmpx1 = (unsigned char)sbox(1, x);
            skey->twofish.S[0][x] = mds_column_mult(sbox(1, (sbox(0, tmpx0 ^ S[0]) ^ S[4])),0);
            skey->twofish.S[1][x] = mds_column_mult(sbox(0, (sbox(0, tmpx1 ^ S[1]) ^ S[5])),1);
            skey->twofish.S[2][x] = mds_column_mult(sbox(1, (sbox(1, tmpx0 ^ S[2]) ^ S[6])),2);
@@ -423,8 +423,8 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
         }
    } else if (k == 3) {
         for (x = 0; x < 256; x++) {
-           tmpx0 = sbox(0, x);
-           tmpx1 = sbox(1, x);
+           tmpx0 = (unsigned char)sbox(0, x);
+           tmpx1 = (unsigned char)sbox(1, x);
            skey->twofish.S[0][x] = mds_column_mult(sbox(1, (sbox(0, sbox(0, tmpx1 ^ S[0]) ^ S[4]) ^ S[8])),0);
            skey->twofish.S[1][x] = mds_column_mult(sbox(0, (sbox(0, sbox(1, tmpx1 ^ S[1]) ^ S[5]) ^ S[9])),1);
            skey->twofish.S[2][x] = mds_column_mult(sbox(1, (sbox(1, sbox(0, tmpx0 ^ S[2]) ^ S[6]) ^ S[10])),2);
@@ -432,8 +432,8 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
         }
    } else {
         for (x = 0; x < 256; x++) {
-           tmpx0 = sbox(0, x);
-           tmpx1 = sbox(1, x);
+           tmpx0 = (unsigned char)sbox(0, x);
+           tmpx1 = (unsigned char)sbox(1, x);
            skey->twofish.S[0][x] = mds_column_mult(sbox(1, (sbox(0, sbox(0, sbox(1, tmpx1 ^ S[0]) ^ S[4]) ^ S[8]) ^ S[12])),0);
            skey->twofish.S[1][x] = mds_column_mult(sbox(0, (sbox(0, sbox(1, sbox(1, tmpx0 ^ S[1]) ^ S[5]) ^ S[9]) ^ S[13])),1);
            skey->twofish.S[2][x] = mds_column_mult(sbox(1, (sbox(1, sbox(0, sbox(0, tmpx0 ^ S[2]) ^ S[6]) ^ S[10]) ^ S[14])),2);
@@ -467,11 +467,12 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+static int _twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #else
-void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
     ulong32 a,b,c,d,ta,tb,tc,td,t1,t2, *k;
@@ -521,13 +522,16 @@ void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
     /* store output */
     STORE32L(ta,&ct[0]); STORE32L(tb,&ct[4]);
     STORE32L(tc,&ct[8]); STORE32L(td,&ct[12]);
+
+    return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
-   _twofish_ecb_encrypt(pt, ct, skey);
+   int err = _twofish_ecb_encrypt(pt, ct, skey);
    burn_stack(sizeof(ulong32) * 10 + sizeof(int));
+   return err;
 }
 #endif
 
@@ -536,11 +540,12 @@ void twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+static int _twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #else
-void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
     ulong32 a,b,c,d,ta,tb,tc,td,t1,t2, *k;
@@ -593,13 +598,15 @@ void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
     /* store */
     STORE32L(a, &pt[0]); STORE32L(b, &pt[4]);
     STORE32L(c, &pt[8]); STORE32L(d, &pt[12]);
+    return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
-   _twofish_ecb_decrypt(ct, pt, skey);
+   int err =_twofish_ecb_decrypt(ct, pt, skey);
    burn_stack(sizeof(ulong32) * 10 + sizeof(int));
+   return err;
 }
 #endif
 
@@ -656,7 +663,10 @@ int twofish_test(void)
     }
     twofish_ecb_encrypt(tests[i].pt, tmp[0], &key);
     twofish_ecb_decrypt(tmp[0], tmp[1], &key);
-    if (memcmp(tmp[0], tests[i].ct, 16) != 0 || memcmp(tmp[1], tests[i].pt, 16) != 0) {
+    if (XMEMCMP(tmp[0], tests[i].ct, 16) != 0 || XMEMCMP(tmp[1], tests[i].pt, 16) != 0) {
+#if 0
+       printf("Twofish failed test %d, %d, %d\n", i, XMEMCMP(tmp[0], tests[i].ct, 16), XMEMCMP(tmp[1], tests[i].pt, 16));
+#endif
        return CRYPT_FAIL_TESTVECTOR;
     }
       /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
@@ -704,5 +714,5 @@ int twofish_keysize(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/twofish/twofish.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.14 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

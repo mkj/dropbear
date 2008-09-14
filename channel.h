@@ -45,15 +45,7 @@
 /* Not a real type */
 #define SSH_OPEN_IN_PROGRESS					99
 
-#define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
-							connection, so can't be _too_ small */
-
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
-
-#define RECV_MAXWINDOW 8000 /* tweak */
-#define RECV_WINDOWEXTEND 1000 /* We send a "window extend" every
-								RECV_WINDOWEXTEND bytes */
-#define RECV_MAXPACKET RECV_MAXWINDOW /* tweak */
 
 struct ChanType;
 
@@ -73,10 +65,9 @@ struct Channel {
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf
 					     but for stderr */
 
-	int sentclosed, recvclosed;
-
-	/* this is set when we receive/send a channel eof packet */
-	int recveof, senteof;
+	/* whether close/eof messages have been exchanged */
+	int sent_close, recv_close;
+	int recv_eof, sent_eof;
 
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
@@ -84,6 +75,8 @@ struct Channel {
 	int await_open; /* flag indicating whether we've sent an open request
 					   for this channel (and are awaiting a confirmation
 					   or failure). */
+
+	int flushing;
 
 	const struct ChanType* type;
 
@@ -94,7 +87,7 @@ struct ChanType {
 	int sepfds; /* Whether this channel has seperate pipes for in/out or not */
 	char *name;
 	int (*inithandler)(struct Channel*);
-	int (*checkclose)(struct Channel*);
+	int (*check_close)(struct Channel*);
 	void (*reqhandler)(struct Channel*);
 	void (*closehandler)(struct Channel*);
 

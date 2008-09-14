@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -18,9 +18,9 @@ struct ltc_prng_descriptor prng_descriptor[TAB_SIZE] = {
 { NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
 
-LTC_MUTEX_GLOBAL(ltc_prng_mutex);
+LTC_MUTEX_GLOBAL(ltc_prng_mutex)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_prng_descriptor.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/06/19 18:00:28 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

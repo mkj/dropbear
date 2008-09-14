@@ -24,7 +24,7 @@ See MULTI for instructions on making all-in-one binaries.
 
 If you want to compile statically, add "STATIC=1" to the make command-line.
 
-Binaries can be strippd with "make strip"
+Binaries can be stripped with "make strip"
 
 ============================================================================
 

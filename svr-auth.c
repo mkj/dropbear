@@ -42,6 +42,10 @@ static void send_msg_userauth_banner();
 void svr_authinitialise() {
 
 	ses.authstate.failcount = 0;
+	ses.authstate.pw_name = NULL;
+	ses.authstate.pw_dir = NULL;
+	ses.authstate.pw_shell = NULL;
+	ses.authstate.pw_passwd = NULL;
 	authclear();
 	
 }
@@ -60,7 +64,19 @@ static void authclear() {
 		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 	}
 #endif
-
+	if (ses.authstate.pw_name) {
+		m_free(ses.authstate.pw_name);
+	}
+	if (ses.authstate.pw_shell) {
+		m_free(ses.authstate.pw_shell);
+	}
+	if (ses.authstate.pw_dir) {
+		m_free(ses.authstate.pw_dir);
+	}
+	if (ses.authstate.pw_passwd) {
+		m_free(ses.authstate.pw_passwd);
+	}
+	
 }
 
 /* Send a banner message if specified to the client. The client might
@@ -143,7 +159,7 @@ void recv_msg_userauth_request() {
 
 #ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass &&
-			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
+			!(svr_opts.norootpass && ses.authstate.pw_uid == 0) ) {
 		/* user wants to try password auth */
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
@@ -156,7 +172,7 @@ void recv_msg_userauth_request() {
 
 #ifdef ENABLE_SVR_PAM_AUTH
 	if (!svr_opts.noauthpass &&
-			!(svr_opts.norootpass && ses.authstate.pw->pw_uid == 0) ) {
+			!(svr_opts.norootpass && ses.authstate.pw_uid == 0) ) {
 		/* user wants to try password auth */
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
@@ -187,6 +203,30 @@ out:
 	m_free(methodname);
 }
 
+static void fill_passwd(const char* username) {
+	struct passwd *pw = NULL;
+	if (ses.authstate.pw_name)
+		m_free(ses.authstate.pw_name);
+	if (ses.authstate.pw_dir)
+		m_free(ses.authstate.pw_dir);
+	if (ses.authstate.pw_shell)
+		m_free(ses.authstate.pw_shell);
+	if (ses.authstate.pw_passwd)
+		m_free(ses.authstate.pw_passwd);
+
+	pw = getpwnam(username);
+	if (!pw) {
+		return;
+	}
+	ses.authstate.pw_uid = pw->pw_uid;
+	ses.authstate.pw_gid = pw->pw_gid;
+	ses.authstate.pw_name = m_strdup(pw->pw_name);
+	ses.authstate.pw_dir = m_strdup(pw->pw_dir);
+	ses.authstate.pw_shell = m_strdup(pw->pw_shell);
+	ses.authstate.pw_passwd = m_strdup(pw->pw_passwd);
+}
+
+
 /* Check that the username exists, has a non-empty password, and has a valid
  * shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
@@ -194,7 +234,6 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* listshell = NULL;
 	char* usershell = NULL;
-	
 	TRACE(("enter checkusername"))
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;
@@ -210,13 +249,12 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 				m_free(ses.authstate.username);
 			}
 			authclear();
-			ses.authstate.pw = getpwnam((char*)username);
+			fill_passwd(username);
 			ses.authstate.username = m_strdup(username);
-			m_free(ses.authstate.printableuser);
 	}
 
 	/* check that user exists */
-	if (ses.authstate.pw == NULL) {
+	if (!ses.authstate.pw_name) {
 		TRACE(("leave checkusername: user '%s' doesn't exist", username))
 		dropbear_log(LOG_WARNING,
 				"login attempt for nonexistent user from %s",
@@ -225,11 +263,8 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 		return DROPBEAR_FAILURE;
 	}
 
-	/* We can set it once we know its a real user */
-	ses.authstate.printableuser = m_strdup(ses.authstate.pw->pw_name);
-
 	/* check for non-root if desired */
-	if (svr_opts.norootlogin && ses.authstate.pw->pw_uid == 0) {
+	if (svr_opts.norootlogin && ses.authstate.pw_uid == 0) {
 		TRACE(("leave checkusername: root login disabled"))
 		dropbear_log(LOG_WARNING, "root login rejected");
 		send_msg_userauth_failure(0, 1);
@@ -237,18 +272,18 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	}
 
 	/* check for an empty password */
-	if (ses.authstate.pw->pw_passwd[0] == '\0') {
+	if (ses.authstate.pw_passwd[0] == '\0') {
 		TRACE(("leave checkusername: empty pword"))
 		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
-				ses.authstate.printableuser);
+				ses.authstate.pw_name);
 		send_msg_userauth_failure(0, 1);
 		return DROPBEAR_FAILURE;
 	}
 
-	TRACE(("shell is %s", ses.authstate.pw->pw_shell))
+	TRACE(("shell is %s", ses.authstate.pw_shell))
 
 	/* check that the shell is set */
-	usershell = ses.authstate.pw->pw_shell;
+	usershell = ses.authstate.pw_shell;
 	if (usershell[0] == '\0') {
 		/* empty shell in /etc/passwd means /bin/sh according to passwd(5) */
 		usershell = "/bin/sh";
@@ -269,7 +304,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 	endusershell();
 	TRACE(("no matching shell"))
 	dropbear_log(LOG_WARNING, "user '%s' has invalid shell, rejected",
-				ses.authstate.printableuser);
+				ses.authstate.pw_name);
 	send_msg_userauth_failure(0, 1);
 	return DROPBEAR_FAILURE;
 	
@@ -277,7 +312,7 @@ goodshell:
 	endusershell();
 	TRACE(("matching shell"))
 
-	TRACE(("uid = %d", ses.authstate.pw->pw_uid))
+	TRACE(("uid = %d", ses.authstate.pw_uid))
 	TRACE(("leave checkusername"))
 	return DROPBEAR_SUCCESS;
 
@@ -315,13 +350,14 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	buf_setpos(typebuf, 0);
 	buf_putstring(ses.writepayload, buf_getptr(typebuf, typebuf->len),
 			typebuf->len);
+
+	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
+				buf_getptr(typebuf, typebuf->len)));
+
 	buf_free(typebuf);
 
 	buf_putbyte(ses.writepayload, partial ? 1 : 0);
 	encrypt_packet();
-
-	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
-				buf_getptr(typebuf, typebuf->len)));
 
 	if (incrfail) {
 		usleep(300000); /* XXX improve this */
@@ -333,10 +369,10 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"))
 
-		if (ses.authstate.printableuser == NULL) {
+		if (ses.authstate.pw_name == NULL) {
 			userstr = "is invalid";
 		} else {
-			userstr = ses.authstate.printableuser;
+			userstr = ses.authstate.pw_name;
 		}
 		dropbear_exit("Max auth tries reached - user '%s' from %s",
 				userstr, svr_ses.addrstring);
@@ -356,10 +392,10 @@ void send_msg_userauth_success() {
 	encrypt_packet();
 
 	ses.authstate.authdone = 1;
-	ses.connecttimeout = 0;
+	ses.connect_time = 0;
 
 
-	if (ses.authstate.pw->pw_uid == 0) {
+	if (ses.authstate.pw_uid == 0) {
 		ses.allowprivport = 1;
 	}
 

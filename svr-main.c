@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "signkey.h"
 #include "runopts.h"
+#include "random.h"
 
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
@@ -50,6 +51,8 @@ int main(int argc, char ** argv)
 {
 	_dropbear_exit = svr_dropbear_exit;
 	_dropbear_log = svr_dropbear_log;
+
+	disallow_core();
 
 	/* get commandline options */
 	svr_getopts(argc, argv);
@@ -108,7 +111,6 @@ static void main_inetd() {
 #ifdef NON_INETD_MODE
 void main_noinetd() {
 	fd_set fds;
-	struct timeval seltimeout;
 	unsigned int i, j;
 	int val;
 	int maxsock = -1;
@@ -122,34 +124,10 @@ void main_noinetd() {
 	int childsock;
 	int childpipe[2];
 
-	/* fork */
-	if (svr_opts.forkbg) {
-		int closefds = 0;
-#ifndef DEBUG_TRACE
-		if (!svr_opts.usingsyslog) {
-			closefds = 1;
-		}
-#endif
-		if (daemon(0, closefds) < 0) {
-			dropbear_exit("Failed to daemonize: %s", strerror(errno));
-		}
-	}
-
+	/* Note: commonsetup() must happen before we daemon()ise. Otherwise
+	   daemon() will chdir("/"), and we won't be able to find local-dir
+	   hostkeys. */
 	commonsetup();
-
-	/* should be done after syslog is working */
-	if (svr_opts.forkbg) {
-		dropbear_log(LOG_INFO, "Running in background");
-	} else {
-		dropbear_log(LOG_INFO, "Not forking");
-	}
-
-	/* create a PID file so that we can be killed easily */
-	pidfile = fopen(DROPBEAR_PIDFILE, "w");
-	if (pidfile) {
-		fprintf(pidfile, "%d\n", getpid());
-		fclose(pidfile);
-	}
 
 	/* sockets to identify pre-authenticated clients */
 	for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
@@ -164,13 +142,37 @@ void main_noinetd() {
 		dropbear_exit("No listening ports available.");
 	}
 
+	/* fork */
+	if (svr_opts.forkbg) {
+		int closefds = 0;
+#ifndef DEBUG_TRACE
+		if (!svr_opts.usingsyslog) {
+			closefds = 1;
+		}
+#endif
+		if (daemon(0, closefds) < 0) {
+			dropbear_exit("Failed to daemonize: %s", strerror(errno));
+		}
+	}
+
+	/* should be done after syslog is working */
+	if (svr_opts.forkbg) {
+		dropbear_log(LOG_INFO, "Running in background");
+	} else {
+		dropbear_log(LOG_INFO, "Not backgrounding");
+	}
+
+	/* create a PID file so that we can be killed easily */
+	pidfile = fopen(svr_opts.pidfile, "w");
+	if (pidfile) {
+		fprintf(pidfile, "%d\n", getpid());
+		fclose(pidfile);
+	}
+
 	/* incoming connection select loop */
 	for(;;) {
 
 		FD_ZERO(&fds);
-		
-		seltimeout.tv_sec = 60;
-		seltimeout.tv_usec = 0;
 		
 		/* listening sockets */
 		for (i = 0; i < listensockcount; i++) {
@@ -185,15 +187,15 @@ void main_noinetd() {
 			}
 		}
 
-		val = select(maxsock+1, &fds, NULL, NULL, &seltimeout);
+		val = select(maxsock+1, &fds, NULL, NULL, NULL);
 
 		if (exitflag) {
-			unlink(DROPBEAR_PIDFILE);
+			unlink(svr_opts.pidfile);
 			dropbear_exit("Terminated by signal");
 		}
 		
 		if (val == 0) {
-			/* timeout reached */
+			/* timeout reached - shouldn't happen. eh */
 			continue;
 		}
 
@@ -397,9 +399,9 @@ static size_t listensockets(int *sock, size_t sockcount, int *maxfd) {
 
 	for (i = 0; i < svr_opts.portcount; i++) {
 
-		TRACE(("listening on '%s'", svr_opts.ports[i]))
+		TRACE(("listening on '%s:%s'", svr_opts.addresses[i], svr_opts.ports[i]))
 
-		nsock = dropbear_listen("", svr_opts.ports[i], &sock[sockpos], 
+		nsock = dropbear_listen(svr_opts.addresses[i], svr_opts.ports[i], &sock[sockpos], 
 				sockcount - sockpos,
 				&errstring, maxfd);
 

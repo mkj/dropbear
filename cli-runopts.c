@@ -44,12 +44,15 @@ static void addforward(char* str, struct TCPFwdList** fwdlist);
 static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
-					"Usage: %s [options] [user@]host\n"
+					"Usage: %s [options] [user@]host [command]\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
 					"-l <username>\n"
 					"-t    Allocate a pty\n"
 					"-T    Don't allocate a pty\n"
+					"-N    Don't run a remote command\n"
+					"-f    Run in background after auth\n"
+					"-y    Always accept remote host key if unknown\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
@@ -60,10 +63,14 @@ static void printhelp() {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
+					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
 #endif
-					,DROPBEAR_VERSION, cli_opts.progname);
+					,DROPBEAR_VERSION, cli_opts.progname,
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE);
+					
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -82,13 +89,19 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 	char* dummy = NULL; /* Not used for anything real */
 
+	char* recv_window_arg = NULL;
+	char* keepalive_arg = NULL;
+
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
 	cli_opts.remotehost = NULL;
 	cli_opts.remoteport = NULL;
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
+	cli_opts.no_cmd = 0;
+	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
+	cli_opts.always_accept_key = 0;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = NULL;
 #endif
@@ -103,6 +116,7 @@ void cli_getopts(int argc, char ** argv) {
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
 	*/
+	opts.recv_window = DEFAULT_RECV_WINDOW;
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -144,6 +158,9 @@ void cli_getopts(int argc, char ** argv) {
 			/* A flag *waves* */
 
 			switch (argv[i][1]) {
+				case 'y': /* always accept the remote hostkey */
+					cli_opts.always_accept_key = 1;
+					break;
 				case 'p': /* remoteport */
 					next = &cli_opts.remoteport;
 					break;
@@ -162,6 +179,12 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'T': /* don't want a pty */
 					cli_opts.wantpty = 0;
+					break;
+				case 'N':
+					cli_opts.no_cmd = 1;
+					break;
+				case 'f':
+					cli_opts.backgrounded = 1;
 					break;
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':
@@ -182,6 +205,15 @@ void cli_getopts(int argc, char ** argv) {
 				case 'h':
 					printhelp();
 					exit(EXIT_SUCCESS);
+					break;
+				case 'u':
+					/* backwards compatibility with old urandom option */
+					break;
+				case 'W':
+					next = &recv_window_arg;
+					break;
+				case 'K':
+					next = &keepalive_arg;
 					break;
 #ifdef DEBUG_TRACE
 				case 'v':
@@ -269,6 +301,28 @@ void cli_getopts(int argc, char ** argv) {
 			cli_opts.wantpty = 0;
 		}
 	}
+
+	if (cli_opts.backgrounded && cli_opts.cmd == NULL
+			&& cli_opts.no_cmd == 0) {
+		dropbear_exit("command required for -f");
+	}
+	
+	if (recv_window_arg)
+	{
+		opts.recv_window = atol(recv_window_arg);
+		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW)
+		{
+			dropbear_exit("Bad recv window '%s'", recv_window_arg);
+		}
+	}
+	if (keepalive_arg) {
+		opts.keepalive_secs = strtoul(keepalive_arg, NULL, 10);
+		if (opts.keepalive_secs == 0 && errno == EINVAL)
+		{
+			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
+		}
+	}
+	
 }
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
@@ -348,7 +402,8 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	TRACE(("enter addforward"))
 
-	/* We probably don't want to be editing argvs */
+	/* We need to split the original argument up. This var
+	   is never free()d. */ 
 	str = m_strdup(origstr);
 
 	listenport = str;
@@ -358,8 +413,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 		TRACE(("connectaddr == NULL"))
 		goto fail;
 	}
-
-	connectaddr[0] = '\0';
+	*connectaddr = '\0';
 	connectaddr++;
 
 	connectport = strchr(connectaddr, ':');
@@ -367,8 +421,7 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 		TRACE(("connectport == NULL"))
 		goto fail;
 	}
-
-	connectport[0] = '\0';
+	*connectport = '\0';
 	connectport++;
 
 	newfwd = (struct TCPFwdList*)m_malloc(sizeof(struct TCPFwdList));

@@ -31,13 +31,13 @@
 #include "dbutil.h"
 #include "auth.h"
 
+#ifdef ENABLE_SVR_PAM_AUTH
+
 #if defined(HAVE_SECURITY_PAM_APPL_H)
 #include <security/pam_appl.h>
 #elif defined (HAVE_PAM_PAM_APPL_H)
 #include <pam/pam_appl.h>
 #endif
-
-#ifdef ENABLE_SVR_PAM_AUTH
 
 struct UserDataS {
 	char* user;
@@ -195,7 +195,7 @@ void svr_auth_pam() {
 	/* used to pass data to the PAM conversation function - don't bother with
 	 * strdup() etc since these are touched only by our own conversation
 	 * function (above) which takes care of it */
-	userData.user = ses.authstate.printableuser;
+	userData.user = ses.authstate.pw_name;
 	userData.passwd = password;
 
 	/* Init pam */
@@ -221,7 +221,7 @@ void svr_auth_pam() {
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"bad PAM password attempt for '%s' from %s",
-				ses.authstate.printableuser,
+				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
@@ -232,7 +232,7 @@ void svr_auth_pam() {
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"bad PAM password attempt for '%s' from %s",
-				ses.authstate.printableuser,
+				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
@@ -240,7 +240,7 @@ void svr_auth_pam() {
 
 	/* successful authentication */
 	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s' from %s",
-			ses.authstate.printableuser,
+			ses.authstate.pw_name,
 			svr_ses.addrstring);
 	send_msg_userauth_success();
 

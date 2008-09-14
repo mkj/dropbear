@@ -7,21 +7,46 @@
 #ifndef TOMCRYPT_CFG_H
 #define TOMCRYPT_CFG_H
 
+#if defined(_WIN32) || defined(_MSC_VER)
+#define LTC_CALL __cdecl
+#else
+#ifndef LTC_CALL
+   #define LTC_CALL
+#endif
+#endif
+
+#ifndef LTC_EXPORT
+#define LTC_EXPORT
+#endif
+
+/* certain platforms use macros for these, making the prototypes broken */
+#ifndef LTC_NO_PROTOTYPES
+
 /* you can change how memory allocation works ... */
-void *XMALLOC(size_t n);
-void *XREALLOC(void *p, size_t n);
-void *XCALLOC(size_t n, size_t s);
-void XFREE(void *p);
+LTC_EXPORT void * LTC_CALL XMALLOC(size_t n);
+LTC_EXPORT void * LTC_CALL XREALLOC(void *p, size_t n);
+LTC_EXPORT void * LTC_CALL XCALLOC(size_t n, size_t s);
+LTC_EXPORT void LTC_CALL XFREE(void *p);
+
+LTC_EXPORT void LTC_CALL XQSORT(void *base, size_t nmemb, size_t size, int(*compar)(const void *, const void *));
+
 
 /* change the clock function too */
- clock_t XCLOCK(void);
+LTC_EXPORT clock_t LTC_CALL XCLOCK(void);
 
 /* various other functions */
-void *XMEMCPY(void *dest, const void *src, size_t n);
-int   XMEMCMP(const void *s1, const void *s2, size_t n);
+LTC_EXPORT void * LTC_CALL XMEMCPY(void *dest, const void *src, size_t n);
+LTC_EXPORT int   LTC_CALL XMEMCMP(const void *s1, const void *s2, size_t n);
+LTC_EXPORT void * LTC_CALL XMEMSET(void *s, int c, size_t n);
 
-/* type of argument checking, 0=default, 1=fatal and 2=none */
-#define ARGTYPE  0
+LTC_EXPORT int   LTC_CALL XSTRCMP(const char *s1, const char *s2);
+
+#endif
+
+/* type of argument checking, 0=default, 1=fatal and 2=error+continue, 3=nothing */
+#ifndef ARGTYPE
+   #define ARGTYPE  0
+#endif
 
 /* Controls endianess and size of registers.  Leave uncommented to get platform neutral [slower] code 
  * 
@@ -31,7 +56,7 @@ int   XMEMCMP(const void *s1, const void *s2, size_t n);
  */
 
 /* detect x86-32 machines somewhat */
-#if defined(INTEL_CC) || (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__i386__)))
+#if !defined(__STRICT_ANSI__) && (defined(INTEL_CC) || (defined(_MSC_VER) && defined(WIN32)) || (defined(__GNUC__) && (defined(__DJGPP__) || defined(__CYGWIN__) || defined(__MINGW32__) || defined(__i386__))))
    #define ENDIAN_LITTLE
    #define ENDIAN_32BITWORD
    #define LTC_FAST
@@ -45,12 +70,31 @@ int   XMEMCMP(const void *s1, const void *s2, size_t n);
 #endif
 
 /* detect amd64 */
-#if defined(__x86_64__)
+#if !defined(__STRICT_ANSI__) && defined(__x86_64__)
    #define ENDIAN_LITTLE
    #define ENDIAN_64BITWORD
    #define LTC_FAST
    #define LTC_FAST_TYPE    unsigned long
 #endif
+
+/* detect PPC32 */
+#if !defined(__STRICT_ANSI__) && defined(LTC_PPC32)
+   #define ENDIAN_BIG
+   #define ENDIAN_32BITWORD
+   #define LTC_FAST
+   #define LTC_FAST_TYPE    unsigned long
+#endif   
+
+/* detect sparc and sparc64 */
+#if defined(__sparc__)
+  #define ENDIAN_BIG
+  #if defined(__arch64__)
+    #define ENDIAN_64BITWORD
+  #else
+    #define ENDIAN_32BITWORD
+  #endif
+#endif
+
 
 #ifdef LTC_NO_FAST
    #ifdef LTC_FAST
@@ -77,36 +121,16 @@ int   XMEMCMP(const void *s1, const void *s2, size_t n);
 /* #define ENDIAN_64BITWORD */
 
 #if (defined(ENDIAN_BIG) || defined(ENDIAN_LITTLE)) && !(defined(ENDIAN_32BITWORD) || defined(ENDIAN_64BITWORD))
-    #error You must specify a word size as well as endianess in mycrypt_cfg.h
+    #error You must specify a word size as well as endianess in tomcrypt_cfg.h
 #endif
 
 #if !(defined(ENDIAN_BIG) || defined(ENDIAN_LITTLE))
    #define ENDIAN_NEUTRAL
 #endif
 
-/* packet code */
-#if defined(MRSA) || defined(MDH) || defined(MECC)
-    #define PACKET
-
-    /* size of a packet header in bytes */
-    #define PACKET_SIZE            4
-
-    /* Section tags */
-    #define PACKET_SECT_RSA        0
-    #define PACKET_SECT_DH         1
-    #define PACKET_SECT_ECC        2
-    #define PACKET_SECT_DSA        3
-
-    /* Subsection Tags for the first three sections */
-    #define PACKET_SUB_KEY         0
-    #define PACKET_SUB_ENCRYPTED   1
-    #define PACKET_SUB_SIGNED      2
-    #define PACKET_SUB_ENC_KEY     3
-#endif
-
 #endif
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_cfg.h,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.19 $ */
+/* $Date: 2006/12/04 02:19:48 $ */

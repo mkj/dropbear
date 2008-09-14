@@ -82,6 +82,4 @@ void recv_msg_service_accept() {
 	}
 
 	dropbear_exit("unrecognised service accept");
-	/* m_free(servicename); not reached */
-
 }

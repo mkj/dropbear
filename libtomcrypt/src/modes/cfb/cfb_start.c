@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef CFB
+#ifdef LTC_CFB_MODE
 
 /**
    Initialize a CFB context
@@ -54,14 +54,12 @@ int cfb_start(int cipher, const unsigned char *IV, const unsigned char *key,
    }
 
    /* encrypt the IV */
-   cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->IV, cfb->IV, &cfb->key);
    cfb->padlen = 0;
-
-   return CRYPT_OK;
+   return cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->IV, cfb->IV, &cfb->key);
 }
 
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/cfb/cfb_start.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/06/29 01:51:34 $ */

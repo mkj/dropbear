@@ -47,8 +47,22 @@ static const unsigned char openssl_private_rsa[] = {
    0x4a, 0x9f,  };
 
 
-/*** NOTE:  OpenSSL seems to have more to their public key format.  I've stripped the extra headers... */
+/*** openssl public RSA key in DER format */
 static const unsigned char openssl_public_rsa[] = {
+   0x30, 0x81, 0x9f, 0x30, 0x0d, 0x06, 0x09, 0x2a, 0x86, 0x48, 0x86, 0xf7, 0x0d, 0x01, 0x01, 0x01,
+   0x05, 0x00, 0x03, 0x81, 0x8d, 0x00, 0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xcf, 0x9a, 0xde,
+   0x64, 0x8a, 0xda, 0xc8, 0x33, 0x20, 0xa9, 0xd7, 0x83, 0x31, 0x19, 0x54, 0xb2, 0x9a, 0x85, 0xa7,
+   0xa1, 0xb7, 0x75, 0x33, 0xb6, 0xa9, 0xac, 0x84, 0x24, 0xb3, 0xde, 0xdb, 0x7d, 0x85, 0x2d, 0x96,
+   0x65, 0xe5, 0x3f, 0x72, 0x95, 0x24, 0x9f, 0x28, 0x68, 0xca, 0x4f, 0xdb, 0x44, 0x1c, 0x3e, 0x60,
+   0x12, 0x8a, 0xdd, 0x26, 0xa5, 0xeb, 0xff, 0x0b, 0x5e, 0xd4, 0x88, 0x38, 0x49, 0x2a, 0x6e, 0x5b,
+   0xbf, 0x12, 0x37, 0x47, 0xbd, 0x05, 0x6b, 0xbc, 0xdb, 0xf3, 0xee, 0xe4, 0x11, 0x8e, 0x41, 0x68,
+   0x7c, 0x61, 0x13, 0xd7, 0x42, 0xc8, 0x80, 0xbe, 0x36, 0x8f, 0xdc, 0x08, 0x8b, 0x4f, 0xac, 0xa4,
+   0xe2, 0x76, 0x0c, 0xc9, 0x63, 0x6c, 0x49, 0x58, 0x93, 0xed, 0xcc, 0xaa, 0xdc, 0x25, 0x3b, 0x0a,
+   0x60, 0x3f, 0x8b, 0x54, 0x3a, 0xc3, 0x4d, 0x31, 0xe7, 0x94, 0xa4, 0x44, 0xfd, 0x02, 0x03, 0x01,
+   0x00, 0x01,  };
+
+/* same key but with extra headers stripped */
+static const unsigned char openssl_public_rsa_stripped[] = {
    0x30, 0x81, 0x89, 0x02, 0x81, 0x81, 0x00, 0xcf, 0x9a, 0xde, 
    0x64, 0x8a, 0xda, 0xc8, 0x33, 0x20, 0xa9, 0xd7, 0x83, 0x31, 0x19, 0x54, 0xb2, 0x9a, 0x85, 0xa7, 
    0xa1, 0xb7, 0x75, 0x33, 0xb6, 0xa9, 0xac, 0x84, 0x24, 0xb3, 0xde, 0xdb, 0x7d, 0x85, 0x2d, 0x96, 
@@ -73,23 +87,24 @@ static int rsa_compat_test(void)
    len = sizeof(buf);
    DO(rsa_export(buf, &len, PK_PRIVATE, &key));
    if (len != sizeof(openssl_private_rsa) || memcmp(buf, openssl_private_rsa, len)) {
-      fprintf(stderr, "RSA private export failed to match OpenSSL output, %lu, %lu\n", len, sizeof(openssl_private_rsa));
-
-
-{
-int x;
-printf("\n\n");
-for (x = 0; x < len; ) { if (buf[x] == openssl_private_rsa[x]) printf("-- "); else printf("%02x ", buf[x]^openssl_private_rsa[x]); if (!(++x & 15)) printf("\n"); }
-}
-printf("\n\n");
-
+      fprintf(stderr, "RSA private export failed to match OpenSSL output, %lu, %lu\n", len, (unsigned long)sizeof(openssl_private_rsa));
       return 1;
    }
 
    len = sizeof(buf);
    DO(rsa_export(buf, &len, PK_PUBLIC, &key));
-   if (len != sizeof(openssl_public_rsa) || memcmp(buf, openssl_public_rsa, len)) {
+   if (len != sizeof(openssl_public_rsa_stripped) || memcmp(buf, openssl_public_rsa_stripped, len)) {
       fprintf(stderr, "RSA(private) public export failed to match OpenSSL output\n");
+      return 1;
+   }
+   rsa_free(&key);
+
+   /* try reading the public key */
+   DO(rsa_import(openssl_public_rsa_stripped, sizeof(openssl_public_rsa_stripped), &key));
+   len = sizeof(buf);
+   DO(rsa_export(buf, &len, PK_PUBLIC, &key));
+   if (len != sizeof(openssl_public_rsa_stripped) || memcmp(buf, openssl_public_rsa_stripped, len)) {
+      fprintf(stderr, "RSA(public) stripped public import failed to match OpenSSL output\n");
       return 1;
    }
    rsa_free(&key);
@@ -98,8 +113,8 @@ printf("\n\n");
    DO(rsa_import(openssl_public_rsa, sizeof(openssl_public_rsa), &key));
    len = sizeof(buf);
    DO(rsa_export(buf, &len, PK_PUBLIC, &key));
-   if (len != sizeof(openssl_public_rsa) || memcmp(buf, openssl_public_rsa, len)) {
-      fprintf(stderr, "RSA(public) public export failed to match OpenSSL output\n");
+   if (len != sizeof(openssl_public_rsa_stripped) || memcmp(buf, openssl_public_rsa_stripped, len)) {
+      fprintf(stderr, "RSA(public) SSL public import failed to match OpenSSL output\n");
       return 1;
    }
    rsa_free(&key);
@@ -129,27 +144,27 @@ int rsa_test(void)
    /* make 10 random key */
    for (cnt = 0; cnt < 10; cnt++) {
       DO(rsa_make_key(&yarrow_prng, prng_idx, 1024/8, 65537, &key));
-      if (mp_count_bits(&key.N) != 1024) {
-         fprintf(stderr, "rsa_1024 key modulus has %d bits\n", mp_count_bits(&key.N));
+      if (mp_count_bits(key.N) != 1024) {
+         fprintf(stderr, "rsa_1024 key modulus has %d bits\n", mp_count_bits(key.N));
 
-len = mp_unsigned_bin_size(&key.N);
-mp_to_unsigned_bin(&key.N, tmp);
+len = mp_unsigned_bin_size(key.N);
+mp_to_unsigned_bin(key.N, tmp);
  fprintf(stderr, "N == \n");
 for (cnt = 0; cnt < len; ) {
    fprintf(stderr, "%02x ", tmp[cnt]);
    if (!(++cnt & 15)) fprintf(stderr, "\n");
 }
 
-len = mp_unsigned_bin_size(&key.p);
-mp_to_unsigned_bin(&key.p, tmp);
+len = mp_unsigned_bin_size(key.p);
+mp_to_unsigned_bin(key.p, tmp);
  fprintf(stderr, "p == \n");
 for (cnt = 0; cnt < len; ) {
    fprintf(stderr, "%02x ", tmp[cnt]);
    if (!(++cnt & 15)) fprintf(stderr, "\n");
 }
 
-len = mp_unsigned_bin_size(&key.q);
-mp_to_unsigned_bin(&key.q, tmp);
+len = mp_unsigned_bin_size(key.q);
+mp_to_unsigned_bin(key.q, tmp);
  fprintf(stderr, "\nq == \n");
 for (cnt = 0; cnt < len; ) {
    fprintf(stderr, "%02x ", tmp[cnt]);
@@ -242,6 +257,24 @@ for (cnt = 0; cnt < len; ) {
       }
    }
 
+   /* encrypt the key PKCS #1 v1.5 (payload from 1 to 117 bytes) */
+   for (rsa_msgsize = 1; rsa_msgsize <= 117; rsa_msgsize++) {
+      len  = sizeof(out);
+      len2 = rsa_msgsize;
+      DO(rsa_encrypt_key_ex(in, rsa_msgsize, out, &len, NULL, 0, &yarrow_prng, prng_idx, 0, LTC_PKCS_1_V1_5, &key));
+
+      len2 = rsa_msgsize;
+      DO(rsa_decrypt_key_ex(out, len, tmp, &len2, NULL, 0, 0, LTC_PKCS_1_V1_5, &stat, &key));
+      if (!(stat == 1 && stat2 == 0)) {
+         fprintf(stderr, "rsa_decrypt_key_ex failed, %d, %d", stat, stat2);
+         return 1;
+      }
+      if (len2 != rsa_msgsize || memcmp(tmp, in, rsa_msgsize)) {
+         fprintf(stderr, "rsa_decrypt_key_ex mismatch len %lu", len2);
+         return 1;
+      }
+   }
+
    /* sign a message (unsalted, lower cholestorol and Atkins approved) now */
    len = sizeof(out);
    DO(rsa_sign_hash(in, 20, out, &len, &yarrow_prng, prng_idx, hash_idx, 0, &key));
@@ -316,6 +349,22 @@ for (cnt = 0; cnt < len; ) {
       return 1;
    }
    
+   /* sign a message with PKCS #1 v1.5 */
+   len = sizeof(out);
+   DO(rsa_sign_hash_ex(in, 20, out, &len, LTC_PKCS_1_V1_5, &yarrow_prng, prng_idx, hash_idx, 8, &privKey));
+   DO(rsa_verify_hash_ex(out, len, in, 20, LTC_PKCS_1_V1_5, hash_idx, 8, &stat, &pubKey));
+   /* change a byte */
+   in[0] ^= 1;
+   DO(rsa_verify_hash_ex(out, len, in, 20, LTC_PKCS_1_V1_5, hash_idx, 8, &stat2, &pubKey));
+   
+   if (!(stat == 1 && stat2 == 0)) {
+      fprintf(stderr, "rsa_verify_hash_ex failed, %d, %d", stat, stat2);
+      rsa_free(&key);
+      rsa_free(&pubKey);
+      rsa_free(&privKey);
+      return 1;
+   }
+
    /* free the key and return */
    rsa_free(&key);
    rsa_free(&pubKey);
@@ -334,5 +383,5 @@ int rsa_test(void)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/testprof/rsa_test.c,v $ */
-/* $Revision: 1.10 $ */
-/* $Date: 2005/06/03 19:18:33 $ */
+/* $Revision: 1.18 $ */
+/* $Date: 2006/11/21 00:10:18 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    CTR implementation, finish chain, Tom St Denis
 */
 
-#ifdef CTR
+#ifdef LTC_CTR_MODE
 
 /** Terminate the chain
   @param ctr    The CTR chain to terminate
@@ -38,5 +38,5 @@ int ctr_done(symmetric_CTR *ctr)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_done.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/06/29 01:46:46 $ */

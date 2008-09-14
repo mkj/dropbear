@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   CFB implementation, encrypt data, Tom St Denis
 */
 
-#ifdef CFB
+#ifdef LTC_CFB_MODE
 
 /**
   CFB encrypt
@@ -45,13 +45,15 @@ int cfb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 
    while (len-- > 0) {
        if (cfb->padlen == cfb->blocklen) {
-          cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->pad, cfb->IV, &cfb->key);
+          if ((err = cipher_descriptor[cfb->cipher].ecb_encrypt(cfb->pad, cfb->IV, &cfb->key)) != CRYPT_OK) {
+             return err;
+          }
           cfb->padlen = 0;
        }
        cfb->pad[cfb->padlen] = (*ct = *pt ^ cfb->IV[cfb->padlen]);
        ++pt; 
        ++ct;
-       ++cfb->padlen;
+       ++(cfb->padlen);
    }
    return CRYPT_OK;
 }
@@ -59,5 +61,5 @@ int cfb_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/cfb/cfb_encrypt.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/11/26 01:45:14 $ */

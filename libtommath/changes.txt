@@ -1,3 +1,36 @@
+December 24th, 2006
+v0.40  -- Updated makefile to properly support LIBNAME
+       -- Fixed bug in fast_s_mp_mul_high_digs() which overflowed (line 83), thanks Valgrind!
+
+April 4th, 2006
+v0.39  -- Jim Wigginton pointed out my Montgomery examples in figures 6.4 and 6.6 were off by one, k should be 9 not 8
+       -- Bruce Guenter suggested I use --tag=CC for libtool builds where the compiler may think it's C++.
+       -- "mm" from sci.crypt pointed out that my mp_gcd was sub-optimal (I also updated and corrected the book)
+       -- updated some of the @@ tags in tommath.src to reflect source changes.
+       -- updated email and url info in all source files
+
+Jan 26th, 2006
+v0.38  -- broken makefile.shared fixed
+       -- removed some carry stores that were not required [updated text]
+       
+November 18th, 2005
+v0.37  -- [Don Porter] reported on a TCL list [HEY SEND ME BUGREPORTS ALREADY!!!] that mp_add_d() would compute -0 with some inputs.  Fixed.
+       -- [rinick@gmail.com] reported the makefile.bcc was messed up.  Fixed.
+       -- [Kevin Kenny] reported some issues with mp_toradix_n().  Now it doesn't require a min of 3 chars of output.  
+       -- Made the make command renamable.  Wee
+
+August 1st, 2005
+v0.36  -- LTM_PRIME_2MSB_ON was fixed and the "OFF" flag was removed.
+       -- [Peter LaDow] found a typo in the XREALLOC macro
+       -- [Peter LaDow] pointed out that mp_read_(un)signed_bin should have "const" on the input
+       -- Ported LTC patch to fix the prime_random_ex() function to get the bitsize correct [and the maskOR flags]
+       -- Kevin Kenny pointed out a stray //
+       -- David Hulton pointed out a typo in the textbook [mp_montgomery_setup() pseudo-code]
+       -- Neal Hamilton (Elliptic Semiconductor) pointed out that my Karatsuba notation was backwards and that I could use 
+          unsigned operations in the routine.  
+       -- Paul Schmidt pointed out a linking error in mp_exptmod() when BN_S_MP_EXPTMOD_C is undefined (and another for read_radix)
+       -- Updated makefiles to be way more flexible
+
 March 12th, 2005
 v0.35  -- Stupid XOR function missing line again... oops.
        -- Fixed bug in invmod not handling negative inputs correctly [Wolfgang Ehrhardt]

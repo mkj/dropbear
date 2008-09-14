@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /** 
@@ -32,7 +32,8 @@ const struct ltc_hash_descriptor whirlpool_desc =
     &whirlpool_init,
     &whirlpool_process,
     &whirlpool_done,
-    &whirlpool_test
+    &whirlpool_test,
+    NULL
 };
 
 /* the sboxes */
@@ -289,7 +290,7 @@ int  whirlpool_test(void)
       whirlpool_init(&md);
       whirlpool_process(&md, (unsigned char *)tests[i].msg, tests[i].len);
       whirlpool_done(&md, tmp);
-      if (memcmp(tmp, tests[i].hash, 64) != 0) {
+      if (XMEMCMP(tmp, tests[i].hash, 64) != 0) {
 #if 0      
          printf("\nFailed test %d\n", i);
          for (i = 0; i < 64; ) {
@@ -309,5 +310,5 @@ int  whirlpool_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/hashes/whirl/whirl.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/05/23 02:42:07 $ */
+/* $Revision: 1.8 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

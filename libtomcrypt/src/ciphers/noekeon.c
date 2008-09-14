@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 /**
    @file noekeon.c
@@ -27,7 +27,7 @@ const struct ltc_cipher_descriptor noekeon_desc =
     &noekeon_test,
     &noekeon_done,
     &noekeon_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const ulong32 RC[] = {
@@ -107,11 +107,12 @@ int noekeon_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+static int _noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #else
-void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
    ulong32 a,b,c,d,temp;
@@ -142,13 +143,16 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
    
    STORE32H(a,&ct[0]); STORE32H(b,&ct[4]);
    STORE32H(c,&ct[8]); STORE32H(d,&ct[12]);
+
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
-   _noekeon_ecb_encrypt(pt, ct, skey);
+   int err = _noekeon_ecb_encrypt(pt, ct, skey);
    burn_stack(sizeof(ulong32) * 5 + sizeof(int));
+   return CRYPT_OK;
 }
 #endif
 
@@ -157,11 +161,12 @@ void noekeon_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_k
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+static int _noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #else
-void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
    ulong32 a,b,c,d, temp;
@@ -192,13 +197,15 @@ void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_k
    a ^= RC[0];
    STORE32H(a,&pt[0]); STORE32H(b, &pt[4]);
    STORE32H(c,&pt[8]); STORE32H(d, &pt[12]);
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int noekeon_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
-   _noekeon_ecb_decrypt(ct, pt, skey);
+   int err = _noekeon_ecb_decrypt(ct, pt, skey);
    burn_stack(sizeof(ulong32) * 5 + sizeof(int));
+   return err;
 }
 #endif
 
@@ -235,10 +242,10 @@ int noekeon_test(void)
   
     noekeon_ecb_encrypt(tests[i].pt, tmp[0], &key);
     noekeon_ecb_decrypt(tmp[0], tmp[1], &key);
-    if (memcmp(tmp[0], tests[i].ct, 16) || memcmp(tmp[1], tests[i].pt, 16)) { 
+    if (XMEMCMP(tmp[0], tests[i].ct, 16) || XMEMCMP(tmp[1], tests[i].pt, 16)) { 
 #if 0
        printf("\n\nTest %d failed\n", i);
-       if (memcmp(tmp[0], tests[i].ct, 16)) {
+       if (XMEMCMP(tmp[0], tests[i].ct, 16)) {
           printf("CT: ");
           for (i = 0; i < 16; i++) {
              printf("%02x ", tmp[0][i]);
@@ -292,5 +299,5 @@ int noekeon_keysize(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/noekeon.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.12 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

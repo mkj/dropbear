@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -28,9 +28,8 @@
    @param out           [out] The destination for the integer
    @return CRYPT_OK if successful
 */
-int pkcs_1_i2osp(mp_int *n, unsigned long modulus_len, unsigned char *out)
+int pkcs_1_i2osp(void *n, unsigned long modulus_len, unsigned char *out)
 {
-   int err;
    unsigned long size;
 
    size = mp_unsigned_bin_size(n);
@@ -41,15 +40,12 @@ int pkcs_1_i2osp(mp_int *n, unsigned long modulus_len, unsigned char *out)
 
    /* store it */
    zeromem(out, modulus_len);
-   if ((err = mp_to_unsigned_bin(n, out+(modulus_len-size))) != MP_OKAY) {
-      return mpi_to_ltc_error(err);
-   }
-   return CRYPT_OK;
+   return mp_to_unsigned_bin(n, out+(modulus_len-size));
 }
 
 #endif /* PKCS_1 */
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_i2osp.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

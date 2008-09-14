@@ -59,7 +59,6 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 		struct ChanSess * chansess);
 static void send_msg_chansess_exitsignal(struct Channel * channel,
 		struct ChanSess * chansess);
-static int sesscheckclose(struct Channel *channel);
 static void get_termmodes(struct ChanSess *chansess);
 
 
@@ -68,7 +67,8 @@ extern char** environ;
 
 static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
-	return chansess->exit.exitpid >= 0;
+	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
+	return chansess->exit.exitpid != -1;
 }
 
 /* Handler for childs exiting, store the state for return to the client */
@@ -89,10 +89,13 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	TRACE(("enter sigchld handler"))
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		TRACE(("sigchld handler: pid %d", pid))
+
+		exit = NULL;
 		/* find the corresponding chansess */
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == pid) {
-
+				TRACE(("found match session"));
 				exit = &svr_ses.childpids[i].chansess->exit;
 				break;
 			}
@@ -100,7 +103,8 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 		/* If the pid wasn't matched, then we might have hit the race mentioned
 		 * above. So we just store the info for the parent to deal with */
-		if (i == svr_ses.childpidsize) {
+		if (exit == NULL) {
+			TRACE(("using lastexit"));
 			exit = &svr_ses.lastexit;
 		}
 
@@ -119,10 +123,18 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 			/* we use this to determine how pid exited */
 			exit->exitsignal = -1;
 		}
-		exit = NULL;
+		
+		/* Make sure that the main select() loop wakes up */
+		while (1) {
+			/* isserver is just a random byte to write. We can't do anything
+			about an error so should just ignore it */
+			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
+					|| errno != EINTR) {
+				break;
+			}
+		}
 	}
 
-	
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	sigaction(SIGCHLD, &sa_chld, NULL);
@@ -130,7 +142,6 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 }
 
 /* send the exit status or the signal causing termination for a session */
-/* XXX server */
 static void send_exitsignalstatus(struct Channel *channel) {
 
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
@@ -169,9 +180,10 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	int i;
 	char* signame = NULL;
-
 	dropbear_assert(chansess->exit.exitpid != -1);
 	dropbear_assert(chansess->exit.exitsignal > 0);
+
+	TRACE(("send_msg_chansess_exitsignal %d", chansess->exit.exitsignal))
 
 	CHECKCLEARTOWRITE();
 
@@ -244,15 +256,16 @@ static void closechansess(struct Channel *channel) {
 	unsigned int i;
 	struct logininfo *li;
 
+	TRACE(("enter closechansess"))
+
 	chansess = (struct ChanSess*)channel->typedata;
 
-	send_exitsignalstatus(channel);
-
-	TRACE(("enter closechansess"))
 	if (chansess == NULL) {
 		TRACE(("leave closechansess: chansess == NULL"))
 		return;
 	}
+
+	send_exitsignalstatus(channel);
 
 	m_free(chansess->cmd);
 	m_free(chansess->term);
@@ -281,7 +294,7 @@ static void closechansess(struct Channel *channel) {
 		if (svr_ses.childpids[i].chansess == chansess) {
 			dropbear_assert(svr_ses.childpids[i].pid > 0);
 			TRACE(("closing pid %d", svr_ses.childpids[i].pid))
-			TRACE(("exitpid = %d", chansess->exit.exitpid))
+			TRACE(("exitpid is %d", chansess->exit.exitpid))
 			svr_ses.childpids[i].pid = -1;
 			svr_ses.childpids[i].chansess = NULL;
 		}
@@ -410,7 +423,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	
 	pty_change_window_size(chansess->master, termr, termc, termw, termh);
 
-	return DROPBEAR_FAILURE;
+	return DROPBEAR_SUCCESS;
 }
 
 static void get_termmodes(struct ChanSess *chansess) {
@@ -511,6 +524,7 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
 	unsigned char namebuf[65];
+	struct passwd * pw = NULL;
 
 	TRACE(("enter sessionpty"))
 	chansess->term = buf_getstring(ses.payload, &termlen);
@@ -534,7 +548,10 @@ static int sessionpty(struct ChanSess * chansess) {
 		dropbear_exit("out of memory"); /* TODO disconnect */
 	}
 
-	pty_setowner(ses.authstate.pw, chansess->tty);
+	pw = getpwnam(ses.authstate.pw_name);
+	if (!pw)
+		dropbear_exit("getpwnam failed after succeeding previously");
+	pty_setowner(pw, chansess->tty);
 
 	/* Set up the rows/col counts */
 	sessionwinchange(chansess);
@@ -588,6 +605,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 
+#ifdef LOG_COMMANDS
+	if (chansess->cmd) {
+		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+						ses.authstate.pw_name, chansess->cmd);
+	} else {
+		dropbear_log(LOG_INFO, "user %s executing login shell", 
+						ses.authstate.pw_name);
+	}
+#endif
+
 	if (chansess->term == NULL) {
 		/* no pty */
 		ret = noptycommand(channel, chansess);
@@ -635,6 +662,12 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (!pid) {
 		/* child */
 
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
+
 		/* redirect stdin/stdout */
 #define FDIN 0
 #define FDOUT 1
@@ -659,21 +692,23 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		/* parent */
 		TRACE(("continue noptycommand: parent"))
 		chansess->pid = pid;
+		TRACE(("child pid is %d", pid))
 
 		addchildpid(chansess, pid);
 
 		if (svr_ses.lastexit.exitpid != -1) {
+			TRACE(("parent side: lastexitpid is %d", svr_ses.lastexit.exitpid))
 			/* The child probably exited and the signal handler triggered
 			 * possibly before we got around to adding the childpid. So we fill
-			 * out it's data manually */
+			 * out its data manually */
 			for (i = 0; i < svr_ses.childpidsize; i++) {
-				if (svr_ses.childpids[i].pid == pid) {
+				if (svr_ses.childpids[i].pid == svr_ses.lastexit.exitpid) {
+					TRACE(("found match for lastexitpid"))
 					svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
 					svr_ses.lastexit.exitpid = -1;
 				}
 			}
 		}
-
 
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);
@@ -730,6 +765,12 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	if (pid == 0) {
 		/* child */
 		
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
+		
 		/* redirect stdin/stdout/stderr */
 		close(chansess->master);
 
@@ -757,11 +798,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		if (svr_opts.domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
 
-			/* 11 == strlen("/hushlogin\0") */
-			len = strlen(ses.authstate.pw->pw_dir) + 11; 
+			/* 12 == strlen("/.hushlogin\0") */
+			len = strlen(ses.authstate.pw_dir) + 12; 
 
 			hushpath = m_malloc(len);
-			snprintf(hushpath, len, "%s/hushlogin", ses.authstate.pw->pw_dir);
+			snprintf(hushpath, len, "%s/.hushlogin", ses.authstate.pw_dir);
 
 			if (stat(hushpath, &sb) < 0) {
 				/* more than a screenful is stupid IMHO */
@@ -871,12 +912,12 @@ static void execchild(struct ChanSess *chansess) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if ((setgid(ses.authstate.pw->pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw->pw_name, 
-						ses.authstate.pw->pw_gid) < 0)) {
+		if ((setgid(ses.authstate.pw_gid) < 0) ||
+			(initgroups(ses.authstate.pw_name, 
+						ses.authstate.pw_gid) < 0)) {
 			dropbear_exit("error changing user group");
 		}
-		if (setuid(ses.authstate.pw->pw_uid) < 0) {
+		if (setuid(ses.authstate.pw_uid) < 0) {
 			dropbear_exit("error changing user");
 		}
 	} else {
@@ -887,29 +928,29 @@ static void execchild(struct ChanSess *chansess) {
 		 * usernames with the same uid, but differing groups, then the
 		 * differing groups won't be set (as with initgroups()). The solution
 		 * is for the sysadmin not to give out the UID twice */
-		if (getuid() != ses.authstate.pw->pw_uid) {
+		if (getuid() != ses.authstate.pw_uid) {
 			dropbear_exit("couldn't	change user as non-root");
 		}
 	}
 
 	/* an empty shell should be interpreted as "/bin/sh" */
-	if (ses.authstate.pw->pw_shell[0] == '\0') {
+	if (ses.authstate.pw_shell[0] == '\0') {
 		usershell = "/bin/sh";
 	} else {
-		usershell = ses.authstate.pw->pw_shell;
+		usershell = ses.authstate.pw_shell;
 	}
 
 	/* set env vars */
-	addnewvar("USER", ses.authstate.pw->pw_name);
-	addnewvar("LOGNAME", ses.authstate.pw->pw_name);
-	addnewvar("HOME", ses.authstate.pw->pw_dir);
+	addnewvar("USER", ses.authstate.pw_name);
+	addnewvar("LOGNAME", ses.authstate.pw_name);
+	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", usershell);
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
 
 	/* change directory */
-	if (chdir(ses.authstate.pw->pw_dir) < 0) {
+	if (chdir(ses.authstate.pw_dir) < 0) {
 		dropbear_exit("error changing directory");
 	}
 
@@ -997,6 +1038,7 @@ void addnewvar(const char* param, const char* var) {
 	newvar[plen] = '=';
 	memcpy(&newvar[plen+1], var, vlen);
 	newvar[plen+vlen+1] = '\0';
+	/* newvar is leaked here, but that's part of putenv()'s semantics */
 	if (putenv(newvar) < 0) {
 		dropbear_exit("environ error");
 	}

@@ -199,10 +199,10 @@ int dropbear_listen(const char* address, const char* port,
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
-	// for calling getaddrinfo:
-	// address == NULL and !AI_PASSIVE: local loopback
-	// address == NULL and AI_PASSIVE: all interfaces
-	// address != NULL: whatever the address says
+	/* for calling getaddrinfo:
+	 address == NULL and !AI_PASSIVE: local loopback
+	 address == NULL and AI_PASSIVE: all interfaces
+	 address != NULL: whatever the address says */
 	if (!address) {
 		TRACE(("dropbear_listen: local loopback"))
 	} else {
@@ -286,9 +286,9 @@ int dropbear_listen(const char* address, const char* port,
 			len = 20 + strlen(strerror(err));
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error listening: %s", strerror(err));
-			TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
-			return -1;
 		}
+		TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
+		return -1;
 	}
 
 	TRACE(("leave dropbear_listen: success, %d socks bound", nsock))
@@ -400,7 +400,10 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
-	 * of the specific structure. */
+	 * of the specific structure. Some older linux systems (glibc 2.1.3
+	 * such as debian potato) have sockaddr_storage.__ss_family instead
+	 * but we'll ignore them */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -408,6 +411,7 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf), 
@@ -448,6 +452,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
 	 * of the specific structure. */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -455,6 +460,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 
@@ -521,26 +527,36 @@ char * stripcontrol(const char * text) {
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_readfile(buffer* buf, const char* filename) {
 
-	int fd;
+	int fd = -1;
 	int len;
 	int maxlen;
+	int ret = DROPBEAR_FAILURE;
 
 	fd = open(filename, O_RDONLY);
 
 	if (fd < 0) {
-		close(fd);
-		return DROPBEAR_FAILURE;
+		goto out;
 	}
 	
 	do {
 		maxlen = buf->size - buf->pos;
-		len = read(fd, buf_getwriteptr(buf, maxlen),
-				maxlen);
+		len = read(fd, buf_getwriteptr(buf, maxlen), maxlen);
+		if (len < 0) {
+			if (errno == EINTR || errno == EAGAIN) {
+				continue;
+			}
+			goto out;
+		}
 		buf_incrwritepos(buf, len);
 	} while (len < maxlen && len > 0);
 
-	close(fd);
-	return DROPBEAR_SUCCESS;
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	if (fd >= 0) {
+		m_close(fd);
+	}
+	return ret;
 }
 
 /* get a line from the file into buffer in the style expected for an
@@ -676,4 +692,10 @@ void setnonblocking(int fd) {
 		}
 	}
 	TRACE(("leave setnonblocking"))
+}
+
+void disallow_core() {
+	struct rlimit lim;
+	lim.rlim_cur = lim.rlim_max = 0;
+	setrlimit(RLIMIT_CORE, &lim);
 }

@@ -432,9 +432,11 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 /* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE when given a buffer containing
  * a key, a key, and a type. The buffer is positioned at the start of the
  * base64 data, and contains no trailing data */
+/* If fingerprint is non-NULL, it will be set to a malloc()ed fingerprint
+   of the key if it is successfully decoded */
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
 					const unsigned char* algoname, unsigned int algolen, 
-					buffer * line) {
+					buffer * line, char ** fingerprint) {
 
 	buffer * decodekey = NULL;
 	int ret = DROPBEAR_FAILURE;
@@ -455,6 +457,11 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 	}
 	TRACE(("checkpubkey: base64_decode success"))
 	buf_incrlen(decodekey, decodekeylen);
+	
+	if (fingerprint) {
+		*fingerprint = sign_key_fingerprint(buf_getptr(decodekey, decodekeylen),
+											decodekeylen);
+	}
 	
 	/* compare the keys */
 	if ( ( decodekeylen != keybloblen )

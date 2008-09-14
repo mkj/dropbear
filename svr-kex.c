@@ -52,7 +52,9 @@ void recv_msg_kexdh_init() {
 	}
 
 	m_mp_init(&dh_e);
-	buf_getmpint(ses.payload, &dh_e);
+	if (buf_getmpint(ses.payload, &dh_e) != DROPBEAR_SUCCESS) {
+		dropbear_exit("Failed to get kex value");
+	}
 
 	send_msg_kexdh_reply(&dh_e);
 

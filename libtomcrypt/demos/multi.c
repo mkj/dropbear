@@ -13,21 +13,21 @@ int main(void)
 
 /* HASH testing */
    len = sizeof(buf[0]);
-   hash_memory(find_hash("sha256"), "hello", 5, buf[0], &len);
+   hash_memory(find_hash("sha256"), (unsigned char*)"hello", 5, buf[0], &len);
    len2 = sizeof(buf[0]);
-   hash_memory_multi(find_hash("sha256"), buf[1], &len2, "hello", 5, NULL);
+   hash_memory_multi(find_hash("sha256"), buf[1], &len2, (unsigned char*)"hello", 5, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   hash_memory_multi(find_hash("sha256"), buf[1], &len2, "he", 2, "llo", 3, NULL);
+   hash_memory_multi(find_hash("sha256"), buf[1], &len2, (unsigned char*)"he", 2UL, "llo", 3UL, NULL, 0);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   hash_memory_multi(find_hash("sha256"), buf[1], &len2, "h", 1, "e", 1, "l", 1, "l", 1, "o", 1, NULL);
+   hash_memory_multi(find_hash("sha256"), buf[1], &len2, (unsigned char*)"h", 1UL, "e", 1UL, "l", 1UL, "l", 1UL, "o", 1UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
@@ -35,21 +35,21 @@ int main(void)
 
 /* HMAC */
    len = sizeof(buf[0]);
-   hmac_memory(find_hash("sha256"), key, 16, "hello", 5, buf[0], &len);
+   hmac_memory(find_hash("sha256"), key, 16, (unsigned char*)"hello", 5, buf[0], &len);
    len2 = sizeof(buf[0]);
-   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, "hello", 5, NULL);
+   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, (unsigned char*)"hello", 5UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, "he", 2, "llo", 3, NULL);
+   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, (unsigned char*)"he", 2UL, "llo", 3UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, "h", 1, "e", 1, "l", 1, "l", 1, "o", 1, NULL);
+   hmac_memory_multi(find_hash("sha256"), key, 16, buf[1], &len2, (unsigned char*)"h", 1UL, "e", 1UL, "l", 1UL, "l", 1UL, "o", 1UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
@@ -57,21 +57,21 @@ int main(void)
 
 /* OMAC */
    len = sizeof(buf[0]);
-   omac_memory(find_cipher("aes"), key, 16, "hello", 5, buf[0], &len);
+   omac_memory(find_cipher("aes"), key, 16, (unsigned char*)"hello", 5, buf[0], &len);
    len2 = sizeof(buf[0]);
-   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "hello", 5, NULL);
+   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"hello", 5UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "he", 2, "llo", 3, NULL);
+   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"he", 2UL, "llo", 3UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "h", 1, "e", 1, "l", 1, "l", 1, "o", 1, NULL);
+   omac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"h", 1UL, "e", 1UL, "l", 1UL, "l", 1UL, "o", 1UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
@@ -79,21 +79,21 @@ int main(void)
 
 /* PMAC */
    len = sizeof(buf[0]);
-   pmac_memory(find_cipher("aes"), key, 16, "hello", 5, buf[0], &len);
+   pmac_memory(find_cipher("aes"), key, 16, (unsigned char*)"hello", 5, buf[0], &len);
    len2 = sizeof(buf[0]);
-   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "hello", 5, NULL);
+   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"hello", 5, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "he", 2, "llo", 3, NULL);
+   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"he", 2UL, "llo", 3UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
    }
    len2 = sizeof(buf[0]);
-   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, "h", 1, "e", 1, "l", 1, "l", 1, "o", 1, NULL);
+   pmac_memory_multi(find_cipher("aes"), key, 16, buf[1], &len2, (unsigned char*)"h", 1UL, "e", 1UL, "l", 1UL, "l", 1UL, "o", 1UL, NULL);
    if (len != len2 || memcmp(buf[0], buf[1], len)) {
       printf("Failed: %d %lu %lu\n", __LINE__, len, len2);
       return EXIT_FAILURE;
@@ -106,5 +106,5 @@ int main(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/demos/multi.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/05/05 14:35:56 $ */
+/* $Revision: 1.3 $ */
+/* $Date: 2006/06/07 22:25:09 $ */

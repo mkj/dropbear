@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /**
@@ -29,7 +29,7 @@ const struct ltc_cipher_descriptor anubis_desc = {
    &anubis_test,
    &anubis_done,
    &anubis_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 #define MIN_N           4 
@@ -891,7 +891,7 @@ static const ulong32 rc[] = {
     @param skey The key in as scheduled by this function.
     @return CRYPT_OK if successful
  */
-#ifdef CLEAN_STACK
+#ifdef LTC_CLEAN_STACK
 static int _anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #else
 int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
@@ -944,28 +944,28 @@ int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
       /*
        * generate r-th round key K^r:
        */
-      K0 = T4[(kappa[N - 1] >> 24)       ];
+      K0 = T4[(kappa[N - 1] >> 24) & 0xff];
       K1 = T4[(kappa[N - 1] >> 16) & 0xff];
       K2 = T4[(kappa[N - 1] >>  8) & 0xff];
       K3 = T4[(kappa[N - 1]      ) & 0xff];
       for (i = N - 2; i >= 0; i--) {
-         K0 = T4[(kappa[i] >> 24)       ] ^
-            (T5[(K0 >> 24)       ] & 0xff000000U) ^
+         K0 = T4[(kappa[i] >> 24)  & 0xff] ^
+            (T5[(K0 >> 24) & 0xff] & 0xff000000U) ^
             (T5[(K0 >> 16) & 0xff] & 0x00ff0000U) ^
             (T5[(K0 >>  8) & 0xff] & 0x0000ff00U) ^
             (T5[(K0      ) & 0xff] & 0x000000ffU);
          K1 = T4[(kappa[i] >> 16) & 0xff] ^
-            (T5[(K1 >> 24)       ] & 0xff000000U) ^
+            (T5[(K1 >> 24) & 0xff] & 0xff000000U) ^
             (T5[(K1 >> 16) & 0xff] & 0x00ff0000U) ^
             (T5[(K1 >>  8) & 0xff] & 0x0000ff00U) ^
             (T5[(K1      ) & 0xff] & 0x000000ffU);
          K2 = T4[(kappa[i] >>  8) & 0xff] ^
-            (T5[(K2 >> 24)       ] & 0xff000000U) ^
+            (T5[(K2 >> 24) & 0xff] & 0xff000000U) ^
             (T5[(K2 >> 16) & 0xff] & 0x00ff0000U) ^
             (T5[(K2 >>  8) & 0xff] & 0x0000ff00U) ^
             (T5[(K2      ) & 0xff] & 0x000000ffU);
          K3 = T4[(kappa[i]      ) & 0xff] ^
-            (T5[(K3 >> 24)       ] & 0xff000000U) ^
+            (T5[(K3 >> 24) & 0xff] & 0xff000000U) ^
             (T5[(K3 >> 16) & 0xff] & 0x00ff0000U) ^
             (T5[(K3 >>  8) & 0xff] & 0x0000ff00U) ^
             (T5[(K3      ) & 0xff] & 0x000000ffU);
@@ -974,7 +974,7 @@ int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
       -- this is the code to use with the large U tables:
       K0 = K1 = K2 = K3 = 0;
       for (i = 0; i < N; i++) {
-         K0 ^= U[i][(kappa[i] >> 24)       ];
+         K0 ^= U[i][(kappa[i] >> 24) & 0xff];
          K1 ^= U[i][(kappa[i] >> 16) & 0xff];
          K2 ^= U[i][(kappa[i] >>  8) & 0xff];
          K3 ^= U[i][(kappa[i]      ) & 0xff];
@@ -993,7 +993,7 @@ int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
       }
       for (i = 0; i < N; i++) {
          int j = i;
-         inter[i]  = T0[(kappa[j--] >> 24)       ]; if (j < 0) j = N - 1;
+         inter[i]  = T0[(kappa[j--] >> 24) & 0xff]; if (j < 0) j = N - 1;
          inter[i] ^= T1[(kappa[j--] >> 16) & 0xff]; if (j < 0) j = N - 1;
          inter[i] ^= T2[(kappa[j--] >>  8) & 0xff]; if (j < 0) j = N - 1;
          inter[i] ^= T3[(kappa[j  ]      ) & 0xff];
@@ -1015,7 +1015,7 @@ int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
       for (i = 0; i < 4; i++) {
          v = skey->anubis.roundKeyEnc[R - r][i];
          skey->anubis.roundKeyDec[r][i] =
-            T0[T4[(v >> 24)       ] & 0xff] ^
+            T0[T4[(v >> 24) & 0xff] & 0xff] ^
             T1[T4[(v >> 16) & 0xff] & 0xff] ^
             T2[T4[(v >>  8) & 0xff] & 0xff] ^
             T3[T4[(v      ) & 0xff] & 0xff];
@@ -1025,7 +1025,7 @@ int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
    return CRYPT_OK;
 }
 
-#ifdef CLEAN_STACK
+#ifdef LTC_CLEAN_STACK
 int  anubis_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 {
   int err;
@@ -1060,10 +1060,10 @@ static void anubis_crypt(const unsigned char *plaintext, unsigned char *cipherte
      */
     for (r = 1; r < R; r++) {
       inter[0] =
-         T0[(state[0] >> 24)       ] ^
-         T1[(state[1] >> 24)       ] ^
-         T2[(state[2] >> 24)       ] ^
-         T3[(state[3] >> 24)       ] ^
+         T0[(state[0] >> 24) & 0xff] ^
+         T1[(state[1] >> 24) & 0xff] ^
+         T2[(state[2] >> 24) & 0xff] ^
+         T3[(state[3] >> 24) & 0xff] ^
          roundKey[r][0];
       inter[1] =
          T0[(state[0] >> 16) & 0xff] ^
@@ -1093,10 +1093,10 @@ static void anubis_crypt(const unsigned char *plaintext, unsigned char *cipherte
     * last round:
     */
    inter[0] =
-      (T0[(state[0] >> 24)       ] & 0xff000000U) ^
-      (T1[(state[1] >> 24)       ] & 0x00ff0000U) ^
-      (T2[(state[2] >> 24)       ] & 0x0000ff00U) ^
-      (T3[(state[3] >> 24)       ] & 0x000000ffU) ^
+      (T0[(state[0] >> 24) & 0xff] & 0xff000000U) ^
+      (T1[(state[1] >> 24) & 0xff] & 0x00ff0000U) ^
+      (T2[(state[2] >> 24) & 0xff] & 0x0000ff00U) ^
+      (T3[(state[3] >> 24) & 0xff] & 0x000000ffU) ^
       roundKey[R][0];
    inter[1] =
       (T0[(state[0] >> 16) & 0xff] & 0xff000000U) ^
@@ -1134,13 +1134,15 @@ static void anubis_crypt(const unsigned char *plaintext, unsigned char *cipherte
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
-void anubis_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int anubis_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
    LTC_ARGCHK(pt   != NULL);
    LTC_ARGCHK(ct   != NULL);
    LTC_ARGCHK(skey != NULL);
    anubis_crypt(pt, ct, skey->anubis.roundKeyEnc, skey->anubis.R);
+   return CRYPT_OK;
 }
 
 /**
@@ -1148,13 +1150,15 @@ void anubis_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_ke
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
-void anubis_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int anubis_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
    LTC_ARGCHK(pt   != NULL);
    LTC_ARGCHK(ct   != NULL);
    LTC_ARGCHK(skey != NULL);
    anubis_crypt(ct, pt, skey->anubis.roundKeyDec, skey->anubis.R);
+   return CRYPT_OK;
 }
 
 /**
@@ -1496,13 +1500,13 @@ int anubis_test(void)
        anubis_setup(tests[x].key, tests[x].keylen, 0, &skey);
        anubis_ecb_encrypt(tests[x].pt, buf[0], &skey);
        anubis_ecb_decrypt(buf[0], buf[1], &skey);
-       if (memcmp(buf[0], tests[x].ct, 16) || memcmp(buf[1], tests[x].pt, 16)) {
+       if (XMEMCMP(buf[0], tests[x].ct, 16) || XMEMCMP(buf[1], tests[x].pt, 16)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
 
        for (y = 0; y < 1000; y++) anubis_ecb_encrypt(buf[0], buf[0], &skey);
        for (y = 0; y < 1000; y++) anubis_ecb_decrypt(buf[0], buf[0], &skey);
-       if (memcmp(buf[0], tests[x].ct, 16)) {
+       if (XMEMCMP(buf[0], tests[x].ct, 16)) {
           return CRYPT_FAIL_TESTVECTOR;
        }
 
@@ -1550,5 +1554,5 @@ int anubis_keysize(int *keysize)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/anubis.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.15 $ */
+/* $Date: 2006/11/15 12:41:28 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /** 
@@ -84,7 +84,9 @@ int s_ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
    }
 
    /* Y[m] = E(X[m])) */
-   cipher_descriptor[ocb->cipher].ecb_encrypt(X, Y, &ocb->key);
+   if ((err = cipher_descriptor[ocb->cipher].ecb_encrypt(X, Y, &ocb->key)) != CRYPT_OK) {
+      goto error;
+   }
 
    if (mode == 1) {
       /* decrypt mode, so let's xor it first */
@@ -113,7 +115,9 @@ int s_ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
    }
    
    /* encrypt checksum, er... tag!! */
-   cipher_descriptor[ocb->cipher].ecb_encrypt(ocb->checksum, X, &ocb->key);
+   if ((err = cipher_descriptor[ocb->cipher].ecb_encrypt(ocb->checksum, X, &ocb->key)) != CRYPT_OK) {
+      goto error;
+   }
    cipher_descriptor[ocb->cipher].done(&ocb->key);
 
    /* now store it */
@@ -128,17 +132,17 @@ int s_ocb_done(ocb_state *ocb, const unsigned char *pt, unsigned long ptlen,
    zeromem(Z, MAXBLOCKSIZE);
    zeromem(ocb, sizeof(*ocb));
 #endif
-   
+error:   
    XFREE(X);
    XFREE(Y);
    XFREE(Z);
 
-   return CRYPT_OK;
+   return err;
 }
 
 #endif
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/s_ocb_done.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

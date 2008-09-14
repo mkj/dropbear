@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -101,7 +101,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    x += modulus_len - hLen - 1;
 
    /* compute MGF1 of maskedDB (hLen) */ 
-   if ((err = pkcs_1_mgf1(DB, modulus_len - hLen - 1, hash_idx, mask, hLen)) != CRYPT_OK) {
+   if ((err = pkcs_1_mgf1(hash_idx, DB, modulus_len - hLen - 1, mask, hLen)) != CRYPT_OK) {
       goto LBL_ERR;
    }
 
@@ -111,7 +111,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    }
 
    /* compute MGF1 of seed (k - hlen - 1) */
-   if ((err = pkcs_1_mgf1(seed, hLen, hash_idx, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
+   if ((err = pkcs_1_mgf1(hash_idx, seed, hLen, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
       goto LBL_ERR;
    }
 
@@ -136,7 +136,7 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
    }
 
    /* compare the lhash'es */
-   if (memcmp(seed, DB, hLen) != 0) {
+   if (XMEMCMP(seed, DB, hLen) != 0) {
       err = CRYPT_OK;
       goto LBL_ERR;
    }
@@ -148,18 +148,19 @@ int pkcs_1_oaep_decode(const unsigned char *msg,    unsigned long msglen,
 
    /* error out if wasn't 0x01 */
    if (x == (modulus_len - hLen - 1) || DB[x] != 0x01) {
-      err = CRYPT_OK;
+      err = CRYPT_INVALID_PACKET;
       goto LBL_ERR;
    }
 
    /* rest is the message (and skip 0x01) */
-   if ((modulus_len - hLen - 1) - ++x > *outlen) {
+   if ((modulus_len - hLen - 1 - ++x) > *outlen) {
+      *outlen = modulus_len - hLen - 1 - x;
       err = CRYPT_BUFFER_OVERFLOW;
       goto LBL_ERR;
    }
 
    /* copy message */
-   *outlen = (modulus_len - hLen - 1) - x;
+   *outlen = modulus_len - hLen - 1 - x;
    XMEMCPY(out, DB + x, modulus_len - hLen - 1 - x);
    x += modulus_len - hLen - 1;
 
@@ -184,5 +185,5 @@ LBL_ERR:
 #endif /* PKCS_1 */
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_oaep_decode.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/06/18 02:37:06 $ */
+/* $Revision: 1.11 $ */
+/* $Date: 2006/11/01 09:28:17 $ */

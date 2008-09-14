@@ -45,6 +45,7 @@ void common_session_init(int sock, char* remotehost);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
 void session_identification();
+void send_msg_ignore();
 
 
 /* Server */
@@ -81,13 +82,20 @@ struct key_context {
 
 };
 
+struct packetlist;
+struct packetlist {
+	struct packetlist *next;
+	buffer * payload;
+};
+
 struct sshsession {
 
 	/* Is it a client or server? */
 	unsigned char isserver;
 
-	long connecttimeout; /* time to disconnect if we have a timeout (for
-							userauth etc), or 0 for no timeout */
+	time_t connect_time; /* time the connection was established
+							(cleared after auth once we're not
+							respecting AUTH_TIMEOUT any more) */
 
 	int sock;
 
@@ -123,7 +131,11 @@ struct sshsession {
 
 	unsigned char lastpacket; /* What the last received packet type was */
 	
-
+    int signal_pipe[2]; /* stores endpoints of a self-pipe used for
+						   race-free signal handling */
+						
+	time_t last_packet_time; /* time of the last packet transmission, for
+							keepalive purposes */
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;
@@ -136,6 +148,10 @@ struct sshsession {
 	buffer* kexhashbuf; /* session hash buffer calculated from various packets*/
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
 							 can add it to the hash when generating keys */
+							
+	/* a list of queued replies that should be sent after a KEX has
+	   concluded (ie, while dataallowed was unset)*/
+	struct packetlist *reply_queue_head, *reply_queue_tail;
 
 	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
 			int *goodguess); /* The function to use to choose which algorithm
@@ -189,8 +205,7 @@ typedef enum {
 	KEX_NOTHING,
 	KEXINIT_RCVD,
 	KEXDH_INIT_SENT,
-	KEXDONE,
-
+	KEXDONE
 } cli_kex_state;
 
 typedef enum {
@@ -202,8 +217,7 @@ typedef enum {
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
-	SESSION_RUNNING,
-
+	SESSION_RUNNING
 } cli_state;
 
 struct clientsession {
