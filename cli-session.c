@@ -74,13 +74,13 @@ static const struct ChanType *cli_chantypes[] = {
 	NULL /* Null termination */
 };
 
-void cli_session(int sock, char* remotehost) {
+void cli_session(int sock_in, int sock_out, char* remotehost) {
 
 	seedrandom();
 
 	crypto_init();
 
-	common_session_init(sock, remotehost);
+	common_session_init(sock_in, sock_out, remotehost);
 
 	chaninitialise(cli_chantypes);
 
@@ -294,8 +294,10 @@ static void cli_remoteclosed() {
 
 	/* XXX TODO perhaps print a friendlier message if we get this but have
 	 * already sent/received disconnect message(s) ??? */
-	close(ses.sock);
-	ses.sock = -1;
+	m_close(ses.sock_in);
+	m_close(ses.sock_out);
+	ses.sock_in = -1;
+	ses.sock_out = -1;
 	dropbear_exit("remote closed the connection");
 }
 

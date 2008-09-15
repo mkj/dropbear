@@ -117,6 +117,9 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	struct TCPFwdList * localfwds;
 #endif
+#ifdef ENABLE_CLI_PROXYCMD
+	char *proxycmd;
+#endif
 
 } cli_runopts;
 

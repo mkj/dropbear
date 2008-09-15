@@ -39,7 +39,7 @@ int cli_main(int argc, char ** argv) {
 int main(int argc, char ** argv) {
 #endif
 
-	int sock;
+	int sock_in, sock_out;
 	char* error = NULL;
 	char* hostandport;
 	int len;
@@ -58,10 +58,18 @@ int main(int argc, char ** argv) {
 		dropbear_exit("signal() error");
 	}
 
-	sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
-			0, &error);
+#ifdef CLI_ENABLE_PROXYCMD
+	if (cli_runopts.proxycmd) {
 
-	if (sock < 0) {
+	} else
+#endif
+	{
+		int sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
+				0, &error);
+		sock_in = sock_out = sock;
+	}
+
+	if (sock_in < 0) {
 		dropbear_exit("%s", error);
 	}
 
@@ -72,7 +80,7 @@ int main(int argc, char ** argv) {
 	snprintf(hostandport, len, "%s:%s", 
 			cli_opts.remotehost, cli_opts.remoteport);
 
-	cli_session(sock, hostandport);
+	cli_session(sock_in, sock_out, hostandport);
 
 	/* not reached */
 	return -1;

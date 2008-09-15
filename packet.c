@@ -61,7 +61,7 @@ void write_packet() {
 	len = writebuf->len - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
-	written = write(ses.sock, buf_getptr(writebuf, len), len);
+	written = write(ses.sock_out, buf_getptr(writebuf, len), len);
 
 	if (written < 0) {
 		if (errno == EINTR) {
@@ -122,7 +122,7 @@ void read_packet() {
 	 * mightn't be any available (EAGAIN) */
 	dropbear_assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
-	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
+	len = read(ses.sock_in, buf_getptr(ses.readbuf, maxlen), maxlen);
 
 	if (len == 0) {
 		ses.remoteclosed();
@@ -171,7 +171,7 @@ static void read_packet_init() {
 	maxlen = blocksize - ses.readbuf->pos;
 			
 	/* read the rest of the packet if possible */
-	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
+	len = read(ses.sock_in, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
 		ses.remoteclosed();

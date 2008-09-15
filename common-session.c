@@ -52,14 +52,15 @@ int exitflag = 0; /* GLOBAL */
 
 
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock, char* remotehost) {
+void common_session_init(int sock_in, int sock_out, char* remotehost) {
 
 	TRACE(("enter session_init"))
 
 	ses.remotehost = remotehost;
 
-	ses.sock = sock;
-	ses.maxfd = sock;
+	ses.sock_in = sock_in;
+	ses.sock_out = sock_out;
+	ses.maxfd = MAX(sock_in, sock_out);
 
 	ses.connect_time = 0;
 	ses.last_packet_time = 0;
@@ -137,11 +138,11 @@ void session_loop(void(*loophandler)()) {
 		FD_ZERO(&writefd);
 		FD_ZERO(&readfd);
 		dropbear_assert(ses.payload == NULL);
-		if (ses.sock != -1) {
-			FD_SET(ses.sock, &readfd);
-			if (!isempty(&ses.writequeue)) {
-				FD_SET(ses.sock, &writefd);
-			}
+		if (ses.sock_in != -1) {
+			FD_SET(ses.sock_in, &readfd);
+		}
+		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
+			FD_SET(ses.sock_out, &writefd);
 		}
 		
 		/* We get woken up when signal handlers write to this pipe.
@@ -183,12 +184,14 @@ void session_loop(void(*loophandler)()) {
 		checktimeouts();
 
 		/* process session socket's incoming/outgoing data */
-		if (ses.sock != -1) {
-			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
+		if (ses.sock_out != -1) {
+			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
 				write_packet();
 			}
+		}
 
-			if (FD_ISSET(ses.sock, &readfd)) {
+		if (ses.sock_in != -1) {
+			if (FD_ISSET(ses.sock_in, &readfd)) {
 				read_packet();
 			}
 			
@@ -248,14 +251,14 @@ void session_identification() {
 	int i;
 
 	/* write our version string, this blocks */
-	if (atomicio(write, ses.sock, LOCAL_IDENT "\r\n",
+	if (atomicio(write, ses.sock_out, LOCAL_IDENT "\r\n",
 				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
 		ses.remoteclosed();
 	}
 
     /* If they send more than 50 lines, something is wrong */
 	for (i = 0; i < 50; i++) {
-		len = ident_readln(ses.sock, linebuf, sizeof(linebuf));
+		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));
 
 		if (len < 0 && errno != EINTR) {
 			/* It failed */

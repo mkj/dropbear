@@ -41,7 +41,7 @@
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
-void common_session_init(int sock, char* remotehost);
+void common_session_init(int sock_in, int sock_out, char* remotehost);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
 void session_identification();
@@ -54,7 +54,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param);
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock, char *remotehost);
+void cli_session(int sock_in, int sock_out, char *remotehost);
 void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
@@ -97,7 +97,8 @@ struct sshsession {
 							(cleared after auth once we're not
 							respecting AUTH_TIMEOUT any more) */
 
-	int sock;
+	int sock_in;
+	int sock_out;
 
 	unsigned char *remotehost; /* the peer hostname */
 

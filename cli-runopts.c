@@ -65,6 +65,9 @@ static void printhelp() {
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
+#ifdef ENABLE_CLI_PROXYCMD
+					"-J <proxy_program> Use program rather than tcp connection"
+#endif
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
 #endif
@@ -86,6 +89,9 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	int nextisremote = 0;
+#endif
+#ifdef ENABLE_CLI_PROXYCMD
+	int nextisproxycmd = 0;
 #endif
 	char* dummy = NULL; /* Not used for anything real */
 
@@ -197,6 +203,11 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 				case 'R':
 					nextisremote = 1;
+					break;
+#endif
+#ifdef ENABLE_CLI_PROXYCMD
+				case 'J':
+					next = &cli_opts.proxycmd;
 					break;
 #endif
 				case 'l':
