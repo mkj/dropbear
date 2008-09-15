@@ -47,7 +47,7 @@ static int sessionsignal(struct ChanSess *chansess);
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int sessionwinchange(struct ChanSess *chansess);
-static void execchild(struct ChanSess *chansess);
+static void execchild(void *user_data_chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
 static void closechansess(struct Channel *channel);
@@ -633,102 +633,37 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
  * pty.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
-
-	int infds[2];
-	int outfds[2];
-	int errfds[2];
-	pid_t pid;
-	unsigned int i;
-
-	const int FDIN = 0;
-	const int FDOUT = 1;
+	int ret;
 
 	TRACE(("enter noptycommand"))
+	ret = spawn_command(execchild, chansess, 
+			&channel->writefd, &channel->readfd, &channel->errfd,
+			&chansess->pid);
 
-	/* redirect stdin/stdout/stderr */
-	if (pipe(infds) != 0)
-		return DROPBEAR_FAILURE;
-	if (pipe(outfds) != 0)
-		return DROPBEAR_FAILURE;
-	if (pipe(errfds) != 0)
-		return DROPBEAR_FAILURE;
+	if (ret == DROPBEAR_FAILURE) {
+		return ret;
+	}
 
-#ifdef __uClinux__
-	pid = vfork();
-#else
-	pid = fork();
-#endif
+	ses.maxfd = MAX(ses.maxfd, channel->writefd);
+	ses.maxfd = MAX(ses.maxfd, channel->readfd);
+	ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
-	if (pid < 0)
-		return DROPBEAR_FAILURE;
+	addchildpid(chansess, chansess->pid);
 
-	if (!pid) {
-		/* child */
-
-		TRACE(("back to normal sigchld"))
-		/* Revert to normal sigchld handling */
-		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
-			dropbear_exit("signal() error");
-		}
-
-		/* redirect stdin/stdout */
-
-		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
-			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
-			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
-			TRACE(("leave noptycommand: error redirecting FDs"))
-			return DROPBEAR_FAILURE;
-		}
-
-		close(infds[FDOUT]);
-		close(infds[FDIN]);
-		close(outfds[FDIN]);
-		close(outfds[FDOUT]);
-		close(errfds[FDIN]);
-		close(errfds[FDOUT]);
-
-		execchild(chansess);
-		/* not reached */
-
-	} else {
-		/* parent */
-		TRACE(("continue noptycommand: parent"))
-		chansess->pid = pid;
-		TRACE(("child pid is %d", pid))
-
-		addchildpid(chansess, pid);
-
-		if (svr_ses.lastexit.exitpid != -1) {
-			TRACE(("parent side: lastexitpid is %d", svr_ses.lastexit.exitpid))
-			/* The child probably exited and the signal handler triggered
-			 * possibly before we got around to adding the childpid. So we fill
-			 * out its data manually */
-			for (i = 0; i < svr_ses.childpidsize; i++) {
-				if (svr_ses.childpids[i].pid == svr_ses.lastexit.exitpid) {
-					TRACE(("found match for lastexitpid"))
-					svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
-					svr_ses.lastexit.exitpid = -1;
-				}
+	if (svr_ses.lastexit.exitpid != -1) {
+		TRACE(("parent side: lastexitpid is %d", svr_ses.lastexit.exitpid))
+		/* The child probably exited and the signal handler triggered
+		 * possibly before we got around to adding the childpid. So we fill
+		 * out its data manually */
+		int i;
+		for (i = 0; i < svr_ses.childpidsize; i++) {
+			if (svr_ses.childpids[i].pid == svr_ses.lastexit.exitpid) {
+				TRACE(("found match for lastexitpid"))
+				svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
+				svr_ses.lastexit.exitpid = -1;
 			}
 		}
-
-		close(infds[FDIN]);
-		close(outfds[FDOUT]);
-		close(errfds[FDOUT]);
-		channel->writefd = infds[FDOUT];
-		channel->readfd = outfds[FDIN];
-		channel->errfd = errfds[FDIN];
-		ses.maxfd = MAX(ses.maxfd, channel->writefd);
-		ses.maxfd = MAX(ses.maxfd, channel->readfd);
-		ses.maxfd = MAX(ses.maxfd, channel->errfd);
-
-		setnonblocking(channel->readfd);
-		setnonblocking(channel->writefd);
-		setnonblocking(channel->errfd);
-
 	}
-#undef FDIN
-#undef FDOUT
 
 	TRACE(("leave noptycommand"))
 	return DROPBEAR_SUCCESS;
@@ -873,12 +808,13 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
-static void execchild(struct ChanSess *chansess) {
+static void execchild(void *user_data) {
 
 	char *argv[4];
 	char * usershell = NULL;
 	char * baseshell = NULL;
 	unsigned int i;
+	struct ChanSess *chansess = user_data;
 
     /* with uClinux we'll have vfork()ed, so don't want to overwrite the
      * hostkey. can't think of a workaround to clear it */

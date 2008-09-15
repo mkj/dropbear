@@ -389,6 +389,83 @@ int connect_remote(const char* remotehost, const char* remoteport,
 	return sock;
 }
 
+/* Sets up a pipe for a, returning three non-blocking file descriptors
+ * and the pid. exec_fn is the function that will actually execute the child process,
+ * it will be run after the child has fork()ed, and is passed exec_data. */
+int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
+		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid)
+{
+	int infds[2];
+	int outfds[2];
+	int errfds[2];
+	pid_t pid;
+
+	const int FDIN = 0;
+	const int FDOUT = 1;
+
+	/* redirect stdin/stdout/stderr */
+	if (pipe(infds) != 0)
+		return DROPBEAR_FAILURE;
+	if (pipe(outfds) != 0)
+		return DROPBEAR_FAILURE;
+	if (pipe(errfds) != 0)
+		return DROPBEAR_FAILURE;
+
+#ifdef __uClinux__
+	pid = vfork();
+#else
+	pid = fork();
+#endif
+
+	if (pid < 0)
+		return DROPBEAR_FAILURE;
+
+	if (!pid) {
+		/* child */
+
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
+
+		/* redirect stdin/stdout */
+
+		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
+			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
+			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
+			TRACE(("leave noptycommand: error redirecting FDs"))
+			dropbear_exit("child dup2() failure");
+		}
+
+		close(infds[FDOUT]);
+		close(infds[FDIN]);
+		close(outfds[FDIN]);
+		close(outfds[FDOUT]);
+		close(errfds[FDIN]);
+		close(errfds[FDOUT]);
+
+		exec_fn(exec_data);
+		/* not reached */
+		return DROPBEAR_FAILURE;
+	} else {
+		/* parent */
+		close(infds[FDIN]);
+		close(outfds[FDOUT]);
+		close(errfds[FDOUT]);
+
+		setnonblocking(errfds[FDIN]);
+		setnonblocking(outfds[FDIN]);
+		setnonblocking(infds[FDOUT]);
+
+		*ret_pid = pid;
+		*ret_writefd = infds[FDOUT];
+		*ret_readfd = outfds[FDIN];
+		*ret_errfd = errfds[FDIN];
+		return DROPBEAR_SUCCESS;
+	}
+}
+
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
 unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
