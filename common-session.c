@@ -414,3 +414,12 @@ static long select_timeout() {
 		ret = MIN(opts.keepalive_secs, ret);
 	return ret;
 }
+
+const char* get_user_shell() {
+	/* an empty shell should be interpreted as "/bin/sh" */
+	if (ses.authstate.pw_shell[0] == '\0') {
+		return "/bin/sh";
+	} else {
+		return ses.authstate.pw_shell;
+	}
+}

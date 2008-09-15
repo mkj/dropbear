@@ -393,8 +393,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
  * and the pid. exec_fn is the function that will actually execute the child process,
  * it will be run after the child has fork()ed, and is passed exec_data. */
 int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
-		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid)
-{
+		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
 	int infds[2];
 	int outfds[2];
 	int errfds[2];
@@ -464,6 +463,48 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		*ret_errfd = errfds[FDIN];
 		return DROPBEAR_SUCCESS;
 	}
+}
+
+/* Runs a command with "sh -c". Will close FDs (except stdin/stdout/stderr) and
+ * re-enabled SIGPIPE. If cmd is NULL, will run a login shell.
+ */
+void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
+	char * argv[4];
+	char * baseshell = NULL;
+	unsigned int i;
+
+	baseshell = basename(usershell);
+
+	if (cmd != NULL) {
+		argv[0] = baseshell;
+	} else {
+		/* a login shell should be "-bash" for "/bin/bash" etc */
+		int len = strlen(baseshell) + 2; /* 2 for "-" */
+		argv[0] = (char*)m_malloc(len);
+		snprintf(argv[0], len, "-%s", baseshell);
+	}
+
+	if (cmd != NULL) {
+		argv[1] = "-c";
+		argv[2] = cmd;
+		argv[3] = NULL;
+	} else {
+		/* construct a shell of the form "-bash" etc */
+		argv[1] = NULL;
+	}
+
+	/* Re-enable SIGPIPE for the executed process */
+	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
+	/* close file descriptors except stdin/stdout/stderr
+	 * Need to be sure FDs are closed here to avoid reading files as root */
+	for (i = 3; i <= maxfd; i++) {
+		m_close(i);
+	}
+
+	execv(usershell, argv);
 }
 
 /* Return a string representation of the socket address passed. The return

@@ -809,12 +809,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
 static void execchild(void *user_data) {
-
-	char *argv[4];
-	char * usershell = NULL;
-	char * baseshell = NULL;
-	unsigned int i;
 	struct ChanSess *chansess = user_data;
+	char *usershell = NULL;
 
     /* with uClinux we'll have vfork()ed, so don't want to overwrite the
      * hostkey. can't think of a workaround to clear it */
@@ -826,12 +822,6 @@ static void execchild(void *user_data) {
 	/* overwrite the prng state */
 	reseedrandom();
 #endif
-
-	/* close file descriptors except stdin/stdout/stderr
-	 * Need to be sure FDs are closed here to avoid reading files as root */
-	for (i = 3; i <= (unsigned int)ses.maxfd; i++) {
-		m_close(i);
-	}
 
 	/* clear environment */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
@@ -871,18 +861,11 @@ static void execchild(void *user_data) {
 		}
 	}
 
-	/* an empty shell should be interpreted as "/bin/sh" */
-	if (ses.authstate.pw_shell[0] == '\0') {
-		usershell = "/bin/sh";
-	} else {
-		usershell = ses.authstate.pw_shell;
-	}
-
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
 	addnewvar("LOGNAME", ses.authstate.pw_name);
 	addnewvar("HOME", ses.authstate.pw_dir);
-	addnewvar("SHELL", usershell);
+	addnewvar("SHELL", get_user_shell());
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
@@ -901,32 +884,8 @@ static void execchild(void *user_data) {
 	agentset(chansess);
 #endif
 
-	/* Re-enable SIGPIPE for the executed process */
-	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
-		dropbear_exit("signal() error");
-	}
-
-	baseshell = basename(usershell);
-
-	if (chansess->cmd != NULL) {
-		argv[0] = baseshell;
-	} else {
-		/* a login shell should be "-bash" for "/bin/bash" etc */
-		int len = strlen(baseshell) + 2; /* 2 for "-" */
-		argv[0] = (char*)m_malloc(len);
-		snprintf(argv[0], len, "-%s", baseshell);
-	}
-
-	if (chansess->cmd != NULL) {
-		argv[1] = "-c";
-		argv[2] = chansess->cmd;
-		argv[3] = NULL;
-	} else {
-		/* construct a shell of the form "-bash" etc */
-		argv[1] = NULL;
-	}
-
-	execv(usershell, argv);
+	usershell = m_strdup(get_user_shell());
+	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 
 	/* only reached on error */
 	dropbear_exit("child failed");

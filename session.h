@@ -47,6 +47,7 @@ void common_session_cleanup();
 void session_identification();
 void send_msg_ignore();
 
+const char* get_user_shell();
 
 /* Server */
 void svr_session(int sock, int childpipe, char *remotehost, char *addrstring);
