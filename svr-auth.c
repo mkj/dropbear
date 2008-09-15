@@ -203,29 +203,6 @@ out:
 	m_free(methodname);
 }
 
-static void fill_passwd(const char* username) {
-	struct passwd *pw = NULL;
-	if (ses.authstate.pw_name)
-		m_free(ses.authstate.pw_name);
-	if (ses.authstate.pw_dir)
-		m_free(ses.authstate.pw_dir);
-	if (ses.authstate.pw_shell)
-		m_free(ses.authstate.pw_shell);
-	if (ses.authstate.pw_passwd)
-		m_free(ses.authstate.pw_passwd);
-
-	pw = getpwnam(username);
-	if (!pw) {
-		return;
-	}
-	ses.authstate.pw_uid = pw->pw_uid;
-	ses.authstate.pw_gid = pw->pw_gid;
-	ses.authstate.pw_name = m_strdup(pw->pw_name);
-	ses.authstate.pw_dir = m_strdup(pw->pw_dir);
-	ses.authstate.pw_shell = m_strdup(pw->pw_shell);
-	ses.authstate.pw_passwd = m_strdup(pw->pw_passwd);
-}
-
 
 /* Check that the username exists, has a non-empty password, and has a valid
  * shell.

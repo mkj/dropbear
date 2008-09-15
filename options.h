@@ -62,7 +62,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 /* Allow using -J <proxycommand> to run the connection through a 
    pipe to a program, rather the normal TCP connection */
-/*#define ENABLE_CLI_PROXYCMD*/
+#define ENABLE_CLI_PROXYCMD
 
 #define ENABLE_SVR_LOCALTCPFWD
 #define ENABLE_SVR_REMOTETCPFWD

@@ -48,6 +48,7 @@ void session_identification();
 void send_msg_ignore();
 
 const char* get_user_shell();
+void fill_passwd(const char* username);
 
 /* Server */
 void svr_session(int sock, int childpipe, char *remotehost, char *addrstring);

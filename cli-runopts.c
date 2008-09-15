@@ -34,6 +34,7 @@ cli_runopts cli_opts; /* GLOBAL */
 
 static void printhelp();
 static void parsehostname(char* userhostarg);
+static void fill_own_user();
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
 #endif
@@ -90,9 +91,6 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	int nextisremote = 0;
 #endif
-#ifdef ENABLE_CLI_PROXYCMD
-	int nextisproxycmd = 0;
-#endif
 	char* dummy = NULL; /* Not used for anything real */
 
 	char* recv_window_arg = NULL;
@@ -118,11 +116,16 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	cli_opts.remotefwds = NULL;
 #endif
+#ifdef ENABLE_CLI_PROXYCMD
+	cli_opts.proxycmd = NULL;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
 	*/
 	opts.recv_window = DEFAULT_RECV_WINDOW;
+
+	fill_own_user();
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -294,6 +297,14 @@ void cli_getopts(int argc, char ** argv) {
 		}
 	}
 
+#ifdef ENABLE_CLI_PROXYCMD
+	if (cli_opts.proxycmd != NULL) {
+		/* XXX something more useful */
+		cli_opts.remotehost = cli_opts.proxycmd;
+		cli_opts.remoteport = "";
+	}
+#endif
+
 	if (cli_opts.remotehost == NULL) {
 		printhelp();
 		exit(EXIT_FAILURE);
@@ -318,18 +329,15 @@ void cli_getopts(int argc, char ** argv) {
 		dropbear_exit("command required for -f");
 	}
 	
-	if (recv_window_arg)
-	{
+	if (recv_window_arg) {
 		opts.recv_window = atol(recv_window_arg);
-		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW)
-		{
+		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
 			dropbear_exit("Bad recv window '%s'", recv_window_arg);
 		}
 	}
 	if (keepalive_arg) {
 		opts.keepalive_secs = strtoul(keepalive_arg, NULL, 10);
-		if (opts.keepalive_secs == 0 && errno == EINVAL)
-		{
+		if (opts.keepalive_secs == 0 && errno == EINVAL) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
 		}
 	}
@@ -365,9 +373,6 @@ static void loadidentityfile(const char* filename) {
 /* Parses a [user@]hostname argument. userhostarg is the argv[i] corresponding
  * - note that it will be modified */
 static void parsehostname(char* orighostarg) {
-
-	uid_t uid;
-	struct passwd *pw = NULL; 
 	char *userhostarg = NULL;
 
 	/* We probably don't want to be editing argvs */
@@ -385,19 +390,26 @@ static void parsehostname(char* orighostarg) {
 	}
 
 	if (cli_opts.username == NULL) {
-		uid = getuid();
-		
-		pw = getpwuid(uid);
-		if (pw == NULL || pw->pw_name == NULL) {
-			dropbear_exit("Unknown own user");
-		}
-
-		cli_opts.username = m_strdup(pw->pw_name);
+		cli_opts.username = m_strdup(cli_opts.own_user);
 	}
 
 	if (cli_opts.remotehost[0] == '\0') {
 		dropbear_exit("Bad hostname");
 	}
+}
+
+static void fill_own_user() {
+	uid_t uid;
+	struct passwd *pw = NULL; 
+
+	uid = getuid();
+
+	pw = getpwuid(uid);
+	if (pw == NULL || pw->pw_name == NULL) {
+		dropbear_exit("Unknown own user");
+	}
+
+	cli_opts.own_user = m_strdup(pw->pw_name);
 }
 
 #ifdef ENABLE_CLI_ANYTCPFWD
