@@ -640,6 +640,9 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	pid_t pid;
 	unsigned int i;
 
+	const int FDIN = 0;
+	const int FDOUT = 1;
+
 	TRACE(("enter noptycommand"))
 
 	/* redirect stdin/stdout/stderr */
@@ -669,8 +672,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		}
 
 		/* redirect stdin/stdout */
-#define FDIN 0
-#define FDOUT 1
+
 		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
 			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
