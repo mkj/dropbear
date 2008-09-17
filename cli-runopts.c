@@ -33,13 +33,16 @@
 cli_runopts cli_opts; /* GLOBAL */
 
 static void printhelp();
-static void parsehostname(char* userhostarg);
+static void parsehostname(const char* orighostarg);
 static void fill_own_user();
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
 #endif
 #ifdef ENABLE_CLI_ANYTCPFWD
-static void addforward(char* str, struct TCPFwdList** fwdlist);
+static void addforward(const char* str, struct TCPFwdList** fwdlist);
+#endif
+#ifdef ENABLE_CLI_NETCAT
+static void add_netcat(const char *str);
 #endif
 
 static void printhelp() {
@@ -66,6 +69,9 @@ static void printhelp() {
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
+#ifdef ENABLE_CLI_NETCAT
+					"-B <endhost:endport> Netcat-alike bouncing\n"
+#endif				
 #ifdef ENABLE_CLI_PROXYCMD
 					"-J <proxy_program> Use program rather than tcp connection\n"
 #endif
@@ -90,6 +96,9 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	int nextisremote = 0;
+#endif
+#ifdef ENABLE_CLI_NETCAT
+	int nextisnetcat = 0;
 #endif
 	char* dummy = NULL; /* Not used for anything real */
 
@@ -153,6 +162,14 @@ void cli_getopts(int argc, char ** argv) {
 			continue;
 		}
 #endif
+#ifdef ENABLE_CLI_NETCAT
+		if (nextisnetcat) {
+			TRACE(("nextisnetcat true"))
+			add_netcat(argv[i]);
+			nextisnetcat = 0;
+			continue;
+		}
+#endif
 		if (next) {
 			/* The previous flag set a value to assign */
 			*next = argv[i];
@@ -206,6 +223,11 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 				case 'R':
 					nextisremote = 1;
+					break;
+#endif
+#ifdef ENABLE_CLI_NETCAT
+				case 'B':
+					nextisnetcat = 1;
 					break;
 #endif
 #ifdef ENABLE_CLI_PROXYCMD
@@ -362,12 +384,13 @@ static void loadidentityfile(const char* filename) {
 #endif
 
 
-/* Parses a [user@]hostname argument. userhostarg is the argv[i] corresponding
- * - note that it will be modified */
-static void parsehostname(char* orighostarg) {
+/* Parses a [user@]hostname argument. orighostarg is the argv[i] corresponding */
+static void parsehostname(const char* orighostarg) {
+
+	uid_t uid;
+	struct passwd *pw = NULL; 
 	char *userhostarg = NULL;
 
-	/* We probably don't want to be editing argvs */
 	userhostarg = m_strdup(orighostarg);
 
 	cli_opts.remotehost = strchr(userhostarg, '@');
@@ -390,6 +413,44 @@ static void parsehostname(char* orighostarg) {
 	}
 }
 
+#ifdef ENABLE_CLI_NETCAT
+static void add_netcat(const char* origstr) {
+	char *portstr = NULL;
+	
+	char * str = m_strdup(origstr);
+	
+	portstr = strchr(str, ':');
+	if (portstr == NULL) {
+		TRACE(("No netcat port"))
+		goto fail;
+	}
+	*portstr = '\0';
+	portstr++;
+	
+	if (strchr(portstr, ':')) {
+		TRACE(("Multiple netcat colons"))
+		goto fail;
+	}
+	
+	cli_opts.netcat_port = strtoul(portstr, NULL, 10);
+	if (errno != 0) {
+		TRACE(("bad netcat port"))
+		goto fail;
+	}
+	
+	if (cli_opts.netcat_port > 65535) {
+		TRACE(("too large netcat port"))
+		goto fail;
+	}
+	
+	cli_opts.netcat_host = str;
+	return;
+	
+fail:
+	dropbear_exit("Bad netcat endpoint '%s'", origstr);
+}
+#endif
+
 static void fill_own_user() {
 	uid_t uid;
 	struct passwd *pw = NULL; 
@@ -407,7 +468,7 @@ static void fill_own_user() {
 #ifdef ENABLE_CLI_ANYTCPFWD
 /* Turn a "listenport:remoteaddr:remoteport" string into into a forwarding
  * set, and add it to the forwarding list */
-static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
+static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 
 	char * listenport = NULL;
 	char * connectport = NULL;
@@ -443,13 +504,13 @@ static void addforward(char* origstr, struct TCPFwdList** fwdlist) {
 
 	/* Now we check the ports - note that the port ints are unsigned,
 	 * the check later only checks for >= MAX_PORT */
-	newfwd->listenport = strtol(listenport, NULL, 10);
+	newfwd->listenport = strtoul(listenport, NULL, 10);
 	if (errno != 0) {
 		TRACE(("bad listenport strtol"))
 		goto fail;
 	}
 
-	newfwd->connectport = strtol(connectport, NULL, 10);
+	newfwd->connectport = strtoul(connectport, NULL, 10);
 	if (errno != 0) {
 		TRACE(("bad connectport strtol"))
 		goto fail;
