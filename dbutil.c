@@ -146,7 +146,7 @@ void dropbear_trace(const char* format, ...) {
 	}
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE: ");
+	fprintf(stderr, "TRACE (%d): ", getpid());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -391,7 +391,9 @@ int connect_remote(const char* remotehost, const char* remoteport,
 
 /* Sets up a pipe for a, returning three non-blocking file descriptors
  * and the pid. exec_fn is the function that will actually execute the child process,
- * it will be run after the child has fork()ed, and is passed exec_data. */
+ * it will be run after the child has fork()ed, and is passed exec_data.
+ * If ret_errfd == NULL then stderr will not be captured.
+ * ret_pid can be passed as  NULL to discard the pid. */
 int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
 	int infds[2];
@@ -403,12 +405,15 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 	const int FDOUT = 1;
 
 	/* redirect stdin/stdout/stderr */
-	if (pipe(infds) != 0)
+	if (pipe(infds) != 0) {
 		return DROPBEAR_FAILURE;
-	if (pipe(outfds) != 0)
+	}
+	if (pipe(outfds) != 0) {
 		return DROPBEAR_FAILURE;
-	if (pipe(errfds) != 0)
+	}
+	if (ret_errfd && pipe(errfds) != 0) {
 		return DROPBEAR_FAILURE;
+	}
 
 #ifdef __uClinux__
 	pid = vfork();
@@ -416,8 +421,9 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 	pid = fork();
 #endif
 
-	if (pid < 0)
+	if (pid < 0) {
 		return DROPBEAR_FAILURE;
+	}
 
 	if (!pid) {
 		/* child */
@@ -432,7 +438,7 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 
 		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
-			(dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
+			(ret_errfd && dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
 			TRACE(("leave noptycommand: error redirecting FDs"))
 			dropbear_exit("child dup2() failure");
 		}
@@ -441,8 +447,11 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		close(infds[FDIN]);
 		close(outfds[FDIN]);
 		close(outfds[FDOUT]);
-		close(errfds[FDIN]);
-		close(errfds[FDOUT]);
+		if (ret_errfd)
+		{
+			close(errfds[FDIN]);
+			close(errfds[FDOUT]);
+		}
 
 		exec_fn(exec_data);
 		/* not reached */
@@ -451,16 +460,24 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		/* parent */
 		close(infds[FDIN]);
 		close(outfds[FDOUT]);
-		close(errfds[FDOUT]);
 
-		setnonblocking(errfds[FDIN]);
 		setnonblocking(outfds[FDIN]);
 		setnonblocking(infds[FDOUT]);
 
-		*ret_pid = pid;
+		if (ret_errfd) {
+			close(errfds[FDOUT]);
+			setnonblocking(errfds[FDIN]);
+		}
+
+		if (ret_pid) {
+			*ret_pid = pid;
+		}
+
 		*ret_writefd = infds[FDOUT];
 		*ret_readfd = outfds[FDIN];
-		*ret_errfd = errfds[FDIN];
+		if (ret_errfd) {
+			*ret_errfd = errfds[FDIN];
+		}
 		return DROPBEAR_SUCCESS;
 	}
 }

@@ -67,7 +67,7 @@ static void printhelp() {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef ENABLE_CLI_PROXYCMD
-					"-J <proxy_program> Use program rather than tcp connection"
+					"-J <proxy_program> Use program rather than tcp connection\n"
 #endif
 #ifdef DEBUG_TRACE
 					"-v    verbose\n"
@@ -296,14 +296,6 @@ void cli_getopts(int argc, char ** argv) {
 			}
 		}
 	}
-
-#ifdef ENABLE_CLI_PROXYCMD
-	if (cli_opts.proxycmd != NULL) {
-		/* XXX something more useful */
-		cli_opts.remotehost = cli_opts.proxycmd;
-		cli_opts.remoteport = "";
-	}
-#endif
 
 	if (cli_opts.remotehost == NULL) {
 		printhelp();
