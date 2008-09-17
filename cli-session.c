@@ -197,20 +197,6 @@ static void cli_sessionloop() {
 			TRACE(("leave cli_sessionloop: cli_auth_try"))
 			return;
 
-			/*
-		case USERAUTH_SUCCESS_RCVD:
-			send_msg_service_request(SSH_SERVICE_CONNECTION);
-			cli_ses.state = SERVICE_CONN_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent ssh-connection service req"))
-			return;
-
-		case SERVICE_CONN_ACCEPT_RCVD:
-			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
-			cli_ses.state = SESSION_RUNNING;
-			return;
-			*/
-
 		case USERAUTH_SUCCESS_RCVD:
 
 			if (cli_opts.backgrounded) {
@@ -230,12 +216,18 @@ static void cli_sessionloop() {
 			}
 			
 #ifdef ENABLE_CLI_LOCALTCPFWD
-			//setup_localtcp();
+			setup_localtcp();
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-			//setup_remotetcp();
+			setup_remotetcp();
 #endif
-			if (!cli_opts.no_cmd) {
+
+#ifdef ENABLE_CLI_NETCAT
+			if (cli_opts.netcat_host) {
+				cli_send_netcat_request();
+			} else 
+#endif
+				if (!cli_opts.no_cmd) {
 				cli_send_chansess_request();
 			}
 			TRACE(("leave cli_sessionloop: running"))

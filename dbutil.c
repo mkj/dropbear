@@ -146,7 +146,7 @@ void dropbear_trace(const char* format, ...) {
 	}
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE: ");
+	fprintf(stderr, "TRACE (%d): ", getpid());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);

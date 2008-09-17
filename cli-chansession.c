@@ -338,9 +338,8 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	TRACE(("leave send_chansess_shell_req"))
 }
 
-static int cli_initchansess(struct Channel *channel) {
-
-
+/* Shared for normal client channel and netcat-alike */
+static int cli_init_stdpipe_sess(struct Channel *channel) {
 	channel->writefd = STDOUT_FILENO;
 	setnonblocking(STDOUT_FILENO);
 
@@ -351,6 +350,12 @@ static int cli_initchansess(struct Channel *channel) {
 	setnonblocking(STDERR_FILENO);
 
 	channel->extrabuf = cbuf_new(opts.recv_window);
+	return 0;
+}
+
+static int cli_initchansess(struct Channel *channel) {
+
+	cli_init_stdpipe_sess(channel);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);
@@ -363,51 +368,59 @@ static int cli_initchansess(struct Channel *channel) {
 	}
 
 	return 0; /* Success */
-
 }
 
-void cli_send_chansess_request() {
+#ifdef ENABLE_CLI_NETCAT
 
-	unsigned int port = 0;
-	unsigned char* addr = NULL;
-	unsigned char* ipstring = "127.0.0.1";
-	unsigned char* portstring = "22";
+void cli_send_netcat_request() {
 
-	/* hack hack */
-	static const struct ChanType cli_chan_tcphack = {
+	const unsigned char* source_host = "127.0.0.1";
+	const int source_port = 22;
+
+	const struct ChanType cli_chan_netcat = {
 		0, /* sepfds */
 		"direct-tcpip",
-		NULL,
+		cli_init_stdpipe_sess, /* inithandler */
 		NULL,
 		NULL,
 		cli_closechansess
 	};
 
-	TRACE(("enter cli_send_chansess_request"))
-	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_tcphack) 
+	cli_opts.wantpty = 0;
+
+	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_netcat) 
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
 	}
 
-	if (cli_opts.localfwds == NULL) {
-		dropbear_exit("You need to give a \"-L ignored:host:port\" option with this hacked up dbclient.");
+	buf_putstring(ses.writepayload, cli_opts.netcat_host, 
+			strlen(cli_opts.netcat_host));
+	buf_putint(ses.writepayload, cli_opts.netcat_port);
+
+	/* originator ip - localhost is accurate enough */
+	buf_putstring(ses.writepayload, source_host, strlen(source_host));
+	buf_putint(ses.writepayload, source_port);
+
+	encrypt_packet();
+	TRACE(("leave cli_send_chansess_request"))
+}
+#endif
+
+void cli_send_chansess_request() {
+
+	TRACE(("enter cli_send_chansess_request"))
+
+	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess) 
+			== DROPBEAR_FAILURE) {
+		dropbear_exit("Couldn't open initial channel");
 	}
 
-	addr = cli_opts.localfwds->connectaddr;
-	port = cli_opts.localfwds->connectport;
-
-	buf_putstring(ses.writepayload, addr, strlen(addr));
-	buf_putint(ses.writepayload, port);
-
-	/* originator ip */
-	buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
-	/* originator port */
-	buf_putint(ses.writepayload, atol(portstring));
-
+	/* No special channel request data */
 	encrypt_packet();
 	TRACE(("leave cli_send_chansess_request"))
 
 }
+
 
 #if 0
 	while (cli_opts.localfwds != NULL) {

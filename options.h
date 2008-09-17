@@ -66,6 +66,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* Enable Authentication Agent Forwarding - server only for now */
 #define ENABLE_AGENTFWD
 
+/* Enable "Netcat mode". TODO describe here. */
+#define ENABLE_CLI_NETCAT
+
+
 /* Encryption - at least one required.
  * RFC Draft requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 

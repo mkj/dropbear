@@ -118,6 +118,11 @@ typedef struct cli_runopts {
 	struct TCPFwdList * localfwds;
 #endif
 
+#ifdef ENABLE_CLI_NETCAT
+	char *netcat_host;
+	unsigned int netcat_port;
+#endif
+
 } cli_runopts;
 
 extern cli_runopts cli_opts;
