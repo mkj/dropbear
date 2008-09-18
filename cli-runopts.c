@@ -33,7 +33,8 @@
 cli_runopts cli_opts; /* GLOBAL */
 
 static void printhelp();
-static void parsehostname(const char* orighostarg, const char* argv0);
+static void parse_hostname(const char* orighostarg);
+static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
 static void fill_own_user();
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
@@ -48,7 +49,7 @@ static void add_netcat(const char *str);
 static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
-					"Usage: %s [options] [user@]host [command]\n"
+					"Usage: %s [options] [user@]host[/port] [command]\n"
 					"Options are:\n"
 					"-p <remoteport>\n"
 					"-l <username>\n"
@@ -290,9 +291,11 @@ void cli_getopts(int argc, char ** argv) {
 			/* Either the hostname or commands */
 
 			if (cli_opts.remotehost == NULL) {
-
-				parsehostname(argv[i], argv[0]);
-
+#ifdef ENABLE_CLI_MULTIHOP
+				parse_multihop_hostname(argv[i], argv[0]);
+#else
+				parse_hostname(argv[i]);
+#endif
 			} else {
 
 				/* this is part of the commands to send - after this we
@@ -393,7 +396,8 @@ static void loadidentityfile(const char* filename) {
 
 #ifdef ENABLE_CLI_MULTIHOP
 
-/* Sets up 'onion-forwarding' connections. 
+/* Sets up 'onion-forwarding' connections. This will spawn
+ * a separate dbclient process for each hop.
  * As an example, if the cmdline is
  *   dbclient wrt,madako,canyons
  * then we want to run:
@@ -401,8 +405,10 @@ static void loadidentityfile(const char* filename) {
  * and then the inner dbclient will recursively run:
  *   dbclient -J "dbclient -B madako:22 wrt" madako
  * etc for as many hosts as we want.
+ *
+ * Ports for hosts can be specified as host/port.
  */
-static void parsehostname(const char* orighostarg, const char* argv0) {
+static void parse_multihop_hostname(const char* orighostarg, const char* argv0) {
 	char *userhostarg = NULL;
 	char *last_hop = NULL;;
 	char *remainder = NULL;
@@ -420,24 +426,7 @@ static void parsehostname(const char* orighostarg, const char* argv0) {
 		userhostarg = last_hop;
 	}
 
-	cli_opts.remotehost = strchr(userhostarg, '@');
-	if (cli_opts.remotehost == NULL) {
-		/* no username portion, the cli-auth.c code can figure the
-		 * local user's name */
-		cli_opts.remotehost = userhostarg;
-	} else {
-		cli_opts.remotehost[0] = '\0'; /* Split the user/host */
-		cli_opts.remotehost++;
-		cli_opts.username = userhostarg;
-	}
-
-	if (cli_opts.username == NULL) {
-		cli_opts.username = m_strdup(cli_opts.own_user);
-	}
-
-	if (cli_opts.remotehost[0] == '\0') {
-		dropbear_exit("Bad hostname");
-	}
+	parse_hostname(userhostarg);
 
 	if (last_hop) {
 		/* Set up the proxycmd */
@@ -454,15 +443,14 @@ static void parsehostname(const char* orighostarg, const char* argv0) {
 		cli_opts.proxycmd = m_malloc(cmd_len);
 		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s", 
 				argv0, cli_opts.remotehost, cli_opts.remoteport, remainder);
-		dropbear_log(LOG_INFO, "proxycmd: '%s'", cli_opts.proxycmd);
 	}
 }
+#endif /* !ENABLE_CLI_MULTIHOP */
 
-#else /* !ENABLE_CLI_MULTIHOP */
-
-/* Parses a [user@]hostname argument. orighostarg is the argv[i] corresponding */
-static void parsehostname(const char* orighostarg, const char* argv0) {
+/* Parses a [user@]hostname[/port] argument. */
+static void parse_hostname(const char* orighostarg) {
 	char *userhostarg = NULL;
+	char *port = NULL;
 
 	userhostarg = m_strdup(orighostarg);
 
@@ -481,12 +469,16 @@ static void parsehostname(const char* orighostarg, const char* argv0) {
 		cli_opts.username = m_strdup(cli_opts.own_user);
 	}
 
+	port = strchr(cli_opts.remotehost, '/');
+	if (port) {
+		*port = '\0';
+		cli_opts.remoteport = port+1;
+	}
+
 	if (cli_opts.remotehost[0] == '\0') {
 		dropbear_exit("Bad hostname");
 	}
 }
-
-#endif /* !ENABLE_CLI_MULTIHOP */
 
 #ifdef ENABLE_CLI_NETCAT
 static void add_netcat(const char* origstr) {
