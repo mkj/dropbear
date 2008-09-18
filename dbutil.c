@@ -321,9 +321,10 @@ int connect_remote(const char* remotehost, const char* remoteport,
 	if (err) {
 		if (errstring != NULL && *errstring == NULL) {
 			int len;
-			len = 20 + strlen(gai_strerror(err));
+			len = 100 + strlen(gai_strerror(err));
 			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
+			snprintf(*errstring, len, "Error resolving '%s' port '%s'. %s", 
+					remotehost, remoteport, gai_strerror(err));
 		}
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 		return -1;
