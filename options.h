@@ -140,8 +140,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * but there's an interface via a PAM module - don't bother using it otherwise.
  * You can't enable both PASSWORD and PAM. */
 
-#define ENABLE_SVR_PASSWORD_AUTH
-/*#define ENABLE_SVR_PAM_AUTH */ /* requires ./configure --enable-pam */
+//#define ENABLE_SVR_PASSWORD_AUTH
+#define ENABLE_SVR_PAM_AUTH /* requires ./configure --enable-pam */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 #define ENABLE_CLI_PASSWORD_AUTH
@@ -405,6 +405,10 @@ be overridden at runtime with -K. 0 disables keepalives */
 	defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_SVR_LOCALTCPFWD) || \
 	defined(ENABLE_AGENTFWD) || defined(ENABLE_X11FWD)
 #define USING_LISTENERS
+#endif
+
+#if defined(ENABLE_CLI_NETCAT) && defined(ENABLE_CLI_PROXYCMD)
+#define ENABLE_CLI_MULTIHOP
 #endif
 
 #if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
