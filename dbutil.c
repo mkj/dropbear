@@ -504,7 +504,7 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 
 	if (cmd != NULL) {
 		argv[1] = "-c";
-		argv[2] = cmd;
+		argv[2] = (char*)cmd;
 		argv[3] = NULL;
 	} else {
 		/* construct a shell of the form "-bash" etc */
@@ -834,4 +834,18 @@ void disallow_core() {
 	struct rlimit lim;
 	lim.rlim_cur = lim.rlim_max = 0;
 	setrlimit(RLIMIT_CORE, &lim);
+}
+
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
+int m_str_to_uint(const char* str, unsigned int *val) {
+	errno = 0;
+	*val = strtoul(str, NULL, 10);
+	/* The c99 spec doesn't actually seem to define EINVAL, but most platforms
+	 * I've looked at mention it in their manpage */
+	if ((*val == 0 && errno == EINVAL)
+		|| (*val == ULONG_MAX && errno == ERANGE)) {
+		return DROPBEAR_FAILURE;
+	} else {
+		return DROPBEAR_SUCCESS;
+	}
 }

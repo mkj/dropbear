@@ -355,8 +355,7 @@ void cli_getopts(int argc, char ** argv) {
 		}
 	}
 	if (keepalive_arg) {
-		opts.keepalive_secs = strtoul(keepalive_arg, NULL, 10);
-		if (opts.keepalive_secs == 0 && errno == EINVAL) {
+		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
 		}
 	}
@@ -499,8 +498,7 @@ static void add_netcat(const char* origstr) {
 		goto fail;
 	}
 	
-	cli_opts.netcat_port = strtoul(portstr, NULL, 10);
-	if (errno != 0) {
+	if (m_str_to_uint(portstr, &cli_opts.netcat_port) == DROPBEAR_FAILURE) {
 		TRACE(("bad netcat port"))
 		goto fail;
 	}
@@ -571,15 +569,13 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 
 	/* Now we check the ports - note that the port ints are unsigned,
 	 * the check later only checks for >= MAX_PORT */
-	newfwd->listenport = strtoul(listenport, NULL, 10);
-	if (errno != 0) {
-		TRACE(("bad listenport strtol"))
+	if (m_str_to_uint(listenport, &newfwd->listenport) == DROPBEAR_FAILURE) {
+		TRACE(("bad listenport strtoul"))
 		goto fail;
 	}
 
-	newfwd->connectport = strtoul(connectport, NULL, 10);
-	if (errno != 0) {
-		TRACE(("bad connectport strtol"))
+	if (m_str_to_uint(connectport, &newfwd->connectport) == DROPBEAR_FAILURE) {
+		TRACE(("bad connectport strtoul"))
 		goto fail;
 	}
 

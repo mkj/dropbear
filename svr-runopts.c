@@ -284,16 +284,13 @@ void svr_getopts(int argc, char ** argv) {
 	
 	if (recv_window_arg) {
 		opts.recv_window = atol(recv_window_arg);
-		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW)
-		{
+		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
 			dropbear_exit("Bad recv window '%s'", recv_window_arg);
 		}
 	}
 	
 	if (keepalive_arg) {
-		opts.keepalive_secs = strtoul(keepalive_arg, NULL, 10);
-		if (opts.keepalive_secs == 0 && errno == EINVAL)
-		{
+		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
 		}
 	}
