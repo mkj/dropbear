@@ -412,7 +412,20 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 	char *last_hop = NULL;;
 	char *remainder = NULL;
 
-	userhostarg = m_strdup(orighostarg);
+	/* both scp and rsync parse a user@host argument
+	 * and turn it into "-l user host". This breaks
+	 * for our multihop syntax, so we suture it back together.
+	 * This will break usernames that have both '@' and ',' in them,
+	 * though that should be fairly uncommon. */
+	if (cli_opts.username 
+			&& strchr(cli_opts.username, ',') 
+			&& strchr(cli_opts.username, '@')) {
+		unsigned int len = strlen(orighostarg) + strlen(cli_opts.username) + 2;
+		userhostarg = m_malloc(len);
+		snprintf(userhostarg, len, "%s@%s", cli_opts.username, orighostarg);
+	} else {
+		userhostarg = m_strdup(orighostarg);
+	}
 
 	last_hop = strrchr(userhostarg, ',');
 	if (last_hop) {
