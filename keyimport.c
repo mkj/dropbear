@@ -701,7 +701,6 @@ static int openssh_write(const char *filename, sign_key *key,
 	int nnumbers = -1, pos, len, seqlen, i;
 	char *header = NULL, *footer = NULL;
 	char zero[1];
-	unsigned char iv[8];
 	int ret = 0;
 	FILE *fp;
 	int keytype = -1;
