@@ -29,15 +29,24 @@
 #include "chansession.h"
 #include "channel.h"
 
+/* An agent reply can be reasonably large, as it can
+ * contain a list of all public keys held by the agent.
+ * 10000 is arbitrary */
+#define MAX_AGENT_REPLY  10000
+
 int agentreq(struct ChanSess * chansess);
 void agentsetauth(struct ChanSess *chansess);
 void agentcleanup(struct ChanSess * chansess);
 void agentset(struct ChanSess *chansess);
 
+SignKeyList * load_agent_keys();
+
 #ifdef __hpux
 #define seteuid(a)       setresuid(-1, (a), -1)
 #define setegid(a)       setresgid(-1, (a), -1)
 #endif
+
+extern const struct ChanSess chan_cli_agent;
 
 #endif /* DROPBEAR_AGENTFWD */
 #endif /* _AGENTFWD_H_ */

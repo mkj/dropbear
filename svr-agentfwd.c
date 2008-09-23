@@ -181,7 +181,7 @@ void agentcleanup(struct ChanSess * chansess) {
 
 }
 
-static const struct ChanType chan_agent = {
+static const struct ChanType chan_svr_agent = {
 	0, /* sepfds */
 	"auth-agent@openssh.com",
 	NULL,
@@ -194,7 +194,7 @@ static const struct ChanType chan_agent = {
 /* helper for accepting an agent request */
 static int send_msg_channel_open_agent(int fd) {
 
-	if (send_msg_channel_open_init(fd, &chan_agent) == DROPBEAR_SUCCESS) {
+	if (send_msg_channel_open_init(fd, &chan_svr_agent) == DROPBEAR_SUCCESS) {
 		encrypt_packet();
 		return DROPBEAR_SUCCESS;
 	} else {

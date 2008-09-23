@@ -68,7 +68,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_SVR_REMOTETCPFWD
 
 /* Enable Authentication Agent Forwarding - server only for now */
-#define ENABLE_AGENTFWD
+#define ENABLE_SVR_AGENTFWD
+#define ENABLE_CLI_AGENTFWD
 
 /* Enable "Netcat mode". TODO describe here. */
 #define ENABLE_CLI_NETCAT
