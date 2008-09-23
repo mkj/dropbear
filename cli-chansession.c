@@ -321,7 +321,11 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	TRACE(("enter send_chansess_shell_req"))
 
 	if (cli_opts.cmd) {
-		reqtype = "exec";
+		if (cli_opts.is_subsystem) {
+			reqtype = "subsystem";
+		} else {
+			reqtype = "exec";
+		}
 	} else {
 		reqtype = "shell";
 	}

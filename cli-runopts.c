@@ -58,6 +58,7 @@ static void printhelp() {
 					"-N    Don't run a remote command\n"
 					"-f    Run in background after auth\n"
 					"-y    Always accept remote host key if unknown\n"
+					"-s    Request a subsystem (use for sftp)\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
@@ -116,6 +117,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 	cli_opts.always_accept_key = 0;
+	cli_opts.is_subsystem = 0;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = NULL;
 #endif
@@ -212,6 +214,9 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'f':
 					cli_opts.backgrounded = 1;
+					break;
+				case 's':
+					cli_opts.is_subsystem = 1;
 					break;
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':

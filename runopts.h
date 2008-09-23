@@ -109,6 +109,7 @@ typedef struct cli_runopts {
 	int always_accept_key;
 	int no_cmd;
 	int backgrounded;
+	int is_subsystem;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
 #endif
