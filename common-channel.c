@@ -572,6 +572,11 @@ void recv_msg_channel_request() {
 	
 	channel = getchannel();
 
+	if (channel->sent_close) {
+		TRACE(("leave recv_msg_channel_request: already closed channel"))
+		return;
+	}
+
 	if (channel->type->reqhandler) {
 		channel->type->reqhandler(channel);
 	} else {
