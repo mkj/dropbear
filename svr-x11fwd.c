@@ -33,6 +33,7 @@
 #include "channel.h"
 #include "packet.h"
 #include "buffer.h"
+#include "auth.h"
 
 #define X11BASEPORT 6000
 #define X11BINDBASE 6010
@@ -46,6 +47,10 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr);
 int x11req(struct ChanSess * chansess) {
 
 	int fd;
+
+	if (!svr_pubkey_allows_x11fwd()) {
+		return DROPBEAR_FAILURE;
+	}
 
 	/* we already have an x11 connection */
 	if (chansess->x11listener != NULL) {

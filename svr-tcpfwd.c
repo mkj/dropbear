@@ -32,6 +32,7 @@
 #include "packet.h"
 #include "listener.h"
 #include "runopts.h"
+#include "auth.h"
 
 #ifdef ENABLE_SVR_REMOTETCPFWD
 
@@ -72,7 +73,7 @@ void recv_msg_global_request_remotetcp() {
 
 	TRACE(("enter recv_msg_global_request_remotetcp"))
 
-	if (svr_opts.noremotetcp) {
+	if (svr_opts.noremotetcp || !svr_pubkey_allows_tcpfwd()) {
 		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"))
 		goto out;
 	}
@@ -236,7 +237,7 @@ static int newtcpdirect(struct Channel * channel) {
 	int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
-	if (svr_opts.nolocaltcp) {
+	if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()) {
 		TRACE(("leave newtcpdirect: local tcp forwarding disabled"))
 		goto out;
 	}

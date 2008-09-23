@@ -23,7 +23,7 @@ COMMONOBJS=dbutil.o buffer.o \
 		atomicio.o compat.o  fake-rfc2553.o
 
 SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
-		svr-authpasswd.o svr-authpubkey.o svr-session.o svr-service.o \
+		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
 		svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o\
 		svr-tcpfwd.o svr-authpam.o
 

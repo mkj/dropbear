@@ -37,6 +37,7 @@
 #include "x11fwd.h"
 #include "agentfwd.h"
 #include "runopts.h"
+#include "auth.h"
 
 /* Handles sessions (either shells or programs) requested by the client */
 
@@ -527,6 +528,12 @@ static int sessionpty(struct ChanSess * chansess) {
 	struct passwd * pw = NULL;
 
 	TRACE(("enter sessionpty"))
+
+	if (!svr_pubkey_allows_pty()) {
+		TRACE(("leave sessionpty : pty forbidden by public key option"))
+		return DROPBEAR_FAILURE;
+	}
+
 	chansess->term = buf_getstring(ses.payload, &termlen);
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
@@ -582,14 +589,19 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		return DROPBEAR_FAILURE;
 	}
 
+	/* take public key option 'command' into account */
+	svr_pubkey_set_forced_command(chansess);
+
 	if (iscmd) {
 		/* "exec" */
-		chansess->cmd = buf_getstring(ses.payload, &cmdlen);
+		if (chansess->cmd == NULL) {
+			chansess->cmd = buf_getstring(ses.payload, &cmdlen);
 
-		if (cmdlen > MAX_CMD_LEN) {
-			m_free(chansess->cmd);
-			/* TODO - send error - too long ? */
-			return DROPBEAR_FAILURE;
+			if (cmdlen > MAX_CMD_LEN) {
+				m_free(chansess->cmd);
+				/* TODO - send error - too long ? */
+				return DROPBEAR_FAILURE;
+			}
 		}
 		if (issubsys) {
 #ifdef SFTPSERVER_PATH

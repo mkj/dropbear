@@ -21,6 +21,37 @@
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
+/*
+ * This file incorporates work covered by the following copyright and  
+ * permission notice:
+ *
+ * 	Copyright (c) 2000 Markus Friedl.  All rights reserved.
+ * 	
+ * 	Redistribution and use in source and binary forms, with or without
+ * 	modification, are permitted provided that the following conditions
+ * 	are met:
+ * 	1. Redistributions of source code must retain the above copyright
+ * 	   notice, this list of conditions and the following disclaimer.
+ * 	2. Redistributions in binary form must reproduce the above copyright
+ * 	   notice, this list of conditions and the following disclaimer in the
+ * 	   documentation and/or other materials provided with the distribution.
+ * 	
+ * 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
+ * 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
+ * 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
+ * 	IN NO EVENT SHALL THE AUTHOR BE LIABLE FOR ANY DIRECT, INDIRECT,
+ * 	INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL DAMAGES (INCLUDING, BUT
+ * 	NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR SERVICES; LOSS OF USE,
+ * 	DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY
+ * 	THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
+ * 	(INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF
+ * 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
+ *
+ * This copyright and permission notice applies to the code parsing public keys
+ * options string which can also be found in OpenSSH auth2-pubkey.c file 
+ * (user_key_allowed2). It has been adapted to work with buffers.
+ *
+ */
 
 /* Process a pubkey auth request */
 
@@ -159,7 +190,9 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
 	unsigned int len, pos;
-	
+	buffer * options_buf = NULL;
+	int line_num;
+
 	TRACE(("enter checkpubkey"))
 
 	/* check that we can use the algo */
@@ -193,25 +226,82 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 	TRACE(("checkpubkey: opened authorized_keys OK"))
 
 	line = buf_new(MAX_AUTHKEYS_LINE);
+	line_num = 0;
 
 	/* iterate through the lines */
 	do {
+		/* new line : potentially new options */
+		if (options_buf) {
+			buf_free(options_buf);
+			options_buf = NULL;
+		}
 
 		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
 			TRACE(("checkpubkey: authorized_keys EOF reached"))
 			break;
 		}
+		line_num++;
 
 		if (line->len < MIN_AUTHKEYS_LINE) {
 			TRACE(("checkpubkey: line too short"))
 			continue; /* line is too short for it to be a valid key */
 		}
 
-		/* check the key type - this also stops us from using keys
-		 * which have options with them */
+		/* check the key type - will fail if there are options */
+		TRACE(("a line!"))
+
 		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
-			continue;
+			int is_comment = 0;
+			char *options_start = NULL;
+			int options_len = 0;
+			int escape, quoted;
+			
+			/* skip over any comments or leading whitespace */
+			while (line->pos < line->len) {
+				const char c = buf_getbyte(line);
+				if (c == ' ' || c == '\t') {
+					continue;
+				} else if (c == '#') {
+					is_comment = 1;
+					break;
+				}
+				buf_incrpos(line, -1);
+				break;
+			}
+			if (is_comment) {
+				/* next line */
+				continue;
+			}
+
+			/* remember start of options */
+			options_start = buf_getptr(line, 1);
+			quoted = 0;
+			escape = 0;
+			options_len = 0;
+			
+			/* figure out where the options are */
+			while (line->pos < line->len) {
+				const char c = buf_getbyte(line);
+				if (!quoted && (c == ' ' || c == '\t')) {
+					break;
+				}
+				escape = (!escape && c == '\\');
+				if (!escape && c == '"') {
+					quoted = !quoted;
+				}
+				options_len++;
+			}
+			options_buf = buf_new(options_len);
+			buf_putbytes(options_buf, options_start, options_len);
+
+			/* compare the algorithm */
+			if (line->pos + algolen > line->len) {
+				continue;
+			}
+			if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) { 
+				continue;
+			}
 		}
 		buf_incrpos(line, algolen);
 		
@@ -232,6 +322,11 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
 
 		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line, NULL);
+
+		if (ret == DROPBEAR_SUCCESS && options_buf) {
+			ret = svr_add_pubkey_options(options_buf, line_num, filename);
+		}
+
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}
@@ -248,6 +343,9 @@ out:
 		buf_free(line);
 	}
 	m_free(filename);
+	if (options_buf) {
+		buf_free(options_buf);
+	}
 	TRACE(("leave checkpubkey: ret=%d", ret))
 	return ret;
 }
@@ -343,5 +441,4 @@ static int checkfileperm(char * filename) {
 	return DROPBEAR_SUCCESS;
 }
 
-
-#endif 
+#endif

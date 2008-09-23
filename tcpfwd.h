@@ -55,6 +55,7 @@ struct TCPFwdList {
 
 /* Server */
 void recv_msg_global_request_remotetcp();
+
 extern const struct ChanType svr_chan_tcpdirect;
 
 /* Client */

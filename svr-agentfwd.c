@@ -39,6 +39,7 @@
 #include "buffer.h"
 #include "random.h"
 #include "listener.h"
+#include "auth.h"
 
 #define AGENTDIRPREFIX "/tmp/dropbear-"
 
@@ -51,6 +52,10 @@ static void agentaccept(struct Listener * listener, int sock);
 int agentreq(struct ChanSess * chansess) {
 
 	int fd;
+
+	if (!svr_pubkey_allows_agentfwd()) {
+		return DROPBEAR_FAILURE;
+	}
 
 	if (chansess->agentlistener != NULL) {
 		return DROPBEAR_FAILURE;
