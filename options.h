@@ -86,7 +86,8 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define DROPBEAR_TWOFISH128
 
 /* Enable "Counter Mode" for ciphers. This is more secure than normal
- * CBC mode against certain attacks. TODO how much size does it add? */
+ * CBC mode against certain attacks. This adds around 1kB to binary 
+ * size and is recommended for most cases */
 #define DROPBEAR_ENABLE_CTR_MODE
 
 /* Message Integrity - at least one required.
