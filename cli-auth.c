@@ -229,6 +229,8 @@ void recv_msg_userauth_failure() {
 
 void recv_msg_userauth_success() {
 	TRACE(("received msg_userauth_success"))
+	/* Note: in delayed-zlib mode, setting authdone here 
+	 * will enable compression in the transport layer */
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;
 	cli_ses.lastauthtype = AUTH_TYPE_NONE;

@@ -37,6 +37,11 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv);
 void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 		sign_key *hostkey);
 
+#ifndef DISABLE_ZLIB
+int is_compress_trans();
+int is_compress_recv();
+#endif
+
 void recv_msg_kexdh_init(); /* server */
 
 void send_msg_kexdh_init(); /* client */

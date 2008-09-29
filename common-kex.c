@@ -331,12 +331,26 @@ void gen_new_keys() {
 }
 
 #ifndef DISABLE_ZLIB
+
+int is_compress_trans() {
+	return ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
+int is_compress_recv() {
+	return ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
 static void gen_new_zstreams() {
 
 	/* create new zstreams */
-	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->recv_zstream = (z_streamp)m_malloc(sizeof(z_stream));
 		ses.newkeys->recv_zstream->zalloc = Z_NULL;
 		ses.newkeys->recv_zstream->zfree = Z_NULL;
@@ -348,7 +362,8 @@ static void gen_new_zstreams() {
 		ses.newkeys->recv_zstream = NULL;
 	}
 
-	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->trans_zstream = (z_streamp)m_malloc(sizeof(z_stream));
 		ses.newkeys->trans_zstream->zalloc = Z_NULL;
 		ses.newkeys->trans_zstream->zfree = Z_NULL;
@@ -360,7 +375,7 @@ static void gen_new_zstreams() {
 	} else {
 		ses.newkeys->trans_zstream = NULL;
 	}
-	
+
 	/* clean up old keys */
 	if (ses.keys->recv_zstream != NULL) {
 		if (inflateEnd(ses.keys->recv_zstream) == Z_STREAM_ERROR) {
@@ -377,7 +392,7 @@ static void gen_new_zstreams() {
 		m_free(ses.keys->trans_zstream);
 	}
 }
-#endif
+#endif /* DISABLE_ZLIB */
 
 
 /* Executed upon receiving a kexinit message from the client to initiate

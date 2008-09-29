@@ -68,6 +68,7 @@
 
 #define DROPBEAR_COMP_NONE 0
 #define DROPBEAR_COMP_ZLIB 1
+#define DROPBEAR_COMP_ZLIB_DELAY 2
 
 /* Required for pubkey auth */
 #if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)

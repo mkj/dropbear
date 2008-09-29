@@ -290,10 +290,9 @@ void decrypt_packet() {
 	buf_setpos(ses.decryptreadbuf, PACKET_PAYLOAD_OFF);
 
 #ifndef DISABLE_ZLIB
-	if (ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (is_compress_recv()) {
 		/* decompress */
 		ses.payload = buf_decompress(ses.decryptreadbuf, len);
-
 	} else 
 #endif
 	{
@@ -469,6 +468,7 @@ void encrypt_packet() {
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
 	unsigned char type;
+	unsigned int clear_len;
 	
 	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
@@ -488,11 +488,12 @@ void encrypt_packet() {
 	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
 	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	clearwritebuf = buf_new((ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3
+	clear_len = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+
 #ifndef DISABLE_ZLIB
-			+ ZLIB_COMPRESS_INCR /* bit of a kludge, but we can't know len*/
+	clear_len += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
 #endif
-			);
+	clearwritebuf = buf_new(clear_len);
 	buf_setlen(clearwritebuf, PACKET_PAYLOAD_OFF);
 	buf_setpos(clearwritebuf, PACKET_PAYLOAD_OFF);
 
@@ -500,7 +501,7 @@ void encrypt_packet() {
 
 #ifndef DISABLE_ZLIB
 	/* compression */
-	if (ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (is_compress_trans()) {
 		buf_compress(clearwritebuf, ses.writepayload, ses.writepayload->len);
 	} else
 #endif

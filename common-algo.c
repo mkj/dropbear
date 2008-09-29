@@ -124,6 +124,7 @@ algo_type sshhashes[] = {
 algo_type sshcompress[] = {
 #ifndef DISABLE_ZLIB
 	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1},
+	{"zlib@openssh.com", DROPBEAR_COMP_ZLIB_DELAY, NULL, 1},
 #endif
 	{"none", DROPBEAR_COMP_NONE, NULL, 1},
 	{NULL, 0, NULL, 0}

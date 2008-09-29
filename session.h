@@ -71,6 +71,8 @@ struct key_context {
 
 	char recv_algo_comp; /* compression */
 	char trans_algo_comp;
+	int allow_compress; /* whether compression has started (useful in 
+							zlib@openssh.com delayed compression case) */
 #ifndef DISABLE_ZLIB
 	z_streamp recv_zstream;
 	z_streamp trans_zstream;
