@@ -96,6 +96,8 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	ses.newkeys = NULL;
 	ses.keys->recv_algo_crypt = &dropbear_nocipher;
 	ses.keys->trans_algo_crypt = &dropbear_nocipher;
+	ses.keys->recv_crypt_mode = &dropbear_mode_none;
+	ses.keys->trans_crypt_mode = &dropbear_mode_none;
 	
 	ses.keys->recv_algo_mac = &dropbear_nohash;
 	ses.keys->trans_algo_mac = &dropbear_nohash;

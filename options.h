@@ -75,18 +75,22 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 
 /* Encryption - at least one required.
- * RFC Draft requires 3DES and recommends AES128 for interoperability.
+ * Protocol RFC requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
  * (eg AES256 as well as AES128) will result in a minimal size increase.*/
-#define DROPBEAR_AES128_CBC
-#define DROPBEAR_3DES_CBC
-#define DROPBEAR_AES256_CBC
-#define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH256_CBC
-#define DROPBEAR_TWOFISH128_CBC
+#define DROPBEAR_AES128
+#define DROPBEAR_3DES
+#define DROPBEAR_AES256
+#define DROPBEAR_BLOWFISH
+#define DROPBEAR_TWOFISH256
+#define DROPBEAR_TWOFISH128
+
+/* Enable "Counter Mode" for ciphers. This is more secure than normal
+ * CBC mode against certain attacks. TODO how much size does it add? */
+#define DROPBEAR_ENABLE_CTR_MODE
 
 /* Message Integrity - at least one required.
- * RFC Draft requires sha1 and recommends sha1-96.
+ * Protocol RFC requires sha1 and recommends sha1-96.
  * sha1-96 may be of use for slow links, as it has a smaller overhead.
  *
  * Note: there's no point disabling sha1 to save space, since it's used
@@ -142,7 +146,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-/* #define ENABLE_SVR_PAM_AUTH */
+/*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Wether to ake public key options in authorized_keys file into account */

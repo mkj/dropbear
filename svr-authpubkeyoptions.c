@@ -105,7 +105,7 @@ void svr_pubkey_options_cleanup() {
 /* helper for svr_add_pubkey_options. returns DROPBEAR_SUCCESS if the option is matched,
    and increments the options_buf */
 static int match_option(buffer *options_buf, const char *opt_name) {
-	const int len = strlen(opt_name);
+	const unsigned int len = strlen(opt_name);
 	if (options_buf->len - options_buf->pos < len) {
 		return DROPBEAR_FAILURE;
 	}

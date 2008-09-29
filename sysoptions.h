@@ -134,12 +134,12 @@
 												accept for keyb-interactive
 												auth */
 
-#if defined(DROPBEAR_AES256_CBC) || defined(DROPBEAR_AES128_CBC)
-#define DROPBEAR_AES_CBC
+#if defined(DROPBEAR_AES256) || defined(DROPBEAR_AES128)
+#define DROPBEAR_AES
 #endif
 
-#if defined(DROPBEAR_TWOFISH256_CBC) || defined(DROPBEAR_TWOFISH128_CBC)
-#define DROPBEAR_TWOFISH_CBC
+#if defined(DROPBEAR_TWOFISH256) || defined(DROPBEAR_TWOFISH128)
+#define DROPBEAR_TWOFISH
 #endif
 
 #ifndef ENABLE_X11FWD

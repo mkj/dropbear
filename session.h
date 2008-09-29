@@ -64,6 +64,8 @@ struct key_context {
 
 	const struct dropbear_cipher *recv_algo_crypt; /* NULL for none */
 	const struct dropbear_cipher *trans_algo_crypt; /* NULL for none */
+	const struct dropbear_cipher_mode *recv_crypt_mode;
+	const struct dropbear_cipher_mode *trans_crypt_mode;
 	const struct dropbear_hash *recv_algo_mac; /* NULL for none */
 	const struct dropbear_hash *trans_algo_mac; /* NULL for none */
 	char algo_kex;
@@ -79,8 +81,18 @@ struct key_context {
 #endif
 
 	/* actual keys */
-	symmetric_CBC recv_symmetric_struct;
-	symmetric_CBC trans_symmetric_struct;
+	union {
+		symmetric_CBC cbc;
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+		symmetric_CTR ctr;
+#endif
+	} recv_cipher_state;
+	union {
+		symmetric_CBC cbc;
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+		symmetric_CTR ctr;
+#endif
+	} trans_cipher_state;
 	unsigned char recvmackey[MAX_MAC_KEY];
 	unsigned char transmackey[MAX_MAC_KEY];
 

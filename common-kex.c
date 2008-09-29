@@ -295,19 +295,20 @@ void gen_new_keys() {
 	recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
 	if (recv_cipher < 0)
 	    dropbear_exit("crypto error");
-		
-	if (cbc_start(recv_cipher, recv_IV, recv_key, 
+	if (ses.newkeys->recv_crypt_mode->start(recv_cipher, 
+			recv_IV, recv_key, 
 			ses.newkeys->recv_algo_crypt->keysize, 0, 
-			&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
+			&ses.newkeys->recv_cipher_state) != CRYPT_OK) {
 		dropbear_exit("crypto error");
 	}
+
 	trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
 	if (trans_cipher < 0)
 	    dropbear_exit("crypto error");
-		
-	if (cbc_start(trans_cipher, trans_IV, trans_key, 
+	if (ses.newkeys->trans_crypt_mode->start(trans_cipher, 
+			trans_IV, trans_key, 
 			ses.newkeys->trans_algo_crypt->keysize, 0, 
-			&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
+			&ses.newkeys->trans_cipher_state) != CRYPT_OK) {
 		dropbear_exit("crypto error");
 	}
 	
@@ -701,6 +702,10 @@ static void read_kex_algos() {
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
 		ses.newkeys->trans_algo_crypt = 
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
+		ses.newkeys->recv_crypt_mode = 
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
+		ses.newkeys->trans_crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
 		ses.newkeys->recv_algo_mac = 
 			(struct dropbear_hash*)s2c_hash_algo->data;
 		ses.newkeys->trans_algo_mac = 
@@ -713,6 +718,10 @@ static void read_kex_algos() {
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
 		ses.newkeys->trans_algo_crypt = 
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
+		ses.newkeys->recv_crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
+		ses.newkeys->trans_crypt_mode =
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
 		ses.newkeys->recv_algo_mac = 
 			(struct dropbear_hash*)c2s_hash_algo->data;
 		ses.newkeys->trans_algo_mac = 

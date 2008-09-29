@@ -90,15 +90,15 @@
 /* #define LTC_NO_BSWAP */
 
 
-#ifdef DROPBEAR_BLOWFISH_CBC
+#ifdef DROPBEAR_BLOWFISH
 #define BLOWFISH
 #endif
 
-#ifdef DROPBEAR_AES_CBC
+#ifdef DROPBEAR_AES
 #define RIJNDAEL
 #endif
 
-#ifdef DROPBEAR_TWOFISH_CBC
+#ifdef DROPBEAR_TWOFISH
 #define TWOFISH
 
 /* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
@@ -108,11 +108,15 @@
 /*#define TWOFISH_TABLES*/
 #endif
 
-#ifdef DROPBEAR_3DES_CBC
+#ifdef DROPBEAR_3DES
 #define DES
 #endif
 
 #define LTC_CBC_MODE
+
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+#define LTC_CTR_MODE
+#endif
 
 #if defined(DROPBEAR_DSS) && defined(DSS_PROTOK)
 #define SHA512

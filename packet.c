@@ -194,19 +194,11 @@ static void read_packet_init() {
 	/* now we have the first block, need to get packet length, so we decrypt
 	 * the first block (only need first 4 bytes) */
 	buf_setpos(ses.readbuf, 0);
-	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, blocksize),
-				buf_getptr(ses.readbuf, blocksize),
-				blocksize);
-	} else {
-		/* decrypt it */
-		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-					buf_getwriteptr(ses.decryptreadbuf,blocksize),
-					blocksize,
-					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-			dropbear_exit("error decrypting");
-		}
+	if (ses.keys->recv_crypt_mode->decrypt(buf_getptr(ses.readbuf, blocksize), 
+				buf_getwriteptr(ses.decryptreadbuf,blocksize),
+				blocksize,
+				&ses.keys->recv_cipher_state) != CRYPT_OK) {
+		dropbear_exit("error decrypting");
 	}
 	buf_setlen(ses.decryptreadbuf, blocksize);
 	len = buf_getint(ses.decryptreadbuf) + 4 + macsize;
@@ -246,24 +238,17 @@ void decrypt_packet() {
 	buf_setlen(ses.decryptreadbuf, ses.decryptreadbuf->size);
 	buf_setpos(ses.decryptreadbuf, blocksize);
 
-	/* decrypt if encryption is set, memcpy otherwise */
-	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		len = ses.readbuf->len - macsize - blocksize;
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, len),
-				buf_getptr(ses.readbuf, len), len);
-	} else {
-		/* decrypt */
-		while (ses.readbuf->pos < ses.readbuf->len - macsize) {
-			if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-						buf_getwriteptr(ses.decryptreadbuf, blocksize),
-						blocksize,
-						&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error decrypting");
-			}
-			buf_incrpos(ses.readbuf, blocksize);
-			buf_incrwritepos(ses.decryptreadbuf, blocksize);
+	/* decrypt it */
+	while (ses.readbuf->pos < ses.readbuf->len - macsize) {
+		if (ses.keys->recv_crypt_mode->decrypt(
+					buf_getptr(ses.readbuf, blocksize), 
+					buf_getwriteptr(ses.decryptreadbuf, blocksize),
+					blocksize,
+					&ses.keys->recv_cipher_state) != CRYPT_OK) {
+			dropbear_exit("error decrypting");
 		}
+		buf_incrpos(ses.readbuf, blocksize);
+		buf_incrwritepos(ses.decryptreadbuf, blocksize);
 	}
 
 	/* check the hmac */
@@ -544,24 +529,17 @@ void encrypt_packet() {
 	 * wire by writepacket() */
 	writebuf = buf_new(clearwritebuf->len + macsize);
 
-	if (ses.keys->trans_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		memcpy(buf_getwriteptr(writebuf, clearwritebuf->len),
-				buf_getptr(clearwritebuf, clearwritebuf->len),
-				clearwritebuf->len);
-		buf_incrwritepos(writebuf, clearwritebuf->len);
-	} else {
-		/* encrypt it */
-		while (clearwritebuf->pos < clearwritebuf->len) {
-			if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
-						buf_getwriteptr(writebuf, blocksize),
-						blocksize,
-						&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error encrypting");
-			}
-			buf_incrpos(clearwritebuf, blocksize);
-			buf_incrwritepos(writebuf, blocksize);
+	/* encrypt it */
+	while (clearwritebuf->pos < clearwritebuf->len) {
+		if (ses.keys->trans_crypt_mode->encrypt(
+					buf_getptr(clearwritebuf, blocksize),
+					buf_getwriteptr(writebuf, blocksize),
+					blocksize,
+					&ses.keys->trans_cipher_state) != CRYPT_OK) {
+			dropbear_exit("error encrypting");
 		}
+		buf_incrpos(clearwritebuf, blocksize);
+		buf_incrwritepos(writebuf, blocksize);
 	}
 
 	/* now add a hmac and we're done */
