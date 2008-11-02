@@ -130,13 +130,22 @@ do_local_cmd(arglist *a)
 			fprintf(stderr, " %s", a->list[i]);
 		fprintf(stderr, "\n");
 	}
-	if ((pid = fork()) == -1)
+#ifdef __uClinux__
+	pid = vfork();
+#else
+	pid = fork();
+#endif /* __uClinux__ */
+	if (pid == -1)
 		fatal("do_local_cmd: fork: %s", strerror(errno));
 
 	if (pid == 0) {
 		execvp(a->list[0], a->list);
 		perror(a->list[0]);
+#ifdef __uClinux__
+		_exit(1);
+#else
 		exit(1);
+#endif /* __uClinux__ */
 	}
 
 	do_cmd_pid = pid;
@@ -225,7 +234,11 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 
 		execvp(ssh_program, args.list);
 		perror(ssh_program);
+#ifndef __uClinux__
 		exit(1);
+#else
+		_exit(1);
+#endif /* __uClinux__ */
 	} else if (do_cmd_pid == -1) {
 		fatal("fork: %s", strerror(errno));
 	}
