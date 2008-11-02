@@ -128,7 +128,7 @@ static void send_msg_global_request_remotetcp(int port) {
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
 	buf_putstring(ses.writepayload, "tcpip-forward", 13);
-	buf_putbyte(ses.writepayload, 0);
+	buf_putbyte(ses.writepayload, 1); /* want_reply */
 	if (opts.listen_fwd_all) {
 		listenspec = "";
 	} else {
@@ -141,6 +141,42 @@ static void send_msg_global_request_remotetcp(int port) {
 	encrypt_packet();
 
 	TRACE(("leave send_msg_global_request_remotetcp"))
+}
+
+/* The only global success/failure messages are for remotetcp.
+ * Since there isn't any identifier in these messages, we have to rely on them
+ * being in the same order as we sent the requests. This is the ordering
+ * of the cli_opts.remotefwds list */
+void cli_recv_msg_request_success() {
+
+	/* Nothing in the packet. We just mark off that we have received the reply,
+	 * so that we can report failure for later ones. */
+	struct TCPFwdList * iter = NULL;
+
+	iter = cli_opts.remotefwds;
+	while (iter != NULL) {
+		if (!iter->have_reply)
+		{
+			iter->have_reply = 1;
+			return;
+		}
+		iter = iter->next;
+	}
+}
+
+void cli_recv_msg_request_failure() {
+	struct TCPFwdList * iter = NULL;
+
+	iter = cli_opts.remotefwds;
+	while (iter != NULL) {
+		if (!iter->have_reply)
+		{
+			iter->have_reply = 1;
+			dropbear_log(LOG_WARNING, "Remote TCP forward request failed (port %d -> %s:%d)", iter->listenport, iter->connectaddr, iter->connectport);
+			return;
+		}
+		iter = iter->next;
+	}
 }
 
 void setup_remotetcp() {

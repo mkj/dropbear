@@ -609,6 +609,7 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 		goto badport;
 	}
 
+	newfwd->have_reply = 0;
 	newfwd->next = *fwdlist;
 	*fwdlist = newfwd;
 
