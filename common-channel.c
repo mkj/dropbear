@@ -276,10 +276,10 @@ static void check_close(struct Channel *channel) {
 		channel->flushing = 1;
 	}
 	
-	// if a type-specific check_close is defined we will only exit
-	// once that has been triggered. this is only used for a server "session"
-	// channel, to ensure that the shell has exited (and the exit status 
-	// retrieved) before we close things up.	
+	/* if a type-specific check_close is defined we will only exit
+	   once that has been triggered. this is only used for a server "session"
+	   channel, to ensure that the shell has exited (and the exit status 
+	   retrieved) before we close things up. */
 	if (!channel->type->check_close	
 			|| channel->type->check_close(channel)) {
 		close_allowed = 1;
