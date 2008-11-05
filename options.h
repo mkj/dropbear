@@ -60,19 +60,23 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_LOCALTCPFWD
 #define ENABLE_CLI_REMOTETCPFWD
 
-/* Allow using -J <proxycommand> to run the connection through a 
-   pipe to a program, rather the normal TCP connection */
-#define ENABLE_CLI_PROXYCMD
-
 #define ENABLE_SVR_LOCALTCPFWD
 #define ENABLE_SVR_REMOTETCPFWD
 
 /* Enable Authentication Agent Forwarding - server only for now */
 #define ENABLE_AGENTFWD
 
-/* Enable "Netcat mode". TODO describe here. */
-#define ENABLE_CLI_NETCAT
 
+/* Note: Both ENABLE_CLI_PROXYCMD and ENABLE_CLI_NETCAT must be set to
+ * allow multihop dbclient connections */
+
+/* Allow using -J <proxycommand> to run the connection through a 
+   pipe to a program, rather the normal TCP connection */
+#define ENABLE_CLI_PROXYCMD
+
+/* Enable "Netcat mode" option. This will forward standard input/output
+ * to a remote TCP-forwarded connection */
+#define ENABLE_CLI_NETCAT
 
 /* Encryption - at least one required.
  * Protocol RFC requires 3DES and recommends AES128 for interoperability.
@@ -253,6 +257,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* Ensure that data is transmitted every KEEPALIVE seconds. This can
 be overridden at runtime with -K. 0 disables keepalives */
 #define DEFAULT_KEEPALIVE 0
+
+/* The default path. This will often get replaced by the shell */
+#define DEFAULT_PATH "/bin:/usr/bin"
 
 /* Some other defines (that mostly should be left alone) are defined
  * in sysoptions.h */
