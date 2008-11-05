@@ -49,7 +49,11 @@ static void add_netcat(const char *str);
 static void printhelp() {
 
 	fprintf(stderr, "Dropbear client v%s\n"
+#ifdef ENABLE_CLI_MULTIHOP
+					"Usage: %s [options] [user@]host[/port][,[user@]host/port],...] [command]\n"
+#else
 					"Usage: %s [options] [user@]host[/port] [command]\n"
+#endif
 					"Options are:\n"
 					"-p <remoteport>\n"
 					"-l <username>\n"
@@ -72,13 +76,13 @@ static void printhelp() {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef ENABLE_CLI_NETCAT
-					"-B <endhost:endport> Netcat-alike bouncing\n"
+					"-B <endhost:endport> Netcat-alike forwarding\n"
 #endif				
 #ifdef ENABLE_CLI_PROXYCMD
-					"-J <proxy_program> Use program rather than tcp connection\n"
+					"-J <proxy_program> Use program pipe rather than TCP connection\n"
 #endif
 #ifdef DEBUG_TRACE
-					"-v    verbose\n"
+					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE);
