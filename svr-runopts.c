@@ -83,7 +83,7 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef DEBUG_TRACE
-					"-v		verbose\n"
+					"-v		verbose (compiled with DEBUG_TRACE)\n"
 #endif
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS

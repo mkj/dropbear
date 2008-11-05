@@ -259,7 +259,7 @@ be overridden at runtime with -K. 0 disables keepalives */
 #define DEFAULT_KEEPALIVE 0
 
 /* The default path. This will often get replaced by the shell */
-#define DEFAULT_PATH "/bin:/usr/bin"
+#define DEFAULT_PATH "/usr/bin:/bin"
 
 /* Some other defines (that mostly should be left alone) are defined
  * in sysoptions.h */

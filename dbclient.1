@@ -106,8 +106,11 @@ Dropbear will also allow multiple "hops" to be specified, separated by commas. I
 this case a connection will be made to the first host, then a TCP forwarded 
 connection will be made through that to the second host, and so on. Hosts other than
 the final destination will not see anything other than the encrypted SSH stream. 
+A port for a host can be specified with a slash (eg matt@martello/44 ).
 This syntax can also be used with scp or rsync (specifying dbclient as the 
-ssh/rsh command). A port for a host can be specified with a slash (eg matt@martello/44 ).
+ssh/rsh command). A file can be "bounced" through multiple SSH hops, eg
+
+scp -S dbclient matt@martello,root@wrt,canyons:/tmp/dump .
 
 .SH ENVIRONMENT
 .TP
