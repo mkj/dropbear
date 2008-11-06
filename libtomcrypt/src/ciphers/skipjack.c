@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 
 /**
@@ -28,7 +28,7 @@ const struct ltc_cipher_descriptor skipjack_desc =
     &skipjack_test,
     &skipjack_done,
     &skipjack_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const unsigned char sbox[256] = {
@@ -138,11 +138,12 @@ static unsigned ig_func(unsigned w, int *kp, unsigned char *key)
   @param pt The input plaintext (8 bytes)
   @param ct The output ciphertext (8 bytes)
   @param skey The key as scheduled
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+static int _skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #else
-void skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 #endif
 {
    unsigned w1,w2,w3,w4,tmp,tmp1;
@@ -183,13 +184,16 @@ void skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
    ct[2] = (w2>>8)&255; ct[3] = w2&255;
    ct[4] = (w3>>8)&255; ct[5] = w3&255;
    ct[6] = (w4>>8)&255; ct[7] = w4&255;
+
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
+int skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *skey)
 {
-   _skipjack_ecb_encrypt(pt, ct, skey);
+   int err = _skipjack_ecb_encrypt(pt, ct, skey);
    burn_stack(sizeof(unsigned) * 8 + sizeof(int) * 2);
+   return err;
 }
 #endif
 
@@ -198,11 +202,12 @@ void skipjack_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
   @param skey The key as scheduled 
+  @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
-static void _skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+static int _skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #else
-void skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 #endif
 {
    unsigned w1,w2,w3,w4,tmp;
@@ -247,13 +252,16 @@ void skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_
    pt[2] = (w2>>8)&255; pt[3] = w2&255;
    pt[4] = (w3>>8)&255; pt[5] = w3&255;
    pt[6] = (w4>>8)&255; pt[7] = w4&255;
+
+   return CRYPT_OK;
 }
 
 #ifdef LTC_CLEAN_STACK
-void skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
+int skipjack_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *skey)
 {
-   _skipjack_ecb_decrypt(ct, pt, skey);
+   int err = _skipjack_ecb_decrypt(ct, pt, skey);
    burn_stack(sizeof(unsigned) * 7 + sizeof(int) * 2);
+   return err;
 }
 #endif
 
@@ -290,7 +298,7 @@ int skipjack_test(void)
       skipjack_ecb_decrypt(buf[0], buf[1], &key);
 
       /* compare */
-      if (memcmp(buf[0], tests[x].ct, 8) != 0 || memcmp(buf[1], tests[x].pt, 8) != 0) {
+      if (XMEMCMP(buf[0], tests[x].ct, 8) != 0 || XMEMCMP(buf[1], tests[x].pt, 8) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
 
@@ -331,5 +339,5 @@ int skipjack_keysize(int *keysize)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/skipjack.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.12 $ */
+/* $Date: 2006/11/08 23:01:06 $ */

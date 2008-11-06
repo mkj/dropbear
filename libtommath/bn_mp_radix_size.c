@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* returns size of ASCII reprensentation */
@@ -36,7 +36,7 @@ int mp_radix_size (mp_int * a, int radix, int *size)
   }
 
   if (mp_iszero(a) == MP_YES) {
-     *size = 2;
+    *size = 2;
     return MP_OKAY;
   }
 
@@ -72,3 +72,7 @@ int mp_radix_size (mp_int * a, int radix, int *size)
 }
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_radix_size.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

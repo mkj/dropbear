@@ -64,6 +64,10 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 	{SSH_MSG_USERAUTH_BANNER, recv_msg_userauth_banner}, /* client */
 	{SSH_MSG_USERAUTH_SPECIFIC_60, recv_msg_userauth_specific_60}, /* client */
+#ifdef  ENABLE_CLI_REMOTETCPFWD
+	{SSH_MSG_REQUEST_SUCCESS, cli_recv_msg_request_success}, /* client */
+	{SSH_MSG_REQUEST_FAILURE, cli_recv_msg_request_failure}, /* client */
+#endif
 	{0, 0} /* End */
 };
 
@@ -74,13 +78,13 @@ static const struct ChanType *cli_chantypes[] = {
 	NULL /* Null termination */
 };
 
-void cli_session(int sock, char* remotehost) {
+void cli_session(int sock_in, int sock_out, char* remotehost) {
 
 	seedrandom();
 
 	crypto_init();
 
-	common_session_init(sock, remotehost);
+	common_session_init(sock_in, sock_out, remotehost);
 
 	chaninitialise(cli_chantypes);
 
@@ -197,34 +201,45 @@ static void cli_sessionloop() {
 			TRACE(("leave cli_sessionloop: cli_auth_try"))
 			return;
 
-			/*
 		case USERAUTH_SUCCESS_RCVD:
-			send_msg_service_request(SSH_SERVICE_CONNECTION);
-			cli_ses.state = SERVICE_CONN_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent ssh-connection service req"))
-			return;
 
-		case SERVICE_CONN_ACCEPT_RCVD:
-			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
-			cli_ses.state = SESSION_RUNNING;
-			return;
-			*/
-
-		case USERAUTH_SUCCESS_RCVD:
+			if (cli_opts.backgrounded) {
+				int devnull;
+				/* keeping stdin open steals input from the terminal and
+				   is confusing, though stdout/stderr could be useful. */
+				devnull = open(_PATH_DEVNULL, O_RDONLY);
+				if (devnull < 0) {
+					dropbear_exit("opening /dev/null: %d %s",
+							errno, strerror(errno));
+				}
+				dup2(devnull, STDIN_FILENO);
+				if (daemon(0, 1) < 0) {
+					dropbear_exit("Backgrounding failed: %d %s", 
+							errno, strerror(errno));
+				}
+			}
+			
 #ifdef ENABLE_CLI_LOCALTCPFWD
 			setup_localtcp();
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 			setup_remotetcp();
 #endif
-			cli_send_chansess_request();
-			TRACE(("leave cli_sessionloop: cli_send_chansess_request"))
+
+#ifdef ENABLE_CLI_NETCAT
+			if (cli_opts.netcat_host) {
+				cli_send_netcat_request();
+			} else 
+#endif
+				if (!cli_opts.no_cmd) {
+				cli_send_chansess_request();
+			}
+			TRACE(("leave cli_sessionloop: running"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
 
 		case SESSION_RUNNING:
-			if (ses.chancount < 1) {
+			if (ses.chancount < 1 && !cli_opts.no_cmd) {
 				cli_finished();
 			}
 
@@ -275,8 +290,10 @@ static void cli_remoteclosed() {
 
 	/* XXX TODO perhaps print a friendlier message if we get this but have
 	 * already sent/received disconnect message(s) ??? */
-	close(ses.sock);
-	ses.sock = -1;
+	m_close(ses.sock_in);
+	m_close(ses.sock_out);
+	ses.sock_in = -1;
+	ses.sock_out = -1;
 	dropbear_exit("remote closed the connection");
 }
 

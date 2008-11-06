@@ -77,6 +77,11 @@ void recv_msg_userauth_info_request() {
 
 	TRACE(("enter recv_msg_recv_userauth_info_request"))
 
+	/* Let the user know what password/host they are authing for */
+	if (!cli_ses.interact_request_received) {
+		fprintf(stderr, "Login for %s@%s\n", cli_opts.username,
+				cli_opts.remotehost);
+	}
 	cli_ses.interact_request_received = 1;
 
 	name = buf_getstring(ses.payload, NULL);
@@ -99,13 +104,14 @@ void recv_msg_userauth_info_request() {
 	if (strlen(name) > 0) {
 		cleantext(name);
 		fprintf(stderr, "%s", name);
-		m_free(name);
 	}
+	m_free(name);
+
 	if (strlen(instruction) > 0) {
 		cleantext(instruction);
 		fprintf(stderr, "%s", instruction);
-		m_free(instruction);
 	}
+	m_free(instruction);
 
 	for (i = 0; i < num_prompts; i++) {
 		unsigned int response_len = 0;

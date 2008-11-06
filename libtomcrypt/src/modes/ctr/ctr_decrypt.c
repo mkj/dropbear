@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   CTR implementation, decrypt data, Tom St Denis
 */
 
-#ifdef CTR
+#ifdef LTC_CTR_MODE
 
 /**
    CTR decrypt
@@ -38,5 +38,5 @@ int ctr_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_decrypt.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/06/29 01:46:46 $ */

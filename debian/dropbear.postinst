@@ -54,6 +54,10 @@ DROPBEAR_BANNER=""
 
 # DSS hostkey file (default: /etc/dropbear/dropbear_dss_host_key)
 #DROPBEAR_DSSKEY="/etc/dropbear/dropbear_dss_host_key"
+
+# Receive window size - this is a tradeoff between memory and
+# network performance
+DROPBEAR_RECEIVE_WINDOW=65536
 EOT
 fi
 
@@ -64,4 +68,12 @@ if test -x /etc/init.d/dropbear; then
   else
     /etc/init.d/dropbear restart
   fi
+fi
+
+if test -n "$2" && dpkg --compare-versions "$2" lt '0.50-4' &&
+update-service --check dropbear; then
+  update-service --remove /etc/dropbear 2>/dev/null || :
+  sleep 6
+  rm -rf /var/run/dropbear /var/run/dropbear.log
+  update-service --add /etc/dropbear || :
 fi

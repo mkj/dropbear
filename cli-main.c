@@ -32,6 +32,8 @@
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param);
 static void cli_dropbear_log(int priority, const char* format, va_list param);
 
+static void cli_proxy_cmd(int *sock_in, int *sock_out);
+
 #if defined(DBMULTI_dbclient) || !defined(DROPBEAR_MULTI)
 #if defined(DBMULTI_dbclient) && defined(DROPBEAR_MULTI)
 int cli_main(int argc, char ** argv) {
@@ -39,13 +41,15 @@ int cli_main(int argc, char ** argv) {
 int main(int argc, char ** argv) {
 #endif
 
-	int sock;
+	int sock_in, sock_out;
 	char* error = NULL;
 	char* hostandport;
 	int len;
 
 	_dropbear_exit = cli_dropbear_exit;
 	_dropbear_log = cli_dropbear_log;
+
+	disallow_core();
 
 	cli_getopts(argc, argv);
 
@@ -56,10 +60,18 @@ int main(int argc, char ** argv) {
 		dropbear_exit("signal() error");
 	}
 
-	sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
-			0, &error);
+#ifdef ENABLE_CLI_PROXYCMD
+	if (cli_opts.proxycmd) {
+		cli_proxy_cmd(&sock_in, &sock_out);
+	} else
+#endif
+	{
+		int sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
+				0, &error);
+		sock_in = sock_out = sock;
+	}
 
-	if (sock < 0) {
+	if (sock_in < 0) {
 		dropbear_exit("%s", error);
 	}
 
@@ -70,7 +82,7 @@ int main(int argc, char ** argv) {
 	snprintf(hostandport, len, "%s:%s", 
 			cli_opts.remotehost, cli_opts.remoteport);
 
-	cli_session(sock, hostandport);
+	cli_session(sock_in, sock_out, hostandport);
 
 	/* not reached */
 	return -1;
@@ -109,4 +121,26 @@ static void cli_dropbear_log(int UNUSED(priority),
 
 	fprintf(stderr, "%s: %s\n", cli_opts.progname, printbuf);
 
+}
+
+static void exec_proxy_cmd(void *user_data_cmd) {
+	const char *cmd = user_data_cmd;
+	char *usershell;
+
+	usershell = m_strdup(get_user_shell());
+	run_shell_command(cmd, ses.maxfd, usershell);
+	dropbear_exit("Failed to run '%s'\n", cmd);
+}
+
+static void cli_proxy_cmd(int *sock_in, int *sock_out) {
+	int ret;
+
+	fill_passwd(cli_opts.own_user);
+
+	ret = spawn_command(exec_proxy_cmd, cli_opts.proxycmd,
+			sock_out, sock_in, NULL, NULL);
+	if (ret == DROPBEAR_FAILURE) {
+		dropbear_exit("Failed running proxy command");
+		*sock_in = *sock_out = -1;
+	}
 }

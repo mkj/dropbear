@@ -49,6 +49,9 @@ char * stripcontrol(const char * text);
 unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport);
 int dropbear_listen(const char* address, const char* port,
 		int *socks, unsigned int sockcount, char **errstring, int *maxfd);
+int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
+		int *writefd, int *readfd, int *errfd, pid_t *pid);
+void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
 int connect_remote(const char* remotehost, const char* remoteport,
 		int nonblocking, char ** errstring);
 char* getaddrhostname(struct sockaddr_storage * addr);
@@ -63,6 +66,8 @@ void * m_realloc(void* ptr, size_t size);
 void __m_free(void* ptr);
 void m_burn(void* data, unsigned int len);
 void setnonblocking(int fd);
+void disallow_core();
+int m_str_to_uint(const char* str, unsigned int *val);
 
 /* Used to force mp_ints to be initialised */
 #define DEF_MP_INT(X) mp_int X = {0, 0, 0, NULL}

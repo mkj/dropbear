@@ -229,6 +229,8 @@ void recv_msg_userauth_failure() {
 
 void recv_msg_userauth_success() {
 	TRACE(("received msg_userauth_success"))
+	/* Note: in delayed-zlib mode, setting authdone here 
+	 * will enable compression in the transport layer */
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;
 	cli_ses.lastauthtype = AUTH_TYPE_NONE;
@@ -236,8 +238,8 @@ void recv_msg_userauth_success() {
 
 void cli_auth_try() {
 
-	TRACE(("enter cli_auth_try"))
 	int finished = 0;
+	TRACE(("enter cli_auth_try"))
 
 	CHECKCLEARTOWRITE();
 	
@@ -287,11 +289,20 @@ void cli_auth_try() {
 
 /* A helper for getpass() that exits if the user cancels. The returned
  * password is statically allocated by getpass() */
-char* getpass_or_cancel()
+char* getpass_or_cancel(char* prompt)
 {
 	char* password = NULL;
+	
+#ifdef DROPBEAR_PASSWORD_ENV
+    /* Password provided in an environment var */
+    password = getenv(DROPBEAR_PASSWORD_ENV);
+    if (password)
+    {
+        return password;
+    }
+#endif
 
-	password = getpass("Password: ");
+	password = getpass(prompt);
 
 	/* 0x03 is a ctrl-c character in the buffer. */
 	if (password == NULL || strchr(password, '\3') != NULL) {

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -26,8 +26,8 @@
    @param masklen     The length of the mask desired
    @return CRYPT_OK if successful
 */
-int pkcs_1_mgf1(const unsigned char *seed, unsigned long seedlen,
-                      int            hash_idx,
+int pkcs_1_mgf1(int                  hash_idx,
+                const unsigned char *seed, unsigned long seedlen,
                       unsigned char *mask, unsigned long masklen)
 {
    unsigned long hLen, x;
@@ -104,5 +104,5 @@ LBL_ERR:
 #endif /* PKCS_1 */
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_mgf1.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

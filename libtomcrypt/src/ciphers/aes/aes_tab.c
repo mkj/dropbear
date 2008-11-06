@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 /* The precomputed tables for AES */
 /*
@@ -94,6 +94,7 @@ static const ulong32 TE0[256] = {
     0x7bb0b0cbUL, 0xa85454fcUL, 0x6dbbbbd6UL, 0x2c16163aUL,
 };
 
+#ifndef PELI_TAB
 static const ulong32 Te4[256] = {
     0x63636363UL, 0x7c7c7c7cUL, 0x77777777UL, 0x7b7b7b7bUL,
     0xf2f2f2f2UL, 0x6b6b6b6bUL, 0x6f6f6f6fUL, 0xc5c5c5c5UL,
@@ -160,6 +161,7 @@ static const ulong32 Te4[256] = {
     0x41414141UL, 0x99999999UL, 0x2d2d2d2dUL, 0x0f0f0f0fUL,
     0xb0b0b0b0UL, 0x54545454UL, 0xbbbbbbbbUL, 0x16161616UL,
 };
+#endif
 
 #ifndef ENCRYPT_ONLY
 
@@ -528,6 +530,7 @@ static const ulong32 TE3[256] = {
     0xb0b0cb7bUL, 0x5454fca8UL, 0xbbbbd66dUL, 0x16163a2cUL,
 };
 
+#ifndef PELI_TAB
 static const ulong32 Te4_0[] = {
 0x00000063UL, 0x0000007cUL, 0x00000077UL, 0x0000007bUL, 0x000000f2UL, 0x0000006bUL, 0x0000006fUL, 0x000000c5UL, 
 0x00000030UL, 0x00000001UL, 0x00000067UL, 0x0000002bUL, 0x000000feUL, 0x000000d7UL, 0x000000abUL, 0x00000076UL, 
@@ -667,6 +670,7 @@ static const ulong32 Te4_3[] = {
 0x8c000000UL, 0xa1000000UL, 0x89000000UL, 0x0d000000UL, 0xbf000000UL, 0xe6000000UL, 0x42000000UL, 0x68000000UL, 
 0x41000000UL, 0x99000000UL, 0x2d000000UL, 0x0f000000UL, 0xb0000000UL, 0x54000000UL, 0xbb000000UL, 0x16000000UL
 };
+#endif /* pelimac */
 
 #ifndef ENCRYPT_ONLY
 
@@ -1020,5 +1024,5 @@ static const ulong32 rcon[] = {
 };
 
 /* $Source: /cvs/libtom/libtomcrypt/src/ciphers/aes/aes_tab.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/04/02 13:19:09 $ */

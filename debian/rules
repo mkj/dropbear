@@ -28,7 +28,7 @@ DIR =$(shell pwd)/debian/dropbear
 patch: deb-checkdir patch-stamp
 patch-stamp:
 	for i in `ls -1 debian/diff/*.diff || :`; do \
-	  patch -p0 <$$i || exit 1; \
+	  patch -p1 <$$i || exit 1; \
 	done
 	touch patch-stamp
 
@@ -46,10 +46,11 @@ build-stamp: config.status
 	touch build-stamp
 
 clean: deb-checkdir deb-checkuid
-	-$(MAKE) distclean
+	test ! -r Makefile || $(MAKE) distclean
+	rm -f libtomcrypt/Makefile libtommath/Makefile
 	test ! -e patch-stamp || \
 	  for i in `ls -1r debian/diff/*.diff || :`; do \
-	    patch -p0 -R <$$i; \
+	    patch -p1 -R <$$i; \
 	  done
 	rm -f patch-stamp build-stamp config.log config.status
 	rm -rf '$(DIR)'
@@ -76,8 +77,6 @@ install: deb-checkdir deb-checkuid build-stamp
 	install -d -m0755 '$(DIR)'/etc/dropbear/log
 	install -m0755 debian/service/log '$(DIR)'/etc/dropbear/log/run
 	ln -s /var/log/dropbear '$(DIR)'/etc/dropbear/log/main
-	ln -s /var/run/dropbear '$(DIR)'/etc/dropbear/supervise
-	ln -s /var/run/dropbear.log '$(DIR)'/etc/dropbear/log/supervise
 	# man pages
 	install -d -m0755 '$(DIR)'/usr/share/man/man8
 	for i in dropbear.8 dropbearkey.8; do \

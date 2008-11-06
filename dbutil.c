@@ -146,7 +146,7 @@ void dropbear_trace(const char* format, ...) {
 	}
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE: ");
+	fprintf(stderr, "TRACE (%d): ", getpid());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -199,10 +199,10 @@ int dropbear_listen(const char* address, const char* port,
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
 
-	// for calling getaddrinfo:
-	// address == NULL and !AI_PASSIVE: local loopback
-	// address == NULL and AI_PASSIVE: all interfaces
-	// address != NULL: whatever the address says
+	/* for calling getaddrinfo:
+	 address == NULL and !AI_PASSIVE: local loopback
+	 address == NULL and AI_PASSIVE: all interfaces
+	 address != NULL: whatever the address says */
 	if (!address) {
 		TRACE(("dropbear_listen: local loopback"))
 	} else {
@@ -286,9 +286,9 @@ int dropbear_listen(const char* address, const char* port,
 			len = 20 + strlen(strerror(err));
 			*errstring = (char*)m_malloc(len);
 			snprintf(*errstring, len, "Error listening: %s", strerror(err));
-			TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
-			return -1;
 		}
+		TRACE(("leave dropbear_listen: failure, %s", strerror(err)))
+		return -1;
 	}
 
 	TRACE(("leave dropbear_listen: success, %d socks bound", nsock))
@@ -321,9 +321,10 @@ int connect_remote(const char* remotehost, const char* remoteport,
 	if (err) {
 		if (errstring != NULL && *errstring == NULL) {
 			int len;
-			len = 20 + strlen(gai_strerror(err));
+			len = 100 + strlen(gai_strerror(err));
 			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
+			snprintf(*errstring, len, "Error resolving '%s' port '%s'. %s", 
+					remotehost, remoteport, gai_strerror(err));
 		}
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 		return -1;
@@ -389,6 +390,141 @@ int connect_remote(const char* remotehost, const char* remoteport,
 	return sock;
 }
 
+/* Sets up a pipe for a, returning three non-blocking file descriptors
+ * and the pid. exec_fn is the function that will actually execute the child process,
+ * it will be run after the child has fork()ed, and is passed exec_data.
+ * If ret_errfd == NULL then stderr will not be captured.
+ * ret_pid can be passed as  NULL to discard the pid. */
+int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
+		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
+	int infds[2];
+	int outfds[2];
+	int errfds[2];
+	pid_t pid;
+
+	const int FDIN = 0;
+	const int FDOUT = 1;
+
+	/* redirect stdin/stdout/stderr */
+	if (pipe(infds) != 0) {
+		return DROPBEAR_FAILURE;
+	}
+	if (pipe(outfds) != 0) {
+		return DROPBEAR_FAILURE;
+	}
+	if (ret_errfd && pipe(errfds) != 0) {
+		return DROPBEAR_FAILURE;
+	}
+
+#ifdef __uClinux__
+	pid = vfork();
+#else
+	pid = fork();
+#endif
+
+	if (pid < 0) {
+		return DROPBEAR_FAILURE;
+	}
+
+	if (!pid) {
+		/* child */
+
+		TRACE(("back to normal sigchld"))
+		/* Revert to normal sigchld handling */
+		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
+
+		/* redirect stdin/stdout */
+
+		if ((dup2(infds[FDIN], STDIN_FILENO) < 0) ||
+			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
+			(ret_errfd && dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
+			TRACE(("leave noptycommand: error redirecting FDs"))
+			dropbear_exit("child dup2() failure");
+		}
+
+		close(infds[FDOUT]);
+		close(infds[FDIN]);
+		close(outfds[FDIN]);
+		close(outfds[FDOUT]);
+		if (ret_errfd)
+		{
+			close(errfds[FDIN]);
+			close(errfds[FDOUT]);
+		}
+
+		exec_fn(exec_data);
+		/* not reached */
+		return DROPBEAR_FAILURE;
+	} else {
+		/* parent */
+		close(infds[FDIN]);
+		close(outfds[FDOUT]);
+
+		setnonblocking(outfds[FDIN]);
+		setnonblocking(infds[FDOUT]);
+
+		if (ret_errfd) {
+			close(errfds[FDOUT]);
+			setnonblocking(errfds[FDIN]);
+		}
+
+		if (ret_pid) {
+			*ret_pid = pid;
+		}
+
+		*ret_writefd = infds[FDOUT];
+		*ret_readfd = outfds[FDIN];
+		if (ret_errfd) {
+			*ret_errfd = errfds[FDIN];
+		}
+		return DROPBEAR_SUCCESS;
+	}
+}
+
+/* Runs a command with "sh -c". Will close FDs (except stdin/stdout/stderr) and
+ * re-enabled SIGPIPE. If cmd is NULL, will run a login shell.
+ */
+void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
+	char * argv[4];
+	char * baseshell = NULL;
+	unsigned int i;
+
+	baseshell = basename(usershell);
+
+	if (cmd != NULL) {
+		argv[0] = baseshell;
+	} else {
+		/* a login shell should be "-bash" for "/bin/bash" etc */
+		int len = strlen(baseshell) + 2; /* 2 for "-" */
+		argv[0] = (char*)m_malloc(len);
+		snprintf(argv[0], len, "-%s", baseshell);
+	}
+
+	if (cmd != NULL) {
+		argv[1] = "-c";
+		argv[2] = (char*)cmd;
+		argv[3] = NULL;
+	} else {
+		/* construct a shell of the form "-bash" etc */
+		argv[1] = NULL;
+	}
+
+	/* Re-enable SIGPIPE for the executed process */
+	if (signal(SIGPIPE, SIG_DFL) == SIG_ERR) {
+		dropbear_exit("signal() error");
+	}
+
+	/* close file descriptors except stdin/stdout/stderr
+	 * Need to be sure FDs are closed here to avoid reading files as root */
+	for (i = 3; i <= maxfd; i++) {
+		m_close(i);
+	}
+
+	execv(usershell, argv);
+}
+
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
 unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
@@ -400,7 +536,10 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
-	 * of the specific structure. */
+	 * of the specific structure. Some older linux systems (glibc 2.1.3
+	 * such as debian potato) have sockaddr_storage.__ss_family instead
+	 * but we'll ignore them */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -408,6 +547,7 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf), 
@@ -448,6 +588,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
 	 * of the specific structure. */
+#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
 	if (addr->ss_family == AF_INET) {
 		len = sizeof(struct sockaddr_in);
 	}
@@ -455,6 +596,7 @@ char* getaddrhostname(struct sockaddr_storage * addr) {
 	if (addr->ss_family == AF_INET6) {
 		len = sizeof(struct sockaddr_in6);
 	}
+#endif
 #endif
 
 
@@ -521,26 +663,36 @@ char * stripcontrol(const char * text) {
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_readfile(buffer* buf, const char* filename) {
 
-	int fd;
+	int fd = -1;
 	int len;
 	int maxlen;
+	int ret = DROPBEAR_FAILURE;
 
 	fd = open(filename, O_RDONLY);
 
 	if (fd < 0) {
-		close(fd);
-		return DROPBEAR_FAILURE;
+		goto out;
 	}
 	
 	do {
 		maxlen = buf->size - buf->pos;
-		len = read(fd, buf_getwriteptr(buf, maxlen),
-				maxlen);
+		len = read(fd, buf_getwriteptr(buf, maxlen), maxlen);
+		if (len < 0) {
+			if (errno == EINTR || errno == EAGAIN) {
+				continue;
+			}
+			goto out;
+		}
 		buf_incrwritepos(buf, len);
 	} while (len < maxlen && len > 0);
 
-	close(fd);
-	return DROPBEAR_SUCCESS;
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	if (fd >= 0) {
+		m_close(fd);
+	}
+	return ret;
 }
 
 /* get a line from the file into buffer in the style expected for an
@@ -676,4 +828,24 @@ void setnonblocking(int fd) {
 		}
 	}
 	TRACE(("leave setnonblocking"))
+}
+
+void disallow_core() {
+	struct rlimit lim;
+	lim.rlim_cur = lim.rlim_max = 0;
+	setrlimit(RLIMIT_CORE, &lim);
+}
+
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
+int m_str_to_uint(const char* str, unsigned int *val) {
+	errno = 0;
+	*val = strtoul(str, NULL, 10);
+	/* The c99 spec doesn't actually seem to define EINVAL, but most platforms
+	 * I've looked at mention it in their manpage */
+	if ((*val == 0 && errno == EINVAL)
+		|| (*val == ULONG_MAX && errno == ERANGE)) {
+		return DROPBEAR_FAILURE;
+	} else {
+		return DROPBEAR_SUCCESS;
+	}
 }

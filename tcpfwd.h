@@ -49,18 +49,23 @@ struct TCPFwdList {
 	const unsigned char* connectaddr;
 	unsigned int connectport;
 	unsigned int listenport;
+	unsigned int have_reply; /* is set to 1 after a reply has been received
+								when setting up the forwarding */
 	struct TCPFwdList * next;
 
 };
 
 /* Server */
 void recv_msg_global_request_remotetcp();
+
 extern const struct ChanType svr_chan_tcpdirect;
 
 /* Client */
 void setup_localtcp();
 void setup_remotetcp();
 extern const struct ChanType cli_chan_tcpremote;
+void cli_recv_msg_request_success();
+void cli_recv_msg_request_failure();
 
 /* Common */
 int listen_tcpfwd(struct TCPListener* tcpinfo);

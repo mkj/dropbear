@@ -64,16 +64,17 @@ static void cli_chansessreq(struct Channel *channel) {
 	type = buf_getstring(ses.payload, NULL);
 	wantreply = buf_getbool(ses.payload);
 
-	if (strcmp(type, "exit-status") != 0) {
+	if (strcmp(type, "exit-status") == 0) {
+		cli_ses.retval = buf_getint(ses.payload);
+		TRACE(("got exit-status of '%d'", cli_ses.retval))
+	} else if (strcmp(type, "exit-signal") == 0) {
+		TRACE(("got exit-signal, ignoring it"))
+	} else {
 		TRACE(("unknown request '%s'", type))
 		send_msg_channel_failure(channel);
 		goto out;
 	}
 		
-	/* We'll just trust what they tell us */
-	cli_ses.retval = buf_getint(ses.payload);
-	TRACE(("got exit-status of '%d'", cli_ses.retval))
-
 out:
 	m_free(type);
 }
@@ -162,8 +163,6 @@ void cli_tty_cleanup() {
 
 static void put_termcodes() {
 
-	TRACE(("enter put_termcodes"))
-
 	struct termios tio;
 	unsigned int sshcode;
 	const struct TermCode *termcode;
@@ -171,6 +170,8 @@ static void put_termcodes() {
 	unsigned int mapcode;
 
 	unsigned int bufpos1, bufpos2;
+
+	TRACE(("enter put_termcodes"))
 
 	if (tcgetattr(STDIN_FILENO, &tio) == -1) {
 		dropbear_log(LOG_WARNING, "Failed reading termmodes");
@@ -320,7 +321,11 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	TRACE(("enter send_chansess_shell_req"))
 
 	if (cli_opts.cmd) {
-		reqtype = "exec";
+		if (cli_opts.is_subsystem) {
+			reqtype = "subsystem";
+		} else {
+			reqtype = "exec";
+		}
 	} else {
 		reqtype = "shell";
 	}
@@ -337,9 +342,8 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	TRACE(("leave send_chansess_shell_req"))
 }
 
-static int cli_initchansess(struct Channel *channel) {
-
-
+/* Shared for normal client channel and netcat-alike */
+static int cli_init_stdpipe_sess(struct Channel *channel) {
 	channel->writefd = STDOUT_FILENO;
 	setnonblocking(STDOUT_FILENO);
 
@@ -349,7 +353,13 @@ static int cli_initchansess(struct Channel *channel) {
 	channel->errfd = STDERR_FILENO;
 	setnonblocking(STDERR_FILENO);
 
-	channel->extrabuf = cbuf_new(RECV_MAXWINDOW);
+	channel->extrabuf = cbuf_new(opts.recv_window);
+	return 0;
+}
+
+static int cli_initchansess(struct Channel *channel) {
+
+	cli_init_stdpipe_sess(channel);
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);
@@ -362,12 +372,48 @@ static int cli_initchansess(struct Channel *channel) {
 	}
 
 	return 0; /* Success */
-
 }
+
+#ifdef ENABLE_CLI_NETCAT
+
+void cli_send_netcat_request() {
+
+	const unsigned char* source_host = "127.0.0.1";
+	const int source_port = 22;
+
+	const struct ChanType cli_chan_netcat = {
+		0, /* sepfds */
+		"direct-tcpip",
+		cli_init_stdpipe_sess, /* inithandler */
+		NULL,
+		NULL,
+		cli_closechansess
+	};
+
+	cli_opts.wantpty = 0;
+
+	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_netcat) 
+			== DROPBEAR_FAILURE) {
+		dropbear_exit("Couldn't open initial channel");
+	}
+
+	buf_putstring(ses.writepayload, cli_opts.netcat_host, 
+			strlen(cli_opts.netcat_host));
+	buf_putint(ses.writepayload, cli_opts.netcat_port);
+
+	/* originator ip - localhost is accurate enough */
+	buf_putstring(ses.writepayload, source_host, strlen(source_host));
+	buf_putint(ses.writepayload, source_port);
+
+	encrypt_packet();
+	TRACE(("leave cli_send_chansess_request"))
+}
+#endif
 
 void cli_send_chansess_request() {
 
 	TRACE(("enter cli_send_chansess_request"))
+
 	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess) 
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
@@ -378,3 +424,16 @@ void cli_send_chansess_request() {
 	TRACE(("leave cli_send_chansess_request"))
 
 }
+
+
+#if 0
+	while (cli_opts.localfwds != NULL) {
+		ret = cli_localtcp(cli_opts.localfwds->listenport,
+				cli_opts.localfwds->connectaddr,
+				cli_opts.localfwds->connectport);
+		if (ret == DROPBEAR_FAILURE) {
+			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
+					cli_opts.localfwds->listenport,
+					cli_opts.localfwds->connectaddr,
+					cli_opts.localfwds->connectport);
+#endif

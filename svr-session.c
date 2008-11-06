@@ -77,12 +77,10 @@ static const struct ChanType *svr_chantypes[] = {
 void svr_session(int sock, int childpipe, 
 		char* remotehost, char *addrstring) {
 
-	struct timeval timeout;
-
     reseedrandom();
 
 	crypto_init();
-	common_session_init(sock, remotehost);
+	common_session_init(sock, sock, remotehost);
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
@@ -91,11 +89,7 @@ void svr_session(int sock, int childpipe,
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
-	if (gettimeofday(&timeout, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-
-	ses.connecttimeout = timeout.tv_sec + AUTH_TIMEOUT;
+	ses.connect_time = time(NULL);
 
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;
@@ -136,12 +130,12 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
 				"exit after auth (%s): %s", 
-				ses.authstate.printableuser, format);
-	} else if (ses.authstate.printableuser) {
+				ses.authstate.pw_name, format);
+	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
 				"exit before auth (user '%s', %d fails): %s",
-				ses.authstate.printableuser, ses.authstate.failcount, format);
+				ses.authstate.pw_name, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
@@ -149,6 +143,9 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	}
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
+
+	/* free potential public key options */
+	svr_pubkey_options_cleanup();
 
 	/* must be after we've done with username etc */
 	common_session_cleanup();
@@ -181,10 +178,15 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 
 	if (!svr_opts.usingsyslog || havetrace)
 	{
+		struct tm * local_tm = NULL;
 		timesec = time(NULL);
-		if (strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
-					localtime(&timesec)) == 0) {
-			datestr[0] = '?'; datestr[1] = '\0';
+		local_tm = localtime(&timesec);
+		if (local_tm == NULL
+			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
+						localtime(&timesec)) == 0)
+		{
+			/* upon failure, just print the epoch-seconds time. */
+			snprintf(datestr, sizeof(datestr), "%d", (int)timesec);
 		}
 		fprintf(stderr, "[%d] %s %s\n", getpid(), datestr, printbuf);
 	}
@@ -193,8 +195,10 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 /* called when the remote side closes the connection */
 static void svr_remoteclosed() {
 
-	close(ses.sock);
-	ses.sock = -1;
+	m_close(ses.sock_in);
+	m_close(ses.sock_out);
+	ses.sock_in = -1;
+	ses.sock_out = -1;
 	dropbear_close("Exited normally");
 
 }

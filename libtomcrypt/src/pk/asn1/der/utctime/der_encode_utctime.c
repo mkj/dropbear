@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -24,8 +24,10 @@ static const char *baseten = "0123456789";
     out[x++] = der_ia5_char_encode(baseten[y % 10]);
 
 /**
-  Gets length of DER encoding of UTCTIME
-  @param outlen [out] The length of the DER encoding
+  Encodes a UTC time structure in DER format
+  @param utctime      The UTC time structure to encode
+  @param out          The destination of the DER encoding of the UTC time structure
+  @param outlen       [in/out] The length of the DER encoding
   @return CRYPT_OK if successful
 */
 int der_encode_utctime(ltc_utctime *utctime, 
@@ -42,6 +44,7 @@ int der_encode_utctime(ltc_utctime *utctime,
        return err;
     }
     if (tmplen > *outlen) {
+        *outlen = tmplen;
         return CRYPT_BUFFER_OVERFLOW;
     }
     
@@ -66,7 +69,7 @@ int der_encode_utctime(ltc_utctime *utctime,
     }
 
     /* store length */
-    out[1] = x - 2;
+    out[1] = (unsigned char)(x - 2);
    
     /* all good let's return */
     *outlen = x;
@@ -76,5 +79,5 @@ int der_encode_utctime(ltc_utctime *utctime,
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/utctime/der_encode_utctime.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2005/06/19 12:07:00 $ */
+/* $Revision: 1.9 $ */
+/* $Date: 2006/12/04 21:34:03 $ */

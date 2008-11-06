@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   CTR implementation, set IV, Tom St Denis
 */
   
-#ifdef CTR
+#ifdef LTC_CTR_MODE
 
 /**
    Set an initial vector
@@ -45,14 +45,12 @@ int ctr_setiv(const unsigned char *IV, unsigned long len, symmetric_CTR *ctr)
    
    /* force next block */
    ctr->padlen = 0;
-   cipher_descriptor[ctr->cipher].ecb_encrypt(IV, ctr->pad, &ctr->key);
-   
-   return CRYPT_OK;
+   return cipher_descriptor[ctr->cipher].ecb_encrypt(IV, ctr->pad, &ctr->key);
 }
 
 #endif 
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_setiv.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:59 $ */
+/* $Revision: 1.6 $ */
+/* $Date: 2006/06/29 01:46:46 $ */

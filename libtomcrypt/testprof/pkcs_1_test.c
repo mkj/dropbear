@@ -5,7 +5,7 @@
 int pkcs_1_test(void)
 {
    unsigned char buf[3][128];
-   int res1, res2, res3, prng_idx, hash_idx;
+   int res1, res2, res3, prng_idx, hash_idx, err;
    unsigned long x, y, l1, l2, l3, i1, i2, lparamlen, saltlen, modlen;
    static const unsigned char lparam[] = { 1,2,3,4,5,6,7,8,9,10,11,12,13,14,15,16 };
 
@@ -18,6 +18,7 @@ int pkcs_1_test(void)
       return 1;
    }   
 
+   srand(time(NULL));
    /* do many tests */
    for (x = 0; x < 100; x++) {
       zeromem(buf, sizeof(buf));
@@ -25,9 +26,6 @@ int pkcs_1_test(void)
       /* make a dummy message (of random length) */
       l3 = (rand() & 31) + 8;
       for (y = 0; y < l3; y++) buf[0][y] = rand() & 255;
-
-      /* random modulus len (v1.5 must be multiple of 8 though arbitrary sizes seem to work) */
-      modlen = 800 + 8 * (abs(rand()) % 28);
 
       /* pick a random lparam len [0..16] */
       lparamlen = abs(rand()) % 17;
@@ -69,9 +67,8 @@ int pkcs_1_test(void)
       DO(pkcs_1_pss_decode(buf[0], l3, buf[1], l1, saltlen, hash_idx, modlen, &res2));
 
       buf[0][i1] ^= 1;
-      buf[1][i2 = abs(rand()) % l1] ^= 1;
-      DO(pkcs_1_pss_decode(buf[0], l3, buf[1], l1, saltlen, hash_idx, modlen, &res3));
-
+      buf[1][i2 = abs(rand()) % (l1 - 1)] ^= 1;
+      pkcs_1_pss_decode(buf[0], l3, buf[1], l1, saltlen, hash_idx, modlen, &res3);
       if (!(res1 == 1 && res2 == 0 && res3 == 0)) {
          fprintf(stderr, "PSS failed: %d, %d, %d, %lu, %lu\n", res1, res2, res3, l3, saltlen);
          return 1;
@@ -92,5 +89,5 @@ int pkcs_1_test(void)
 
 
 /* $Source: /cvs/libtom/libtomcrypt/testprof/pkcs_1_test.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2005/05/21 12:51:25 $ */
+/* $Revision: 1.7 $ */
+/* $Date: 2006/11/30 03:30:45 $ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 
@@ -19,6 +19,7 @@
 
 /**
   Gets length of DER encoding of UTCTIME
+  @param utctime      The UTC time structure to get the size of
   @param outlen [out] The length of the DER encoding
   @return CRYPT_OK if successful
 */
@@ -41,5 +42,5 @@ int der_length_utctime(ltc_utctime *utctime, unsigned long *outlen)
 #endif
 
 /* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/utctime/der_length_utctime.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/06/19 11:23:04 $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:15:35 $ */

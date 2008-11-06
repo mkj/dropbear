@@ -39,13 +39,15 @@
  * Caution: Don't use this in an unfriendly environment (ie unfirewalled),
  * since the printing may not sanitise strings etc. This will add a reasonable
  * amount to your executable size. */
-/*#define DEBUG_TRACE */
+#define DEBUG_TRACE
 
 /* All functions writing to the cleartext payload buffer call
  * CHECKCLEARTOWRITE() before writing. This is only really useful if you're
  * attempting to track down a problem */
-#define CHECKCLEARTOWRITE() assert(ses.writepayload->len == 0 && \
-		ses.writepayload->pos == 0)
+/*#define CHECKCLEARTOWRITE() assert(ses.writepayload->len == 0 && \
+		ses.writepayload->pos == 0)*/
+
+#define CHECKCLEARTOWRITE()
 
 /* Define this, compile with -pg and set GMON_OUT_PREFIX=gmon to get gmon
  * output when Dropbear forks. This will allow it gprof to be used.
@@ -64,6 +66,11 @@
 #else /*DEBUG_TRACE*/
 #define TRACE(X)
 #endif /*DEBUG_TRACE*/
+
+/* To debug with GDB it is easier to run with no forking of child processes.
+   You will need to pass "-F" as well. */
+/* #define DEBUG_NOFORK */
+
 
 /* For testing as non-root on shadowed systems, include the crypt of a password
  * here. You can then log in as any user with this password. Ensure that you

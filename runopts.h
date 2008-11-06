@@ -36,6 +36,8 @@ typedef struct runopts {
 #if defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
 	int listen_fwd_all;
 #endif
+	unsigned int recv_window;
+	unsigned int keepalive_secs;
 
 } runopts;
 
@@ -55,6 +57,7 @@ typedef struct svr_runopts {
 	/* ports is an array of the portcount listening ports */
 	char *ports[DROPBEAR_MAX_PORTS];
 	unsigned int portcount;
+	char *addresses[DROPBEAR_MAX_PORTS];
 
 	int inetdmode;
 
@@ -83,6 +86,7 @@ typedef struct svr_runopts {
 
 	sign_key *hostkey;
 	buffer * banner;
+	char * pidfile;
 
 } svr_runopts;
 
@@ -97,10 +101,15 @@ typedef struct cli_runopts {
 	char *remotehost;
 	char *remoteport;
 
+	char *own_user;
 	char *username;
 
 	char *cmd;
 	int wantpty;
+	int always_accept_key;
+	int no_cmd;
+	int backgrounded;
+	int is_subsystem;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
 #endif
@@ -109,6 +118,14 @@ typedef struct cli_runopts {
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	struct TCPFwdList * localfwds;
+#endif
+
+#ifdef ENABLE_CLI_NETCAT
+	char *netcat_host;
+	unsigned int netcat_port;
+#endif
+#ifdef ENABLE_CLI_PROXYCMD
+	char *proxycmd;
 #endif
 
 } cli_runopts;

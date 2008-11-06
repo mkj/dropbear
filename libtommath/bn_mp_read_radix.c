@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* read a string [ASCII] in a given radix */
@@ -20,6 +20,9 @@ int mp_read_radix (mp_int * a, const char *str, int radix)
 {
   int     y, res, neg;
   char    ch;
+
+  /* zero the digit bignum */
+  mp_zero(a);
 
   /* make sure the radix is ok */
   if (radix < 2 || radix > 64) {
@@ -76,3 +79,7 @@ int mp_read_radix (mp_int * a, const char *str, int radix)
   return MP_OKAY;
 }
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_read_radix.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:18:44 $ */

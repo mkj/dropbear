@@ -61,7 +61,7 @@ void write_packet() {
 	len = writebuf->len - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
-	written = write(ses.sock, buf_getptr(writebuf, len), len);
+	written = write(ses.sock_out, buf_getptr(writebuf, len), len);
 
 	if (written < 0) {
 		if (errno == EINTR) {
@@ -71,6 +71,8 @@ void write_packet() {
 			dropbear_exit("error writing");
 		}
 	} 
+	
+	ses.last_packet_time = time(NULL);
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -120,7 +122,7 @@ void read_packet() {
 	 * mightn't be any available (EAGAIN) */
 	dropbear_assert(ses.readbuf != NULL);
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
-	len = read(ses.sock, buf_getptr(ses.readbuf, maxlen), maxlen);
+	len = read(ses.sock_in, buf_getptr(ses.readbuf, maxlen), maxlen);
 
 	if (len == 0) {
 		ses.remoteclosed();
@@ -169,7 +171,7 @@ static void read_packet_init() {
 	maxlen = blocksize - ses.readbuf->pos;
 			
 	/* read the rest of the packet if possible */
-	len = read(ses.sock, buf_getwriteptr(ses.readbuf, maxlen),
+	len = read(ses.sock_in, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
 	if (len == 0) {
 		ses.remoteclosed();
@@ -192,19 +194,11 @@ static void read_packet_init() {
 	/* now we have the first block, need to get packet length, so we decrypt
 	 * the first block (only need first 4 bytes) */
 	buf_setpos(ses.readbuf, 0);
-	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, blocksize),
-				buf_getptr(ses.readbuf, blocksize),
-				blocksize);
-	} else {
-		/* decrypt it */
-		if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-					buf_getwriteptr(ses.decryptreadbuf,blocksize),
-					blocksize,
-					&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-			dropbear_exit("error decrypting");
-		}
+	if (ses.keys->recv_crypt_mode->decrypt(buf_getptr(ses.readbuf, blocksize), 
+				buf_getwriteptr(ses.decryptreadbuf,blocksize),
+				blocksize,
+				&ses.keys->recv_cipher_state) != CRYPT_OK) {
+		dropbear_exit("error decrypting");
 	}
 	buf_setlen(ses.decryptreadbuf, blocksize);
 	len = buf_getint(ses.decryptreadbuf) + 4 + macsize;
@@ -212,7 +206,7 @@ static void read_packet_init() {
 	buf_setpos(ses.readbuf, blocksize);
 
 	/* check packet length */
-	if ((len > MAX_PACKET_LEN) ||
+	if ((len > RECV_MAX_PACKET_LEN) ||
 		(len < MIN_PACKET_LEN + macsize) ||
 		((len - macsize) % blocksize != 0)) {
 		dropbear_exit("bad packet size %d", len);
@@ -244,24 +238,17 @@ void decrypt_packet() {
 	buf_setlen(ses.decryptreadbuf, ses.decryptreadbuf->size);
 	buf_setpos(ses.decryptreadbuf, blocksize);
 
-	/* decrypt if encryption is set, memcpy otherwise */
-	if (ses.keys->recv_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		len = ses.readbuf->len - macsize - blocksize;
-		memcpy(buf_getwriteptr(ses.decryptreadbuf, len),
-				buf_getptr(ses.readbuf, len), len);
-	} else {
-		/* decrypt */
-		while (ses.readbuf->pos < ses.readbuf->len - macsize) {
-			if (cbc_decrypt(buf_getptr(ses.readbuf, blocksize), 
-						buf_getwriteptr(ses.decryptreadbuf, blocksize),
-						blocksize,
-						&ses.keys->recv_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error decrypting");
-			}
-			buf_incrpos(ses.readbuf, blocksize);
-			buf_incrwritepos(ses.decryptreadbuf, blocksize);
+	/* decrypt it */
+	while (ses.readbuf->pos < ses.readbuf->len - macsize) {
+		if (ses.keys->recv_crypt_mode->decrypt(
+					buf_getptr(ses.readbuf, blocksize), 
+					buf_getwriteptr(ses.decryptreadbuf, blocksize),
+					blocksize,
+					&ses.keys->recv_cipher_state) != CRYPT_OK) {
+			dropbear_exit("error decrypting");
 		}
+		buf_incrpos(ses.readbuf, blocksize);
+		buf_incrwritepos(ses.decryptreadbuf, blocksize);
 	}
 
 	/* check the hmac */
@@ -281,17 +268,16 @@ void decrypt_packet() {
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
 	len = ses.decryptreadbuf->len - padlen - 4 - 1;
-	if ((len > MAX_PAYLOAD_LEN) || (len < 1)) {
+	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
 		dropbear_exit("bad packet size");
 	}
 
 	buf_setpos(ses.decryptreadbuf, PACKET_PAYLOAD_OFF);
 
 #ifndef DISABLE_ZLIB
-	if (ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (is_compress_recv()) {
 		/* decompress */
 		ses.payload = buf_decompress(ses.decryptreadbuf, len);
-
 	} else 
 #endif
 	{
@@ -403,7 +389,60 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 #endif
 
 
+/* returns 1 if the packet is a valid type during kex (see 7.1 of rfc4253) */
+static int packet_is_okay_kex(unsigned char type) {
+	if (type >= SSH_MSG_USERAUTH_REQUEST) {
+		return 0;
+	}
+	if (type == SSH_MSG_SERVICE_REQUEST || type == SSH_MSG_SERVICE_ACCEPT) {
+		return 0;
+	}
+	if (type == SSH_MSG_KEXINIT) {
+		/* XXX should this die horribly if !dataallowed ?? */
+		return 0;
+	}
+	return 1;
+}
 
+static void enqueue_reply_packet() {
+	struct packetlist * new_item = NULL;
+	new_item = m_malloc(sizeof(struct packetlist));
+	new_item->next = NULL;
+	
+	new_item->payload = buf_newcopy(ses.writepayload);
+	buf_setpos(ses.writepayload, 0);
+	buf_setlen(ses.writepayload, 0);
+	
+	if (ses.reply_queue_tail) {
+		ses.reply_queue_tail->next = new_item;
+	} else {
+		ses.reply_queue_head = new_item;
+	}
+	ses.reply_queue_tail = new_item;
+	TRACE(("leave enqueue_reply_packet"))
+}
+
+void maybe_flush_reply_queue() {
+	struct packetlist *tmp_item = NULL, *curr_item = NULL;
+	if (!ses.dataallowed)
+	{
+		TRACE(("maybe_empty_reply_queue - no data allowed"))
+		return;
+	}
+		
+	for (curr_item = ses.reply_queue_head; curr_item; ) {
+		CHECKCLEARTOWRITE();
+		buf_putbytes(ses.writepayload,
+			curr_item->payload->data, curr_item->payload->len);
+			
+		buf_free(curr_item->payload);
+		tmp_item = curr_item;
+		curr_item = curr_item->next;
+		m_free(tmp_item);
+		encrypt_packet();
+	}
+	ses.reply_queue_head = ses.reply_queue_tail = NULL;
+}
 	
 /* encrypt the writepayload, putting into writebuf, ready for write_packet()
  * to put on the wire */
@@ -413,20 +452,33 @@ void encrypt_packet() {
 	unsigned char blocksize, macsize;
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
+	unsigned char type;
+	unsigned int clear_len;
 	
+	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
-	TRACE(("encrypt_packet type is %d", ses.writepayload->data[0]))
+	TRACE(("encrypt_packet type is %d", type))
+	
+	if (!ses.dataallowed && !packet_is_okay_kex(type)) {
+		/* During key exchange only particular packets are allowed.
+			Since this type isn't OK we just enqueue it to send 
+			after the KEX, see maybe_flush_reply_queue */
+		enqueue_reply_packet();
+		return;
+	}
+		
 	blocksize = ses.keys->trans_algo_crypt->blocksize;
 	macsize = ses.keys->trans_algo_mac->hashsize;
 
 	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
 	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	clearwritebuf = buf_new((ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3
+	clear_len = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+
 #ifndef DISABLE_ZLIB
-			+ ZLIB_COMPRESS_INCR /* bit of a kludge, but we can't know len*/
+	clear_len += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
 #endif
-			);
+	clearwritebuf = buf_new(clear_len);
 	buf_setlen(clearwritebuf, PACKET_PAYLOAD_OFF);
 	buf_setpos(clearwritebuf, PACKET_PAYLOAD_OFF);
 
@@ -434,7 +486,7 @@ void encrypt_packet() {
 
 #ifndef DISABLE_ZLIB
 	/* compression */
-	if (ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (is_compress_trans()) {
 		buf_compress(clearwritebuf, ses.writepayload, ses.writepayload->len);
 	} else
 #endif
@@ -446,10 +498,6 @@ void encrypt_packet() {
 	}
 
 	/* finished with payload */
-	buf_burn(ses.writepayload); /* XXX This is probably a good idea, and isn't
-								   _that_ likely to hurt performance too badly.
-								   Buffers can have cleartext passwords etc, or
-								   other sensitive data */
 	buf_setpos(ses.writepayload, 0);
 	buf_setlen(ses.writepayload, 0);
 
@@ -481,24 +529,17 @@ void encrypt_packet() {
 	 * wire by writepacket() */
 	writebuf = buf_new(clearwritebuf->len + macsize);
 
-	if (ses.keys->trans_algo_crypt->cipherdesc == NULL) {
-		/* copy it */
-		memcpy(buf_getwriteptr(writebuf, clearwritebuf->len),
-				buf_getptr(clearwritebuf, clearwritebuf->len),
-				clearwritebuf->len);
-		buf_incrwritepos(writebuf, clearwritebuf->len);
-	} else {
-		/* encrypt it */
-		while (clearwritebuf->pos < clearwritebuf->len) {
-			if (cbc_encrypt(buf_getptr(clearwritebuf, blocksize),
-						buf_getwriteptr(writebuf, blocksize),
-						blocksize,
-						&ses.keys->trans_symmetric_struct) != CRYPT_OK) {
-				dropbear_exit("error encrypting");
-			}
-			buf_incrpos(clearwritebuf, blocksize);
-			buf_incrwritepos(writebuf, blocksize);
+	/* encrypt it */
+	while (clearwritebuf->pos < clearwritebuf->len) {
+		if (ses.keys->trans_crypt_mode->encrypt(
+					buf_getptr(clearwritebuf, blocksize),
+					buf_getwriteptr(writebuf, blocksize),
+					blocksize,
+					&ses.keys->trans_cipher_state) != CRYPT_OK) {
+			dropbear_exit("error encrypting");
 		}
+		buf_incrpos(clearwritebuf, blocksize);
+		buf_incrwritepos(writebuf, blocksize);
 	}
 
 	/* now add a hmac and we're done */

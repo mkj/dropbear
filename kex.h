@@ -37,6 +37,11 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv);
 void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 		sign_key *hostkey);
 
+#ifndef DISABLE_ZLIB
+int is_compress_trans();
+int is_compress_recv();
+#endif
+
 void recv_msg_kexdh_init(); /* server */
 
 void send_msg_kexdh_init(); /* client */
@@ -53,7 +58,7 @@ struct KEXState {
 	unsigned donefirstkex : 1; /* Set to 1 after the first kex has completed,
 								  ie the transport layer has been set up */
 
-	long lastkextime; /* time of the last kex */
+	time_t lastkextime; /* time of the last kex */
 	unsigned int datatrans; /* data transmitted since last kex */
 	unsigned int datarecv; /* data received since last kex */
 

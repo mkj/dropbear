@@ -62,17 +62,13 @@ rsa_key * gen_rsa_priv_key(unsigned int size) {
 		exit(1);
 	}
 
-	/* PuTTY doesn't like it if the modulus isn't a multiple of 8 bits,
-	 * so we just generate them until we get one which is OK */
 	getrsaprime(key->p, &pminus, key->e, size/2);
-	do {
-		getrsaprime(key->q, &qminus, key->e, size/2);
+	getrsaprime(key->q, &qminus, key->e, size/2);
 
-		if (mp_mul(key->p, key->q, key->n) != MP_OKAY) {
-			fprintf(stderr, "rsa generation failed\n");
-			exit(1);
-		}
-	} while (mp_count_bits(key->n) % 8 != 0);
+	if (mp_mul(key->p, key->q, key->n) != MP_OKAY) {
+		fprintf(stderr, "rsa generation failed\n");
+		exit(1);
+	}
 
 	/* lcm(p-1, q-1) */
 	if (mp_lcm(&pminus, &qminus, &lcm) != MP_OKAY) {

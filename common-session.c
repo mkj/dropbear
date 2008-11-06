@@ -34,8 +34,10 @@
 #include "kex.h"
 #include "channel.h"
 #include "atomicio.h"
+#include "runopts.h"
 
 static void checktimeouts();
+static long select_timeout();
 static int ident_readln(int fd, char* buf, int count);
 
 struct sshsession ses; /* GLOBAL */
@@ -50,20 +52,28 @@ int exitflag = 0; /* GLOBAL */
 
 
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock, char* remotehost) {
+void common_session_init(int sock_in, int sock_out, char* remotehost) {
 
 	TRACE(("enter session_init"))
 
 	ses.remotehost = remotehost;
 
-	ses.sock = sock;
-	ses.maxfd = sock;
+	ses.sock_in = sock_in;
+	ses.sock_out = sock_out;
+	ses.maxfd = MAX(sock_in, sock_out);
 
-	ses.connecttimeout = 0;
+	ses.connect_time = 0;
+	ses.last_packet_time = 0;
+	
+	if (pipe(ses.signal_pipe) < 0) {
+		dropbear_exit("signal pipe failed");
+	}
+	setnonblocking(ses.signal_pipe[0]);
+	setnonblocking(ses.signal_pipe[1]);
 	
 	kexfirstinitialise(); /* initialise the kex state */
 
-	ses.writepayload = buf_new(MAX_TRANS_PAYLOAD_LEN);
+	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
 
 	ses.readbuf = NULL;
@@ -74,15 +84,20 @@ void common_session_init(int sock, char* remotehost) {
 	initqueue(&ses.writequeue);
 
 	ses.requirenext = SSH_MSG_KEXINIT;
-	ses.dataallowed = 0; /* don't send data yet, we'll wait until after kex */
+	ses.dataallowed = 1; /* we can send data until we actually 
+							send the SSH_MSG_KEXINIT */
 	ses.ignorenext = 0;
 	ses.lastpacket = 0;
+	ses.reply_queue_head = NULL;
+	ses.reply_queue_tail = NULL;
 
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));
 	ses.newkeys = NULL;
 	ses.keys->recv_algo_crypt = &dropbear_nocipher;
 	ses.keys->trans_algo_crypt = &dropbear_nocipher;
+	ses.keys->recv_crypt_mode = &dropbear_mode_none;
+	ses.keys->trans_crypt_mode = &dropbear_mode_none;
 	
 	ses.keys->recv_algo_mac = &dropbear_nohash;
 	ses.keys->trans_algo_mac = &dropbear_nohash;
@@ -108,7 +123,6 @@ void common_session_init(int sock, char* remotehost) {
 
 	ses.allowprivport = 0;
 
-
 	TRACE(("leave session_init"))
 }
 
@@ -121,17 +135,21 @@ void session_loop(void(*loophandler)()) {
 	/* main loop, select()s for all sockets in use */
 	for(;;) {
 
-		timeout.tv_sec = SELECT_TIMEOUT;
+		timeout.tv_sec = select_timeout();
 		timeout.tv_usec = 0;
 		FD_ZERO(&writefd);
 		FD_ZERO(&readfd);
 		dropbear_assert(ses.payload == NULL);
-		if (ses.sock != -1) {
-			FD_SET(ses.sock, &readfd);
-			if (!isempty(&ses.writequeue)) {
-				FD_SET(ses.sock, &writefd);
-			}
+		if (ses.sock_in != -1) {
+			FD_SET(ses.sock_in, &readfd);
 		}
+		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
+			FD_SET(ses.sock_out, &writefd);
+		}
+		
+		/* We get woken up when signal handlers write to this pipe.
+		   SIGCHLD in svr-chansession is the only one currently. */
+		FD_SET(ses.signal_pipe[0], &readfd);
 
 		/* set up for channels which require reading/writing */
 		if (ses.dataallowed) {
@@ -143,35 +161,39 @@ void session_loop(void(*loophandler)()) {
 			dropbear_exit("Terminated by signal");
 		}
 		
-		if (val < 0) {
-			if (errno == EINTR) {
-				/* This must happen even if we've been interrupted, so that
-				 * changed signal-handler vars can take effect etc */
-				if (loophandler) {
-					loophandler();
-				}
-				continue;
-			} else {
-				dropbear_exit("Error in select");
-			}
+		if (val < 0 && errno != EINTR) {
+			dropbear_exit("Error in select");
+		}
+
+		if (val <= 0) {
+			/* If we were interrupted or the select timed out, we still
+			 * want to iterate over channels etc for reading, to handle
+			 * server processes exiting etc. 
+			 * We don't want to read/write FDs. */
+			FD_ZERO(&writefd);
+			FD_ZERO(&readfd);
+		}
+		
+		/* We'll just empty out the pipe if required. We don't do
+		any thing with the data, since the pipe's purpose is purely to
+		wake up the select() above. */
+		if (FD_ISSET(ses.signal_pipe[0], &readfd)) {
+			char x;
+			while (read(ses.signal_pipe[0], &x, 1) > 0) {}
 		}
 
 		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
-		
-		if (val == 0) {
-			/* timeout */
-			TRACE(("select timeout"))
-			continue;
-		}
 
 		/* process session socket's incoming/outgoing data */
-		if (ses.sock != -1) {
-			if (FD_ISSET(ses.sock, &writefd) && !isempty(&ses.writequeue)) {
+		if (ses.sock_out != -1) {
+			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
 				write_packet();
 			}
+		}
 
-			if (FD_ISSET(ses.sock, &readfd)) {
+		if (ses.sock_in != -1) {
+			if (FD_ISSET(ses.sock_in, &readfd)) {
 				read_packet();
 			}
 			
@@ -181,6 +203,10 @@ void session_loop(void(*loophandler)()) {
 				process_packet();
 			}
 		}
+		
+		/* if required, flush out any queued reply packets that
+		were being held up during a KEX */
+		maybe_flush_reply_queue();
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
@@ -227,14 +253,14 @@ void session_identification() {
 	int i;
 
 	/* write our version string, this blocks */
-	if (atomicio(write, ses.sock, LOCAL_IDENT "\r\n",
+	if (atomicio(write, ses.sock_out, LOCAL_IDENT "\r\n",
 				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
-		dropbear_exit("Error writing ident string");
+		ses.remoteclosed();
 	}
 
     /* If they send more than 50 lines, something is wrong */
 	for (i = 0; i < 50; i++) {
-		len = ident_readln(ses.sock, linebuf, sizeof(linebuf));
+		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));
 
 		if (len < 0 && errno != EINTR) {
 			/* It failed */
@@ -250,7 +276,7 @@ void session_identification() {
 
 	if (!done) {
 		TRACE(("err: %s for '%s'\n", strerror(errno), linebuf))
-		dropbear_exit("Failed to get remote version");
+		ses.remoteclosed();
 	} else {
 		/* linebuf is already null terminated */
 		ses.remoteident = m_malloc(len);
@@ -341,20 +367,22 @@ static int ident_readln(int fd, char* buf, int count) {
 	return pos+1;
 }
 
+void send_msg_ignore() {
+	CHECKCLEARTOWRITE();
+	buf_putbyte(ses.writepayload, SSH_MSG_IGNORE);
+	buf_putstring(ses.writepayload, "", 0);
+	encrypt_packet();
+}
+
 /* Check all timeouts which are required. Currently these are the time for
  * user authentication, and the automatic rekeying. */
 static void checktimeouts() {
 
-	struct timeval tv;
-	long secs;
+	time_t now;
 
-	if (gettimeofday(&tv, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-
-	secs = tv.tv_sec;
+	now = time(NULL);
 	
-	if (ses.connecttimeout != 0 && secs > ses.connecttimeout) {
+	if (ses.connect_time != 0 && now - ses.connect_time >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before auth");
 	}
 
@@ -364,10 +392,59 @@ static void checktimeouts() {
 	}
 
 	if (!ses.kexstate.sentkexinit
-			&& (secs - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
-			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)){
+			&& (now - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
+			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)) {
 		TRACE(("rekeying after timeout or max data reached"))
 		send_msg_kexinit();
 	}
+	
+	if (opts.keepalive_secs > 0 
+		&& now - ses.last_packet_time >= opts.keepalive_secs) {
+		send_msg_ignore();
+	}
+}
+
+static long select_timeout() {
+	/* determine the minimum timeout that might be required, so
+	as to avoid waking when unneccessary */
+	long ret = LONG_MAX;
+	if (KEX_REKEY_TIMEOUT > 0)
+		ret = MIN(KEX_REKEY_TIMEOUT, ret);
+	if (AUTH_TIMEOUT > 0)
+		ret = MIN(AUTH_TIMEOUT, ret);
+	if (opts.keepalive_secs > 0)
+		ret = MIN(opts.keepalive_secs, ret);
+	return ret;
+}
+
+const char* get_user_shell() {
+	/* an empty shell should be interpreted as "/bin/sh" */
+	if (ses.authstate.pw_shell[0] == '\0') {
+		return "/bin/sh";
+	} else {
+		return ses.authstate.pw_shell;
+	}
+}
+void fill_passwd(const char* username) {
+	struct passwd *pw = NULL;
+	if (ses.authstate.pw_name)
+		m_free(ses.authstate.pw_name);
+	if (ses.authstate.pw_dir)
+		m_free(ses.authstate.pw_dir);
+	if (ses.authstate.pw_shell)
+		m_free(ses.authstate.pw_shell);
+	if (ses.authstate.pw_passwd)
+		m_free(ses.authstate.pw_passwd);
+
+	pw = getpwnam(username);
+	if (!pw) {
+		return;
+	}
+	ses.authstate.pw_uid = pw->pw_uid;
+	ses.authstate.pw_gid = pw->pw_gid;
+	ses.authstate.pw_name = m_strdup(pw->pw_name);
+	ses.authstate.pw_dir = m_strdup(pw->pw_dir);
+	ses.authstate.pw_shell = m_strdup(pw->pw_shell);
+	ses.authstate.pw_passwd = m_strdup(pw->pw_passwd);
 }
 

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
 #include "tomcrypt.h"
 #include <stdarg.h>
@@ -16,7 +16,7 @@
   HMAC support, process multiple blocks of memory, Tom St Denis/Dobes Vandermeer
 */
 
-#ifdef HMAC
+#ifdef LTC_HMAC
 
 /**
    HMAC multiple blocks of memory to produce the authentication tag
@@ -88,5 +88,5 @@ LBL_ERR:
 
 
 /* $Source: /cvs/libtom/libtomcrypt/src/mac/hmac/hmac_memory_multi.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2005/05/05 14:35:58 $ */
+/* $Revision: 1.5 $ */
+/* $Date: 2006/11/03 00:39:49 $ */

@@ -361,7 +361,7 @@ struct openssh_key {
 static struct openssh_key *load_openssh_key(const char *filename)
 {
 	struct openssh_key *ret;
-	FILE *fp;
+	FILE *fp = NULL;
 	char buffer[256];
 	char *errmsg = NULL, *p = NULL;
 	int headers_done;
@@ -481,6 +481,9 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		}
 		memset(&ret, 0, sizeof(ret));
 		m_free(ret);
+	}
+	if (fp) {
+		fclose(fp);
 	}
 	if (errmsg) {
 		fprintf(stderr, "Error: %s\n", errmsg);
@@ -698,7 +701,6 @@ static int openssh_write(const char *filename, sign_key *key,
 	int nnumbers = -1, pos, len, seqlen, i;
 	char *header = NULL, *footer = NULL;
 	char zero[1];
-	unsigned char iv[8];
 	int ret = 0;
 	FILE *fp;
 	int keytype = -1;
@@ -926,40 +928,6 @@ static int openssh_write(const char *filename, sign_key *key,
 	if (passphrase) {
 		fprintf(stderr, "Encrypted keys aren't supported currently\n");
 		goto error;
-#if 0
-		/*
-		 * Invent an iv. Then derive encryption key from passphrase
-		 * and iv/salt:
-		 * 
-		 *  - let block A equal MD5(passphrase || iv)
-		 *  - let block B equal MD5(A || passphrase || iv)
-		 *  - block C would be MD5(B || passphrase || iv) and so on
-		 *  - encryption key is the first N bytes of A || B
-		 */
-		struct MD5Context md5c;
-		unsigned char keybuf[32];
-
-		for (i = 0; i < 8; i++) iv[i] = random_byte();
-
-		MD5Init(&md5c);
-		MD5Update(&md5c, (unsigned char *)passphrase, strlen(passphrase));
-		MD5Update(&md5c, iv, 8);
-		MD5Final(keybuf, &md5c);
-
-		MD5Init(&md5c);
-		MD5Update(&md5c, keybuf, 16);
-		MD5Update(&md5c, (unsigned char *)passphrase, strlen(passphrase));
-		MD5Update(&md5c, iv, 8);
-		MD5Final(keybuf+16, &md5c);
-
-		/*
-		 * Now encrypt the key blob.
-		 */
-		des3_encrypt_pubkey_ossh(keybuf, iv, outblob, outlen);
-
-		memset(&md5c, 0, sizeof(md5c));
-		memset(keybuf, 0, sizeof(keybuf));
-#endif
 	}
 
 	/*
@@ -976,12 +944,6 @@ static int openssh_write(const char *filename, sign_key *key,
 		goto error;
 	}
 	fputs(header, fp);
-	if (passphrase) {
-		fprintf(fp, "Proc-Type: 4,ENCRYPTED\nDEK-Info: DES-EDE3-CBC,");
-		for (i = 0; i < 8; i++)
-			fprintf(fp, "%02X", iv[i]);
-		fprintf(fp, "\n\n");
-	}
 	base64_encode_fp(fp, outblob, outlen, 64);
 	fputs(footer, fp);
 	fclose(fp);

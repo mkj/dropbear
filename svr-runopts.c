@@ -32,6 +32,7 @@
 svr_runopts svr_opts; /* GLOBAL */
 
 static void printhelp(const char * progname);
+static void addportandaddress(char* spec);
 
 static void printhelp(const char * progname) {
 
@@ -70,13 +71,19 @@ static void printhelp(const char * progname) {
 					"-k		Disable remote port forwarding\n"
 					"-a		Allow connections to forwarded ports from any host\n"
 #endif
-					"-p port		Listen on specified tcp port, up to %d can be specified\n"
-					"		(default %s if none specified)\n"
+					"-p [address:]port\n"
+					"		Listen on specified tcp port (and optionally address),\n"
+					"		up to %d can be specified\n"
+					"		(default port is %s if none specified)\n"
+					"-P PidFile	Create pid file PidFile\n"
+					"		(default %s)\n"
 #ifdef INETD_MODE
 					"-i		Start for inetd\n"
 #endif
+					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+					"-K <keepalive>  (0 is never, default %d)\n"
 #ifdef DEBUG_TRACE
-					"-v		verbose\n"
+					"-v		verbose (compiled with DEBUG_TRACE)\n"
 #endif
 					,DROPBEAR_VERSION, progname,
 #ifdef DROPBEAR_DSS
@@ -85,13 +92,17 @@ static void printhelp(const char * progname) {
 #ifdef DROPBEAR_RSA
 					RSA_PRIV_FILENAME,
 #endif
-					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT);
+					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE,
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE);
 }
 
 void svr_getopts(int argc, char ** argv) {
 
 	unsigned int i;
 	char ** next = 0;
+	int nextisport = 0;
+	char* recv_window_arg = NULL;
+	char* keepalive_arg = NULL;
 
 	/* see printhelp() for options */
 	svr_opts.rsakeyfile = NULL;
@@ -105,6 +116,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
+	svr_opts.pidfile = DROPBEAR_PIDFILE;
 #ifdef ENABLE_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -121,11 +133,20 @@ void svr_getopts(int argc, char ** argv) {
 #ifndef DISABLE_SYSLOG
 	svr_opts.usingsyslog = 1;
 #endif
+	opts.recv_window = DEFAULT_RECV_WINDOW;
+	opts.keepalive_secs = DEFAULT_KEEPALIVE;	
+	
 #ifdef ENABLE_SVR_REMOTETCPFWD
 	opts.listen_fwd_all = 0;
 #endif
 
 	for (i = 1; i < (unsigned int)argc; i++) {
+		if (nextisport) {
+			addportandaddress(argv[i]);
+			nextisport = 0;
+			continue;
+		}
+	  
 		if (next) {
 			*next = argv[i];
 			if (*next == NULL) {
@@ -177,13 +198,10 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #endif
 				case 'p':
-					if (svr_opts.portcount < DROPBEAR_MAX_PORTS) {
-						svr_opts.ports[svr_opts.portcount] = NULL;
-						next = &svr_opts.ports[svr_opts.portcount];
-						/* Note: if it doesn't actually get set, we'll
-						 * decrement it after the loop */
-						svr_opts.portcount++;
-					}
+				  nextisport = 1;
+				  break;
+				case 'P':
+					next = &svr_opts.pidfile;
 					break;
 #ifdef DO_MOTD
 				/* motd is displayed by default, -m turns it off */
@@ -193,6 +211,12 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 				case 'w':
 					svr_opts.norootlogin = 1;
+					break;
+				case 'W':
+					next = &recv_window_arg;
+					break;
+				case 'K':
+					next = &keepalive_arg;
 					break;
 #if defined(ENABLE_SVR_PASSWORD_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 				case 's':
@@ -205,6 +229,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_FAILURE);
+					break;
+				case 'u':
+					/* backwards compatibility with old urandom option */
 					break;
 #ifdef DEBUG_TRACE
 				case 'v':
@@ -223,15 +250,10 @@ void svr_getopts(int argc, char ** argv) {
 	/* Set up listening ports */
 	if (svr_opts.portcount == 0) {
 		svr_opts.ports[0] = m_strdup(DROPBEAR_DEFPORT);
+		svr_opts.addresses[0] = m_strdup(DROPBEAR_DEFADDRESS);
 		svr_opts.portcount = 1;
-	} else {
-		/* we may have been given a -p option but no argument to go with
-		 * it */
-		if (svr_opts.ports[svr_opts.portcount-1] == NULL) {
-			svr_opts.portcount--;
-		}
 	}
-
+        
 	if (svr_opts.dsskeyfile == NULL) {
 		svr_opts.dsskeyfile = DSS_PRIV_FILENAME;
 	}
@@ -257,8 +279,57 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.bannerfile);
 		}
 		buf_setpos(svr_opts.banner, 0);
-	}
 
+	}
+	
+	if (recv_window_arg) {
+		opts.recv_window = atol(recv_window_arg);
+		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
+			dropbear_exit("Bad recv window '%s'", recv_window_arg);
+		}
+	}
+	
+	if (keepalive_arg) {
+		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
+			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
+		}
+	}
+}
+
+static void addportandaddress(char* spec) {
+
+	char *myspec = NULL;
+
+	if (svr_opts.portcount < DROPBEAR_MAX_PORTS) {
+
+		/* We don't free it, it becomes part of the runopt state */
+		myspec = m_strdup(spec);
+
+		/* search for ':', that separates address and port */
+		svr_opts.ports[svr_opts.portcount] = strchr(myspec, ':');
+
+		if (svr_opts.ports[svr_opts.portcount] == NULL) {
+			/* no ':' -> the whole string specifies just a port */
+			svr_opts.ports[svr_opts.portcount] = myspec;
+		} else {
+			/* Split the address/port */
+			svr_opts.ports[svr_opts.portcount][0] = '\0'; 
+			svr_opts.ports[svr_opts.portcount]++;
+			svr_opts.addresses[svr_opts.portcount] = myspec;
+		}
+
+		if (svr_opts.addresses[svr_opts.portcount] == NULL) {
+			/* no address given -> fill in the default address */
+			svr_opts.addresses[svr_opts.portcount] = m_strdup(DROPBEAR_DEFADDRESS);
+		}
+
+		if (svr_opts.ports[svr_opts.portcount][0] == '\0') {
+			/* empty port -> exit */
+			dropbear_exit("Bad port");
+		}
+
+		svr_opts.portcount++;
+	}
 }
 
 static void disablekey(int type, const char* filename) {

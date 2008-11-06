@@ -188,8 +188,6 @@ void kexfirstinitialise() {
 /* Reset the kex state, ready for a new negotiation */
 static void kexinitialise() {
 
-	struct timeval tv;
-
 	TRACE(("kexinitialise()"))
 
 	/* sent/recv'd MSG_KEXINIT */
@@ -206,10 +204,7 @@ static void kexinitialise() {
 	ses.kexstate.datatrans = 0;
 	ses.kexstate.datarecv = 0;
 
-	if (gettimeofday(&tv, 0) < 0) {
-		dropbear_exit("Error getting time");
-	}
-	ses.kexstate.lastkextime = tv.tv_sec;
+	ses.kexstate.lastkextime = time(NULL);
 
 }
 
@@ -217,12 +212,10 @@ static void kexinitialise() {
  * already initialised hash_state hs, which should already have processed
  * the dh_K and hash, since these are common. X is the letter 'A', 'B' etc.
  * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
- * The output will only be expanded once, since that is all that is required
- * (for 3DES and SHA, with 24 and 20 bytes respectively). 
+ * The output will only be expanded once, as we are assured that
+ * outlen <= 2*SHA1_HASH_SIZE for all known hashes.
  *
- * See Section 5.2 of the IETF secsh Transport Draft for details */
-
-/* Duplicated verbatim from kex.c --mihnea */
+ * See Section 7.2 of rfc4253 (ssh transport) for details */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, const unsigned char X) {
 
@@ -262,6 +255,7 @@ void gen_new_keys() {
 	hash_state hs;
 	unsigned int C2S_keysize, S2C_keysize;
 	char mactransletter, macrecvletter; /* Client or server specific */
+	int recv_cipher = 0, trans_cipher = 0;
 
 	TRACE(("enter gen_new_keys"))
 	/* the dh_K and hash are the start of all hashes, we make use of that */
@@ -298,6 +292,24 @@ void gen_new_keys() {
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
+	recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
+	if (recv_cipher < 0)
+	    dropbear_exit("crypto error");
+	if (ses.newkeys->recv_crypt_mode->start(recv_cipher, 
+			recv_IV, recv_key, 
+			ses.newkeys->recv_algo_crypt->keysize, 0, 
+			&ses.newkeys->recv_cipher_state) != CRYPT_OK) {
+		dropbear_exit("crypto error");
+	}
+
+	trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
+	if (trans_cipher < 0)
+	    dropbear_exit("crypto error");
+	if (ses.newkeys->trans_crypt_mode->start(trans_cipher, 
+			trans_IV, trans_key, 
+			ses.newkeys->trans_algo_crypt->keysize, 0, 
+			&ses.newkeys->trans_cipher_state) != CRYPT_OK) {
+		dropbear_exit("crypto error");
 	if (ses.newkeys->recv_algo_crypt->cipherdesc != NULL) {
 		if (cbc_start(
 			find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
@@ -342,12 +354,26 @@ void gen_new_keys() {
 }
 
 #ifndef DISABLE_ZLIB
+
+int is_compress_trans() {
+	return ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->trans_algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
+int is_compress_recv() {
+	return ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->recv_algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
 static void gen_new_zstreams() {
 
 	/* create new zstreams */
-	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->recv_zstream = (z_streamp)m_malloc(sizeof(z_stream));
 		ses.newkeys->recv_zstream->zalloc = Z_NULL;
 		ses.newkeys->recv_zstream->zfree = Z_NULL;
@@ -359,7 +385,8 @@ static void gen_new_zstreams() {
 		ses.newkeys->recv_zstream = NULL;
 	}
 
-	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
+	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->trans_zstream = (z_streamp)m_malloc(sizeof(z_stream));
 		ses.newkeys->trans_zstream->zalloc = Z_NULL;
 		ses.newkeys->trans_zstream->zfree = Z_NULL;
@@ -371,7 +398,7 @@ static void gen_new_zstreams() {
 	} else {
 		ses.newkeys->trans_zstream = NULL;
 	}
-	
+
 	/* clean up old keys */
 	if (ses.keys->recv_zstream != NULL) {
 		if (inflateEnd(ses.keys->recv_zstream) == Z_STREAM_ERROR) {
@@ -388,7 +415,7 @@ static void gen_new_zstreams() {
 		m_free(ses.keys->trans_zstream);
 	}
 }
-#endif
+#endif /* DISABLE_ZLIB */
 
 
 /* Executed upon receiving a kexinit message from the client to initiate
@@ -525,7 +552,7 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 	hash_state hs;
 
 	/* read the prime and generator*/
-	mp_init(&dh_p);
+	m_mp_init(&dh_p);
 	bytes_to_mp(&dh_p, dh_p_val, DH_P_LEN);
 
 	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
@@ -697,6 +724,10 @@ static void read_kex_algos() {
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
 		ses.newkeys->trans_algo_crypt = 
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
+		ses.newkeys->recv_crypt_mode = 
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
+		ses.newkeys->trans_crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
 		ses.newkeys->recv_algo_mac = 
 			(struct dropbear_hash*)s2c_hash_algo->data;
 		ses.newkeys->trans_algo_mac = 
@@ -709,6 +740,10 @@ static void read_kex_algos() {
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
 		ses.newkeys->trans_algo_crypt = 
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
+		ses.newkeys->recv_crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
+		ses.newkeys->trans_crypt_mode =
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
 		ses.newkeys->recv_algo_mac = 
 			(struct dropbear_hash*)c2s_hash_algo->data;
 		ses.newkeys->trans_algo_mac = 

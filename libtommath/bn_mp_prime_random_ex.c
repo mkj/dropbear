@@ -12,7 +12,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@iahu.ca, http://math.libtomcrypt.org
+ * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
  */
 
 /* makes a truly random prime of a given size (bits),
@@ -62,10 +62,8 @@ int mp_prime_random_ex(mp_int *a, int t, int size, int flags, ltm_prime_callback
    maskOR_msb        = 0;
    maskOR_msb_offset = ((size & 7) == 1) ? 1 : 0;
    if (flags & LTM_PRIME_2MSB_ON) {
-      maskOR_msb     |= 1 << ((size - 2) & 7);
-   } else if (flags & LTM_PRIME_2MSB_OFF) {
-      maskAND        &= ~(1 << ((size - 2) & 7));
-   } 
+      maskOR_msb       |= 0x80 >> ((9 - size) & 7);
+   }  
 
    /* get the maskOR_lsb */
    maskOR_lsb         = 1;
@@ -121,3 +119,7 @@ error:
 
 
 #endif
+
+/* $Source: /cvs/libtom/libtommath/bn_mp_prime_random_ex.c,v $ */
+/* $Revision: 1.4 $ */
+/* $Date: 2006/03/31 14:18:44 $ */
