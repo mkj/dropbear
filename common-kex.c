@@ -292,44 +292,30 @@ void gen_new_keys() {
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
-	recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
-	if (recv_cipher < 0)
-	    dropbear_exit("crypto error");
-	if (ses.newkeys->recv_crypt_mode->start(recv_cipher, 
-			recv_IV, recv_key, 
-			ses.newkeys->recv_algo_crypt->keysize, 0, 
-			&ses.newkeys->recv_cipher_state) != CRYPT_OK) {
-		dropbear_exit("crypto error");
-	}
-
-	trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
-	if (trans_cipher < 0)
-	    dropbear_exit("crypto error");
-	if (ses.newkeys->trans_crypt_mode->start(trans_cipher, 
-			trans_IV, trans_key, 
-			ses.newkeys->trans_algo_crypt->keysize, 0, 
-			&ses.newkeys->trans_cipher_state) != CRYPT_OK) {
-		dropbear_exit("crypto error");
 	if (ses.newkeys->recv_algo_crypt->cipherdesc != NULL) {
-		if (cbc_start(
-			find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name),
+		recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
+		if (recv_cipher < 0)
+			dropbear_exit("crypto error");
+		if (ses.newkeys->recv_crypt_mode->start(recv_cipher, 
 				recv_IV, recv_key, 
 				ses.newkeys->recv_algo_crypt->keysize, 0, 
-				&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
+				&ses.newkeys->recv_cipher_state) != CRYPT_OK) {
 			dropbear_exit("crypto error");
 		}
 	}
 
 	if (ses.newkeys->trans_algo_crypt->cipherdesc != NULL) {
-		if (cbc_start(
-			find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name),
+		trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
+		if (trans_cipher < 0)
+			dropbear_exit("crypto error");
+		if (ses.newkeys->trans_crypt_mode->start(trans_cipher, 
 				trans_IV, trans_key, 
 				ses.newkeys->trans_algo_crypt->keysize, 0, 
-				&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
+				&ses.newkeys->trans_cipher_state) != CRYPT_OK) {
 			dropbear_exit("crypto error");
 		}
 	}
-	
+
 	/* MAC keys */
 	if (ses.newkeys->trans_algo_mac->hashdesc != NULL) {
 		hashkeys(ses.newkeys->transmackey, 

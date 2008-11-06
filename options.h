@@ -82,17 +82,15 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * Protocol RFC requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
  * (eg AES256 as well as AES128) will result in a minimal size increase.*/
+/*
 #define DROPBEAR_AES128
 #define DROPBEAR_3DES
 #define DROPBEAR_AES256
 #define DROPBEAR_BLOWFISH
 #define DROPBEAR_TWOFISH256
 #define DROPBEAR_TWOFISH128
+*/
 
-/* Enable "Counter Mode" for ciphers. This is more secure than normal
- * CBC mode against certain attacks. This adds around 1kB to binary 
- * size and is recommended for most cases */
-#define DROPBEAR_ENABLE_CTR_MODE
 /* You can compile with no encryption if you want. In some circumstances
  * this could be safe securitywise, though make sure you know what
  * you're doing. Anyone can see everything that goes over the wire, so
@@ -104,6 +102,11 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * all ciphers including "none" as the server, then recompile a special
  * "dbclient-insecure" client. */
 #define DROPBEAR_NONE_CIPHER
+
+/* Enable "Counter Mode" for ciphers. This is more secure than normal
+ * CBC mode against certain attacks. This adds around 1kB to binary 
+ * size and is recommended for most cases */
+#define DROPBEAR_ENABLE_CTR_MODE
 
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
@@ -117,15 +120,19 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * These hashes are also used for public key fingerprints in logs.
  * If you disable MD5, Dropbear will fall back to SHA1 fingerprints,
  * which are not the standard form. */
+/*
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_SHA1_96_HMAC
 #define DROPBEAR_MD5_HMAC
+*/
 
 /* You can also disable integrity. Don't bother disabling this if you're
  * still using a cipher, it's relatively cheap. Don't disable this if you're
  * using 'none' cipher, since it's dead simple to run arbitrary commands
- * on the remote host. Beware. */
-/*#define DROPBEAR_NONE_INTEGRITY*/
+ * on the remote host. Beware.
+ * Note again, for the client you will have to disable other hashes above
+ * to use this. */
+#define DROPBEAR_NONE_INTEGRITY
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.

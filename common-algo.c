@@ -151,7 +151,7 @@ algo_type sshciphers[] = {
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
 #endif
 #ifdef DROPBEAR_NONE_CIPHER
-	{"none", 0, (void*)&dropbear_nocipher, 1},
+	{"none", 0, (void*)&dropbear_nocipher, 1, &dropbear_mode_none},
 #endif
 	{NULL, 0, NULL, 0}
 };
