@@ -75,6 +75,7 @@ static void printhelp() {
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
+					"-I <idle_timeout>  (0 is never, default %d)\n"
 #ifdef ENABLE_CLI_NETCAT
 					"-B <endhost:endport> Netcat-alike forwarding\n"
 #endif				
@@ -85,7 +86,7 @@ static void printhelp() {
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname,
-					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE);
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 					
 }
 
@@ -110,6 +111,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
+	char* idle_timeout_arg = NULL;
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -261,6 +263,9 @@ void cli_getopts(int argc, char ** argv) {
 				case 'K':
 					next = &keepalive_arg;
 					break;
+				case 'I':
+					next = &idle_timeout_arg;
+					break;
 #ifdef DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -366,6 +371,12 @@ void cli_getopts(int argc, char ** argv) {
 	if (keepalive_arg) {
 		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
+		}
+	}
+
+	if (idle_timeout_arg) {
+		if (m_str_to_uint(idle_timeout_arg, &opts.idle_timeout_secs) == DROPBEAR_FAILURE) {
+			dropbear_exit("Bad idle_timeout '%s'", idle_timeout_arg);
 		}
 	}
 

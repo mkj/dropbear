@@ -63,6 +63,7 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	ses.maxfd = MAX(sock_in, sock_out);
 
 	ses.connect_time = 0;
+	ses.last_trx_packet_time = 0;
 	ses.last_packet_time = 0;
 	
 	if (pipe(ses.signal_pipe) < 0) {
@@ -258,7 +259,7 @@ void session_identification() {
 		ses.remoteclosed();
 	}
 
-    /* If they send more than 50 lines, something is wrong */
+	/* If they send more than 50 lines, something is wrong */
 	for (i = 0; i < 50; i++) {
 		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));
 
@@ -283,11 +284,11 @@ void session_identification() {
 		memcpy(ses.remoteident, linebuf, len);
 	}
 
-    /* Shall assume that 2.x will be backwards compatible. */
-    if (strncmp(ses.remoteident, "SSH-2.", 6) != 0
-            && strncmp(ses.remoteident, "SSH-1.99-", 9) != 0) {
-        dropbear_exit("Incompatible remote version '%s'", ses.remoteident);
-    }
+	/* Shall assume that 2.x will be backwards compatible. */
+	if (strncmp(ses.remoteident, "SSH-2.", 6) != 0
+			&& strncmp(ses.remoteident, "SSH-1.99-", 9) != 0) {
+		dropbear_exit("Incompatible remote version '%s'", ses.remoteident);
+	}
 
 	TRACE(("remoteident: %s", ses.remoteident))
 
@@ -399,8 +400,13 @@ static void checktimeouts() {
 	}
 	
 	if (opts.keepalive_secs > 0 
-		&& now - ses.last_packet_time >= opts.keepalive_secs) {
+			&& now - ses.last_trx_packet_time >= opts.keepalive_secs) {
 		send_msg_ignore();
+	}
+
+	if (opts.idle_timeout_secs > 0 && ses.last_packet_time > 0
+			&& now - ses.last_packet_time >= opts.idle_timeout_secs) {
+		dropbear_close("Idle timeout");
 	}
 }
 
@@ -414,6 +420,8 @@ static long select_timeout() {
 		ret = MIN(AUTH_TIMEOUT, ret);
 	if (opts.keepalive_secs > 0)
 		ret = MIN(opts.keepalive_secs, ret);
+    if (opts.idle_timeout_secs > 0)
+        ret = MIN(opts.idle_timeout_secs, ret);
 	return ret;
 }
 

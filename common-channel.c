@@ -691,7 +691,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		dropbear_exit("received data after eof");
 	}
 
- 	if (fd < 0) {
+	if (fd < 0) {
 		/* If we have encountered failed write, the far side might still
 		 * be sending data without having yet received our close notification.
 		 * We just drop the data. */

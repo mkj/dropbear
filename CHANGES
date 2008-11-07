@@ -16,7 +16,7 @@
   to end up at host3 via the other two, using SSH TCP forwarding. It's a bit
   like onion-routing. All connections are established from the local machine.
   The comma-separated syntax can also be used for scp/rsync, eg
-	  scp -S dbclient matt@martello,root@wrt,canyons:/tmp/dump .
+	  rsync -a -e dbclient m@gateway,m2@host,martello:/home/matt/ ~/backup/
   to bounce through a few hosts.
 
 - Allow restrictions on authorized_keys logins such as restricting commands

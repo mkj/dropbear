@@ -72,6 +72,7 @@ void write_packet() {
 		}
 	} 
 	
+	ses.last_trx_packet_time = time(NULL);
 	ses.last_packet_time = time(NULL);
 
 	if (written == 0) {

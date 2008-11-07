@@ -148,11 +148,15 @@ struct sshsession {
 
 	unsigned char lastpacket; /* What the last received packet type was */
 	
-    int signal_pipe[2]; /* stores endpoints of a self-pipe used for
+	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
 						
-	time_t last_packet_time; /* time of the last packet transmission, for
+	time_t last_trx_packet_time; /* time of the last packet transmission, for
 							keepalive purposes */
+
+	time_t last_packet_time; /* time of the last packet transmission or receive, for
+								idle timeout purposes */
+
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;

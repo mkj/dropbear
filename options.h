@@ -149,9 +149,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * but there's an interface via a PAM module - don't bother using it otherwise.
  * You can't enable both PASSWORD and PAM. */
 
-#define ENABLE_SVR_PASSWORD_AUTH
+/*#define ENABLE_SVR_PASSWORD_AUTH*/
 /* PAM requires ./configure --enable-pam */
-/*#define ENABLE_SVR_PAM_AUTH*/
+#define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Wether to ake public key options in authorized_keys file into account */
@@ -257,6 +257,10 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* Ensure that data is transmitted every KEEPALIVE seconds. This can
 be overridden at runtime with -K. 0 disables keepalives */
 #define DEFAULT_KEEPALIVE 0
+
+/* Ensure that data is received within IDLE_TIMEOUT seconds. This can
+be overridden at runtime with -I. 0 disables idle timeouts */
+#define DEFAULT_IDLE_TIMEOUT 0
 
 /* The default path. This will often get replaced by the shell */
 #define DEFAULT_PATH "/usr/bin:/bin"
