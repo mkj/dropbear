@@ -24,7 +24,10 @@ before user login (default: none).
 dsskeyfile.
 Use the contents of the file
 .I dsskey
-for the dss host key (default: /etc/dropbear/dropbear_dss_host_key).
+for the DSS host key (default: /etc/dropbear/dropbear_dss_host_key). 
+Note that 
+some SSH implementations
+use the term "DSA" rather than "DSS", they mean the same thing.
 This file is generated with
 .BR dropbearkey (8).
 .TP
