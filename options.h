@@ -149,9 +149,9 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
  * but there's an interface via a PAM module - don't bother using it otherwise.
  * You can't enable both PASSWORD and PAM. */
 
-/*#define ENABLE_SVR_PASSWORD_AUTH*/
+#define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-#define ENABLE_SVR_PAM_AUTH
+/*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Wether to ake public key options in authorized_keys file into account */
