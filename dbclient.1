@@ -102,7 +102,7 @@ Use the standard input/output of the program \fIproxy_command\fR rather than usi
 a normal TCP connection. A hostname should be still be provided, as this is used for
 comparing saved hostkeys.
 .TP
-.B \B \fIendhost:endport
+.B \-B \fIendhost:endport
 "Netcat-alike" mode, where Dropbear will connect to the given host, then create a
 forwarded connection to \fIendhost\fR. This will then be presented as dbclient's
 standard input/output.
@@ -116,6 +116,10 @@ This syntax can also be used with scp or rsync (specifying dbclient as the
 ssh/rsh command). A file can be "bounced" through multiple SSH hops, eg
 
 scp -S dbclient matt@martello,root@wrt,canyons:/tmp/dump .
+
+Note that hostnames are resolved by the prior hop (so "canyons" would be resolved by the host "wrt")
+in the example above, the same way as other -L TCP forwarded hosts are. Host keys are 
+checked locally based on the given hostname.
 
 .SH ENVIRONMENT
 .TP
