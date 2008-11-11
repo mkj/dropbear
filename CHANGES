@@ -12,12 +12,18 @@
 
 - Combine netcat-alike and proxy support to allow "multihop" connections, with
   comma-separated host syntax.  Allows running
+
 	  dbclient user1@host1,user2@host2,user3@host3
+
   to end up at host3 via the other two, using SSH TCP forwarding. It's a bit
   like onion-routing. All connections are established from the local machine.
   The comma-separated syntax can also be used for scp/rsync, eg
+
 	  rsync -a -e dbclient m@gateway,m2@host,martello:/home/matt/ ~/backup/
+
   to bounce through a few hosts.
+
+- Add -I "idle timeout" option (contributed by Farrell Aultman)
 
 - Allow restrictions on authorized_keys logins such as restricting commands
   to be run etc. This is a subset of those allowed by OpenSSH, doesn't
