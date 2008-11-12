@@ -1,4 +1,4 @@
-0.52
+0.52 - Wed 12 November 2008
 
 - Add "netcat-alike" option (-B) to dbclient, allowing Dropbear to tunnel
   standard input/output to a TCP port-forwarded remote host.
