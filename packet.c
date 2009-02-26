@@ -249,17 +249,16 @@ void decrypt_packet() {
 	buf_setpos(ses.decryptreadbuf, blocksize);
 
 	/* decrypt it */
-	while (ses.readbuf->pos < ses.readbuf->len - macsize) {
-		if (ses.keys->recv_crypt_mode->decrypt(
-					buf_getptr(ses.readbuf, blocksize), 
-					buf_getwriteptr(ses.decryptreadbuf, blocksize),
-					blocksize,
-					&ses.keys->recv_cipher_state) != CRYPT_OK) {
-			dropbear_exit("error decrypting");
-		}
-		buf_incrpos(ses.readbuf, blocksize);
-		buf_incrwritepos(ses.decryptreadbuf, blocksize);
+	len = ses.readbuf->len - macsize - ses.readbuf->pos;
+	if (ses.keys->recv_crypt_mode->decrypt(
+				buf_getptr(ses.readbuf, len), 
+				buf_getwriteptr(ses.decryptreadbuf, len),
+				len,
+				&ses.keys->recv_cipher_state) != CRYPT_OK) {
+		dropbear_exit("error decrypting");
 	}
+	buf_incrpos(ses.readbuf, len);
+	buf_incrwritepos(ses.decryptreadbuf, len);
 
 	/* check the hmac */
 	buf_setpos(ses.readbuf, ses.readbuf->len - macsize);
@@ -463,7 +462,7 @@ void encrypt_packet() {
 	buffer * writebuf; /* the packet which will go on the wire */
 	buffer * clearwritebuf; /* unencrypted, possibly compressed */
 	unsigned char type;
-	unsigned int clear_len;
+	unsigned int len;
 	
 	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
@@ -483,12 +482,12 @@ void encrypt_packet() {
 	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
 	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	clear_len = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+	len = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
 
 #ifndef DISABLE_ZLIB
-	clear_len += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
+	len += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
 #endif
-	clearwritebuf = buf_new(clear_len);
+	clearwritebuf = buf_new(len);
 	buf_setlen(clearwritebuf, PACKET_PAYLOAD_OFF);
 	buf_setpos(clearwritebuf, PACKET_PAYLOAD_OFF);
 
@@ -540,17 +539,16 @@ void encrypt_packet() {
 	writebuf = buf_new(clearwritebuf->len + macsize);
 
 	/* encrypt it */
-	while (clearwritebuf->pos < clearwritebuf->len) {
-		if (ses.keys->trans_crypt_mode->encrypt(
-					buf_getptr(clearwritebuf, blocksize),
-					buf_getwriteptr(writebuf, blocksize),
-					blocksize,
-					&ses.keys->trans_cipher_state) != CRYPT_OK) {
-			dropbear_exit("error encrypting");
-		}
-		buf_incrpos(clearwritebuf, blocksize);
-		buf_incrwritepos(writebuf, blocksize);
+	len = clearwritebuf->len;
+	if (ses.keys->trans_crypt_mode->encrypt(
+				buf_getptr(clearwritebuf, len),
+				buf_getwriteptr(writebuf, len),
+				len,
+				&ses.keys->trans_cipher_state) != CRYPT_OK) {
+		dropbear_exit("error encrypting");
 	}
+	buf_incrpos(clearwritebuf, len);
+	buf_incrwritepos(writebuf, len);
 
 	/* now add a hmac and we're done */
 	writemac(writebuf, clearwritebuf);
