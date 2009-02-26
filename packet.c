@@ -46,14 +46,16 @@ static buffer* buf_decompress(buffer* buf, unsigned int len);
 static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 #endif
 
-/* non-blocking function writing out a current encrypted packet */
-void write_packet() {
+/* non-blocking function writing out a current encrypted packet. Returns
+ * DROPBEAR_SUCCESS if entire packet was written, DROPBEAR_FAILURE
+ * otherwise */
+static int write_packet() {
 
 	int len, written;
+	int ret = DROPBEAR_FAILURE;
 	buffer * writebuf = NULL;
 	
 	TRACE(("enter write_packet"))
-	dropbear_assert(!isempty(&ses.writequeue));
 
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
@@ -84,12 +86,19 @@ void write_packet() {
 		dequeue(&ses.writequeue);
 		buf_free(writebuf);
 		writebuf = NULL;
+		ret = DROPBEAR_SUCCESS;
 	} else {
 		/* More packet left to write, leave it in the queue for later */
 		buf_incrpos(writebuf, written);
 	}
 
 	TRACE(("leave write_packet"))
+	return ret;
+}
+
+void write_packets() {
+	/* keep writing packets while we can. */
+	while (!isempty(&ses.writequeue) && write_packet() == DROPBEAR_SUCCESS) {}
 }
 
 /* Non-blocking function reading available portion of a packet into the

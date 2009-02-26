@@ -28,7 +28,7 @@
 
 #include "includes.h"
 
-void write_packet();
+void write_packets();
 void read_packet();
 void decrypt_packet();
 void encrypt_packet();
