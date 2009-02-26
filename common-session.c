@@ -189,7 +189,7 @@ void session_loop(void(*loophandler)()) {
 		/* process session socket's incoming/outgoing data */
 		if (ses.sock_out != -1) {
 			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
-				write_packets();
+				write_packet();
 			}
 		}
 
