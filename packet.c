@@ -36,7 +36,7 @@
 #include "channel.h"
 
 static void read_packet_init();
-static void writemac(buffer * outputbuffer, buffer * clearwritebuf);
+static void make_mac(buffer * clearwritebuf, unsigned char *output_mac);
 static int checkmac(buffer* hashbuf, buffer* readbuf);
 
 #define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
@@ -449,11 +449,12 @@ void maybe_flush_reply_queue() {
 void encrypt_packet() {
 
 	unsigned char padlen;
-	unsigned char blocksize, macsize;
-	buffer * writebuf; /* the packet which will go on the wire */
-	buffer * clearwritebuf; /* unencrypted, possibly compressed */
+	unsigned char blocksize, mac_size;
+	buffer * writebuf; /* the packet which will go on the wire. This is 
+	                      encrypted in-place. */
 	unsigned char type;
-	unsigned int len;
+	unsigned int len, encrypt_buf_size;
+	unsigned char mac_bytes[MAX_MAC_LEN];
 	
 	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
@@ -468,33 +469,35 @@ void encrypt_packet() {
 	}
 		
 	blocksize = ses.keys->trans_algo_crypt->blocksize;
-	macsize = ses.keys->trans_algo_mac->hashsize;
+	mac_size = ses.keys->trans_algo_mac->hashsize;
 
 	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
 	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	len = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+	encrypt_buf_size = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+	/* add space for the MAC at the end */
+	encrypt_buf_size += mac_size;
 
 #ifndef DISABLE_ZLIB
-	len += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
+	encrypt_buf_size += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
 #endif
-	clearwritebuf = buf_new(len);
-	buf_setlen(clearwritebuf, PACKET_PAYLOAD_OFF);
-	buf_setpos(clearwritebuf, PACKET_PAYLOAD_OFF);
+	writebuf = buf_new(encrypt_buf_size);
+	buf_setlen(writebuf, PACKET_PAYLOAD_OFF);
+	buf_setpos(writebuf, PACKET_PAYLOAD_OFF);
 
 	buf_setpos(ses.writepayload, 0);
 
 #ifndef DISABLE_ZLIB
 	/* compression */
 	if (is_compress_trans()) {
-		buf_compress(clearwritebuf, ses.writepayload, ses.writepayload->len);
+		buf_compress(writebuf, ses.writepayload, ses.writepayload->len);
 	} else
 #endif
 	{
-		memcpy(buf_getwriteptr(clearwritebuf, ses.writepayload->len),
+		memcpy(buf_getwriteptr(writebuf, ses.writepayload->len),
 				buf_getptr(ses.writepayload, ses.writepayload->len),
 				ses.writepayload->len);
-		buf_incrwritepos(clearwritebuf, ses.writepayload->len);
+		buf_incrwritepos(writebuf, ses.writepayload->len);
 	}
 
 	/* finished with payload */
@@ -503,52 +506,45 @@ void encrypt_packet() {
 
 	/* length of padding - packet length must be a multiple of blocksize,
 	 * with a minimum of 4 bytes of padding */
-	padlen = blocksize - (clearwritebuf->len) % blocksize;
+	padlen = blocksize - (writebuf->len) % blocksize;
 	if (padlen < 4) {
 		padlen += blocksize;
 	}
 	/* check for min packet length */
-	if (clearwritebuf->len + padlen < MIN_PACKET_LEN) {
+	if (writebuf->len + padlen < MIN_PACKET_LEN) {
 		padlen += blocksize;
 	}
 
-	buf_setpos(clearwritebuf, 0);
+	buf_setpos(writebuf, 0);
 	/* packet length excluding the packetlength uint32 */
-	buf_putint(clearwritebuf, clearwritebuf->len + padlen - 4);
+	buf_putint(writebuf, writebuf->len + padlen - 4);
 
 	/* padding len */
-	buf_putbyte(clearwritebuf, padlen);
+	buf_putbyte(writebuf, padlen);
 	/* actual padding */
-	buf_setpos(clearwritebuf, clearwritebuf->len);
-	buf_incrlen(clearwritebuf, padlen);
-	genrandom(buf_getptr(clearwritebuf, padlen), padlen);
+	buf_setpos(writebuf, writebuf->len);
+	buf_incrlen(writebuf, padlen);
+	genrandom(buf_getptr(writebuf, padlen), padlen);
 
-	/* do the actual encryption */
-	buf_setpos(clearwritebuf, 0);
-	/* create a new writebuffer, this is freed when it has been put on the 
-	 * wire by writepacket() */
-	writebuf = buf_new(clearwritebuf->len + macsize);
+	make_mac(writebuf, mac_bytes);
 
-	/* encrypt it */
-	len = clearwritebuf->len;
+	/* do the actual encryption, in-place */
+	buf_setpos(writebuf, 0);
+	/* encrypt it in-place*/
+	len = writebuf->len;
 	if (ses.keys->trans_crypt_mode->encrypt(
-				buf_getptr(clearwritebuf, len),
+				buf_getptr(writebuf, len),
 				buf_getwriteptr(writebuf, len),
 				len,
 				&ses.keys->trans_cipher_state) != CRYPT_OK) {
 		dropbear_exit("error encrypting");
 	}
-	buf_incrpos(clearwritebuf, len);
-	buf_incrwritepos(writebuf, len);
+	buf_incrpos(writebuf, len);
 
-	/* now add a hmac and we're done */
-	writemac(writebuf, clearwritebuf);
+    /* stick the MAC on it */
+    buf_putbytes(writebuf, mac_bytes, mac_size);
 
-	/* clearwritebuf is finished with */
-	buf_free(clearwritebuf);
-	clearwritebuf = NULL;
-
-	/* enqueue the packet for sending */
+	/* enqueue the packet for sending. It will get freed after transmission. */
 	buf_setpos(writebuf, 0);
 	enqueue(&ses.writequeue, (void*)writebuf);
 
@@ -561,18 +557,15 @@ void encrypt_packet() {
 
 
 /* Create the packet mac, and append H(seqno|clearbuf) to the output */
-static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
-
-	unsigned int macsize;
+/* output_mac must have ses.keys->trans_algo_mac->hashsize bytes. */
+static void make_mac(buffer * clearwritebuf, unsigned char *output_mac) {
 	unsigned char seqbuf[4];
-	unsigned char tempbuf[MAX_MAC_LEN];
 	unsigned long bufsize;
 	hmac_state hmac;
 
 	TRACE(("enter writemac"))
 
-	macsize = ses.keys->trans_algo_mac->hashsize;
-	if (macsize > 0) {
+	if (ses.keys->trans_algo_mac->hashsize > 0) {
 		/* calculate the mac */
 		if (hmac_init(&hmac, 
 					find_hash(ses.keys->trans_algo_mac->hashdesc->name), 
@@ -596,12 +589,10 @@ static void writemac(buffer * outputbuffer, buffer * clearwritebuf) {
 			dropbear_exit("HMAC error");
 		}
 	
-		bufsize = sizeof(tempbuf);
-		if (hmac_done(&hmac, tempbuf, &bufsize) 
-				!= CRYPT_OK) {
+        bufsize = MAX_MAC_LEN;
+		if (hmac_done(&hmac, output_mac, &bufsize) != CRYPT_OK) {
 			dropbear_exit("HMAC error");
 		}
-		buf_putbytes(outputbuffer, tempbuf, macsize);
 	}
 	TRACE(("leave writemac"))
 }
