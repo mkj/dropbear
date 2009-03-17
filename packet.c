@@ -250,8 +250,6 @@ void decrypt_packet() {
 	}
 	buf_incrpos(ses.readbuf, len);
 
-	printhex("readbuf decrypted", ses.readbuf->data, ses.readbuf->len);
-
 	/* check the hmac */
 	if (checkmac() != DROPBEAR_SUCCESS) {
 		dropbear_exit("Integrity error");

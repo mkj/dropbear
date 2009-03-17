@@ -46,9 +46,10 @@
 /*#define NO_FAST_EXPTMOD*/
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
-several kB in binary size, however will make the symmetrical ciphers (AES, DES
-etc) slower (perhaps by 50%). Recommended for most small systems. */
-#define DROPBEAR_SMALL_CODE
+several kB in binary size however will make the symmetrical ciphers and hashes
+slower, perhaps by 50%. Recommended for small systems that aren't doing
+much traffic. */
+/*#define DROPBEAR_SMALL_CODE*/
 
 /* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
