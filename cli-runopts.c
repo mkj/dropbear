@@ -90,10 +90,6 @@ static void printhelp() {
 					
 }
 
-/* Note that options that affect the transport or auth layers (such as -i or
- * -W) should also be passed through to a multi-hop child proxycmd, in
- * parse_multihop_hostname(). */
-
 void cli_getopts(int argc, char ** argv) {
 
 	unsigned int i, j;
@@ -473,9 +469,9 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 		if (cli_opts.remoteport == NULL) {
 			cli_opts.remoteport = "22";
 		}
-		cmd_len = strlen(argv0) + strlen(remainder) 
+		cmd_len = strlen(remainder) 
 			+ strlen(cli_opts.remotehost) + strlen(cli_opts.remoteport)
-			+ 30;
+			+ strlen(argv0) + 30;
 		cli_opts.proxycmd = m_malloc(cmd_len);
 		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s", 
 				argv0, cli_opts.remotehost, cli_opts.remoteport, remainder);
