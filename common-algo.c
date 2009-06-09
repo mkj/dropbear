@@ -31,7 +31,9 @@
 
 static int void_cipher(const unsigned char* in, unsigned char* out,
 		unsigned long len, void *cipher_state) {
-	memcpy(out, in, len);
+	if (in != out) {
+		memmove(out, in, len);
+	}
 	return CRYPT_OK;
 }
 
