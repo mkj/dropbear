@@ -91,7 +91,6 @@ static void printhelp() {
 }
 
 void cli_getopts(int argc, char ** argv) {
-
 	unsigned int i, j;
 	char ** next = 0;
 	unsigned int cmdlen;
@@ -112,6 +111,7 @@ void cli_getopts(int argc, char ** argv) {
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
+	char *host_arg = NULL;
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -304,12 +304,8 @@ void cli_getopts(int argc, char ** argv) {
 
 			/* Either the hostname or commands */
 
-			if (cli_opts.remotehost == NULL) {
-#ifdef ENABLE_CLI_MULTIHOP
-				parse_multihop_hostname(argv[i], argv[0]);
-#else
-				parse_hostname(argv[i]);
-#endif
+			if (host_arg == NULL) {
+				host_arg = argv[i];
 			} else {
 
 				/* this is part of the commands to send - after this we
@@ -338,7 +334,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	/* And now a few sanity checks and setup */
 
-	if (cli_opts.remotehost == NULL) {
+	if (host_arg == NULL) {
 		printhelp();
 		exit(EXIT_FAILURE);
 	}
@@ -385,7 +381,15 @@ void cli_getopts(int argc, char ** argv) {
 		dropbear_log(LOG_INFO, "Ignoring command '%s' in netcat mode", cli_opts.cmd);
 	}
 #endif
-	
+
+	/* The hostname gets set up last, since
+	 * in multi-hop mode it will require knowledge
+	 * of other flags such as -i */
+#ifdef ENABLE_CLI_MULTIHOP
+	parse_multihop_hostname(host_arg, argv[0]);
+#else
+	parse_hostname(host_arg);
+#endif
 }
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
@@ -398,14 +402,12 @@ static void loadidentityfile(const char* filename) {
 	key = new_sign_key();
 	keytype = DROPBEAR_SIGNKEY_ANY;
 	if ( readhostkey(filename, key, &keytype) != DROPBEAR_SUCCESS ) {
-
 		fprintf(stderr, "Failed loading keyfile '%s'\n", filename);
 		sign_key_free(key);
-
 	} else {
-
 		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
 		nextkey->key = key;
+		nextkey->filename = m_strdup(filename);
 		nextkey->next = cli_opts.privkeys;
 		nextkey->type = keytype;
 		cli_opts.privkeys = nextkey;
@@ -414,6 +416,39 @@ static void loadidentityfile(const char* filename) {
 #endif
 
 #ifdef ENABLE_CLI_MULTIHOP
+
+static char*
+multihop_passthrough_args() {
+	char *ret;
+	int total;
+	unsigned int len = 0;
+	struct SignKeyList *nextkey;
+	/* Fill out -i and -W options that make sense for all
+	 * the intermediate processes */
+	for (nextkey = cli_opts.privkeys; nextkey; nextkey = nextkey->next)
+	{
+		len += 3 + strlen(nextkey->filename);
+	}
+	len += 20; // space for -W <size>, terminator.
+	ret = m_malloc(len);
+	total = 0;
+
+	if (opts.recv_window != DEFAULT_RECV_WINDOW)
+	{
+		int written = snprintf(ret+total, len-total, "-W %d", opts.recv_window);
+		total += written;
+	}
+
+	for (nextkey = cli_opts.privkeys; nextkey; nextkey = nextkey->next)
+	{
+		const size_t size = len - total;
+		int written = snprintf(ret+total, size, "-i %s", nextkey->filename);
+		dropbear_assert(written < size);
+		total += written;
+	}
+
+	return ret;
+}
 
 /* Sets up 'onion-forwarding' connections. This will spawn
  * a separate dbclient process for each hop.
@@ -429,6 +464,7 @@ static void loadidentityfile(const char* filename) {
  */
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0) {
 	char *userhostarg = NULL;
+	char *hostbuf = NULL;
 	char *last_hop = NULL;;
 	char *remainder = NULL;
 
@@ -441,11 +477,12 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 			&& strchr(cli_opts.username, ',') 
 			&& strchr(cli_opts.username, '@')) {
 		unsigned int len = strlen(orighostarg) + strlen(cli_opts.username) + 2;
-		userhostarg = m_malloc(len);
-		snprintf(userhostarg, len, "%s@%s", cli_opts.username, orighostarg);
+		hostbuf = m_malloc(len);
+		snprintf(hostbuf, len, "%s@%s", cli_opts.username, orighostarg);
 	} else {
-		userhostarg = m_strdup(orighostarg);
+		hostbuf = m_strdup(orighostarg);
 	}
+	userhostarg = hostbuf;
 
 	last_hop = strrchr(userhostarg, ',');
 	if (last_hop) {
@@ -463,19 +500,24 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 	if (last_hop) {
 		/* Set up the proxycmd */
 		unsigned int cmd_len = 0;
+		char *passthrough_args = multihop_passthrough_args();
 		if (cli_opts.proxycmd) {
 			dropbear_exit("-J can't be used with multihop mode");
 		}
 		if (cli_opts.remoteport == NULL) {
 			cli_opts.remoteport = "22";
 		}
-		cmd_len = strlen(remainder) 
+		cmd_len = strlen(argv0) + strlen(remainder) 
 			+ strlen(cli_opts.remotehost) + strlen(cli_opts.remoteport)
-			+ strlen(argv0) + 30;
+			+ strlen(passthrough_args)
+			+ 30;
 		cli_opts.proxycmd = m_malloc(cmd_len);
-		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s", 
-				argv0, cli_opts.remotehost, cli_opts.remoteport, remainder);
+		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s %s", 
+				argv0, cli_opts.remotehost, cli_opts.remoteport, 
+				passthrough_args, remainder);
+		m_free(passthrough_args);
 	}
+	m_free(hostbuf);
 }
 #endif /* !ENABLE_CLI_MULTIHOP */
 

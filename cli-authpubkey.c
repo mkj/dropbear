@@ -53,6 +53,7 @@ void cli_pubkeyfail() {
 	}
 
 	sign_key_free(cli_ses.lastprivkey->key); /* It won't be used again */
+	m_free(cli_ses.lastprivkey->filename);
 	m_free(cli_ses.lastprivkey);
 
 	TRACE(("leave cli_pubkeyfail"))
