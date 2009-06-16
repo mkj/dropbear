@@ -91,7 +91,7 @@ void recv_msg_userauth_banner() {
 		}
 	}
 
-	printf("%s\n", banner);
+	fprintf(stderr, "%s\n", banner);
 
 out:
 	m_free(banner);
