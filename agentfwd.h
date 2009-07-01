@@ -23,11 +23,11 @@
  * SOFTWARE. */
 #ifndef _AGENTFWD_H_
 #define _AGENTFWD_H_
-#ifndef DISABLE_AGENTFWD
 
 #include "includes.h"
 #include "chansession.h"
 #include "channel.h"
+#include "auth.h"
 
 /* An agent reply can be reasonably large, as it can
  * contain a list of all public keys held by the agent.
@@ -39,14 +39,13 @@ void agentsetauth(struct ChanSess *chansess);
 void agentcleanup(struct ChanSess * chansess);
 void agentset(struct ChanSess *chansess);
 
-SignKeyList * load_agent_keys();
+void load_agent_keys();
 
 #ifdef __hpux
 #define seteuid(a)       setresuid(-1, (a), -1)
 #define setegid(a)       setresgid(-1, (a), -1)
 #endif
 
-extern const struct ChanSess chan_cli_agent;
+extern const struct ChanType cli_chan_agent;
 
-#endif /* DROPBEAR_AGENTFWD */
 #endif /* _AGENTFWD_H_ */

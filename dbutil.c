@@ -295,19 +295,16 @@ int dropbear_listen(const char* address, const char* port,
 	return nsock;
 }
 
-/* Connect to a given unix socket. The socket is not non-blocking */
+/* Connect to a given unix socket. The socket is blocking */
 #ifdef ENABLE_CONNECT_UNIX
-int connect_unix(const char* addr)
-{
+int connect_unix(const char* addr) {
 	struct sockaddr_un egdsock;
 	int fd = -1;
 
 	memset((void*)&egdsock, 0x0, sizeof(egdsock));
 	egdsock.sun_family = AF_UNIX;
 	strlcpy(egdsock.sun_path, addr, sizeof(egdsock.sun_path));
-
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
-
 	return fd;
 }
 #endif

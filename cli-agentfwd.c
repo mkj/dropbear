@@ -47,7 +47,7 @@
 
 static int new_agent_chan(struct Channel * channel);
 
-const struct ChanType chan_cli_agent = {
+const struct ChanType cli_chan_agent = {
 	0, /* sepfds */
 	"auth-agent@openssh.com",
 	new_agent_chan,
@@ -85,8 +85,8 @@ static int new_agent_chan(struct Channel * channel) {
 
 	ses.maxfd = MAX(ses.maxfd, fd);
 
-	channel->infd = fd;
-	channel->outfd = fd;
+	channel->readfd = fd;
+	channel->writefd = fd;
 
 	// success
 	return 0;
@@ -151,7 +151,7 @@ out:
 	return inbuf;
 }
 
-static SignKeyList * agent_get_key_list(int fd)
+static struct SignKeyList * agent_get_key_list(int fd)
 {
 	buffer * inbuf = NULL;
 	unsigned int num = 0;
@@ -183,7 +183,7 @@ static SignKeyList * agent_get_key_list(int fd)
 	num = buf_getint(inbuf);
 	for (i = 0; i < num; i++) {
 		sign_key * pubkey = NULL;
-		char key_type = DROPBEAR_SIGNKEY_ANY;
+		int key_type = DROPBEAR_SIGNKEY_ANY;
 		struct SignKeyList *nextkey = NULL;
 
 		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
@@ -218,16 +218,15 @@ out:
 	return retkey;
 }
 
-/* return DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-SignKeyList * load_agent_keys()
+void load_agent_keys()
 {
 
-	SignKeyList * ret_list;
+	struct SignKeyList * ret_list;
 	int fd;
 	fd = connect_agent();
 	if (fd < 0) {
 		dropbear_log(LOG_INFO, "Failed to connect to agent");
-		return NULL;
+		return;
 	}
 
 	ret_list =  agent_get_key_list(fd);

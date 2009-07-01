@@ -215,6 +215,17 @@ struct serversession {
 
 };
 
+struct protocol {
+	int sock; /* read/write with this */
+	buffer * readbuf; /* Pending input data, should read a packet's worth */
+	struct Queue writequeue; /* A queue of output buffers to send */
+	void (*process)(); /* To be called after reading */
+	size_t (*bytes_to_read)();
+	void * state; /* protocol specific */
+	void (*protocol_closed)(); /* to be run when the sock gets closed */
+	void (*loop_handler)(); /* to run at end of each loop */
+};
+
 typedef enum {
 	KEX_NOTHING,
 	KEXINIT_RCVD,

@@ -35,6 +35,7 @@
 #include "service.h"
 #include "runopts.h"
 #include "chansession.h"
+#include "agentfwd.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();

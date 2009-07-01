@@ -60,7 +60,7 @@ struct ChanSess {
 	unsigned char x11singleconn;
 #endif
 
-#ifndef DISABLE_AGENTFWD
+#ifdef ENABLE_SVR_AGENTFWD
 	struct Listener * agentlistener;
 	char * agentfile;
 	char * agentdir;

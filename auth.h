@@ -26,6 +26,7 @@
 #define _AUTH_H_
 
 #include "includes.h"
+#include "signkey.h"
 #include "chansession.h"
 
 void svr_authinitialise();
@@ -124,8 +125,10 @@ struct AuthState {
 };
 
 /* Sources for signing keys */
-#define SIGNKEY_SOURCE_RAW_FILE 1
-#define SIGNKEY_SOURCE_AGENT 21
+typedef enum {
+	SIGNKEY_SOURCE_RAW_FILE,
+	SIGNKEY_SOURCE_AGENT,
+} signkey_source;
 
 struct SignKeyList;
 /* A singly linked list of signing keys */
@@ -134,7 +137,7 @@ struct SignKeyList {
 	sign_key *key;
 	int type; /* The type of key */
 	struct SignKeyList *next;
-	int source;
+	signkey_source source;
 	char *filename;
 	/* the buffer? for encrypted keys, so we can later get
 	 * the private key portion */
