@@ -39,7 +39,7 @@ void agentsetauth(struct ChanSess *chansess);
 void agentcleanup(struct ChanSess * chansess);
 void agentset(struct ChanSess *chansess);
 
-void load_agent_keys();
+void load_agent_keys(struct SignKeyList * ret_list);
 
 #ifdef __hpux
 #define seteuid(a)       setresuid(-1, (a), -1)

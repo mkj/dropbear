@@ -297,14 +297,22 @@ int dropbear_listen(const char* address, const char* port,
 
 /* Connect to a given unix socket. The socket is blocking */
 #ifdef ENABLE_CONNECT_UNIX
-int connect_unix(const char* addr) {
-	struct sockaddr_un egdsock;
+int connect_unix(const char* path) {
+	struct sockaddr_un addr;
 	int fd = -1;
 
-	memset((void*)&egdsock, 0x0, sizeof(egdsock));
-	egdsock.sun_family = AF_UNIX;
-	strlcpy(egdsock.sun_path, addr, sizeof(egdsock.sun_path));
+	memset((void*)&addr, 0x0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strlcpy(addr.sun_path, path, sizeof(addr.sun_path));
 	fd = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (fd < 0) {
+		TRACE(("Failed to open unix socket"))
+		return -1;
+	}
+	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+		TRACE(("Failed to connect to '%s' socket", path))
+		return -1;
+	}
 	return fd;
 }
 #endif
@@ -574,7 +582,6 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 	}
 
 	return retstring;
-
 }
 
 /* Get the hostname corresponding to the address addr. On failure, the IP

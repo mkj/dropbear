@@ -94,13 +94,14 @@ static int new_agent_chan(struct Channel * channel) {
 
 /* Sends a request to the agent, returning a newly allocated buffer
  * with the response */
+/* This function will block waiting for a response - it will
+ * only be used by client authentication (not for forwarded requests)
+ * won't cause problems for interactivity. */
 /* Packet format (from draft-ylonen)
    4 bytes     Length, msb first.  Does not include length itself.
    1 byte      Packet type.  The value 255 is reserved for future extensions.
    data        Any data, depending on packet type.  Encoding as in the ssh packet
-   protocol.
-
- In this case, data is always empty
+               protocol.
 */
 static buffer * agent_request(int fd, unsigned char type) {
 
@@ -113,16 +114,17 @@ static buffer * agent_request(int fd, unsigned char type) {
 
 	buf_putint(payload, 1);
 	buf_putbyte(payload, type);
+	buf_setpos(payload, 0);
 
 	ret = atomicio(write, fd, buf_getptr(payload, payload->len), payload->len);
 	if ((size_t)ret != payload->len) {
-		TRACE(("write failed for agent_request"))
+		TRACE(("write failed fd %d for agent_request, %s", fd, strerror(errno)))
 		goto out;
 	}
 
 	buf_free(payload);
 	payload = NULL;
-
+	TRACE(("Wrote out bytes for agent_request"))
 	/* Now we read the response */
 	inbuf = buf_new(4);
 	ret = atomicio(read, fd, buf_getwriteptr(inbuf, 4), 4);
@@ -130,19 +132,27 @@ static buffer * agent_request(int fd, unsigned char type) {
 		TRACE(("read of length failed for agent_request"))
 		goto out;
 	}
+	buf_setpos(inbuf, 0);
+	buf_setlen(inbuf, ret);
 
 	readlen = buf_getint(inbuf);
 	if (readlen > MAX_AGENT_REPLY) {
 		TRACE(("agent reply is too big"));
 		goto out;
 	}
+	
+	TRACE(("agent_request readlen is %d", readlen))
 
 	buf_resize(inbuf, readlen);
+	buf_setpos(inbuf, 0);
 	ret = atomicio(read, fd, buf_getwriteptr(inbuf, readlen), readlen);
 	if ((size_t)ret != readlen) {
 		TRACE(("read of data failed for agent_request"))
 		goto out;
 	}
+	buf_incrwritepos(inbuf, readlen);
+	buf_setpos(inbuf, 0);
+	TRACE(("agent_request success, length %d", readlen))
 
 out:
 	if (payload)
@@ -151,17 +161,18 @@ out:
 	return inbuf;
 }
 
-static struct SignKeyList * agent_get_key_list(int fd)
+static void agent_get_key_list(int fd, struct SignKeyList * ret_list)
 {
 	buffer * inbuf = NULL;
 	unsigned int num = 0;
 	unsigned char packet_type;
 	unsigned int i;
-	struct SignKeyList *retkey = NULL, *key = NULL;
+	struct SignKeyList *key = NULL;
 	int ret;
 
 	inbuf = agent_request(fd, SSH2_AGENTC_REQUEST_IDENTITIES);
 	if (!inbuf) {
+		TRACE(("agent_request returned no identities"))
 		goto out;
 	}
 
@@ -187,11 +198,8 @@ static struct SignKeyList * agent_get_key_list(int fd)
 		struct SignKeyList *nextkey = NULL;
 
 		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
-		if (key)
-			key->next = nextkey;
-		else
-			retkey = nextkey;
-		key = nextkey;
+		ret_list->next = nextkey;
+		ret_list = nextkey;
 
 		pubkey = new_sign_key();
 		ret = buf_get_pub_key(inbuf, pubkey, &key_type);
@@ -214,14 +222,11 @@ out:
 		buf_free(inbuf);
 		inbuf = NULL;
 	}
-
-	return retkey;
 }
 
-void load_agent_keys()
+/* Returned keys are appended to ret_list */
+void load_agent_keys(struct SignKeyList * ret_list)
 {
-
-	struct SignKeyList * ret_list;
 	int fd;
 	fd = connect_agent();
 	if (fd < 0) {
@@ -229,7 +234,7 @@ void load_agent_keys()
 		return;
 	}
 
-	ret_list =  agent_get_key_list(fd);
+	agent_get_key_list(fd, ret_list);
 	close(fd);
 }
 	
