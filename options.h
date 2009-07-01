@@ -46,9 +46,10 @@
 /*#define NO_FAST_EXPTMOD*/
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
-several kB in binary size, however will make the symmetrical ciphers (AES, DES
-etc) slower (perhaps by 50%). Recommended for most small systems. */
-#define DROPBEAR_SMALL_CODE
+several kB in binary size however will make the symmetrical ciphers and hashes
+slower, perhaps by 50%. Recommended for small systems that aren't doing
+much traffic. */
+/*#define DROPBEAR_SMALL_CODE*/
 
 /* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
@@ -60,10 +61,6 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_CLI_LOCALTCPFWD
 #define ENABLE_CLI_REMOTETCPFWD
 
-/* Allow using -J <proxycommand> to run the connection through a 
-   pipe to a program, rather the normal TCP connection */
-#define ENABLE_CLI_PROXYCMD
-
 #define ENABLE_SVR_LOCALTCPFWD
 #define ENABLE_SVR_REMOTETCPFWD
 
@@ -71,23 +68,36 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 #define ENABLE_SVR_AGENTFWD
 #define ENABLE_CLI_AGENTFWD
 
-/* Enable "Netcat mode". TODO describe here. */
+
+/* Note: Both ENABLE_CLI_PROXYCMD and ENABLE_CLI_NETCAT must be set to
+ * allow multihop dbclient connections */
+
+/* Allow using -J <proxycommand> to run the connection through a 
+   pipe to a program, rather the normal TCP connection */
+#define ENABLE_CLI_PROXYCMD
+
+/* Enable "Netcat mode" option. This will forward standard input/output
+ * to a remote TCP-forwarded connection */
 #define ENABLE_CLI_NETCAT
 
-
 /* Encryption - at least one required.
- * RFC Draft requires 3DES and recommends AES128 for interoperability.
+ * Protocol RFC requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
  * (eg AES256 as well as AES128) will result in a minimal size increase.*/
-#define DROPBEAR_AES128_CBC
-#define DROPBEAR_3DES_CBC
-#define DROPBEAR_AES256_CBC
-#define DROPBEAR_BLOWFISH_CBC
-#define DROPBEAR_TWOFISH256_CBC
-#define DROPBEAR_TWOFISH128_CBC
+#define DROPBEAR_AES128
+#define DROPBEAR_3DES
+#define DROPBEAR_AES256
+#define DROPBEAR_BLOWFISH
+#define DROPBEAR_TWOFISH256
+#define DROPBEAR_TWOFISH128
+
+/* Enable "Counter Mode" for ciphers. This is more secure than normal
+ * CBC mode against certain attacks. This adds around 1kB to binary 
+ * size and is recommended for most cases */
+#define DROPBEAR_ENABLE_CTR_MODE
 
 /* Message Integrity - at least one required.
- * RFC Draft requires sha1 and recommends sha1-96.
+ * Protocol RFC requires sha1 and recommends sha1-96.
  * sha1-96 may be of use for slow links, as it has a smaller overhead.
  *
  * Note: there's no point disabling sha1 to save space, since it's used
@@ -143,7 +153,7 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-/* #define ENABLE_SVR_PAM_AUTH */
+/*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Wether to ake public key options in authorized_keys file into account */
@@ -249,6 +259,13 @@ etc) slower (perhaps by 50%). Recommended for most small systems. */
 /* Ensure that data is transmitted every KEEPALIVE seconds. This can
 be overridden at runtime with -K. 0 disables keepalives */
 #define DEFAULT_KEEPALIVE 0
+
+/* Ensure that data is received within IDLE_TIMEOUT seconds. This can
+be overridden at runtime with -I. 0 disables idle timeouts */
+#define DEFAULT_IDLE_TIMEOUT 0
+
+/* The default path. This will often get replaced by the shell */
+#define DEFAULT_PATH "/usr/bin:/bin"
 
 /* Some other defines (that mostly should be left alone) are defined
  * in sysoptions.h */

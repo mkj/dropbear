@@ -24,7 +24,10 @@ before user login (default: none).
 dsskeyfile.
 Use the contents of the file
 .I dsskey
-for the dss host key (default: /etc/dropbear/dropbear_dss_host_key).
+for the DSS host key (default: /etc/dropbear/dropbear_dss_host_key). 
+Note that 
+some SSH implementations
+use the term "DSA" rather than "DSS", they mean the same thing.
 This file is generated with
 .BR dropbearkey (8).
 .TP
@@ -94,6 +97,63 @@ useful for working around firewalls or routers that drop connections after
 a certain period of inactivity. The trade-off is that a session may be
 closed if there is a temporary lapse of network connectivity. A setting
 if 0 disables keepalives.
+.TP
+.B \-I \fIidle_timeout
+Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
+.SH FILES
+
+.TP
+Authorized Keys
+
+~/.ssh/authorized_keys can be set up to allow remote login with a RSA or DSS
+key. Each line is of the form
+.TP
+[restrictions] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIgAsp... [comment]
+
+and can be extracted from a Dropbear private host key with "dropbearkey -y". This is the same format as used by OpenSSH, though the restrictions are a subset (keys with unknown restrictions are ignored).
+Restrictions are comma separated, with double quotes around spaces in arguments.
+Available restrictions are:
+
+.TP
+.B no-port-forwarding
+Don't allow port forwarding for this connection
+
+.TP
+.B no-agent-forwarding
+Don't allow agent forwarding for this connection
+
+.TP
+.B no-X11-forwarding
+Don't allow X11 forwarding for this connection
+
+.TP
+.B no-pty
+Disable PTY allocation. Note that a user can still obtain most of the
+same functionality with other means even if no-pty is set.
+
+.TP
+.B command="\fIforced_command\fR"
+Disregard the command provided by the user and always run \fIforced_command\fR.
+
+The authorized_keys file and its containing ~/.ssh directory must only be
+writable by the user, otherwise Dropbear will not allow a login using public
+key authentication.
+
+.TP
+Host Key Files
+
+Host key files are read at startup from a standard location, by default
+/etc/dropbear/dropbear_dss_host_key and /etc/dropbear/dropbear_rsa_host_key
+or specified on the commandline with -d or -r. These are of the form generated
+by dropbearkey.
+
+.TP
+Message Of The Day
+
+By default the file /etc/motd will be printed for any login shell (unless 
+disabled at compile-time). This can also be disabled per-user
+by creating a file ~/.hushlogin .
+
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br

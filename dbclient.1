@@ -10,6 +10,13 @@ dbclient \- lightweight SSH2 client
 .I l\fR:\fIh\fR:\fIr\fR] [\-l
 .IR user ]
 .I host
+.RI [ command ]
+
+.B dbclient
+[
+.I args ]
+.I [user1]@host1[/port1],[user2]@host2[/port2],...
+
 .SH DESCRIPTION
 .B dbclient
 is a SSH 2 client designed to be small enough to be used in small memory
@@ -86,7 +93,40 @@ useful for working around firewalls or routers that drop connections after
 a certain period of inactivity. The trade-off is that a session may be
 closed if there is a temporary lapse of network connectivity. A setting
 if 0 disables keepalives.
+.TP
+.B \-I \fIidle_timeout
+Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
+.TP
+.B \-J \fIproxy_command
+Use the standard input/output of the program \fIproxy_command\fR rather than using
+a normal TCP connection. A hostname should be still be provided, as this is used for
+comparing saved hostkeys.
+.TP
+.B \-B \fIendhost:endport
+"Netcat-alike" mode, where Dropbear will connect to the given host, then create a
+forwarded connection to \fIendhost\fR. This will then be presented as dbclient's
+standard input/output.
+
+Dropbear will also allow multiple "hops" to be specified, separated by commas. In
+this case a connection will be made to the first host, then a TCP forwarded 
+connection will be made through that to the second host, and so on. Hosts other than
+the final destination will not see anything other than the encrypted SSH stream. 
+A port for a host can be specified with a slash (eg matt@martello/44 ).
+This syntax can also be used with scp or rsync (specifying dbclient as the 
+ssh/rsh command). A file can be "bounced" through multiple SSH hops, eg
+
+scp -S dbclient matt@martello,root@wrt,canyons:/tmp/dump .
+
+Note that hostnames are resolved by the prior hop (so "canyons" would be resolved by the host "wrt")
+in the example above, the same way as other -L TCP forwarded hosts are. Host keys are 
+checked locally based on the given hostname.
+
 .SH ENVIRONMENT
+.TP
+.B DROPBEAR_PASSWORD
+A password to use for remote authentication can be specified in the environment
+variable DROPBEAR_PASSWORD. Care should be taken that the password is not
+exposed to other users on a multi-user system, or stored in accessible files.
 .TP
 .B SSH_ASKPASS
 dbclient can use an external program to request a password from a user.
@@ -94,13 +134,10 @@ SSH_ASKPASS should be set to the path of a program that will return a password
 on standard output. This program will only be used if either DISPLAY is set and
 standard input is not a TTY, or the environment variable SSH_ASKPASS_ALWAYS is
 set.
-.TP
-.B DROPBEAR_PASSWORD
-A password to use for remote authentication can be specified in the environment
-variable DROPBEAR_PASSWORD. Care should be taken that the password is not
-exposed to other users on a multi-user system, or stored in accessible files.
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
+.br
+Mihnea Stoenescu wrote initial Dropbear client support
 .br
 Gerrit Pape (pape@smarden.org) wrote this manual page.
 .SH SEE ALSO

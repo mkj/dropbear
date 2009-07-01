@@ -70,6 +70,7 @@ void process_packet() {
 			dropbear_close("Disconnect received");
 	}
 
+    ses.last_packet_time = time(NULL);
 
 	/* This applies for KEX, where the spec says the next packet MUST be
 	 * NEWKEYS */

@@ -272,8 +272,8 @@ void gen_new_keys() {
 	    recv_IV		= S2C_IV;
 	    trans_key	= C2S_key;
 	    recv_key	= S2C_key;
-	    C2S_keysize = ses.newkeys->trans_algo_crypt->keysize;
-	    S2C_keysize = ses.newkeys->recv_algo_crypt->keysize;
+	    C2S_keysize = ses.newkeys->trans.algo_crypt->keysize;
+	    S2C_keysize = ses.newkeys->recv.algo_crypt->keysize;
 		mactransletter = 'E';
 		macrecvletter = 'F';
 	} else {
@@ -281,8 +281,8 @@ void gen_new_keys() {
 	    recv_IV		= C2S_IV;
 	    trans_key	= S2C_key;
 	    recv_key	= C2S_key;
-	    C2S_keysize = ses.newkeys->recv_algo_crypt->keysize;
-	    S2C_keysize = ses.newkeys->trans_algo_crypt->keysize;
+	    C2S_keysize = ses.newkeys->recv.algo_crypt->keysize;
+	    S2C_keysize = ses.newkeys->trans.algo_crypt->keysize;
 		mactransletter = 'F';
 		macrecvletter = 'E';
 	}
@@ -292,30 +292,33 @@ void gen_new_keys() {
 	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
 	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
 
-	recv_cipher = find_cipher(ses.newkeys->recv_algo_crypt->cipherdesc->name);
+	recv_cipher = find_cipher(ses.newkeys->recv.algo_crypt->cipherdesc->name);
 	if (recv_cipher < 0)
 	    dropbear_exit("crypto error");
-		
-	if (cbc_start(recv_cipher, recv_IV, recv_key, 
-			ses.newkeys->recv_algo_crypt->keysize, 0, 
-			&ses.newkeys->recv_symmetric_struct) != CRYPT_OK) {
+	if (ses.newkeys->recv.crypt_mode->start(recv_cipher, 
+			recv_IV, recv_key, 
+			ses.newkeys->recv.algo_crypt->keysize, 0, 
+			&ses.newkeys->recv.cipher_state) != CRYPT_OK) {
 		dropbear_exit("crypto error");
 	}
-	trans_cipher = find_cipher(ses.newkeys->trans_algo_crypt->cipherdesc->name);
+
+	trans_cipher = find_cipher(ses.newkeys->trans.algo_crypt->cipherdesc->name);
 	if (trans_cipher < 0)
 	    dropbear_exit("crypto error");
-		
-	if (cbc_start(trans_cipher, trans_IV, trans_key, 
-			ses.newkeys->trans_algo_crypt->keysize, 0, 
-			&ses.newkeys->trans_symmetric_struct) != CRYPT_OK) {
+	if (ses.newkeys->trans.crypt_mode->start(trans_cipher, 
+			trans_IV, trans_key, 
+			ses.newkeys->trans.algo_crypt->keysize, 0, 
+			&ses.newkeys->trans.cipher_state) != CRYPT_OK) {
 		dropbear_exit("crypto error");
 	}
 	
 	/* MAC keys */
-	hashkeys(ses.newkeys->transmackey, 
-			ses.newkeys->trans_algo_mac->keysize, &hs, mactransletter);
-	hashkeys(ses.newkeys->recvmackey, 
-			ses.newkeys->recv_algo_mac->keysize, &hs, macrecvletter);
+	hashkeys(ses.newkeys->trans.mackey, 
+			ses.newkeys->trans.algo_mac->keysize, &hs, mactransletter);
+	hashkeys(ses.newkeys->recv.mackey, 
+			ses.newkeys->recv.algo_mac->keysize, &hs, macrecvletter);
+	ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hashdesc->name),
+	ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hashdesc->name),
 
 #ifndef DISABLE_ZLIB
 	gen_new_zstreams();
@@ -331,53 +334,68 @@ void gen_new_keys() {
 }
 
 #ifndef DISABLE_ZLIB
+
+int is_compress_trans() {
+	return ses.keys->trans.algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->trans.algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
+int is_compress_recv() {
+	return ses.keys->recv.algo_comp == DROPBEAR_COMP_ZLIB
+		|| (ses.authstate.authdone
+			&& ses.keys->recv.algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
+}
+
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
 static void gen_new_zstreams() {
 
 	/* create new zstreams */
-	if (ses.newkeys->recv_algo_comp == DROPBEAR_COMP_ZLIB) {
-		ses.newkeys->recv_zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->recv_zstream->zalloc = Z_NULL;
-		ses.newkeys->recv_zstream->zfree = Z_NULL;
+	if (ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
+		ses.newkeys->recv.zstream = (z_streamp)m_malloc(sizeof(z_stream));
+		ses.newkeys->recv.zstream->zalloc = Z_NULL;
+		ses.newkeys->recv.zstream->zfree = Z_NULL;
 		
-		if (inflateInit(ses.newkeys->recv_zstream) != Z_OK) {
+		if (inflateInit(ses.newkeys->recv.zstream) != Z_OK) {
 			dropbear_exit("zlib error");
 		}
 	} else {
-		ses.newkeys->recv_zstream = NULL;
+		ses.newkeys->recv.zstream = NULL;
 	}
 
-	if (ses.newkeys->trans_algo_comp == DROPBEAR_COMP_ZLIB) {
-		ses.newkeys->trans_zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->trans_zstream->zalloc = Z_NULL;
-		ses.newkeys->trans_zstream->zfree = Z_NULL;
+	if (ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB
+			|| ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
+		ses.newkeys->trans.zstream = (z_streamp)m_malloc(sizeof(z_stream));
+		ses.newkeys->trans.zstream->zalloc = Z_NULL;
+		ses.newkeys->trans.zstream->zfree = Z_NULL;
 	
-		if (deflateInit(ses.newkeys->trans_zstream, Z_DEFAULT_COMPRESSION) 
+		if (deflateInit(ses.newkeys->trans.zstream, Z_DEFAULT_COMPRESSION) 
 				!= Z_OK) {
 			dropbear_exit("zlib error");
 		}
 	} else {
-		ses.newkeys->trans_zstream = NULL;
+		ses.newkeys->trans.zstream = NULL;
 	}
-	
+
 	/* clean up old keys */
-	if (ses.keys->recv_zstream != NULL) {
-		if (inflateEnd(ses.keys->recv_zstream) == Z_STREAM_ERROR) {
+	if (ses.keys->recv.zstream != NULL) {
+		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
 			dropbear_exit("crypto error");
 		}
-		m_free(ses.keys->recv_zstream);
+		m_free(ses.keys->recv.zstream);
 	}
-	if (ses.keys->trans_zstream != NULL) {
-		if (deflateEnd(ses.keys->trans_zstream) == Z_STREAM_ERROR) {
+	if (ses.keys->trans.zstream != NULL) {
+		if (deflateEnd(ses.keys->trans.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
 			dropbear_exit("crypto error");
 		}
-		m_free(ses.keys->trans_zstream);
+		m_free(ses.keys->trans.zstream);
 	}
 }
-#endif
+#endif /* DISABLE_ZLIB */
 
 
 /* Executed upon receiving a kexinit message from the client to initiate
@@ -682,28 +700,36 @@ static void read_kex_algos() {
 
 	/* Handle the asymmetry */
 	if (IS_DROPBEAR_CLIENT) {
-		ses.newkeys->recv_algo_crypt = 
+		ses.newkeys->recv.algo_crypt = 
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
-		ses.newkeys->trans_algo_crypt = 
+		ses.newkeys->trans.algo_crypt = 
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
-		ses.newkeys->recv_algo_mac = 
+		ses.newkeys->recv.crypt_mode = 
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
+		ses.newkeys->trans.crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
+		ses.newkeys->recv.algo_mac = 
 			(struct dropbear_hash*)s2c_hash_algo->data;
-		ses.newkeys->trans_algo_mac = 
+		ses.newkeys->trans.algo_mac = 
 			(struct dropbear_hash*)c2s_hash_algo->data;
-		ses.newkeys->recv_algo_comp = s2c_comp_algo->val;
-		ses.newkeys->trans_algo_comp = c2s_comp_algo->val;
+		ses.newkeys->recv.algo_comp = s2c_comp_algo->val;
+		ses.newkeys->trans.algo_comp = c2s_comp_algo->val;
 	} else {
 		/* SERVER */
-		ses.newkeys->recv_algo_crypt = 
+		ses.newkeys->recv.algo_crypt = 
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
-		ses.newkeys->trans_algo_crypt = 
+		ses.newkeys->trans.algo_crypt = 
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
-		ses.newkeys->recv_algo_mac = 
+		ses.newkeys->recv.crypt_mode =
+			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
+		ses.newkeys->trans.crypt_mode =
+			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
+		ses.newkeys->recv.algo_mac = 
 			(struct dropbear_hash*)c2s_hash_algo->data;
-		ses.newkeys->trans_algo_mac = 
+		ses.newkeys->trans.algo_mac = 
 			(struct dropbear_hash*)s2c_hash_algo->data;
-		ses.newkeys->recv_algo_comp = c2s_comp_algo->val;
-		ses.newkeys->trans_algo_comp = s2c_comp_algo->val;
+		ses.newkeys->recv.algo_comp = c2s_comp_algo->val;
+		ses.newkeys->trans.algo_comp = s2c_comp_algo->val;
 	}
 
 	/* reserved for future extensions */

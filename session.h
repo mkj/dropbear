@@ -60,28 +60,36 @@ void cli_session(int sock_in, int sock_out, char *remotehost);
 void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
+/* crypto parameters that are stored individually for transmit and receive */
+struct key_context_directional {
+	const struct dropbear_cipher *algo_crypt; /* NULL for none */
+	const struct dropbear_cipher_mode *crypt_mode;
+	const struct dropbear_hash *algo_mac; /* NULL for none */
+	int hash_index; /* lookup for libtomcrypt */
+	char algo_comp; /* compression */
+#ifndef DISABLE_ZLIB
+	z_streamp zstream;
+#endif
+	/* actual keys */
+	union {
+		symmetric_CBC cbc;
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+		symmetric_CTR ctr;
+#endif
+	} cipher_state;
+	unsigned char mackey[MAX_MAC_KEY];
+};
+
 struct key_context {
 
-	const struct dropbear_cipher *recv_algo_crypt; /* NULL for none */
-	const struct dropbear_cipher *trans_algo_crypt; /* NULL for none */
-	const struct dropbear_hash *recv_algo_mac; /* NULL for none */
-	const struct dropbear_hash *trans_algo_mac; /* NULL for none */
+	struct key_context_directional recv;
+	struct key_context_directional trans;
+
 	char algo_kex;
 	char algo_hostkey;
 
-	char recv_algo_comp; /* compression */
-	char trans_algo_comp;
-#ifndef DISABLE_ZLIB
-	z_streamp recv_zstream;
-	z_streamp trans_zstream;
-#endif
-
-	/* actual keys */
-	symmetric_CBC recv_symmetric_struct;
-	symmetric_CBC trans_symmetric_struct;
-	unsigned char recvmackey[MAX_MAC_KEY];
-	unsigned char transmackey[MAX_MAC_KEY];
-
+	int allow_compress; /* whether compression has started (useful in 
+							zlib@openssh.com delayed compression case) */
 };
 
 struct packetlist;
@@ -114,8 +122,7 @@ struct sshsession {
 							 throughout the code, as handlers fill out this
 							 buffer with the packet to send. */
 	struct Queue writequeue; /* A queue of encrypted packets to send */
-	buffer *readbuf; /* Encrypted */
-	buffer *decryptreadbuf; /* Post-decryption */
+	buffer *readbuf; /* From the wire, decrypted in-place */
 	buffer *payload; /* Post-decompression, the actual SSH packet */
 	unsigned int transseq, recvseq; /* Sequence IDs */
 
@@ -134,11 +141,15 @@ struct sshsession {
 
 	unsigned char lastpacket; /* What the last received packet type was */
 	
-    int signal_pipe[2]; /* stores endpoints of a self-pipe used for
+	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
 						
-	time_t last_packet_time; /* time of the last packet transmission, for
+	time_t last_trx_packet_time; /* time of the last packet transmission, for
 							keepalive purposes */
+
+	time_t last_packet_time; /* time of the last packet transmission or receive, for
+								idle timeout purposes */
+
 
 	/* KEX/encryption related */
 	struct KEXState kexstate;

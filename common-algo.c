@@ -29,32 +29,46 @@
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
 
+static int void_cipher(const unsigned char* in, unsigned char* out,
+		unsigned long len, void *cipher_state) {
+	if (in != out) {
+		memmove(out, in, len);
+	}
+	return CRYPT_OK;
+}
+
+static int void_start(int cipher, const unsigned char *IV, 
+			const unsigned char *key, 
+			int keylen, int num_rounds, void *cipher_state) {
+	return CRYPT_OK;
+}
+
 /* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
 /* NOTE: if keysize > 2*SHA1_HASH_SIZE, code such as hashkeys()
    needs revisiting */
 
-#ifdef DROPBEAR_AES256_CBC
+#ifdef DROPBEAR_AES256
 static const struct dropbear_cipher dropbear_aes256 = 
 	{&aes_desc, 32, 16};
 #endif
-#ifdef DROPBEAR_AES128_CBC
+#ifdef DROPBEAR_AES128
 static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
 #endif
-#ifdef DROPBEAR_BLOWFISH_CBC
+#ifdef DROPBEAR_BLOWFISH
 static const struct dropbear_cipher dropbear_blowfish = 
 	{&blowfish_desc, 16, 8};
 #endif
-#ifdef DROPBEAR_TWOFISH256_CBC
+#ifdef DROPBEAR_TWOFISH256
 static const struct dropbear_cipher dropbear_twofish256 = 
 	{&twofish_desc, 32, 16};
 #endif
-#ifdef DROPBEAR_TWOFISH128_CBC
+#ifdef DROPBEAR_TWOFISH128
 static const struct dropbear_cipher dropbear_twofish128 = 
 	{&twofish_desc, 16, 16};
 #endif
-#ifdef DROPBEAR_3DES_CBC
+#ifdef DROPBEAR_3DES
 static const struct dropbear_cipher dropbear_3des = 
 	{&des3_desc, 24, 8};
 #endif
@@ -62,6 +76,24 @@ static const struct dropbear_cipher dropbear_3des =
 /* used to indicate no encryption, as defined in rfc2410 */
 const struct dropbear_cipher dropbear_nocipher =
 	{NULL, 16, 8}; 
+
+/* A few void* s are required to silence warnings
+ * about the symmetric_CBC vs symmetric_CTR cipher_state pointer */
+const struct dropbear_cipher_mode dropbear_mode_cbc =
+	{(void*)cbc_start, (void*)cbc_encrypt, (void*)cbc_decrypt};
+const struct dropbear_cipher_mode dropbear_mode_none =
+	{void_start, void_cipher, void_cipher};
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+/* a wrapper to make ctr_start and cbc_start look the same */
+static int dropbear_big_endian_ctr_start(int cipher, 
+		const unsigned char *IV, 
+		const unsigned char *key, int keylen, 
+		int num_rounds, symmetric_CTR *ctr) {
+	return ctr_start(cipher, IV, key, keylen, num_rounds, CTR_COUNTER_BIG_ENDIAN, ctr);
+}
+const struct dropbear_cipher_mode dropbear_mode_ctr =
+	{(void*)dropbear_big_endian_ctr_start, (void*)ctr_encrypt, (void*)ctr_decrypt};
+#endif
 
 /* Mapping of ssh hashes to libtomcrypt hashes, including keysize etc.
    {&hash_desc, keysize, hashsize} */
@@ -83,65 +115,81 @@ const struct dropbear_hash dropbear_nohash =
 	{NULL, 16, 0}; /* used initially */
 	
 
-/* The following map ssh names to internal values */
+/* The following map ssh names to internal values.
+ * The ordering here is important for the client - the first mode
+ * that is also supported by the server will get used. */
 
 algo_type sshciphers[] = {
-#ifdef DROPBEAR_AES128_CBC
-	{"aes128-cbc", 0, (void*)&dropbear_aes128, 1},
+#ifdef DROPBEAR_ENABLE_CTR_MODE
+#ifdef DROPBEAR_AES128
+	{"aes128-ctr", 0, &dropbear_aes128, 1, &dropbear_mode_ctr},
 #endif
-#ifdef DROPBEAR_3DES_CBC
-	{"3des-cbc", 0, (void*)&dropbear_3des, 1},
+#ifdef DROPBEAR_3DES
+	{"3des-ctr", 0, &dropbear_3des, 1, &dropbear_mode_ctr},
 #endif
-#ifdef DROPBEAR_AES256_CBC
-	{"aes256-cbc", 0, (void*)&dropbear_aes256, 1},
+#ifdef DROPBEAR_AES256
+	{"aes256-ctr", 0, &dropbear_aes256, 1, &dropbear_mode_ctr},
 #endif
-#ifdef DROPBEAR_TWOFISH256_CBC
-	{"twofish256-cbc", 0, (void*)&dropbear_twofish256, 1},
-	{"twofish-cbc", 0, (void*)&dropbear_twofish256, 1},
+#endif /* DROPBEAR_ENABLE_CTR_MODE */
+
+/* CBC modes are always enabled */
+#ifdef DROPBEAR_AES128
+	{"aes128-cbc", 0, &dropbear_aes128, 1, &dropbear_mode_cbc},
 #endif
-#ifdef DROPBEAR_TWOFISH128_CBC
-	{"twofish128-cbc", 0, (void*)&dropbear_twofish128, 1},
+#ifdef DROPBEAR_3DES
+	{"3des-cbc", 0, &dropbear_3des, 1, &dropbear_mode_cbc},
 #endif
-#ifdef DROPBEAR_BLOWFISH_CBC
-	{"blowfish-cbc", 0, (void*)&dropbear_blowfish, 1},
+#ifdef DROPBEAR_AES256
+	{"aes256-cbc", 0, &dropbear_aes256, 1, &dropbear_mode_cbc},
 #endif
-	{NULL, 0, NULL, 0}
+#ifdef DROPBEAR_TWOFISH256
+	{"twofish256-cbc", 0, &dropbear_twofish256, 1, &dropbear_mode_cbc},
+	{"twofish-cbc", 0, &dropbear_twofish256, 1, &dropbear_mode_cbc},
+#endif
+#ifdef DROPBEAR_TWOFISH128
+	{"twofish128-cbc", 0, &dropbear_twofish128, 1, &dropbear_mode_cbc},
+#endif
+#ifdef DROPBEAR_BLOWFISH
+	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
+#endif
+	{NULL, 0, NULL, 0, NULL}
 };
 
 algo_type sshhashes[] = {
 #ifdef DROPBEAR_SHA1_96_HMAC
-	{"hmac-sha1-96", 0, (void*)&dropbear_sha1_96, 1},
+	{"hmac-sha1-96", 0, &dropbear_sha1_96, 1, NULL},
 #endif
 #ifdef DROPBEAR_SHA1_HMAC
-	{"hmac-sha1", 0, (void*)&dropbear_sha1, 1},
+	{"hmac-sha1", 0, &dropbear_sha1, 1, NULL},
 #endif
 #ifdef DROPBEAR_MD5_HMAC
-	{"hmac-md5", 0, (void*)&dropbear_md5, 1},
+	{"hmac-md5", 0, &dropbear_md5, 1, NULL},
 #endif
-	{NULL, 0, NULL, 0}
+	{NULL, 0, NULL, 0, NULL}
 };
 
 algo_type sshcompress[] = {
 #ifndef DISABLE_ZLIB
-	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1},
+	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1, NULL},
+	{"zlib@openssh.com", DROPBEAR_COMP_ZLIB_DELAY, NULL, 1, NULL},
 #endif
-	{"none", DROPBEAR_COMP_NONE, NULL, 1},
-	{NULL, 0, NULL, 0}
+	{"none", DROPBEAR_COMP_NONE, NULL, 1, NULL},
+	{NULL, 0, NULL, 0, NULL}
 };
 
 algo_type sshhostkey[] = {
 #ifdef DROPBEAR_RSA
-	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1},
+	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1, NULL},
 #endif
 #ifdef DROPBEAR_DSS
-	{"ssh-dss", DROPBEAR_SIGNKEY_DSS, NULL, 1},
+	{"ssh-dss", DROPBEAR_SIGNKEY_DSS, NULL, 1, NULL},
 #endif
-	{NULL, 0, NULL, 0}
+	{NULL, 0, NULL, 0, NULL}
 };
 
 algo_type sshkex[] = {
-	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1},
-	{NULL, 0, NULL, 0}
+	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1, NULL},
+	{NULL, 0, NULL, 0, NULL}
 };
 
 
@@ -150,16 +198,16 @@ algo_type sshkex[] = {
 void crypto_init() {
 
 	const struct ltc_cipher_descriptor *regciphers[] = {
-#ifdef DROPBEAR_AES_CBC
+#ifdef DROPBEAR_AES
 		&aes_desc,
 #endif
-#ifdef DROPBEAR_BLOWFISH_CBC
+#ifdef DROPBEAR_BLOWFISH
 		&blowfish_desc,
 #endif
-#ifdef DROPBEAR_TWOFISH_CBC
+#ifdef DROPBEAR_TWOFISH
 		&twofish_desc,
 #endif
-#ifdef DROPBEAR_3DES_CBC
+#ifdef DROPBEAR_3DES
 		&des3_desc,
 #endif
 		NULL
@@ -215,7 +263,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	unsigned int donefirst = 0;
 	buffer *algolist = NULL;
 
-	algolist = buf_new(100);
+	algolist = buf_new(160);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
 			if (donefirst)

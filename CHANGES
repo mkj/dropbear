@@ -1,3 +1,56 @@
+0.52 - Wed 12 November 2008
+
+- Add "netcat-alike" option (-B) to dbclient, allowing Dropbear to tunnel
+  standard input/output to a TCP port-forwarded remote host.
+
+- Add "proxy command" support to dbclient, to allow using a spawned process for
+  IO rather than a direct TCP connection. eg
+	  dbclient remotehost
+  is equivalent to
+	  dbclient -J 'nc remotehost 22' remotehost
+  (the hostname is still provided purely for looking up saved host keys)
+
+- Combine netcat-alike and proxy support to allow "multihop" connections, with
+  comma-separated host syntax.  Allows running
+
+	  dbclient user1@host1,user2@host2,user3@host3
+
+  to end up at host3 via the other two, using SSH TCP forwarding. It's a bit
+  like onion-routing. All connections are established from the local machine.
+  The comma-separated syntax can also be used for scp/rsync, eg
+
+	  rsync -a -e dbclient m@gateway,m2@host,martello:/home/matt/ ~/backup/
+
+  to bounce through a few hosts.
+
+- Add -I "idle timeout" option (contributed by Farrell Aultman)
+
+- Allow restrictions on authorized_keys logins such as restricting commands
+  to be run etc. This is a subset of those allowed by OpenSSH, doesn't
+  yet allow restricting source host.
+
+- Use vfork() for scp on uClinux
+
+- Default to PATH=/usr/bin:/bin for shells.
+
+- Report errors if -R forwarding fails
+
+- Add counter mode cipher support, which avoids some security problems with the
+  standard CBC mode.
+
+- Support zlib@openssh.com delayed compression for client/server. It can be
+  required for the Dropbear server with the '-Z' option. This is useful for
+  security as it avoids exposing the server to attacks on zlib by
+  unauthenticated remote users, though requires client side support.
+
+- options.h has been split into options.h (user-changable) and sysoptions.h
+  (less commonly changed)
+
+- Support "dbclient -s sftp" to specify a subsystem
+
+- Fix a bug in replies to channel requests that could be triggered by recent
+  versions of PuTTY
+
 0.51 - Thu 27 March 2008
 
 - Make a copy of password fields rather erroneously relying on getwpnam()

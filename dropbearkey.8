@@ -11,13 +11,16 @@ dropbearkey \- create private keys for the use with dropbear(8)
 .IR bits ]
 .SH DESCRIPTION
 .B dropbearkey
-generates a type
-.I rsa
+generates a
+.I RSA
 or
-.I dss
-SSH private key, and saves it to a file for the use with the
+.I DSS
+format SSH private key, and saves it to a file for the use with the
 .BR dropbear (8)
 SSH 2 server.
+Note that 
+some SSH implementations
+use the term "DSA" rather than "DSS", they mean the same thing.
 .SH OPTIONS
 .TP
 .B \-t \fItype

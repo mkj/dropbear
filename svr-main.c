@@ -133,7 +133,7 @@ void main_noinetd() {
 	for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
 		childpipes[i] = -1;
 	}
-	bzero(preauth_addrs, sizeof(preauth_addrs));
+	memset(preauth_addrs, 0x0, sizeof(preauth_addrs));
 	
 	/* Set up the listening sockets */
 	listensockcount = listensockets(listensocks, MAX_LISTEN_ADDR, &maxsock);

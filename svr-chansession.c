@@ -663,11 +663,11 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	addchildpid(chansess, chansess->pid);
 
 	if (svr_ses.lastexit.exitpid != -1) {
+		unsigned int i;
 		TRACE(("parent side: lastexitpid is %d", svr_ses.lastexit.exitpid))
 		/* The child probably exited and the signal handler triggered
 		 * possibly before we got around to adding the childpid. So we fill
 		 * out its data manually */
-		int i;
 		for (i = 0; i < svr_ses.childpidsize; i++) {
 			if (svr_ses.childpids[i].pid == svr_ses.lastexit.exitpid) {
 				TRACE(("found match for lastexitpid"))
@@ -878,6 +878,7 @@ static void execchild(void *user_data) {
 	addnewvar("LOGNAME", ses.authstate.pw_name);
 	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", get_user_shell());
+	addnewvar("PATH", DEFAULT_PATH);
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}

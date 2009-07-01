@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "0.51"
+#define DROPBEAR_VERSION "0.52"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -68,6 +68,7 @@
 
 #define DROPBEAR_COMP_NONE 0
 #define DROPBEAR_COMP_ZLIB 1
+#define DROPBEAR_COMP_ZLIB_DELAY 2
 
 /* Required for pubkey auth */
 #if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
@@ -133,12 +134,12 @@
 												accept for keyb-interactive
 												auth */
 
-#if defined(DROPBEAR_AES256_CBC) || defined(DROPBEAR_AES128_CBC)
-#define DROPBEAR_AES_CBC
+#if defined(DROPBEAR_AES256) || defined(DROPBEAR_AES128)
+#define DROPBEAR_AES
 #endif
 
-#if defined(DROPBEAR_TWOFISH256_CBC) || defined(DROPBEAR_TWOFISH128_CBC)
-#define DROPBEAR_TWOFISH_CBC
+#if defined(DROPBEAR_TWOFISH256) || defined(DROPBEAR_TWOFISH128)
+#define DROPBEAR_TWOFISH
 #endif
 
 #ifndef ENABLE_X11FWD
@@ -201,5 +202,8 @@
 #define IS_DROPBEAR_CLIENT 1
 
 #else
-#error You must compiled with either DROPBEAR_CLIENT or DROPBEAR_SERVER selected
+/* Just building key utils? */
+#define IS_DROPBEAR_SERVER 0
+#define IS_DROPBEAR_CLIENT 0
+
 #endif

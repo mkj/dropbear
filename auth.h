@@ -135,7 +135,8 @@ struct SignKeyList {
 	int type; /* The type of key */
 	struct SignKeyList *next;
 	int source;
-	/* filename? or the buffer? for encrypted keys, so we can later get
+	char *filename;
+	/* the buffer? for encrypted keys, so we can later get
 	 * the private key portion */
 
 };

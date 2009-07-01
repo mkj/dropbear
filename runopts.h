@@ -38,6 +38,7 @@ typedef struct runopts {
 #endif
 	unsigned int recv_window;
 	unsigned int keepalive_secs;
+	unsigned int idle_timeout_secs;
 
 } runopts;
 

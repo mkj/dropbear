@@ -327,4 +327,5 @@ out:
 	if (line != NULL) {
 		buf_free(line);
 	}
+	m_free(fingerprint);
 }

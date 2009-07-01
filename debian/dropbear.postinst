@@ -71,7 +71,7 @@ if test -x /etc/init.d/dropbear; then
 fi
 
 if test -n "$2" && dpkg --compare-versions "$2" lt '0.50-4' &&
-update-service --check dropbear; then
+update-service --check dropbear 2>/dev/null; then
   update-service --remove /etc/dropbear 2>/dev/null || :
   sleep 6
   rm -rf /var/run/dropbear /var/run/dropbear.log

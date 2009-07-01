@@ -368,6 +368,8 @@ void send_msg_userauth_success() {
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_SUCCESS);
 	encrypt_packet();
 
+	/* authdone must be set after encrypt_packet() for 
+	 * delayed-zlib mode */
 	ses.authstate.authdone = 1;
 	ses.connect_time = 0;
 
