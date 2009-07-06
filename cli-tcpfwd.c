@@ -59,27 +59,22 @@ static const struct ChanType cli_chan_tcplocal = {
 
 #ifdef ENABLE_CLI_LOCALTCPFWD
 void setup_localtcp() {
-
+	m_list_elem *iter;
 	int ret;
 
 	TRACE(("enter setup_localtcp"))
 
-	if (cli_opts.localfwds == NULL) {
-		TRACE(("cli_opts.localfwds == NULL"))
-	}
-
-	while (cli_opts.localfwds != NULL) {
-		ret = cli_localtcp(cli_opts.localfwds->listenport,
-				cli_opts.localfwds->connectaddr,
-				cli_opts.localfwds->connectport);
+	for (iter = cli_opts.localfwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry * fwd = (struct TCPFwdEntry*)iter->item;
+		ret = cli_localtcp(fwd->listenport,
+				fwd->connectaddr,
+				fwd->connectport);
 		if (ret == DROPBEAR_FAILURE) {
 			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
-					cli_opts.localfwds->listenport,
-					cli_opts.localfwds->connectaddr,
-					cli_opts.localfwds->connectport);
-		}
-
-		cli_opts.localfwds = cli_opts.localfwds->next;
+					fwd->listenport,
+					fwd->connectaddr,
+					fwd->connectport);
+		}		
 	}
 	TRACE(("leave setup_localtcp"))
 
@@ -148,60 +143,47 @@ static void send_msg_global_request_remotetcp(int port) {
  * being in the same order as we sent the requests. This is the ordering
  * of the cli_opts.remotefwds list */
 void cli_recv_msg_request_success() {
-
 	/* Nothing in the packet. We just mark off that we have received the reply,
 	 * so that we can report failure for later ones. */
-	struct TCPFwdList * iter = NULL;
-
-	iter = cli_opts.remotefwds;
-	while (iter != NULL) {
-		if (!iter->have_reply)
-		{
-			iter->have_reply = 1;
+	m_list_elem * iter = NULL;
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		if (!fwd->have_reply) {
+			fwd->have_reply = 1;
 			return;
 		}
-		iter = iter->next;
 	}
 }
 
 void cli_recv_msg_request_failure() {
-	struct TCPFwdList * iter = NULL;
-
-	iter = cli_opts.remotefwds;
-	while (iter != NULL) {
-		if (!iter->have_reply)
-		{
-			iter->have_reply = 1;
-			dropbear_log(LOG_WARNING, "Remote TCP forward request failed (port %d -> %s:%d)", iter->listenport, iter->connectaddr, iter->connectport);
+	m_list_elem *iter;
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		if (!fwd->have_reply) {
+			fwd->have_reply = 1;
+			dropbear_log(LOG_WARNING, "Remote TCP forward request failed (port %d -> %s:%d)", fwd->listenport, fwd->connectaddr, fwd->connectport);
 			return;
 		}
-		iter = iter->next;
 	}
 }
 
 void setup_remotetcp() {
-
-	struct TCPFwdList * iter = NULL;
-
+	m_list_elem *iter;
 	TRACE(("enter setup_remotetcp"))
 
-	if (cli_opts.remotefwds == NULL) {
-		TRACE(("cli_opts.remotefwds == NULL"))
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		send_msg_global_request_remotetcp(fwd->listenport);
 	}
 
-	iter = cli_opts.remotefwds;
-
-	while (iter != NULL) {
-		send_msg_global_request_remotetcp(iter->listenport);
-		iter = iter->next;
-	}
 	TRACE(("leave setup_remotetcp"))
 }
 
 static int newtcpforwarded(struct Channel * channel) {
 
 	unsigned int origport;
-	struct TCPFwdList * iter = NULL;
+	m_list_elem * iter = NULL;
+	struct TCPFwdEntry *fwd;
 	char portstring[NI_MAXSERV];
 	int sock;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
@@ -212,13 +194,11 @@ static int newtcpforwarded(struct Channel * channel) {
 	origport = buf_getint(ses.payload);
 
 	/* Find which port corresponds */
-	iter = cli_opts.remotefwds;
-
-	while (iter != NULL) {
-		if (origport == iter->listenport) {
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		fwd = (struct TCPFwdEntry*)iter->item;
+		if (origport == fwd->listenport) {
 			break;
 		}
-		iter = iter->next;
 	}
 
 	if (iter == NULL) {
@@ -228,8 +208,8 @@ static int newtcpforwarded(struct Channel * channel) {
 		goto out;
 	}
 	
-	snprintf(portstring, sizeof(portstring), "%d", iter->connectport);
-	sock = connect_remote(iter->connectaddr, portstring, 1, NULL);
+	snprintf(portstring, sizeof(portstring), "%d", fwd->connectport);
+	sock = connect_remote(fwd->connectaddr, portstring, 1, NULL);
 	if (sock < 0) {
 		TRACE(("leave newtcpdirect: sock failed"))
 		err = SSH_OPEN_CONNECT_FAILED;

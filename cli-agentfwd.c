@@ -22,10 +22,6 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-/* The basic protocol use to communicate with the agent is defined in
- * draft-ylonen-ssh-protocol-00.txt, with the ssh2 extensions defined through
- * openssh's implementation. */
-
 #include "includes.h"
 
 #ifdef ENABLE_CLI_AGENTFWD
@@ -44,6 +40,9 @@
 #include "atomicio.h"
 #include "signkey.h"
 #include "auth.h"
+
+/* The protocol implemented to talk to OpenSSH's SSH2 agent is documented in
+   PROTOCOL.agent in recent OpenSSH source distributions (5.1p1 has it). */
 
 static int new_agent_chan(struct Channel * channel);
 
@@ -161,13 +160,12 @@ out:
 	return inbuf;
 }
 
-static void agent_get_key_list(int fd, struct SignKeyList * ret_list)
+static void agent_get_key_list(int fd, m_list * ret_list)
 {
 	buffer * inbuf = NULL;
 	unsigned int num = 0;
 	unsigned char packet_type;
 	unsigned int i;
-	struct SignKeyList *key = NULL;
 	int ret;
 
 	inbuf = agent_request(fd, SSH2_AGENTC_REQUEST_IDENTITIES);
@@ -177,14 +175,11 @@ static void agent_get_key_list(int fd, struct SignKeyList * ret_list)
 	}
 
 	/* The reply has a format of:
-	 * byte     packet_type
-	 * int      num_keys
-	 *
-	 * string    keyblob1
-	 * string    comment1
-	 * ...
-	 * string    keyblob(n)
-	 * string    comment(n)
+		byte			SSH2_AGENT_IDENTITIES_ANSWER
+		uint32			num_keys
+  	   Followed by zero or more consecutive keys, encoded as:
+       	 string			key_blob
+    	 string			key_comment
 	 */
 	packet_type = buf_getbyte(inbuf);
 	if (packet_type != SSH2_AGENT_IDENTITIES_ANSWER) {
@@ -195,25 +190,24 @@ static void agent_get_key_list(int fd, struct SignKeyList * ret_list)
 	for (i = 0; i < num; i++) {
 		sign_key * pubkey = NULL;
 		int key_type = DROPBEAR_SIGNKEY_ANY;
+		buffer * key_buf;
 		struct SignKeyList *nextkey = NULL;
 
-		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
-		ret_list->next = nextkey;
-		ret_list = nextkey;
-
+		/* each public key is encoded as a string */
+		key_buf = buf_getstringbuf(inbuf);
 		pubkey = new_sign_key();
-		ret = buf_get_pub_key(inbuf, pubkey, &key_type);
+		ret = buf_get_pub_key(key_buf, pubkey, &key_type);
+		buf_free(key_buf);
 		if (ret != DROPBEAR_SUCCESS) {
 			/* This is slack, properly would cleanup vars etc */
 			dropbear_exit("Bad pubkey received from agent");
 		}
+		pubkey->type = key_type;
+		pubkey->source = SIGNKEY_SOURCE_AGENT;
 
-		key->key = pubkey;
-		key->next = NULL;
-		key->type = key_type;
-		key->source = SIGNKEY_SOURCE_AGENT;
+		list_append(ret_list, pubkey);
 
-		/* We'll ignore the comment */
+		/* We'll ignore the comment for now. might want it later.*/
 		buf_eatstring(inbuf);
 	}
 
@@ -224,8 +218,9 @@ out:
 	}
 }
 
-/* Returned keys are appended to ret_list */
-void load_agent_keys(struct SignKeyList * ret_list)
+/* Returned keys are prepended to ret_list, which will
+   be updated. */
+void load_agent_keys(m_list *ret_list)
 {
 	int fd;
 	fd = connect_agent();
@@ -237,13 +232,9 @@ void load_agent_keys(struct SignKeyList * ret_list)
 	agent_get_key_list(fd, ret_list);
 	close(fd);
 }
-	
-// general procedure:
-// - get the list of keys from the agent
-// - foreach, send a dummy userauth_pubkey message to the server and see
-// if it lets us in
-// - if it does, sign and auth
-// - if not, repeat.
-//
+
+void agent_buf_sign(buffer *sigblob, sign_key *key, 
+		const unsigned char *data, unsigned int len) {
+}
 
 #endif

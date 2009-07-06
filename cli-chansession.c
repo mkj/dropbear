@@ -424,16 +424,3 @@ void cli_send_chansess_request() {
 	TRACE(("leave cli_send_chansess_request"))
 
 }
-
-
-#if 0
-	while (cli_opts.localfwds != NULL) {
-		ret = cli_localtcp(cli_opts.localfwds->listenport,
-				cli_opts.localfwds->connectaddr,
-				cli_opts.localfwds->connectport);
-		if (ret == DROPBEAR_FAILURE) {
-			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
-					cli_opts.localfwds->listenport,
-					cli_opts.localfwds->connectaddr,
-					cli_opts.localfwds->connectport);
-#endif

@@ -112,13 +112,13 @@ typedef struct cli_runopts {
 	int backgrounded;
 	int is_subsystem;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	struct SignKeyList *privkeys; /* Keys to use for public-key auth */
+	m_list *privkeys; /* Keys to use for public-key auth */
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-	struct TCPFwdList * remotefwds;
+	m_list * remotefwds;
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-	struct TCPFwdList * localfwds;
+	m_list * localfwds;
 #endif
 #ifdef ENABLE_CLI_AGENTFWD
 	int agent_fwd;

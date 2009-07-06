@@ -40,8 +40,10 @@ sign_key * new_sign_key() {
 #ifdef DROPBEAR_RSA
 	ret->rsakey = NULL;
 #endif
+	ret->filename = NULL;
+	ret->type = DROPBEAR_SIGNKEY_NONE;
+	ret->source = SIGNKEY_SOURCE_INVALID;
 	return ret;
-
 }
 
 /* Returns "ssh-dss" or "ssh-rsa" corresponding to the type. Exits fatally
@@ -81,6 +83,9 @@ int signkey_type_from_name(const char* name, int namelen) {
 	}
 #endif
 
+	TRACE(("signkey_type_from_name unexpected key type."))
+	printhex("Key type", name, namelen);
+
 	return DROPBEAR_SIGNKEY_NONE;
 }
 
@@ -101,8 +106,11 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	m_free(ident);
 
 	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
+		TRACE(("buf_get_pub_key bad type - got %d, expected %d", keytype, type))
 		return DROPBEAR_FAILURE;
 	}
+	
+	TRACE(("buf_get_pub_key keytype is %d"))
 
 	*type = keytype;
 
@@ -255,6 +263,8 @@ void sign_key_free(sign_key *key) {
 	key->rsakey = NULL;
 #endif
 
+	m_free(key->filename);
+
 	m_free(key);
 	TRACE(("leave sign_key_free"))
 }
@@ -358,7 +368,6 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 		const unsigned char *data, unsigned int len) {
 
 	buffer *sigblob;
-
 	sigblob = buf_new(MAX_PUBKEY_SIZE);
 
 #ifdef DROPBEAR_DSS
@@ -374,7 +383,6 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 	if (sigblob->len == 0) {
 		dropbear_exit("non-matching signing type");
 	}
-
 	buf_setpos(sigblob, 0);
 	buf_putstring(buf, buf_getptr(sigblob, sigblob->len),
 			sigblob->len);

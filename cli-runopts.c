@@ -29,6 +29,7 @@
 #include "dbutil.h"
 #include "algo.h"
 #include "tcpfwd.h"
+#include "list.h"
 
 cli_runopts cli_opts; /* GLOBAL */
 
@@ -40,7 +41,7 @@ static void fill_own_user();
 static void loadidentityfile(const char* filename);
 #endif
 #ifdef ENABLE_CLI_ANYTCPFWD
-static void addforward(const char* str, struct TCPFwdList** fwdlist);
+static void addforward(const char* str, m_list *fwdlist);
 #endif
 #ifdef ENABLE_CLI_NETCAT
 static void add_netcat(const char *str);
@@ -128,14 +129,14 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.always_accept_key = 0;
 	cli_opts.is_subsystem = 0;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	cli_opts.privkeys = NULL;
+	cli_opts.privkeys = list_new();
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-	cli_opts.localfwds = NULL;
+	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-	cli_opts.remotefwds = NULL;
+	cli_opts.remotefwds = list_new();
 #endif
 #ifdef ENABLE_CLI_AGENTFWD
 	cli_opts.agent_fwd = 0;
@@ -165,7 +166,7 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_REMOTETCPFWD
 		if (nextisremote) {
 			TRACE(("nextisremote true"))
-			addforward(argv[i], &cli_opts.remotefwds);
+			addforward(argv[i], cli_opts.remotefwds);
 			nextisremote = 0;
 			continue;
 		}
@@ -173,7 +174,7 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_LOCALTCPFWD
 		if (nextislocal) {
 			TRACE(("nextislocal true"))
-			addforward(argv[i], &cli_opts.localfwds);
+			addforward(argv[i], cli_opts.localfwds);
 			nextislocal = 0;
 			continue;
 		}
@@ -406,8 +407,6 @@ void cli_getopts(int argc, char ** argv) {
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename) {
-
-	struct SignKeyList * nextkey;
 	sign_key *key;
 	int keytype;
 
@@ -417,13 +416,10 @@ static void loadidentityfile(const char* filename) {
 		fprintf(stderr, "Failed loading keyfile '%s'\n", filename);
 		sign_key_free(key);
 	} else {
-		nextkey = (struct SignKeyList*)m_malloc(sizeof(struct SignKeyList));
-		nextkey->key = key;
-		nextkey->filename = m_strdup(filename);
-		nextkey->next = cli_opts.privkeys;
-		nextkey->type = keytype;
-		nextkey->source = SIGNKEY_SOURCE_RAW_FILE;
-		cli_opts.privkeys = nextkey;
+		key->type = keytype;
+		key->source = SIGNKEY_SOURCE_RAW_FILE;
+		key->filename = m_strdup(filename);
+		list_append(cli_opts.privkeys, key);
 	}
 }
 #endif
@@ -435,12 +431,13 @@ multihop_passthrough_args() {
 	char *ret;
 	int total;
 	unsigned int len = 0;
-	struct SignKeyList *nextkey;
+	m_list_elem *iter;
 	/* Fill out -i and -W options that make sense for all
 	 * the intermediate processes */
-	for (nextkey = cli_opts.privkeys; nextkey; nextkey = nextkey->next)
+	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
-		len += 3 + strlen(nextkey->filename);
+		sign_key * key = (sign_key*)iter->item;
+		len += 3 + strlen(key->filename);
 	}
 	len += 20; // space for -W <size>, terminator.
 	ret = m_malloc(len);
@@ -452,10 +449,11 @@ multihop_passthrough_args() {
 		total += written;
 	}
 
-	for (nextkey = cli_opts.privkeys; nextkey; nextkey = nextkey->next)
+	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
+		sign_key * key = (sign_key*)iter->item;
 		const size_t size = len - total;
-		int written = snprintf(ret+total, size, "-i %s", nextkey->filename);
+		int written = snprintf(ret+total, size, "-i %s", key->filename);
 		dropbear_assert(written < size);
 		total += written;
 	}
@@ -621,12 +619,12 @@ static void fill_own_user() {
 #ifdef ENABLE_CLI_ANYTCPFWD
 /* Turn a "listenport:remoteaddr:remoteport" string into into a forwarding
  * set, and add it to the forwarding list */
-static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
+static void addforward(const char* origstr, m_list *fwdlist) {
 
 	char * listenport = NULL;
 	char * connectport = NULL;
 	char * connectaddr = NULL;
-	struct TCPFwdList* newfwd = NULL;
+	struct TCPFwdEntry* newfwd = NULL;
 	char * str = NULL;
 
 	TRACE(("enter addforward"))
@@ -653,7 +651,7 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 	*connectport = '\0';
 	connectport++;
 
-	newfwd = (struct TCPFwdList*)m_malloc(sizeof(struct TCPFwdList));
+	newfwd = m_malloc(sizeof(struct TCPFwdEntry));
 
 	/* Now we check the ports - note that the port ints are unsigned,
 	 * the check later only checks for >= MAX_PORT */
@@ -680,8 +678,7 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 	}
 
 	newfwd->have_reply = 0;
-	newfwd->next = *fwdlist;
-	*fwdlist = newfwd;
+	list_append(fwdlist, newfwd);
 
 	TRACE(("leave addforward: done"))
 	return;

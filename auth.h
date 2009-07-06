@@ -124,26 +124,6 @@ struct AuthState {
 
 };
 
-/* Sources for signing keys */
-typedef enum {
-	SIGNKEY_SOURCE_RAW_FILE,
-	SIGNKEY_SOURCE_AGENT,
-} signkey_source;
-
-struct SignKeyList;
-/* A singly linked list of signing keys */
-struct SignKeyList {
-
-	sign_key *key;
-	int type; /* The type of key */
-	struct SignKeyList *next;
-	signkey_source source;
-	char *filename;
-	/* the buffer? for encrypted keys, so we can later get
-	 * the private key portion */
-
-};
-
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 struct PubKeyOptions;
 struct PubKeyOptions {

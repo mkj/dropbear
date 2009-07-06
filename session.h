@@ -261,7 +261,7 @@ struct clientsession {
 									  info request from the server for
 									  interactive auth.*/
 #endif
-	struct SignKeyList *lastprivkey;
+	sign_key *lastprivkey;
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0
