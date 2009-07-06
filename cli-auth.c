@@ -234,6 +234,10 @@ void recv_msg_userauth_success() {
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;
 	cli_ses.lastauthtype = AUTH_TYPE_NONE;
+
+#ifdef ENABLE_CLI_PUBKEY_AUTH
+	cli_auth_pubkey_cleanup();
+#endif
 }
 
 void cli_auth_try() {

@@ -174,7 +174,7 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 		sigbuf = buf_new(4 + SHA1_HASH_SIZE + ses.writepayload->len);
 		buf_putstring(sigbuf, ses.session_id, SHA1_HASH_SIZE);
 		buf_putbytes(sigbuf, ses.writepayload->data, ses.writepayload->len);
-		buf_put_sign(ses.writepayload, key, type, sigbuf->data, sigbuf->len);
+		cli_buf_put_sign(ses.writepayload, key, type, sigbuf->data, sigbuf->len);
 		buf_free(sigbuf); /* Nothing confidential in the buffer */
 	}
 
@@ -202,8 +202,22 @@ int cli_auth_pubkey() {
 		TRACE(("leave cli_auth_pubkey-success"))
 		return 1;
 	} else {
+		/* no more keys left */
 		TRACE(("leave cli_auth_pubkey-failure"))
 		return 0;
+	}
+}
+
+void cli_auth_pubkey_cleanup() {
+
+#ifdef ENABLE_CLI_AGENTFWD
+	m_close(cli_opts.agent_fd);
+	cli_opts.agent_fd = -1;
+#endif
+
+	while (cli_opts.privkeys->first) {
+		sign_key * key = list_remove(cli_opts.privkeys->first);
+		sign_key_free(key);
 	}
 }
 #endif /* Pubkey auth */

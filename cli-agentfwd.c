@@ -102,17 +102,26 @@ static int new_agent_chan(struct Channel * channel) {
    data        Any data, depending on packet type.  Encoding as in the ssh packet
                protocol.
 */
-static buffer * agent_request(int fd, unsigned char type) {
+static buffer * agent_request(unsigned char type, buffer *data) {
 
 	buffer * payload = NULL;
 	buffer * inbuf = NULL;
 	size_t readlen = 0;
 	ssize_t ret;
+	const int fd = cli_opts.agent_fd;
+	unsigned int data_len = 0;
+	if (data)
+	{
+		data_len = data->len;
+	}
 
-	payload = buf_new(4 + 1);
+	payload = buf_new(4 + 1 + data_len);
 
-	buf_putint(payload, 1);
+	buf_putint(payload, 1 + data_len);
 	buf_putbyte(payload, type);
+	if (data) {
+		buf_putbytes(payload, data->data, data->len);
+	}
 	buf_setpos(payload, 0);
 
 	ret = atomicio(write, fd, buf_getptr(payload, payload->len), payload->len);
@@ -160,7 +169,7 @@ out:
 	return inbuf;
 }
 
-static void agent_get_key_list(int fd, m_list * ret_list)
+static void agent_get_key_list(m_list * ret_list)
 {
 	buffer * inbuf = NULL;
 	unsigned int num = 0;
@@ -168,9 +177,9 @@ static void agent_get_key_list(int fd, m_list * ret_list)
 	unsigned int i;
 	int ret;
 
-	inbuf = agent_request(fd, SSH2_AGENTC_REQUEST_IDENTITIES);
+	inbuf = agent_request(SSH2_AGENTC_REQUEST_IDENTITIES, NULL);
 	if (!inbuf) {
-		TRACE(("agent_request returned no identities"))
+		TRACE(("agent_request failed returning identities"))
 		goto out;
 	}
 
@@ -191,7 +200,6 @@ static void agent_get_key_list(int fd, m_list * ret_list)
 		sign_key * pubkey = NULL;
 		int key_type = DROPBEAR_SIGNKEY_ANY;
 		buffer * key_buf;
-		struct SignKeyList *nextkey = NULL;
 
 		/* each public key is encoded as a string */
 		key_buf = buf_getstringbuf(inbuf);
@@ -222,19 +230,66 @@ out:
    be updated. */
 void load_agent_keys(m_list *ret_list)
 {
-	int fd;
-	fd = connect_agent();
-	if (fd < 0) {
+	/* agent_fd will be closed after successful auth */
+	cli_opts.agent_fd = connect_agent();
+	if (cli_opts.agent_fd < 0) {
 		dropbear_log(LOG_INFO, "Failed to connect to agent");
 		return;
 	}
 
-	agent_get_key_list(fd, ret_list);
-	close(fd);
+	agent_get_key_list(ret_list);
 }
 
 void agent_buf_sign(buffer *sigblob, sign_key *key, 
 		const unsigned char *data, unsigned int len) {
+	buffer *request_data = buf_new(MAX_PUBKEY_SIZE + len + 12);
+	buffer *response;
+	unsigned int keylen, siglen;
+	int packet_type;
+	
+	/* Request format
+	byte			SSH2_AGENTC_SIGN_REQUEST
+	string			key_blob
+	string			data
+	uint32			flags
+	*/
+	/* We write the key, then figure how long it was and write that */
+	//buf_putint(request_data, 0);
+	buf_put_pub_key(request_data, key, key->type);
+	keylen = request_data->len - 4;
+	//buf_setpos(request_data, 0);
+	//buf_putint(request_data, keylen);
+	
+	//buf_setpos(request_data, request_data->len);
+	buf_putstring(request_data, data, len);
+	buf_putint(request_data, 0);
+	
+	response = agent_request(SSH2_AGENTC_SIGN_REQUEST, request_data);
+	buf_free(request_data);
+	
+	if (!response) {
+		goto fail;
+	}
+	
+	packet_type = buf_getbyte(response);
+	if (packet_type != SSH2_AGENT_SIGN_RESPONSE) {
+		goto fail;
+	}
+	
+	/* Response format
+	byte			SSH2_AGENT_SIGN_RESPONSE
+	string			signature_blob
+	*/
+	siglen = buf_getint(response);
+	buf_putbytes(sigblob, buf_getptr(response, siglen), siglen);
+	buf_free(response);
+	
+	return;
+fail:
+	/* XXX don't fail badly here. instead propagate a failure code back up to
+	   the cli auth pubkey code, and just remove this key from the list of 
+	   ones to try. */
+	dropbear_exit("Agent failed signing key");
 }
 
 #endif

@@ -124,6 +124,8 @@ typedef struct cli_runopts {
 	int agent_fwd;
 	int agent_keys_loaded; /* whether pubkeys has been populated with a 
 							  list of keys held by the agent */
+	int agent_fd; /* The agent fd is only set during authentication. Forwarded
+	                 agent sessions have their own file descriptors */
 #endif
 
 #ifdef ENABLE_CLI_NETCAT
