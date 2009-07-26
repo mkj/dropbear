@@ -261,7 +261,7 @@ void decrypt_packet() {
 		
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
-	len = ses.readbuf->len - padlen - 4 - 1;
+	len = ses.readbuf->len - padlen - 4 - 1 - macsize;
 	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
 		dropbear_exit("bad packet size");
 	}
