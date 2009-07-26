@@ -371,7 +371,9 @@ static void gen_new_zstreams() {
 		ses.newkeys->trans.zstream->zalloc = Z_NULL;
 		ses.newkeys->trans.zstream->zfree = Z_NULL;
 	
-		if (deflateInit(ses.newkeys->trans.zstream, Z_DEFAULT_COMPRESSION) 
+		if (deflateInit2(ses.newkeys->trans.zstream, Z_DEFAULT_COMPRESSION,
+					Z_DEFLATED, DROPBEAR_ZLIB_WINDOW_BITS, 
+					DROPBEAR_ZLIB_MEM_LEVEL, Z_DEFAULT_STRATEGY)
 				!= Z_OK) {
 			dropbear_exit("zlib error");
 		}
