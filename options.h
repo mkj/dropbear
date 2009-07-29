@@ -87,7 +87,8 @@ much traffic. */
 #define DROPBEAR_AES128
 #define DROPBEAR_3DES
 #define DROPBEAR_AES256
-#define DROPBEAR_BLOWFISH
+/* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
+/*#define DROPBEAR_BLOWFISH*/
 #define DROPBEAR_TWOFISH256
 #define DROPBEAR_TWOFISH128
 
@@ -129,6 +130,21 @@ much traffic. */
  * ~4k in binary size with static uclibc, but your DSS hostkey could be exposed
  * if the random number source isn't good. In general this isn't required */
 /* #define DSS_PROTOK */
+
+/* Control the memory/performance/compression tradeoff for zlib.
+ * Set windowBits=8, memLevel=1 for least memory usage, see your system's
+ * zlib.h for full details.
+ * Default settings (windowBits=15, memLevel=8) will use 
+ * 256kB for compression + 32kB for decompression.
+ * windowBits=8, memLevel=1 will use 10kB compression + 32kB decompression.
+ * Note that windowBits is only set for deflate() - inflate() always uses the
+ * default of 15 so as to interoperate with other clients. */
+#ifndef DROPBEAR_ZLIB_WINDOW_BITS
+#define DROPBEAR_ZLIB_WINDOW_BITS 15 
+#endif
+#ifndef DROPBEAR_ZLIB_MEM_LEVEL
+#define DROPBEAR_ZLIB_MEM_LEVEL 8
+#endif
 
 /* Whether to do reverse DNS lookups. */
 #define DO_HOST_LOOKUP
@@ -248,13 +264,19 @@ much traffic. */
    significant difference to network performance. 24kB was empirically
    chosen for a 100mbit ethernet network. The value can be altered at
    runtime with the -W argument. */
+#ifndef DEFAULT_RECV_WINDOW
 #define DEFAULT_RECV_WINDOW 24576
+#endif
 /* Maximum size of a received SSH data packet - this _MUST_ be >= 32768
    in order to interoperate with other implementations */
+#ifndef RECV_MAX_PAYLOAD_LEN
 #define RECV_MAX_PAYLOAD_LEN 32768
+#endif
 /* Maximum size of a transmitted data packet - this can be any value,
    though increasing it may not make a significant difference. */
+#ifndef TRANS_MAX_PAYLOAD_LEN
 #define TRANS_MAX_PAYLOAD_LEN 16384
+#endif
 
 /* Ensure that data is transmitted every KEEPALIVE seconds. This can
 be overridden at runtime with -K. 0 disables keepalives */

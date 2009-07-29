@@ -85,6 +85,10 @@ void svr_session(int sock, int childpipe,
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
 	svr_ses.addrstring = addrstring;
+#ifdef __uClinux__
+	svr_ses.server_pid = getpid();
+#endif
+	svr_ses.addrstring = addrstring;
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
@@ -144,11 +148,20 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-	/* free potential public key options */
-	svr_pubkey_options_cleanup();
+#ifdef __uClinux__
+	/* only the main server process should cleanup - we don't want
+	 * forked children doing that */
+	if (svr_ses.server_pid == getpid())
+#else
+	if (1)
+#endif
+	{
+		/* free potential public key options */
+		svr_pubkey_options_cleanup();
 
-	/* must be after we've done with username etc */
-	common_session_cleanup();
+		/* must be after we've done with username etc */
+		common_session_cleanup();
+	}
 
 	exit(exitcode);
 

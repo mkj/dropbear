@@ -213,6 +213,10 @@ struct serversession {
 	/* The numeric address they connected from, used for logging */
 	char * addrstring;
 
+#ifdef __uClinux__
+	pid_t server_pid;
+#endif
+
 };
 
 typedef enum {
