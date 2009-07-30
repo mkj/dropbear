@@ -84,7 +84,6 @@ int signkey_type_from_name(const char* name, int namelen) {
 #endif
 
 	TRACE(("signkey_type_from_name unexpected key type."))
-	printhex("Key type", name, namelen);
 
 	return DROPBEAR_SIGNKEY_NONE;
 }

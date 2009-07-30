@@ -35,14 +35,16 @@
  * 10000 is arbitrary */
 #define MAX_AGENT_REPLY  10000
 
-int agentreq(struct ChanSess * chansess);
-void agentcleanup(struct ChanSess * chansess);
-void agentset(struct ChanSess *chansess);
+int svr_agentreq(struct ChanSess * chansess);
+void svr_agentcleanup(struct ChanSess * chansess);
+void svr_agentset(struct ChanSess *chansess);
 
 /* client functions */
-void load_agent_keys(m_list * ret_list);
+void cli_load_agent_keys(m_list * ret_list);
 void agent_buf_sign(buffer *sigblob, sign_key *key, 
     const unsigned char *data, unsigned int len);
+void cli_setup_agent(struct Channel *channel);
+
 
 #ifdef __hpux
 #define seteuid(a)       setresuid(-1, (a), -1)

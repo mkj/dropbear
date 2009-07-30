@@ -33,12 +33,11 @@
 #include "runopts.h"
 #include "termcodes.h"
 #include "chansession.h"
+#include "agentfwd.h"
 
 static void cli_closechansess(struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
 static void cli_chansessreq(struct Channel *channel);
-
-static void start_channel_request(struct Channel *channel, unsigned char *type);
 
 static void send_chansess_pty_req(struct Channel *channel);
 static void send_chansess_shell_req(struct Channel *channel);
@@ -92,7 +91,7 @@ static void cli_closechansess(struct Channel *UNUSED(channel)) {
 
 }
 
-static void start_channel_request(struct Channel *channel, 
+void cli_start_send_channel_request(struct Channel *channel, 
 		unsigned char *type) {
 
 	CHECKCLEARTOWRITE();
@@ -287,7 +286,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 
 	TRACE(("enter send_chansess_pty_req"))
 
-	start_channel_request(channel, "pty-req");
+	cli_start_send_channel_request(channel, "pty-req");
 
 	/* Don't want replies */
 	buf_putbyte(ses.writepayload, 0);
@@ -330,7 +329,7 @@ static void send_chansess_shell_req(struct Channel *channel) {
 		reqtype = "shell";
 	}
 
-	start_channel_request(channel, reqtype);
+	cli_start_send_channel_request(channel, reqtype);
 
 	/* XXX TODO */
 	buf_putbyte(ses.writepayload, 0); /* Don't want replies */
@@ -360,6 +359,12 @@ static int cli_init_stdpipe_sess(struct Channel *channel) {
 static int cli_initchansess(struct Channel *channel) {
 
 	cli_init_stdpipe_sess(channel);
+
+#ifdef ENABLE_CLI_AGENTFWD
+	if (cli_opts.agent_fwd) {
+		cli_setup_agent(channel);
+	}
+#endif
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);

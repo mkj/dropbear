@@ -287,7 +287,7 @@ static void closechansess(struct Channel *channel) {
 #endif
 
 #ifndef DISABLE_AGENTFWD
-	agentcleanup(chansess);
+	svr_agentcleanup(chansess);
 #endif
 
 	/* clear child pid entries */
@@ -346,7 +346,7 @@ static void chansessionrequest(struct Channel *channel) {
 #endif
 #ifndef DISABLE_AGENTFWD
 	} else if (strcmp(type, "auth-agent-req@openssh.com") == 0) {
-		ret = agentreq(chansess);
+		ret = svr_agentreq(chansess);
 #endif
 	} else if (strcmp(type, "signal") == 0) {
 		ret = sessionsignal(chansess);
@@ -894,7 +894,7 @@ static void execchild(void *user_data) {
 #endif
 #ifndef DISABLE_AGENTFWD
 	/* set up agent env variable */
-	agentset(chansess);
+	svr_agentset(chansess);
 #endif
 
 	usershell = m_strdup(get_user_shell());

@@ -49,9 +49,11 @@ static void agentaccept(struct Listener * listener, int sock);
 
 /* Handles client requests to start agent forwarding, sets up listening socket.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int agentreq(struct ChanSess * chansess) {
+int svr_agentreq(struct ChanSess * chansess) {
 
 	int fd;
+
+	TRACE(("enter svr_agentreq"))
 
 	if (!svr_pubkey_allows_agentfwd()) {
 		return DROPBEAR_FAILURE;
@@ -89,10 +91,12 @@ int agentreq(struct ChanSess * chansess) {
 	}
 
 	return DROPBEAR_SUCCESS;
+	TRACE(("success"))
 
 fail:
+	TRACE(("fail"))
 	/* cleanup */
-	agentcleanup(chansess);
+	svr_agentcleanup(chansess);
 
 	return DROPBEAR_FAILURE;
 }
@@ -118,7 +122,7 @@ static void agentaccept(struct Listener *UNUSED(listener), int sock) {
 
 /* set up the environment variable pointing to the socket. This is called
  * just before command/shell execution, after dropping priveleges */
-void agentset(struct ChanSess * chansess) {
+void svr_agentset(struct ChanSess * chansess) {
 
 	char *path = NULL;
 	int len;
@@ -137,7 +141,7 @@ void agentset(struct ChanSess * chansess) {
 }
 
 /* close the socket, remove the socket-file */
-void agentcleanup(struct ChanSess * chansess) {
+void svr_agentcleanup(struct ChanSess * chansess) {
 
 	char *path = NULL;
 	uid_t uid;

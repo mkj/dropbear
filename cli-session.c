@@ -235,7 +235,7 @@ static void cli_sessionloop() {
 				cli_send_netcat_request();
 			} else 
 #endif
-				if (!cli_opts.no_cmd) {
+			if (!cli_opts.no_cmd) {
 				cli_send_chansess_request();
 			}
 			TRACE(("leave cli_sessionloop: running"))

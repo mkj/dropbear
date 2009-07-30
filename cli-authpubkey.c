@@ -187,10 +187,9 @@ int cli_auth_pubkey() {
 
 	TRACE(("enter cli_auth_pubkey"))
 
-	if (cli_opts.agent_fwd &&
-			!cli_opts.agent_keys_loaded) {
+	if (!cli_opts.agent_keys_loaded) {
 		/* get the list of available keys from the agent */
-		load_agent_keys(cli_opts.privkeys);
+		cli_load_agent_keys(cli_opts.privkeys);
 		cli_opts.agent_keys_loaded = 1;
 	}
 

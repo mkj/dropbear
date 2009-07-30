@@ -226,10 +226,20 @@ out:
 	}
 }
 
+void cli_setup_agent(struct Channel *channel) {
+	if (!getenv("SSH_AUTH_SOCK")) {
+		return;
+	}
+	
+	cli_start_send_channel_request(channel, "auth-agent-req@openssh.com");
+	/* Don't want replies */
+	buf_putbyte(ses.writepayload, 0);
+	encrypt_packet();
+}
+
 /* Returned keys are prepended to ret_list, which will
    be updated. */
-void load_agent_keys(m_list *ret_list)
-{
+void cli_load_agent_keys(m_list *ret_list) {
 	/* agent_fd will be closed after successful auth */
 	cli_opts.agent_fd = connect_agent();
 	if (cli_opts.agent_fd < 0) {
