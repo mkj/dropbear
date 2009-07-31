@@ -79,6 +79,10 @@ static int new_agent_chan(struct Channel * channel) {
 		return SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	fd = connect_agent();
+	if (cli_opts.agent_fd < 0) {
+		dropbear_log(LOG_INFO, "Failed to connect to agent");
+		return SSH_OPEN_CONNECT_FAILED;
+	}
 
 	setnonblocking(fd);
 
