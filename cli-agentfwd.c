@@ -66,6 +66,10 @@ static int connect_agent() {
 
 	fd = connect_unix(agent_sock);
 
+	if (fd < 0) {
+		dropbear_log(LOG_INFO, "Failed to connect to agent");
+	}
+
 	return fd;
 }
 
@@ -80,7 +84,6 @@ static int new_agent_chan(struct Channel * channel) {
 
 	fd = connect_agent();
 	if (cli_opts.agent_fd < 0) {
-		dropbear_log(LOG_INFO, "Failed to connect to agent");
 		return SSH_OPEN_CONNECT_FAILED;
 	}
 
@@ -247,7 +250,6 @@ void cli_load_agent_keys(m_list *ret_list) {
 	/* agent_fd will be closed after successful auth */
 	cli_opts.agent_fd = connect_agent();
 	if (cli_opts.agent_fd < 0) {
-		dropbear_log(LOG_INFO, "Failed to connect to agent");
 		return;
 	}
 
