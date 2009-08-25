@@ -381,19 +381,19 @@ static int cli_initchansess(struct Channel *channel) {
 
 #ifdef ENABLE_CLI_NETCAT
 
+const struct ChanType cli_chan_netcat = {
+	0, /* sepfds */
+	"direct-tcpip",
+	cli_init_stdpipe_sess, /* inithandler */
+	NULL,
+	NULL,
+	cli_closechansess
+};
+
 void cli_send_netcat_request() {
 
 	const unsigned char* source_host = "127.0.0.1";
 	const int source_port = 22;
-
-	const struct ChanType cli_chan_netcat = {
-		0, /* sepfds */
-		"direct-tcpip",
-		cli_init_stdpipe_sess, /* inithandler */
-		NULL,
-		NULL,
-		cli_closechansess
-	};
 
 	cli_opts.wantpty = 0;
 
