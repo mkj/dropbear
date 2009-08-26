@@ -578,6 +578,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
+	int is_forced;
 	int ret;
 
 	TRACE(("enter sessioncommand"))
@@ -588,9 +589,6 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		 * from sftp to scp */
 		return DROPBEAR_FAILURE;
 	}
-
-	/* take public key option 'command' into account */
-	svr_pubkey_set_forced_command(chansess);
 
 	if (iscmd) {
 		/* "exec" */
@@ -616,6 +614,9 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			}
 		}
 	}
+	
+	/* take public key option 'command' into account */
+	svr_pubkey_set_forced_command(chansess);
 
 #ifdef LOG_COMMANDS
 	if (chansess->cmd) {
@@ -882,6 +883,17 @@ static void execchild(void *user_data) {
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
+
+	printf("adding option %p %s\n", ses.authstate.pubkey_options,
+			ses.authstate.pubkey_options->original_command);
+
+#ifdef ENABLE_SVR_PUBKEY_OPTIONS
+	if (ses.authstate.pubkey_options &&
+			ses.authstate.pubkey_options->original_command) {
+		addnewvar("SSH_ORIGINAL_COMMAND", 
+			ses.authstate.pubkey_options->original_command);
+	}
+#endif
 
 	/* change directory */
 	if (chdir(ses.authstate.pw_dir) < 0) {

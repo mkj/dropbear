@@ -172,7 +172,8 @@ much traffic. */
 /*#define ENABLE_SVR_PAM_AUTH*/
 #define ENABLE_SVR_PUBKEY_AUTH
 
-/* Wether to ake public key options in authorized_keys file into account */
+/* Whether to take public key options in 
+ * authorized_keys file into account */
 #ifdef ENABLE_SVR_PUBKEY_AUTH
 #define ENABLE_SVR_PUBKEY_OPTIONS
 #endif

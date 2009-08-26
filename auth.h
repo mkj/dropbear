@@ -99,7 +99,6 @@ void cli_auth_pubkey_cleanup();
  * relatively little extraneous bits when used for the client rather than the
  * server */
 struct AuthState {
-
 	char *username; /* This is the username the client presents to check. It
 					   is updated each run through, used for auth checking */
 	unsigned char authtypes; /* Flags indicating which auth types are still 
@@ -122,7 +121,6 @@ struct AuthState {
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 	struct PubKeyOptions* pubkey_options;
 #endif
-
 };
 
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
@@ -135,7 +133,7 @@ struct PubKeyOptions {
 	int no_pty_flag;
 	/* "command=" option. */
 	unsigned char * forced_command;
-
+	unsigned char * original_command;
 };
 #endif
 
