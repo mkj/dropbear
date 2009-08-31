@@ -742,8 +742,6 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		login_login(li);
 		login_free_entry(li);
 
-		m_free(chansess->tty);
-
 #ifdef DO_MOTD
 		if (svr_opts.domotd) {
 			/* don't show the motd if ~/.hushlogin exists */
@@ -884,9 +882,10 @@ static void execchild(void *user_data) {
 		addnewvar("TERM", chansess->term);
 	}
 
-	printf("adding option %p %s\n", ses.authstate.pubkey_options,
-			ses.authstate.pubkey_options->original_command);
-
+	if (chansess->tty) {
+		addnewvar("SSH_TTY", chansess->tty);
+	}
+	
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 	if (ses.authstate.pubkey_options &&
 			ses.authstate.pubkey_options->original_command) {
