@@ -74,26 +74,32 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
-void svr_session(int sock, int childpipe, 
-		char* remotehost, char *addrstring) {
-
+void svr_session(int sock, int childpipe) {
+	char *host, *port;
+	size_t len;
     reseedrandom();
 
 	crypto_init();
-	common_session_init(sock, sock, remotehost);
+	common_session_init(sock, sock);
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
-	svr_ses.addrstring = addrstring;
 #ifdef __uClinux__
 	svr_ses.server_pid = getpid();
 #endif
-	svr_ses.addrstring = addrstring;
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
 	ses.connect_time = time(NULL);
+
+	/* for logging the remote address */
+	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
+	len = strlen(host) + strlen(port) + 2;
+	svr_ses.addrstring = m_malloc(len);
+	snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
+	m_free(host);
+	m_free(port);
 
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;

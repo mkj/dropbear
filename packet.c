@@ -157,9 +157,10 @@ void read_packet() {
 static int read_packet_init() {
 
 	unsigned int maxlen;
-	int len;
-	unsigned char blocksize;
-	unsigned char macsize;
+	int slen;
+	unsigned int len;
+	unsigned int blocksize;
+	unsigned int macsize;
 
 
 	blocksize = ses.keys->recv.algo_crypt->blocksize;
@@ -173,12 +174,12 @@ static int read_packet_init() {
 	maxlen = blocksize - ses.readbuf->pos;
 			
 	/* read the rest of the packet if possible */
-	len = read(ses.sock_in, buf_getwriteptr(ses.readbuf, maxlen),
+	slen = read(ses.sock_in, buf_getwriteptr(ses.readbuf, maxlen),
 			maxlen);
-	if (len == 0) {
+	if (slen == 0) {
 		ses.remoteclosed();
 	}
-	if (len < 0) {
+	if (slen < 0) {
 		if (errno == EINTR) {
 			TRACE(("leave read_packet_init: EINTR"))
 			return DROPBEAR_FAILURE;
@@ -186,9 +187,9 @@ static int read_packet_init() {
 		dropbear_exit("error reading: %s", strerror(errno));
 	}
 
-	buf_incrwritepos(ses.readbuf, len);
+	buf_incrwritepos(ses.readbuf, slen);
 
-	if ((unsigned int)len != maxlen) {
+	if ((unsigned int)slen != maxlen) {
 		/* don't have enough bytes to determine length, get next time */
 		return DROPBEAR_FAILURE;
 	}

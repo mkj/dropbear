@@ -52,11 +52,9 @@ int exitflag = 0; /* GLOBAL */
 
 
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock_in, int sock_out, char* remotehost) {
+void common_session_init(int sock_in, int sock_out) {
 
 	TRACE(("enter session_init"))
-
-	ses.remotehost = remotehost;
 
 	ses.sock_in = sock_in;
 	ses.sock_out = sock_out;

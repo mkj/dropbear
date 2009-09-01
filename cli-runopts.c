@@ -378,15 +378,19 @@ void cli_getopts(int argc, char ** argv) {
 		}
 	}
 	if (keepalive_arg) {
-		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
+		unsigned int val;
+		if (m_str_to_uint(keepalive_arg, &val) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
 		}
+		opts.keepalive_secs = val;
 	}
 
 	if (idle_timeout_arg) {
-		if (m_str_to_uint(idle_timeout_arg, &opts.idle_timeout_secs) == DROPBEAR_FAILURE) {
+		unsigned int val;
+		if (m_str_to_uint(idle_timeout_arg, &val) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad idle_timeout '%s'", idle_timeout_arg);
 		}
+		opts.idle_timeout_secs = val;
 	}
 
 #ifdef ENABLE_CLI_NETCAT
@@ -454,7 +458,7 @@ multihop_passthrough_args() {
 		sign_key * key = (sign_key*)iter->item;
 		const size_t size = len - total;
 		int written = snprintf(ret+total, size, "-i %s", key->filename);
-		dropbear_assert(written < size);
+		dropbear_assert((unsigned int)written < size);
 		total += written;
 	}
 

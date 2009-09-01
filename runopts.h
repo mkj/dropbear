@@ -37,8 +37,8 @@ typedef struct runopts {
 	int listen_fwd_all;
 #endif
 	unsigned int recv_window;
-	unsigned int keepalive_secs;
-	unsigned int idle_timeout_secs;
+	time_t keepalive_secs;
+	time_t idle_timeout_secs;
 
 } runopts;
 

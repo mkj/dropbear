@@ -82,13 +82,13 @@ static const struct ChanType *cli_chantypes[] = {
 	NULL /* Null termination */
 };
 
-void cli_session(int sock_in, int sock_out, char* remotehost) {
+void cli_session(int sock_in, int sock_out) {
 
 	seedrandom();
 
 	crypto_init();
 
-	common_session_init(sock_in, sock_out, remotehost);
+	common_session_init(sock_in, sock_out);
 
 	chaninitialise(cli_chantypes);
 

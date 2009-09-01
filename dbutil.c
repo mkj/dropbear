@@ -539,14 +539,47 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 	execv(usershell, argv);
 }
 
+void get_socket_address(int fd, char **local_host, char **local_port,
+						char **remote_host, char **remote_port, int host_lookup)
+{
+	struct sockaddr_storage addr;
+	socklen_t addrlen;
+	
+	if (local_host || local_port) {
+		addrlen = sizeof(addr);
+		if (getsockname(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
+			dropbear_exit("Failed socket address: %s", strerror(errno));
+		}
+		getaddrstring(&addr, local_host, local_port, host_lookup);		
+	}
+	if (remote_host || remote_port) {
+		addrlen = sizeof(addr);
+		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
+			dropbear_exit("Failed socket address: %s", strerror(errno));
+		}
+		getaddrstring(&addr, remote_host, remote_port, host_lookup);		
+	}
+}
+
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
-unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
+void getaddrstring(struct sockaddr_storage* addr, 
+			char **ret_host, char **ret_port,
+			int host_lookup) {
 
-	char hbuf[NI_MAXHOST], sbuf[NI_MAXSERV];
-	char *retstring = NULL;
-	int ret;
+	char host[NI_MAXHOST+1], serv[NI_MAXSERV+1];
 	unsigned int len;
+	int ret;
+	
+	int flags = NI_NUMERICSERV | NI_NUMERICHOST;
+
+#ifndef DO_HOST_LOOKUP
+	host_lookup = 0;
+#endif
+	
+	if (host_lookup) {
+		flags = NI_NUMERICSERV;
+	}
 
 	len = sizeof(struct sockaddr_storage);
 	/* Some platforms such as Solaris 8 require that len is the length
@@ -564,66 +597,28 @@ unsigned char * getaddrstring(struct sockaddr_storage* addr, int withport) {
 #endif
 #endif
 
-	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf), 
-			sbuf, sizeof(sbuf), NI_NUMERICSERV | NI_NUMERICHOST);
+	ret = getnameinfo((struct sockaddr*)addr, len, host, sizeof(host)-1, 
+			serv, sizeof(serv)-1, flags);
 
 	if (ret != 0) {
-		/* This is a fairly bad failure - it'll fallback to IP if it
-		 * just can't resolve */
-		dropbear_exit("failed lookup (%d, %d)", ret, errno);
+		if (host_lookup) {
+			/* On some systems (Darwin does it) we get EINTR from getnameinfo
+			 * somehow. Eew. So we'll just return the IP, since that doesn't seem
+			 * to exhibit that behaviour. */
+			getaddrstring(addr, ret_host, ret_port, 0);
+			return;
+		} else {
+			/* if we can't do a numeric lookup, something's gone terribly wrong */
+			dropbear_exit("Failed lookup: %s", gai_strerror(ret));
+		}
 	}
 
-	if (withport) {
-		len = strlen(hbuf) + 2 + strlen(sbuf);
-		retstring = (char*)m_malloc(len);
-		snprintf(retstring, len, "%s:%s", hbuf, sbuf);
-	} else {
-		retstring = m_strdup(hbuf);
+	if (ret_host) {
+		*ret_host = m_strdup(host);
 	}
-
-	return retstring;
-}
-
-/* Get the hostname corresponding to the address addr. On failure, the IP
- * address is returned. The return value is allocated with strdup() */
-char* getaddrhostname(struct sockaddr_storage * addr) {
-
-	char hbuf[NI_MAXHOST];
-	char sbuf[NI_MAXSERV];
-	int ret;
-	unsigned int len;
-#ifdef DO_HOST_LOOKUP
-	const int flags = NI_NUMERICSERV;
-#else
-	const int flags = NI_NUMERICHOST | NI_NUMERICSERV;
-#endif
-
-	len = sizeof(struct sockaddr_storage);
-	/* Some platforms such as Solaris 8 require that len is the length
-	 * of the specific structure. */
-#ifdef HAVE_STRUCT_SOCKADDR_STORAGE_SS_FAMILY
-	if (addr->ss_family == AF_INET) {
-		len = sizeof(struct sockaddr_in);
+	if (ret_port) {
+		*ret_port = m_strdup(serv);
 	}
-#ifdef AF_INET6
-	if (addr->ss_family == AF_INET6) {
-		len = sizeof(struct sockaddr_in6);
-	}
-#endif
-#endif
-
-
-	ret = getnameinfo((struct sockaddr*)addr, len, hbuf, sizeof(hbuf),
-			sbuf, sizeof(sbuf), flags);
-
-	if (ret != 0) {
-		/* On some systems (Darwin does it) we get EINTR from getnameinfo
-		 * somehow. Eew. So we'll just return the IP, since that doesn't seem
-		 * to exhibit that behaviour. */
-		return getaddrstring(addr, 0);
-	}
-
-	return m_strdup(hbuf);
 }
 
 #ifdef DEBUG_TRACE

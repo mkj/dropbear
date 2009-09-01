@@ -250,6 +250,17 @@ static int newchansess(struct Channel *channel) {
 
 }
 
+static struct logininfo* 
+chansess_login_alloc(struct ChanSess *chansess) {
+	char *remotehost;
+	struct logininfo * li;
+	get_socket_address(ses.sock_in, NULL, NULL, &remotehost, NULL, 1);
+	li = login_alloc_entry(chansess->pid, ses.authstate.username,
+			remotehost, chansess->tty);
+	m_free(remotehost);	
+	return li;
+}
+
 /* clean a session channel */
 static void closechansess(struct Channel *channel) {
 
@@ -273,8 +284,7 @@ static void closechansess(struct Channel *channel) {
 
 	if (chansess->tty) {
 		/* write the utmp/wtmp login record */
-		li = login_alloc_entry(chansess->pid, ses.authstate.username,
-				ses.remotehost, chansess->tty);
+		li = chansess_login_alloc(chansess);
 		login_logout(li);
 		login_free_entry(li);
 
@@ -578,7 +588,6 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys) {
 
 	unsigned int cmdlen;
-	int is_forced;
 	int ret;
 
 	TRACE(("enter sessioncommand"))
@@ -627,6 +636,8 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 						ses.authstate.pw_name);
 	}
 #endif
+
+	// XXX set SSH_CONNECTION string here, since about to close socket...
 
 	if (chansess->term == NULL) {
 		/* no pty */
@@ -737,8 +748,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 		/* write the utmp/wtmp login record - must be after changing the
 		 * terminal used for stdout with the dup2 above */
-		li= login_alloc_entry(getpid(), ses.authstate.username,
-				ses.remotehost, chansess->tty);
+		li = chansess_login_alloc(chansess);
 		login_login(li);
 		login_free_entry(li);
 
@@ -885,6 +895,8 @@ static void execchild(void *user_data) {
 	if (chansess->tty) {
 		addnewvar("SSH_TTY", chansess->tty);
 	}
+	
+	
 	
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 	if (ses.authstate.pubkey_options &&
