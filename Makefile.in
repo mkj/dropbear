@@ -41,7 +41,7 @@ KEYOBJS=dropbearkey.o gendss.o genrsa.o
 
 CONVERTOBJS=dropbearconvert.o keyimport.o
 
-SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o
+SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
 
 HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h \
