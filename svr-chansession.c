@@ -222,6 +222,7 @@ static int newchansess(struct Channel *channel) {
 
 	chansess = (struct ChanSess*)m_malloc(sizeof(struct ChanSess));
 	chansess->cmd = NULL;
+	chansess->connection_string = NULL;
 	chansess->pid = 0;
 
 	/* pty details */
@@ -580,6 +581,21 @@ static int sessionpty(struct ChanSess * chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
+static char* make_connection_string() {
+	char *local_ip, *local_port, *remote_ip, *remote_port;
+	size_t len;
+	char *ret;
+	get_socket_address(ses.sock_in, &local_ip, &local_port, &remote_ip, &remote_port, 0);
+	len = strlen(local_ip) + strlen(local_port) + strlen(remote_ip) + strlen(remote_port) + 4;
+	ret = m_malloc(len);
+	snprintf(ret, len, "%s %s %s %s", remote_ip, remote_port, local_ip, local_port);
+	m_free(local_ip);
+	m_free(local_port);
+	m_free(remote_ip);
+	m_free(remote_port);
+	return ret;
+}
+
 /* Handle a command request from the client. This is used for both shell
  * and command-execution requests, and passes the command to
  * noptycommand or ptycommand as appropriate.
@@ -637,7 +653,11 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	}
 #endif
 
-	// XXX set SSH_CONNECTION string here, since about to close socket...
+	/* uClinux will vfork(), so there'll be a race as 
+	connection_string is freed below. */
+#ifndef __uClinux__
+	chansess->connection_string = make_connection_string();
+#endif
 
 	if (chansess->term == NULL) {
 		/* no pty */
@@ -646,6 +666,10 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		/* want pty */
 		ret = ptycommand(channel, chansess);
 	}
+
+#ifndef __uClinux__	
+	m_free(chansess->connection_string);
+#endif
 
 	if (ret == DROPBEAR_FAILURE) {
 		m_free(chansess->cmd);
@@ -896,7 +920,9 @@ static void execchild(void *user_data) {
 		addnewvar("SSH_TTY", chansess->tty);
 	}
 	
-	
+	if (chansess->connection_string) {
+		addnewvar("SSH_CONNECTION", chansess->connection_string);
+	}
 	
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
 	if (ses.authstate.pubkey_options &&

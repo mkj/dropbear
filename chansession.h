@@ -50,6 +50,10 @@ struct ChanSess {
 
 	/* exit details */
 	struct exitinfo exit;
+
+	/* Used to set $SSH_CONNECTION in the child session. 
+	Is only set temporarily before forking */
+	char *connection_string;
 	
 #ifndef DISABLE_X11FWD
 	struct Listener * x11listener;
