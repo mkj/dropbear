@@ -101,6 +101,9 @@ void svr_session(int sock, int childpipe) {
 	m_free(host);
 	m_free(port);
 
+	get_socket_address(ses.sock_in, NULL, NULL, 
+			&svr_ses.remotehost, NULL, 1);
+
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;
 

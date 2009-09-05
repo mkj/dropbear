@@ -211,6 +211,9 @@ struct serversession {
 	/* The numeric address they connected from, used for logging */
 	char * addrstring;
 
+	/* The resolved remote address, used for lastlog etc */
+	char *remotehost;
+
 #ifdef __uClinux__
 	pid_t server_pid;
 #endif

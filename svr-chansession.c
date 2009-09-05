@@ -253,12 +253,9 @@ static int newchansess(struct Channel *channel) {
 
 static struct logininfo* 
 chansess_login_alloc(struct ChanSess *chansess) {
-	char *remotehost;
 	struct logininfo * li;
-	get_socket_address(ses.sock_in, NULL, NULL, &remotehost, NULL, 1);
 	li = login_alloc_entry(chansess->pid, ses.authstate.username,
-			remotehost, chansess->tty);
-	m_free(remotehost);	
+			svr_ses.remotehost, chansess->tty);
 	return li;
 }
 
