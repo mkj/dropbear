@@ -102,7 +102,7 @@ pamConvFunc(int num_msg,
 				/* We don't recognise the prompt as asking for a password,
 				   so can't handle it. Add more above as required for
 				   different pam modules/implementations */
-				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (no echo)",
+				dropbear_log(LOG_NOTICE, "PAM unknown prompt '%s' (no echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;
 				break;
@@ -123,12 +123,15 @@ pamConvFunc(int num_msg,
 
 		case PAM_PROMPT_ECHO_ON:
 
-			if (!((strcmp(compare_message, "login:" ) == 0) 
-				|| (strcmp(compare_message, "please enter username:") == 0))) {
+			if (!(
+				(strcmp(compare_message, "login:" ) == 0) 
+				|| (strcmp(compare_message, "please enter username:") == 0)
+				|| (strcmp(compare_message, "username:") == 0)
+				)) {
 				/* We don't recognise the prompt as asking for a username,
 				   so can't handle it. Add more above as required for
 				   different pam modules/implementations */
-				dropbear_log(LOG_NOTICE, "PAM unknown prompt %s (with echo)",
+				dropbear_log(LOG_NOTICE, "PAM unknown prompt '%s' (with echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;
 				break;
@@ -212,7 +215,10 @@ void svr_auth_pam() {
 		goto cleanup;
 	}
 
+#ifdef HAVE_PAM_FAIL_DELAY
+	/* We have our own random delay code already, disable PAM's */
 	(void) pam_fail_delay(pamHandlep, 0 /* musec_delay */);
+#endif
 
 	/* (void) pam_set_item(pamHandlep, PAM_FAIL_DELAY, (void*) pamDelayFunc); */
 
