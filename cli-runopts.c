@@ -480,7 +480,7 @@ multihop_passthrough_args() {
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0) {
 	char *userhostarg = NULL;
 	char *hostbuf = NULL;
-	char *last_hop = NULL;;
+	char *last_hop = NULL;
 	char *remainder = NULL;
 
 	/* both scp and rsync parse a user@host argument
