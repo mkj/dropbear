@@ -160,6 +160,9 @@ struct sshsession {
 	buffer* kexhashbuf; /* session hash buffer calculated from various packets*/
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
 							 can add it to the hash when generating keys */
+
+	/* Enables/disables compression */
+	algo_type *compress_algos;
 							
 	/* a list of queued replies that should be sent after a KEX has
 	   concluded (ie, while dataallowed was unset)*/

@@ -40,6 +40,14 @@ typedef struct runopts {
 	time_t keepalive_secs;
 	time_t idle_timeout_secs;
 
+#ifndef DISABLE_ZLIB
+	/* TODO: add a commandline flag. Currently this is on by default if compression
+	 * is compiled in, but disabled for a client's non-final multihop stages. (The
+	 * intermediate stages are compressed streams, so are uncompressible. */
+	int enable_compress;
+#endif
+
+
 } runopts;
 
 extern runopts opts;
@@ -135,7 +143,6 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_PROXYCMD
 	char *proxycmd;
 #endif
-
 } cli_runopts;
 
 extern cli_runopts cli_opts;

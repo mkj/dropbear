@@ -33,6 +33,7 @@
 #include "packet.h"
 #include "bignum.h"
 #include "random.h"
+#include "runopts.h"
 
 /* diffie-hellman-group1-sha1 value for p */
 static const unsigned char dh_p_val[] = {
@@ -91,10 +92,10 @@ void send_msg_kexinit() {
 	buf_put_algolist(ses.writepayload, sshhashes);
 
 	/* compression_algorithms_client_to_server */
-	buf_put_algolist(ses.writepayload, sshcompress);
+	buf_put_algolist(ses.writepayload, ses.compress_algos);
 
 	/* compression_algorithms_server_to_client */
-	buf_put_algolist(ses.writepayload, sshcompress);
+	buf_put_algolist(ses.writepayload, ses.compress_algos);
 
 	/* languages_client_to_server */
 	buf_putstring(ses.writepayload, "", 0);
@@ -180,8 +181,16 @@ void recv_msg_newkeys() {
 
 /* Set up the kex for the first time */
 void kexfirstinitialise() {
-
 	ses.kexstate.donefirstkex = 0;
+
+#ifndef DISABLE_ZLIB
+	if (opts.enable_compress) {
+		ses.compress_algos = ssh_compress;
+	} else
+#endif
+	{
+		ses.compress_algos = ssh_nocompress;
+	}
 	kexinitialise();
 }
 
@@ -670,7 +679,7 @@ static void read_kex_algos() {
 	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
-	c2s_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
+	c2s_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, &goodguess);
 	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -678,7 +687,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
-	s2c_comp_algo = ses.buf_match_algo(ses.payload, sshcompress, &goodguess);
+	s2c_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, &goodguess);
 	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;

@@ -145,6 +145,9 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_PROXYCMD
 	cli_opts.proxycmd = NULL;
 #endif
+#ifndef DISABLE_ZLIB
+	opts.enable_compress = 1;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -530,6 +533,10 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s %s", 
 				argv0, cli_opts.remotehost, cli_opts.remoteport, 
 				passthrough_args, remainder);
+#ifndef DISABLE_ZLIB
+		/* The stream will be incompressible since it's encrypted. */
+		opts.enable_compress = 0;
+#endif
 		m_free(passthrough_args);
 	}
 	m_free(hostbuf);
