@@ -104,21 +104,13 @@ int listen_tcpfwd(struct TCPListener* tcpinfo) {
 	struct Listener *listener = NULL;
 	int nsocks;
 	char* errstring = NULL;
-	/* listen_spec = NULL indicates localhost */
-	const char* listen_spec = NULL;
 
 	TRACE(("enter listen_tcpfwd"))
 
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%d", tcpinfo->listenport);
 
-	/* a listenaddr of "" will indicate all interfaces */
-	if (opts.listen_fwd_all 
-			&& (strcmp(tcpinfo->listenaddr, "localhost") != 0) ) {
-		listen_spec = tcpinfo->listenaddr;
-	}
-
-	nsocks = dropbear_listen(listen_spec, portstring, socks, 
+	nsocks = dropbear_listen(tcpinfo->listenaddr, portstring, socks, 
 			DROPBEAR_MAX_SOCKS, &errstring, &ses.maxfd);
 	if (nsocks < 0) {
 		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);

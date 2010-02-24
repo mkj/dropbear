@@ -48,6 +48,7 @@ struct TCPFwdList {
 
 	const unsigned char* connectaddr;
 	unsigned int connectport;
+	const unsigned char* listenaddr;
 	unsigned int listenport;
 	unsigned int have_reply; /* is set to 1 after a reply has been received
 								when setting up the forwarding */

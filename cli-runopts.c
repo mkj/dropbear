@@ -564,13 +564,15 @@ static void fill_own_user() {
 }
 
 #ifdef ENABLE_CLI_ANYTCPFWD
-/* Turn a "listenport:remoteaddr:remoteport" string into into a forwarding
+/* Turn a "[listenaddr:]listenport:remoteaddr:remoteport" string into into a forwarding
  * set, and add it to the forwarding list */
 static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 
+	char *part1 = NULL, *part2 = NULL, *part3 = NULL, *part4 = NULL;
+	char * listenaddr = NULL;
 	char * listenport = NULL;
-	char * connectport = NULL;
 	char * connectaddr = NULL;
+	char * connectport = NULL;
 	struct TCPFwdList* newfwd = NULL;
 	char * str = NULL;
 
@@ -580,23 +582,41 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 	   is never free()d. */ 
 	str = m_strdup(origstr);
 
-	listenport = str;
+	part1 = str;
 
-	connectaddr = strchr(str, ':');
-	if (connectaddr == NULL) {
-		TRACE(("connectaddr == NULL"))
+	part2 = strchr(str, ':');
+	if (part2 == NULL) {
+		TRACE(("part2 == NULL"))
 		goto fail;
 	}
-	*connectaddr = '\0';
-	connectaddr++;
+	*part2 = '\0';
+	part2++;
 
-	connectport = strchr(connectaddr, ':');
-	if (connectport == NULL) {
-		TRACE(("connectport == NULL"))
+	part3 = strchr(part2, ':');
+	if (part3 == NULL) {
+		TRACE(("part3 == NULL"))
 		goto fail;
 	}
-	*connectport = '\0';
-	connectport++;
+	*part3 = '\0';
+	part3++;
+
+	part4 = strchr(part3, ':');
+	if (part4) {
+		*part4 = '\0';
+		part4++;
+	}
+
+	if (part4) {
+		listenaddr = part1;
+		listenport = part2;
+		connectaddr = part3;
+		connectport = part4;
+	} else {
+		listenaddr = NULL;
+		listenport = part1;
+		connectaddr = part2;
+		connectport = part3;
+	}
 
 	newfwd = (struct TCPFwdList*)m_malloc(sizeof(struct TCPFwdList));
 
@@ -612,6 +632,7 @@ static void addforward(const char* origstr, struct TCPFwdList** fwdlist) {
 		goto fail;
 	}
 
+	newfwd->listenaddr = listenaddr;
 	newfwd->connectaddr = connectaddr;
 
 	if (newfwd->listenport > 65535) {

@@ -45,7 +45,9 @@ const struct ChanType cli_chan_tcpremote = {
 #endif
 
 #ifdef ENABLE_CLI_LOCALTCPFWD
-static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
+static int cli_localtcp(const char* listenaddr, 
+		unsigned int listenport, 
+		const char* remoteaddr,
 		unsigned int remoteport);
 static const struct ChanType cli_chan_tcplocal = {
 	1, /* sepfds */
@@ -69,11 +71,14 @@ void setup_localtcp() {
 	}
 
 	while (cli_opts.localfwds != NULL) {
-		ret = cli_localtcp(cli_opts.localfwds->listenport,
+		ret = cli_localtcp(
+                cli_opts.localfwds->listenaddr,
+                cli_opts.localfwds->listenport,
 				cli_opts.localfwds->connectaddr,
 				cli_opts.localfwds->connectport);
 		if (ret == DROPBEAR_FAILURE) {
 			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
+					cli_opts.localfwds->listenaddr,
 					cli_opts.localfwds->listenport,
 					cli_opts.localfwds->connectaddr,
 					cli_opts.localfwds->connectport);
@@ -85,7 +90,9 @@ void setup_localtcp() {
 
 }
 
-static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
+static int cli_localtcp(const char* listenaddr, 
+		unsigned int listenport, 
+		const char* remoteaddr,
 		unsigned int remoteport) {
 
 	struct TCPListener* tcpinfo = NULL;
@@ -99,10 +106,17 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 	tcpinfo->sendaddr = m_strdup(remoteaddr);
 	tcpinfo->sendport = remoteport;
 
-	if (opts.listen_fwd_all) {
-		tcpinfo->listenaddr = m_strdup("");
-	} else {
-		tcpinfo->listenaddr = m_strdup("localhost");
+	if (listenaddr)
+	{
+		tcpinfo->listenaddr = m_strdup(listenaddr);
+	}
+	else
+	{
+		if (opts.listen_fwd_all) {
+			tcpinfo->listenaddr = m_strdup("");
+		} else {
+			tcpinfo->listenaddr = m_strdup("localhost");
+		}
 	}
 	tcpinfo->listenport = listenport;
 
@@ -120,7 +134,7 @@ static int cli_localtcp(unsigned int listenport, const char* remoteaddr,
 #endif /* ENABLE_CLI_LOCALTCPFWD */
 
 #ifdef  ENABLE_CLI_REMOTETCPFWD
-static void send_msg_global_request_remotetcp(int port) {
+static void send_msg_global_request_remotetcp(const char *addr, int port) {
 
 	char* listenspec = NULL;
 	TRACE(("enter send_msg_global_request_remotetcp"))
@@ -129,13 +143,7 @@ static void send_msg_global_request_remotetcp(int port) {
 	buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
 	buf_putstring(ses.writepayload, "tcpip-forward", 13);
 	buf_putbyte(ses.writepayload, 1); /* want_reply */
-	if (opts.listen_fwd_all) {
-		listenspec = "";
-	} else {
-		listenspec = "localhost";
-	}
-	/* TODO: IPv6? */;
-	buf_putstring(ses.writepayload, listenspec, strlen(listenspec));
+	buf_putstring(ses.writepayload, addr, strlen(addr));
 	buf_putint(ses.writepayload, port);
 
 	encrypt_packet();
@@ -192,7 +200,17 @@ void setup_remotetcp() {
 	iter = cli_opts.remotefwds;
 
 	while (iter != NULL) {
-		send_msg_global_request_remotetcp(iter->listenport);
+		if (!iter->listenaddr)
+		{
+			// we store the addresses so that we can compare them
+			// when the server sends them back
+			if (opts.listen_fwd_all) {
+				iter->listenaddr = m_strdup("");
+			} else {
+				iter->listenaddr = m_strdup("localhost");
+			}
+		}
+		send_msg_global_request_remotetcp(iter->listenaddr, iter->listenport);
 		iter = iter->next;
 	}
 	TRACE(("leave setup_remotetcp"))
@@ -200,22 +218,22 @@ void setup_remotetcp() {
 
 static int newtcpforwarded(struct Channel * channel) {
 
+    char *origaddr = NULL;
 	unsigned int origport;
 	struct TCPFwdList * iter = NULL;
 	char portstring[NI_MAXSERV];
 	int sock;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
-	/* We don't care what address they connected to */
-	buf_eatstring(ses.payload);
-
+	origaddr = buf_getstring(ses.payload, NULL);
 	origport = buf_getint(ses.payload);
 
 	/* Find which port corresponds */
 	iter = cli_opts.remotefwds;
 
 	while (iter != NULL) {
-		if (origport == iter->listenport) {
+		if (origport == iter->listenport
+            && (strcmp(origaddr, iter->listenaddr) == 0)) {
 			break;
 		}
 		iter = iter->next;
@@ -223,8 +241,9 @@ static int newtcpforwarded(struct Channel * channel) {
 
 	if (iter == NULL) {
 		/* We didn't request forwarding on that port */
-		dropbear_log(LOG_INFO, "Server send unrequested port, from port %d", 
-										origport);
+        cleantext(origaddr);
+		dropbear_log(LOG_INFO, "Server sent unrequested forward from \"%s:%d\"", 
+                origaddr, origport);
 		goto out;
 	}
 	
@@ -246,6 +265,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	err = SSH_OPEN_IN_PROGRESS;
 
 out:
+    m_free(origaddr);
 	TRACE(("leave newtcpdirect: err %d", err))
 	return err;
 }
