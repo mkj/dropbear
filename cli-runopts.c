@@ -71,11 +71,11 @@ static void printhelp() {
 					"-A    Enable agent auth forwarding\n"
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-					"-L <listenport:remotehost:remoteport> Local port forwarding\n"
+					"-L <[listenaddress:]listenport:remotehost:remoteport> Local port forwarding\n"
 					"-g    Allow remote hosts to connect to forwarded ports\n"
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
+					"-R <[listenaddress:]listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
@@ -680,8 +680,6 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 		listenport = part1;
 		connectaddr = part2;
 		connectport = part3;
-	}
-
 	}
 
 	newfwd = m_malloc(sizeof(struct TCPFwdEntry));
