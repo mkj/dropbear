@@ -58,7 +58,7 @@ struct Channel {
 	unsigned int recvmaxpacket, transmaxpacket;
 	void* typedata; /* a pointer to type specific data */
 	int writefd; /* read from wire, written to insecure side */
-	int readfd; /* read from insecure size, written to wire */
+	int readfd; /* read from insecure side, written to wire */
 	int errfd; /* used like writefd or readfd, depending if it's client or server.
 				  Doesn't exactly belong here, but is cleaner here */
 	circbuffer *writebuf; /* data from the wire, for local consumption */

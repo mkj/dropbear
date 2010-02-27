@@ -29,7 +29,21 @@
 #include "dss.h"
 #include "rsa.h"
 
+
+/* Sources for signing keys */
+typedef enum {
+	SIGNKEY_SOURCE_RAW_FILE,
+	SIGNKEY_SOURCE_AGENT,
+	SIGNKEY_SOURCE_INVALID,	
+} signkey_source;
+
 struct SIGN_key {
+
+	int type; /* The type of key (dss or rsa) */
+	signkey_source source;
+	char *filename;
+	/* the buffer? for encrypted keys, so we can later get
+	 * the private key portion */
 
 #ifdef DROPBEAR_DSS
 	dss_key * dsskey;

@@ -304,7 +304,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
 		buf_setpos(line, 0);
 		buf_setlen(line, 0);
-		buf_putbytes(line, ses.remotehost, hostlen);
+		buf_putbytes(line, cli_opts.remotehost, hostlen);
 		buf_putbyte(line, ' ');
 		buf_putbytes(line, algoname, algolen);
 		buf_putbyte(line, ' ');
@@ -327,4 +327,5 @@ out:
 	if (line != NULL) {
 		buf_free(line);
 	}
+	m_free(fingerprint);
 }

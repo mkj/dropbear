@@ -82,7 +82,8 @@ AC_CHECK_DECL(__UCLIBC__,
 	],,,)
 
 # Checks for libraries.
-AC_CHECK_LIB(crypt, crypt, LIBS="$LIBS -lcrypt")
+AC_CHECK_LIB(crypt, crypt, CRYPTLIB="-lcrypt")
+AC_SUBST(CRYPTLIB)	
 
 # Check if zlib is needed
 AC_ARG_WITH(zlib,
@@ -145,6 +146,7 @@ AC_ARG_ENABLE(pam,
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
 			AC_MSG_NOTICE(Enabling PAM)
+			AC_CHECK_FUNCS(pam_fail_delay)
 		else
 			AC_DEFINE(DISABLE_PAM,, Use PAM)
 			AC_MSG_NOTICE(Disabling PAM)

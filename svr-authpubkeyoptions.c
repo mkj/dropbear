@@ -88,10 +88,20 @@ int svr_pubkey_allows_pty() {
 	return 1;
 }
 
-/* Set chansession command to the one forced by 'command' public key option */
+/* Set chansession command to the one forced 
+ * by any 'command' public key option. */
 void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
-	if (ses.authstate.pubkey_options)
+	if (ses.authstate.pubkey_options) {
+		ses.authstate.pubkey_options->original_command = chansess->cmd;
+		if (!chansess->cmd)
+		{
+			ses.authstate.pubkey_options->original_command = m_strdup("");
+		}
 		chansess->cmd = ses.authstate.pubkey_options->forced_command;
+#ifdef LOG_COMMANDS
+		dropbear_log(LOG_INFO, "command forced to '%s'", ses.authstate.pubkey_options->original_command);
+#endif
+	}
 }
 
 /* Free potential public key options */
@@ -124,7 +134,6 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 	TRACE(("enter addpubkeyoptions"))
 
 	ses.authstate.pubkey_options = (struct PubKeyOptions*)m_malloc(sizeof( struct PubKeyOptions ));
-	memset(ses.authstate.pubkey_options, '\0', sizeof(*ses.authstate.pubkey_options));
 
 	buf_setpos(options_buf, 0);
 	while (options_buf->pos < options_buf->len) {

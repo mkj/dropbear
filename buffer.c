@@ -223,6 +223,20 @@ unsigned char* buf_getstring(buffer* buf, unsigned int *retlen) {
 	return ret;
 }
 
+/* Return a string as a newly allocated buffer */
+buffer * buf_getstringbuf(buffer *buf) {
+	buffer *ret;
+	unsigned char* str;
+	unsigned int len;
+	str = buf_getstring(buf, &len);
+	ret = m_malloc(sizeof(*ret));
+	ret->data = str;
+	ret->len = len;
+	ret->size = len;
+	ret->pos = 0;
+	return ret;
+}
+
 /* Just increment the buffer position the same as if we'd used buf_getstring,
  * but don't bother copying/malloc()ing for it */
 void buf_eatstring(buffer *buf) {

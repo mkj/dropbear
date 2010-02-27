@@ -61,30 +61,25 @@ static const struct ChanType cli_chan_tcplocal = {
 
 #ifdef ENABLE_CLI_LOCALTCPFWD
 void setup_localtcp() {
-
+	m_list_elem *iter;
 	int ret;
 
 	TRACE(("enter setup_localtcp"))
 
-	if (cli_opts.localfwds == NULL) {
-		TRACE(("cli_opts.localfwds == NULL"))
-	}
-
-	while (cli_opts.localfwds != NULL) {
+	for (iter = cli_opts.localfwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry * fwd = (struct TCPFwdEntry*)iter->item;
 		ret = cli_localtcp(
-                cli_opts.localfwds->listenaddr,
-                cli_opts.localfwds->listenport,
-				cli_opts.localfwds->connectaddr,
-				cli_opts.localfwds->connectport);
+				fwd->listenaddr,
+				fwd->listenport,
+				fwd->connectaddr,
+				fwd->connectport);
 		if (ret == DROPBEAR_FAILURE) {
-			dropbear_log(LOG_WARNING, "Failed local port forward %d:%s:%d",
-					cli_opts.localfwds->listenaddr,
-					cli_opts.localfwds->listenport,
-					cli_opts.localfwds->connectaddr,
-					cli_opts.localfwds->connectport);
-		}
-
-		cli_opts.localfwds = cli_opts.localfwds->next;
+			dropbear_log(LOG_WARNING, "Failed local port forward %s:%d:%s:%d",
+					fwd->listenaddr,
+					fwd->listenport,
+					fwd->connectaddr,
+					fwd->connectport);
+		}		
 	}
 	TRACE(("leave setup_localtcp"))
 
@@ -156,63 +151,49 @@ static void send_msg_global_request_remotetcp(const char *addr, int port) {
  * being in the same order as we sent the requests. This is the ordering
  * of the cli_opts.remotefwds list */
 void cli_recv_msg_request_success() {
-
 	/* Nothing in the packet. We just mark off that we have received the reply,
 	 * so that we can report failure for later ones. */
-	struct TCPFwdList * iter = NULL;
-
-	iter = cli_opts.remotefwds;
-	while (iter != NULL) {
-		if (!iter->have_reply)
-		{
-			iter->have_reply = 1;
+	m_list_elem * iter = NULL;
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		if (!fwd->have_reply) {
+			fwd->have_reply = 1;
 			return;
 		}
-		iter = iter->next;
 	}
 }
 
 void cli_recv_msg_request_failure() {
-	struct TCPFwdList * iter = NULL;
-
-	iter = cli_opts.remotefwds;
-	while (iter != NULL) {
-		if (!iter->have_reply)
-		{
-			iter->have_reply = 1;
-			dropbear_log(LOG_WARNING, "Remote TCP forward request failed (port %d -> %s:%d)", iter->listenport, iter->connectaddr, iter->connectport);
+	m_list_elem *iter;
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		if (!fwd->have_reply) {
+			fwd->have_reply = 1;
+			dropbear_log(LOG_WARNING, "Remote TCP forward request failed (port %d -> %s:%d)", fwd->listenport, fwd->connectaddr, fwd->connectport);
 			return;
 		}
-		iter = iter->next;
 	}
 }
 
 void setup_remotetcp() {
-
-	struct TCPFwdList * iter = NULL;
-
+	m_list_elem *iter;
 	TRACE(("enter setup_remotetcp"))
 
-	if (cli_opts.remotefwds == NULL) {
-		TRACE(("cli_opts.remotefwds == NULL"))
-	}
-
-	iter = cli_opts.remotefwds;
-
-	while (iter != NULL) {
-		if (!iter->listenaddr)
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
+		if (!fwd->listenaddr)
 		{
 			// we store the addresses so that we can compare them
 			// when the server sends them back
 			if (opts.listen_fwd_all) {
-				iter->listenaddr = m_strdup("");
+				fwd->listenaddr = m_strdup("");
 			} else {
-				iter->listenaddr = m_strdup("localhost");
+				fwd->listenaddr = m_strdup("localhost");
 			}
 		}
-		send_msg_global_request_remotetcp(iter->listenaddr, iter->listenport);
-		iter = iter->next;
+		send_msg_global_request_remotetcp(fwd->listenaddr, fwd->listenport);
 	}
+
 	TRACE(("leave setup_remotetcp"))
 }
 
@@ -220,7 +201,8 @@ static int newtcpforwarded(struct Channel * channel) {
 
     char *origaddr = NULL;
 	unsigned int origport;
-	struct TCPFwdList * iter = NULL;
+	m_list_elem * iter = NULL;
+	struct TCPFwdEntry *fwd;
 	char portstring[NI_MAXSERV];
 	int sock;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
@@ -229,14 +211,12 @@ static int newtcpforwarded(struct Channel * channel) {
 	origport = buf_getint(ses.payload);
 
 	/* Find which port corresponds */
-	iter = cli_opts.remotefwds;
-
-	while (iter != NULL) {
-		if (origport == iter->listenport
-            && (strcmp(origaddr, iter->listenaddr) == 0)) {
+	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
+		fwd = (struct TCPFwdEntry*)iter->item;
+		if (origport == fwd->listenport
+				&& (strcmp(origaddr, fwd->listenaddr) == 0)) {
 			break;
 		}
-		iter = iter->next;
 	}
 
 	if (iter == NULL) {
@@ -247,8 +227,8 @@ static int newtcpforwarded(struct Channel * channel) {
 		goto out;
 	}
 	
-	snprintf(portstring, sizeof(portstring), "%d", iter->connectport);
-	sock = connect_remote(iter->connectaddr, portstring, 1, NULL);
+	snprintf(portstring, sizeof(portstring), "%d", fwd->connectport);
+	sock = connect_remote(fwd->connectaddr, portstring, 1, NULL);
 	if (sock < 0) {
 		TRACE(("leave newtcpdirect: sock failed"))
 		err = SSH_OPEN_CONNECT_FAILED;
@@ -265,7 +245,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	err = SSH_OPEN_IN_PROGRESS;
 
 out:
-    m_free(origaddr);
+	m_free(origaddr);
 	TRACE(("leave newtcpdirect: err %d", err))
 	return err;
 }

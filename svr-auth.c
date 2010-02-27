@@ -33,6 +33,7 @@
 #include "packet.h"
 #include "auth.h"
 #include "runopts.h"
+#include "random.h"
 
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);
@@ -337,7 +338,12 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	encrypt_packet();
 
 	if (incrfail) {
-		usleep(300000); /* XXX improve this */
+		unsigned int delay;
+		genrandom((unsigned char*)&delay, sizeof(delay));
+		/* We delay for 300ms +- 50ms, 0.1ms granularity */
+		delay = 250000 + (delay % 1000)*100;
+		usleep(delay);
+		dropbear_log(LOG_INFO, "delay is %d", delay);
 		ses.authstate.failcount++;
 	}
 

@@ -52,11 +52,9 @@ int exitflag = 0; /* GLOBAL */
 
 
 /* called only at the start of a session, set up initial state */
-void common_session_init(int sock_in, int sock_out, char* remotehost) {
+void common_session_init(int sock_in, int sock_out) {
 
 	TRACE(("enter session_init"))
-
-	ses.remotehost = remotehost;
 
 	ses.sock_in = sock_in;
 	ses.sock_out = sock_out;
@@ -71,6 +69,9 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	}
 	setnonblocking(ses.signal_pipe[0]);
 	setnonblocking(ses.signal_pipe[1]);
+
+	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
+	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
 	
 	kexfirstinitialise(); /* initialise the kex state */
 
@@ -78,7 +79,6 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	ses.transseq = 0;
 
 	ses.readbuf = NULL;
-	ses.decryptreadbuf = NULL;
 	ses.payload = NULL;
 	ses.recvseq = 0;
 
@@ -95,22 +95,22 @@ void common_session_init(int sock_in, int sock_out, char* remotehost) {
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));
 	ses.newkeys = NULL;
-	ses.keys->recv_algo_crypt = &dropbear_nocipher;
-	ses.keys->trans_algo_crypt = &dropbear_nocipher;
-	ses.keys->recv_crypt_mode = &dropbear_mode_none;
-	ses.keys->trans_crypt_mode = &dropbear_mode_none;
+	ses.keys->recv.algo_crypt = &dropbear_nocipher;
+	ses.keys->trans.algo_crypt = &dropbear_nocipher;
+	ses.keys->recv.crypt_mode = &dropbear_mode_none;
+	ses.keys->trans.crypt_mode = &dropbear_mode_none;
 	
-	ses.keys->recv_algo_mac = &dropbear_nohash;
-	ses.keys->trans_algo_mac = &dropbear_nohash;
+	ses.keys->recv.algo_mac = &dropbear_nohash;
+	ses.keys->trans.algo_mac = &dropbear_nohash;
 
 	ses.keys->algo_kex = -1;
 	ses.keys->algo_hostkey = -1;
-	ses.keys->recv_algo_comp = DROPBEAR_COMP_NONE;
-	ses.keys->trans_algo_comp = DROPBEAR_COMP_NONE;
+	ses.keys->recv.algo_comp = DROPBEAR_COMP_NONE;
+	ses.keys->trans.algo_comp = DROPBEAR_COMP_NONE;
 
 #ifndef DISABLE_ZLIB
-	ses.keys->recv_zstream = NULL;
-	ses.keys->trans_zstream = NULL;
+	ses.keys->recv.zstream = NULL;
+	ses.keys->trans.zstream = NULL;
 #endif
 
 	/* key exchange buffers */

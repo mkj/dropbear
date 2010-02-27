@@ -125,6 +125,9 @@ void svr_getopts(int argc, char ** argv) {
 #ifdef ENABLE_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
 #endif
+#ifndef DISABLE_ZLIB
+	opts.enable_compress = 1;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -296,15 +299,19 @@ void svr_getopts(int argc, char ** argv) {
 	}
 	
 	if (keepalive_arg) {
-		if (m_str_to_uint(keepalive_arg, &opts.keepalive_secs) == DROPBEAR_FAILURE) {
+		unsigned int val;
+		if (m_str_to_uint(keepalive_arg, &val) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
 		}
+		opts.keepalive_secs = val;
 	}
 
 	if (idle_timeout_arg) {
-		if (m_str_to_uint(idle_timeout_arg, &opts.idle_timeout_secs) == DROPBEAR_FAILURE) {
+		unsigned int val;
+		if (m_str_to_uint(idle_timeout_arg, &val) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad idle_timeout '%s'", idle_timeout_arg);
 		}
+		opts.idle_timeout_secs = val;
 	}
 }
 
