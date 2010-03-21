@@ -71,11 +71,11 @@ static void printhelp() {
 					"-A    Enable agent auth forwarding\n"
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-					"-L <listenport:remotehost:remoteport> Local port forwarding\n"
+					"-L <[listenaddress:]listenport:remotehost:remoteport> Local port forwarding\n"
 					"-g    Allow remote hosts to connect to forwarded ports\n"
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-					"-R <listenport:remotehost:remoteport> Remote port forwarding\n"
+					"-R <[listenaddress:]listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
@@ -628,13 +628,15 @@ static void fill_own_user() {
 }
 
 #ifdef ENABLE_CLI_ANYTCPFWD
-/* Turn a "listenport:remoteaddr:remoteport" string into into a forwarding
+/* Turn a "[listenaddr:]listenport:remoteaddr:remoteport" string into into a forwarding
  * set, and add it to the forwarding list */
 static void addforward(const char* origstr, m_list *fwdlist) {
 
+	char *part1 = NULL, *part2 = NULL, *part3 = NULL, *part4 = NULL;
+	char * listenaddr = NULL;
 	char * listenport = NULL;
-	char * connectport = NULL;
 	char * connectaddr = NULL;
+	char * connectport = NULL;
 	struct TCPFwdEntry* newfwd = NULL;
 	char * str = NULL;
 
@@ -644,23 +646,41 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 	   is never free()d. */ 
 	str = m_strdup(origstr);
 
-	listenport = str;
+	part1 = str;
 
-	connectaddr = strchr(str, ':');
-	if (connectaddr == NULL) {
-		TRACE(("connectaddr == NULL"))
+	part2 = strchr(str, ':');
+	if (part2 == NULL) {
+		TRACE(("part2 == NULL"))
 		goto fail;
 	}
-	*connectaddr = '\0';
-	connectaddr++;
+	*part2 = '\0';
+	part2++;
 
-	connectport = strchr(connectaddr, ':');
-	if (connectport == NULL) {
-		TRACE(("connectport == NULL"))
+	part3 = strchr(part2, ':');
+	if (part3 == NULL) {
+		TRACE(("part3 == NULL"))
 		goto fail;
 	}
-	*connectport = '\0';
-	connectport++;
+	*part3 = '\0';
+	part3++;
+
+	part4 = strchr(part3, ':');
+	if (part4) {
+		*part4 = '\0';
+		part4++;
+	}
+
+	if (part4) {
+		listenaddr = part1;
+		listenport = part2;
+		connectaddr = part3;
+		connectport = part4;
+	} else {
+		listenaddr = NULL;
+		listenport = part1;
+		connectaddr = part2;
+		connectport = part3;
+	}
 
 	newfwd = m_malloc(sizeof(struct TCPFwdEntry));
 
@@ -676,6 +696,7 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 		goto fail;
 	}
 
+	newfwd->listenaddr = listenaddr;
 	newfwd->connectaddr = connectaddr;
 
 	if (newfwd->listenport > 65535) {

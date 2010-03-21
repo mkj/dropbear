@@ -33,7 +33,6 @@
 #include "termcodes.h"
 #include "ssh.h"
 #include "random.h"
-#include "utmp.h"
 #include "x11fwd.h"
 #include "agentfwd.h"
 #include "runopts.h"
