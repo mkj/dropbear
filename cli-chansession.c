@@ -381,7 +381,7 @@ static int cli_initchansess(struct Channel *channel) {
 
 #ifdef ENABLE_CLI_NETCAT
 
-const struct ChanType cli_chan_netcat = {
+static const struct ChanType cli_chan_netcat = {
 	0, /* sepfds */
 	"direct-tcpip",
 	cli_init_stdpipe_sess, /* inithandler */
