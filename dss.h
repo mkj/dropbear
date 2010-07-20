@@ -38,6 +38,7 @@ struct DSS_key {
 	mp_int* q;
 	mp_int* g;
 	mp_int* y;
+	/* x is the private part */
 	mp_int* x;
 
 };

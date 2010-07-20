@@ -36,6 +36,7 @@ struct RSA_key {
 
 	mp_int* n;
 	mp_int* e;
+	/* d, p, and q are private parts */
 	mp_int* d;
 	mp_int* p;
 	mp_int* q;
