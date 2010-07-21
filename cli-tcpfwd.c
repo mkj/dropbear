@@ -131,7 +131,6 @@ static int cli_localtcp(const char* listenaddr,
 #ifdef  ENABLE_CLI_REMOTETCPFWD
 static void send_msg_global_request_remotetcp(const char *addr, int port) {
 
-	char* listenspec = NULL;
 	TRACE(("enter send_msg_global_request_remotetcp"))
 
 	CHECKCLEARTOWRITE();
