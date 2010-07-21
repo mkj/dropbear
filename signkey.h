@@ -46,10 +46,10 @@ struct SIGN_key {
 	 * the private key portion */
 
 #ifdef DROPBEAR_DSS
-	dss_key * dsskey;
+	dropbear_dss_key * dsskey;
 #endif
 #ifdef DROPBEAR_RSA
-	rsa_key * rsakey;
+	dropbear_rsa_key * rsakey;
 #endif
 };
 

@@ -119,7 +119,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 #ifdef DROPBEAR_DSS
 	if (keytype == DROPBEAR_SIGNKEY_DSS) {
 		dss_key_free(key->dsskey);
-		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
+		key->dsskey = m_malloc(sizeof(*key->dsskey));
 		ret = buf_get_dss_pub_key(buf, key->dsskey);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->dsskey);
@@ -129,7 +129,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 #ifdef DROPBEAR_RSA
 	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 		rsa_key_free(key->rsakey);
-		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
+		key->rsakey = m_malloc(sizeof(*key->rsakey));
 		ret = buf_get_rsa_pub_key(buf, key->rsakey);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->rsakey);
@@ -172,7 +172,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 #ifdef DROPBEAR_DSS
 	if (keytype == DROPBEAR_SIGNKEY_DSS) {
 		dss_key_free(key->dsskey);
-		key->dsskey = (dss_key*)m_malloc(sizeof(dss_key));
+		key->dsskey = m_malloc(sizeof(*key->dsskey));
 		ret = buf_get_dss_priv_key(buf, key->dsskey);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->dsskey);
@@ -182,7 +182,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 #ifdef DROPBEAR_RSA
 	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 		rsa_key_free(key->rsakey);
-		key->rsakey = (rsa_key*)m_malloc(sizeof(rsa_key));
+		key->rsakey = m_malloc(sizeof(*key->rsakey));
 		ret = buf_get_rsa_priv_key(buf, key->rsakey);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->rsakey);

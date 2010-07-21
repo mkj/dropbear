@@ -37,14 +37,14 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		mp_int* rsa_e, unsigned int size);
 
 /* mostly taken from libtomcrypt's rsa key generation routine */
-rsa_key * gen_rsa_priv_key(unsigned int size) {
+dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 
-	rsa_key * key;
+	dropbear_rsa_key * key;
 	DEF_MP_INT(pminus);
 	DEF_MP_INT(qminus);
 	DEF_MP_INT(lcm);
 
-	key = (rsa_key*)m_malloc(sizeof(rsa_key));
+	key = m_malloc(sizeof(*key));
 
 	key->e = (mp_int*)m_malloc(sizeof(mp_int));
 	key->n = (mp_int*)m_malloc(sizeof(mp_int));

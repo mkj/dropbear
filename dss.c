@@ -43,7 +43,7 @@
  * The key will have the same format as buf_put_dss_key.
  * These should be freed with dss_key_free.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
+int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 
 	TRACE(("enter buf_get_dss_pub_key"))
 	dropbear_assert(key != NULL);
@@ -76,7 +76,7 @@ int buf_get_dss_pub_key(buffer* buf, dss_key *key) {
 /* Same as buf_get_dss_pub_key, but reads a private "x" key at the end.
  * Loads a private dss key from a buffer
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
+int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 
 	int ret = DROPBEAR_FAILURE;
 
@@ -99,7 +99,7 @@ int buf_get_dss_priv_key(buffer* buf, dss_key *key) {
 	
 
 /* Clear and free the memory used by a public or private key */
-void dss_key_free(dss_key *key) {
+void dss_key_free(dropbear_dss_key *key) {
 
 	TRACE(("enter dsa_key_free"))
 	if (key == NULL) {
@@ -138,7 +138,7 @@ void dss_key_free(dss_key *key) {
  * mpint	g
  * mpint	y
  */
-void buf_put_dss_pub_key(buffer* buf, dss_key *key) {
+void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
 	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
@@ -150,7 +150,7 @@ void buf_put_dss_pub_key(buffer* buf, dss_key *key) {
 }
 
 /* Same as buf_put_dss_pub_key, but with the private "x" key appended */
-void buf_put_dss_priv_key(buffer* buf, dss_key *key) {
+void buf_put_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
 	buf_put_dss_pub_key(buf, key);
@@ -161,7 +161,7 @@ void buf_put_dss_priv_key(buffer* buf, dss_key *key) {
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 /* Verify a DSS signature (in buf) made on data by the key given. 
  * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_dss_verify(buffer* buf, dss_key *key, const unsigned char* data,
+int buf_dss_verify(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned char msghash[SHA1_HASH_SIZE];
@@ -292,7 +292,7 @@ static unsigned char* mptobytes(mp_int *mp, int *len) {
  *
  * Now we aren't relying on the random number generation to protect the private
  * key x, which is a long term secret */
-void buf_put_dss_sign(buffer* buf, dss_key *key, const unsigned char* data,
+void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned char msghash[SHA1_HASH_SIZE];
