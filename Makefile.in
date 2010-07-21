@@ -16,6 +16,12 @@ endif
 LTC=libtomcrypt/libtomcrypt.a
 LTM=libtommath/libtommath.a
 
+ifeq (@BUNDLED_LIBTOM@, 1)
+LIBTOM_DEPS=$(LTC) $(LTM)
+CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/ 
+LIBS+=$(LTC) $(LTM)
+endif
+
 COMMONOBJS=dbutil.o buffer.o \
 		dss.o bignum.o \
 		signkey.o rsa.o random.o \
@@ -70,8 +76,8 @@ RANLIB=@RANLIB@
 STRIP=@STRIP@
 INSTALL=@INSTALL@
 CPPFLAGS=@CPPFLAGS@
-CFLAGS=-I. -I$(srcdir) -I$(srcdir)/libtomcrypt/src/headers/ $(CPPFLAGS) @CFLAGS@
-LIBS=$(LTC) $(LTM) @LIBS@
+CFLAGS=-I. -I$(srcdir) $(CPPFLAGS) @CFLAGS@
+LIBS+=@LIBS@
 LDFLAGS=@LDFLAGS@
 
 EXEEXT=@EXEEXT@
@@ -106,10 +112,6 @@ endif
 ifeq ($(SCPPROGRESS), 1)
 	CFLAGS+=-DPROGRESS_METER
 endif
-
-#%: $(HEADERS)
-#%: $(HEADERS) Makefile
-# TODO
 
 all: $(TARGETS)
 
@@ -154,8 +156,7 @@ dbclient: $(dbclientobjs)
 dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
-dropbear dbclient dropbearkey dropbearconvert: $(HEADERS)  $(LTC) $(LTM) \
-													Makefile
+dropbear dbclient dropbearkey dropbearconvert: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBS)
 
 # scp doesn't use the libs so is special.
@@ -172,7 +173,7 @@ endif
 
 dropbearmulti: multilink 
 
-multibinary: $(HEADERS) $(MULTIOBJS) $(LTC) $(LTM) Makefile
+multibinary: $(HEADERS) $(MULTIOBJS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o dropbearmulti$(EXEEXT) $(MULTIOBJS) $(LIBS)
 
 multilink: multibinary $(addprefix link, $(PROGRAMS))
