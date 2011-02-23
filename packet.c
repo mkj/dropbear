@@ -53,6 +53,8 @@ void write_packet() {
 
 	int len, written;
 	buffer * writebuf = NULL;
+	time_t now;
+	unsigned packet_type;
 	
 	TRACE(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
@@ -60,7 +62,10 @@ void write_packet() {
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
-	len = writebuf->len - writebuf->pos;
+	/* The last byte of the buffer is not to be transmitted, but is 
+	 * a cleartext packet_type indicator */
+	packet_type = writebuf->data[writebuf->len-1];
+	len = writebuf->len - 1 - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock_out, buf_getptr(writebuf, len), len);
@@ -74,8 +79,12 @@ void write_packet() {
 		}
 	} 
 	
-	ses.last_trx_packet_time = time(NULL);
-	ses.last_packet_time = time(NULL);
+	now = time(NULL);
+	ses.last_trx_packet_time = now;
+
+	if (packet_type != SSH_MSG_IGNORE) {
+		ses.last_packet_time = now;
+	}
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -420,17 +429,21 @@ void encrypt_packet() {
 	unsigned char blocksize, mac_size;
 	buffer * writebuf; /* the packet which will go on the wire. This is 
 	                      encrypted in-place. */
-	unsigned char type;
+	unsigned char packet_type;
 	unsigned int len, encrypt_buf_size;
 	unsigned char mac_bytes[MAX_MAC_LEN];
 	
-	type = ses.writepayload->data[0];
 	TRACE(("enter encrypt_packet()"))
-	TRACE(("encrypt_packet type is %d", type))
+
+	buf_setpos(ses.writepayload, 0);
+	packet_type = buf_getbyte(ses.writepayload);
+	buf_setpos(ses.writepayload, 0);
+
+	TRACE(("encrypt_packet type is %d", packet_type))
 	
-	if (!ses.dataallowed && !packet_is_okay_kex(type)) {
+	if (!ses.dataallowed && !packet_is_okay_kex(packet_type)) {
 		/* During key exchange only particular packets are allowed.
-			Since this type isn't OK we just enqueue it to send 
+			Since this packet_type isn't OK we just enqueue it to send 
 			after the KEX, see maybe_flush_reply_queue */
 		enqueue_reply_packet();
 		return;
@@ -442,18 +455,20 @@ void encrypt_packet() {
 	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
 	 * from a blocksize multiple. In which case we need to pad to the
 	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	encrypt_buf_size = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3;
+	encrypt_buf_size = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3
 	/* add space for the MAC at the end */
-	encrypt_buf_size += mac_size;
-
+				+ mac_size
 #ifndef DISABLE_ZLIB
-	encrypt_buf_size += ZLIB_COMPRESS_INCR; /* bit of a kludge, but we can't know len*/
+	/* zlib compression could lengthen the payload in some cases */
+				+ ZLIB_COMPRESS_INCR
 #endif
+	/* and an extra cleartext (stripped before transmission) byte for the
+	 * packet type */
+				+ 1;
+
 	writebuf = buf_new(encrypt_buf_size);
 	buf_setlen(writebuf, PACKET_PAYLOAD_OFF);
 	buf_setpos(writebuf, PACKET_PAYLOAD_OFF);
-
-	buf_setpos(ses.writepayload, 0);
 
 #ifndef DISABLE_ZLIB
 	/* compression */
@@ -512,6 +527,9 @@ void encrypt_packet() {
     /* stick the MAC on it */
     buf_putbytes(writebuf, mac_bytes, mac_size);
 
+	/* The last byte of the buffer stores the cleartext packet_type. It is not
+	 * transmitted but is used for transmit timeout purposes */
+	buf_putbyte(writebuf, packet_type);
 	/* enqueue the packet for sending. It will get freed after transmission. */
 	buf_setpos(writebuf, 0);
 	enqueue(&ses.writequeue, (void*)writebuf);
