@@ -308,7 +308,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 
 	/* Set up a window-change handler */
 	if (signal(SIGWINCH, sigwinch_handler) == SIG_ERR) {
-		dropbear_exit("signal error");
+		dropbear_exit("Signal error");
 	}
 	TRACE(("leave send_chansess_pty_req"))
 }

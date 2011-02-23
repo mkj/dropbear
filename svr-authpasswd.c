@@ -64,7 +64,7 @@ void svr_auth_password() {
 	 * since the shadow password may differ to that tested
 	 * in auth.c */
 	if (passwdcrypt[0] == '\0') {
-		dropbear_log(LOG_WARNING, "user '%s' has blank password, rejected",
+		dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
 				ses.authstate.pw_name);
 		send_msg_userauth_failure(0, 1);
 		return;
@@ -88,13 +88,13 @@ void svr_auth_password() {
 	if (strcmp(testcrypt, passwdcrypt) == 0) {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
-				"password auth succeeded for '%s' from %s",
+				"Password auth succeeded for '%s' from %s",
 				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
-				"bad password attempt for '%s' from %s",
+				"Bad password attempt for '%s' from %s",
 				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);

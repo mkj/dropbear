@@ -101,7 +101,8 @@ pamConvFunc(int num_msg,
 			if (!(strcmp(compare_message, "password:") == 0)) {
 				/* We don't recognise the prompt as asking for a password,
 				   so can't handle it. Add more above as required for
-				   different pam modules/implementations */
+				   different pam modules/implementations. If you need
+				   to add an entry here please mail the Dropbear developer */
 				dropbear_log(LOG_NOTICE, "PAM unknown prompt '%s' (no echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;
@@ -130,7 +131,8 @@ pamConvFunc(int num_msg,
 				)) {
 				/* We don't recognise the prompt as asking for a username,
 				   so can't handle it. Add more above as required for
-				   different pam modules/implementations */
+				   different pam modules/implementations. If you need
+				   to add an entry here please mail the Dropbear developer */
 				dropbear_log(LOG_NOTICE, "PAM unknown prompt '%s' (with echo)",
 						compare_message);
 				rc = PAM_CONV_ERR;
@@ -226,7 +228,7 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad PAM password attempt for '%s' from %s",
+				"Bad PAM password attempt for '%s' from %s",
 				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
@@ -237,7 +239,7 @@ void svr_auth_pam() {
 		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s\n", 
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
-				"bad PAM password attempt for '%s' from %s",
+				"Bad PAM password attempt for '%s' from %s",
 				ses.authstate.pw_name,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);

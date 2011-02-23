@@ -265,7 +265,7 @@ void main_noinetd() {
 			fork_ret = fork();
 #endif
 			if (fork_ret < 0) {
-				dropbear_log(LOG_WARNING, "error forking: %s", strerror(errno));
+				dropbear_log(LOG_WARNING, "Error forking: %s", strerror(errno));
 				goto out;
 
 			} else if (fork_ret > 0) {

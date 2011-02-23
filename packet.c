@@ -75,7 +75,7 @@ void write_packet() {
 			TRACE(("leave writepacket: EINTR"))
 			return;
 		} else {
-			dropbear_exit("error writing");
+			dropbear_exit("Error writing");
 		}
 	} 
 	
@@ -144,7 +144,7 @@ void read_packet() {
 			TRACE(("leave read_packet: EINTR or EAGAIN"))
 			return;
 		} else {
-			dropbear_exit("error reading: %s", strerror(errno));
+			dropbear_exit("Error reading: %s", strerror(errno));
 		}
 	}
 
@@ -193,7 +193,7 @@ static int read_packet_init() {
 			TRACE(("leave read_packet_init: EINTR"))
 			return DROPBEAR_FAILURE;
 		}
-		dropbear_exit("error reading: %s", strerror(errno));
+		dropbear_exit("Error reading: %s", strerror(errno));
 	}
 
 	buf_incrwritepos(ses.readbuf, slen);
@@ -210,7 +210,7 @@ static int read_packet_init() {
 				buf_getwriteptr(ses.readbuf, blocksize),
 				blocksize,
 				&ses.keys->recv.cipher_state) != CRYPT_OK) {
-		dropbear_exit("error decrypting");
+		dropbear_exit("Error decrypting");
 	}
 	len = buf_getint(ses.readbuf) + 4 + macsize;
 
@@ -221,7 +221,7 @@ static int read_packet_init() {
 	if ((len > RECV_MAX_PACKET_LEN) ||
 		(len < MIN_PACKET_LEN + macsize) ||
 		((len - macsize) % blocksize != 0)) {
-		dropbear_exit("bad packet size %d", len);
+		dropbear_exit("Integrity error (bad packet size %d)", len);
 	}
 
 	if (len > ses.readbuf->size) {
@@ -256,7 +256,7 @@ void decrypt_packet() {
 				buf_getwriteptr(ses.readbuf, len),
 				len,
 				&ses.keys->recv.cipher_state) != CRYPT_OK) {
-		dropbear_exit("error decrypting");
+		dropbear_exit("Error decrypting");
 	}
 	buf_incrpos(ses.readbuf, len);
 
@@ -273,7 +273,7 @@ void decrypt_packet() {
 	/* - 4 - 1 is for LEN and PADLEN values */
 	len = ses.readbuf->len - padlen - 4 - 1 - macsize;
 	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
-		dropbear_exit("bad packet size");
+		dropbear_exit("Bad packet size %d", len);
 	}
 
 	buf_setpos(ses.readbuf, PACKET_PAYLOAD_OFF);
@@ -520,7 +520,7 @@ void encrypt_packet() {
 				buf_getwriteptr(writebuf, len),
 				len,
 				&ses.keys->trans.cipher_state) != CRYPT_OK) {
-		dropbear_exit("error encrypting");
+		dropbear_exit("Error encrypting");
 	}
 	buf_incrpos(writebuf, len);
 

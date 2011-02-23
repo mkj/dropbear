@@ -81,7 +81,7 @@ static void getq(dropbear_dss_key *key) {
 
 	/* 18 rounds are required according to HAC */
 	if (mp_prime_next_prime(key->q, 18, 0) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
+		fprintf(stderr, "DSS key generation failed\n");
 		exit(1);
 	}
 }
@@ -100,7 +100,7 @@ static void getp(dropbear_dss_key *key, unsigned int size) {
 
 	/* 2*q */
 	if (mp_mul_d(key->q, 2, &temp2q) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
+		fprintf(stderr, "DSS key generation failed\n");
 		exit(1);
 	}
 	
@@ -117,25 +117,25 @@ static void getp(dropbear_dss_key *key, unsigned int size) {
 
 		/* C = X mod 2q */
 		if (mp_mod(&tempX, &temp2q, &tempC) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 
 		/* P = X - (C - 1) = X - C + 1*/
 		if (mp_sub(&tempX, &tempC, &tempP) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 		
 		if (mp_add_d(&tempP, 1, key->p) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 
 		/* now check for prime, 5 rounds is enough according to HAC */
 		/* result == 1  =>  p is prime */
 		if (mp_prime_is_prime(key->p, 5, &result) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 	} while (!result);
@@ -155,11 +155,11 @@ static void getg(dropbear_dss_key * key) {
 
 	/* get div=(p-1)/q */
 	if (mp_sub_d(key->p, 1, &val) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
+		fprintf(stderr, "DSS key generation failed\n");
 		exit(1);
 	}
 	if (mp_div(&val, key->q, &div, NULL) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
+		fprintf(stderr, "DSS key generation failed\n");
 		exit(1);
 	}
 
@@ -168,12 +168,12 @@ static void getg(dropbear_dss_key * key) {
 	do {
 		/* now keep going with g=h^div mod p, until g > 1 */
 		if (mp_exptmod(&h, &div, key->p, key->g) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 
 		if (mp_add_d(&h, 1, &h) != MP_OKAY) {
-			fprintf(stderr, "dss key generation failed\n");
+			fprintf(stderr, "DSS key generation failed\n");
 			exit(1);
 		}
 	
@@ -190,7 +190,7 @@ static void getx(dropbear_dss_key *key) {
 static void gety(dropbear_dss_key *key) {
 
 	if (mp_exptmod(key->g, key->x, key->p, key->y) != MP_OKAY) {
-		fprintf(stderr, "dss key generation failed\n");
+		fprintf(stderr, "DSS key generation failed\n");
 		exit(1);
 	}
 }

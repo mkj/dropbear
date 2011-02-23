@@ -99,7 +99,7 @@ void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
 		}
 		chansess->cmd = ses.authstate.pubkey_options->forced_command;
 #ifdef LOG_COMMANDS
-		dropbear_log(LOG_INFO, "command forced to '%s'", ses.authstate.pubkey_options->original_command);
+		dropbear_log(LOG_INFO, "Command forced to '%s'", ses.authstate.pubkey_options->original_command);
 #endif
 	}
 }

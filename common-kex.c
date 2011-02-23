@@ -303,22 +303,22 @@ void gen_new_keys() {
 
 	recv_cipher = find_cipher(ses.newkeys->recv.algo_crypt->cipherdesc->name);
 	if (recv_cipher < 0)
-	    dropbear_exit("crypto error");
+	    dropbear_exit("Crypto error");
 	if (ses.newkeys->recv.crypt_mode->start(recv_cipher, 
 			recv_IV, recv_key, 
 			ses.newkeys->recv.algo_crypt->keysize, 0, 
 			&ses.newkeys->recv.cipher_state) != CRYPT_OK) {
-		dropbear_exit("crypto error");
+		dropbear_exit("Crypto error");
 	}
 
 	trans_cipher = find_cipher(ses.newkeys->trans.algo_crypt->cipherdesc->name);
 	if (trans_cipher < 0)
-	    dropbear_exit("crypto error");
+	    dropbear_exit("Crypto error");
 	if (ses.newkeys->trans.crypt_mode->start(trans_cipher, 
 			trans_IV, trans_key, 
 			ses.newkeys->trans.algo_crypt->keysize, 0, 
 			&ses.newkeys->trans.cipher_state) != CRYPT_OK) {
-		dropbear_exit("crypto error");
+		dropbear_exit("Crypto error");
 	}
 	
 	/* MAC keys */
@@ -394,14 +394,14 @@ static void gen_new_zstreams() {
 	if (ses.keys->recv.zstream != NULL) {
 		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
-			dropbear_exit("crypto error");
+			dropbear_exit("Crypto error");
 		}
 		m_free(ses.keys->recv.zstream);
 	}
 	if (ses.keys->trans.zstream != NULL) {
 		if (deflateEnd(ses.keys->trans.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
-			dropbear_exit("crypto error");
+			dropbear_exit("Crypto error");
 		}
 		m_free(ses.keys->trans.zstream);
 	}
@@ -748,5 +748,5 @@ static void read_kex_algos() {
 	return;
 
 error:
-	dropbear_exit("no matching algo %s", erralgo);
+	dropbear_exit("No matching algo %s", erralgo);
 }

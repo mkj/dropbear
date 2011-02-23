@@ -64,7 +64,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 #ifdef DROPBEAR_RANDOM_DEV
 	readfd = open(DROPBEAR_RANDOM_DEV, O_RDONLY);
 	if (readfd < 0) {
-		dropbear_exit("couldn't open random device");
+		dropbear_exit("Couldn't open random device");
 	}
 #endif
 
@@ -72,20 +72,20 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	readfd = connect_unix(DROPBEAR_PRNGD_SOCKET);
 
 	if (readfd < 0) {
-		dropbear_exit("couldn't open random device");
+		dropbear_exit("Couldn't open random device");
 	}
 	/* todo - try various common locations */
 	if (connect(readfd, (struct sockaddr*)&egdsock, 
 			sizeof(struct sockaddr_un)) < 0) {
-		dropbear_exit("couldn't open random device");
+		dropbear_exit("Couldn't open random device");
 	}
 
 	if (buflen > 255)
-		dropbear_exit("can't request more than 255 bytes from egd");
+		dropbear_exit("Can't request more than 255 bytes from egd");
 	egdcmd[0] = 0x02;	/* blocking read */
 	egdcmd[1] = (unsigned char)buflen;
 	if (write(readfd, egdcmd, 2) < 0)
-		dropbear_exit("can't send command to egd");
+		dropbear_exit("Can't send command to egd");
 #endif
 
 	/* read the actual random data */
@@ -114,7 +114,7 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 			if (readlen < 0 && errno == EINTR) {
 				continue;
 			}
-			dropbear_exit("error reading random source");
+			dropbear_exit("Error reading random source");
 		}
 		readpos += readlen;
 	} while (readpos < buflen);

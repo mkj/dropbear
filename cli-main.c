@@ -88,11 +88,11 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 	char fmtbuf[300];
 
 	if (!sessinitdone) {
-		snprintf(fmtbuf, sizeof(fmtbuf), "exited: %s",
+		snprintf(fmtbuf, sizeof(fmtbuf), "Exited: %s",
 				format);
 	} else {
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"connection to %s@%s:%s exited: %s", 
+				"Connection to %s@%s:%s exited: %s", 
 				cli_opts.username, cli_opts.remotehost, 
 				cli_opts.remoteport, format);
 	}

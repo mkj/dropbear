@@ -62,7 +62,7 @@ const char* signkey_name_from_type(int type, int *namelen) {
 		return SSH_SIGNKEY_DSS;
 	}
 #endif
-	dropbear_exit("bad key type %d", type);
+	dropbear_exit("Bad key type %d", type);
 	return NULL; /* notreached */
 }
 
@@ -215,7 +215,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 	}
 #endif
 	if (pubkeys->len == 0) {
-		dropbear_exit("bad key types in buf_put_pub_key");
+		dropbear_exit("Bad key types in buf_put_pub_key");
 	}
 
 	buf_setpos(pubkeys, 0);
@@ -246,7 +246,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 	return;
 	}
 #endif
-	dropbear_exit("bad key types in put pub key");
+	dropbear_exit("Bad key types in put pub key");
 }
 
 void sign_key_free(sign_key *key) {
@@ -380,7 +380,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 	}
 #endif
 	if (sigblob->len == 0) {
-		dropbear_exit("non-matching signing type");
+		dropbear_exit("Non-matching signing type");
 	}
 	buf_setpos(sigblob, 0);
 	buf_putstring(buf, buf_getptr(sigblob, sigblob->len),
@@ -412,7 +412,7 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 			memcmp(ident, SSH_SIGNKEY_DSS, identlen) == 0) {
 		m_free(ident);
 		if (key->dsskey == NULL) {
-			dropbear_exit("no dss key to verify signature");
+			dropbear_exit("No DSS key to verify signature");
 		}
 		return buf_dss_verify(buf, key->dsskey, data, len);
 	}
@@ -422,14 +422,14 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 	if (memcmp(ident, SSH_SIGNKEY_RSA, identlen) == 0) {
 		m_free(ident);
 		if (key->rsakey == NULL) {
-			dropbear_exit("no rsa key to verify signature");
+			dropbear_exit("No RSA key to verify signature");
 		}
 		return buf_rsa_verify(buf, key->rsakey, data, len);
 	}
 #endif
 
 	m_free(ident);
-	dropbear_exit("non-matching signing type");
+	dropbear_exit("Non-matching signing type");
 	return DROPBEAR_FAILURE;
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */

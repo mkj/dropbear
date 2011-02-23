@@ -43,11 +43,11 @@ static void printhelp(const char * progname) {
 					" before user login\n"
 					"		(default: none)\n"
 #ifdef DROPBEAR_DSS
-					"-d dsskeyfile	Use dsskeyfile for the dss host key\n"
+					"-d dsskeyfile	Use dsskeyfile for the DSS host key\n"
 					"		(default: %s)\n"
 #endif
 #ifdef DROPBEAR_RSA
-					"-r rsakeyfile	Use rsakeyfile for the rsa host key\n"
+					"-r rsakeyfile	Use rsakeyfile for the RSA host key\n"
 					"		(default: %s)\n"
 #endif
 					"-F		Don't fork into background\n"

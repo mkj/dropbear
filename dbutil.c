@@ -111,7 +111,7 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 }
 
 void fail_assert(const char* expr, const char* file, int line) {
-	dropbear_exit("failed assertion (%s:%d): `%s'", file, line, expr);
+	dropbear_exit("Failed assertion (%s:%d): `%s'", file, line, expr);
 }
 
 static void generic_dropbear_log(int UNUSED(priority), const char* format, 
@@ -455,7 +455,7 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 			(dup2(outfds[FDOUT], STDOUT_FILENO) < 0) ||
 			(ret_errfd && dup2(errfds[FDOUT], STDERR_FILENO) < 0)) {
 			TRACE(("leave noptycommand: error redirecting FDs"))
-			dropbear_exit("child dup2() failure");
+			dropbear_exit("Child dup2() failure");
 		}
 
 		close(infds[FDOUT]);

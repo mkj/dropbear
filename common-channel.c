@@ -688,7 +688,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 	TRACE(("enter recv_msg_channel_data"))
 
 	if (channel->recv_eof) {
-		dropbear_exit("received data after eof");
+		dropbear_exit("Received data after eof");
 	}
 
 	if (fd < 0) {
@@ -1006,7 +1006,7 @@ void recv_msg_channel_open_confirmation() {
 	channel = getchannel();
 
 	if (!channel->await_open) {
-		dropbear_exit("unexpected channel reply");
+		dropbear_exit("Unexpected channel reply");
 	}
 	channel->await_open = 0;
 
@@ -1038,7 +1038,7 @@ void recv_msg_channel_open_failure() {
 	channel = getchannel();
 
 	if (!channel->await_open) {
-		dropbear_exit("unexpected channel reply");
+		dropbear_exit("Unexpected channel reply");
 	}
 	channel->await_open = 0;
 

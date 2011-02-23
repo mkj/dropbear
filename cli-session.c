@@ -213,7 +213,7 @@ static void cli_sessionloop() {
 				   is confusing, though stdout/stderr could be useful. */
 				devnull = open(_PATH_DEVNULL, O_RDONLY);
 				if (devnull < 0) {
-					dropbear_exit("opening /dev/null: %d %s",
+					dropbear_exit("Opening /dev/null: %d %s",
 							errno, strerror(errno));
 				}
 				dup2(devnull, STDIN_FILENO);
@@ -298,7 +298,7 @@ static void cli_remoteclosed() {
 	m_close(ses.sock_out);
 	ses.sock_in = -1;
 	ses.sock_out = -1;
-	dropbear_exit("remote closed the connection");
+	dropbear_exit("Remote closed the connection");
 }
 
 /* Operates in-place turning dirty (untrusted potentially containing control

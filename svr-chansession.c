@@ -455,7 +455,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 	TRACE(("term mode str %d p->l %d p->p %d", 
 				len, ses.payload->len , ses.payload->pos));
 	if (len != ses.payload->len - ses.payload->pos) {
-		dropbear_exit("bad term mode string");
+		dropbear_exit("Bad term mode string");
 	}
 
 	if (len == 0) {
@@ -520,7 +520,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 		}
 	}
 	if (tcsetattr(chansess->master, TCSANOW, &termio) < 0) {
-		dropbear_log(LOG_INFO, "error setting terminal attributes");
+		dropbear_log(LOG_INFO, "Error setting terminal attributes");
 	}
 	TRACE(("leave get_termmodes"))
 }
@@ -550,7 +550,7 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	/* allocate the pty */
 	if (chansess->master != -1) {
-		dropbear_exit("multiple pty requests");
+		dropbear_exit("Multiple pty requests");
 	}
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"))
@@ -559,7 +559,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	
 	chansess->tty = (char*)m_strdup(namebuf);
 	if (!chansess->tty) {
-		dropbear_exit("out of memory"); /* TODO disconnect */
+		dropbear_exit("Out of memory"); /* TODO disconnect */
 	}
 
 	pw = getpwnam(ses.authstate.pw_name);
@@ -641,10 +641,10 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 #ifdef LOG_COMMANDS
 	if (chansess->cmd) {
-		dropbear_log(LOG_INFO, "user %s executing '%s'", 
+		dropbear_log(LOG_INFO, "User %s executing '%s'", 
 						ses.authstate.pw_name, chansess->cmd);
 	} else {
-		dropbear_log(LOG_INFO, "user %s executing login shell", 
+		dropbear_log(LOG_INFO, "User %s executing login shell", 
 						ses.authstate.pw_name);
 	}
 #endif
@@ -731,7 +731,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	/* we need to have a pty allocated */
 	if (chansess->master == -1 || chansess->tty == NULL) {
-		dropbear_log(LOG_WARNING, "no pty was allocated, couldn't execute");
+		dropbear_log(LOG_WARNING, "No pty was allocated, couldn't execute");
 		return DROPBEAR_FAILURE;
 	}
 	
@@ -884,10 +884,10 @@ static void execchild(void *user_data) {
 		if ((setgid(ses.authstate.pw_gid) < 0) ||
 			(initgroups(ses.authstate.pw_name, 
 						ses.authstate.pw_gid) < 0)) {
-			dropbear_exit("error changing user group");
+			dropbear_exit("Error changing user group");
 		}
 		if (setuid(ses.authstate.pw_uid) < 0) {
-			dropbear_exit("error changing user");
+			dropbear_exit("Error changing user");
 		}
 	} else {
 		/* ... but if the daemon is the same uid as the requested uid, we don't
@@ -898,7 +898,7 @@ static void execchild(void *user_data) {
 		 * differing groups won't be set (as with initgroups()). The solution
 		 * is for the sysadmin not to give out the UID twice */
 		if (getuid() != ses.authstate.pw_uid) {
-			dropbear_exit("couldn't	change user as non-root");
+			dropbear_exit("Couldn't	change user as non-root");
 		}
 	}
 
@@ -930,7 +930,7 @@ static void execchild(void *user_data) {
 
 	/* change directory */
 	if (chdir(ses.authstate.pw_dir) < 0) {
-		dropbear_exit("error changing directory");
+		dropbear_exit("Error changing directory");
 	}
 
 #ifndef DISABLE_X11FWD
@@ -946,7 +946,7 @@ static void execchild(void *user_data) {
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 
 	/* only reached on error */
-	dropbear_exit("child failed");
+	dropbear_exit("Child failed");
 }
 
 const struct ChanType svrchansess = {

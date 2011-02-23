@@ -138,21 +138,21 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	if (!sessinitdone) {
 		/* before session init */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"premature exit: %s", format);
+				"Premature exit: %s", format);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),
-				"exit after auth (%s): %s", 
+				"Exit (%s): %s", 
 				ses.authstate.pw_name, format);
 	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth (user '%s', %d fails): %s",
+				"Exit before auth (user '%s', %d fails): %s",
 				ses.authstate.pw_name, ses.authstate.failcount, format);
 	} else {
 		/* before userauth */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"exit before auth: %s", format);
+				"Exit before auth: %s", format);
 	}
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);

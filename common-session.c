@@ -65,7 +65,7 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.last_packet_time = 0;
 	
 	if (pipe(ses.signal_pipe) < 0) {
-		dropbear_exit("signal pipe failed");
+		dropbear_exit("Signal pipe failed");
 	}
 	setnonblocking(ses.signal_pipe[0]);
 	setnonblocking(ses.signal_pipe[1]);

@@ -67,7 +67,7 @@ int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 	}
 
 	if (mp_count_bits(key->n) < MIN_RSA_KEYLEN) {
-		dropbear_log(LOG_WARNING, "rsa key too short");
+		dropbear_log(LOG_WARNING, "RSA key too short");
 	    goto out;
 	}
 
@@ -302,26 +302,26 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* d
 
 	/* rsa_s used as a temp var*/
 	if (mp_exptmod(&rsa_tmp2, key->e, key->n, &rsa_s) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 	if (mp_invmod(&rsa_tmp2, key->n, &rsa_tmp3) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 	if (mp_mulmod(&rsa_tmp1, &rsa_s, key->n, &rsa_tmp2) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 
 	/* rsa_tmp2 is em' */
 	/* s' = (em')^d mod n */
 	if (mp_exptmod(&rsa_tmp2, key->d, key->n, &rsa_tmp1) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 
 	/* rsa_tmp1 is s' */
 	/* rsa_tmp3 is r^(-1) mod n */
 	/* s = (s')r^(-1) mod n */
 	if (mp_mulmod(&rsa_tmp1, &rsa_tmp3, key->n, &rsa_s) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 
 #else
@@ -329,7 +329,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* d
 	/* s = em^d mod n */
 	/* rsa_tmp1 is em */
 	if (mp_exptmod(&rsa_tmp1, key->d, key->n, &rsa_s) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 
 #endif /* RSA_BLINDING */
@@ -351,7 +351,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* d
 	}
 
 	if (mp_to_unsigned_bin(&rsa_s, buf_getwriteptr(buf, ssize)) != MP_OKAY) {
-		dropbear_exit("rsa error");
+		dropbear_exit("RSA error");
 	}
 	buf_incrwritepos(buf, ssize);
 	mp_clear(&rsa_s);

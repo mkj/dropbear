@@ -233,7 +233,7 @@ static int bindport(int fd) {
 			continue;
 		}
 		/* otherwise it was an error we don't know about */
-		dropbear_log(LOG_DEBUG, "failed to bind x11 socket");
+		dropbear_log(LOG_DEBUG, "Failed to bind x11 socket");
 		break;
 	}
 	return -1;

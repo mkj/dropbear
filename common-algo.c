@@ -230,13 +230,13 @@ void crypto_init() {
 	
 	for (i = 0; regciphers[i] != NULL; i++) {
 		if (register_cipher(regciphers[i]) == -1) {
-			dropbear_exit("error registering crypto");
+			dropbear_exit("Error registering crypto");
 		}
 	}
 
 	for (i = 0; reghashes[i] != NULL; i++) {
 		if (register_hash(reghashes[i]) == -1) {
-			dropbear_exit("error registering crypto");
+			dropbear_exit("Error registering crypto");
 		}
 	}
 }

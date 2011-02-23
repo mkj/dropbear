@@ -371,7 +371,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	if (cli_opts.backgrounded && cli_opts.cmd == NULL
 			&& cli_opts.no_cmd == 0) {
-		dropbear_exit("command required for -f");
+		dropbear_exit("Command required for -f");
 	}
 	
 	if (recv_window_arg) {
