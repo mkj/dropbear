@@ -36,7 +36,7 @@ Read the identity from file
 .I idfile
 (multiple allowed).
 .TP
-.B \-L \fIlistenport\fR:\fIhost\fR:\fIport\fR
+.B \-L [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
 Local port forwarding.
 Forward the port
 .I listenport
@@ -45,7 +45,7 @@ on the local host through the SSH connection to port
 on the host
 .IR host .
 .TP
-.B \-R \fIlistenport\fR:\fIhost\fR:\fIport\fR
+.B \-R [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
 Remote port forwarding.
 Forward the port
 .I listenport
