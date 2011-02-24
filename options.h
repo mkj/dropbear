@@ -128,7 +128,8 @@ much traffic. */
 /* Define DSS_PROTOK to use PuTTY's method of generating the value k for dss,
  * rather than just from the random byte source. Undefining this will save you
  * ~4k in binary size with static uclibc, but your DSS hostkey could be exposed
- * if the random number source isn't good. In general this isn't required */
+ * if the random number source isn't good. It happened to Sony. 
+ * On systems with a decent random source this isn't required. */
 /* #define DSS_PROTOK */
 
 /* Control the memory/performance/compression tradeoff for zlib.
