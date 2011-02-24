@@ -194,6 +194,7 @@ algo_type sshhostkey[] = {
 
 algo_type sshkex[] = {
 	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1, NULL},
+	{"diffie-hellman-group14-sha1", DROPBEAR_KEX_DH_GROUP14, NULL, 1, NULL},
 	{NULL, 0, NULL, 0, NULL}
 };
 
