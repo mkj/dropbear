@@ -1,3 +1,48 @@
+0.53 - Thurs 24 February 2011
+
+- Various performance/memory use improvements
+
+- Client agent forwarding now works, using OpenSSH's ssh-agent
+
+- Improve robustness of client multihop mode
+
+- Fix a prime generation bug in bundled libtommath. This is unlikely to have
+  generated any bad keys in the wild.
+  See 
+  https://bugzilla.redhat.com/show_bug.cgi?id=615088
+  http://bugs.gentoo.org/show_bug.cgi?id=328383
+  http://bugs.gentoo.org/show_bug.cgi?id=328409
+
+- Attempt to build against system libtomcrypt/libtommath if available. This
+  can be disabled with ./configure --enable-bundled-libtom
+
+- Make -K (keepalive) and -I (idle timeout) work together sensibly in the client.
+  The idle timeout is no longer reset by SSH_MSG_IGNORE packets.
+
+- Compile fix if ENABLE_CLI_PROXYCMD is disabled
+
+- /usr/bin/X11/xauth is now the default path
+
+- Client remote forward (-L/-R) arguments now accept a listen address
+
+- In uClinux avoid trashing the parent process when a session exits
+
+- Blowfish is now disabled by default since it has large memory usage
+
+- Add option to change zlib windowbits/memlevel. Use less memory by default
+
+- DROPBEAR_SMALL_CODE is now disabled by default
+
+- SSH_ORIGINAL_COMMAND environment variable is set by the server when an
+  authorized_keys command is specified.
+
+- Set SSH_TTY and SSH_CONNECTION environment variables in the server
+
+- Client banner is now printed to standard error rather than standard output
+
+- Capitalisation in many log messages has been made consistent. This may affect
+  scripts that parse logfiles.
+
 0.52 - Wed 12 November 2008
 
 - Add "netcat-alike" option (-B) to dbclient, allowing Dropbear to tunnel
