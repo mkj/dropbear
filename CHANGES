@@ -1,3 +1,7 @@
+0.53.1 
+
+- -lcrypt needs to be before object files for static linking
+
 0.53 - Thurs 24 February 2011
 
 - Various performance/memory use improvements
@@ -18,6 +22,8 @@
 
 - Make -K (keepalive) and -I (idle timeout) work together sensibly in the client.
   The idle timeout is no longer reset by SSH_MSG_IGNORE packets.
+
+- Add diffie-hellman-group14-sha1 key exchange method
 
 - Compile fix if ENABLE_CLI_PROXYCMD is disabled
 
