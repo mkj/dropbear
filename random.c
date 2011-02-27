@@ -74,11 +74,6 @@ static void readrand(unsigned char* buf, unsigned int buflen) {
 	if (readfd < 0) {
 		dropbear_exit("Couldn't open random device");
 	}
-	/* todo - try various common locations */
-	if (connect(readfd, (struct sockaddr*)&egdsock, 
-			sizeof(struct sockaddr_un)) < 0) {
-		dropbear_exit("Couldn't open random device");
-	}
 
 	if (buflen > 255)
 		dropbear_exit("Can't request more than 255 bytes from egd");
