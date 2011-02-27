@@ -272,8 +272,8 @@ static void hashkeys(unsigned char *out, int outlen,
 }
 
 /* Generate the actual encryption/integrity keys, using the results of the
- * key exchange, as specified in section 5.2 of the IETF secsh-transport
- * draft. This occurs after the DH key-exchange.
+ * key exchange, as specified in section 7.2 of the transport rfc 4253.
+ * This occurs after the DH key-exchange.
  *
  * ses.newkeys is the new set of keys which are generated, these are only
  * taken into use after both sides have sent a newkeys message */
@@ -532,7 +532,7 @@ static void load_dh_p(mp_int * dh_p)
 }
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
- * See the ietf-secsh-transport draft, section 6, for details */
+ * See the transport rfc 4253 section 8 for details */
 /* dh_pub and dh_priv MUST be already initialised */
 void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 

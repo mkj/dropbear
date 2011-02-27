@@ -99,6 +99,7 @@
 #define MAX_PROPOSED_ALGO 20
 
 /* size/count limits */
+/* From transport rfc */
 #define MIN_PACKET_LEN 16
 
 #define RECV_MAX_PACKET_LEN (MAX(35000, ((RECV_MAX_PAYLOAD_LEN)+100)))
@@ -123,7 +124,7 @@
 #define MAX_PRIVKEY_SIZE 1700
 
 /* The maximum size of the bignum portion of the kexhash buffer */
-/* Sect. 8 of the transport draft, K_S + e + f + K */
+/* Sect. 8 of the transport rfc 4253, K_S + e + f + K */
 #define KEXHASHBUF_MAX_INTS (1700 + 130 + 130 + 130)
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
