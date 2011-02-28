@@ -240,7 +240,7 @@ static int newchansess(struct Channel *channel) {
 	chansess->x11authcookie = NULL;
 #endif
 
-#ifndef DISABLE_AGENTFWD
+#ifdef ENABLE_AGENTFWD
 	chansess->agentlistener = NULL;
 	chansess->agentfile = NULL;
 	chansess->agentdir = NULL;
@@ -293,7 +293,7 @@ static void closechansess(struct Channel *channel) {
 	x11cleanup(chansess);
 #endif
 
-#ifndef DISABLE_AGENTFWD
+#ifdef ENABLE_AGENTFWD
 	svr_agentcleanup(chansess);
 #endif
 
@@ -351,7 +351,7 @@ static void chansessionrequest(struct Channel *channel) {
 	} else if (strcmp(type, "x11-req") == 0) {
 		ret = x11req(chansess);
 #endif
-#ifndef DISABLE_AGENTFWD
+#ifdef ENABLE_AGENTFWD
 	} else if (strcmp(type, "auth-agent-req@openssh.com") == 0) {
 		ret = svr_agentreq(chansess);
 #endif
@@ -937,7 +937,7 @@ static void execchild(void *user_data) {
 	/* set up X11 forwarding if enabled */
 	x11setauth(chansess);
 #endif
-#ifndef DISABLE_AGENTFWD
+#ifdef ENABLE_AGENTFWD
 	/* set up agent env variable */
 	svr_agentset(chansess);
 #endif

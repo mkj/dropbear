@@ -64,7 +64,7 @@ much traffic. */
 #define ENABLE_SVR_LOCALTCPFWD
 #define ENABLE_SVR_REMOTETCPFWD
 
-/* Enable Authentication Agent Forwarding - server only for now */
+/* Enable Authentication Agent Forwarding */
 #define ENABLE_SVR_AGENTFWD
 #define ENABLE_CLI_AGENTFWD
 
