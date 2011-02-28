@@ -41,7 +41,7 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 		unsigned char *output_mac);
 static int checkmac();
 
-#define ZLIB_COMPRESS_INCR 20 /* this is 12 bytes + 0.1% of 8000 bytes */
+#define ZLIB_COMPRESS_INCR 100
 #define ZLIB_DECOMPRESS_INCR 100
 #ifndef DISABLE_ZLIB
 static buffer* buf_decompress(buffer* buf, unsigned int len);
@@ -452,14 +452,15 @@ void encrypt_packet() {
 	blocksize = ses.keys->trans.algo_crypt->blocksize;
 	mac_size = ses.keys->trans.algo_mac->hashsize;
 
-	/* Encrypted packet len is payload+5, then worst case is if we are 3 away
-	 * from a blocksize multiple. In which case we need to pad to the
-	 * multiple, then add another blocksize (or MIN_PACKET_LEN) */
-	encrypt_buf_size = (ses.writepayload->len+4+1) + MIN_PACKET_LEN + 3
+	/* Encrypted packet len is payload+5. We need to then make sure
+	 * there is enough space for padding or MIN_PACKET_LEN. 
+	 * Add extra 3 since we need at least 4 bytes of padding */
+	encrypt_buf_size = (ses.writepayload->len+4+1) 
+		+ MAX(MIN_PACKET_LEN, blocksize) + 3
 	/* add space for the MAC at the end */
 				+ mac_size
 #ifndef DISABLE_ZLIB
-	/* zlib compression could lengthen the payload in some cases */
+	/* some extra in case 'compression' makes it larger */
 				+ ZLIB_COMPRESS_INCR
 #endif
 	/* and an extra cleartext (stripped before transmission) byte for the
@@ -473,7 +474,14 @@ void encrypt_packet() {
 #ifndef DISABLE_ZLIB
 	/* compression */
 	if (is_compress_trans()) {
+		int compress_delta;
 		buf_compress(writebuf, ses.writepayload, ses.writepayload->len);
+		compress_delta = (writebuf->len - PACKET_PAYLOAD_OFF) - ses.writepayload->len;
+
+		/* Handle the case where 'compress' increased the size. */
+		if (compress_delta > ZLIB_COMPRESS_INCR) {
+			buf_resize(writebuf, writebuf->size + compress_delta);
+		}
 	} else
 #endif
 	{
