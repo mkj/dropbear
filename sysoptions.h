@@ -173,6 +173,10 @@
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
 #endif
 
+/* Changing this is inadvisable, it appears to have problems
+ * with flushing compressed data */
+#define DROPBEAR_ZLIB_MEM_LEVEL 8
+
 #if defined(ENABLE_SVR_PASSWORD_AUTH) && defined(ENABLE_SVR_PAM_AUTH)
 #error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
 #endif

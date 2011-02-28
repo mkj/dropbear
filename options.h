@@ -133,18 +133,14 @@ much traffic. */
 /* #define DSS_PROTOK */
 
 /* Control the memory/performance/compression tradeoff for zlib.
- * Set windowBits=8, memLevel=1 for least memory usage, see your system's
+ * Set windowBits=8 for least memory usage, see your system's
  * zlib.h for full details.
- * Default settings (windowBits=15, memLevel=8) will use 
- * 256kB for compression + 32kB for decompression.
- * windowBits=8, memLevel=1 will use 10kB compression + 32kB decompression.
- * Note that windowBits is only set for deflate() - inflate() always uses the
- * default of 15 so as to interoperate with other clients. */
+ * Default settings (windowBits=15) will use 256kB for compression
+ * windowBits=8 will use 129kB for compression.
+ * Both modes will use ~35kB for decompression (using windowBits=15 for
+ * interoperability) */
 #ifndef DROPBEAR_ZLIB_WINDOW_BITS
 #define DROPBEAR_ZLIB_WINDOW_BITS 15 
-#endif
-#ifndef DROPBEAR_ZLIB_MEM_LEVEL
-#define DROPBEAR_ZLIB_MEM_LEVEL 8
 #endif
 
 /* Whether to do reverse DNS lookups. */
