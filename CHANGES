@@ -1,6 +1,12 @@
-0.53.1 
+0.53.1 - Wednesday 2 March 2011
 
 - -lcrypt needs to be before object files for static linking
+
+- Compile fix when both client and agent forwarding are disabled
+
+- Fix DROPBEAR_PRNGD_SOCKET mode
+
+- Don't allow setting zlib memLevel since it seems buggy
 
 0.53 - Thurs 24 February 2011
 
