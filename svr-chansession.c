@@ -692,6 +692,8 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	ses.maxfd = MAX(ses.maxfd, channel->readfd);
 	ses.maxfd = MAX(ses.maxfd, channel->errfd);
 
+	sleep(1);
+
 	addchildpid(chansess, chansess->pid);
 
 	if (svr_ses.lastexit.exitpid != -1) {
@@ -705,6 +707,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 				TRACE(("found match for lastexitpid"))
 				svr_ses.childpids[i].chansess->exit = svr_ses.lastexit;
 				svr_ses.lastexit.exitpid = -1;
+				break;
 			}
 		}
 	}
