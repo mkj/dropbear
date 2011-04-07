@@ -61,6 +61,7 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 	if (getnameinfo((struct sockaddr*)&addr, len, ipstring, sizeof(ipstring),
 				portstring, sizeof(portstring), 
 				NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
+		m_close(fd);
 		return;
 	}
 
