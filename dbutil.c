@@ -311,6 +311,7 @@ int connect_unix(const char* path) {
 	}
 	if (connect(fd, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
 		TRACE(("Failed to connect to '%s' socket", path))
+		m_close(fd);
 		return -1;
 	}
 	return fd;
