@@ -29,7 +29,7 @@
 #include "runopts.h"
 #include "session.h"
 
-static void cli_dropbear_exit(int exitcode, const char* format, va_list param);
+static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 static void cli_dropbear_log(int priority, const char* format, va_list param);
 
 #ifdef ENABLE_CLI_PROXYCMD

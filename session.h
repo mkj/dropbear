@@ -37,6 +37,7 @@
 #include "packet.h"
 #include "tcpfwd.h"
 #include "chansession.h"
+#include "dbutil.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
@@ -52,7 +53,7 @@ void fill_passwd(const char* username);
 
 /* Server */
 void svr_session(int sock, int childpipe);
-void svr_dropbear_exit(int exitcode, const char* format, va_list param);
+void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */

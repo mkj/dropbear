@@ -33,18 +33,34 @@
 void startsyslog();
 #endif
 
-extern void (*_dropbear_exit)(int exitcode, const char* format, va_list param);
+#ifdef __GNUC__
+#define ATTRIB_PRINTF(fmt,args) __attribute__((format(printf, fmt, args))) 
+#else
+#define ATTRIB_PRINTF(fmt,args)
+#endif
+
+#ifdef __GNUC__
+#define ATTRIB_NORETURN __attribute__((noreturn))
+#else
+#define ATTRIB_NORETURN
+#endif
+
+extern void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 extern void (*_dropbear_log)(int priority, const char* format, va_list param);
 
-void dropbear_exit(const char* format, ...);
-void dropbear_close(const char* format, ...);
-void dropbear_log(int priority, const char* format, ...);
-void fail_assert(const char* expr, const char* file, int line);
+void dropbear_exit(const char* format, ...) ATTRIB_PRINTF(1,2) ATTRIB_NORETURN;
+
+void dropbear_close(const char* format, ...) ATTRIB_PRINTF(1,2) ;
+void dropbear_log(int priority, const char* format, ...) ATTRIB_PRINTF(2,3) ;
+
+void fail_assert(const char* expr, const char* file, int line) ATTRIB_NORETURN;
+
 #ifdef DEBUG_TRACE
-void dropbear_trace(const char* format, ...);
+void dropbear_trace(const char* format, ...) ATTRIB_PRINTF(1,2);
 void printhex(const char * label, const unsigned char * buf, int len);
 extern int debug_trace;
 #endif
+
 char * stripcontrol(const char * text);
 void get_socket_address(int fd, char **local_host, char **local_port,
 		char **remote_host, char **remote_port, int host_lookup);

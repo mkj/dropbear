@@ -57,11 +57,11 @@
 #define MAX_FMT 100
 
 static void generic_dropbear_exit(int exitcode, const char* format, 
-		va_list param);
+		va_list param) ATTRIB_NORETURN;
 static void generic_dropbear_log(int priority, const char* format, 
 		va_list param);
 
-void (*_dropbear_exit)(int exitcode, const char* format, va_list param) 
+void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_NORETURN
 						= generic_dropbear_exit;
 void (*_dropbear_log)(int priority, const char* format, va_list param)
 						= generic_dropbear_log;
