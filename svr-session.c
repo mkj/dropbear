@@ -205,7 +205,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 		local_tm = localtime(&timesec);
 		if (local_tm == NULL
 			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
-						localtime(&timesec)) == 0)
+						local_tm) == 0)
 		{
 			/* upon failure, just print the epoch-seconds time. */
 			snprintf(datestr, sizeof(datestr), "%d", (int)timesec);
