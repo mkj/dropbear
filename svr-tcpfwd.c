@@ -213,12 +213,10 @@ static int svr_remotetcpreq() {
 	if (!opts.listen_fwd_all 
 			|| (strcmp(tcpinfo->listenaddr, "localhost") == 0) ) {
         // NULL means "localhost only"
-        tcpinfo->listenaddr = NULL;
+		m_free(bindaddr);
+		bindaddr = NULL;
 	}
-    else
-    {
-        tcpinfo->listenaddr = bindaddr;
-    }
+	tcpinfo->listenaddr = bindaddr;
 
 	ret = listen_tcpfwd(tcpinfo);
 
