@@ -258,8 +258,8 @@ void cli_load_agent_keys(m_list *ret_list) {
 
 void agent_buf_sign(buffer *sigblob, sign_key *key, 
 		const unsigned char *data, unsigned int len) {
-	buffer *request_data = buf_new(MAX_PUBKEY_SIZE + len + 12);
-	buffer *response;
+	buffer *request_data = NULL;
+	buffer *response = NULL;
 	unsigned int keylen, siglen;
 	int packet_type;
 	
@@ -269,19 +269,14 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 	string			data
 	uint32			flags
 	*/
-	/* We write the key, then figure how long it was and write that */
-	//buf_putint(request_data, 0);
+	request_data = buf_new(MAX_PUBKEY_SIZE + len + 12);
 	buf_put_pub_key(request_data, key, key->type);
 	keylen = request_data->len - 4;
-	//buf_setpos(request_data, 0);
-	//buf_putint(request_data, keylen);
 	
-	//buf_setpos(request_data, request_data->len);
 	buf_putstring(request_data, data, len);
 	buf_putint(request_data, 0);
 	
 	response = agent_request(SSH2_AGENTC_SIGN_REQUEST, request_data);
-	buf_free(request_data);
 	
 	if (!response) {
 		goto fail;
@@ -298,14 +293,21 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 	*/
 	siglen = buf_getint(response);
 	buf_putbytes(sigblob, buf_getptr(response, siglen), siglen);
-	buf_free(response);
+	goto cleanup;
 	
-	return;
 fail:
 	/* XXX don't fail badly here. instead propagate a failure code back up to
 	   the cli auth pubkey code, and just remove this key from the list of 
 	   ones to try. */
 	dropbear_exit("Agent failed signing key");
+
+cleanup:
+	if (request_data) {
+		buf_free(request_data);
+	}
+	if (response) {
+		buf_free(response);
+	}
 }
 
 #endif
