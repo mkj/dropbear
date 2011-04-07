@@ -210,8 +210,7 @@ static int svr_remotetcpreq() {
 	tcpinfo->chantype = &svr_chan_tcpremote;
 	tcpinfo->tcp_type = forwarded;
 
-	if (!opts.listen_fwd_all 
-			|| (strcmp(tcpinfo->listenaddr, "localhost") == 0) ) {
+	if (!opts.listen_fwd_all || (strcmp(bindaddr, "localhost") == 0) ) {
         // NULL means "localhost only"
 		m_free(bindaddr);
 		bindaddr = NULL;
