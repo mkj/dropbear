@@ -83,7 +83,7 @@ static int new_agent_chan(struct Channel * channel) {
 		return SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	fd = connect_agent();
-	if (cli_opts.agent_fd < 0) {
+	if (fd < 0) {
 		return SSH_OPEN_CONNECT_FAILED;
 	}
 
