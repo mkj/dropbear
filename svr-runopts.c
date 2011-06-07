@@ -81,8 +81,8 @@ static void printhelp(const char * progname) {
 					"-i		Start for inetd\n"
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
-					"-K <keepalive>  (0 is never, default %d)\n"
-					"-I <idle_timeout>  (0 is never, default %d)\n"
+					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
+					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
 #ifdef DEBUG_TRACE
 					"-v		verbose (compiled with DEBUG_TRACE)\n"
 #endif
