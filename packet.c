@@ -441,10 +441,16 @@ void encrypt_packet() {
 
 	TRACE(("encrypt_packet type is %d", packet_type))
 	
-	if (!ses.dataallowed && !packet_is_okay_kex(packet_type)) {
+	if ((!ses.dataallowed && !packet_is_okay_kex(packet_type))
+			|| ses.kexstate.sentnewkeys) {
 		/* During key exchange only particular packets are allowed.
 			Since this packet_type isn't OK we just enqueue it to send 
 			after the KEX, see maybe_flush_reply_queue */
+
+		/* We also enqueue packets here when we have sent a MSG_NEWKEYS
+		 * packet but are yet to received one. For simplicity we just switch
+		 * over all the keys at once. This is the 'ses.kexstate.sentnewkeys'
+		 * case. */
 		enqueue_reply_packet();
 		return;
 	}
