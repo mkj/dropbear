@@ -28,7 +28,7 @@ COMMONOBJS=dbutil.o buffer.o \
 		queue.o \
 		atomicio.o compat.o  fake-rfc2553.o 
 
-SVROBJS=@CRYPTLIB@ svr-kex.o svr-algo.o svr-auth.o sshpty.o \
+SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
 		svr-chansession.o svr-runopts.o svr-agentfwd.o svr-main.o svr-x11fwd.o\
 		svr-tcpfwd.o svr-authpam.o
@@ -56,7 +56,7 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
 		listener.h fake-rfc2553.h
 
-dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) 
+dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) @CRYPTLIB@ 
 dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
 dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
 dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
@@ -167,7 +167,7 @@ scp: $(SCPOBJS)  $(HEADERS) Makefile
 # multi-binary compilation.
 MULTIOBJS=
 ifeq ($(MULTI),1)
-	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))
+	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs))) @CRYPTLIB@ 
 	CFLAGS+=$(addprefix -DDBMULTI_, $(PROGRAMS)) -DDROPBEAR_MULTI
 endif
 
