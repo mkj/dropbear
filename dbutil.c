@@ -254,6 +254,16 @@ int dropbear_listen(const char* address, const char* port,
 		linger.l_linger = 5;
 		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
 
+#ifdef IPV6_V6ONLY
+		if (res->ai_family == AF_INET6) {
+			int on = 1;
+			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+						&on, sizeof(on)) == -1) {
+				dropbear_log(LOG_WARNING, "Couldn't set IPV6_V6ONLY");
+			}
+		}
+#endif
+
 		set_sock_priority(sock);
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
