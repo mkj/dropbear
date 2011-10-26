@@ -161,10 +161,12 @@ static void set_sock_priority(int sock) {
 	val = 1;
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 
-	/* set the TOS bit. note that this will fail for ipv6, I can't find any
-	 * equivalent. */
+	/* set the TOS bit for either ipv4 or ipv6 */
 #ifdef IPTOS_LOWDELAY
 	val = IPTOS_LOWDELAY;
+#ifdef IPPROTO_IPV6
+	setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&val, sizeof(val));
+#endif
 	setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
 #endif
 
