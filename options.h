@@ -158,10 +158,11 @@ much traffic. */
 /* Authentication Types - at least one required.
    RFC Draft requires pubkey auth, and recommends password */
 
-/* Note: PAM auth is quite simple, and only works for PAM modules which just do
+/* Note: PAM auth is quite simple and only works for PAM modules which just do
  * a simple "Login: " "Password: " (you can edit the strings in svr-authpam.c).
- * It's useful for systems like OS X where standard password crypts don't work,
- * but there's an interface via a PAM module - don't bother using it otherwise.
+ * It's useful for systems like OS X where standard password crypts don't work
+ * but there's an interface via a PAM module. It won't work for more complex
+ * PAM challenge/response.
  * You can't enable both PASSWORD and PAM. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
@@ -174,6 +175,12 @@ much traffic. */
 #ifdef ENABLE_SVR_PUBKEY_AUTH
 #define ENABLE_SVR_PUBKEY_OPTIONS
 #endif
+
+/* Define this to allow logging in to accounts that have no password specified.
+ * Public key logins are allowed for blank-password accounts regardless of this
+ * setting.  PAM is not affected by this setting, it uses the normal pam.d
+ * settings ('nullok' option) */
+/* #define ALLOW_BLANK_PASSWORD */
 
 #define ENABLE_CLI_PASSWORD_AUTH
 #define ENABLE_CLI_PUBKEY_AUTH
