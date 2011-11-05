@@ -148,15 +148,26 @@ static void send_msg_global_request_remotetcp(const char *addr, int port) {
 /* The only global success/failure messages are for remotetcp.
  * Since there isn't any identifier in these messages, we have to rely on them
  * being in the same order as we sent the requests. This is the ordering
- * of the cli_opts.remotefwds list */
+ * of the cli_opts.remotefwds list.
+ * If the requested remote port is 0 the listen port will be
+ * dynamically allocated by the server and the port number will be returned
+ * to client and the port number reported to the user. */
 void cli_recv_msg_request_success() {
-	/* Nothing in the packet. We just mark off that we have received the reply,
+	/* We just mark off that we have received the reply,
 	 * so that we can report failure for later ones. */
 	m_list_elem * iter = NULL;
 	for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
 		struct TCPFwdEntry *fwd = (struct TCPFwdEntry*)iter->item;
 		if (!fwd->have_reply) {
 			fwd->have_reply = 1;
+			if (fwd->listenport == 0) {
+				/* The server should let us know which port was allocated if we requestd port 0 */
+				int allocport = buf_getint(ses.payload);
+				if (allocport > 0) {
+					dropbear_log(LOG_INFO, "Allocated port %d for remote forward to %s:%d", 
+							allocport, fwd->connectaddr, fwd->connectport);
+				}
+			}
 			return;
 		}
 	}
