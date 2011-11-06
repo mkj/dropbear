@@ -82,6 +82,9 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 			port = tcpinfo->listenport;
 		}
 
+		if (addr == NULL) {
+			addr = "localhost";
+		}
 		buf_putstring(ses.writepayload, addr, strlen(addr));
 		buf_putint(ses.writepayload, port);
 
