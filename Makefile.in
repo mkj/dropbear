@@ -129,12 +129,14 @@ insdbmulti: dropbearmulti
 	-chgrp 0 $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT)
 
 insmultidropbear: dropbearmulti
+	$(INSTALL) -d -m 755 $(DESTDIR)$(sbindir)
 	-rm -f $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
-	-ln -s $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/dropbear$(EXEEXT) 
+	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/dropbear$(EXEEXT) 
 
 insmulti%: dropbearmulti
+	$(INSTALL) -d -m 755 $(DESTDIR)$(bindir)
 	-rm -f $(DESTDIR)$(bindir)/$*$(EXEEXT) 
-	-ln -s $(DESTDIR)$(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
+	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 
 # dropbear should go in sbin, so it needs a seperate rule
 inst_dropbear: dropbear
