@@ -260,7 +260,7 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 		const unsigned char *data, unsigned int len) {
 	buffer *request_data = NULL;
 	buffer *response = NULL;
-	unsigned int keylen, siglen;
+	unsigned int siglen;
 	int packet_type;
 	
 	/* Request format
@@ -271,7 +271,6 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 	*/
 	request_data = buf_new(MAX_PUBKEY_SIZE + len + 12);
 	buf_put_pub_key(request_data, key, key->type);
-	keylen = request_data->len - 4;
 	
 	buf_putstring(request_data, data, len);
 	buf_putint(request_data, 0);
