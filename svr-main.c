@@ -370,7 +370,7 @@ static void commonsetup() {
 	/* catch and reap zombie children */
 	sa_chld.sa_handler = sigchld_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
-	sa_chld.sa_mask = 0;
+	sigemptyset(&sa_chld.sa_mask);
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
 		dropbear_exit("signal() error");
 	}

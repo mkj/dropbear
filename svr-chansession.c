@@ -137,7 +137,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
-	sa_chld.sa_mask = 0;
+	sigemptyset(&sa_chld.sa_mask);
 	sigaction(SIGCHLD, &sa_chld, NULL);
 	TRACE(("leave sigchld handler"))
 }
@@ -981,6 +981,7 @@ void svr_chansessinitialise() {
 	svr_ses.lastexit.exitpid = -1; /* Nothing has exited yet */
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
+	sigemptyset(&sa_chld.sa_mask);
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
 		dropbear_exit("signal() error");
 	}
