@@ -105,11 +105,11 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	m_free(ident);
 
 	if (*type != DROPBEAR_SIGNKEY_ANY && *type != keytype) {
-		TRACE(("buf_get_pub_key bad type - got %d, expected %d", keytype, type))
+		TRACE(("buf_get_pub_key bad type - got %d, expected %d", keytype, *type))
 		return DROPBEAR_FAILURE;
 	}
 	
-	TRACE(("buf_get_pub_key keytype is %d"))
+	TRACE(("buf_get_pub_key keytype is %d", keytype))
 
 	*type = keytype;
 
