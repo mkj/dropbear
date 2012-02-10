@@ -366,6 +366,11 @@ void gen_new_keys() {
 	ses.keys = ses.newkeys;
 	ses.newkeys = NULL;
 
+	m_burn(C2S_IV, sizeof(C2S_IV));
+	m_burn(C2S_key, sizeof(C2S_key));
+	m_burn(S2C_IV, sizeof(S2C_IV));
+	m_burn(S2C_key, sizeof(S2C_key));
+
 	TRACE(("leave gen_new_keys"))
 }
 
