@@ -48,6 +48,7 @@ circbuffer * cbuf_new(unsigned int size) {
 
 void cbuf_free(circbuffer * cbuf) {
 
+	m_burn(cbuf->data, cbuf->size);
 	m_free(cbuf->data);
 	m_free(cbuf);
 }
