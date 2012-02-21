@@ -830,7 +830,7 @@ void m_burn(void *data, unsigned int len) {
 	if (data == NULL)
 		return;
 	while (len--) {
-		*p++ = 0x66;
+		*p++ = 0x0;
 	}
 }
 
