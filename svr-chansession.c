@@ -137,6 +137,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
+	sa_chld.sa_mask = 0;
 	sigaction(SIGCHLD, &sa_chld, NULL);
 	TRACE(("leave sigchld handler"))
 }
