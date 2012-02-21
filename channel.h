@@ -69,6 +69,10 @@ struct Channel {
 	int sent_close, recv_close;
 	int recv_eof, sent_eof;
 
+	/* Set after running the ChanType-specific close hander
+	 * to ensure we don't run it twice (nor type->checkclose()). */
+	int close_handler_done;
+
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
 

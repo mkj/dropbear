@@ -133,7 +133,6 @@ struct PubKeyOptions {
 	int no_pty_flag;
 	/* "command=" option. */
 	unsigned char * forced_command;
-	unsigned char * original_command;
 };
 #endif
 

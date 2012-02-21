@@ -800,12 +800,6 @@ void * m_strdup(const char * str) {
 	return ret;
 }
 
-void __m_free(void* ptr) {
-	if (ptr != NULL) {
-		free(ptr);
-	}
-}
-
 void * m_realloc(void* ptr, size_t size) {
 
 	void *ret;

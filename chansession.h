@@ -69,6 +69,10 @@ struct ChanSess {
 	char * agentfile;
 	char * agentdir;
 #endif
+
+#ifdef ENABLE_SVR_PUBKEY_OPTIONS
+	char *original_command;
+#endif
 };
 
 struct ChildPid {
