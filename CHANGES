@@ -1,3 +1,20 @@
+2012.55 - Wednesday 22 February 2012
+
+- Security: Fix use-after-free bug that could be triggered when multiple command sessions were
+  made when a command="" authorized_keys restriction was in effect. Possible arbitrary
+  code execution to an authenticated user, and probable bypass of the command="" restriction.
+  CVE-2012-0920. Thanks to Danny Fullerton of Mantor Organization for reporting the bug
+
+- Compile fix, only apply IPV6 socket options if they are available in headers
+  Thanks to Gustavo Zacarias for the patch
+
+- Clear key memory on exit
+
+- Fix minor memory leak in unusual PAM authentication configurations.
+  Thanks to Stathis Voukelatos
+
+- Other small code cleanups
+
 2011.54 - Tuesday 8 November 2011
 
 - Building statically works again, broke in 0.53 and 0.53.1
