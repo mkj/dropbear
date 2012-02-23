@@ -1,14 +1,16 @@
 2012.55 - Wednesday 22 February 2012
 
-- Security: Fix use-after-free bug that could be triggered when multiple command sessions were
-  made when a command="" authorized_keys restriction was in effect. Possible arbitrary
-  code execution to an authenticated user, and probable bypass of the command="" restriction.
-  CVE-2012-0920. Thanks to Danny Fullerton of Mantor Organization for reporting the bug
+- Security: Fix use-after-free bug that could be triggered if command="..."
+  authorized_keys restrictions are used.  Could allow arbitrary code execution
+  or bypass of the command="..." restriction to an authenticated user.
+  This bug affects releases 0.52 onwards. Ref CVE-2012-0920.
+  Thanks to Danny Fullerton of Mantor Organization for reporting
+  the bug.
 
 - Compile fix, only apply IPV6 socket options if they are available in headers
   Thanks to Gustavo Zacarias for the patch
 
-- Clear key memory on exit
+- Overwrite session key memory on exit
 
 - Fix minor memory leak in unusual PAM authentication configurations.
   Thanks to Stathis Voukelatos
