@@ -162,10 +162,6 @@
 #define USING_LISTENERS
 #endif
 
-#if defined(ENABLE_SVR_AGENTFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
-#define ENABLE_AGENTFWD
-#endif
-
 #if defined(ENABLE_CLI_NETCAT) && defined(ENABLE_CLI_PROXYCMD)
 #define ENABLE_CLI_MULTIHOP
 #endif
