@@ -84,7 +84,7 @@ void svr_session(int sock, int childpipe) {
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
-#ifdef __uClinux__
+#ifndef HAVE_FORK
 	svr_ses.server_pid = getpid();
 #endif
 	svr_authinitialise();
@@ -157,7 +157,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-#ifdef __uClinux__
+#ifndef HAVE_FORK
 	/* only the main server process should cleanup - we don't want
 	 * forked children doing that */
 	if (svr_ses.server_pid == getpid())
