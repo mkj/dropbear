@@ -130,7 +130,7 @@ do_local_cmd(arglist *a)
 			fprintf(stderr, " %s", a->list[i]);
 		fprintf(stderr, "\n");
 	}
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	pid = vfork();
 #else
 	pid = fork();
@@ -141,7 +141,7 @@ do_local_cmd(arglist *a)
 	if (pid == 0) {
 		execvp(a->list[0], a->list);
 		perror(a->list[0]);
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 		_exit(1);
 #else
 		exit(1);
@@ -210,12 +210,12 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 
 	/* uClinux needs to build the args here before vforking,
 	   otherwise we do it later on. */
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	arg_setup(host, remuser, cmd);
 #endif
 
 	/* Fork a child to execute the command on the remote host using ssh. */
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	do_cmd_pid = vfork();
 #else
 	do_cmd_pid = fork();
@@ -230,13 +230,13 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 		close(pin[0]);
 		close(pout[1]);
 
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 		arg_setup(host, remuser, cmd);
 #endif
 
 		execvp(ssh_program, args.list);
 		perror(ssh_program);
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 		_exit(1);
 #else
 		exit(1);
@@ -245,7 +245,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 		fatal("fork: %s", strerror(errno));
 	}
 
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	/* clean up command */
 	/* pop cmd */
 	xfree(args.list[args.num-1]);

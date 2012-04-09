@@ -216,4 +216,10 @@
 #define IS_DROPBEAR_SERVER 0
 #define IS_DROPBEAR_CLIENT 0
 
-#endif
+#endif /* neither DROPBEAR_SERVER nor DROPBEAR_CLIENT */
+
+#ifndef HAVE_FORK
+#define USE_VFORK
+#endif  /* don't HAVE_FORK */
+
+/* no include guard for this file */

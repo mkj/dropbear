@@ -218,7 +218,7 @@ struct serversession {
 	/* The resolved remote address, used for lastlog etc */
 	char *remotehost;
 
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	pid_t server_pid;
 #endif
 

@@ -658,7 +658,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	/* uClinux will vfork(), so there'll be a race as 
 	connection_string is freed below. */
-#ifdef HAVE_FORK
+#ifndef USE_VFORK
 	chansess->connection_string = make_connection_string();
 #endif
 
@@ -670,7 +670,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		ret = ptycommand(channel, chansess);
 	}
 
-#ifdef HAVE_FORK	
+#ifndef USE_VFORK
 	m_free(chansess->connection_string);
 #endif
 
@@ -745,7 +745,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
-#ifndef HAVE_FORK
+#ifdef USE_VFORK
 	pid = vfork();
 #else
 	pid = fork();
@@ -865,7 +865,7 @@ static void execchild(void *user_data) {
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
 	 * hostkey. can't think of a workaround to clear it */
-#ifdef HAVE_FORK
+#ifndef USE_VFORK
 	/* wipe the hostkey */
 	sign_key_free(svr_opts.hostkey);
 	svr_opts.hostkey = NULL;
