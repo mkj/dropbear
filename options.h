@@ -99,16 +99,17 @@ much traffic. */
 
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
- * sha1-96 may be of use for slow links, as it has a smaller overhead.
+ * sha1-96 is of use for slow links as it has a smaller overhead.
  *
- * Note: there's no point disabling sha1 to save space, since it's used
- * for the random number generator and public-key cryptography anyway.
+ * There's no reason to disable sha1 or sha1-96 to save space since it's
+ * used for the random number generator and public-key cryptography anyway.
  * Disabling it here will just stop it from being used as the integrity portion
  * of the ssh protocol.
  *
  * These hashes are also used for public key fingerprints in logs.
  * If you disable MD5, Dropbear will fall back to SHA1 fingerprints,
  * which are not the standard form. */
+
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_SHA1_96_HMAC
 #define DROPBEAR_MD5_HMAC
