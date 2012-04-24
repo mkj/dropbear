@@ -365,12 +365,12 @@ main(int argc, char **argv)
 			addargs(&args, "-v");
 			verbose_mode = 1;
 			break;
-#ifdef PROGRESS_METER
 		case 'q':
+#ifdef PROGRESS_METER
 			addargs(&args, "-q");
 			showprogress = 0;
-			break;
 #endif
+			break;
 
 		/* Server options. */
 		case 'd':
