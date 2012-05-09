@@ -141,15 +141,6 @@ void recv_msg_userauth_request() {
 		dropbear_exit("unknown service in auth");
 	}
 
-	/* user wants to know what methods are supported */
-	if (methodlen == AUTH_METHOD_NONE_LEN &&
-			strncmp(methodname, AUTH_METHOD_NONE,
-				AUTH_METHOD_NONE_LEN) == 0) {
-		TRACE(("recv_msg_userauth_request: 'none' request"))
-		send_msg_userauth_failure(0, 0);
-		goto out;
-	}
-	
 	/* check username is good before continuing */
 	if (checkusername(username, userlen) == DROPBEAR_FAILURE) {
 		/* username is invalid/no shell/etc - send failure */
@@ -158,6 +149,31 @@ void recv_msg_userauth_request() {
 		goto out;
 	}
 
+	/* user wants to know what methods are supported */
+	if (methodlen == AUTH_METHOD_NONE_LEN &&
+			strncmp(methodname, AUTH_METHOD_NONE,
+				AUTH_METHOD_NONE_LEN) == 0) {
+		TRACE(("recv_msg_userauth_request: 'none' request"))
+#ifdef ALLOW_BLANK_PASSWORD
+		if (!svr_opts.noauthpass 
+				&& !(svr_opts.norootpass && ses.authstate.pw_uid == 0) 
+				&& ses.authstate.pw_passwd == '\0') 
+		{
+			dropbear_log(LOG_NOTICE, 
+					"Auth succeeded with blank password for '%s' from %s",
+					ses.authstate.pw_name,
+					svr_ses.addrstring);
+			send_msg_userauth_success();
+			goto out;
+		}
+		else
+#endif
+		{
+			send_msg_userauth_failure(0, 0);
+			goto out;
+		}
+	}
+	
 #ifdef ENABLE_SVR_PASSWORD_AUTH
 	if (!svr_opts.noauthpass &&
 			!(svr_opts.norootpass && ses.authstate.pw_uid == 0) ) {
@@ -205,8 +221,7 @@ out:
 }
 
 
-/* Check that the username exists, has a non-empty password, and has a valid
- * shell.
+/* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
 static int checkusername(unsigned char *username, unsigned int userlen) {
 

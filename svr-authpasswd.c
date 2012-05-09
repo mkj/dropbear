@@ -36,9 +36,6 @@
  * appropriate */
 void svr_auth_password() {
 	
-#ifdef HAVE_SHADOW_H
-	struct spwd *spasswd = NULL;
-#endif
 	char * passwdcrypt = NULL; /* the crypt from /etc/passwd or /etc/shadow */
 	char * testcrypt = NULL; /* crypt generated from the user's password sent */
 	unsigned char * password;
@@ -48,13 +45,6 @@ void svr_auth_password() {
 	unsigned int changepw;
 
 	passwdcrypt = ses.authstate.pw_passwd;
-#ifdef HAVE_SHADOW_H
-	/* get the shadow password if possible */
-	spasswd = getspnam(ses.authstate.pw_name);
-	if (spasswd != NULL && spasswd->sp_pwdp != NULL) {
-		passwdcrypt = spasswd->sp_pwdp;
-	}
-#endif
 
 #ifdef DEBUG_HACKCRYPT
 	/* debugging crypt for non-root testing with shadows */
