@@ -140,6 +140,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_AGENTFWD
 	cli_opts.agent_fwd = 0;
+	cli_opts.agent_fd = -1;
 	cli_opts.agent_keys_loaded = 0;
 #endif
 #ifdef ENABLE_CLI_PROXYCMD
