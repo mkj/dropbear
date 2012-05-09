@@ -34,24 +34,31 @@
 #include "runopts.h"
 #include "auth.h"
 
-#ifdef ENABLE_SVR_REMOTETCPFWD
+static void send_msg_request_failure();
+
+static void send_msg_request_failure() {
+	CHECKCLEARTOWRITE();
+	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
+	encrypt_packet();
+}
+
+#ifndef ENABLE_SVR_REMOTETCPFWD
+
+/* This is better than SSH_MSG_UNIMPLEMENTED */
+void recv_msg_global_request_remotetcp() {
+		TRACE(("recv_msg_global_request_remotetcp: remote tcp forwarding not compiled in"))
+		send_msg_request_failure();
+}
+
+/* */
+#endif /* !ENABLE_SVR_REMOTETCPFWD */
 
 static void send_msg_request_success();
-static void send_msg_request_failure();
 static int svr_cancelremotetcp();
 static int svr_remotetcpreq();
 static int newtcpdirect(struct Channel * channel);
 
-
-const struct ChanType svr_chan_tcpdirect = {
-	1, /* sepfds */
-	"direct-tcpip",
-	newtcpdirect, /* init */
-	NULL, /* checkclose */
-	NULL, /* reqhandler */
-	NULL /* closehandler */
-};
-
+#ifdef ENABLE_SVR_REMOTETCPFWD
 static const struct ChanType svr_chan_tcpremote = {
 	1, /* sepfds */
 	"forwarded-tcpip",
@@ -113,14 +120,6 @@ static void send_msg_request_success() {
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
-	encrypt_packet();
-
-}
-
-static void send_msg_request_failure() {
-
-	CHECKCLEARTOWRITE();
-	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
 	encrypt_packet();
 
 }
@@ -230,6 +229,19 @@ out:
 	return ret;
 }
 
+#endif /* ENABLE_SVR_REMOTETCPFWD */
+
+#ifdef ENABLE_SVR_LOCALTCPFWD
+
+const struct ChanType svr_chan_tcpdirect = {
+	1, /* sepfds */
+	"direct-tcpip",
+	newtcpdirect, /* init */
+	NULL, /* checkclose */
+	NULL, /* reqhandler */
+	NULL /* closehandler */
+};
+
 /* Called upon creating a new direct tcp channel (ie we connect out to an
  * address */
 static int newtcpdirect(struct Channel * channel) {
@@ -294,4 +306,4 @@ out:
 	return err;
 }
 
-#endif
+#endif /* ENABLE_SVR_LOCALTCPFWD */

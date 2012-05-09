@@ -653,6 +653,8 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 					len, errno, fd))
 		return;
 	}
+
+	TRACE(("send_msg_channel_data: len %d fd %d", len, fd))
 	buf_incrwritepos(ses.writepayload, len);
 	/* ... real size here */
 	buf_setpos(ses.writepayload, size_pos);
