@@ -172,14 +172,14 @@ out:
 static int svr_remotetcpreq() {
 
 	int ret = DROPBEAR_FAILURE;
-	unsigned char * bindaddr = NULL;
+	unsigned char * request_addr = NULL;
 	unsigned int addrlen;
 	struct TCPListener *tcpinfo = NULL;
 	unsigned int port;
 
 	TRACE(("enter remotetcpreq"))
 
-	bindaddr = buf_getstring(ses.payload, &addrlen);
+	request_addr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -209,12 +209,15 @@ static int svr_remotetcpreq() {
 	tcpinfo->chantype = &svr_chan_tcpremote;
 	tcpinfo->tcp_type = forwarded;
 
-	if (!opts.listen_fwd_all || (strcmp(bindaddr, "localhost") == 0) ) {
+	tcpinfo->request_listenaddr = request_addr;
+	if (!opts.listen_fwd_all || (strcmp(request_addr, "localhost") == 0) ) {
         // NULL means "localhost only"
-		m_free(bindaddr);
-		bindaddr = NULL;
+		tcpinfo->listenaddr = NULL;
 	}
-	tcpinfo->listenaddr = bindaddr;
+	else
+	{
+		tcpinfo->listenaddr = request_addr;
+	}
 
 	ret = listen_tcpfwd(tcpinfo);
 
@@ -222,7 +225,7 @@ out:
 	if (ret == DROPBEAR_FAILURE) {
 		/* we only free it if a listener wasn't created, since the listener
 		 * has to remember it if it's to be cancelled */
-		m_free(bindaddr);
+		m_free(request_addr);
 		m_free(tcpinfo);
 	}
 	TRACE(("leave remotetcpreq"))
