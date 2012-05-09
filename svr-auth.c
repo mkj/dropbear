@@ -155,7 +155,6 @@ void recv_msg_userauth_request() {
 				AUTH_METHOD_NONE_LEN) == 0) {
 		TRACE(("recv_msg_userauth_request: 'none' request"))
 #ifdef ALLOW_BLANK_PASSWORD
-		TRACE(("pw_passwd '%s'", ses.authstate.pw_passwd))
 		if (!svr_opts.noauthpass 
 				&& !(svr_opts.norootpass && ses.authstate.pw_uid == 0) 
 				&& ses.authstate.pw_passwd[0] == '\0') 
