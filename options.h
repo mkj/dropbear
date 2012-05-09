@@ -179,8 +179,7 @@ much traffic. */
 
 /* Define this to allow logging in to accounts that have no password specified.
  * Public key logins are allowed for blank-password accounts regardless of this
- * setting.  PAM is not affected by this setting, it uses the normal pam.d
- * settings ('nullok' option) */
+ * setting. */
 /* #define ALLOW_BLANK_PASSWORD */
 
 #define ENABLE_CLI_PASSWORD_AUTH
