@@ -90,7 +90,13 @@
 #define MAX_KEY_LEN 32 /* 256 bits for aes256 etc */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 
 						 and >= SHA1_HASH_SIZE */
+#if defined(DROPBEAR_SHA2_512_HMAC)
+#define MAX_MAC_KEY 64
+#elif defined(DROPBEAR_SHA2_256_HMAC)
+#define MAX_MAC_KEY 32
+#else
 #define MAX_MAC_KEY 20
+#endif
 
 #define MAX_NAME_LEN 64 /* maximum length of a protocol name, isn't
 						   explicitly specified for all protocols (just
@@ -142,6 +148,19 @@
 
 #if defined(DROPBEAR_TWOFISH256) || defined(DROPBEAR_TWOFISH128)
 #define DROPBEAR_TWOFISH
+#endif
+
+#ifdef DROPBEAR_MD5_HMAC
+#define DROPBEAR_MD5
+#endif
+
+#ifdef DROPBEAR_SHA2_256_HMAC
+#define DROPBEAR_SHA256
+#endif
+
+#if (defined(DROPBEAR_DSS) && defined(DSS_PROTOK)) \
+	|| defined(DROPBEAR_SHA2_512_HMAC)
+#define DROPBEAR_SHA512
 #endif
 
 #ifndef ENABLE_X11FWD

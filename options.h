@@ -112,6 +112,8 @@ much traffic. */
 
 #define DROPBEAR_SHA1_HMAC
 #define DROPBEAR_SHA1_96_HMAC
+#define DROPBEAR_SHA2_256_HMAC
+#define DROPBEAR_SHA2_512_HMAC
 #define DROPBEAR_MD5_HMAC
 
 /* Hostkey/public key algorithms - at least one required, these are used

@@ -248,26 +248,28 @@ static void kexinitialise() {
  * already initialised hash_state hs, which should already have processed
  * the dh_K and hash, since these are common. X is the letter 'A', 'B' etc.
  * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
- * The output will only be expanded once, as we are assured that
- * outlen <= 2*SHA1_HASH_SIZE for all known hashes.
  *
  * See Section 7.2 of rfc4253 (ssh transport) for details */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, const unsigned char X) {
 
 	hash_state hs2;
-	unsigned char k2[SHA1_HASH_SIZE]; /* used to extending */
+	int offset;
 
 	memcpy(&hs2, hs, sizeof(hash_state));
 	sha1_process(&hs2, &X, 1);
 	sha1_process(&hs2, ses.session_id, SHA1_HASH_SIZE);
 	sha1_done(&hs2, out);
-	if (SHA1_HASH_SIZE < outlen) {
+	for (offset = SHA1_HASH_SIZE; 
+			offset < outlen; 
+			offset += SHA1_HASH_SIZE)
+	{
 		/* need to extend */
+		unsigned char k2[SHA1_HASH_SIZE];
 		memcpy(&hs2, hs, sizeof(hash_state));
-		sha1_process(&hs2, out, SHA1_HASH_SIZE);
+		sha1_process(&hs2, out, offset);
 		sha1_done(&hs2, k2);
-		memcpy(&out[SHA1_HASH_SIZE], k2, outlen - SHA1_HASH_SIZE);
+		memcpy(&out[offset], k2, MIN(outlen - offset, SHA1_HASH_SIZE));
 	}
 }
 
