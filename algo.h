@@ -89,7 +89,7 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
 		int *goodguess);
 
 #ifdef ENABLE_USER_ALGO_LIST
-int check_user_algos(char* user_algo_list, algo_type * algos, 
+int check_user_algos(const char* user_algo_list, algo_type * algos, 
 		const char *algo_desc);
 char * algolist_string(algo_type algos[]);
 #endif
