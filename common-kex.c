@@ -106,17 +106,40 @@ void send_msg_kexinit() {
 	/* server_host_key_algorithms */
 	buf_put_algolist(ses.writepayload, sshhostkey);
 
-	/* encryption_algorithms_client_to_server */
-	buf_put_algolist(ses.writepayload, sshciphers);
+#ifdef ENABLE_USER_ALGO_LIST
+	if (opts.cipher_list)
+	{
+		/* encryption_algorithms_client_to_server */
+		buf_putbytes(ses.writepayload, opts.cipher_list, strlen(opts.cipher_list));
+		/* encryption_algorithms_server_to_client */
+		buf_putbytes(ses.writepayload, opts.cipher_list, strlen(opts.cipher_list));
+	}
+	else
+#endif
+	{
+		/* encryption_algorithms_client_to_server */
+		buf_put_algolist(ses.writepayload, sshciphers);
+		/* encryption_algorithms_server_to_client */
+		buf_put_algolist(ses.writepayload, sshciphers);
+	}
 
-	/* encryption_algorithms_server_to_client */
-	buf_put_algolist(ses.writepayload, sshciphers);
+#ifdef ENABLE_USER_ALGO_LIST
+	if (opts.mac_list)
+	{
+		/* mac_algorithms_client_to_server */
+		buf_putbytes(ses.writepayload, opts.mac_list, strlen(opts.mac_list));
+		/* mac_algorithms_server_to_client */
+		buf_putbytes(ses.writepayload, opts.mac_list, strlen(opts.mac_list));
+	}
+	else
+#endif
+	{
+		/* mac_algorithms_client_to_server */
+		buf_put_algolist(ses.writepayload, sshhashes);
+		/* mac_algorithms_server_to_client */
+		buf_put_algolist(ses.writepayload, sshhashes);
+	}
 
-	/* mac_algorithms_client_to_server */
-	buf_put_algolist(ses.writepayload, sshhashes);
-
-	/* mac_algorithms_server_to_client */
-	buf_put_algolist(ses.writepayload, sshhashes);
 
 	/* compression_algorithms_client_to_server */
 	buf_put_algolist(ses.writepayload, ses.compress_algos);

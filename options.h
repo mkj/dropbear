@@ -80,6 +80,9 @@ much traffic. */
  * to a remote TCP-forwarded connection */
 #define ENABLE_CLI_NETCAT
 
+/* Whether to support "-c" and "-m" flags to choose ciphers/MACs at runtime */
+/* #define ENABLE_USER_ALGO_LIST*/
+
 /* Encryption - at least one required.
  * Protocol RFC requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
