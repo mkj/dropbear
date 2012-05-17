@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "auth.h"
+#include "algo.h"
 
 runopts opts; /* GLOBAL */
 
@@ -55,3 +56,42 @@ out:
 	buf_free(buf);
 	return ret;
 }
+
+#ifdef ENABLE_USER_ALGO_LIST
+void
+parse_ciphers_macs()
+{
+	if (opts.cipher_list)
+	{
+		if (strcmp(opts.cipher_list, "help") == 0)
+		{
+			char *ciphers = algolist_string(sshciphers);
+			dropbear_log(LOG_INFO, "Available ciphers:\n%s\n", ciphers);
+			m_free(ciphers);
+			dropbear_exit(".");
+		}
+
+		if (check_user_algos(opts.cipher_list, sshciphers, "cipher") == 0)
+		{
+			dropbear_exit("No valid ciphers specified for '-c'");
+		}
+	}
+
+	if (opts.mac_list)
+	{
+		if (strcmp(opts.mac_list, "help") == 0)
+		{
+			char *macs = algolist_string(sshhashes);
+			dropbear_log(LOG_INFO, "Available MACs:\n%s\n", macs);
+			m_free(macs);
+			dropbear_exit(".");
+		}
+
+		if (check_user_algos(opts.mac_list, sshhashes, "MAC") == 0)
+		{
+			dropbear_exit("No valid MACs specified for '-m'");
+		}
+	}
+}
+#endif
+

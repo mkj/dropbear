@@ -118,6 +118,7 @@ void send_msg_kexinit() {
 	/* mac_algorithms_server_to_client */
 	buf_put_algolist(ses.writepayload, sshhashes);
 
+
 	/* compression_algorithms_client_to_server */
 	buf_put_algolist(ses.writepayload, ses.compress_algos);
 

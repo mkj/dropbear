@@ -280,8 +280,6 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 	return DROPBEAR_FAILURE;
 }
 
-
-
 /* Output a comma separated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 
@@ -302,3 +300,83 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	buf_putstring(buf, algolist->data, algolist->len);
 	buf_free(algolist);
 }
+
+#ifdef ENABLE_USER_ALGO_LIST
+
+char *
+algolist_string(algo_type algos[])
+{
+	char *ret_list;
+	buffer *b = buf_new(200);
+	buf_put_algolist(b, algos);
+	buf_setpos(b, b->len);
+	buf_putbyte(b, '\0');
+	buf_setpos(b, 4);
+	ret_list = m_strdup(buf_getptr(b, b->len - b->pos));
+	buf_free(b);
+	return ret_list;
+}
+
+static algo_type*
+check_algo(const char* algo_name, algo_type *algos)
+{
+	algo_type *a;
+	for (a = algos; a->name != NULL; a++)
+	{
+		if (strcmp(a->name, algo_name) == 0)
+		{
+			return a;
+		}
+	}
+
+	return NULL;
+}
+
+static void
+try_add_algo(const char *algo_name, algo_type *algos, 
+		const char *algo_desc, algo_type * new_algos, int *num_ret)
+{
+	algo_type *match_algo = check_algo(algo_name, algos);
+	if (!match_algo)
+	{
+		dropbear_log(LOG_WARNING, "This Dropbear program does not support '%s' %s algorithm", algo_name, algo_desc);
+		return;
+	}
+
+	new_algos[*num_ret] = *match_algo;
+	(*num_ret)++;
+}
+
+/* Checks a user provided comma-separated algorithm list for available
+ * options. Any that are not acceptable are removed in-place. Returns the
+ * number of valid algorithms. */
+int
+check_user_algos(const char* user_algo_list, algo_type * algos, 
+		const char *algo_desc)
+{
+	algo_type new_algos[MAX_PROPOSED_ALGO];
+	/* this has two passes. first we sweep through the given list of
+	 * algorithms and mark them as usable=2 in the algo_type[] array... */
+	int num_ret = 0;
+	char *work_list = m_strdup(user_algo_list);
+	char *last_name = work_list;
+	char *c;
+	for (c = work_list; *c; c++)
+	{
+		if (*c == ',')
+		{
+			*c = '\0';
+			try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
+			last_name = c++;
+		}
+	}
+	try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
+	m_free(work_list);
+
+	new_algos[num_ret].name = NULL;
+
+	/* Copy one more as a blank delimiter */
+	memcpy(algos, new_algos, sizeof(*new_algos) * (num_ret+1));
+	return num_ret;
+}
+#endif // ENABLE_USER_ALGO_LIST

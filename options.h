@@ -80,6 +80,9 @@ much traffic. */
  * to a remote TCP-forwarded connection */
 #define ENABLE_CLI_NETCAT
 
+/* Whether to support "-c" and "-m" flags to choose ciphers/MACs at runtime */
+#define ENABLE_USER_ALGO_LIST
+
 /* Encryption - at least one required.
  * Protocol RFC requires 3DES and recommends AES128 for interoperability.
  * Including multiple keysize variants the same cipher 
@@ -107,7 +110,7 @@ much traffic. */
  * The best way to do things is probably make normal compile of dropbear with
  * all ciphers including "none" as the server, then recompile a special
  * "dbclient-insecure" client. */
-/* #define DROPBEAR_NONE_CIPHER */
+#define DROPBEAR_NONE_CIPHER
 
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
@@ -132,7 +135,7 @@ much traffic. */
  * simple to run arbitrary commands on the remote host. Beware.
  * Note again, for the client you will have to disable other hashes above
  * to use this. */
-/* #define DROPBEAR_NONE_INTEGRITY */
+#define DROPBEAR_NONE_INTEGRITY
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.

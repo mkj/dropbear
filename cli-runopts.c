@@ -86,6 +86,10 @@ static void printhelp() {
 #ifdef ENABLE_CLI_PROXYCMD
 					"-J <proxy_program> Use program pipe rather than TCP connection\n"
 #endif
+#ifdef ENABLE_USER_ALGO_LIST
+					"-c <cipher list> Specify preferred ciphers ('-c help' to list options)\n"
+					"-m <MAC list> Specify preferred MACs for packet verification (or '-m help')\n"
+#endif
 #ifdef DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
@@ -148,6 +152,10 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifndef DISABLE_ZLIB
 	opts.enable_compress = 1;
+#endif
+#ifdef ENABLE_USER_ALGO_LIST
+	opts.cipher_list = NULL;
+	opts.mac_list = NULL;
 #endif
 	/* not yet
 	opts.ipv4 = 1;
@@ -283,6 +291,14 @@ void cli_getopts(int argc, char ** argv) {
 					cli_opts.agent_fwd = 1;
 					break;
 #endif
+#ifdef ENABLE_USER_ALGO_LIST
+				case 'c':
+					next = &opts.cipher_list;
+					break;
+				case 'm':
+					next = &opts.mac_list;
+					break;
+#endif
 #ifdef DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -290,8 +306,10 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 				case 'F':
 				case 'e':
+#ifndef ENABLE_USER_ALGO_LIST
 				case 'c':
 				case 'm':
+#endif
 				case 'D':
 #ifndef ENABLE_CLI_REMOTETCPFWD
 				case 'R':
@@ -350,6 +368,10 @@ void cli_getopts(int argc, char ** argv) {
 	}
 
 	/* And now a few sanity checks and setup */
+
+#ifdef ENABLE_USER_ALGO_LIST
+	parse_ciphers_macs();
+#endif
 
 	if (host_arg == NULL) {
 		printhelp();
