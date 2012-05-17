@@ -103,14 +103,12 @@ much traffic. */
 /* You can compile with no encryption if you want. In some circumstances
  * this could be safe security-wise, though make sure you know what
  * you're doing. Anyone can see everything that goes over the wire, so
- * the only safe auth method is public key. You'll have to disable all other
- * ciphers above in the client if you want to use this, or implement cipher
- * prioritisation in cli-runopts.
- *
- * The best way to do things is probably make normal compile of dropbear with
- * all ciphers including "none" as the server, then recompile a special
- * "dbclient-insecure" client. */
+ * the only safe auth method is public key. */
 #define DROPBEAR_NONE_CIPHER
+
+/* Define this to allow password authentication even when no encryption
+ * is being used. This can be unsafe */
+#define ALLOW_NONE_PASSWORD_AUTH
 
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
