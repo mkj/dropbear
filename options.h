@@ -106,10 +106,6 @@ much traffic. */
  * the only safe auth method is public key. */
 #define DROPBEAR_NONE_CIPHER
 
-/* Define this to allow password authentication even when no encryption
- * is being used. This can be unsafe */
-#define ALLOW_NONE_PASSWORD_AUTH
-
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
  * sha1-96 is of use for slow links as it has a smaller overhead.

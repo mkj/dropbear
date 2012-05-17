@@ -301,6 +301,38 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	buf_free(algolist);
 }
 
+#ifdef DROPBEAR_NONE_CIPHER
+
+void
+set_algo_usable(algo_type algos[], const char * algo_name, int usable)
+{
+	algo_type *a;
+	for (a = algos; a->name != NULL; a++)
+	{
+		if (strcmp(a->name, algo_name) == 0)
+		{
+			a->usable = usable;
+			return;
+		}
+	}
+}
+
+int
+get_algo_usable(algo_type algos[], const char * algo_name)
+{
+	algo_type *a;
+	for (a = algos; a->name != NULL; a++)
+	{
+		if (strcmp(a->name, algo_name) == 0)
+		{
+			return a->usable;
+		}
+	}
+	return 0;
+}
+
+#endif // DROPBEAR_NONE_CIPHER
+
 #ifdef ENABLE_USER_ALGO_LIST
 
 char *
@@ -367,7 +399,8 @@ check_user_algos(const char* user_algo_list, algo_type * algos,
 		{
 			*c = '\0';
 			try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
-			last_name = c++;
+			c++;
+			last_name = c;
 		}
 	}
 	try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
