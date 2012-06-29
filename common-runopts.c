@@ -29,6 +29,7 @@
 #include "dbutil.h"
 #include "auth.h"
 #include "algo.h"
+#include "random.h"
 
 runopts opts; /* GLOBAL */
 
@@ -45,6 +46,9 @@ int readhostkey(const char * filename, sign_key * hostkey, int *type) {
 		goto out;
 	}
 	buf_setpos(buf, 0);
+
+	addrandom(buf_getptr(buf, buf->len), buf->len);
+
 	if (buf_get_priv_key(buf, hostkey, type) == DROPBEAR_FAILURE) {
 		goto out;
 	}

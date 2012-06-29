@@ -75,7 +75,6 @@ static const struct ChanType *svr_chantypes[] = {
 void svr_session(int sock, int childpipe) {
 	char *host, *port;
 	size_t len;
-    reseedrandom();
 
 	crypto_init();
 	common_session_init(sock, sock);

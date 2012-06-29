@@ -182,14 +182,6 @@
 #error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
 #endif
 
-#if defined(DROPBEAR_RANDOM_DEV) && defined(DROPBEAR_PRNGD_SOCKET)
-#error "You can't turn on DROPBEAR_PRNGD_SOCKET and DROPBEAR_RANDOM_DEV at once"
-#endif
-
-#if !defined(DROPBEAR_RANDOM_DEV) && !defined(DROPBEAR_PRNGD_SOCKET)
-#error "You must choose one of DROPBEAR_PRNGD_SOCKET or DROPBEAR_RANDOM_DEV in options.h"
-#endif
-
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
  * code, if we're just compiling as client or server */
 #if defined(DROPBEAR_SERVER) && defined(DROPBEAR_CLIENT)

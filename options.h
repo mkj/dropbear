@@ -204,20 +204,14 @@ much traffic. */
  * return the password on standard output */
 /*#define ENABLE_CLI_ASKPASS_HELPER*/
 
-/* Random device to use - define either DROPBEAR_RANDOM_DEV or
- * DROPBEAR_PRNGD_SOCKET.
- * DROPBEAR_RANDOM_DEV is recommended on hosts with a good /dev/(u)random,
- * otherwise use run prngd (or egd if you want), specifying the socket. 
- * The device will be queried for a few dozen bytes of seed a couple of times
- * per session (or more for very long-lived sessions). */
+/* Source for randomness. This must be able to provide hundreds of bytes per SSH
+ * connection without blocking. In addition /dev/random is used for seeding
+ * rsa/dss key generation */
+#define DROPBEAR_URANDOM_DEV "/dev/urandom"
 
-/* We'll use /dev/urandom by default, since /dev/random is too much hassle.
- * If system developers aren't keeping seeds between boots nor getting
- * any entropy from somewhere it's their own fault. */
-#define DROPBEAR_RANDOM_DEV "/dev/urandom"
-
-/* prngd must be manually set up to produce output */
+/* Set this to use PRNGD or EGD instead of /dev/urandom or /dev/random */
 /*#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"*/
+
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */

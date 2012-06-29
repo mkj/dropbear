@@ -871,7 +871,7 @@ static void execchild(void *user_data) {
 	svr_opts.hostkey = NULL;
 
 	/* overwrite the prng state */
-	reseedrandom();
+	seedrandom();
 #endif
 
 	/* clear environment */
