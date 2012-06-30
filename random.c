@@ -205,10 +205,18 @@ void seedrandom() {
 
 	/* A few other sources to fall back on. Add more here for other platforms */
 #ifdef __linux__
-	/* Seems to be a reasonable source of entropy from timers */
+	/* Seems to be a reasonable source of entropy from timers. Possibly hard
+	 * for even local attackers to reproduce */
 	process_file(&hs, "/proc/timer_list", 0, 0);
 	/* Might help on systems with wireless */
 	process_file(&hs, "/proc/interrupts", 0, 0);
+
+	/* Mostly network visible but useful in some situations */
+	process_file(&hs, "/proc/net/netstat", 0, 0);
+	process_file(&hs, "/proc/net/dev", 0, 0);
+	process_file(&hs, "/proc/net/tcp", 0, 0);
+	/* Also includes interface lo */
+	process_file(&hs, "/proc/net/rt_cache", 0, 0);
 #endif
 
 	pid = getpid();
