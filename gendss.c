@@ -57,7 +57,6 @@ dropbear_dss_key * gen_dss_priv_key(unsigned int size) {
 	m_mp_init_multi(key->p, key->q, key->g, key->y, key->x, NULL);
 	
 	seedrandom();
-	seedstrongrandom();
 	
 	getq(key);
 	getp(key, size);

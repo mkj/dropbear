@@ -56,7 +56,6 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 			&pminus, &lcm, &qminus, NULL);
 
 	seedrandom();
-	seedstrongrandom();
 
 	if (mp_set_int(key->e, RSA_E) != MP_OKAY) {
 		fprintf(stderr, "RSA generation failed\n");

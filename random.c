@@ -155,24 +155,6 @@ static void write_urandom()
 #endif
 }
 
-/* add entropy from the stronger, blocking source /dev/random. Only used
- * for generating persistent private keys (RSA and DSS) */
-void seedstrongrandom()
-{
-	/* We assume that PRNGD is a strong source, so don't need to do anything here */
-#ifndef DROPBEAR_PRNGD_SOCKET
-	hash_state hs;
-
-	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
-	if (process_file(&hs, "/dev/random", INIT_SEED_SIZE, 0) 
-			!= DROPBEAR_SUCCESS) {
-		dropbear_exit("Failure reading random device %s", "/dev/random");
-	}
-
-	sha1_done(&hs, hashpool);
-#endif
-}
-
 /* Initialise the prng from /dev/urandom or prngd. This function can
  * be called multiple times */
 void seedrandom() {

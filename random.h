@@ -27,7 +27,6 @@
 
 struct mp_int;
 
-void seedstrongrandom();
 void seedrandom();
 void genrandom(unsigned char* buf, unsigned int len);
 void addrandom(char * buf, unsigned int len);
