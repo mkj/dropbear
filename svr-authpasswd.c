@@ -29,6 +29,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "auth.h"
+#include "runopts.h"
 
 #ifdef ENABLE_SVR_PASSWORD_AUTH
 

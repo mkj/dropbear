@@ -63,6 +63,7 @@ static void printhelp(const char * progname) {
 #if defined(ENABLE_SVR_PASSWORD_AUTH) || defined(ENABLE_SVR_PAM_AUTH)
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
+					"-B		Allow blank password logins\n"
 #endif
 #ifdef ENABLE_SVR_LOCALTCPFWD
 					"-j		Disable local port forwarding\n"
@@ -115,6 +116,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.norootlogin = 0;
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
+	svr_opts.allowblankpass = 0;
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
@@ -233,6 +235,9 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'g':
 					svr_opts.norootpass = 1;
+					break;
+				case 'B':
+					svr_opts.allowblankpass = 1;
 					break;
 #endif
 				case 'h':
