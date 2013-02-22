@@ -1,3 +1,19 @@
+- Allow specifying cipher (-c) and MAC (-m) lists for dbclient
+
+- Allow using 'none' cipher or MAC
+
+- Allow a user in immediately if the account has a blank password and blank
+  passwords are enabled
+
+- Include a few extra sources of entropy from /proc on Linux, hash private keys
+  as well
+
+- Added sha2-256 and sha2-512 hashes
+
+- Don't sent "localhost" for -R forward connections, reported by Denis Bider
+
+- Add "-B" runtime option to allow blank passwords
+
 2012.55 - Wednesday 22 February 2012
 
 - Security: Fix use-after-free bug that could be triggered if command="..."
