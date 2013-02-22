@@ -111,6 +111,12 @@ comparing saved hostkeys.
 "Netcat-alike" mode, where Dropbear will connect to the given host, then create a
 forwarded connection to \fIendhost\fR. This will then be presented as dbclient's
 standard input/output.
+.TP
+.B \-c \fIcipherlist
+Specify a comma separated list of ciphers to enable. Use \fI-c help\fR to list possibilities.
+.TP
+.B \-m \fIMAClist
+Specify a comma separated list of authentication MACs to enable. Use \fI-m help\fR to list possibilities.
 
 Dropbear will also allow multiple "hops" to be specified, separated by commas. In
 this case a connection will be made to the first host, then a TCP forwarded 
@@ -148,4 +154,4 @@ Gerrit Pape (pape@smarden.org) wrote this manual page.
 .SH SEE ALSO
 dropbear(8), dropbearkey(8)
 .P
-http://matt.ucc.asn.au/dropbear/dropbear.html
+https://matt.ucc.asn.au/dropbear/dropbear.html
