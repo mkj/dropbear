@@ -73,10 +73,10 @@ process_file(hash_state *hs, const char *filename,
 	}
 
 	readcount = 0;
-	while (readcount < len)
+	while (len == 0 || readcount < len)
 	{
 		int readlen, wantread;
-		unsigned char readbuf[128];
+		unsigned char readbuf[2048];
 		if (!already_blocked)
 		{
 			int ret;
@@ -93,7 +93,14 @@ process_file(hash_state *hs, const char *filename,
 			}
 		}
 
-		wantread = MIN(sizeof(readbuf), len-readcount);
+		if (len == 0)
+		{
+			wantread = sizeof(readbuf);
+		} 
+		else
+		{
+			wantread = MIN(sizeof(readbuf), len-readcount);
+		}
 
 #ifdef DROPBEAR_PRNGD_SOCKET
 		if (prngd)
@@ -185,13 +192,17 @@ void seedrandom() {
 	}
 #endif
 
-	/* A few other sources to fall back on. Add more here for other platforms */
+	/* A few other sources to fall back on. 
+	 * Add more here for other platforms */
 #ifdef __linux__
 	/* Seems to be a reasonable source of entropy from timers. Possibly hard
 	 * for even local attackers to reproduce */
 	process_file(&hs, "/proc/timer_list", 0, 0);
 	/* Might help on systems with wireless */
 	process_file(&hs, "/proc/interrupts", 0, 0);
+
+	process_file(&hs, "/proc/loadavg", 0, 0);
+	process_file(&hs, "/proc/sys/kernel/random/entropy_avail", 0, 0);
 
 	/* Mostly network visible but useful in some situations */
 	process_file(&hs, "/proc/net/netstat", 0, 0);
