@@ -260,7 +260,6 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
- *
 void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
