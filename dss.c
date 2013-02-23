@@ -258,52 +258,15 @@ out:
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 
-#ifdef DSS_PROTOK	
-/* convert an unsigned mp into an array of bytes, malloced.
- * This array must be freed after use, len contains the length of the array,
- * if len != NULL */
-static unsigned char* mptobytes(mp_int *mp, int *len) {
-	
-	unsigned char* ret;
-	int size;
-
-	size = mp_unsigned_bin_size(mp);
-	ret = m_malloc(size);
-	if (mp_to_unsigned_bin(mp, ret) != MP_OKAY) {
-		dropbear_exit("Mem alloc error");
-	}
-	if (len != NULL) {
-		*len = size;
-	}
-	return ret;
-}
-#endif
-
 /* Sign the data presented with key, writing the signature contents
- * to the buffer
+ * to the buffer */
  *
- * When DSS_PROTOK is #defined:
- * The alternate k generation method is based on the method used in PuTTY. 
- * In particular to avoid being vulnerable to attacks using flaws in random
- * generation of k, we use the following:
- *
- * proto_k = SHA512 ( SHA512(x) || SHA160(message) )
- * k = proto_k mod q
- *
- * Now we aren't relying on the random number generation to protect the private
- * key x, which is a long term secret */
 void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
 		unsigned int len) {
 
 	unsigned char msghash[SHA1_HASH_SIZE];
 	unsigned int writelen;
 	unsigned int i;
-#ifdef DSS_PROTOK
-	unsigned char privkeyhash[SHA512_HASH_SIZE];
-	unsigned char *privkeytmp;
-	unsigned char proto_k[SHA512_HASH_SIZE];
-	DEF_MP_INT(dss_protok);
-#endif
 	DEF_MP_INT(dss_k);
 	DEF_MP_INT(dss_m);
 	DEF_MP_INT(dss_temp1);
@@ -322,33 +285,9 @@ void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* d
 
 	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp2, &dss_r, &dss_s,
 			&dss_m, NULL);
-#ifdef DSS_PROTOK	
-	/* hash the privkey */
-	privkeytmp = mptobytes(key->x, &i);
-	sha512_init(&hs);
-	sha512_process(&hs, "the quick brown fox jumped over the lazy dog", 44);
-	sha512_process(&hs, privkeytmp, i);
-	sha512_done(&hs, privkeyhash);
-	m_burn(privkeytmp, i);
-	m_free(privkeytmp);
-
-	/* calculate proto_k */
-	sha512_init(&hs);
-	sha512_process(&hs, privkeyhash, SHA512_HASH_SIZE);
-	sha512_process(&hs, msghash, SHA1_HASH_SIZE);
-	sha512_done(&hs, proto_k);
-
-	/* generate k */
-	m_mp_init(&dss_protok);
-	bytes_to_mp(&dss_protok, proto_k, SHA512_HASH_SIZE);
-	if (mp_mod(&dss_protok, key->q, &dss_k) != MP_OKAY) {
-		dropbear_exit("DSS error");
-	}
-	mp_clear(&dss_protok);
-	m_burn(proto_k, SHA512_HASH_SIZE);
-#else /* DSS_PROTOK not defined*/
+	/* the random number generator's input has included the private key which
+	 * avoids DSS's problem of private key exposure due to low entropy */
 	gen_random_mpint(key->q, &dss_k);
-#endif
 
 	/* now generate the actual signature */
 	bytes_to_mp(&dss_m, msghash, SHA1_HASH_SIZE);
