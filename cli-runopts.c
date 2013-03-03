@@ -63,7 +63,7 @@ static void printhelp() {
 					"-N    Don't run a remote command\n"
 					"-f    Run in background after auth\n"
 					"-y    Always accept remote host key if unknown\n"
-					"-s    Request a subsystem (use for sftp)\n"
+					"-s    Request a subsystem (use by external sftp)\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed)\n"
 #endif
