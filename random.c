@@ -26,6 +26,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "bignum.h"
+#include "random.h"
 
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
@@ -136,7 +137,7 @@ out:
 	return ret;
 }
 
-void addrandom(char * buf, int len)
+void addrandom(char * buf, unsigned int len)
 {
 	hash_state hs;
 
