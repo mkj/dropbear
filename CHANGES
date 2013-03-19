@@ -14,6 +14,13 @@
 
 - Add "-B" runtime option to allow blank passwords
 
+- Allow using IPv6 bracket notation for addresses in server "-p" option, from Ben Jencks
+
+- A few improvements for Android from Reimar Döffinger
+
+- Fix memory leak for TCP forwarded connections to hosts that timed out,
+  reported by Norbert Benczúr. Appears to be a very long-standing bug.
+
 2012.55 - Wednesday 22 February 2012
 
 - Security: Fix use-after-free bug that could be triggered if command="..."
