@@ -462,6 +462,10 @@ void fill_passwd(const char* username) {
 			passwd_crypt = spasswd->sp_pwdp;
 		}
 #endif
+		if (!passwd_crypt) {
+			/* android supposedly returns NULL */
+			passwd_crypt = "!!";
+		}
 		ses.authstate.pw_passwd = m_strdup(passwd_crypt);
 	}
 }
