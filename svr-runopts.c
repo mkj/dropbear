@@ -329,8 +329,23 @@ static void addportandaddress(char* spec) {
 		/* We don't free it, it becomes part of the runopt state */
 		myspec = m_strdup(spec);
 
-		/* search for ':', that separates address and port */
-		svr_opts.ports[svr_opts.portcount] = strrchr(myspec, ':');
+		if (myspec[0] == '[') {
+			myspec++;
+			svr_opts.ports[svr_opts.portcount] = strchr(myspec, ']');
+			if (svr_opts.ports[svr_opts.portcount] == NULL) {
+				/* Unmatched [ -> exit */
+				dropbear_exit("Bad listen address");
+			}
+			svr_opts.ports[svr_opts.portcount][0] = '\0';
+			svr_opts.ports[svr_opts.portcount]++;
+			if (svr_opts.ports[svr_opts.portcount][0] != ':') {
+				/* Missing port -> exit */
+				dropbear_exit("Missing port");
+			}
+		} else {
+			/* search for ':', that separates address and port */
+			svr_opts.ports[svr_opts.portcount] = strrchr(myspec, ':');
+		}
 
 		if (svr_opts.ports[svr_opts.portcount] == NULL) {
 			/* no ':' -> the whole string specifies just a port */
