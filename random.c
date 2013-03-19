@@ -211,6 +211,7 @@ void seedrandom() {
 	process_file(&hs, "/proc/net/tcp", 0, 0);
 	/* Also includes interface lo */
 	process_file(&hs, "/proc/net/rt_cache", 0, 0);
+	process_file(&hs, "/proc/vmstat", 0, 0);
 #endif
 
 	pid = getpid();
