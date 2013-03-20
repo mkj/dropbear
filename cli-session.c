@@ -133,6 +133,13 @@ static void cli_session_init() {
 	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
 
+#ifdef DROPBEAR_NONE_CIPHER
+	cli_ses.cipher_none_after_auth = get_algo_usable(sshciphers, "none");
+	set_algo_usable(sshciphers, "none", 0);
+#else
+	cli_ses.cipher_none_after_auth = 0;
+#endif
+
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
 	ses.buf_match_algo = cli_buf_match_algo;
@@ -206,6 +213,14 @@ static void cli_sessionloop() {
 			return;
 
 		case USERAUTH_SUCCESS_RCVD:
+
+#ifdef DROPBEAR_NONE_CIPHER
+			if (cli_ses.cipher_none_after_auth)
+			{
+				set_algo_usable(sshciphers, "none", 1);
+				send_msg_kexinit();
+			}
+#endif
 
 			if (cli_opts.backgrounded) {
 				int devnull;

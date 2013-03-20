@@ -106,6 +106,14 @@ static const struct dropbear_hash dropbear_sha1 =
 static const struct dropbear_hash dropbear_sha1_96 = 
 	{&sha1_desc, 20, 12};
 #endif
+#ifdef DROPBEAR_SHA2_256_HMAC
+static const struct dropbear_hash dropbear_sha2_256 = 
+	{&sha256_desc, 32, 32};
+#endif
+#ifdef DROPBEAR_SHA2_512_HMAC
+static const struct dropbear_hash dropbear_sha2_512 =
+	{&sha512_desc, 64, 64};
+#endif
 #ifdef DROPBEAR_MD5_HMAC
 static const struct dropbear_hash dropbear_md5 = 
 	{&md5_desc, 16, 16};
@@ -152,10 +160,19 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_BLOWFISH
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
 #endif
+#ifdef DROPBEAR_NONE_CIPHER
+	{"none", 0, (void*)&dropbear_nocipher, 1, &dropbear_mode_none},
+#endif
 	{NULL, 0, NULL, 0, NULL}
 };
 
 algo_type sshhashes[] = {
+#ifdef DROPBEAR_SHA2_256_HMAC
+//	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
+#endif
+#ifdef DROPBEAR_SHA2_512_HMAC
+//	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
+#endif
 #ifdef DROPBEAR_SHA1_96_HMAC
 	{"hmac-sha1-96", 0, &dropbear_sha1_96, 1, NULL},
 #endif
@@ -163,7 +180,10 @@ algo_type sshhashes[] = {
 	{"hmac-sha1", 0, &dropbear_sha1, 1, NULL},
 #endif
 #ifdef DROPBEAR_MD5_HMAC
-	{"hmac-md5", 0, &dropbear_md5, 1, NULL},
+	{"hmac-md5", 0, (void*)&dropbear_md5, 1, NULL},
+#endif
+#ifdef DROPBEAR_NONE_INTEGRITY
+	{"none", 0, (void*)&dropbear_nohash, 1, NULL},
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };
@@ -281,6 +301,38 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	buf_free(algolist);
 }
 
+#ifdef DROPBEAR_NONE_CIPHER
+
+void
+set_algo_usable(algo_type algos[], const char * algo_name, int usable)
+{
+	algo_type *a;
+	for (a = algos; a->name != NULL; a++)
+	{
+		if (strcmp(a->name, algo_name) == 0)
+		{
+			a->usable = usable;
+			return;
+		}
+	}
+}
+
+int
+get_algo_usable(algo_type algos[], const char * algo_name)
+{
+	algo_type *a;
+	for (a = algos; a->name != NULL; a++)
+	{
+		if (strcmp(a->name, algo_name) == 0)
+		{
+			return a->usable;
+		}
+	}
+	return 0;
+}
+
+#endif // DROPBEAR_NONE_CIPHER
+
 #ifdef ENABLE_USER_ALGO_LIST
 
 char *
@@ -347,7 +399,8 @@ check_user_algos(const char* user_algo_list, algo_type * algos,
 		{
 			*c = '\0';
 			try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
-			last_name = c++;
+			c++;
+			last_name = c;
 		}
 	}
 	try_add_algo(last_name, algos, algo_desc, new_algos, &num_ret);
