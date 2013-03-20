@@ -104,7 +104,7 @@ much traffic. */
  * this could be safe security-wise, though make sure you know what
  * you're doing. Anyone can see everything that goes over the wire, so
  * the only safe auth method is public key. */
-#define DROPBEAR_NONE_CIPHER
+/* #define DROPBEAR_NONE_CIPHER */
 
 /* Message Integrity - at least one required.
  * Protocol RFC requires sha1 and recommends sha1-96.
@@ -126,10 +126,8 @@ much traffic. */
 
 /* You can also disable integrity. Don't bother disabling this if you're
  * still using a cipher, it's relatively cheap. If you disable this it's dead
- * simple to run arbitrary commands on the remote host. Beware.
- * Note again, for the client you will have to disable other hashes above
- * to use this. */
-#define DROPBEAR_NONE_INTEGRITY
+ * simple to run arbitrary commands on the remote host. Beware. */
+/* #define DROPBEAR_NONE_INTEGRITY */
 
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
