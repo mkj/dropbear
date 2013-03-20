@@ -133,22 +133,29 @@ void read_packet() {
 	/* Attempt to read the remainder of the packet, note that there
 	 * mightn't be any available (EAGAIN) */
 	maxlen = ses.readbuf->len - ses.readbuf->pos;
-	len = read(ses.sock_in, buf_getptr(ses.readbuf, maxlen), maxlen);
+	if (maxlen == 0) {
+		/* Occurs when the packet is only a single block long and has all
+		 * been read in read_packet_init().  Usually means that MAC is disabled
+		 */
+		len = 0;
+	} else {
+		len = read(ses.sock_in, buf_getptr(ses.readbuf, maxlen), maxlen);
 
-	if (len == 0) {
-		ses.remoteclosed();
-	}
-
-	if (len < 0) {
-		if (errno == EINTR || errno == EAGAIN) {
-			TRACE(("leave read_packet: EINTR or EAGAIN"))
-			return;
-		} else {
-			dropbear_exit("Error reading: %s", strerror(errno));
+		if (len == 0) {
+			ses.remoteclosed();
 		}
-	}
 
-	buf_incrpos(ses.readbuf, len);
+		if (len < 0) {
+			if (errno == EINTR || errno == EAGAIN) {
+				TRACE(("leave read_packet: EINTR or EAGAIN"))
+				return;
+			} else {
+				dropbear_exit("Error reading: %s", strerror(errno));
+			}
+		}
+
+		buf_incrpos(ses.readbuf, len);
+	}
 
 	if ((unsigned int)len == maxlen) {
 		/* The whole packet has been read */
