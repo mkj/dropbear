@@ -95,7 +95,8 @@ void chancleanup() {
 static void
 chan_initwritebuf(struct Channel *channel)
 {
-	dropbear_assert(channel->writebuf == NULL && channel->recvwindow == 0);
+	dropbear_assert(channel->writebuf->size == 0 && channel->recvwindow == 0);
+	cbuf_free(channel->writebuf);
 	channel->writebuf = cbuf_new(opts.recv_window);
 	channel->recvwindow = opts.recv_window;
 }
@@ -159,7 +160,7 @@ static struct Channel* newchannel(unsigned int remotechan,
 	newchan->await_open = 0;
 	newchan->flushing = 0;
 
-	newchan->writebuf = NULL;
+	newchan->writebuf = cbuf_new(0); /* resized later by chan_initwritebuf */
 	newchan->recvwindow = 0;
 
 	newchan->extrabuf = NULL; /* The user code can set it up */
@@ -233,7 +234,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 				continue; /* Important not to use the channel after
 							 check_in_progress(), as it may be NULL */
 			}
-			dropbear_assert(channel->writebuf);
 			writechannel(channel, channel->writefd, channel->writebuf);
 		}
 		
@@ -259,9 +259,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
  * stderr of a channel's endpoint. */
 static unsigned int write_pending(struct Channel * channel) {
 
-	if (channel->writefd >= 0 
-			&& channel->writebuf 
-			&& cbuf_getused(channel->writebuf) > 0) {
+	if (channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0) {
 		return 1;
 	} else if (channel->errfd >= 0 && channel->extrabuf && 
 			cbuf_getused(channel->extrabuf) > 0) {
@@ -452,8 +450,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 	}
 
 	dropbear_assert(channel->recvwindow <= opts.recv_window);
-	dropbear_assert(channel->writebuf == NULL ||
-			channel->recvwindow <= cbuf_getavail(channel->writebuf));
+	dropbear_assert(channel->recvwindow <= cbuf_getavail(channel->writebuf));
 	dropbear_assert(channel->extrabuf == NULL ||
 			channel->recvwindow <= cbuf_getavail(channel->extrabuf));
 	
@@ -546,10 +543,8 @@ static void remove_channel(struct Channel * channel) {
 	TRACE(("enter remove_channel"))
 	TRACE(("channel index is %d", channel->index))
 
-	if (channel->writebuf) {
-		cbuf_free(channel->writebuf);
-		channel->writebuf = NULL;
-	}
+	cbuf_free(channel->writebuf);
+	channel->writebuf = NULL;
 
 	if (channel->extrabuf) {
 		cbuf_free(channel->extrabuf);
