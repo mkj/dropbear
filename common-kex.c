@@ -354,17 +354,17 @@ void gen_new_keys() {
 		}
 	}
 
-	/* MAC keys */
 	if (ses.newkeys->trans.algo_mac->hashdesc != NULL) {
 		hashkeys(ses.newkeys->trans.mackey, 
 				ses.newkeys->trans.algo_mac->keysize, &hs, mactransletter);
+		ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hashdesc->name);
 	}
+
 	if (ses.newkeys->recv.algo_mac->hashdesc != NULL) {
 		hashkeys(ses.newkeys->recv.mackey, 
 				ses.newkeys->recv.algo_mac->keysize, &hs, macrecvletter);
+		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hashdesc->name);
 	}
-	ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hashdesc->name),
-	ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hashdesc->name),
 
 #ifndef DISABLE_ZLIB
 	gen_new_zstreams();

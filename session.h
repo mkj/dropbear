@@ -63,9 +63,9 @@ void cleantext(unsigned char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
 struct key_context_directional {
-	const struct dropbear_cipher *algo_crypt; /* NULL for none */
+	const struct dropbear_cipher *algo_crypt;
 	const struct dropbear_cipher_mode *crypt_mode;
-	const struct dropbear_hash *algo_mac; /* NULL for none */
+	const struct dropbear_hash *algo_mac;
 	int hash_index; /* lookup for libtomcrypt */
 	char algo_comp; /* compression */
 #ifndef DISABLE_ZLIB
