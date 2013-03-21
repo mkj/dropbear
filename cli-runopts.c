@@ -49,13 +49,12 @@ static void add_netcat(const char *str);
 
 static void printhelp() {
 
-	fprintf(stderr, "Dropbear client v%s\n"
+	fprintf(stderr, "Dropbear SSH client v%s https://matt.ucc.asn.au/dropbear/dropbear.html\n"
 #ifdef ENABLE_CLI_MULTIHOP
 					"Usage: %s [options] [user@]host[/port][,[user@]host/port],...] [command]\n"
 #else
 					"Usage: %s [options] [user@]host[/port] [command]\n"
 #endif
-					"Options are:\n"
 					"-p <remoteport>\n"
 					"-l <username>\n"
 					"-t    Allocate a pty\n"

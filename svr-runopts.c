@@ -36,9 +36,8 @@ static void addportandaddress(char* spec);
 
 static void printhelp(const char * progname) {
 
-	fprintf(stderr, "Dropbear sshd v%s\n"
+	fprintf(stderr, "Dropbear server v%s https://matt.ucc.asn.au/dropbear/dropbear.html\n"
 					"Usage: %s [options]\n"
-					"Options are:\n"
 					"-b bannerfile	Display the contents of bannerfile"
 					" before user login\n"
 					"		(default: none)\n"
