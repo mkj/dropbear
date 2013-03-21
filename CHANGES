@@ -1,16 +1,20 @@
+2013.56
+
 - Allow specifying cipher (-c) and MAC (-m) lists for dbclient
 
-- Allow using 'none' cipher or MAC
+- Allow using 'none' cipher or MAC (off by default, use options.h). Encryption
+  is used during authentication then disabled, similar to OpenSSH HPN mode
 
 - Allow a user in immediately if the account has a blank password and blank
   passwords are enabled
 
 - Include a few extra sources of entropy from /proc on Linux, hash private keys
-  as well
+  as well. Dropbear will also write gathered entropy back into /dev/urandom
 
-- Added sha2-256 and sha2-512 hashes
+- Added hmac-sha2-256 and hmac-sha2-512 support (off by default, use options.h)
 
-- Don't sent "localhost" for -R forward connections, reported by Denis Bider
+- Don't sent bad address "localhost" for -R forward connections, 
+  reported by Denis Bider
 
 - Add "-B" runtime option to allow blank passwords
 
@@ -20,6 +24,10 @@
 
 - Fix memory leak for TCP forwarded connections to hosts that timed out,
   reported by Norbert Benczúr. Appears to be a very long-standing bug.
+
+- Fix "make clean" for out of tree builds
+
+- Fix compilation when ENABLE_{SVR,CLI}_AGENTFWD are unset
 
 2012.55 - Wednesday 22 February 2012
 
