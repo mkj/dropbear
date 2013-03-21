@@ -45,8 +45,8 @@ static int void_start(int cipher, const unsigned char *IV,
 
 /* Mappings for ciphers, parameters are
    {&cipher_desc, keysize, blocksize} */
-/* NOTE: if keysize > 2*SHA1_HASH_SIZE, code such as hashkeys()
-   needs revisiting */
+
+/* Remember to add new ciphers/hashes to regciphers/reghashes too */
 
 #ifdef DROPBEAR_AES256
 static const struct dropbear_cipher dropbear_aes256 = 
@@ -168,10 +168,10 @@ algo_type sshciphers[] = {
 
 algo_type sshhashes[] = {
 #ifdef DROPBEAR_SHA2_256_HMAC
-//	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
+	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
 #endif
 #ifdef DROPBEAR_SHA2_512_HMAC
-//	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
+	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
 #endif
 #ifdef DROPBEAR_SHA1_96_HMAC
 	{"hmac-sha1-96", 0, &dropbear_sha1_96, 1, NULL},
@@ -244,6 +244,12 @@ void crypto_init() {
 		&sha1_desc,
 #ifdef DROPBEAR_MD5_HMAC
 		&md5_desc,
+#endif
+#ifdef DROPBEAR_SHA2_256_HMAC
+		&sha256_desc,
+#endif
+#ifdef DROPBEAR_SHA2_512_HMAC
+		&sha512_desc,
 #endif
 		NULL
 	};	

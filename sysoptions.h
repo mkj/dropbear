@@ -76,26 +76,19 @@
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
 
-/* SHA1 is 20 bytes == 160 bits */
 #define SHA1_HASH_SIZE 20
-/* SHA512 is 64 bytes == 512 bits */
-#define SHA512_HASH_SIZE 64
-/* MD5 is 16 bytes = 128 bits */
 #define MD5_HASH_SIZE 16
-
-/* largest of MD5 and SHA1 */
-#define MAX_MAC_LEN SHA1_HASH_SIZE
-
 
 #define MAX_KEY_LEN 32 /* 256 bits for aes256 etc */
 #define MAX_IV_LEN 20 /* must be same as max blocksize, 
 						 and >= SHA1_HASH_SIZE */
+
 #if defined(DROPBEAR_SHA2_512_HMAC)
-#define MAX_MAC_KEY 64
+#define MAX_MAC_LEN 64
 #elif defined(DROPBEAR_SHA2_256_HMAC)
-#define MAX_MAC_KEY 32
+#define MAX_MAC_LEN 32
 #else
-#define MAX_MAC_KEY 20
+#define MAX_MAC_LEN 20
 #endif
 
 #define MAX_NAME_LEN 64 /* maximum length of a protocol name, isn't

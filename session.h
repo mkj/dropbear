@@ -78,7 +78,7 @@ struct key_context_directional {
 		symmetric_CTR ctr;
 #endif
 	} cipher_state;
-	unsigned char mackey[MAX_MAC_KEY];
+	unsigned char mackey[MAX_MAC_LEN];
 };
 
 struct key_context {
