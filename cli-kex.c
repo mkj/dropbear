@@ -309,7 +309,6 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		buf_putbytes(line, algoname, algolen);
 		buf_putbyte(line, ' ');
 		len = line->size - line->pos;
-		TRACE(("keybloblen %d, len %d", keybloblen, len))
 		/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
 		 * will die horribly in the case anyway */
 		base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
