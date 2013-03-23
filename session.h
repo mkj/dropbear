@@ -259,6 +259,9 @@ struct clientsession {
 	int stderrcopy;
 	int stderrflags;
 
+	/* for escape char handling */
+	int last_char;
+
 	int winchange; /* Set to 1 when a windowchange signal happens */
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,

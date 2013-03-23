@@ -54,6 +54,8 @@
 
 #define _PATH_CP "/bin/cp"
 
+#define DROPBEAR_ESCAPE_CHAR '~'
+
 /* success/failure defines */
 #define DROPBEAR_SUCCESS 0
 #define DROPBEAR_FAILURE -1

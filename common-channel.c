@@ -643,6 +643,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 
 	/* read the data */
 	len = read(fd, buf_getwriteptr(ses.writepayload, maxlen), maxlen);
+
 	if (len <= 0) {
 		if (len == 0 || errno != EINTR) {
 			/* This will also get hit in the case of EAGAIN. The only
@@ -650,10 +651,20 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 			in which case it can be treated the same as EOF */
 			close_chan_fd(channel, fd, SHUT_RD);
 		}
-		ses.writepayload->len = ses.writepayload->pos = 0;
+		buf_setpos(ses.writepayload, 0);
+		buf_setlen(ses.writepayload, 0);
 		TRACE(("leave send_msg_channel_data: len %d read err %d or EOF for fd %d", 
 					len, errno, fd))
 		return;
+	}
+
+	if (channel->read_mangler) {
+		channel->read_mangler(channel, buf_getwriteptr(ses.writepayload, len), &len);
+		if (len == 0) {
+			buf_setpos(ses.writepayload, 0);
+			buf_setlen(ses.writepayload, 0);
+			return;
+		}
 	}
 
 	TRACE(("send_msg_channel_data: len %d fd %d", len, fd))
