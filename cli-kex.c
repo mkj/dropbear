@@ -42,16 +42,16 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
 #define MAX_KNOWNHOSTS_LINE 4500
 
 void send_msg_kexdh_init() {
-
-	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
-	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
-
-	gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
-
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
-	buf_putmpint(ses.writepayload, cli_ses.dh_e);
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		cli_ses.dh_param = gen_kexdh_param();
+		buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
+	} else {
+#ifdef DROPBEAR_ECDH
+		cli_ses.ecdh_param = 
+#endif
+	}
 	encrypt_packet();
 	ses.requirenext = SSH_MSG_KEXDH_REPLY;
 }
@@ -59,18 +59,15 @@ void send_msg_kexdh_init() {
 /* Handle a diffie-hellman key exchange reply. */
 void recv_msg_kexdh_reply() {
 
-	DEF_MP_INT(dh_f);
 	sign_key *hostkey = NULL;
 	unsigned int type, keybloblen;
 	unsigned char* keyblob = NULL;
-
 
 	TRACE(("enter recv_msg_kexdh_reply"))
 
 	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
 		dropbear_exit("Received out-of-order kexdhreply");
 	}
-	m_mp_init(&dh_f);
 	type = ses.newkeys->algo_hostkey;
 	TRACE(("type is %d", type))
 
@@ -88,16 +85,23 @@ void recv_msg_kexdh_reply() {
 		dropbear_exit("Bad KEX packet");
 	}
 
-	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
-		TRACE(("failed getting mpint"))
-		dropbear_exit("Bad KEX packet");
-	}
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		// Normal diffie-hellman
+		DEF_MP_INT(dh_f);
+		m_mp_init(&dh_f);
+		if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
+			TRACE(("failed getting mpint"))
+			dropbear_exit("Bad KEX packet");
+		}
 
-	kexdh_comb_key(cli_ses.dh_e, cli_ses.dh_x, &dh_f, hostkey);
-	mp_clear(&dh_f);
-	mp_clear_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
-	m_free(cli_ses.dh_e);
-	m_free(cli_ses.dh_x);
+		kexdh_comb_key(cli_ses.dh_param, &dh_f, hostkey);
+		mp_clear(&dh_f);
+		free_kexdh_param(cli_ses.dh_param);
+		cli_ses.dh_param = NULL;
+	} else {
+#ifdef DROPBEAR_ECDH
+#endif
+	}
 
 	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
 			!= DROPBEAR_SUCCESS) {

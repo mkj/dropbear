@@ -134,6 +134,13 @@
 
 #define LTC_HMAC
 
+#ifdef DROPBEAR_ECDH
+#define MECC
+#define ECC256
+#define ECC384
+#define ECC521
+#endif
+
 /* Various tidbits of modern neatoness */
 #define BASE64
 

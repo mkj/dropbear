@@ -36,6 +36,8 @@ static uint32_t counter = 0;
 static unsigned char hashpool[SHA1_HASH_SIZE] = {0};
 static int donerandinit = 0;
 
+int dropbear_ltc_prng = -1;
+
 #define INIT_SEED_SIZE 32 /* 256 bits */
 
 /* The basic setup is we read some data from /dev/(u)random or prngd and hash it
@@ -230,6 +232,13 @@ void seedrandom() {
 	 * be added to the hashpool - see runopts.c */
 
 	sha1_done(&hs, hashpool);
+
+#ifdef DROPBEAR_LTC_PRNG
+	if (dropbear_ltc_prng == -1) {
+		dropbear_ltc_prng = register_prng(&dropbear_prng_desc);
+		dropbear_assert(dropbear_ltc_prng != -1);
+	}
+#endif
 
 	counter = 0;
 	donerandinit = 1;

@@ -60,22 +60,18 @@
 #define DROPBEAR_SUCCESS 0
 #define DROPBEAR_FAILURE -1
 
-/* various algorithm identifiers */
-#define DROPBEAR_KEX_DH_GROUP1 0
-#define DROPBEAR_KEX_DH_GROUP14 1
-
 #define DROPBEAR_SIGNKEY_ANY 0
 #define DROPBEAR_SIGNKEY_RSA 1
 #define DROPBEAR_SIGNKEY_DSS 2
 #define DROPBEAR_SIGNKEY_NONE 3
 
-#define DROPBEAR_COMP_NONE 0
-#define DROPBEAR_COMP_ZLIB 1
-#define DROPBEAR_COMP_ZLIB_DELAY 2
-
 /* Required for pubkey auth */
 #if defined(ENABLE_SVR_PUBKEY_AUTH) || defined(DROPBEAR_CLIENT)
 #define DROPBEAR_SIGNKEY_VERIFY
+#endif
+
+#ifdef DROPBEAR_ECDH
+#define DROPBEAR_LTC_PRNG
 #endif
 
 #define SHA1_HASH_SIZE 20
@@ -92,6 +88,13 @@
 #else
 #define MAX_MAC_LEN 20
 #endif
+
+#if defined(DROPBEAR_ECDH) || defined (DROPBEAR_ECDSA)
+#define DROPBEAR_ECC
+#endif
+
+// roughly 2x 521 bits
+#define MAX_ECC_SIZE 140
 
 #define MAX_NAME_LEN 64 /* maximum length of a protocol name, isn't
 						   explicitly specified for all protocols (just

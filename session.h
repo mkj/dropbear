@@ -67,7 +67,7 @@ struct key_context_directional {
 	const struct dropbear_cipher_mode *crypt_mode;
 	const struct dropbear_hash *algo_mac;
 	int hash_index; /* lookup for libtomcrypt */
-	char algo_comp; /* compression */
+	int algo_comp; /* compression */
 #ifndef DISABLE_ZLIB
 	z_streamp zstream;
 #endif
@@ -86,8 +86,8 @@ struct key_context {
 	struct key_context_directional recv;
 	struct key_context_directional trans;
 
-	char algo_kex;
-	char algo_hostkey;
+	int algo_kex;
+	int algo_hostkey;
 
 	int allow_compress; /* whether compression has started (useful in 
 							zlib@openssh.com delayed compression case) */
@@ -244,8 +244,8 @@ typedef enum {
 } cli_state;
 
 struct clientsession {
-
-	mp_int *dh_e, *dh_x; /* Used during KEX */
+	struct kex_dh_param *dh_param;
+	struct kex_ecdh_param *ecdh_param;
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */

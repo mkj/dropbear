@@ -549,15 +549,16 @@ static void load_dh_p(mp_int * dh_p)
 /* Initialises and generate one side of the diffie-hellman key exchange values.
  * See the transport rfc 4253 section 8 for details */
 /* dh_pub and dh_priv MUST be already initialised */
-void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
+struct kex_dh_param *gen_kexdh_param() {
 
 	DEF_MP_INT(dh_p);
 	DEF_MP_INT(dh_q);
 	DEF_MP_INT(dh_g);
 
 	TRACE(("enter send_msg_kexdh_reply"))
-	
-	m_mp_init_multi(&dh_g, &dh_p, &dh_q, NULL);
+
+	struct kex_dh_param *param = m_malloc(sizeof(*param));
+	m_mp_init_multi(&param->pub, &param->priv, NULL);
 
 	/* read the prime and generator*/
 	load_dh_p(&dh_p);
@@ -568,32 +569,40 @@ void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv) {
 
 	/* calculate q = (p-1)/2 */
 	/* dh_priv is just a temp var here */
-	if (mp_sub_d(&dh_p, 1, dh_priv) != MP_OKAY) { 
+	if (mp_sub_d(&dh_p, 1, &param->priv) != MP_OKAY) { 
 		dropbear_exit("Diffie-Hellman error");
 	}
-	if (mp_div_2(dh_priv, &dh_q) != MP_OKAY) {
+	if (mp_div_2(&param->priv, &dh_q) != MP_OKAY) {
 		dropbear_exit("Diffie-Hellman error");
 	}
 
 	/* Generate a private portion 0 < dh_priv < dh_q */
-	gen_random_mpint(&dh_q, dh_priv);
+	gen_random_mpint(&dh_q, &param->priv);
 
 	/* f = g^y mod p */
-	if (mp_exptmod(&dh_g, dh_priv, &dh_p, dh_pub) != MP_OKAY) {
+	if (mp_exptmod(&dh_g, &param->priv, &dh_p, &param->pub) != MP_OKAY) {
 		dropbear_exit("Diffie-Hellman error");
 	}
 	mp_clear_multi(&dh_g, &dh_p, &dh_q, NULL);
+	return param;
+}
+
+void free_kexdh_param(struct kex_dh_param *param)
+{
+	mp_clear_multi(&param->pub, &param->priv, NULL);
+	m_free(param);
 }
 
 /* This function is fairly common between client/server, with some substitution
  * of dh_e/dh_f etc. Hence these arguments:
  * dh_pub_us is 'e' for the client, 'f' for the server. dh_pub_them is 
  * vice-versa. dh_priv is the x/y value corresponding to dh_pub_us */
-void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
+void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 		sign_key *hostkey) {
 
 	mp_int dh_p;
 	mp_int *dh_e = NULL, *dh_f = NULL;
+
 	hash_state hs;
 
 	/* read the prime and generator*/
@@ -609,7 +618,7 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 	/* K = e^y mod p = f^x mod p */
 	ses.dh_K = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init(ses.dh_K);
-	if (mp_exptmod(dh_pub_them, dh_priv, &dh_p, ses.dh_K) != MP_OKAY) {
+	if (mp_exptmod(dh_pub_them, &param->priv, &dh_p, ses.dh_K) != MP_OKAY) {
 		dropbear_exit("Diffie-Hellman error");
 	}
 
@@ -619,11 +628,11 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 	/* From here on, the code needs to work with the _same_ vars on each side,
 	 * not vice-versaing for client/server */
 	if (IS_DROPBEAR_CLIENT) {
-		dh_e = dh_pub_us;
+		dh_e = &param->pub;
 		dh_f = dh_pub_them;
 	} else {
 		dh_e = dh_pub_them;
-		dh_f = dh_pub_us;
+		dh_f = &param->pub;
 	} 
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash */
@@ -654,6 +663,16 @@ void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
 		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
 	}
 }
+
+#ifdef DROPBEAR_ECDH
+struct kex_ecdh_param *gen_kexecdh_param() {
+	struct kex_ecdh_param *param = m_malloc(sizeof(*param));
+	if (ecc_make_key_ex(NULL, dropbear_ltc_prng, &param->key
+}
+void free_kexecdh_param(struct kex_ecdh_param *param);
+void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
+		sign_key *hostkey);
+#endif
 
 /* read the other side's algo list. buf_match_algo is a callback to match
  * algos for the client or server. */

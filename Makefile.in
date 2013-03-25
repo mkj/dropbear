@@ -26,7 +26,7 @@ COMMONOBJS=dbutil.o buffer.o \
 		dss.o bignum.o \
 		signkey.o rsa.o random.o \
 		queue.o \
-		atomicio.o compat.o  fake-rfc2553.o 
+		atomicio.o compat.o  fake-rfc2553.o ltc_prng.o ecc.o
 
 SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \

@@ -94,5 +94,23 @@ int check_user_algos(const char* user_algo_list, algo_type * algos,
 char * algolist_string(algo_type algos[]);
 #endif
 
+enum {
+	DROPBEAR_KEX_DH_GROUP1,
+	DROPBEAR_KEX_DH_GROUP14,
+	DROPBEAR_KEX_ECDH_SECP256R1,
+};
+
+#ifdef DROPBEAR_ECDH
+#define IS_NORMAL_DH(algo) ((algo) == DROPBEAR_KEX_DH_GROUP1 || (algo) == DROPBEAR_KEX_DH_GROUP14)
+#else
+#define IS_NORMAL_DH(algo) 1
+#endif
+
+enum {
+	DROPBEAR_COMP_NONE,
+	DROPBEAR_COMP_ZLIB,
+	DROPBEAR_COMP_ZLIB_DELAY,
+};
+
 
 #endif /* _ALGO_H_ */
