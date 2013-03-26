@@ -36,8 +36,7 @@
 #include "runopts.h"
 
 /* diffie-hellman-group1-sha1 value for p */
-#define DH_P_1_LEN 128
-static const unsigned char dh_p_1[DH_P_1_LEN] = {
+const unsigned char dh_p_1[DH_P_1_LEN] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2,
     0x21, 0x68, 0xC2, 0x34, 0xC4, 0xC6, 0x62, 0x8B, 0x80, 0xDC, 0x1C, 0xD1,
 	0x29, 0x02, 0x4E, 0x08, 0x8A, 0x67, 0xCC, 0x74, 0x02, 0x0B, 0xBE, 0xA6,
@@ -51,8 +50,7 @@ static const unsigned char dh_p_1[DH_P_1_LEN] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF};
 
 /* diffie-hellman-group14-sha1 value for p */
-#define DH_P_14_LEN 256
-static const unsigned char dh_p_14[DH_P_14_LEN] = {
+const unsigned char dh_p_14[DH_P_14_LEN] = {
 	0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xFF, 0xC9, 0x0F, 0xDA, 0xA2, 
     0x21, 0x68, 0xC2, 0x34, 0xC4, 0xC6, 0x62, 0x8B, 0x80, 0xDC, 0x1C, 0xD1, 
 	0x29, 0x02, 0x4E, 0x08, 0x8A, 0x67, 0xCC, 0x74, 0x02, 0x0B, 0xBE, 0xA6,
@@ -536,14 +534,8 @@ void recv_msg_kexinit() {
 
 static void load_dh_p(mp_int * dh_p)
 {
-	switch (ses.newkeys->algo_kex) {
-		case DROPBEAR_KEX_DH_GROUP1:
-			bytes_to_mp(dh_p, dh_p_1, DH_P_1_LEN);
-			break;
-		case DROPBEAR_KEX_DH_GROUP14:
-			bytes_to_mp(dh_p, dh_p_14, DH_P_14_LEN);
-			break;
-	}
+	bytes_to_mp(dh_p, ses.newkeys->algo_kex->dh_p_bytes, 
+		ses.newkeys->algo_kex->dh_p_len);
 }
 
 /* Initialises and generate one side of the diffie-hellman key exchange values.
@@ -667,11 +659,84 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 #ifdef DROPBEAR_ECDH
 struct kex_ecdh_param *gen_kexecdh_param() {
 	struct kex_ecdh_param *param = m_malloc(sizeof(*param));
-	if (ecc_make_key_ex(NULL, dropbear_ltc_prng, &param->key
+	if (ecc_make_key_ex(NULL, dropbear_ltc_prng, 
+		&param->key, ses.newkeys->algo_kex->ecc_curve) != CRYPT_OK) {
+		dropbear_exit("ECC error")
+	}
+	return param;
 }
-void free_kexecdh_param(struct kex_ecdh_param *param);
+
+void free_kexecdh_param(struct kex_ecdh_param *param) {
+	ecc_free(&param->key);
+	m_free(param);
+
+}
 void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
-		sign_key *hostkey);
+		sign_key *hostkey) {
+
+	hash_state hs;
+	// public keys from client and server
+	ecc_key *Q_C, *Q_S, *Q_them;
+
+	// XXX load Q_them
+
+	ses.dh_K = dropbear_ecc_shared_secret()
+	
+	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
+	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
+			|| mp_cmp_d(dh_pub_them, 0) != MP_GT) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+	
+	/* K = e^y mod p = f^x mod p */
+	ses.dh_K = (mp_int*)m_malloc(sizeof(mp_int));
+	m_mp_init(ses.dh_K);
+	if (mp_exptmod(dh_pub_them, &param->priv, &dh_p, ses.dh_K) != MP_OKAY) {
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	/* clear no longer needed vars */
+	mp_clear_multi(&dh_p, NULL);
+
+	/* From here on, the code needs to work with the _same_ vars on each side,
+	 * not vice-versaing for client/server */
+	if (IS_DROPBEAR_CLIENT) {
+		dh_e = &param->pub;
+		dh_f = dh_pub_them;
+	} else {
+		dh_e = dh_pub_them;
+		dh_f = &param->pub;
+	} 
+
+	/* Create the remainder of the hash buffer, to generate the exchange hash */
+	/* K_S, the host key */
+	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
+	/* e, exchange value sent by the client */
+	buf_putmpint(ses.kexhashbuf, dh_e);
+	/* f, exchange value sent by the server */
+	buf_putmpint(ses.kexhashbuf, dh_f);
+	/* K, the shared secret */
+	buf_putmpint(ses.kexhashbuf, ses.dh_K);
+
+	/* calculate the hash H to sign */
+	sha1_init(&hs);
+	buf_setpos(ses.kexhashbuf, 0);
+	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
+			ses.kexhashbuf->len);
+	sha1_done(&hs, ses.hash);
+
+	buf_burn(ses.kexhashbuf);
+	buf_free(ses.kexhashbuf);
+	ses.kexhashbuf = NULL;
+	
+	/* first time around, we set the session_id to H */
+	if (ses.session_id == NULL) {
+		/* create the session_id, this never needs freeing */
+		ses.session_id = (unsigned char*)m_malloc(SHA1_HASH_SIZE);
+		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
+	}
+
+}
 #endif
 
 /* read the other side's algo list. buf_match_algo is a callback to match
@@ -707,7 +772,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	TRACE(("kex algo %s", algo->name))
-	ses.newkeys->algo_kex = algo->val;
+	ses.newkeys->algo_kex = algo->data;
 
 	/* server_host_key_algorithms */
 	algo = ses.buf_match_algo(ses.payload, sshhostkey, &goodguess);

@@ -86,7 +86,7 @@ struct key_context {
 	struct key_context_directional recv;
 	struct key_context_directional trans;
 
-	int algo_kex;
+	const struct dropbear_kex *algo_kex;
 	int algo_hostkey;
 
 	int allow_compress; /* whether compression has started (useful in 

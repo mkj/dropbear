@@ -93,6 +93,13 @@
 #define DROPBEAR_ECC
 #endif
 
+
+#ifdef DROPBEAR_ECC
+#define DROPBEAR_ECC_256
+#define DROPBEAR_ECC_384
+#define DROPBEAR_ECC_521
+#endif
+
 // roughly 2x 521 bits
 #define MAX_ECC_SIZE 140
 

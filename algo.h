@@ -79,6 +79,20 @@ struct dropbear_hash {
 	unsigned char hashsize;
 };
 
+struct dropbear_kex {
+	// "normal" DH KEX
+	unsigned char *dh_p_bytes;
+	int dh_p_len;
+
+	// elliptic curve DH KEX
+#ifdef DROPBEAR_ECDH
+	const struct dropbear_ecc_curve *ecc_curve;
+#endif
+
+	// both
+	const struct ltc_hash_descriptor *hashdesc;
+};
+
 void crypto_init();
 int have_algo(char* algo, size_t algolen, algo_type algos[]);
 void buf_put_algolist(buffer * buf, algo_type localalgos[]);
@@ -94,14 +108,16 @@ int check_user_algos(const char* user_algo_list, algo_type * algos,
 char * algolist_string(algo_type algos[]);
 #endif
 
-enum {
+enum kex_type {
 	DROPBEAR_KEX_DH_GROUP1,
 	DROPBEAR_KEX_DH_GROUP14,
 	DROPBEAR_KEX_ECDH_SECP256R1,
+	DROPBEAR_KEX_ECDH_SECP384R1,
+	DROPBEAR_KEX_ECDH_SECP521R1,
 };
 
 #ifdef DROPBEAR_ECDH
-#define IS_NORMAL_DH(algo) ((algo) == DROPBEAR_KEX_DH_GROUP1 || (algo) == DROPBEAR_KEX_DH_GROUP14)
+#define IS_NORMAL_DH(algo) ((algo)->dh_p_bytes != NULL)
 #else
 #define IS_NORMAL_DH(algo) 1
 #endif

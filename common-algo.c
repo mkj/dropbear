@@ -212,10 +212,36 @@ algo_type sshhostkey[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
+static struct dropbear_kex kex_dh_group1 {dh_p_1, DH_P_1_LEN, NULL, sha1_desc };
+static struct dropbear_kex kex_dh_group14 {dh_p_14, DH_P_14_LEN, NULL, sha1_desc };
+
+#ifdef DROPBEAR_ECC_DH
+#ifdef DROPBEAR_ECC_256
+static struct dropbear_kex kex_ecdh_secp256r1 {NULL, 0, &ecc_curve_secp256r1, sha256_desc };
+#endif
+#ifdef DROPBEAR_ECC_384
+static struct dropbear_kex kex_ecdh_secp384r1 {NULL, 0, &ecc_curve_secp384r1, sha384_desc };
+#endif
+#ifdef DROPBEAR_ECC_521
+static struct dropbear_kex kex_ecdh_secp521r1 {NULL, 0, &ecc_curve_secp521r1, sha512_desc };
+#endif
+#endif // DROPBEAR_ECC_DH
+
+
 algo_type sshkex[] = {
-//	{"ecdh-sha2-secp256r1", DROPBEAR_KEX_ECDH_SECP256R1, NULL, 1, NULL},
-	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1, NULL},
-	{"diffie-hellman-group14-sha1", DROPBEAR_KEX_DH_GROUP14, NULL, 1, NULL},
+#ifdef DROPBEAR_ECC_DH
+#ifdef DROPBEAR_ECC_256
+	{"ecdh-sha2-secp256r1", 0, &kex_ecdh_descp256r1, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_384
+	{"ecdh-sha2-secp384r1", 0, &kex_ecdh_descp384r1, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_521
+	{"ecdh-sha2-secp521r1", 0, &kex_ecdh_descp521r1, 1, NULL},
+#endif
+#endif
+	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
+	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14, 1, NULL},
 	{NULL, 0, NULL, 0, NULL}
 };
 

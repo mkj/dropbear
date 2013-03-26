@@ -49,7 +49,7 @@ void send_msg_kexdh_init() {
 		buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
 	} else {
 #ifdef DROPBEAR_ECDH
-		cli_ses.ecdh_param = 
+		cli_ses.ecdh_param = gen_kexecdh_param();
 #endif
 	}
 	encrypt_packet();
