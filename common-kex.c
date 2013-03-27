@@ -678,10 +678,11 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	// public keys from client and server
 	ecc_key *Q_C, *Q_S, *Q_them;
 
-	// XXX load Q_them
+oj	// XXX load Q_them
+	Q_them = buf_get_ecc_key_string()
 
-	ses.dh_K = dropbear_ecc_shared_secret()
-	
+	ses.dh_K = dropbear_ecc_shared_secret();
+
 	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
 	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
 			|| mp_cmp_d(dh_pub_them, 0) != MP_GT) {

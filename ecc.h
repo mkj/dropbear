@@ -9,7 +9,7 @@
 #ifdef DROPBEAR_ECC
 
 struct dropbear_ecc_curve {
-	const ltc_ecc_set_type* ltc_set;
+	const ltc_ecc_set_type *dp; // curve domain parameters
 	const struct ltc_hash_descriptor *hash_desc;
 	const char *name;
 };
