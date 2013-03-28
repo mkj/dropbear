@@ -93,11 +93,24 @@
 #define DROPBEAR_ECC
 #endif
 
-
 #ifdef DROPBEAR_ECC
 #define DROPBEAR_ECC_256
 #define DROPBEAR_ECC_384
 #define DROPBEAR_ECC_521
+#endif
+
+// hashes which will be linked and registered
+#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256)
+#define DROPBEAR_SHA256
+#endif
+#if defined(DROPBEAR_ECC_384)
+#define DROPBEAR_SHA384
+#endif
+#if defined(DROPBEAR_SHA2_512_HMAC) || defined(DROPBEAR_ECC_521)
+#define DROPBEAR_SHA512
+#endif
+#if defined(DROPBEAR_MD5_HMAC)
+#define DROPBEAR_MD5
 #endif
 
 // roughly 2x 521 bits
@@ -153,19 +166,6 @@
 
 #if defined(DROPBEAR_TWOFISH256) || defined(DROPBEAR_TWOFISH128)
 #define DROPBEAR_TWOFISH
-#endif
-
-#ifdef DROPBEAR_MD5_HMAC
-#define DROPBEAR_MD5
-#endif
-
-#ifdef DROPBEAR_SHA2_256_HMAC
-#define DROPBEAR_SHA256
-#endif
-
-#if (defined(DROPBEAR_DSS) && defined(DSS_PROTOK)) \
-	|| defined(DROPBEAR_SHA2_512_HMAC)
-#define DROPBEAR_SHA512
 #endif
 
 #ifndef ENABLE_X11FWD

@@ -14,6 +14,7 @@
 #include "options.h"
 #include "includes.h"
 #include "random.h"
+#include "ltc_prng.h"
 
 /**
    @file sprng.c

@@ -1,41 +1,48 @@
 #include "includes.h"
 #include "options.h"
 #include "ecc.h"
+#include "dbutil.h"
+#include "bignum.h"
 
 #ifdef DROPBEAR_ECC
 
 // TODO: use raw bytes for the dp rather than the hex strings in libtomcrypt's ecc.c
 
 #ifdef DROPBEAR_ECC_256
-const struct dropbear_ecc_curve ecc_curve_secp256r1 {
+const struct dropbear_ecc_curve ecc_curve_secp256r1 = {
 	.dp = &ltc_ecc_sets[0],
-	.hash_desc = sha256_desc,
+	.hash_desc = &sha256_desc,
 	.name = "secp256r1"
 };
 #endif
-
-
 #ifdef DROPBEAR_ECC_384
-const struct dropbear_ecc_curve ecc_curve_secp384r1 {
+const struct dropbear_ecc_curve ecc_curve_secp384r1 = {
 	.dp = &ltc_ecc_sets[1],
-	.hash_desc = sha384_desc,
+	.hash_desc = &sha384_desc,
 	.name = "secp384r1"
 };
 #endif
-
 #ifdef DROPBEAR_ECC_521
-const struct dropbear_ecc_curve ecc_curve_secp521r1 {
+const struct dropbear_ecc_curve ecc_curve_secp521r1 = {
 	.dp = &ltc_ecc_sets[2],
-	.hash_desc = sha521_desc,
+	.hash_desc = &sha512_desc,
 	.name = "secp521r1"
 };
 #endif
 
+static ecc_key * new_ecc_key(void) {
+   ecc_key *key = m_malloc(sizeof(*key));
+   key->pubkey.x = m_malloc(sizeof(mp_int));
+   key->pubkey.y = m_malloc(sizeof(mp_int));
+   key->pubkey.z = m_malloc(sizeof(mp_int));
+   key->k = m_malloc(sizeof(mp_init));
+   m_mp_init_multi(key->pubkey.x, key->pubkey.y, key->pubkey.z, key->k, NULL);
+   return key;
+}
 
 void buf_put_ecc_pubkey_string(buffer *buf, ecc_key *key) {
-	// XXX point compression
-	int len = key->dp->size*2 + 1;
-	buf_putint(len);
+	unsigned long len = key->dp->size*2 + 1;
+	buf_putint(buf, len);
 	int err = ecc_ansi_x963_export(key, buf_getwriteptr(buf, len), &len);
 	if (err != CRYPT_OK) {
 		dropbear_exit("ECC error");
@@ -43,38 +50,93 @@ void buf_put_ecc_pubkey_string(buffer *buf, ecc_key *key) {
 	buf_incrwritepos(buf, len);
 }
 
-ecc_key * buf_get_ecc_key_string(buffer *buf, const struct dropbear_ecc_curve *curve) {
+// Copied from libtomcrypt ecc_import.c (version there is static), modified
+// for different mp_int pointer without LTC_SOURCE
+static int ecc_is_point(ecc_key *key)
+{
+   mp_int *prime, *b, *t1, *t2;
+   int err;
+
+   prime = m_malloc(sizeof(mp_int));
+   b = m_malloc(sizeof(mp_int));
+   t1 = m_malloc(sizeof(mp_int));
+   t2 = m_malloc(sizeof(mp_int));
+   
+   m_mp_init_multi(prime, b, t1, t2, NULL);
+   
+   /* load prime and b */
+   if ((err = mp_read_radix(prime, key->dp->prime, 16)) != CRYPT_OK)                          { goto error; }
+   if ((err = mp_read_radix(b, key->dp->B, 16)) != CRYPT_OK)                                  { goto error; }
+   
+   /* compute y^2 */
+   if ((err = mp_sqr(key->pubkey.y, t1)) != CRYPT_OK)                                         { goto error; }
+   
+   /* compute x^3 */
+   if ((err = mp_sqr(key->pubkey.x, t2)) != CRYPT_OK)                                         { goto error; }
+   if ((err = mp_mod(t2, prime, t2)) != CRYPT_OK)                                             { goto error; }
+   if ((err = mp_mul(key->pubkey.x, t2, t2)) != CRYPT_OK)                                     { goto error; }
+   
+   /* compute y^2 - x^3 */
+   if ((err = mp_sub(t1, t2, t1)) != CRYPT_OK)                                                { goto error; }
+   
+   /* compute y^2 - x^3 + 3x */
+   if ((err = mp_add(t1, key->pubkey.x, t1)) != CRYPT_OK)                                     { goto error; }
+   if ((err = mp_add(t1, key->pubkey.x, t1)) != CRYPT_OK)                                     { goto error; }
+   if ((err = mp_add(t1, key->pubkey.x, t1)) != CRYPT_OK)                                     { goto error; }
+   if ((err = mp_mod(t1, prime, t1)) != CRYPT_OK)                                             { goto error; }
+   while (mp_cmp_d(t1, 0) == LTC_MP_LT) {
+      if ((err = mp_add(t1, prime, t1)) != CRYPT_OK)                                          { goto error; }
+   }
+   while (mp_cmp(t1, prime) != LTC_MP_LT) {
+      if ((err = mp_sub(t1, prime, t1)) != CRYPT_OK)                                          { goto error; }
+   }
+   
+   /* compare to b */
+   if (mp_cmp(t1, b) != LTC_MP_EQ) {
+      err = CRYPT_INVALID_PACKET;
+   } else {
+      err = CRYPT_OK;
+   }
+   
+error:
+   mp_clear_multi(prime, b, t1, t2, NULL);
+   m_free(prime);
+   m_free(b);
+   m_free(t1);
+   m_free(t2);
+   return err;
+}
+
+ecc_key * buf_get_ecc_pubkey(buffer *buf, const struct dropbear_ecc_curve *curve) {
    ecc_key *key = NULL;
    int ret = DROPBEAR_FAILURE;
    const int size = curve->dp->size;
-   unsigned int len = buf_get_string(buf);
-   unsigned char first = buf_get_char(buf);
+   buf_setpos(buf, 0);
+   unsigned int len = buf->len;
+   unsigned char first = buf_getbyte(buf);
    if (first == 2 || first == 3) {
-      dropbear_log("Dropbear doesn't support ECC point compression");
+      dropbear_log(LOG_WARNING, "Dropbear doesn't support ECC point compression");
       return NULL;
    }
    if (first != 4 || len != 1+2*size) {
       return NULL;
    }
 
-   key = m_malloc(sizeof(*key));
-   m_mp_init_multi(&key->pubkey.x, &key->pubkey.y, &key->pubkey.z, &key->k, NULL);
+   key = new_ecc_key();
 
-   if (mp_read_unsigned_bin(&key->pubkey.x, buf_getptr(buf, size), size) != MP_OKAY) {
+   if (mp_read_unsigned_bin(key->pubkey.x, buf_getptr(buf, size), size) != MP_OKAY) {
       goto out;
    }
    buf_incrpos(buf, size);
 
-   if (mp_read_unsigned_bin(&key->pubkey.y, buf_getptr(buf, size), size) != MP_OKAY) {
+   if (mp_read_unsigned_bin(key->pubkey.y, buf_getptr(buf, size), size) != MP_OKAY) {
       goto out;
    }
    buf_incrpos(buf, size);
 
-   if (mp_set(key->pubkey.z, 1) != MP_OKAY) {
-      goto out;
-   }
+   mp_set(key->pubkey.z, 1);
 
-   if (is_point(key) != CRYPT_OK) {
+   if (ecc_is_point(key) != CRYPT_OK) {
       goto out;
    }
 
@@ -91,7 +153,7 @@ ecc_key * buf_get_ecc_key_string(buffer *buf, const struct dropbear_ecc_curve *c
 out:
    if (ret == DROPBEAR_FAILURE) {
       if (key) {
-         mp_free_multi(&key->pubkey.x, &key->pubkey.y, &key->pubkey.z, &key->k, NULL);
+         ecc_free(key);
          m_free(key);
          key = NULL;
       }
@@ -105,9 +167,9 @@ out:
 // a mp_int instead.
 mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, ecc_key *private_key)
 {
-   ecc_point *result = NULL
+   ecc_point *result = NULL;
    mp_int *prime = NULL, *shared_secret = NULL;
-   int ret = DROPBEAR_FAILURE;
+   int err = DROPBEAR_FAILURE;
 
    /* type valid? */
    if (private_key->type != PK_PRIVATE) {
@@ -163,9 +225,6 @@ done:
    }
 
    return shared_secret;
-   return err;
-}
-
 }
 
 #endif

@@ -35,8 +35,8 @@
 
 struct Algo_Type {
 
-	unsigned char *name; /* identifying name */
-	char val; /* a value for this cipher, or -1 for invalid */
+	const unsigned char *name; /* identifying name */
+	const char val; /* a value for this cipher, or -1 for invalid */
 	const void *data; /* algorithm specific data */
 	char usable; /* whether we can use this algorithm */
 	const void *mode; /* the mode, currently only used for ciphers,
@@ -59,8 +59,8 @@ extern const struct dropbear_hash dropbear_nohash;
 
 struct dropbear_cipher {
 	const struct ltc_cipher_descriptor *cipherdesc;
-	unsigned long keysize;
-	unsigned char blocksize;
+	const unsigned long keysize;
+	const unsigned char blocksize;
 };
 
 struct dropbear_cipher_mode {
@@ -75,14 +75,14 @@ struct dropbear_cipher_mode {
 
 struct dropbear_hash {
 	const struct ltc_hash_descriptor *hashdesc;
-	unsigned long keysize;
-	unsigned char hashsize;
+	const unsigned long keysize;
+	const unsigned char hashsize;
 };
 
 struct dropbear_kex {
 	// "normal" DH KEX
-	unsigned char *dh_p_bytes;
-	int dh_p_len;
+	const unsigned char *dh_p_bytes;
+	const int dh_p_len;
 
 	// elliptic curve DH KEX
 #ifdef DROPBEAR_ECDH
@@ -107,14 +107,6 @@ int check_user_algos(const char* user_algo_list, algo_type * algos,
 		const char *algo_desc);
 char * algolist_string(algo_type algos[]);
 #endif
-
-enum kex_type {
-	DROPBEAR_KEX_DH_GROUP1,
-	DROPBEAR_KEX_DH_GROUP14,
-	DROPBEAR_KEX_ECDH_SECP256R1,
-	DROPBEAR_KEX_ECDH_SECP384R1,
-	DROPBEAR_KEX_ECDH_SECP521R1,
-};
 
 #ifdef DROPBEAR_ECDH
 #define IS_NORMAL_DH(algo) ((algo)->dh_p_bytes != NULL)

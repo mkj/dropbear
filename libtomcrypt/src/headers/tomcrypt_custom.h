@@ -127,7 +127,9 @@
 #ifdef DROPBEAR_SHA256
 #define SHA256
 #endif
-
+#ifdef DROPBEAR_SHA384
+#define SHA384
+#endif
 #ifdef DROPBEAR_SHA512
 #define SHA512
 #endif

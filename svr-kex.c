@@ -59,6 +59,7 @@ void recv_msg_kexdh_init() {
 		}
 	} else {
 #ifdef DROPBEAR_ECDH
+		buffer *ecdh_qs = buf_getstringbuf(ses.payload);
 #endif
 	}
 

@@ -154,10 +154,10 @@ struct sshsession {
 	struct KEXState kexstate;
 	struct key_context *keys;
 	struct key_context *newkeys;
-	unsigned char *session_id; /* this is the hash from the first kex */
-	/* The below are used temorarily during kex, are freed after use */
+	buffer *session_id; /* this is the hash from the first kex */
+	/* The below are used temporarily during kex, are freed after use */
 	mp_int * dh_K; /* SSH_MSG_KEXDH_REPLY and sending SSH_MSH_NEWKEYS */
-	unsigned char hash[SHA1_HASH_SIZE]; /* the hash*/
+	buffer *hash/* the session hash */
 	buffer* kexhashbuf; /* session hash buffer calculated from various packets*/
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
 							 can add it to the hash when generating keys */

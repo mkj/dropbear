@@ -96,12 +96,15 @@ void recv_msg_kexdh_reply() {
 
 		kexdh_comb_key(cli_ses.dh_param, &dh_f, hostkey);
 		mp_clear(&dh_f);
-		free_kexdh_param(cli_ses.dh_param);
-		cli_ses.dh_param = NULL;
 	} else {
 #ifdef DROPBEAR_ECDH
+		buffer *ecdh_qs = buf_getstringbuf(ses.payload);
+		kexecdh_comb_key(cli_ses.dh_param, ecdh_qs, hostkey);
+		buf_free(ecdh_qs);
 #endif
 	}
+	free_kexdh_param(cli_ses.dh_param);
+	cli_ses.dh_param = NULL;
 
 	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
 			!= DROPBEAR_SUCCESS) {

@@ -27,6 +27,8 @@
 #include "dbutil.h"
 #include "bignum.h"
 #include "random.h"
+#include "ltc_prng.h"
+
 
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;

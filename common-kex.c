@@ -34,6 +34,7 @@
 #include "bignum.h"
 #include "random.h"
 #include "runopts.h"
+#include "ecc.h"
 
 /* diffie-hellman-group1-sha1 value for p */
 const unsigned char dh_p_1[DH_P_1_LEN] = {
@@ -642,6 +643,9 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	buf_setpos(ses.kexhashbuf, 0);
 	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
+	
+		ses.hash = m_malloc(SHA1_HASH_SIZE);
+	}
 	sha1_done(&hs, ses.hash);
 
 	buf_burn(ses.kexhashbuf);
@@ -660,8 +664,8 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 struct kex_ecdh_param *gen_kexecdh_param() {
 	struct kex_ecdh_param *param = m_malloc(sizeof(*param));
 	if (ecc_make_key_ex(NULL, dropbear_ltc_prng, 
-		&param->key, ses.newkeys->algo_kex->ecc_curve) != CRYPT_OK) {
-		dropbear_exit("ECC error")
+		&param->key, ses.newkeys->algo_kex->ecc_curve->dp) != CRYPT_OK) {
+		dropbear_exit("ECC error");
 	}
 	return param;
 }
@@ -673,58 +677,45 @@ void free_kexecdh_param(struct kex_ecdh_param *param) {
 }
 void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 		sign_key *hostkey) {
-
+	const struct dropbear_kex *algo_kex = ses.newkeys->algo_kex;
 	hash_state hs;
 	// public keys from client and server
 	ecc_key *Q_C, *Q_S, *Q_them;
 
-oj	// XXX load Q_them
-	Q_them = buf_get_ecc_key_string()
+	// XXX load Q_them
+	Q_them = buf_get_ecc_pubkey(pub_them, algo_kex->ecc_curve);
 
-	ses.dh_K = dropbear_ecc_shared_secret();
-
-	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
-	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
-			|| mp_cmp_d(dh_pub_them, 0) != MP_GT) {
-		dropbear_exit("Diffie-Hellman error");
-	}
-	
-	/* K = e^y mod p = f^x mod p */
-	ses.dh_K = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(ses.dh_K);
-	if (mp_exptmod(dh_pub_them, &param->priv, &dh_p, ses.dh_K) != MP_OKAY) {
-		dropbear_exit("Diffie-Hellman error");
-	}
-
-	/* clear no longer needed vars */
-	mp_clear_multi(&dh_p, NULL);
+	ses.dh_K = dropbear_ecc_shared_secret(Q_them, param->key);
 
 	/* From here on, the code needs to work with the _same_ vars on each side,
 	 * not vice-versaing for client/server */
 	if (IS_DROPBEAR_CLIENT) {
-		dh_e = &param->pub;
-		dh_f = dh_pub_them;
+		Q_C = param->key;
+		Q_S = Q_them;
 	} else {
-		dh_e = dh_pub_them;
-		dh_f = &param->pub;
+		Q_C = Q_them;
+		Q_S = param->key;
 	} 
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash */
 	/* K_S, the host key */
 	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
-	/* e, exchange value sent by the client */
-	buf_putmpint(ses.kexhashbuf, dh_e);
-	/* f, exchange value sent by the server */
-	buf_putmpint(ses.kexhashbuf, dh_f);
+	/* Q_C, client's ephemeral public key octet string */
+	buf_put_ecc_pubkey_string(Q_C);
+	/* Q_S, server's ephemeral public key octet string */
+	buf_put_ecc_pubkey_string(Q_S);
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 
 	/* calculate the hash H to sign */
-	sha1_init(&hs);
+	algo_kex->hashdesc->init(&hs);
 	buf_setpos(ses.kexhashbuf, 0);
-	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
+	algo_kex->hashdesc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
-	sha1_done(&hs, ses.hash);
+	if (!ses.hash) {
+		ses.hash = m_malloc(algo_kex->hashdesc->hashsize);
+	}
+	algo_kex->hashdesc->done(&hs, ses.hash);
 
 	buf_burn(ses.kexhashbuf);
 	buf_free(ses.kexhashbuf);
@@ -733,8 +724,8 @@ oj	// XXX load Q_them
 	/* first time around, we set the session_id to H */
 	if (ses.session_id == NULL) {
 		/* create the session_id, this never needs freeing */
-		ses.session_id = (unsigned char*)m_malloc(SHA1_HASH_SIZE);
-		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
+		ses.session_id = m_malloc(algo_kex->hashdesc->hashsize);
+		memcpy(ses.session_id, ses.hash, algo_kex->hashdesc->hashsize);
 	}
 
 }

@@ -25,6 +25,7 @@
 
 #include "algo.h"
 #include "dbutil.h"
+#include "kex.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
@@ -212,18 +213,18 @@ algo_type sshhostkey[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
-static struct dropbear_kex kex_dh_group1 {dh_p_1, DH_P_1_LEN, NULL, sha1_desc };
-static struct dropbear_kex kex_dh_group14 {dh_p_14, DH_P_14_LEN, NULL, sha1_desc };
+static struct dropbear_kex kex_dh_group1 = {dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
+static struct dropbear_kex kex_dh_group14 = {dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
 
 #ifdef DROPBEAR_ECC_DH
 #ifdef DROPBEAR_ECC_256
-static struct dropbear_kex kex_ecdh_secp256r1 {NULL, 0, &ecc_curve_secp256r1, sha256_desc };
+static struct dropbear_kex kex_ecdh_secp256r1 = {NULL, 0, &ecc_curve_secp256r1, &sha256_desc };
 #endif
 #ifdef DROPBEAR_ECC_384
-static struct dropbear_kex kex_ecdh_secp384r1 {NULL, 0, &ecc_curve_secp384r1, sha384_desc };
+static struct dropbear_kex kex_ecdh_secp384r1 = {NULL, 0, &ecc_curve_secp384r1, &sha384_desc };
 #endif
 #ifdef DROPBEAR_ECC_521
-static struct dropbear_kex kex_ecdh_secp521r1 {NULL, 0, &ecc_curve_secp521r1, sha512_desc };
+static struct dropbear_kex kex_ecdh_secp521r1 = {NULL, 0, &ecc_curve_secp521r1, &sha512_desc };
 #endif
 #endif // DROPBEAR_ECC_DH
 
@@ -272,10 +273,13 @@ void crypto_init() {
 #ifdef DROPBEAR_MD5_HMAC
 		&md5_desc,
 #endif
-#ifdef DROPBEAR_SHA2_256_HMAC
+#ifdef DROPBEAR_SHA256
 		&sha256_desc,
 #endif
-#ifdef DROPBEAR_SHA2_512_HMAC
+#ifdef DROPBEAR_SHA384
+		&sha384_desc,
+#endif
+#ifdef DROPBEAR_SHA512
 		&sha512_desc,
 #endif
 		NULL
