@@ -66,6 +66,7 @@ struct KEXState {
 
 };
 
+
 #define MAX_KEXHASHBUF 2000
 
 #endif /* _KEX_H_ */

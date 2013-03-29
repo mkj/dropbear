@@ -34,7 +34,7 @@
  * that is also on the server's list.
  */
 algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
-		int *goodguess) {
+		enum kexguess2_used *kexguess2, int *goodguess) {
 
 	unsigned char * algolist = NULL;
 	unsigned char * remotealgos[MAX_PROPOSED_ALGO];
@@ -42,7 +42,9 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
 	unsigned int count, i, j;
 	algo_type * ret = NULL;
 
-	*goodguess = 0;
+	if (goodguess) {
+		*goodguess = 0;
+	}
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
@@ -72,6 +74,19 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
 		}
 	}
 
+	if (kexguess2 && *kexguess2 == KEXGUESS2_LOOK) {
+		for (i = 0; i < count; i++)
+		{
+			if (strcmp(remotealgos[i], KEXGUESS2_ALGO_NAME) == 0) {
+				*kexguess2 = KEXGUESS2_YES;
+				break;
+			}
+		}
+		if (*kexguess2 == KEXGUESS2_LOOK) {
+			*kexguess2 = KEXGUESS2_NO;
+		}
+	}
+
 	/* iterate and find the first match */
 
 	for (j = 0; localalgos[j].name != NULL; j++) {
@@ -81,9 +96,16 @@ algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
 				if (len == strlen(remotealgos[i]) 
 						&& strncmp(localalgos[j].name, 
 							remotealgos[i], len) == 0) {
-					if (i == 0 && j == 0) {
-						/* was a good guess */
-						*goodguess = 1;
+					if (goodguess && kexguess2) {
+						if (*kexguess2 == KEXGUESS2_YES) {
+							if (j == 0) {
+								*goodguess = 1;
+							}
+						} else {
+							if (i == 0 && j == 0) {
+								*goodguess = 1;
+							}
+						}
 					}
 					ret = &localalgos[j];
 					goto out;

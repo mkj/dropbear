@@ -170,6 +170,7 @@ struct sshsession {
 	struct packetlist *reply_queue_head, *reply_queue_tail;
 
 	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
+			enum kexguess2_used *kexguess2,
 			int *goodguess); /* The function to use to choose which algorithm
 								to use from the ones presented by the remote
 								side. Is specific to the client/server mode,

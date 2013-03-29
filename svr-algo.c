@@ -33,7 +33,7 @@
  * 0 otherwise. This is used for checking if the kexalgo/hostkeyalgos are
  * guessed correctly */
 algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
-		int *goodguess)
+		enum kexguess2_used *kexguess2, int *goodguess)
 {
 
 	unsigned char * algolist = NULL;
@@ -42,7 +42,9 @@ algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 	unsigned int count, i, j;
 	algo_type * ret = NULL;
 
-	*goodguess = 0;
+	if (goodguess) {
+		*goodguess = 0;
+	}
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
@@ -73,6 +75,19 @@ algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 		}
 	}
 
+	if (kexguess2 && *kexguess2 == KEXGUESS2_LOOK) {
+		for (i = 0; i < count; i++)
+		{
+			if (strcmp(remotealgos[i], KEXGUESS2_ALGO_NAME) == 0) {
+				*kexguess2 = KEXGUESS2_YES;
+				break;
+			}
+		}
+		if (*kexguess2 == KEXGUESS2_LOOK) {
+			*kexguess2 = KEXGUESS2_NO;
+		}
+	}
+
 	/* iterate and find the first match */
 	for (i = 0; i < count; i++) {
 
@@ -83,8 +98,17 @@ algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
 				if (len == strlen(localalgos[j].name) &&
 						strncmp(localalgos[j].name, remotealgos[i], len) == 0) {
 					/* set if it was a good guess */
-					if (i == 0 && j == 0) {
-						*goodguess = 1;
+					if (goodguess && kexguess2) {
+						if (*kexguess2 == KEXGUESS2_YES) {
+							if (i == 0) {
+								*goodguess = 1;
+							}
+
+						} else {
+							if (i == 0 && j == 0) {
+								*goodguess = 1;
+							}
+						}
 					}
 					/* set the algo to return */
 					ret = &localalgos[j];
