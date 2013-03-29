@@ -42,7 +42,7 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
 #define MAX_KNOWNHOSTS_LINE 4500
 
 void send_msg_kexdh_init() {
-
+	TRACE(("send_msg_kexdh_init()"))	
 	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
 	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
@@ -53,7 +53,8 @@ void send_msg_kexdh_init() {
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
 	buf_putmpint(ses.writepayload, cli_ses.dh_e);
 	encrypt_packet();
-	ses.requirenext = SSH_MSG_KEXDH_REPLY;
+	// XXX fixme
+	//ses.requirenext = SSH_MSG_KEXDH_REPLY;
 }
 
 /* Handle a diffie-hellman key exchange reply. */

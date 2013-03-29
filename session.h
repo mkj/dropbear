@@ -178,6 +178,8 @@ struct sshsession {
 	void(*remoteclosed)(); /* A callback to handle closure of the
 									  remote connection */
 
+	void(*send_kex_first_guess)();
+
 
 	struct AuthState authstate; /* Common amongst client and server, since most
 								   struct elements are common */

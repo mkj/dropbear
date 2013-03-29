@@ -109,6 +109,12 @@ void cli_session(int sock_in, int sock_out) {
 
 }
 
+static void cli_send_kex_first_guess() {
+	send_msg_kexdh_init();
+	dropbear_log(LOG_INFO, "kexdh_init guess sent");
+	//cli_ses.kex_state = KEXDH_INIT_SENT;			
+}
+
 static void cli_session_init() {
 
 	cli_ses.state = STATE_NOTHING;
@@ -148,6 +154,9 @@ static void cli_session_init() {
 	ses.packettypes = cli_packettypes;
 
 	ses.isserver = 0;
+
+	ses.send_kex_first_guess = cli_send_kex_first_guess;
+
 }
 
 /* This function drives the progress of the session - it initiates KEX,
@@ -157,15 +166,13 @@ static void cli_sessionloop() {
 	TRACE(("enter cli_sessionloop"))
 
 	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
-		cli_ses.kex_state = KEXINIT_RCVD;
-	}
-
-	if (cli_ses.kex_state == KEXINIT_RCVD) {
-
 		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
 		 * negotiation would have failed. */
-		send_msg_kexdh_init();
-		cli_ses.kex_state = KEXDH_INIT_SENT;
+		if (!ses.kexstate.our_first_follows_matches) {
+			dropbear_log(LOG_INFO, "kexdh_init after remote's kexinit");
+			send_msg_kexdh_init();
+		}
+		cli_ses.kex_state = KEXDH_INIT_SENT;			
 		TRACE(("leave cli_sessionloop: done with KEXINIT_RCVD"))
 		return;
 	}
