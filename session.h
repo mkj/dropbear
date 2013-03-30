@@ -45,7 +45,7 @@ extern int exitflag;
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)());
 void common_session_cleanup();
-void session_identification();
+void send_session_identification();
 void send_msg_ignore();
 
 const char* get_user_shell();
@@ -111,7 +111,10 @@ struct sshsession {
 	int sock_in;
 	int sock_out;
 
-	unsigned char *remoteident;
+	/* remotehost will be initially NULL as we delay
+	 * reading the remote version string. it will be set
+	 * by the time any recv_() packet methods are called */
+	unsigned char *remoteident; 
 
 	int maxfd; /* the maximum file descriptor to check with select() */
 
