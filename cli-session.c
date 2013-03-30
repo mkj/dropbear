@@ -148,7 +148,6 @@ static void cli_session_init() {
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
-	ses.buf_match_algo = cli_buf_match_algo;
 
 	/* packet handlers */
 	ses.packettypes = cli_packettypes;

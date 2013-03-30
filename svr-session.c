@@ -106,7 +106,6 @@ void svr_session(int sock, int childpipe) {
 
 	/* packet handlers */
 	ses.packettypes = svr_packettypes;
-	ses.buf_match_algo = svr_buf_match_algo;
 
 	ses.isserver = 1;
 

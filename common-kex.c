@@ -695,7 +695,7 @@ static void read_kex_algos() {
 	enum kexguess2_used kexguess2 = KEXGUESS2_LOOK;
 
 	/* kex_algorithms */
-	algo = ses.buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);
+	algo = buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL || algo->val == KEXGUESS2_ALGO_ID) {
 		erralgo = "kex";
@@ -706,7 +706,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_kex = algo->val;
 
 	/* server_host_key_algorithms */
-	algo = ses.buf_match_algo(ses.payload, sshhostkey, &kexguess2, &goodguess);
+	algo = buf_match_algo(ses.payload, sshhostkey, &kexguess2, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";
@@ -716,7 +716,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
-	c2s_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, NULL, NULL);
+	c2s_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
 	if (c2s_cipher_algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
@@ -724,7 +724,7 @@ static void read_kex_algos() {
 	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
-	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, NULL, NULL);
+	s2c_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
 	if (s2c_cipher_algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
@@ -732,7 +732,7 @@ static void read_kex_algos() {
 	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
-	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, NULL, NULL);
+	c2s_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
 	if (c2s_hash_algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
@@ -740,7 +740,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_hash_algo->name))
 
 	/* mac_algorithms_server_to_client */
-	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, NULL, NULL);
+	s2c_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
 	if (s2c_hash_algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
@@ -748,7 +748,7 @@ static void read_kex_algos() {
 	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
-	c2s_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
+	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
 	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -756,7 +756,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
-	s2c_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
+	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
 	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;

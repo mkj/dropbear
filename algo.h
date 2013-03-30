@@ -93,9 +93,7 @@ enum kexguess2_used {
 #define KEXGUESS2_ALGO_ID 99
 
 
-algo_type * svr_buf_match_algo(buffer* buf, algo_type localalgos[],
-		enum kexguess2_used *kexguess2, int *goodguess);
-algo_type * cli_buf_match_algo(buffer* buf, algo_type localalgos[],
+algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 		enum kexguess2_used *kexguess2, int *goodguess);
 
 #ifdef ENABLE_USER_ALGO_LIST
