@@ -99,7 +99,7 @@ void cli_session(int sock_in, int sock_out) {
 	sessinitdone = 1;
 
 	/* Exchange identification */
-	session_identification();
+	send_session_identification();
 
 	send_msg_kexinit();
 

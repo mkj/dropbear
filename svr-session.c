@@ -114,7 +114,7 @@ void svr_session(int sock, int childpipe) {
 	sessinitdone = 1;
 
 	/* exchange identification, version etc */
-	session_identification();
+	send_session_identification();
 
 	/* start off with key exchange */
 	send_msg_kexinit();
