@@ -45,7 +45,7 @@ void process_packet() {
 	unsigned char type;
 	unsigned int i;
 
-	TRACE(("enter process_packet"))
+	TRACE2(("enter process_packet"))
 
 	type = buf_getbyte(ses.payload);
 	TRACE(("process_packet: packet type = %d", type))
@@ -123,7 +123,7 @@ out:
 	buf_free(ses.payload);
 	ses.payload = NULL;
 
-	TRACE(("leave process_packet"))
+	TRACE2(("leave process_packet"))
 }
 
 

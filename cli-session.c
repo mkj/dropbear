@@ -172,7 +172,7 @@ static void recv_msg_service_accept(void) {
  * service, userauth and channel requests */
 static void cli_sessionloop() {
 
-	TRACE(("enter cli_sessionloop"))
+	TRACE2(("enter cli_sessionloop"))
 
 	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
 		cli_ses.kex_state = KEXINIT_RCVD;
@@ -286,7 +286,7 @@ static void cli_sessionloop() {
 		break;
 	}
 
-	TRACE(("leave cli_sessionloop: fell out"))
+	TRACE2(("leave cli_sessionloop: fell out"))
 
 }
 

@@ -62,7 +62,7 @@ void write_packet() {
 	struct Link *l;
 #endif
 	
-	TRACE(("enter write_packet"))
+	TRACE2(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
 
 #ifdef HAVE_WRITEV
@@ -81,7 +81,7 @@ void write_packet() {
 	if (written < 0) {
 		if (errno == EINTR) {
 			m_free(iov);
-			TRACE(("leave writepacket: EINTR"))
+			TRACE2(("leave writepacket: EINTR"))
 			return;
 		} else {
 			dropbear_exit("Error writing");
@@ -122,7 +122,7 @@ void write_packet() {
 
 	if (written < 0) {
 		if (errno == EINTR) {
-			TRACE(("leave writepacket: EINTR"))
+			TRACE2(("leave writepacket: EINTR"))
 			return;
 		} else {
 			dropbear_exit("Error writing");
@@ -152,7 +152,7 @@ void write_packet() {
 		ses.last_packet_time = now;
 	}
 
-	TRACE(("leave write_packet"))
+	TRACE2(("leave write_packet"))
 }
 
 /* Non-blocking function reading available portion of a packet into the
@@ -164,7 +164,7 @@ void read_packet() {
 	unsigned int maxlen;
 	unsigned char blocksize;
 
-	TRACE(("enter read_packet"))
+	TRACE2(("enter read_packet"))
 	blocksize = ses.keys->recv.algo_crypt->blocksize;
 	
 	if (ses.readbuf == NULL || ses.readbuf->len < blocksize) {
@@ -177,7 +177,7 @@ void read_packet() {
 
 		if (ret == DROPBEAR_FAILURE) {
 			/* didn't read enough to determine the length */
-			TRACE(("leave read_packet: packetinit done"))
+			TRACE2(("leave read_packet: packetinit done"))
 			return;
 		}
 	}
@@ -199,7 +199,7 @@ void read_packet() {
 
 		if (len < 0) {
 			if (errno == EINTR || errno == EAGAIN) {
-				TRACE(("leave read_packet: EINTR or EAGAIN"))
+				TRACE2(("leave read_packet: EINTR or EAGAIN"))
 				return;
 			} else {
 				dropbear_exit("Error reading: %s", strerror(errno));
@@ -215,7 +215,7 @@ void read_packet() {
 		/* The main select() loop process_packet() to
 		 * handle the packet contents... */
 	}
-	TRACE(("leave read_packet"))
+	TRACE2(("leave read_packet"))
 }
 
 /* Function used to read the initial portion of a packet, and determine the
@@ -249,7 +249,7 @@ static int read_packet_init() {
 	}
 	if (slen < 0) {
 		if (errno == EINTR) {
-			TRACE(("leave read_packet_init: EINTR"))
+			TRACE2(("leave read_packet_init: EINTR"))
 			return DROPBEAR_FAILURE;
 		}
 		dropbear_exit("Error reading: %s", strerror(errno));
@@ -273,7 +273,7 @@ static int read_packet_init() {
 	}
 	len = buf_getint(ses.readbuf) + 4 + macsize;
 
-	TRACE(("packet size is %d, block %d mac %d", len, blocksize, macsize))
+	TRACE2(("packet size is %d, block %d mac %d", len, blocksize, macsize))
 
 
 	/* check packet length */
@@ -299,7 +299,7 @@ void decrypt_packet() {
 	unsigned int padlen;
 	unsigned int len;
 
-	TRACE(("enter decrypt_packet"))
+	TRACE2(("enter decrypt_packet"))
 	blocksize = ses.keys->recv.algo_crypt->blocksize;
 	macsize = ses.keys->recv.algo_mac->hashsize;
 
@@ -356,7 +356,7 @@ void decrypt_packet() {
 
 	ses.recvseq++;
 
-	TRACE(("leave decrypt_packet"))
+	TRACE2(("leave decrypt_packet"))
 }
 
 /* Checks the mac at the end of a decrypted readbuf.
@@ -455,7 +455,7 @@ static void enqueue_reply_packet() {
 		ses.reply_queue_head = new_item;
 	}
 	ses.reply_queue_tail = new_item;
-	TRACE(("leave enqueue_reply_packet"))
+	TRACE2(("leave enqueue_reply_packet"))
 }
 
 void maybe_flush_reply_queue() {
@@ -492,13 +492,13 @@ void encrypt_packet() {
 	unsigned int len, encrypt_buf_size;
 	unsigned char mac_bytes[MAX_MAC_LEN];
 	
-	TRACE(("enter encrypt_packet()"))
+	TRACE2(("enter encrypt_packet()"))
 
 	buf_setpos(ses.writepayload, 0);
 	packet_type = buf_getbyte(ses.writepayload);
 	buf_setpos(ses.writepayload, 0);
 
-	TRACE(("encrypt_packet type is %d", packet_type))
+	TRACE2(("encrypt_packet type is %d", packet_type))
 	
 	if ((!ses.dataallowed && !packet_is_okay_kex(packet_type))
 			|| ses.kexstate.sentnewkeys) {
@@ -611,7 +611,7 @@ void encrypt_packet() {
 	ses.kexstate.datatrans += writebuf->len;
 	ses.transseq++;
 
-	TRACE(("leave encrypt_packet()"))
+	TRACE2(("leave encrypt_packet()"))
 }
 
 
@@ -623,8 +623,6 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 	unsigned char seqbuf[4];
 	unsigned long bufsize;
 	hmac_state hmac;
-
-	TRACE(("enter writemac"))
 
 	if (key_state->algo_mac->hashsize > 0) {
 		/* calculate the mac */
@@ -654,7 +652,7 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 			dropbear_exit("HMAC error");
 		}
 	}
-	TRACE(("leave writemac"))
+	TRACE2(("leave writemac"))
 }
 
 #ifndef DISABLE_ZLIB
@@ -665,7 +663,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 	unsigned int endpos = src->pos + len;
 	int result;
 
-	TRACE(("enter buf_compress"))
+	TRACE2(("enter buf_compress"))
 
 	while (1) {
 
@@ -699,6 +697,6 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 		buf_resize(dest, dest->size + ZLIB_COMPRESS_INCR);
 
 	}
-	TRACE(("leave buf_compress"))
+	TRACE2(("leave buf_compress"))
 }
 #endif
