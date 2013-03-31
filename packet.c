@@ -55,10 +55,60 @@ void write_packet() {
 	buffer * writebuf = NULL;
 	time_t now;
 	unsigned packet_type;
+	int all_ignore = 1;
+#ifdef HAVE_WRITEV
+	struct iovec *iov = NULL;
+	int i;
+	struct Link *l;
+#endif
 	
 	TRACE(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
 
+#ifdef HAVE_WRITEV
+	iov = m_malloc(sizeof(*iov) * ses.writequeue.count);
+	for (l = ses.writequeue.head, i = 0; l; l = l->link, i++)
+	{
+		writebuf = (buffer*)l->item;
+		packet_type = writebuf->data[writebuf->len-1];
+		len = writebuf->len - 1 - writebuf->pos;
+		dropbear_assert(len > 0);
+		all_ignore &= (packet_type == SSH_MSG_IGNORE);
+		iov[i].iov_base = buf_getptr(writebuf, len);
+		iov[i].iov_len = len;
+	}
+	written = writev(ses.sock_out, iov, ses.writequeue.count);
+	if (written < 0) {
+		if (errno == EINTR) {
+			m_free(iov);
+			TRACE(("leave writepacket: EINTR"))
+			return;
+		} else {
+			dropbear_exit("Error writing");
+		}
+	} 
+
+	if (written == 0) {
+		ses.remoteclosed();
+	}
+
+	while (written > 0) {
+		writebuf = (buffer*)examine(&ses.writequeue);
+		len = writebuf->len - 1 - writebuf->pos;
+		if (len > written) {
+			// partial buffer write
+			buf_incrpos(writebuf, written);
+			written = 0;
+		} else {
+			written -= len;
+			dequeue(&ses.writequeue);
+			buf_free(writebuf);
+		}
+	}
+
+	m_free(iov);
+
+#else
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
@@ -78,13 +128,7 @@ void write_packet() {
 			dropbear_exit("Error writing");
 		}
 	} 
-	
-	now = time(NULL);
-	ses.last_trx_packet_time = now;
-
-	if (packet_type != SSH_MSG_IGNORE) {
-		ses.last_packet_time = now;
-	}
+	all_ignore = (packet_type == SSH_MSG_IGNORE);
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -98,6 +142,14 @@ void write_packet() {
 	} else {
 		/* More packet left to write, leave it in the queue for later */
 		buf_incrpos(writebuf, written);
+	}
+
+#endif
+	now = time(NULL);
+	ses.last_trx_packet_time = now;
+
+	if (!all_ignore) {
+		ses.last_packet_time = now;
 	}
 
 	TRACE(("leave write_packet"))
