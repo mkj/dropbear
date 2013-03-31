@@ -41,6 +41,7 @@ static void cli_remoteclosed();
 static void cli_sessionloop();
 static void cli_session_init();
 static void cli_finished();
+static void recv_msg_service_accept(void);
 
 struct clientsession cli_ses; /* GLOBAL */
 
@@ -150,6 +151,23 @@ static void cli_session_init() {
 	ses.isserver = 0;
 }
 
+static void send_msg_service_request(char* servicename) {
+
+	TRACE(("enter send_msg_service_request: servicename='%s'", servicename))
+
+	CHECKCLEARTOWRITE();
+
+	buf_putbyte(ses.writepayload, SSH_MSG_SERVICE_REQUEST);
+	buf_putstring(ses.writepayload, servicename, strlen(servicename));
+
+	encrypt_packet();
+	TRACE(("leave send_msg_service_request"))
+}
+
+static void recv_msg_service_accept(void) {
+	// do nothing, if it failed then the server MUST have disconnected
+}
+
 /* This function drives the progress of the session - it initiates KEX,
  * service, userauth and channel requests */
 static void cli_sessionloop() {
@@ -195,12 +213,6 @@ static void cli_sessionloop() {
 			/* We've got the transport layer sorted, we now need to request
 			 * userauth */
 			send_msg_service_request(SSH_SERVICE_USERAUTH);
-			cli_ses.state = SERVICE_AUTH_REQ_SENT;
-			TRACE(("leave cli_sessionloop: sent userauth service req"))
-			return;
-
-		/* userauth code */
-		case SERVICE_AUTH_ACCEPT_RCVD:
 			cli_auth_getmethods();
 			cli_ses.state = USERAUTH_REQ_SENT;
 			TRACE(("leave cli_sessionloop: sent userauth methods req"))
