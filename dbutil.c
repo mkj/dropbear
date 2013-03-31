@@ -151,6 +151,20 @@ void dropbear_trace(const char* format, ...) {
 	fprintf(stderr, "\n");
 	va_end(param);
 }
+void dropbear_trace2(const char* format, ...) {
+
+	va_list param;
+
+	if (!(debug_trace && getenv("DROPBEAR_TRACE2"))) {
+		return;
+	}
+
+	va_start(param, format);
+	fprintf(stderr, "TRACE2 (%d): ", getpid());
+	vfprintf(stderr, format, param);
+	fprintf(stderr, "\n");
+	va_end(param);
+}
 #endif /* DEBUG_TRACE */
 
 static void set_sock_priority(int sock) {
@@ -725,7 +739,7 @@ int buf_getline(buffer * line, FILE * authfile) {
 
 	int c = EOF;
 
-	TRACE(("enter buf_getline"))
+	TRACE2(("enter buf_getline"))
 
 	buf_setpos(line, 0);
 	buf_setlen(line, 0);
@@ -750,10 +764,10 @@ out:
 
 	/* if we didn't read anything before EOF or error, exit */
 	if (c == EOF && line->pos == 0) {
-		TRACE(("leave buf_getline: failure"))
+		TRACE2(("leave buf_getline: failure"))
 		return DROPBEAR_FAILURE;
 	} else {
-		TRACE(("leave buf_getline: success"))
+		TRACE2(("leave buf_getline: success"))
 		buf_setpos(line, 0);
 		return DROPBEAR_SUCCESS;
 	}

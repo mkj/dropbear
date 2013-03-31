@@ -40,11 +40,12 @@ void cli_authinitialise() {
 
 /* Send a "none" auth request to get available methods */
 void cli_auth_getmethods() {
-
 	TRACE(("enter cli_auth_getmethods"))
-
+#ifdef CLI_IMMEDIATE_AUTH
+	ses.authstate.authtypes = AUTH_TYPE_PUBKEY | AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
+	cli_auth_try();
+#else
 	CHECKCLEARTOWRITE();
-
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 	buf_putstring(ses.writepayload, cli_opts.username, 
 			strlen(cli_opts.username));
@@ -53,8 +54,8 @@ void cli_auth_getmethods() {
 	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
 
 	encrypt_packet();
+#endif
 	TRACE(("leave cli_auth_getmethods"))
-
 }
 
 void recv_msg_userauth_banner() {

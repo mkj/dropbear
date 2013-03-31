@@ -230,7 +230,7 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout, int argc)
 		close(pin[0]);
 		close(pout[1]);
 
-#ifdef USE_VFORK
+#ifndef USE_VFORK
 		arg_setup(host, remuser, cmd);
 #endif
 

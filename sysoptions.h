@@ -188,6 +188,9 @@
 #define DROPBEAR_KEY_LINES /* ie we're using authorized_keys or known_hosts */
 #endif
 
+/* Send an auth request straight away rather than trying "none" type to get a list */
+#define CLI_IMMEDIATE_AUTH
+
 /* Changing this is inadvisable, it appears to have problems
  * with flushing compressed data */
 #define DROPBEAR_ZLIB_MEM_LEVEL 8

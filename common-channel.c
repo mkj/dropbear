@@ -273,10 +273,10 @@ static unsigned int write_pending(struct Channel * channel) {
 static void check_close(struct Channel *channel) {
 	int close_allowed = 0;
 
-	TRACE(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
+	TRACE2(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
 				channel->errfd, channel->sent_close, channel->recv_close))
-	TRACE(("writebuf size %d extrabuf size %d",
+	TRACE2(("writebuf size %d extrabuf size %d",
 				channel->writebuf ? cbuf_getused(channel->writebuf) : 0,
 				channel->extrabuf ? cbuf_getused(channel->extrabuf) : 0))
 
