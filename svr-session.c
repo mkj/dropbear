@@ -72,6 +72,13 @@ static const struct ChanType *svr_chantypes[] = {
 	NULL /* Null termination is mandatory. */
 };
 
+static void
+svr_session_cleanup(void)
+{
+	/* free potential public key options */
+	svr_pubkey_options_cleanup();
+}
+
 void svr_session(int sock, int childpipe) {
 	char *host, *port;
 	size_t len;
@@ -103,6 +110,7 @@ void svr_session(int sock, int childpipe) {
 
 	/* set up messages etc */
 	ses.remoteclosed = svr_remoteclosed;
+	ses.extra_session_cleanup = svr_session_cleanup;
 
 	/* packet handlers */
 	ses.packettypes = svr_packettypes;
@@ -160,11 +168,8 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	if (svr_ses.server_pid == getpid())
 #endif
 	{
-		/* free potential public key options */
-		svr_pubkey_options_cleanup();
-
 		/* must be after we've done with username etc */
-		common_session_cleanup();
+		session_cleanup();
 	}
 
 	exit(exitcode);

@@ -44,7 +44,7 @@ extern int exitflag;
 
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)());
-void common_session_cleanup();
+void session_cleanup();
 void send_session_identification();
 void send_msg_ignore();
 
@@ -58,7 +58,6 @@ void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
 void cli_session(int sock_in, int sock_out);
-void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
@@ -181,6 +180,7 @@ struct sshsession {
 	void(*remoteclosed)(); /* A callback to handle closure of the
 									  remote connection */
 
+	void(*extra_session_cleanup)(); /* client or server specific cleanup */
 
 	struct AuthState authstate; /* Common amongst client and server, since most
 								   struct elements are common */

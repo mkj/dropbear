@@ -42,6 +42,7 @@ static void cli_sessionloop();
 static void cli_session_init();
 static void cli_finished();
 static void recv_msg_service_accept(void);
+static void cli_session_cleanup(void);
 
 struct clientsession cli_ses; /* GLOBAL */
 
@@ -143,6 +144,7 @@ static void cli_session_init() {
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
+	ses.extra_session_cleanup = cli_session_cleanup;
 	ses.buf_match_algo = cli_buf_match_algo;
 
 	/* packet handlers */
@@ -290,7 +292,7 @@ static void cli_sessionloop() {
 
 }
 
-void cli_session_cleanup() {
+static void cli_session_cleanup(void) {
 
 	if (!sessinitdone) {
 		return;
@@ -308,8 +310,7 @@ void cli_session_cleanup() {
 
 static void cli_finished() {
 
-	cli_session_cleanup();
-	common_session_cleanup();
+	session_cleanup();
 	fprintf(stderr, "Connection to %s@%s:%s closed.\n", cli_opts.username,
 			cli_opts.remotehost, cli_opts.remoteport);
 	exit(cli_ses.retval);

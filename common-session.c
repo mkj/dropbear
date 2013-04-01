@@ -234,7 +234,7 @@ void session_loop(void(*loophandler)()) {
 }
 
 /* clean up a session on exit */
-void common_session_cleanup() {
+void session_cleanup() {
 	
 	TRACE(("enter session_cleanup"))
 	
@@ -242,6 +242,10 @@ void common_session_cleanup() {
 	if (!sessinitdone) {
 		TRACE(("leave session_cleanup: !sessinitdone"))
 		return;
+	}
+
+	if (ses.extra_session_cleanup) {
+		ses.extra_session_cleanup();
 	}
 	
 	m_free(ses.session_id);
