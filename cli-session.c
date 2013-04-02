@@ -114,7 +114,6 @@ void cli_session(int sock_in, int sock_out) {
 #ifdef USE_KEX_FIRST_FOLLOWS
 static void cli_send_kex_first_guess() {
 	send_msg_kexdh_init();
-	dropbear_log(LOG_INFO, "kexdh_init guess sent");
 }
 #endif
 
@@ -197,7 +196,6 @@ static void cli_sessionloop() {
 		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
 		 * negotiation would have failed. */
 		if (!ses.kexstate.our_first_follows_matches) {
-			dropbear_log(LOG_INFO, "kexdh_init after remote's kexinit");
 			send_msg_kexdh_init();
 		}
 		cli_ses.kex_state = KEXDH_INIT_SENT;			
