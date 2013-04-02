@@ -26,6 +26,7 @@
 #define _BIGNUM_H_
 
 #include "includes.h"
+#include "dbutil.h"
 
 void m_mp_init(mp_int *mp);
 void m_mp_init_multi(mp_int *mp, ...) ATTRIB_SENTINEL;
