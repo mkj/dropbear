@@ -23,6 +23,15 @@
 #define AUTH_TIMEOUT 300 /* we choose 5 minutes */
 #endif
 
+/* A client should try and send an initial key exchange packet guessing
+ * the algorithm that will match - saves a round trip connecting, has little
+ * overhead if the guess was "wrong". */
+#define USE_KEX_FIRST_FOLLOWS
+/* Use protocol extension to allow "first follows" to succeed more frequently.
+ * This is currently Dropbear-specific but will gracefully fallback when connecting
+ * to other implementations. */
+#define USE_KEXGUESS2
+
 /* Minimum key sizes for DSS and RSA */
 #ifndef MIN_DSS_KEYLEN
 #define MIN_DSS_KEYLEN 512

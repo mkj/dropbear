@@ -692,7 +692,11 @@ static void read_kex_algos() {
 
 	memset(ses.newkeys, 0x0, sizeof(*ses.newkeys));
 
+#ifdef USE_KEXGUESS2
 	enum kexguess2_used kexguess2 = KEXGUESS2_LOOK;
+#else
+	enum kexguess2_used kexguess2 = KEXGUESS2_NO;
+#endif
 
 	/* kex_algorithms */
 	algo = buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);

@@ -110,11 +110,12 @@ void cli_session(int sock_in, int sock_out) {
 
 }
 
+#ifdef USE_KEX_FIRST_FOLLOWS
 static void cli_send_kex_first_guess() {
 	send_msg_kexdh_init();
 	dropbear_log(LOG_INFO, "kexdh_init guess sent");
-	//cli_ses.kex_state = KEXDH_INIT_SENT;			
 }
+#endif
 
 static void cli_session_init() {
 
@@ -155,7 +156,9 @@ static void cli_session_init() {
 
 	ses.isserver = 0;
 
+#ifdef USE_KEX_FIRST_FOLLOWS
 	ses.send_kex_first_guess = cli_send_kex_first_guess;
+#endif
 
 }
 
