@@ -35,14 +35,12 @@ void startsyslog();
 
 #ifdef __GNUC__
 #define ATTRIB_PRINTF(fmt,args) __attribute__((format(printf, fmt, args))) 
+#define ATTRIB_NORETURN __attribute__((noreturn))
+#define ATTRIB_SENTINEL __attribute__((sentinel))
 #else
 #define ATTRIB_PRINTF(fmt,args)
-#endif
-
-#ifdef __GNUC__
-#define ATTRIB_NORETURN __attribute__((noreturn))
-#else
 #define ATTRIB_NORETURN
+#define ATTRIB_SENTINEL
 #endif
 
 extern void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;

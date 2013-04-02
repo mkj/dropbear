@@ -111,6 +111,13 @@ void cli_session(int sock_in, int sock_out) {
 
 }
 
+#ifdef USE_KEX_FIRST_FOLLOWS
+static void cli_send_kex_first_guess() {
+	send_msg_kexdh_init();
+	dropbear_log(LOG_INFO, "kexdh_init guess sent");
+}
+#endif
+
 static void cli_session_init() {
 
 	cli_ses.state = STATE_NOTHING;
@@ -144,13 +151,18 @@ static void cli_session_init() {
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
+
 	ses.extra_session_cleanup = cli_session_cleanup;
-	ses.buf_match_algo = cli_buf_match_algo;
 
 	/* packet handlers */
 	ses.packettypes = cli_packettypes;
 
 	ses.isserver = 0;
+
+#ifdef USE_KEX_FIRST_FOLLOWS
+	ses.send_kex_first_guess = cli_send_kex_first_guess;
+#endif
+
 }
 
 static void send_msg_service_request(char* servicename) {
@@ -176,16 +188,19 @@ static void cli_sessionloop() {
 
 	TRACE2(("enter cli_sessionloop"))
 
-	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
-		cli_ses.kex_state = KEXINIT_RCVD;
+	if (ses.lastpacket == 0) {
+		TRACE2(("exit cli_sessionloop: no real packets yet"))
+		return;
 	}
 
-	if (cli_ses.kex_state == KEXINIT_RCVD) {
-
+	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
 		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
 		 * negotiation would have failed. */
-		send_msg_kexdh_init();
-		cli_ses.kex_state = KEXDH_INIT_SENT;
+		if (!ses.kexstate.our_first_follows_matches) {
+			dropbear_log(LOG_INFO, "kexdh_init after remote's kexinit");
+			send_msg_kexdh_init();
+		}
+		cli_ses.kex_state = KEXDH_INIT_SENT;			
 		TRACE(("leave cli_sessionloop: done with KEXINIT_RCVD"))
 		return;
 	}
@@ -202,10 +217,9 @@ static void cli_sessionloop() {
 		return;
 	}
 
-	/* We should exit if we haven't donefirstkex: we shouldn't reach here
-	 * in normal operation */
 	if (ses.kexstate.donefirstkex == 0) {
-		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"))
+		/* We might reach here if we have partial packet reads or have
+		 * received SSG_MSG_IGNORE etc. Just skip it */
 		return;
 	}
 

@@ -171,16 +171,11 @@ struct sshsession {
 	   concluded (ie, while dataallowed was unset)*/
 	struct packetlist *reply_queue_head, *reply_queue_tail;
 
-	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
-			int *goodguess); /* The function to use to choose which algorithm
-								to use from the ones presented by the remote
-								side. Is specific to the client/server mode,
-								hence the function-pointer callback.*/
-
 	void(*remoteclosed)(); /* A callback to handle closure of the
 									  remote connection */
 
 	void(*extra_session_cleanup)(); /* client or server specific cleanup */
+	void(*send_kex_first_guess)();
 
 	struct AuthState authstate; /* Common amongst client and server, since most
 								   struct elements are common */
@@ -245,6 +240,7 @@ typedef enum {
 struct clientsession {
 
 	mp_int *dh_e, *dh_x; /* Used during KEX */
+	int dh_val_algo; /* KEX algorithm corresponding to current dh_e and dh_x */
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */

@@ -174,9 +174,9 @@ much traffic. */
  * PAM challenge/response.
  * You can't enable both PASSWORD and PAM. */
 
-#define ENABLE_SVR_PASSWORD_AUTH
+//#define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-/*#define ENABLE_SVR_PAM_AUTH*/
+#define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Whether to take public key options in 
