@@ -42,9 +42,15 @@ void cli_authinitialise() {
 void cli_auth_getmethods() {
 	TRACE(("enter cli_auth_getmethods"))
 #ifdef CLI_IMMEDIATE_AUTH
-	ses.authstate.authtypes = AUTH_TYPE_PUBKEY | AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
-	cli_auth_try();
-#else
+	ses.authstate.authtypes = AUTH_TYPE_PUBKEY;
+    if (getenv(DROPBEAR_PASSWORD_ENV)) {
+		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
+	}
+	if (cli_auth_try() == DROPBEAR_SUCCESS) {
+		TRACE(("skipped initial none auth query"))
+		return;
+	}
+#endif
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 	buf_putstring(ses.writepayload, cli_opts.username, 
@@ -54,7 +60,6 @@ void cli_auth_getmethods() {
 	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
 
 	encrypt_packet();
-#endif
 	TRACE(("leave cli_auth_getmethods"))
 }
 
@@ -241,7 +246,7 @@ void recv_msg_userauth_success() {
 #endif
 }
 
-void cli_auth_try() {
+int cli_auth_try() {
 
 	int finished = 0;
 	TRACE(("enter cli_auth_try"))
@@ -258,36 +263,39 @@ void cli_auth_try() {
 #endif
 
 #ifdef ENABLE_CLI_PASSWORD_AUTH
-	if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
-		fprintf(stderr, "Sorry, I won't let you use password auth unencrypted.\n");
-	} else if (!finished && ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
-		cli_auth_password();
-		finished = 1;
-		cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;
+	if (!finished && (ses.authstate.authtypes & AUTH_TYPE_PASSWORD)) {
+		if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
+			fprintf(stderr, "Sorry, I won't let you use password auth unencrypted.\n");
+		} else {
+			cli_auth_password();
+			finished = 1;
+			cli_ses.lastauthtype = AUTH_TYPE_PASSWORD;
+		}
 	}
 #endif
 
 #ifdef ENABLE_CLI_INTERACT_AUTH
-	if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
-		fprintf(stderr, "Sorry, I won't let you use interactive auth unencrypted.\n");
-	} else if (!finished && ses.authstate.authtypes & AUTH_TYPE_INTERACT) {
-		if (cli_ses.auth_interact_failed) {
-			finished = 0;
+	if (!finished && (ses.authstate.authtypes & AUTH_TYPE_INTERACT)) {
+		if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
+			fprintf(stderr, "Sorry, I won't let you use interactive auth unencrypted.\n");
 		} else {
-			cli_auth_interactive();
-			cli_ses.lastauthtype = AUTH_TYPE_INTERACT;
-			finished = 1;
+			if (!cli_ses.auth_interact_failed) {
+				cli_auth_interactive();
+				cli_ses.lastauthtype = AUTH_TYPE_INTERACT;
+				finished = 1;
+			}
 		}
 	}
 #endif
 
 	TRACE(("cli_auth_try lastauthtype %d", cli_ses.lastauthtype))
 
-	if (!finished) {
-		dropbear_exit("No auth methods could be used.");
+	if (finished) {
+		TRACE(("leave cli_auth_try success"))
+		return DROPBEAR_SUCCESS;
 	}
-
-	TRACE(("leave cli_auth_try"))
+	TRACE(("leave cli_auth_try failure"))
+	return DROPBEAR_FAILURE;
 }
 
 /* A helper for getpass() that exits if the user cancels. The returned

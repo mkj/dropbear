@@ -221,7 +221,9 @@ static void cli_sessionloop() {
 			return;
 			
 		case USERAUTH_FAIL_RCVD:
-			cli_auth_try();
+			if (cli_auth_try() == DROPBEAR_FAILURE) {
+				dropbear_exit("No auth methods could be used.");
+			}
 			cli_ses.state = USERAUTH_REQ_SENT;
 			TRACE(("leave cli_sessionloop: cli_auth_try"))
 			return;
