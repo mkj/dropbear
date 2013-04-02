@@ -61,8 +61,9 @@
 #define DROPBEAR_FAILURE -1
 
 /* various algorithm identifiers */
-#define DROPBEAR_KEX_DH_GROUP1 0
-#define DROPBEAR_KEX_DH_GROUP14 1
+#define DROPBEAR_KEX_NONE 0
+#define DROPBEAR_KEX_DH_GROUP1 1
+#define DROPBEAR_KEX_DH_GROUP14 2
 
 #define DROPBEAR_SIGNKEY_ANY 0
 #define DROPBEAR_SIGNKEY_RSA 1

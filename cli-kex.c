@@ -43,11 +43,19 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
 
 void send_msg_kexdh_init() {
 	TRACE(("send_msg_kexdh_init()"))	
-	cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
-	cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+	if ((cli_ses.dh_e && cli_ses.dh_x 
+				&& cli_ses.dh_val_algo == ses.newkeys->algo_kex)) {
+		TRACE(("reusing existing dh_e from first_kex_packet_follows"))
+	} else {
+		if (!cli_ses.dh_e || !cli_ses.dh_e) {
+			cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
+			cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
+			m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
+		}
 
-	gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
+		gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
+		cli_ses.dh_val_algo = ses.newkeys->algo_kex;
+	}
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
@@ -99,6 +107,7 @@ void recv_msg_kexdh_reply() {
 	mp_clear_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
 	m_free(cli_ses.dh_e);
 	m_free(cli_ses.dh_x);
+	cli_ses.dh_val_algo = DROPBEAR_KEX_NONE;
 
 	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
 			!= DROPBEAR_SUCCESS) {

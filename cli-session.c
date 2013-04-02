@@ -182,6 +182,11 @@ static void cli_sessionloop() {
 
 	TRACE2(("enter cli_sessionloop"))
 
+	if (ses.lastpacket == 0) {
+		TRACE2(("exit cli_sessionloop: no real packets yet"))
+		return;
+	}
+
 	if (ses.lastpacket == SSH_MSG_KEXINIT && cli_ses.kex_state == KEX_NOTHING) {
 		/* We initiate the KEXDH. If DH wasn't the correct type, the KEXINIT
 		 * negotiation would have failed. */
@@ -206,10 +211,9 @@ static void cli_sessionloop() {
 		return;
 	}
 
-	/* We should exit if we haven't donefirstkex: we shouldn't reach here
-	 * in normal operation */
 	if (ses.kexstate.donefirstkex == 0) {
-		TRACE(("XXX XXX might be bad! leave cli_sessionloop: haven't donefirstkex"))
+		/* We might reach here if we have partial packet reads or have
+		 * received SSG_MSG_IGNORE etc. Just skip it */
 		return;
 	}
 

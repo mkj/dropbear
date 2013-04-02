@@ -241,6 +241,7 @@ typedef enum {
 struct clientsession {
 
 	mp_int *dh_e, *dh_x; /* Used during KEX */
+	int dh_val_algo; /* KEX algorithm corresponding to current dh_e and dh_x */
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
