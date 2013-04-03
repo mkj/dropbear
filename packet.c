@@ -74,6 +74,8 @@ void write_packet() {
 		len = writebuf->len - 1 - writebuf->pos;
 		dropbear_assert(len > 0);
 		all_ignore &= (packet_type == SSH_MSG_IGNORE);
+		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, packet_type,
+				len, writebuf->len-1))
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
@@ -366,7 +368,7 @@ static int checkmac() {
 	unsigned char mac_bytes[MAX_MAC_LEN];
 	unsigned int mac_size, contents_len;
 	
-	mac_size = ses.keys->trans.algo_mac->hashsize;
+	mac_size = ses.keys->recv.algo_mac->hashsize;
 	contents_len = ses.readbuf->len - mac_size;
 
 	buf_setpos(ses.readbuf, 0);
@@ -455,7 +457,6 @@ static void enqueue_reply_packet() {
 		ses.reply_queue_head = new_item;
 	}
 	ses.reply_queue_tail = new_item;
-	TRACE2(("leave enqueue_reply_packet"))
 }
 
 void maybe_flush_reply_queue() {
@@ -500,16 +501,12 @@ void encrypt_packet() {
 
 	TRACE2(("encrypt_packet type is %d", packet_type))
 	
-	if ((!ses.dataallowed && !packet_is_okay_kex(packet_type))
-			|| ses.kexstate.sentnewkeys) {
+	if ((!ses.dataallowed && !packet_is_okay_kex(packet_type))) {
 		/* During key exchange only particular packets are allowed.
 			Since this packet_type isn't OK we just enqueue it to send 
 			after the KEX, see maybe_flush_reply_queue */
-
-		/* We also enqueue packets here when we have sent a MSG_NEWKEYS
-		 * packet but are yet to received one. For simplicity we just switch
-		 * over all the keys at once. This is the 'ses.kexstate.sentnewkeys'
-		 * case. */
+		TRACE2(("Delay sending reply packet. dataallowed %d, type %d, sentnewkeys %d",
+					ses.dataallowed, packet_type, ses.kexstate.sentnewkeys))
 		enqueue_reply_packet();
 		return;
 	}
