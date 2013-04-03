@@ -204,8 +204,7 @@ static void cli_sessionloop() {
 	}
 
 	/* A KEX has finished, so we should go back to our KEX_NOTHING state */
-	if (cli_ses.kex_state != KEX_NOTHING && ses.kexstate.recvkexinit == 0
-			&& ses.kexstate.sentkexinit == 0) {
+	if (cli_ses.kex_state != KEX_NOTHING && ses.kexstate.sentnewkeys) {
 		cli_ses.kex_state = KEX_NOTHING;
 	}
 
@@ -218,6 +217,7 @@ static void cli_sessionloop() {
 	if (ses.kexstate.donefirstkex == 0) {
 		/* We might reach here if we have partial packet reads or have
 		 * received SSG_MSG_IGNORE etc. Just skip it */
+		TRACE2(("donefirstkex false\n"))
 		return;
 	}
 

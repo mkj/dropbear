@@ -505,8 +505,6 @@ void encrypt_packet() {
 		/* During key exchange only particular packets are allowed.
 			Since this packet_type isn't OK we just enqueue it to send 
 			after the KEX, see maybe_flush_reply_queue */
-		TRACE2(("Delay sending reply packet. dataallowed %d, type %d, sentnewkeys %d",
-					ses.dataallowed, packet_type, ses.kexstate.sentnewkeys))
 		enqueue_reply_packet();
 		return;
 	}

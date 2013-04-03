@@ -78,6 +78,7 @@ struct key_context_directional {
 #endif
 	} cipher_state;
 	unsigned char mackey[MAX_MAC_LEN];
+	int valid;
 };
 
 struct key_context {

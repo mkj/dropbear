@@ -256,7 +256,6 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		/* Compare hostnames */
 		if (strncmp(cli_opts.remotehost, buf_getptr(line, hostlen),
 					hostlen) != 0) {
-			TRACE2(("hosts don't match"))
 			continue;
 		}
 

@@ -80,7 +80,7 @@ static const unsigned char dh_p_14[DH_P_14_LEN] = {
 static const int DH_G_VAL = 2;
 
 static void kexinitialise();
-void gen_new_keys();
+static void gen_new_keys();
 #ifndef DISABLE_ZLIB
 static void gen_new_zstreams();
 #endif
@@ -159,11 +159,39 @@ void send_msg_kexinit() {
 
 }
 
-/* *** NOTE regarding (send|recv)_msg_newkeys *** 
- * Changed by mihnea from the original kex.c to set dataallowed after a 
- * completed key exchange, no matter the order in which it was performed.
- * This enables client mode without affecting server functionality.
- */
+void switch_keys() {
+	TRACE2(("enter switch_keys"))
+	if (!(ses.kexstate.sentkexinit && ses.kexstate.recvkexinit)) {
+		dropbear_exit("Unexpected newkeys message");
+	}
+
+	if (!ses.keys) {
+		ses.keys = m_malloc(sizeof(*ses.newkeys));
+	}
+	if (ses.kexstate.recvnewkeys && ses.newkeys->recv.valid) {
+		TRACE(("switch_keys recv"))
+		ses.keys->recv = ses.newkeys->recv;
+		m_burn(&ses.newkeys->recv, sizeof(ses.newkeys->recv));
+		ses.newkeys->recv.valid = 0;
+	}
+	if (ses.kexstate.sentnewkeys && ses.newkeys->trans.valid) {
+		TRACE(("switch_keys trans"))
+		ses.keys->trans = ses.newkeys->trans;
+		m_burn(&ses.newkeys->trans, sizeof(ses.newkeys->trans));
+		ses.newkeys->trans.valid = 0;
+	}
+	if (ses.kexstate.sentnewkeys && ses.kexstate.recvnewkeys)
+	{
+		TRACE(("switch_keys done"))
+		ses.keys->algo_kex = ses.newkeys->algo_kex;
+		ses.keys->algo_hostkey = ses.newkeys->algo_hostkey;
+		ses.keys->allow_compress = 0;
+		m_free(ses.newkeys);
+		ses.newkeys = NULL;
+		kexinitialise();
+	}
+	TRACE2(("leave switch_keys"))
+}
 
 /* Bring new keys into use after a key exchange, and let the client know*/
 void send_msg_newkeys() {
@@ -174,44 +202,25 @@ void send_msg_newkeys() {
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_NEWKEYS);
 	encrypt_packet();
+
 	
-
 	/* set up our state */
-	if (ses.kexstate.recvnewkeys) {
-		TRACE(("while RECVNEWKEYS=1"))
-		gen_new_keys();
-		kexinitialise(); /* we've finished with this kex */
-		TRACE((" -> DATAALLOWED=1"))
-		ses.dataallowed = 1; /* we can send other packets again now */
-		ses.kexstate.donefirstkex = 1;
-	} else {
-		ses.kexstate.sentnewkeys = 1;
-		TRACE(("SENTNEWKEYS=1"))
-	}
+	ses.kexstate.sentnewkeys = 1;
+	ses.kexstate.donefirstkex = 1;
+	ses.dataallowed = 1; /* we can send other packets again now */
+	gen_new_keys();
+	switch_keys();
 
-	TRACE(("-> MSG_NEWKEYS"))
 	TRACE(("leave send_msg_newkeys"))
 }
 
 /* Bring the new keys into use after a key exchange */
 void recv_msg_newkeys() {
 
-	TRACE(("<- MSG_NEWKEYS"))
 	TRACE(("enter recv_msg_newkeys"))
 
-	/* simply check if we've sent SSH_MSG_NEWKEYS, and if so,
-	 * switch to the new keys */
-	if (ses.kexstate.sentnewkeys) {
-		TRACE(("while SENTNEWKEYS=1"))
-		gen_new_keys();
-		kexinitialise(); /* we've finished with this kex */
-	    TRACE((" -> DATAALLOWED=1"))
-	    ses.dataallowed = 1; /* we can send other packets again now */
-		ses.kexstate.donefirstkex = 1;
-	} else {
-		TRACE(("RECVNEWKEYS=1"))
-		ses.kexstate.recvnewkeys = 1;
-	}
+	ses.kexstate.recvnewkeys = 1;
+	switch_keys();
 	
 	TRACE(("leave recv_msg_newkeys"))
 }
@@ -293,8 +302,7 @@ static void hashkeys(unsigned char *out, int outlen,
  * ses.newkeys is the new set of keys which are generated, these are only
  * taken into use after both sides have sent a newkeys message */
 
-/* Originally from kex.c, generalized for cli/svr mode --mihnea */
-void gen_new_keys() {
+static void gen_new_keys() {
 
 	unsigned char C2S_IV[MAX_IV_LEN];
 	unsigned char C2S_key[MAX_KEY_LEN];
@@ -382,11 +390,9 @@ void gen_new_keys() {
 	gen_new_zstreams();
 #endif
 	
-	/* Switch over to the new keys */
-	m_burn(ses.keys, sizeof(struct key_context));
-	m_free(ses.keys);
-	ses.keys = ses.newkeys;
-	ses.newkeys = NULL;
+	/* Ready to switch over */
+	ses.newkeys->trans.valid = 1;
+	ses.newkeys->recv.valid = 1;
 
 	m_burn(C2S_IV, sizeof(C2S_IV));
 	m_burn(C2S_key, sizeof(C2S_key));
