@@ -266,13 +266,6 @@ static void cli_sessionloop() {
 				}
 			}
 			
-#ifdef ENABLE_CLI_LOCALTCPFWD
-			setup_localtcp();
-#endif
-#ifdef ENABLE_CLI_REMOTETCPFWD
-			setup_remotetcp();
-#endif
-
 #ifdef ENABLE_CLI_NETCAT
 			if (cli_opts.netcat_host) {
 				cli_send_netcat_request();
@@ -281,6 +274,14 @@ static void cli_sessionloop() {
 			if (!cli_opts.no_cmd) {
 				cli_send_chansess_request();
 			}
+
+#ifdef ENABLE_CLI_LOCALTCPFWD
+			setup_localtcp();
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+			setup_remotetcp();
+#endif
+
 			TRACE(("leave cli_sessionloop: running"))
 			cli_ses.state = SESSION_RUNNING;
 			return;
