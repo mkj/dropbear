@@ -33,7 +33,6 @@
 #include "random.h"
 #include "kex.h"
 #include "channel.h"
-#include "atomicio.h"
 #include "runopts.h"
 
 static void checktimeouts();
@@ -49,8 +48,6 @@ int sessinitdone = 0; /* GLOBAL */
 
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
 int exitflag = 0; /* GLOBAL */
-
-
 
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock_in, int sock_out) {
@@ -257,13 +254,12 @@ void session_cleanup() {
 	TRACE(("leave session_cleanup"))
 }
 
-
 void send_session_identification() {
-	/* write our version string, this blocks */
-	if (atomicio(write, ses.sock_out, LOCAL_IDENT "\r\n",
-				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
-		ses.remoteclosed();
-	}
+	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
+	buf_putbytes(writebuf, LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
+	buf_putbyte(writebuf, 0x0); // packet type
+	buf_setpos(writebuf, 0);
+	enqueue(&ses.writequeue, writebuf);
 }
 
 static void read_session_identification() {

@@ -48,7 +48,7 @@ void process_packet() {
 	TRACE2(("enter process_packet"))
 
 	type = buf_getbyte(ses.payload);
-	TRACE(("process_packet: packet type = %d", type))
+	TRACE(("process_packet: packet type = %d,  len %d", type, ses.payload->len))
 
 	ses.lastpacket = type;
 
