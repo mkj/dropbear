@@ -36,7 +36,7 @@
 struct Algo_Type {
 
 	const unsigned char *name; /* identifying name */
-	const char val; /* a value for this cipher, or -1 for invalid */
+	char val; /* a value for this cipher, or -1 for invalid */
 	const void *data; /* algorithm specific data */
 	char usable; /* whether we can use this algorithm */
 	const void *mode; /* the mode, currently only used for ciphers,
@@ -120,5 +120,6 @@ enum {
 	DROPBEAR_COMP_ZLIB_DELAY,
 };
 
+extern int dropbear_ltc_prng;
 
 #endif /* _ALGO_H_ */

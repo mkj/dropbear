@@ -172,7 +172,7 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 		sigbuf = buf_new(4 + SHA1_HASH_SIZE + ses.writepayload->len);
 		buf_putbufstring(sigbuf, ses.session_id);
 		buf_putbytes(sigbuf, ses.writepayload->data, ses.writepayload->len);
-		cli_buf_put_sign(ses.writepayload, key, type, sigbuf->data, sigbuf->len);
+		cli_buf_put_sign(ses.writepayload, key, type, sigbuf);
 		buf_free(sigbuf); /* Nothing confidential in the buffer */
 	}
 

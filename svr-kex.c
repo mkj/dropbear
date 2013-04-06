@@ -34,7 +34,7 @@
 #include "bignum.h"
 #include "random.h"
 #include "runopts.h"
-
+#include "ecc.h"
 
 static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs);
 
@@ -59,7 +59,7 @@ void recv_msg_kexdh_init() {
 		}
 	} else {
 #ifdef DROPBEAR_ECDH
-		buffer *ecdh_qs = buf_getstringbuf(ses.payload);
+		ecdh_qs = buf_getstringbuf(ses.payload);
 #endif
 	}
 
@@ -104,14 +104,14 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 		struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
 		kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
 
-		buf_put_ecc_pub(ses.writepayload, &ecdh_param->key);
+		buf_put_ecc_pubkey_string(ses.writepayload, &ecdh_param->key);
 		free_kexecdh_param(ecdh_param);
 #endif
 	}
 
 	/* calc the signature */
 	buf_put_sign(ses.writepayload, svr_opts.hostkey, 
-			ses.newkeys->algo_hostkey, ses.hash, SHA1_HASH_SIZE);
+			ses.newkeys->algo_hostkey, ses.hash);
 
 	/* the SSH_MSG_KEXDH_REPLY is done */
 	encrypt_packet();

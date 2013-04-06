@@ -32,6 +32,4 @@ void genrandom(unsigned char* buf, unsigned int len);
 void addrandom(char * buf, unsigned int len);
 void gen_random_mpint(mp_int *max, mp_int *rand);
 
-extern int dropbear_ltc_prng;
-
 #endif /* _RANDOM_H_ */

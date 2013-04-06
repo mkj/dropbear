@@ -70,10 +70,6 @@
 #define DROPBEAR_SIGNKEY_VERIFY
 #endif
 
-#ifdef DROPBEAR_ECDH
-#define DROPBEAR_LTC_PRNG
-#endif
-
 #define SHA1_HASH_SIZE 20
 #define MD5_HASH_SIZE 16
 
@@ -97,6 +93,10 @@
 #define DROPBEAR_ECC_256
 #define DROPBEAR_ECC_384
 #define DROPBEAR_ECC_521
+#endif
+
+#ifdef DROPBEAR_ECC
+#define DROPBEAR_LTC_PRNG
 #endif
 
 // hashes which will be linked and registered

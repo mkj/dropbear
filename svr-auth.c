@@ -93,8 +93,7 @@ static void send_msg_userauth_banner() {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
-	buf_putstring(ses.writepayload, buf_getptr(svr_opts.banner,
-				svr_opts.banner->len), svr_opts.banner->len);
+	buf_putbufstring(ses.writepayload, svr_opts.banner);
 	buf_putstring(ses.writepayload, "en", 2);
 
 	encrypt_packet();
@@ -330,11 +329,10 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		buf_putbytes(typebuf, AUTH_METHOD_PASSWORD, AUTH_METHOD_PASSWORD_LEN);
 	}
 
-	buf_setpos(typebuf, 0);
-	buf_putstring(ses.writepayload, buf_getptr(typebuf, typebuf->len),
-			typebuf->len);
+	buf_putbufstring(ses.writepayload, typebuf);
 
-	TRACE(("auth fail: methods %d, '%s'", ses.authstate.authtypes,
+	TRACE(("auth fail: methods %d, '%.*s'", ses.authstate.authtypes,
+				typebuf->len,
 				buf_getptr(typebuf, typebuf->len)));
 
 	buf_free(typebuf);

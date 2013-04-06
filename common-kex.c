@@ -87,6 +87,7 @@ static void read_kex_algos();
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, int outlen, 
 		const hash_state * hs, unsigned const char X);
+static void finish_kexhashbuf(void);
 
 
 /* Send our list of algorithms we can use */
@@ -258,7 +259,7 @@ static void hashkeys(unsigned char *out, int outlen,
 
 	memcpy(&hs2, hs, sizeof(hash_state));
 	sha1_process(&hs2, &X, 1);
-	sha1_process(&hs2, ses.session_id, SHA1_HASH_SIZE);
+	sha1_process(&hs2, ses.session_id->data, ses.session_id->len);
 	sha1_done(&hs2, out);
 	for (offset = SHA1_HASH_SIZE; 
 			offset < outlen; 
@@ -301,8 +302,10 @@ void gen_new_keys() {
 	sha1_process_mp(&hs, ses.dh_K);
 	mp_clear(ses.dh_K);
 	m_free(ses.dh_K);
-	sha1_process(&hs, ses.hash, SHA1_HASH_SIZE);
-	m_burn(ses.hash, SHA1_HASH_SIZE);
+	sha1_process(&hs, ses.hash->data, ses.hash->len);
+	buf_burn(ses.hash);
+	buf_free(ses.hash);
+	ses.hash = NULL;
 
 	if (IS_DROPBEAR_CLIENT) {
 	    trans_IV	= C2S_IV;
@@ -596,8 +599,6 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	mp_int dh_p;
 	mp_int *dh_e = NULL, *dh_f = NULL;
 
-	hash_state hs;
-
 	/* read the prime and generator*/
 	m_mp_init(&dh_p);
 	load_dh_p(&dh_p);
@@ -639,25 +640,7 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 
 	/* calculate the hash H to sign */
-	sha1_init(&hs);
-	buf_setpos(ses.kexhashbuf, 0);
-	sha1_process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
-			ses.kexhashbuf->len);
-	
-		ses.hash = m_malloc(SHA1_HASH_SIZE);
-	}
-	sha1_done(&hs, ses.hash);
-
-	buf_burn(ses.kexhashbuf);
-	buf_free(ses.kexhashbuf);
-	ses.kexhashbuf = NULL;
-	
-	/* first time around, we set the session_id to H */
-	if (ses.session_id == NULL) {
-		/* create the session_id, this never needs freeing */
-		ses.session_id = (unsigned char*)m_malloc(SHA1_HASH_SIZE);
-		memcpy(ses.session_id, ses.hash, SHA1_HASH_SIZE);
-	}
+	finish_kexhashbuf();
 }
 
 #ifdef DROPBEAR_ECDH
@@ -685,25 +668,25 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	// XXX load Q_them
 	Q_them = buf_get_ecc_pubkey(pub_them, algo_kex->ecc_curve);
 
-	ses.dh_K = dropbear_ecc_shared_secret(Q_them, param->key);
+	ses.dh_K = dropbear_ecc_shared_secret(Q_them, &param->key);
 
 	/* From here on, the code needs to work with the _same_ vars on each side,
 	 * not vice-versaing for client/server */
 	if (IS_DROPBEAR_CLIENT) {
-		Q_C = param->key;
+		Q_C = &param->key;
 		Q_S = Q_them;
 	} else {
 		Q_C = Q_them;
-		Q_S = param->key;
+		Q_S = &param->key;
 	} 
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash */
 	/* K_S, the host key */
 	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
 	/* Q_C, client's ephemeral public key octet string */
-	buf_put_ecc_pubkey_string(Q_C);
+	buf_put_ecc_pubkey_string(ses.kexhashbuf, Q_C);
 	/* Q_S, server's ephemeral public key octet string */
-	buf_put_ecc_pubkey_string(Q_S);
+	buf_put_ecc_pubkey_string(ses.kexhashbuf, Q_S);
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 
@@ -712,10 +695,23 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	buf_setpos(ses.kexhashbuf, 0);
 	algo_kex->hashdesc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
-	if (!ses.hash) {
-		ses.hash = m_malloc(algo_kex->hashdesc->hashsize);
-	}
-	algo_kex->hashdesc->done(&hs, ses.hash);
+
+	/* calculate the hash H to sign */
+	finish_kexhashbuf();
+}
+#endif
+
+static void finish_kexhashbuf(void) {
+	hash_state hs;
+	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
+
+	hashdesc->init(&hs);
+	buf_setpos(ses.kexhashbuf, 0);
+	hashdesc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
+			ses.kexhashbuf->len);
+	ses.hash = buf_new(hashdesc->hashsize);
+	hashdesc->done(&hs, buf_getwriteptr(ses.hash, hashdesc->hashsize));
+	buf_setlen(ses.hash, hashdesc->hashsize);
 
 	buf_burn(ses.kexhashbuf);
 	buf_free(ses.kexhashbuf);
@@ -724,12 +720,10 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	/* first time around, we set the session_id to H */
 	if (ses.session_id == NULL) {
 		/* create the session_id, this never needs freeing */
-		ses.session_id = m_malloc(algo_kex->hashdesc->hashsize);
-		memcpy(ses.session_id, ses.hash, algo_kex->hashdesc->hashsize);
+		ses.session_id = buf_newcopy(ses.hash);
 	}
 
 }
-#endif
 
 /* read the other side's algo list. buf_match_algo is a callback to match
  * algos for the client or server. */

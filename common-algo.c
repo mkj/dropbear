@@ -23,24 +23,33 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+#include "includes.h"
 #include "algo.h"
 #include "dbutil.h"
 #include "kex.h"
+#include "ltc_prng.h"
+#include "ecc.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
 
+#ifdef DROPBEAR_LTC_PRNG
+	int dropbear_ltc_prng = -1;
+#endif
+
+
+
 static int void_cipher(const unsigned char* in, unsigned char* out,
-		unsigned long len, void *cipher_state) {
+		unsigned long len, void* UNUSED(cipher_state)) {
 	if (in != out) {
 		memmove(out, in, len);
 	}
 	return CRYPT_OK;
 }
 
-static int void_start(int cipher, const unsigned char *IV, 
-			const unsigned char *key, 
-			int keylen, int num_rounds, void *cipher_state) {
+static int void_start(int UNUSED(cipher), const unsigned char* UNUSED(IV), 
+			const unsigned char* UNUSED(key), 
+			int UNUSED(keylen), int UNUSED(num_rounds), void* UNUSED(cipher_state)) {
 	return CRYPT_OK;
 }
 
@@ -216,7 +225,7 @@ algo_type sshhostkey[] = {
 static struct dropbear_kex kex_dh_group1 = {dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
 static struct dropbear_kex kex_dh_group14 = {dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
 
-#ifdef DROPBEAR_ECC_DH
+#ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
 static struct dropbear_kex kex_ecdh_secp256r1 = {NULL, 0, &ecc_curve_secp256r1, &sha256_desc };
 #endif
@@ -226,19 +235,19 @@ static struct dropbear_kex kex_ecdh_secp384r1 = {NULL, 0, &ecc_curve_secp384r1, 
 #ifdef DROPBEAR_ECC_521
 static struct dropbear_kex kex_ecdh_secp521r1 = {NULL, 0, &ecc_curve_secp521r1, &sha512_desc };
 #endif
-#endif // DROPBEAR_ECC_DH
+#endif // DROPBEAR_ECDH
 
 
 algo_type sshkex[] = {
-#ifdef DROPBEAR_ECC_DH
+#ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
-	{"ecdh-sha2-secp256r1", 0, &kex_ecdh_descp256r1, 1, NULL},
+	{"ecdh-sha2-secp256r1", 0, &kex_ecdh_secp256r1, 1, NULL},
 #endif
 #ifdef DROPBEAR_ECC_384
-	{"ecdh-sha2-secp384r1", 0, &kex_ecdh_descp384r1, 1, NULL},
+	{"ecdh-sha2-secp384r1", 0, &kex_ecdh_secp384r1, 1, NULL},
 #endif
 #ifdef DROPBEAR_ECC_521
-	{"ecdh-sha2-secp521r1", 0, &kex_ecdh_descp521r1, 1, NULL},
+	{"ecdh-sha2-secp521r1", 0, &kex_ecdh_secp521r1, 1, NULL},
 #endif
 #endif
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
@@ -297,6 +306,17 @@ void crypto_init() {
 			dropbear_exit("Error registering crypto");
 		}
 	}
+
+#ifdef DROPBEAR_LTC_PRNG
+	dropbear_ltc_prng = register_prng(&dropbear_prng_desc);
+	if (dropbear_ltc_prng == -1) {
+		dropbear_exit("Error registering crypto");
+	}
+#endif
+
+#ifdef DROPBEAR_ECC
+	ltc_mp = ltm_desc;
+#endif
 }
 
 /* algolen specifies the length of algo, algos is our local list to match

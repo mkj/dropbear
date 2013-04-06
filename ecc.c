@@ -110,7 +110,7 @@ error:
 ecc_key * buf_get_ecc_pubkey(buffer *buf, const struct dropbear_ecc_curve *curve) {
    ecc_key *key = NULL;
    int ret = DROPBEAR_FAILURE;
-   const int size = curve->dp->size;
+   const unsigned int size = curve->dp->size;
    buf_setpos(buf, 0);
    unsigned int len = buf->len;
    unsigned char first = buf_getbyte(buf);
@@ -123,6 +123,7 @@ ecc_key * buf_get_ecc_pubkey(buffer *buf, const struct dropbear_ecc_curve *curve
    }
 
    key = new_ecc_key();
+   key->dp = curve->dp;
 
    if (mp_read_unsigned_bin(key->pubkey.x, buf_getptr(buf, size), size) != MP_OKAY) {
       goto out;

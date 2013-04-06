@@ -17,9 +17,9 @@ LTC=libtomcrypt/libtomcrypt.a
 LTM=libtommath/libtommath.a
 
 ifeq (@BUNDLED_LIBTOM@, 1)
-LIBTOM_DEPS=$(LTC) $(LTM)
-CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/ 
-LIBS+=$(LTC) $(LTM)
+LIBTOM_DEPS=$(LTM) $(LTC)
+CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
+LIBS+=$(LTM) $(LTC)
 endif
 
 COMMONOBJS=dbutil.o buffer.o \
@@ -185,7 +185,7 @@ link%:
 	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
 $(LTC): options.h
-	cd libtomcrypt && $(MAKE) clean && $(MAKE)
+	cd libtomcrypt && $(MAKE)
 
 $(LTM): options.h
 	cd libtommath && $(MAKE)

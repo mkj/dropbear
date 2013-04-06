@@ -36,6 +36,7 @@
 #include "random.h"
 #include "runopts.h"
 #include "signkey.h"
+#include "ecc.h"
 
 
 static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
@@ -50,6 +51,7 @@ void send_msg_kexdh_init() {
 	} else {
 #ifdef DROPBEAR_ECDH
 		cli_ses.ecdh_param = gen_kexecdh_param();
+		buf_put_ecc_pubkey_string(ses.writepayload, &cli_ses.ecdh_param->key);
 #endif
 	}
 	encrypt_packet();
@@ -99,14 +101,14 @@ void recv_msg_kexdh_reply() {
 	} else {
 #ifdef DROPBEAR_ECDH
 		buffer *ecdh_qs = buf_getstringbuf(ses.payload);
-		kexecdh_comb_key(cli_ses.dh_param, ecdh_qs, hostkey);
+		kexecdh_comb_key(cli_ses.ecdh_param, ecdh_qs, hostkey);
 		buf_free(ecdh_qs);
 #endif
 	}
 	free_kexdh_param(cli_ses.dh_param);
 	cli_ses.dh_param = NULL;
 
-	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
+	if (buf_verify(ses.payload, hostkey, ses.hash) 
 			!= DROPBEAR_SUCCESS) {
 		dropbear_exit("Bad hostkey signature");
 	}

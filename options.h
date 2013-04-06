@@ -5,10 +5,10 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
-/******************************************************************
- * Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
- * parts are to allow for commandline -DDROPBEAR_XXX options etc.
- ******************************************************************/
+/* Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
+ * parts are to allow for commandline -DDROPBEAR_XXX options etc. */
+
+// XXX XXX You should probably run "make clean" after changing most options */
 
 #ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"

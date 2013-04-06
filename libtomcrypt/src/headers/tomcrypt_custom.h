@@ -138,6 +138,8 @@
 
 #ifdef DROPBEAR_ECC
 #define MECC
+#define MPI
+#define LTM_DESC
 #ifdef DROPBEAR_ECC_256
 #define ECC256
 #endif

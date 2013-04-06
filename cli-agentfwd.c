@@ -266,7 +266,7 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 	string			data
 	uint32			flags
 	*/
-	request_data = buf_new(MAX_PUBKEY_SIZE + data_buf>-len + 12);
+	request_data = buf_new(MAX_PUBKEY_SIZE + data_buf->len + 12);
 	buf_put_pub_key(request_data, key, key->type);
 	
 	buf_putbufstring(request_data, data_buf);
