@@ -254,7 +254,7 @@ void cli_load_agent_keys(m_list *ret_list) {
 }
 
 void agent_buf_sign(buffer *sigblob, sign_key *key, 
-		const unsigned char *data, unsigned int len) {
+		buffer *data_buf) {
 	buffer *request_data = NULL;
 	buffer *response = NULL;
 	unsigned int siglen;
@@ -266,10 +266,10 @@ void agent_buf_sign(buffer *sigblob, sign_key *key,
 	string			data
 	uint32			flags
 	*/
-	request_data = buf_new(MAX_PUBKEY_SIZE + len + 12);
+	request_data = buf_new(MAX_PUBKEY_SIZE + data_buf>-len + 12);
 	buf_put_pub_key(request_data, key, key->type);
 	
-	buf_putstring(request_data, data, len);
+	buf_putbufstring(request_data, data_buf);
 	buf_putint(request_data, 0);
 	
 	response = agent_request(SSH2_AGENTC_SIGN_REQUEST, request_data);

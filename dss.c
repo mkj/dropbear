@@ -161,9 +161,7 @@ void buf_put_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 /* Verify a DSS signature (in buf) made on data by the key given. 
  * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_dss_verify(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
-		unsigned int len) {
-
+int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	unsigned char msghash[SHA1_HASH_SIZE];
 	hash_state hs;
 	int ret = DROPBEAR_FAILURE;
@@ -187,7 +185,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, const unsigned char* data
 
 	/* hash the data */
 	sha1_init(&hs);
-	sha1_process(&hs, data, len);
+	sha1_process(&hs, data_buf->data, data_buf->len);
 	sha1_done(&hs, msghash);
 
 	/* create the signature - s' and r' are the received signatures in buf */
@@ -260,9 +258,7 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
-void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* data,
-		unsigned int len) {
-
+void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	unsigned char msghash[SHA1_HASH_SIZE];
 	unsigned int writelen;
 	unsigned int i;
@@ -279,7 +275,7 @@ void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, const unsigned char* d
 	
 	/* hash the data */
 	sha1_init(&hs);
-	sha1_process(&hs, data, len);
+	sha1_process(&hs, data_buf->data, data_buf->len);
 	sha1_done(&hs, msghash);
 
 	m_mp_init_multi(&dss_k, &dss_temp1, &dss_temp2, &dss_r, &dss_s,

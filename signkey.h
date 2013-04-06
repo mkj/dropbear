@@ -63,11 +63,9 @@ int buf_get_priv_key(buffer* buf, sign_key *key, int *type);
 void buf_put_pub_key(buffer* buf, sign_key *key, int type);
 void buf_put_priv_key(buffer* buf, sign_key *key, int type);
 void sign_key_free(sign_key *key);
-void buf_put_sign(buffer* buf, sign_key *key, int type, 
-		const unsigned char *data, unsigned int len);
+void buf_put_sign(buffer* buf, sign_key *key, int type, buffer *data_buf);
 #ifdef DROPBEAR_SIGNKEY_VERIFY
-int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
-		unsigned int len);
+int buf_verify(buffer * buf, sign_key *key, buffer *data_buf);
 char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen);
 #endif
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 

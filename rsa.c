@@ -39,8 +39,7 @@
 #ifdef DROPBEAR_RSA 
 
 static void rsa_pad_em(dropbear_rsa_key * key,
-		const unsigned char * data, unsigned int len,
-		mp_int * rsa_em);
+	buffer *data_buf, mp_int * rsa_em);
 
 /* Load a public rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
@@ -213,9 +212,7 @@ void buf_put_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 /* Verify a signature in buf, made on data by the key given.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_rsa_verify(buffer * buf, dropbear_rsa_key *key, const unsigned char* data,
-		unsigned int len) {
-
+int buf_rsa_verify(buffer * buf, dropbear_rsa_key *key, buffer *data_buf) {
 	unsigned int slen;
 	DEF_MP_INT(rsa_s);
 	DEF_MP_INT(rsa_mdash);
@@ -247,7 +244,7 @@ int buf_rsa_verify(buffer * buf, dropbear_rsa_key *key, const unsigned char* dat
 	}
 
 	/* create the magic PKCS padded value */
-	rsa_pad_em(key, data, len, &rsa_em);
+	rsa_pad_em(key, data_buf, &rsa_em);
 
 	if (mp_exptmod(&rsa_s, key->e, key->n, &rsa_mdash) != MP_OKAY) {
 		TRACE(("failed exptmod rsa_s"))
@@ -270,9 +267,7 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
-void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* data,
-		unsigned int len) {
-
+void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 	unsigned int nsize, ssize;
 	unsigned int i;
 	DEF_MP_INT(rsa_s);
@@ -285,7 +280,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* d
 
 	m_mp_init_multi(&rsa_s, &rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 
-	rsa_pad_em(key, data, len, &rsa_tmp1);
+	rsa_pad_em(key, data_buf, &rsa_tmp1);
 
 	/* the actual signing of the padded data */
 
@@ -377,8 +372,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, const unsigned char* d
  * rsa_em must be a pointer to an initialised mp_int.
  */
 static void rsa_pad_em(dropbear_rsa_key * key,
-		const unsigned char * data, unsigned int len, 
-		mp_int * rsa_em) {
+	buffer *data_buf, mp_int * rsa_em) {
 
 	/* ASN1 designator (including the 0x00 preceding) */
 	const unsigned char rsa_asn1_magic[] = 
@@ -391,7 +385,6 @@ static void rsa_pad_em(dropbear_rsa_key * key,
 	unsigned int nsize;
 	
 	dropbear_assert(key != NULL);
-	dropbear_assert(data != NULL);
 	nsize = mp_unsigned_bin_size(key->n);
 
 	rsa_EM = buf_new(nsize-1);
@@ -408,7 +401,7 @@ static void rsa_pad_em(dropbear_rsa_key * key,
 
 	/* The hash of the data */
 	sha1_init(&hs);
-	sha1_process(&hs, data, len);
+	sha1_process(&hs, data_buf->data, data_buf->len);
 	sha1_done(&hs, buf_getwriteptr(rsa_EM, SHA1_HASH_SIZE));
 	buf_incrwritepos(rsa_EM, SHA1_HASH_SIZE);
 

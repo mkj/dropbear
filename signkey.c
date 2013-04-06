@@ -218,10 +218,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 		dropbear_exit("Bad key types in buf_put_pub_key");
 	}
 
-	buf_setpos(pubkeys, 0);
-	buf_putstring(buf, buf_getptr(pubkeys, pubkeys->len),
-			pubkeys->len);
-	
+	buf_putbufstring(buf, pubkeys);
 	buf_free(pubkeys);
 	TRACE(("leave buf_put_pub_key"))
 }
@@ -364,28 +361,24 @@ char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen) {
 }
 
 void buf_put_sign(buffer* buf, sign_key *key, int type, 
-		const unsigned char *data, unsigned int len) {
-
+	buffer *data_buf) {
 	buffer *sigblob;
 	sigblob = buf_new(MAX_PUBKEY_SIZE);
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
-		buf_put_dss_sign(sigblob, key->dsskey, data, len);
+		buf_put_dss_sign(sigblob, key->dsskey, data_buf);
 	}
 #endif
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
-		buf_put_rsa_sign(sigblob, key->rsakey, data, len);
+		buf_put_rsa_sign(sigblob, key->rsakey, data_buf);
 	}
 #endif
 	if (sigblob->len == 0) {
 		dropbear_exit("Non-matching signing type");
 	}
-	buf_setpos(sigblob, 0);
-	buf_putstring(buf, buf_getptr(sigblob, sigblob->len),
-			sigblob->len);
-			
+	buf_putbufstring(buf, sigblob);
 	buf_free(sigblob);
 
 }
@@ -395,8 +388,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the
  * signature blob */
-int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
-		unsigned int len) {
+int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	
 	unsigned int bloblen;
 	unsigned char * ident = NULL;
@@ -414,7 +406,7 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		if (key->dsskey == NULL) {
 			dropbear_exit("No DSS key to verify signature");
 		}
-		return buf_dss_verify(buf, key->dsskey, data, len);
+		return buf_dss_verify(buf, key->dsskey, data_buf);
 	}
 #endif
 
@@ -424,7 +416,7 @@ int buf_verify(buffer * buf, sign_key *key, const unsigned char *data,
 		if (key->rsakey == NULL) {
 			dropbear_exit("No RSA key to verify signature");
 		}
-		return buf_rsa_verify(buf, key->rsakey, data, len);
+		return buf_rsa_verify(buf, key->rsakey, data_buf);
 	}
 #endif
 
