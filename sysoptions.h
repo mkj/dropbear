@@ -74,8 +74,7 @@
 #define MD5_HASH_SIZE 16
 
 #define MAX_KEY_LEN 32 /* 256 bits for aes256 etc */
-#define MAX_IV_LEN 20 /* must be same as max blocksize, 
-						 and >= SHA1_HASH_SIZE */
+#define MAX_IV_LEN 20 /* must be same as max blocksize,  */
 
 #if defined(DROPBEAR_SHA2_512_HMAC)
 #define MAX_MAC_LEN 64

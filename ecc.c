@@ -9,24 +9,24 @@
 // TODO: use raw bytes for the dp rather than the hex strings in libtomcrypt's ecc.c
 
 #ifdef DROPBEAR_ECC_256
-const struct dropbear_ecc_curve ecc_curve_secp256r1 = {
+const struct dropbear_ecc_curve ecc_curve_nistp256 = {
 	.dp = &ltc_ecc_sets[0],
 	.hash_desc = &sha256_desc,
-	.name = "secp256r1"
+	.name = "nistp256"
 };
 #endif
 #ifdef DROPBEAR_ECC_384
-const struct dropbear_ecc_curve ecc_curve_secp384r1 = {
+const struct dropbear_ecc_curve ecc_curve_nistp384 = {
 	.dp = &ltc_ecc_sets[1],
 	.hash_desc = &sha384_desc,
-	.name = "secp384r1"
+	.name = "nistp384"
 };
 #endif
 #ifdef DROPBEAR_ECC_521
-const struct dropbear_ecc_curve ecc_curve_secp521r1 = {
+const struct dropbear_ecc_curve ecc_curve_nistp521 = {
 	.dp = &ltc_ecc_sets[2],
 	.hash_desc = &sha512_desc,
-	.name = "secp521r1"
+	.name = "nistp521"
 };
 #endif
 
@@ -35,7 +35,7 @@ static ecc_key * new_ecc_key(void) {
    key->pubkey.x = m_malloc(sizeof(mp_int));
    key->pubkey.y = m_malloc(sizeof(mp_int));
    key->pubkey.z = m_malloc(sizeof(mp_int));
-   key->k = m_malloc(sizeof(mp_init));
+   key->k = m_malloc(sizeof(mp_int));
    m_mp_init_multi(key->pubkey.x, key->pubkey.y, key->pubkey.z, key->k, NULL);
    return key;
 }

@@ -227,13 +227,13 @@ static struct dropbear_kex kex_dh_group14 = {dh_p_14, DH_P_14_LEN, NULL, &sha1_d
 
 #ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
-static struct dropbear_kex kex_ecdh_secp256r1 = {NULL, 0, &ecc_curve_secp256r1, &sha256_desc };
+static struct dropbear_kex kex_ecdh_nistp256 = {NULL, 0, &ecc_curve_nistp256, &sha256_desc };
 #endif
 #ifdef DROPBEAR_ECC_384
-static struct dropbear_kex kex_ecdh_secp384r1 = {NULL, 0, &ecc_curve_secp384r1, &sha384_desc };
+static struct dropbear_kex kex_ecdh_nistp384 = {NULL, 0, &ecc_curve_nistp384, &sha384_desc };
 #endif
 #ifdef DROPBEAR_ECC_521
-static struct dropbear_kex kex_ecdh_secp521r1 = {NULL, 0, &ecc_curve_secp521r1, &sha512_desc };
+static struct dropbear_kex kex_ecdh_nistp521 = {NULL, 0, &ecc_curve_nistp521, &sha512_desc };
 #endif
 #endif // DROPBEAR_ECDH
 
@@ -241,13 +241,13 @@ static struct dropbear_kex kex_ecdh_secp521r1 = {NULL, 0, &ecc_curve_secp521r1, 
 algo_type sshkex[] = {
 #ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
-	{"ecdh-sha2-secp256r1", 0, &kex_ecdh_secp256r1, 1, NULL},
+	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #ifdef DROPBEAR_ECC_384
-	{"ecdh-sha2-secp384r1", 0, &kex_ecdh_secp384r1, 1, NULL},
+	{"ecdh-sha2-nistp384", 0, &kex_ecdh_nistp384, 1, NULL},
 #endif
 #ifdef DROPBEAR_ECC_521
-	{"ecdh-sha2-secp521r1", 0, &kex_ecdh_secp521r1, 1, NULL},
+	{"ecdh-sha2-nistp521", 0, &kex_ecdh_nistp521, 1, NULL},
 #endif
 #endif
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},

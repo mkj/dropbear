@@ -85,8 +85,8 @@ static void gen_new_zstreams();
 #endif
 static void read_kex_algos();
 /* helper function for gen_new_keys */
-static void hashkeys(unsigned char *out, int outlen, 
-		const hash_state * hs, unsigned const char X);
+static void hashkeys(unsigned char *out, unsigned int outlen, 
+		const hash_state * hs, const unsigned char X);
 static void finish_kexhashbuf(void);
 
 
@@ -251,26 +251,28 @@ static void kexinitialise() {
  * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
  *
  * See Section 7.2 of rfc4253 (ssh transport) for details */
-static void hashkeys(unsigned char *out, int outlen, 
+static void hashkeys(unsigned char *out, unsigned int outlen, 
 		const hash_state * hs, const unsigned char X) {
 
+	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
 	hash_state hs2;
-	int offset;
+	unsigned int offset;
+	unsigned char tmpout[hashdesc->hashsize];
 
 	memcpy(&hs2, hs, sizeof(hash_state));
-	sha1_process(&hs2, &X, 1);
-	sha1_process(&hs2, ses.session_id->data, ses.session_id->len);
-	sha1_done(&hs2, out);
-	for (offset = SHA1_HASH_SIZE; 
+	hashdesc->process(&hs2, &X, 1);
+	hashdesc->process(&hs2, ses.session_id->data, ses.session_id->len);
+	hashdesc->done(&hs2, tmpout);
+	memcpy(out, tmpout, MIN(hashdesc->hashsize, outlen));
+	for (offset = hashdesc->hashsize; 
 			offset < outlen; 
-			offset += SHA1_HASH_SIZE)
+			offset += hashdesc->hashsize)
 	{
 		/* need to extend */
-		unsigned char k2[SHA1_HASH_SIZE];
 		memcpy(&hs2, hs, sizeof(hash_state));
-		sha1_process(&hs2, out, offset);
-		sha1_done(&hs2, k2);
-		memcpy(&out[offset], k2, MIN(outlen - offset, SHA1_HASH_SIZE));
+		hashdesc->process(&hs2, out, offset);
+		hashdesc->done(&hs2, tmpout);
+		memcpy(&out[offset], tmpout, MIN(outlen - offset, hashdesc->hashsize));
 	}
 }
 
@@ -292,14 +294,14 @@ void gen_new_keys() {
 	unsigned char *trans_IV, *trans_key, *recv_IV, *recv_key;
 
 	hash_state hs;
-	unsigned int C2S_keysize, S2C_keysize;
+	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
 	char mactransletter, macrecvletter; /* Client or server specific */
 
 	TRACE(("enter gen_new_keys"))
 	/* the dh_K and hash are the start of all hashes, we make use of that */
 
-	sha1_init(&hs);
-	sha1_process_mp(&hs, ses.dh_K);
+	hashdesc->init(&hs);
+	hash_process_mp(hashdesc, &hs, ses.dh_K);
 	mp_clear(ses.dh_K);
 	m_free(ses.dh_K);
 	sha1_process(&hs, ses.hash->data, ses.hash->len);
@@ -312,8 +314,6 @@ void gen_new_keys() {
 	    recv_IV		= S2C_IV;
 	    trans_key	= C2S_key;
 	    recv_key	= S2C_key;
-	    C2S_keysize = ses.newkeys->trans.algo_crypt->keysize;
-	    S2C_keysize = ses.newkeys->recv.algo_crypt->keysize;
 		mactransletter = 'E';
 		macrecvletter = 'F';
 	} else {
@@ -321,16 +321,14 @@ void gen_new_keys() {
 	    recv_IV		= C2S_IV;
 	    trans_key	= S2C_key;
 	    recv_key	= C2S_key;
-	    C2S_keysize = ses.newkeys->recv.algo_crypt->keysize;
-	    S2C_keysize = ses.newkeys->trans.algo_crypt->keysize;
 		mactransletter = 'F';
 		macrecvletter = 'E';
 	}
 
-	hashkeys(C2S_IV, SHA1_HASH_SIZE, &hs, 'A');
-	hashkeys(S2C_IV, SHA1_HASH_SIZE, &hs, 'B');
-	hashkeys(C2S_key, C2S_keysize, &hs, 'C');
-	hashkeys(S2C_key, S2C_keysize, &hs, 'D');
+	hashkeys(C2S_IV, sizeof(C2S_IV), &hs, 'A');
+	hashkeys(S2C_IV, sizeof(S2C_IV), &hs, 'B');
+	hashkeys(C2S_key, sizeof(C2S_key), &hs, 'C');
+	hashkeys(S2C_key, sizeof(S2C_key), &hs, 'D');
 
 	if (ses.newkeys->recv.algo_crypt->cipherdesc != NULL) {
 		int recv_cipher = find_cipher(ses.newkeys->recv.algo_crypt->cipherdesc->name);

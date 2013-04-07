@@ -14,9 +14,9 @@ struct dropbear_ecc_curve {
 	const char *name;
 };
 
-extern const struct dropbear_ecc_curve ecc_curve_secp256r1;
-extern const struct dropbear_ecc_curve ecc_curve_secp384r1;
-extern const struct dropbear_ecc_curve ecc_curve_secp521r1;
+extern const struct dropbear_ecc_curve ecc_curve_nistp256;
+extern const struct dropbear_ecc_curve ecc_curve_nistp384;
+extern const struct dropbear_ecc_curve ecc_curve_nistp521;
 
 // "pubkey" refers to a point, but LTC uses ecc_key structure for both public
 // and private keys

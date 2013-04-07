@@ -169,7 +169,7 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 		TRACE(("realsign"))
 		/* We put the signature as well - this contains string(session id), then
 		 * the contents of the write payload to this point */
-		sigbuf = buf_new(4 + SHA1_HASH_SIZE + ses.writepayload->len);
+		sigbuf = buf_new(4 + ses.session_id->len + ses.writepayload->len);
 		buf_putbufstring(sigbuf, ses.session_id);
 		buf_putbytes(sigbuf, ses.writepayload->data, ses.writepayload->len);
 		cli_buf_put_sign(ses.writepayload, key, type, sigbuf);

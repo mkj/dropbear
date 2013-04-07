@@ -60,7 +60,8 @@ void bytes_to_mp(mp_int *mp, const unsigned char* bytes, unsigned int len) {
 }
 
 /* hash the ssh representation of the mp_int mp */
-void sha1_process_mp(hash_state *hs, mp_int *mp) {
+void hash_process_mp(const struct ltc_hash_descriptor *hash_desc, 
+				hash_state *hs, mp_int *mp) {
 
 	int i;
 	buffer * buf;
@@ -68,8 +69,6 @@ void sha1_process_mp(hash_state *hs, mp_int *mp) {
 	buf = buf_new(512 + 20); /* max buffer is a 4096 bit key, 
 								plus header + some leeway*/
 	buf_putmpint(buf, mp);
-	i = buf->pos;
-	buf_setpos(buf, 0);
-	sha1_process(hs, buf_getptr(buf, i), i);
+	hash_desc->process(hs, buf->data, buf->len);
 	buf_free(buf);
 }

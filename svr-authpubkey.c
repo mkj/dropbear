@@ -125,7 +125,7 @@ void svr_auth_pubkey() {
 
 	/* create the data which has been signed - this a string containing
 	 * session_id, concatenated with the payload packet up to the signature */
-	signbuf = buf_new(ses.payload->pos + 4 + SHA1_HASH_SIZE);
+	signbuf = buf_new(ses.payload->pos + 4 + ses.session_id->len);
 	buf_putbufstring(signbuf, ses.session_id);
 	buf_putbytes(signbuf, ses.payload->data, ses.payload->pos);
 	buf_setpos(signbuf, 0);

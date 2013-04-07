@@ -332,8 +332,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	buf_putbufstring(ses.writepayload, typebuf);
 
 	TRACE(("auth fail: methods %d, '%.*s'", ses.authstate.authtypes,
-				typebuf->len,
-				buf_getptr(typebuf, typebuf->len)));
+				typebuf->len, typebuf->data))
 
 	buf_free(typebuf);
 
