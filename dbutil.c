@@ -651,6 +651,14 @@ void printhex(const char * label, const unsigned char * buf, int len) {
 	}
 	fprintf(stderr, "\n");
 }
+
+void printmpint(const char *label, mp_int *mp) {
+	buffer *buf = buf_new(1000);
+	buf_putmpint(buf, mp);
+	printhex(label, buf->data, buf->len);
+	buf_free(buf);
+
+}
 #endif
 
 /* Strip all control characters from text (a null-terminated string), except
