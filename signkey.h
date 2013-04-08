@@ -51,6 +51,9 @@ struct SIGN_key {
 #ifdef DROPBEAR_RSA
 	dropbear_rsa_key * rsakey;
 #endif
+#ifdef DROPBEAR_ECDSA
+	ecc_key *ecckey;
+#endif
 };
 
 typedef struct SIGN_key sign_key;

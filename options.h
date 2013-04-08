@@ -137,6 +137,7 @@ much traffic. */
 #define DROPBEAR_DSS
 
 #define DROPBEAR_ECDH
+#define DROPBEAR_ECDSA
 
 /* RSA can be vulnerable to timing attacks which use the time required for
  * signing to guess the private key. Blinding avoids this attack, though makes

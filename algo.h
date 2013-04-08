@@ -93,7 +93,6 @@ struct dropbear_kex {
 	const struct ltc_hash_descriptor *hashdesc;
 };
 
-void crypto_init();
 int have_algo(char* algo, size_t algolen, algo_type algos[]);
 void buf_put_algolist(buffer * buf, algo_type localalgos[]);
 
@@ -119,7 +118,5 @@ enum {
 	DROPBEAR_COMP_ZLIB,
 	DROPBEAR_COMP_ZLIB_DELAY,
 };
-
-extern int dropbear_ltc_prng;
 
 #endif /* _ALGO_H_ */

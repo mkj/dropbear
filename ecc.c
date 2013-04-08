@@ -7,25 +7,24 @@
 #ifdef DROPBEAR_ECC
 
 // TODO: use raw bytes for the dp rather than the hex strings in libtomcrypt's ecc.c
-
 #ifdef DROPBEAR_ECC_256
 const struct dropbear_ecc_curve ecc_curve_nistp256 = {
 	.dp = &ltc_ecc_sets[0],
-	.hash_desc = &sha256_desc,
+	.hashdesc = &sha256_desc,
 	.name = "nistp256"
 };
 #endif
 #ifdef DROPBEAR_ECC_384
 const struct dropbear_ecc_curve ecc_curve_nistp384 = {
 	.dp = &ltc_ecc_sets[1],
-	.hash_desc = &sha384_desc,
+	.hashdesc = &sha384_desc,
 	.name = "nistp384"
 };
 #endif
 #ifdef DROPBEAR_ECC_521
 const struct dropbear_ecc_curve ecc_curve_nistp521 = {
 	.dp = &ltc_ecc_sets[2],
-	.hash_desc = &sha512_desc,
+	.hashdesc = &sha512_desc,
 	.name = "nistp521"
 };
 #endif

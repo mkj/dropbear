@@ -39,6 +39,7 @@
 #include "service.h"
 #include "auth.h"
 #include "runopts.h"
+#include "crypto_desc.h"
 
 static void svr_remoteclosed();
 

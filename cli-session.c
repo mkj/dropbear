@@ -36,6 +36,7 @@
 #include "runopts.h"
 #include "chansession.h"
 #include "agentfwd.h"
+#include "crypto_desc.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();

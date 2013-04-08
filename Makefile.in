@@ -26,7 +26,8 @@ COMMONOBJS=dbutil.o buffer.o \
 		dss.o bignum.o \
 		signkey.o rsa.o random.o \
 		queue.o \
-		atomicio.o compat.o fake-rfc2553.o ltc_prng.o ecc.o
+		atomicio.o compat.o fake-rfc2553.o \
+		ltc_prng.o ecc.o ecdsa.o crypto_desc.o
 
 SVROBJS=svr-kex.o svr-algo.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
@@ -54,7 +55,7 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		debug.h channel.h chansession.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h runopts.h includes.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
-		listener.h fake-rfc2553.h
+		listener.h fake-rfc2553.h ecc.h ecdsa.h
 
 dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) @CRYPTLIB@ 
 dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)

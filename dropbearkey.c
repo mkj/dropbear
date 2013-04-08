@@ -188,6 +188,7 @@ int main(int argc, char ** argv) {
 			exit(EXIT_FAILURE);
 		}
 		
+		// TODO: put RSA and DSS size checks into genrsa.c etc
 		if (keytype == DROPBEAR_SIGNKEY_DSS && bits != 1024) {
 			fprintf(stderr, "DSS keys have a fixed size of 1024 bits\n");
 			exit(EXIT_FAILURE);			

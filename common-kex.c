@@ -35,6 +35,7 @@
 #include "random.h"
 #include "runopts.h"
 #include "ecc.h"
+#include "crypto_desc.h"
 
 /* diffie-hellman-group1-sha1 value for p */
 const unsigned char dh_p_1[DH_P_1_LEN] = {
