@@ -304,7 +304,7 @@ void gen_new_keys() {
 	hash_process_mp(hashdesc, &hs, ses.dh_K);
 	mp_clear(ses.dh_K);
 	m_free(ses.dh_K);
-	sha1_process(&hs, ses.hash->data, ses.hash->len);
+	hashdesc->process(&hs, ses.hash->data, ses.hash->len);
 	buf_burn(ses.hash);
 	buf_free(ses.hash);
 	ses.hash = NULL;
@@ -659,11 +659,9 @@ void free_kexecdh_param(struct kex_ecdh_param *param) {
 void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 		sign_key *hostkey) {
 	const struct dropbear_kex *algo_kex = ses.newkeys->algo_kex;
-	hash_state hs;
 	// public keys from client and server
 	ecc_key *Q_C, *Q_S, *Q_them;
 
-	// XXX load Q_them
 	Q_them = buf_get_ecc_pubkey(pub_them, algo_kex->ecc_curve);
 
 	ses.dh_K = dropbear_ecc_shared_secret(Q_them, &param->key);
@@ -687,12 +685,6 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	buf_put_ecc_pubkey_string(ses.kexhashbuf, Q_S);
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
-
-	/* calculate the hash H to sign */
-	algo_kex->hashdesc->init(&hs);
-	buf_setpos(ses.kexhashbuf, 0);
-	algo_kex->hashdesc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
-			ses.kexhashbuf->len);
 
 	/* calculate the hash H to sign */
 	finish_kexhashbuf();

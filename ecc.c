@@ -181,17 +181,6 @@ mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, ecc_key *private_key)
    	goto done;
    }
 
-#if 0
-   // XXX - possibly not neccessary tests?
-   if (ltc_ecc_is_valid_idx(private_key->idx) == 0 || ltc_ecc_is_valid_idx(public_key->idx) == 0) {
-   	goto done;
-   }
-
-   if (XSTRCMP(private_key->dp->name, public_key->dp->name) != 0) {
-   	goto done;
-   }
-#endif
-
    /* make new point */
    result = ltc_ecc_new_point();
    if (result == NULL) {
@@ -211,20 +200,23 @@ mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, ecc_key *private_key)
    err = DROPBEAR_SUCCESS;
 done:
 	if (err == DROPBEAR_SUCCESS) {
-		shared_secret = prime;
-		prime = NULL;
+		shared_secret = m_malloc(sizeof(*shared_secret));
+      m_mp_init(shared_secret);
+      mp_copy(result->x, shared_secret);
 	}
 
 	if (prime) {
 	   mp_clear(prime);
 	   m_free(prime);
 	}
-   ltc_ecc_del_point(result);
+   if (result)
+   {
+      ltc_ecc_del_point(result);
+   }
 
    if (err == DROPBEAR_FAILURE) {
    	 dropbear_exit("ECC error");
    }
-
    return shared_secret;
 }
 
