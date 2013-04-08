@@ -662,7 +662,7 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	// public keys from client and server
 	ecc_key *Q_C, *Q_S, *Q_them;
 
-	Q_them = buf_get_ecc_pubkey(pub_them, algo_kex->ecc_curve);
+	Q_them = buf_get_ecc_raw_pubkey(pub_them, algo_kex->ecc_curve);
 
 	ses.dh_K = dropbear_ecc_shared_secret(Q_them, &param->key);
 
@@ -680,9 +680,9 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	/* K_S, the host key */
 	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
 	/* Q_C, client's ephemeral public key octet string */
-	buf_put_ecc_pubkey_string(ses.kexhashbuf, Q_C);
+	buf_put_ecc_raw_pubkey_string(ses.kexhashbuf, Q_C);
 	/* Q_S, server's ephemeral public key octet string */
-	buf_put_ecc_pubkey_string(ses.kexhashbuf, Q_S);
+	buf_put_ecc_raw_pubkey_string(ses.kexhashbuf, Q_S);
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 

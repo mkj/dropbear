@@ -104,7 +104,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 		struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
 		kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
 
-		buf_put_ecc_pubkey_string(ses.writepayload, &ecdh_param->key);
+		buf_put_ecc_raw_pubkey_string(ses.writepayload, &ecdh_param->key);
 		free_kexecdh_param(ecdh_param);
 #endif
 	}

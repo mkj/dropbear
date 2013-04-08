@@ -20,8 +20,8 @@ extern const struct dropbear_ecc_curve ecc_curve_nistp521;
 
 // "pubkey" refers to a point, but LTC uses ecc_key structure for both public
 // and private keys
-void buf_put_ecc_pubkey_string(buffer *buf, ecc_key *key);
-ecc_key * buf_get_ecc_pubkey(buffer *buf, const struct dropbear_ecc_curve *curve);
+void buf_put_ecc_raw_pubkey_string(buffer *buf, ecc_key *key);
+ecc_key * buf_get_ecc_raw_pubkey(buffer *buf, const struct dropbear_ecc_curve *curve);
 int buf_get_ecc_privkey_string(buffer *buf, ecc_key *key);
 
 mp_int * dropbear_ecc_shared_secret(ecc_key *pub_key, ecc_key *priv_key);
