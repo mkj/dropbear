@@ -142,14 +142,18 @@ ecc_key * buf_get_ecc_raw_pubkey(buffer *buf, const struct dropbear_ecc_curve *c
 	ecc_key *key = NULL;
 	int ret = DROPBEAR_FAILURE;
 	const unsigned int size = curve->dp->size;
+	unsigned char first;
+
+	TRACE(("enter buf_get_ecc_raw_pubkey"))
+
 	buf_setpos(buf, 0);
-	unsigned int len = buf->len;
-	unsigned char first = buf_getbyte(buf);
+	first = buf_getbyte(buf);
 	if (first == 2 || first == 3) {
 		dropbear_log(LOG_WARNING, "Dropbear doesn't support ECC point compression");
 		return NULL;
 	}
-	if (first != 4 || len != 1+2*size) {
+	if (first != 4 || buf->len != 1+2*size) {
+		TRACE(("leave, wrong size"))
 		return NULL;
 	}
 
@@ -157,11 +161,13 @@ ecc_key * buf_get_ecc_raw_pubkey(buffer *buf, const struct dropbear_ecc_curve *c
 	key->dp = curve->dp;
 
 	if (mp_read_unsigned_bin(key->pubkey.x, buf_getptr(buf, size), size) != MP_OKAY) {
+		TRACE(("failed to read x"))
 		goto out;
 	}
 	buf_incrpos(buf, size);
 
 	if (mp_read_unsigned_bin(key->pubkey.y, buf_getptr(buf, size), size) != MP_OKAY) {
+		TRACE(("failed to read y"))
 		goto out;
 	}
 	buf_incrpos(buf, size);
@@ -169,14 +175,17 @@ ecc_key * buf_get_ecc_raw_pubkey(buffer *buf, const struct dropbear_ecc_curve *c
 	mp_set(key->pubkey.z, 1);
 
 	if (ecc_is_point(key) != CRYPT_OK) {
+		TRACE(("failed, not a point"))
 		goto out;
 	}
 
    // SEC1 3.2.3.1 Check that Q != 0
 	if (mp_cmp_d(key->pubkey.x, 0) == LTC_MP_EQ) {
+		TRACE(("failed, x == 0"))
 		goto out;
 	}
 	if (mp_cmp_d(key->pubkey.y, 0) == LTC_MP_EQ) {
+		TRACE(("failed, y == 0"))
 		goto out;
 	}
 
