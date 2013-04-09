@@ -6,30 +6,60 @@
 
 #ifdef DROPBEAR_ECC
 
-// TODO: use raw bytes for the dp rather than the hex strings in libtomcrypt's ecc.c
+// .dp members are filled out by dropbear_ecc_fill_dp() at startup
 #ifdef DROPBEAR_ECC_256
-const struct dropbear_ecc_curve ecc_curve_nistp256 = {
-	.dp = &ltc_ecc_sets[0],
+struct dropbear_ecc_curve ecc_curve_nistp256 = {
+	.ltc_size = 32,
 	.hashdesc = &sha256_desc,
 	.name = "nistp256"
 };
 #endif
 #ifdef DROPBEAR_ECC_384
-const struct dropbear_ecc_curve ecc_curve_nistp384 = {
-	.dp = &ltc_ecc_sets[1],
+struct dropbear_ecc_curve ecc_curve_nistp384 = {
+	.ltc_size = 48,
 	.hashdesc = &sha384_desc,
 	.name = "nistp384"
 };
 #endif
 #ifdef DROPBEAR_ECC_521
-const struct dropbear_ecc_curve ecc_curve_nistp521 = {
-	.dp = &ltc_ecc_sets[2],
+struct dropbear_ecc_curve ecc_curve_nistp521 = {
+	.ltc_size = 66,
 	.hashdesc = &sha512_desc,
 	.name = "nistp521"
 };
 #endif
 
-static ecc_key * new_ecc_key(void) {
+struct dropbear_ecc_curve *dropbear_ecc_curves[] = {
+#ifdef DROPBEAR_ECC_256
+	&ecc_curve_nistp256,
+#endif
+#ifdef DROPBEAR_ECC_384
+	&ecc_curve_nistp384,
+#endif
+#ifdef DROPBEAR_ECC_521
+	&ecc_curve_nistp521,
+#endif
+	NULL
+};
+
+void dropbear_ecc_fill_dp() {
+	struct dropbear_ecc_curve **curve;
+	// libtomcrypt guarantees they're ordered by size
+	const ltc_ecc_set_type *dp = ltc_ecc_sets;
+	for (curve = dropbear_ecc_curves; *curve; curve++) {
+		for (;dp->size > 0; dp++) {
+			if (dp->size == (*curve)->ltc_size) {
+				(*curve)->dp = dp;
+				break;
+			}
+		}
+		if (!(*curve)->dp) {
+			dropbear_exit("Missing ECC params %s", (*curve)->name);
+		}
+	}
+}
+
+ecc_key * new_ecc_key(void) {
 	ecc_key *key = m_malloc(sizeof(*key));
 	key->pubkey.x = m_malloc(sizeof(mp_int));
 	key->pubkey.y = m_malloc(sizeof(mp_int));

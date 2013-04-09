@@ -2,6 +2,7 @@
 #include "dbutil.h"
 #include "crypto_desc.h"
 #include "ltc_prng.h"
+#include "ecc.h"
 
 #ifdef DROPBEAR_LTC_PRNG
 	int dropbear_ltc_prng = -1;
@@ -68,6 +69,7 @@ void crypto_init() {
 
 #ifdef DROPBEAR_ECC
 	ltc_mp = ltm_desc;
+	dropbear_ecc_fill_dp();
 #endif
 }
 
