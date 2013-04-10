@@ -82,14 +82,12 @@ out:
 
 /* If the main session goes, we close it up */
 static void cli_closechansess(struct Channel *UNUSED(channel)) {
+	cli_tty_cleanup(); /* Restore tty modes etc */
 
 	/* This channel hasn't gone yet, so we have > 1 */
 	if (ses.chancount > 1) {
 		dropbear_log(LOG_INFO, "Waiting for other channels to close...");
 	}
-
-	cli_tty_cleanup(); /* Restore tty modes etc */
-
 }
 
 void cli_start_send_channel_request(struct Channel *channel, 
