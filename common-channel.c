@@ -561,7 +561,11 @@ static void remove_channel(struct Channel * channel) {
 	TRACE(("CLOSE errfd %d", channel->errfd))
 	close(channel->errfd);
 
-	channel->typedata = NULL;
+	if (!channel->close_handler_done
+		&& channel->type->closehandler) {
+		channel->type->closehandler(channel);
+		channel->close_handler_done = 1;
+	}
 
 	ses.channels[channel->index] = NULL;
 	m_free(channel);
@@ -625,7 +629,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	 * exttype if is extended */
 	maxlen = MIN(maxlen, 
 			ses.writepayload->size - 1 - 4 - 4 - (isextended ? 4 : 0));
-	TRACE(("maxlen %d", maxlen))
+	TRACE(("maxlen %zd", maxlen))
 	if (maxlen == 0) {
 		TRACE(("leave send_msg_channel_data: no window"))
 		return;
