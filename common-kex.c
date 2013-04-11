@@ -82,7 +82,8 @@ static const int DH_G_VAL = 2;
 static void kexinitialise();
 static void gen_new_keys();
 #ifndef DISABLE_ZLIB
-static void gen_new_zstreams();
+static void gen_new_zstream_recv();
+static void gen_new_zstream_trans();
 #endif
 static void read_kex_algos();
 /* helper function for gen_new_keys */
@@ -159,7 +160,7 @@ void send_msg_kexinit() {
 
 }
 
-void switch_keys() {
+static void switch_keys() {
 	TRACE2(("enter switch_keys"))
 	if (!(ses.kexstate.sentkexinit && ses.kexstate.recvkexinit)) {
 		dropbear_exit("Unexpected newkeys message");
@@ -170,12 +171,14 @@ void switch_keys() {
 	}
 	if (ses.kexstate.recvnewkeys && ses.newkeys->recv.valid) {
 		TRACE(("switch_keys recv"))
+		gen_new_zstream_recv();
 		ses.keys->recv = ses.newkeys->recv;
 		m_burn(&ses.newkeys->recv, sizeof(ses.newkeys->recv));
 		ses.newkeys->recv.valid = 0;
 	}
 	if (ses.kexstate.sentnewkeys && ses.newkeys->trans.valid) {
 		TRACE(("switch_keys trans"))
+		gen_new_zstream_trans();
 		ses.keys->trans = ses.newkeys->trans;
 		m_burn(&ses.newkeys->trans, sizeof(ses.newkeys->trans));
 		ses.newkeys->trans.valid = 0;
@@ -386,10 +389,6 @@ static void gen_new_keys() {
 		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hashdesc->name);
 	}
 
-#ifndef DISABLE_ZLIB
-	gen_new_zstreams();
-#endif
-	
 	/* Ready to switch over */
 	ses.newkeys->trans.valid = 1;
 	ses.newkeys->recv.valid = 1;
@@ -418,7 +417,7 @@ int is_compress_recv() {
 
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
-static void gen_new_zstreams() {
+static void gen_new_zstream_recv() {
 
 	/* create new zstreams */
 	if (ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB
@@ -433,6 +432,17 @@ static void gen_new_zstreams() {
 	} else {
 		ses.newkeys->recv.zstream = NULL;
 	}
+	/* clean up old keys */
+	if (ses.keys->recv.zstream != NULL) {
+		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
+			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
+			dropbear_exit("Crypto error");
+		}
+		m_free(ses.keys->recv.zstream);
+	}
+}
+
+static void gen_new_zstream_trans() {
 
 	if (ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB
 			|| ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
@@ -450,14 +460,6 @@ static void gen_new_zstreams() {
 		ses.newkeys->trans.zstream = NULL;
 	}
 
-	/* clean up old keys */
-	if (ses.keys->recv.zstream != NULL) {
-		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
-			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
-			dropbear_exit("Crypto error");
-		}
-		m_free(ses.keys->recv.zstream);
-	}
 	if (ses.keys->trans.zstream != NULL) {
 		if (deflateEnd(ses.keys->trans.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
