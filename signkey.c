@@ -34,13 +34,6 @@ sign_key * new_sign_key() {
 	sign_key * ret;
 
 	ret = (sign_key*)m_malloc(sizeof(sign_key));
-#ifdef DROPBEAR_DSS
-	ret->dsskey = NULL;
-#endif
-#ifdef DROPBEAR_RSA
-	ret->rsakey = NULL;
-#endif
-	ret->filename = NULL;
 	ret->type = DROPBEAR_SIGNKEY_NONE;
 	ret->source = SIGNKEY_SOURCE_INVALID;
 	return ret;

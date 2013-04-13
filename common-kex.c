@@ -255,25 +255,25 @@ static void kexinitialise() {
 static void hashkeys(unsigned char *out, unsigned int outlen, 
 		const hash_state * hs, const unsigned char X) {
 
-	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
+	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
 	hash_state hs2;
 	unsigned int offset;
-	unsigned char tmpout[hashdesc->hashsize];
+	unsigned char tmpout[hash_desc->hashsize];
 
 	memcpy(&hs2, hs, sizeof(hash_state));
-	hashdesc->process(&hs2, &X, 1);
-	hashdesc->process(&hs2, ses.session_id->data, ses.session_id->len);
-	hashdesc->done(&hs2, tmpout);
-	memcpy(out, tmpout, MIN(hashdesc->hashsize, outlen));
-	for (offset = hashdesc->hashsize; 
+	hash_desc->process(&hs2, &X, 1);
+	hash_desc->process(&hs2, ses.session_id->data, ses.session_id->len);
+	hash_desc->done(&hs2, tmpout);
+	memcpy(out, tmpout, MIN(hash_desc->hashsize, outlen));
+	for (offset = hash_desc->hashsize; 
 			offset < outlen; 
-			offset += hashdesc->hashsize)
+			offset += hash_desc->hashsize)
 	{
 		/* need to extend */
 		memcpy(&hs2, hs, sizeof(hash_state));
-		hashdesc->process(&hs2, out, offset);
-		hashdesc->done(&hs2, tmpout);
-		memcpy(&out[offset], tmpout, MIN(outlen - offset, hashdesc->hashsize));
+		hash_desc->process(&hs2, out, offset);
+		hash_desc->done(&hs2, tmpout);
+		memcpy(&out[offset], tmpout, MIN(outlen - offset, hash_desc->hashsize));
 	}
 }
 
@@ -295,17 +295,17 @@ void gen_new_keys() {
 	unsigned char *trans_IV, *trans_key, *recv_IV, *recv_key;
 
 	hash_state hs;
-	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
+	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
 	char mactransletter, macrecvletter; /* Client or server specific */
 
 	TRACE(("enter gen_new_keys"))
 	/* the dh_K and hash are the start of all hashes, we make use of that */
 
-	hashdesc->init(&hs);
-	hash_process_mp(hashdesc, &hs, ses.dh_K);
+	hash_desc->init(&hs);
+	hash_process_mp(hash_desc, &hs, ses.dh_K);
 	mp_clear(ses.dh_K);
 	m_free(ses.dh_K);
-	hashdesc->process(&hs, ses.hash->data, ses.hash->len);
+	hash_desc->process(&hs, ses.hash->data, ses.hash->len);
 	buf_burn(ses.hash);
 	buf_free(ses.hash);
 	ses.hash = NULL;
@@ -355,16 +355,16 @@ void gen_new_keys() {
 		}
 	}
 
-	if (ses.newkeys->trans.algo_mac->hashdesc != NULL) {
+	if (ses.newkeys->trans.algo_mac->hash_desc != NULL) {
 		hashkeys(ses.newkeys->trans.mackey, 
 				ses.newkeys->trans.algo_mac->keysize, &hs, mactransletter);
-		ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hashdesc->name);
+		ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hash_desc->name);
 	}
 
-	if (ses.newkeys->recv.algo_mac->hashdesc != NULL) {
+	if (ses.newkeys->recv.algo_mac->hash_desc != NULL) {
 		hashkeys(ses.newkeys->recv.mackey, 
 				ses.newkeys->recv.algo_mac->keysize, &hs, macrecvletter);
-		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hashdesc->name);
+		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hash_desc->name);
 	}
 
 #ifndef DISABLE_ZLIB
@@ -694,15 +694,15 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 
 static void finish_kexhashbuf(void) {
 	hash_state hs;
-	const struct ltc_hash_descriptor *hashdesc = ses.newkeys->algo_kex->hashdesc;
+	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
 
-	hashdesc->init(&hs);
+	hash_desc->init(&hs);
 	buf_setpos(ses.kexhashbuf, 0);
-	hashdesc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
+	hash_desc->process(&hs, buf_getptr(ses.kexhashbuf, ses.kexhashbuf->len),
 			ses.kexhashbuf->len);
-	ses.hash = buf_new(hashdesc->hashsize);
-	hashdesc->done(&hs, buf_getwriteptr(ses.hash, hashdesc->hashsize));
-	buf_setlen(ses.hash, hashdesc->hashsize);
+	ses.hash = buf_new(hash_desc->hashsize);
+	hash_desc->done(&hs, buf_getwriteptr(ses.hash, hash_desc->hashsize));
+	buf_setlen(ses.hash, hash_desc->hashsize);
 
 	buf_burn(ses.kexhashbuf);
 	buf_free(ses.kexhashbuf);

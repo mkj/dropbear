@@ -349,7 +349,7 @@ struct mpint_pos { void *start; int bytes; };
  * Code to read and write OpenSSH private keys.
  */
 
-enum { OSSH_DSA, OSSH_RSA };
+enum { OSSH_DSA, OSSH_RSA, OSSH_EC };
 struct openssh_key {
 	int type;
 	int encrypted;
@@ -392,6 +392,8 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		ret->type = OSSH_RSA;
 	else if (!strcmp(buffer, "-----BEGIN DSA PRIVATE KEY-----\n"))
 		ret->type = OSSH_DSA;
+	else if (!strcmp(buffer, "-----BEGIN EC PRIVATE KEY-----\n"))
+		ret->type = OSSH_EC;
 	else {
 		errmsg = "Unrecognised key type";
 		goto error;

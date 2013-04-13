@@ -10,21 +10,21 @@
 #ifdef DROPBEAR_ECC_256
 struct dropbear_ecc_curve ecc_curve_nistp256 = {
 	.ltc_size = 32,
-	.hashdesc = &sha256_desc,
+	.hash_desc = &sha256_desc,
 	.name = "nistp256"
 };
 #endif
 #ifdef DROPBEAR_ECC_384
 struct dropbear_ecc_curve ecc_curve_nistp384 = {
 	.ltc_size = 48,
-	.hashdesc = &sha384_desc,
+	.hash_desc = &sha384_desc,
 	.name = "nistp384"
 };
 #endif
 #ifdef DROPBEAR_ECC_521
 struct dropbear_ecc_curve ecc_curve_nistp521 = {
 	.ltc_size = 66,
-	.hashdesc = &sha512_desc,
+	.hash_desc = &sha512_desc,
 	.name = "nistp521"
 };
 #endif
@@ -57,6 +57,17 @@ void dropbear_ecc_fill_dp() {
 			dropbear_exit("Missing ECC params %s", (*curve)->name);
 		}
 	}
+}
+
+struct dropbear_ecc_curve* curve_for_dp(const ltc_ecc_set_type *dp) {
+	struct dropbear_ecc_curve **curve = NULL;
+	for (curve = dropbear_ecc_curves; *curve; curve++) {
+		if ((*curve)->dp == dp) {
+			break;
+		}
+	}
+	assert(*curve);
+	return *curve;
 }
 
 ecc_key * new_ecc_key(void) {
