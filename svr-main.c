@@ -271,7 +271,7 @@ void main_noinetd() {
 				goto out;
 			}
 
-			addrandom(&fork_ret, sizeof(fork_ret));
+			addrandom((void*)&fork_ret, sizeof(fork_ret));
 			
 			if (fork_ret > 0) {
 

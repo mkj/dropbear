@@ -33,12 +33,12 @@
 #include "random.h"
 #include "kex.h"
 #include "channel.h"
-#include "atomicio.h"
 #include "runopts.h"
 
 static void checktimeouts();
 static long select_timeout();
 static int ident_readln(int fd, char* buf, int count);
+static void read_session_identification();
 
 struct sshsession ses; /* GLOBAL */
 
@@ -48,8 +48,6 @@ int sessinitdone = 0; /* GLOBAL */
 
 /* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
 int exitflag = 0; /* GLOBAL */
-
-
 
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock_in, int sock_out) {
@@ -141,7 +139,10 @@ void session_loop(void(*loophandler)()) {
 		FD_ZERO(&writefd);
 		FD_ZERO(&readfd);
 		dropbear_assert(ses.payload == NULL);
-		if (ses.sock_in != -1) {
+
+		/* during initial setup we flush out the KEXINIT packet before
+		 * attempting to read the remote version string, which might block */
+		if (ses.sock_in != -1 && (ses.remoteident || isempty(&ses.writequeue))) {
 			FD_SET(ses.sock_in, &readfd);
 		}
 		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
@@ -195,7 +196,12 @@ void session_loop(void(*loophandler)()) {
 
 		if (ses.sock_in != -1) {
 			if (FD_ISSET(ses.sock_in, &readfd)) {
-				read_packet();
+				if (!ses.remoteident) {
+					/* blocking read of the version string */
+					read_session_identification();
+				} else {
+					read_packet();
+				}
 			}
 			
 			/* Process the decrypted packet. After this, the read buffer
@@ -225,7 +231,7 @@ void session_loop(void(*loophandler)()) {
 }
 
 /* clean up a session on exit */
-void common_session_cleanup() {
+void session_cleanup() {
 	
 	TRACE(("enter session_cleanup"))
 	
@@ -233,6 +239,10 @@ void common_session_cleanup() {
 	if (!sessinitdone) {
 		TRACE(("leave session_cleanup: !sessinitdone"))
 		return;
+	}
+
+	if (ses.extra_session_cleanup) {
+		ses.extra_session_cleanup();
 	}
 	
 	m_free(ses.session_id);
@@ -244,21 +254,20 @@ void common_session_cleanup() {
 	TRACE(("leave session_cleanup"))
 }
 
+void send_session_identification() {
+	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
+	buf_putbytes(writebuf, LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
+	buf_putbyte(writebuf, 0x0); // packet type
+	buf_setpos(writebuf, 0);
+	enqueue(&ses.writequeue, writebuf);
+}
 
-void session_identification() {
-
+static void read_session_identification() {
 	/* max length of 255 chars */
 	char linebuf[256];
 	int len = 0;
 	char done = 0;
 	int i;
-
-	/* write our version string, this blocks */
-	if (atomicio(write, ses.sock_out, LOCAL_IDENT "\r\n",
-				strlen(LOCAL_IDENT "\r\n")) == DROPBEAR_FAILURE) {
-		ses.remoteclosed();
-	}
-
 	/* If they send more than 50 lines, something is wrong */
 	for (i = 0; i < 50; i++) {
 		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));

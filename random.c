@@ -157,6 +157,9 @@ static void write_urandom()
 	/* This is opportunistic, don't worry about failure */
 	unsigned char buf[INIT_SEED_SIZE];
 	FILE *f = fopen(DROPBEAR_URANDOM_DEV, "w");
+	if (!f) {
+		return;
+	}
 	genrandom(buf, sizeof(buf));
 	fwrite(buf, sizeof(buf), 1, f);
 	fclose(f);

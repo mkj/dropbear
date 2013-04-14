@@ -153,7 +153,7 @@ much traffic. */
 #endif
 
 /* Whether to do reverse DNS lookups. */
-#define DO_HOST_LOOKUP
+//#define DO_HOST_LOOKUP
 
 /* Whether to print the message of the day (MOTD). This doesn't add much code
  * size */
@@ -176,7 +176,7 @@ much traffic. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-/*#define ENABLE_SVR_PAM_AUTH*/
+//#define ENABLE_SVR_PAM_AUTH
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Whether to take public key options in 

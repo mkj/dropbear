@@ -83,8 +83,10 @@ struct Channel {
 
 	int flushing;
 
-	const struct ChanType* type;
+	/* Used by client chansession to handle ~ escaping, NULL ignored otherwise */
+	void (*read_mangler)(struct Channel*, unsigned char* bytes, int *len);
 
+	const struct ChanType* type;
 };
 
 struct ChanType {

@@ -24,6 +24,7 @@
  * SOFTWARE. */
 
 #include "algo.h"
+#include "session.h"
 #include "dbutil.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
@@ -215,6 +216,9 @@ algo_type sshhostkey[] = {
 algo_type sshkex[] = {
 	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1, NULL},
 	{"diffie-hellman-group14-sha1", DROPBEAR_KEX_DH_GROUP14, NULL, 1, NULL},
+#ifdef USE_KEXGUESS2
+	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},
+#endif
 	{NULL, 0, NULL, 0, NULL}
 };
 
@@ -305,6 +309,122 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	}
 	buf_putstring(buf, algolist->data, algolist->len);
 	buf_free(algolist);
+}
+
+/* match the first algorithm in the comma-separated list in buf which is
+ * also in localalgos[], or return NULL on failure.
+ * (*goodguess) is set to 1 if the preferred client/server algos match,
+ * 0 otherwise. This is used for checking if the kexalgo/hostkeyalgos are
+ * guessed correctly */
+algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
+		enum kexguess2_used *kexguess2, int *goodguess)
+{
+
+	unsigned char * algolist = NULL;
+	const unsigned char *remotenames[MAX_PROPOSED_ALGO], *localnames[MAX_PROPOSED_ALGO];
+	unsigned int len;
+	unsigned int remotecount, localcount, clicount, servcount, i, j;
+	algo_type * ret = NULL;
+	const unsigned char **clinames, **servnames;
+
+	if (goodguess) {
+		*goodguess = 0;
+	}
+
+	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
+	algolist = buf_getstring(buf, &len);
+	TRACE(("buf_match_algo: %s", algolist))
+	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
+		goto out;
+	}
+
+	/* remotenames will contain a list of the strings parsed out */
+	/* We will have at least one string (even if it's just "") */
+	remotenames[0] = algolist;
+	remotecount = 1;
+	for (i = 0; i < len; i++) {
+		if (algolist[i] == '\0') {
+			/* someone is trying something strange */
+			goto out;
+		}
+		if (algolist[i] == ',') {
+			algolist[i] = '\0';
+			remotenames[remotecount] = &algolist[i+1];
+			remotecount++;
+		}
+		if (remotecount >= MAX_PROPOSED_ALGO) {
+			break;
+		}
+	}
+	if (kexguess2 && *kexguess2 == KEXGUESS2_LOOK) {
+		for (i = 0; i < remotecount; i++)
+		{
+			if (strcmp(remotenames[i], KEXGUESS2_ALGO_NAME) == 0) {
+				*kexguess2 = KEXGUESS2_YES;
+				break;
+			}
+		}
+		if (*kexguess2 == KEXGUESS2_LOOK) {
+			*kexguess2 = KEXGUESS2_NO;
+		}
+	}
+
+	for (i = 0; localalgos[i].name != NULL; i++) {
+		if (localalgos[i].usable) {
+			localnames[i] = localalgos[i].name;
+		} else {
+			localnames[i] = NULL;
+		}
+	}
+	localcount = i;
+
+	if (IS_DROPBEAR_SERVER) {
+		clinames = remotenames;
+		clicount = remotecount;
+		servnames = localnames;
+		servcount = localcount;
+	} else {
+		clinames = localnames;
+		clicount = localcount;
+		servnames = remotenames;
+		servcount = remotecount;
+	}
+
+	/* iterate and find the first match */
+	for (i = 0; i < clicount; i++) {
+		for (j = 0; j < servcount; j++) {
+			if (!(servnames[j] && clinames[i])) {
+				// unusable algos are NULL
+				continue;
+			}
+			if (strcmp(servnames[j], clinames[i]) == 0) {
+				/* set if it was a good guess */
+				if (goodguess && kexguess2) {
+					if (*kexguess2 == KEXGUESS2_YES) {
+						if (i == 0) {
+							*goodguess = 1;
+						}
+
+					} else {
+						if (i == 0 && j == 0) {
+							*goodguess = 1;
+						}
+					}
+				}
+				/* set the algo to return */
+				if (IS_DROPBEAR_SERVER) {
+					ret = &localalgos[j];
+				} else {
+					ret = &localalgos[i];
+				}
+				goto out;
+			}
+		}
+	}
+
+out:
+	m_free(algolist);
+	return ret;
 }
 
 #ifdef DROPBEAR_NONE_CIPHER
