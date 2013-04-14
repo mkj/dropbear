@@ -82,7 +82,7 @@ void common_session_init(int sock_in, int sock_out) {
 
 	initqueue(&ses.writequeue);
 
-	ses.requirenext = SSH_MSG_KEXINIT;
+	ses.requirenext[0] = SSH_MSG_KEXINIT;
 	ses.dataallowed = 1; /* we can send data until we actually 
 							send the SSH_MSG_KEXINIT */
 	ses.ignorenext = 0;

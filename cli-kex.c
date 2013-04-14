@@ -61,8 +61,8 @@ void send_msg_kexdh_init() {
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
 	buf_putmpint(ses.writepayload, cli_ses.dh_e);
 	encrypt_packet();
-	// XXX fixme
-	//ses.requirenext = SSH_MSG_KEXDH_REPLY;
+	ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
+	ses.requirenext[1] = SSH_MSG_KEXINIT;
 }
 
 /* Handle a diffie-hellman key exchange reply. */
@@ -118,7 +118,8 @@ void recv_msg_kexdh_reply() {
 	hostkey = NULL;
 
 	send_msg_newkeys();
-	ses.requirenext = SSH_MSG_NEWKEYS;
+	ses.requirenext[0] = SSH_MSG_NEWKEYS;
+	ses.requirenext[1] = 0;
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 

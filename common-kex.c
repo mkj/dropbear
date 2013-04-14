@@ -542,7 +542,7 @@ void recv_msg_kexinit() {
 	    buf_putstring(ses.kexhashbuf,
 			ses.transkexinit->data, ses.transkexinit->len);
 
-		ses.requirenext = SSH_MSG_KEXDH_INIT;
+		ses.requirenext[0] = SSH_MSG_KEXDH_INIT;
 	}
 
 	buf_free(ses.transkexinit);

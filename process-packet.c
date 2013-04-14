@@ -74,14 +74,15 @@ void process_packet() {
 
 	/* This applies for KEX, where the spec says the next packet MUST be
 	 * NEWKEYS */
-	if (ses.requirenext != 0) {
-		if (ses.requirenext != type) {
-			/* TODO send disconnect? */
+	if (ses.requirenext[0] != 0) {
+		if (ses.requirenext[0] != type
+				&& (ses.requirenext[1] == 0 || ses.requirenext[1] != type)) {
 			dropbear_exit("Unexpected packet type %d, expected %d", type,
 					ses.requirenext);
 		} else {
 			/* Got what we expected */
-			ses.requirenext = 0;
+			ses.requirenext[0] = 0;
+			ses.requirenext[1] = 0;
 		}
 	}
 
