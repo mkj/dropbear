@@ -121,6 +121,7 @@ typedef struct cli_runopts {
 	char *cmd;
 	int wantpty;
 	int always_accept_key;
+	int no_hostkey_check;
 	int no_cmd;
 	int backgrounded;
 	int is_subsystem;

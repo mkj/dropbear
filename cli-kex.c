@@ -217,6 +217,11 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	buffer * line = NULL;
 	int ret;
 
+	if (cli_opts.no_hostkey_check) {
+		fprintf(stderr, "Caution, skipping hostkey check for %s\n", cli_opts.remotehost);
+		return;
+	}
+
 	hostsfile = open_known_hosts_file(&readonly);
 	if (!hostsfile)	{
 		ask_to_confirm(keyblob, keybloblen);

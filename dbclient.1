@@ -80,7 +80,8 @@ by the ssh server.
 .TP
 .B \-y
 Always accept hostkeys if they are unknown. If a hostkey mismatch occurs the
-connection will abort as normal.
+connection will abort as normal. If specified a second time no host key checking
+is performed at all, this is usually undesirable.
 .TP
 .B \-A
 Forward agent connections to the remote host. dbclient will use any
