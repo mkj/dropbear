@@ -61,10 +61,10 @@ Login as
 on the remote host.
 .TP
 .B \-t
-Allocate a pty.
+Allocate a PTY.
 .TP
 .B \-T
-Don't allocate a pty.
+Don't allocate a PTY.
 .TP
 .B \-N
 Don't request a remote shell or run any commands. Any command arguments are ignored.
@@ -136,6 +136,11 @@ scp -S dbclient matt@martello,root@wrt,canyons:/tmp/dump .
 Note that hostnames are resolved by the prior hop (so "canyons" would be resolved by the host "wrt")
 in the example above, the same way as other -L TCP forwarded hosts are. Host keys are 
 checked locally based on the given hostname.
+
+.SH ESCAPE CHARACTERS
+Typing a newline followed by the  key sequence \fI~.\fR (tilde, dot) will terminate a connection.
+The sequence \fI~^Z\fR (tilde, ctrl-z) will background the connection. This behaviour only
+applies when a PTY is used.
 
 .SH ENVIRONMENT
 .TP
