@@ -77,8 +77,8 @@ void process_packet() {
 	if (ses.requirenext[0] != 0) {
 		if (ses.requirenext[0] != type
 				&& (ses.requirenext[1] == 0 || ses.requirenext[1] != type)) {
-			dropbear_exit("Unexpected packet type %d, expected %d", type,
-					ses.requirenext);
+			dropbear_exit("Unexpected packet type %d, expected [%d,%d]", type,
+					ses.requirenext[0], ses.requirenext[1]);
 		} else {
 			/* Got what we expected */
 			ses.requirenext[0] = 0;
