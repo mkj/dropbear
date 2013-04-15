@@ -1,17 +1,16 @@
-2013.57 - 
+2013.57 - Monday 15 April 2013
 
-- Improved initial connection time particularly with high latency connections.
-  The number of round trips has been reduced for both client and server. 
+- Decreased connection setup time particularly with high latency connections,
+  the number of round trips has been reduced for both client and server. 
   CPU time hasn't been changed.
 
-- Client will attempt to send an initial key exchange packet to save a round
-  trip. Dropbear implements an extension kexguess2@matt.ucc.asn.au to allow
-  the first packet guess to succeed in wider circumstances than the standard
-  behaviour. When communicating with other implementations the standard
-  behaviour is used.
+- Client will send an initial key exchange guess to save a round trip.
+  Dropbear implements an extension kexguess2@matt.ucc.asn.au to allow the first
+  packet guess to succeed in wider circumstances than the standard behaviour.
+  When communicating with other implementations the standard behaviour is used.
 
 - Client side: when public key or password authentication with
-  $DROPBEAR_PASSWORD is used, an initial authentication request will
+  $DROPBEAR_PASSWORD is used an initial authentication request will
   be sent immediately rather than querying the list of available methods.
   This behaviour is enabled by CLI_IMMEDIATE_AUTH option (on by default),
   please let the Dropbear author know if it causes any interoperability
@@ -20,7 +19,8 @@
 - Implement client escape characters ~. (terminate session) and 
   ~^Z (background session)
 
-- Server will more reliably clean up utmp when connection is closed
+- Server will more reliably clean up utmp when connection is closed, reported by
+  Mattias Walström
 
 - Don't crash if /dev/urandom isn't writable (RHEL5), thanks to Scott Case
 
@@ -28,11 +28,15 @@
 
 - scp didn't work properly on systems using vfork(), thanks to Frank Van Uffelen
 
-- Added IUTF8 terminal mode support. Not yet standardised though seems that it
-  will soon be
+- Added IUTF8 terminal mode support (Linux and Mac OS). Not standardised yet
+though probably will be soon
 
 - Some verbose DROPBEAR_TRACE output is now hidden unless $DROPBEAR_TRACE2
-  enviroment variable is set 
+  enviroment variable is set
+
+- Fix using asymmetric MAC algorithms (broke in )
+
+- Renamed configure.in to configure.ac to quieten autoconf, from Mike Frysinger
 
 2013.56 - Thursday 21 March 2013
 

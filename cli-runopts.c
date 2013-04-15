@@ -504,7 +504,7 @@ multihop_passthrough_args() {
 		total += written;
 	}
 
-	/* if args where passed, total will be not zero, and it will have a space at the end, so remove that */
+	/* if args were passed, total will be not zero, and it will have a space at the end, so remove that */
 	if (total > 0) 
 	{
 		total--;
