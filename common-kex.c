@@ -171,14 +171,18 @@ static void switch_keys() {
 	}
 	if (ses.kexstate.recvnewkeys && ses.newkeys->recv.valid) {
 		TRACE(("switch_keys recv"))
+#ifndef DISABLE_ZLIB
 		gen_new_zstream_recv();
+#endif
 		ses.keys->recv = ses.newkeys->recv;
 		m_burn(&ses.newkeys->recv, sizeof(ses.newkeys->recv));
 		ses.newkeys->recv.valid = 0;
 	}
 	if (ses.kexstate.sentnewkeys && ses.newkeys->trans.valid) {
 		TRACE(("switch_keys trans"))
+#ifndef DISABLE_ZLIB
 		gen_new_zstream_trans();
+#endif
 		ses.keys->trans = ses.newkeys->trans;
 		m_burn(&ses.newkeys->trans, sizeof(ses.newkeys->trans));
 		ses.newkeys->trans.valid = 0;
