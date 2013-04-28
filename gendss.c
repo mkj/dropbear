@@ -47,6 +47,10 @@ dropbear_dss_key * gen_dss_priv_key(unsigned int size) {
 
 	dropbear_dss_key *key;
 
+	if (size != 1024) {
+		dropbear_exit("DSS keys have a fixed size of 1024 bits");
+	}
+
 	key = m_malloc(sizeof(*key));
 
 	key->p = (mp_int*)m_malloc(sizeof(mp_int));
@@ -56,10 +60,8 @@ dropbear_dss_key * gen_dss_priv_key(unsigned int size) {
 	key->x = (mp_int*)m_malloc(sizeof(mp_int));
 	m_mp_init_multi(key->p, key->q, key->g, key->y, key->x, NULL);
 	
-	seedrandom();
-	
 	getq(key);
-	getp(key, size);
+	getp(key, size/8);
 	getg(key);
 	getx(key);
 	gety(key);

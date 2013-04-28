@@ -1,3 +1,4 @@
+#include "options.h"
 #include "includes.h"
 #include "dbutil.h"
 #include "crypto_desc.h"
@@ -8,7 +9,6 @@
 
 ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
 	const ltc_ecc_set_type *dp = NULL; // curve domain parameters
-	// TODO: use raw bytes for the dp rather than the hex strings in libtomcrypt's ecc.c
 	switch (bit_size) {
 #ifdef DROPBEAR_ECC_256
 		case 256:

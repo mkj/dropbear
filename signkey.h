@@ -29,6 +29,30 @@
 #include "dss.h"
 #include "rsa.h"
 
+enum signkey_type {
+#ifdef DROPBEAR_RSA
+	DROPBEAR_SIGNKEY_RSA,
+#endif
+#ifdef DROPBEAR_DSS
+	DROPBEAR_SIGNKEY_DSS,
+#endif
+#ifdef DROPBEAR_ECDSA
+#ifdef DROPBEAR_ECC_256
+	DROPBEAR_SIGNKEY_ECDSA_NISTP256,
+#endif
+#ifdef DROPBEAR_ECC_384
+	DROPBEAR_SIGNKEY_ECDSA_NISTP384,
+#endif
+#ifdef DROPBEAR_ECC_521
+	DROPBEAR_SIGNKEY_ECDSA_NISTP521,
+#endif
+	DROPBEAR_SIGNKEY_ECDSA_KEYGEN, // just "ecdsa" for keygen
+#endif // DROPBEAR_ECDSA
+	DROPBEAR_SIGNKEY_NUM_NAMED,
+	DROPBEAR_SIGNKEY_ANY = 80,
+	DROPBEAR_SIGNKEY_NONE = 90,
+};
+
 
 /* Sources for signing keys */
 typedef enum {
@@ -59,8 +83,8 @@ struct SIGN_key {
 typedef struct SIGN_key sign_key;
 
 sign_key * new_sign_key();
-const char* signkey_name_from_type(int type, int *namelen);
-int signkey_type_from_name(const char* name, int namelen);
+const char* signkey_name_from_type(enum signkey_type type, unsigned int *namelen);
+enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen);
 int buf_get_pub_key(buffer *buf, sign_key *key, int *type);
 int buf_get_priv_key(buffer* buf, sign_key *key, int *type);
 void buf_put_pub_key(buffer* buf, sign_key *key, int type);

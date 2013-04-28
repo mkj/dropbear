@@ -51,11 +51,13 @@
 
 #include "genrsa.h"
 #include "gendss.h"
+#include "ecdsa.h"
+#include "crypto_desc.h"
 
 static void printhelp(char * progname);
 
-#define RSA_SIZE (1024/8) /* 1024 bit */
-#define DSS_SIZE (1024/8) /* 1024 bit */
+#define RSA_DEFAULT_SIZE 1024
+#define DSS_DEFAULT_SIZE 1024
 
 static void buf_writefile(buffer * buf, const char * filename);
 static void printpubkey(sign_key * key, int keytype);
@@ -72,9 +74,27 @@ static void printhelp(char * progname) {
 #ifdef DROPBEAR_DSS
 					"		dss\n"
 #endif
+#ifdef DROPBEAR_ECDSA
+					"       ecdsa\n"
+#endif
 					"-f filename	Use filename for the secret key\n"
 					"-s bits	Key size in bits, should be a multiple of 8 (optional)\n"
-					"           (DSS has a fixed size of 1024 bits)\n"
+#ifdef DROPBEAR_DSS
+					"           DSS has a fixed size of 1024 bits\n"
+#endif
+#ifdef DROPBEAR_ECDSA
+					"           ECDSA has sizes "
+#ifdef DROPBEAR_ECC_256
+					"256 "
+#endif
+#ifdef DROPBEAR_ECC_384
+					"384 "
+#endif
+#ifdef DROPBEAR_ECC_521
+					"521 "
+#endif
+					"\n"
+#endif
 					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n"
 #ifdef DEBUG_TRACE
 					"-v		verbose\n"
@@ -94,11 +114,10 @@ int main(int argc, char ** argv) {
 	sign_key *key = NULL;
 	buffer *buf = NULL;
 	char * filename = NULL;
-	int keytype = -1;
+	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;
 	char * sizetext = NULL;
 	unsigned int bits;
-	unsigned int keysize;
 	int printpub = 0;
 
 	/* get the commandline options */
@@ -162,21 +181,9 @@ int main(int argc, char ** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	if (strlen(typetext) == 3) {
-#ifdef DROPBEAR_RSA
-		if (strncmp(typetext, "rsa", 3) == 0) {
-			keytype = DROPBEAR_SIGNKEY_RSA;
-			TRACE(("type is rsa"))
-		}
-#endif
-#ifdef DROPBEAR_DSS
-		if (strncmp(typetext, "dss", 3) == 0) {
-			keytype = DROPBEAR_SIGNKEY_DSS;
-			TRACE(("type is dss"))
-		}
-#endif
-	}
-	if (keytype == -1) {
+	keytype = signkey_type_from_name(typetext, strlen(typetext));
+
+	if (keytype == DROPBEAR_SIGNKEY_NONE) {
 		fprintf(stderr, "Unknown key type '%s'\n", typetext);
 		printhelp(argv[0]);
 		exit(EXIT_FAILURE);
@@ -197,24 +204,28 @@ int main(int argc, char ** argv) {
 					" multiple of 8\n");
 			exit(EXIT_FAILURE);
 		}
-
-		keysize = bits / 8;
 	} else {
 		if (keytype == DROPBEAR_SIGNKEY_DSS) {
-			keysize = DSS_SIZE;
+			bits = DSS_DEFAULT_SIZE;
 		} else if (keytype == DROPBEAR_SIGNKEY_RSA) {
-			keysize = RSA_SIZE;
+			bits = RSA_DEFAULT_SIZE;
+		} else if (keytype == DROPBEAR_SIGNKEY_ECDSA_KEYGEN) {
+			bits = ECDSA_DEFAULT_SIZE;
 		} else {
 			exit(EXIT_FAILURE); /* not reached */
 		}
 	}
 
 
-	fprintf(stderr, "Will output %d bit %s secret key to '%s'\n", keysize*8,
+	fprintf(stderr, "Will output %d bit %s secret key to '%s'\n", bits,
 			typetext, filename);
 
 	/* don't want the file readable by others */
 	umask(077);
+
+	crypto_init();
+	seedrandom();
+
 
 	/* now we can generate the key */
 	key = new_sign_key();
@@ -223,12 +234,17 @@ int main(int argc, char ** argv) {
 	switch(keytype) {
 #ifdef DROPBEAR_RSA
 		case DROPBEAR_SIGNKEY_RSA:
-			key->rsakey = gen_rsa_priv_key(keysize); /* 128 bytes = 1024 bit */
+			key->rsakey = gen_rsa_priv_key(bits);
 			break;
 #endif
 #ifdef DROPBEAR_DSS
 		case DROPBEAR_SIGNKEY_DSS:
-			key->dsskey = gen_dss_priv_key(keysize); /* 128 bytes = 1024 bit */
+			key->dsskey = gen_dss_priv_key(bits);
+			break;
+#endif
+#ifdef DROPBEAR_ECDSA
+		case DROPBEAR_SIGNKEY_ECDSA_KEYGEN:
+			key->ecckey = gen_ecdsa_priv_key(bits);
 			break;
 #endif
 		default:
@@ -320,7 +336,7 @@ static void printpubkey(sign_key * key, int keytype) {
 		fprintf(stderr, "base64 failed");
 	}
 
-	typestring = signkey_name_from_type(keytype, &err);
+	typestring = signkey_name_from_type(keytype, NULL);
 
 	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
 

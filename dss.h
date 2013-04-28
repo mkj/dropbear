@@ -30,8 +30,6 @@
 
 #ifdef DROPBEAR_DSS 
 
-#define DSS_SIGNATURE_SIZE 4+SSH_SIGNKEY_DSS_LEN+4+2*SHA1_HASH_SIZE
-
 typedef struct {
 
 	mp_int* p;
