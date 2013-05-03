@@ -53,6 +53,7 @@
 #include "gendss.h"
 #include "ecdsa.h"
 #include "crypto_desc.h"
+#include "random.h"
 
 static void printhelp(char * progname);
 
@@ -119,6 +120,9 @@ int main(int argc, char ** argv) {
 	char * sizetext = NULL;
 	unsigned int bits;
 	int printpub = 0;
+
+	crypto_init();
+	seedrandom();
 
 	/* get the commandline options */
 	for (i = 1; i < argc; i++) {
@@ -223,10 +227,6 @@ int main(int argc, char ** argv) {
 	/* don't want the file readable by others */
 	umask(077);
 
-	crypto_init();
-	seedrandom();
-
-
 	/* now we can generate the key */
 	key = new_sign_key();
 	
@@ -245,6 +245,7 @@ int main(int argc, char ** argv) {
 #ifdef DROPBEAR_ECDSA
 		case DROPBEAR_SIGNKEY_ECDSA_KEYGEN:
 			key->ecckey = gen_ecdsa_priv_key(bits);
+			keytype = ecdsa_signkey_type(key->ecckey);
 			break;
 #endif
 		default:

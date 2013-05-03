@@ -37,15 +37,9 @@ static const char *signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 	"ssh-dss",
 #endif
 #ifdef DROPBEAR_ECDSA
-#ifdef DROPBEAR_ECC_256
 	"ecdsa-sha2-nistp256",
-#endif
-#ifdef DROPBEAR_ECC_384
 	"ecdsa-sha2-nistp384",
-#endif
-#ifdef DROPBEAR_ECC_521
 	"ecdsa-sha2-nistp521",
-#endif
 	"ecdsa" // for keygen
 #endif // DROPBEAR_ECDSA
 };
@@ -81,6 +75,25 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 		const char *fixed_name = signkey_names[i];
 		if (namelen == strlen(fixed_name)
 			&& memcmp(fixed_name, name, namelen) == 0) {
+
+#ifdef DROPBEAR_ECDSA
+			/* Some of the ECDSA key sizes are defined even if they're not compiled in */
+			if (0
+#ifndef DROPBEAR_ECC_256
+				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP256
+#endif
+#ifndef DROPBEAR_ECC_384
+				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP384
+#endif
+#ifndef DROPBEAR_ECC_521
+				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP521
+#endif
+				) {
+				TRACE(("attempt to use ecdsa type %d not compiled in", i))
+				return DROPBEAR_SIGNKEY_NONE;
+			}
+#endif
+
 			return i;
 		}
 	}
@@ -139,9 +152,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (IS_ECDSA_KEY(keytype)) {
 		if (key->ecckey) {
 			ecc_free(key->ecckey);
 		}
@@ -205,9 +216,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| keytype == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (IS_ECDSA_KEY(keytype)) {
 		if (key->ecckey) {
 			ecc_free(key->ecckey);
 		}
@@ -243,9 +252,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (IS_ECDSA_KEY(type)) {
 		buf_put_ecdsa_pub_key(pubkeys, key->ecckey);
 	}
 #endif
@@ -279,10 +286,8 @@ void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
-		buf_put_ecdsa_pub_key(buf, key->ecckey);
+	if (IS_ECDSA_KEY(type)) {
+		buf_put_ecdsa_priv_key(buf, key->ecckey);
 		return;
 	}
 #endif
@@ -424,9 +429,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (IS_ECDSA_KEY(type)) {
 		buf_put_ecdsa_sign(sigblob, key->ecckey, data_buf);
 	}
 #endif
@@ -474,9 +477,7 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (IS_ECDSA_KEY(type)) {
 		return buf_ecdsa_verify(buf, key->ecckey, data_buf);
 	}
 #endif

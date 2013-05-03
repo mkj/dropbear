@@ -207,6 +207,17 @@ algo_type ssh_nocompress[] = {
 };
 
 algo_type sshhostkey[] = {
+#ifdef DROPBEAR_ECDSA
+#ifdef DROPBEAR_ECC_256
+	{"ecdsa-sha2-nistp256", DROPBEAR_SIGNKEY_ECDSA_NISTP256, NULL, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_384
+	{"ecdsa-sha2-nistp384", DROPBEAR_SIGNKEY_ECDSA_NISTP384, NULL, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_521
+	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNKEY_ECDSA_NISTP521, NULL, 1, NULL},
+#endif
+#endif
 #ifdef DROPBEAR_RSA
 	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1, NULL},
 #endif

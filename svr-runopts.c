@@ -28,11 +28,14 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "algo.h"
+#include "ecdsa.h"
 
 svr_runopts svr_opts; /* GLOBAL */
 
 static void printhelp(const char * progname);
 static void addportandaddress(char* spec);
+static void loadhostkey(const char *keyfile, int fatal_duplicate);
+static void addhostkey(const char *keyfile);
 
 static void printhelp(const char * progname) {
 
@@ -105,10 +108,10 @@ void svr_getopts(int argc, char ** argv) {
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
+	char* keyfile = NULL;
+
 
 	/* see printhelp() for options */
-	svr_opts.rsakeyfile = NULL;
-	svr_opts.dsskeyfile = NULL;
 	svr_opts.bannerfile = NULL;
 	svr_opts.banner = NULL;
 	svr_opts.forkbg = 1;
@@ -160,6 +163,11 @@ void svr_getopts(int argc, char ** argv) {
 				dropbear_exit("Invalid null argument");
 			}
 			next = 0x00;
+
+			if (keyfile) {
+				addhostkey(keyfile);
+				keyfile = NULL;
+			}
 			continue;
 		}
 
@@ -168,16 +176,10 @@ void svr_getopts(int argc, char ** argv) {
 				case 'b':
 					next = &svr_opts.bannerfile;
 					break;
-#ifdef DROPBEAR_DSS
 				case 'd':
-					next = &svr_opts.dsskeyfile;
-					break;
-#endif
-#ifdef DROPBEAR_RSA
 				case 'r':
-					next = &svr_opts.rsakeyfile;
+					next = &keyfile;
 					break;
-#endif
 				case 'F':
 					svr_opts.forkbg = 0;
 					break;
@@ -267,13 +269,6 @@ void svr_getopts(int argc, char ** argv) {
 		svr_opts.portcount = 1;
 	}
 
-	if (svr_opts.dsskeyfile == NULL) {
-		svr_opts.dsskeyfile = DSS_PRIV_FILENAME;
-	}
-	if (svr_opts.rsakeyfile == NULL) {
-		svr_opts.rsakeyfile = RSA_PRIV_FILENAME;
-	}
-
 	if (svr_opts.bannerfile) {
 		struct stat buf;
 		if (stat(svr_opts.bannerfile, &buf) != 0) {
@@ -292,7 +287,6 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.bannerfile);
 		}
 		buf_setpos(svr_opts.banner, 0);
-
 	}
 	
 	if (recv_window_arg) {
@@ -370,55 +364,125 @@ static void addportandaddress(char* spec) {
 	}
 }
 
-static void disablekey(int type, const char* filename) {
-
+static void disablekey(int type) {
 	int i;
-
 	for (i = 0; sshhostkey[i].name != NULL; i++) {
 		if (sshhostkey[i].val == type) {
-			sshhostkey[i].usable = 0;
+			sshhostkey[i].usable = 1;
 			break;
 		}
 	}
-	dropbear_log(LOG_WARNING, "Failed reading '%s', disabling %s", filename,
-			type == DROPBEAR_SIGNKEY_DSS ? "DSS" : "RSA");
 }
 
 /* Must be called after syslog/etc is working */
-void loadhostkeys() {
+static void loadhostkey(const char *keyfile, int fatal_duplicate) {
+	sign_key * read_key = new_sign_key();
+	int type = DROPBEAR_SIGNKEY_ANY;
+	if (readhostkey(keyfile, read_key, &type) == DROPBEAR_FAILURE) {
+		dropbear_log(LOG_WARNING, "Failed loading %s", keyfile);
+	}
 
-	int ret;
-	int type;
+#ifdef DROPBEAR_RSA
+	if (type == DROPBEAR_SIGNKEY_RSA) {
+		if (svr_opts.hostkey->rsakey) {
+			if (fatal_duplicate) {
+				dropbear_exit("Only one RSA key can be specified");
+			}
+		} else {
+			svr_opts.hostkey->rsakey = read_key->rsakey;
+			read_key->rsakey = NULL;
+		}
+	}
+#endif
 
-	TRACE(("enter loadhostkeys"))
+#ifdef DROPBEAR_DSS
+	if (type == DROPBEAR_SIGNKEY_DSS) {
+		if (svr_opts.hostkey->dsskey) {
+			if (fatal_duplicate) {
+				dropbear_exit("Only one DSS key can be specified");
+			}
+		} else {
+			svr_opts.hostkey->dsskey = read_key->dsskey;
+			read_key->dsskey = NULL;
+		}
+	}
+#endif
+
+#ifdef DROPBEAR_ECDSA
+	if (IS_ECDSA_KEY(type)) {
+		if (svr_opts.hostkey->ecckey) {
+			if (fatal_duplicate) {
+				dropbear_exit("Only one ECDSA key can be specified");
+			}
+		} else {
+			svr_opts.hostkey->ecckey = read_key->ecckey;
+			read_key->ecckey = NULL;
+		}
+	}
+#endif
+	sign_key_free(read_key);
+	TRACE(("leave loadhostkey"))
+}
+
+static void addhostkey(const char *keyfile) {
+	if (svr_opts.num_hostkey_files >= MAX_HOSTKEYS) {
+		dropbear_exit("Too many hostkeys");
+	}
+	svr_opts.hostkey_files[svr_opts.num_hostkey_files] = m_strdup(keyfile);
+	svr_opts.num_hostkey_files++;
+}
+
+void load_all_hostkeys() {
+	int i;
 
 	svr_opts.hostkey = new_sign_key();
 
+	for (i = 0; i < svr_opts.num_hostkey_files; i++) {
+		char *hostkey_file = svr_opts.hostkey_files[i];
+		loadhostkey(hostkey_file, 1);
+		m_free(hostkey_file);
+	}
+
 #ifdef DROPBEAR_RSA
-	type = DROPBEAR_SIGNKEY_RSA;
-	ret = readhostkey(svr_opts.rsakeyfile, svr_opts.hostkey, &type);
-	if (ret == DROPBEAR_FAILURE) {
-		disablekey(DROPBEAR_SIGNKEY_RSA, svr_opts.rsakeyfile);
+	loadhostkey(RSA_PRIV_FILENAME, 0);
+#endif
+
+#ifdef DROPBEAR_DSS
+	loadhostkey(DSS_PRIV_FILENAME, 0);
+#endif
+
+#ifdef DROPBEAR_ECDSA
+	loadhostkey(ECDSA_PRIV_FILENAME, 0);
+#endif
+
+#ifdef DROPBEAR_RSA
+	if (!svr_opts.hostkey->rsakey) {
+		disablekey(DROPBEAR_SIGNKEY_RSA);
 	}
 #endif
 #ifdef DROPBEAR_DSS
-	type = DROPBEAR_SIGNKEY_DSS;
-	ret = readhostkey(svr_opts.dsskeyfile, svr_opts.hostkey, &type);
-	if (ret == DROPBEAR_FAILURE) {
-		disablekey(DROPBEAR_SIGNKEY_DSS, svr_opts.dsskeyfile);
+	if (!svr_opts.hostkey->dsskey) {
+		disablekey(DROPBEAR_SIGNKEY_RSA);
 	}
 #endif
-
-	if ( 1
-#ifdef DROPBEAR_DSS
-		&& svr_opts.hostkey->dsskey == NULL
-#endif
-#ifdef DROPBEAR_RSA
-		&& svr_opts.hostkey->rsakey == NULL
-#endif
-		) {
-		dropbear_exit("No hostkeys available");
+#ifdef DROPBEAR_ECDSA
+#ifdef DROPBEAR_ECC_256
+	if (!svr_opts.hostkey->ecckey 
+		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP256) {
+		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP256);
 	}
-
-	TRACE(("leave loadhostkeys"))
+#endif
+#ifdef DROPBEAR_ECC_384
+	if (!svr_opts.hostkey->ecckey 
+		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP384) {
+		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP384);
+	}
+#endif
+#ifdef DROPBEAR_ECC_521
+	if (!svr_opts.hostkey->ecckey 
+		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
+	}
+#endif
+#endif
 }

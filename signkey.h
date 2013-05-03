@@ -37,15 +37,9 @@ enum signkey_type {
 	DROPBEAR_SIGNKEY_DSS,
 #endif
 #ifdef DROPBEAR_ECDSA
-#ifdef DROPBEAR_ECC_256
 	DROPBEAR_SIGNKEY_ECDSA_NISTP256,
-#endif
-#ifdef DROPBEAR_ECC_384
 	DROPBEAR_SIGNKEY_ECDSA_NISTP384,
-#endif
-#ifdef DROPBEAR_ECC_521
 	DROPBEAR_SIGNKEY_ECDSA_NISTP521,
-#endif
 	DROPBEAR_SIGNKEY_ECDSA_KEYGEN, // just "ecdsa" for keygen
 #endif // DROPBEAR_ECDSA
 	DROPBEAR_SIGNKEY_NUM_NAMED,
@@ -63,11 +57,9 @@ typedef enum {
 
 struct SIGN_key {
 
-	int type; /* The type of key (dss or rsa) */
+	enum signkey_type type;
 	signkey_source source;
 	char *filename;
-	/* the buffer? for encrypted keys, so we can later get
-	 * the private key portion */
 
 #ifdef DROPBEAR_DSS
 	dropbear_dss_key * dsskey;
@@ -76,7 +68,7 @@ struct SIGN_key {
 	dropbear_rsa_key * rsakey;
 #endif
 #ifdef DROPBEAR_ECDSA
-	ecc_key *ecckey;
+	ecc_key * ecckey;
 #endif
 };
 
@@ -98,5 +90,13 @@ char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen);
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
 					const unsigned char* algoname, unsigned int algolen, 
 					buffer * line, char ** fingerprint);
+
+#ifdef DROPBEAR_ECDSA
+#define IS_ECDSA_KEY(type) \
+	((type) == DROPBEAR_SIGNKEY_ECDSA_NISTP256 \
+		|| (type) == DROPBEAR_SIGNKEY_ECDSA_NISTP384 \
+		|| (type) == DROPBEAR_SIGNKEY_ECDSA_NISTP521 \
+		|| (type) == DROPBEAR_SIGNKEY_ECDSA_KEYGEN)
+#endif
 
 #endif /* _SIGNKEY_H_ */

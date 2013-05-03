@@ -4,8 +4,28 @@
 #include "crypto_desc.h"
 #include "ecc.h"
 #include "ecdsa.h"
+#include "signkey.h"
 
 #ifdef DROPBEAR_ECDSA
+
+enum signkey_type ecdsa_signkey_type(ecc_key * key) {
+#ifdef DROPBEAR_ECC_256
+	if (key->dp == ecc_curve_nistp256.dp) {
+		return DROPBEAR_SIGNKEY_ECDSA_NISTP256;
+	}
+#endif
+#ifdef DROPBEAR_ECC_384
+	if (key->dp == ecc_curve_nistp384.dp) {
+		return DROPBEAR_SIGNKEY_ECDSA_NISTP384;
+	}
+#endif
+#ifdef DROPBEAR_ECC_521
+	if (key->dp == ecc_curve_nistp521.dp) {
+		return DROPBEAR_SIGNKEY_ECDSA_NISTP521;
+	}
+#endif
+	return DROPBEAR_SIGNKEY_NONE;
+}
 
 ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
 	const ltc_ecc_set_type *dp = NULL; // curve domain parameters

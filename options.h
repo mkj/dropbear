@@ -8,7 +8,7 @@
 /* Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
  * parts are to allow for commandline -DDROPBEAR_XXX options etc. */
 
-// XXX XXX You should probably run "make clean" after changing most options */
+/* Important: Many options will require "make clean" after changes */
 
 #ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"
@@ -25,6 +25,9 @@
 #endif
 #ifndef RSA_PRIV_FILENAME
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
+#endif
+#ifndef ECDSA_PRIV_FILENAME
+#define ECDSA_PRIV_FILENAME "/etc/dropbear/dropbear_ecdsa_host_key"
 #endif
 
 /* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
