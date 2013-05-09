@@ -248,14 +248,6 @@ static int buf_get_ecdsa_verify_params(buffer *buf, struct dropbear_ecc_curve *c
 	unsigned int sig_pos;
 	unsigned char key_ident[30];
 
-	ident = buf_getstring(buf, &ident_len);
-	snprintf((char*)key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
-	if (strlen((char*)key_ident) != ident_len) {
-		goto out;
-	}
-	if (memcmp(key_ident, ident, ident_len) != 0) {
-		goto out;
-	}
 	sig_len = buf_getint(buf);
 	sig_pos = buf->pos;
 	if (buf_getmpint(buf, r) != DROPBEAR_SUCCESS) {
