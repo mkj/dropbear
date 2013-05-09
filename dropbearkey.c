@@ -217,7 +217,8 @@ int main(int argc, char ** argv) {
                     exit(EXIT_FAILURE);			
                 }
 #endif
-                // pass. ecdsa handles checks itself
+			default:
+				(void)0; /* quiet, compiler. ecdsa handles checks itself */
         }
 
         switch (keytype) {
