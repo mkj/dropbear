@@ -76,7 +76,7 @@ static void printhelp(char * progname) {
 					"		dss\n"
 #endif
 #ifdef DROPBEAR_ECDSA
-					"       ecdsa\n"
+					"		ecdsa\n"
 #endif
 					"-f filename	Use filename for the secret key\n"
 					"-s bits	Key size in bits, should be a multiple of 8 (optional)\n"
@@ -200,23 +200,44 @@ int main(int argc, char ** argv) {
 		}
 		
 		// TODO: put RSA and DSS size checks into genrsa.c etc
-		if (keytype == DROPBEAR_SIGNKEY_DSS && bits != 1024) {
-			fprintf(stderr, "DSS keys have a fixed size of 1024 bits\n");
-			exit(EXIT_FAILURE);			
-		} else if (bits < 512 || bits > 4096 || (bits % 8 != 0)) {
-			fprintf(stderr, "Bits must satisfy 512 <= bits <= 4096, and be a"
-					" multiple of 8\n");
-			exit(EXIT_FAILURE);
-		}
-	} else {
-		if (keytype == DROPBEAR_SIGNKEY_DSS) {
-			bits = DSS_DEFAULT_SIZE;
-		} else if (keytype == DROPBEAR_SIGNKEY_RSA) {
-			bits = RSA_DEFAULT_SIZE;
-		} else if (keytype == DROPBEAR_SIGNKEY_ECDSA_KEYGEN) {
-			bits = ECDSA_DEFAULT_SIZE;
-		} else {
-			exit(EXIT_FAILURE); /* not reached */
+        switch (keytype) {
+#ifdef DROPBEAR_RSA
+            case DROPBEAR_SIGNKEY_RSA:
+                if (bits < 512 || bits > 4096 || (bits % 8 != 0)) {
+                    fprintf(stderr, "Bits must satisfy 512 <= bits <= 4096, and be a"
+                            " multiple of 8\n");
+                    exit(EXIT_FAILURE);
+                }
+                break;
+#endif
+#ifdef DROPEAR_DSS
+            case DROPBEAR_SIGNKEY_DSS:
+                if (bits != 1024) {
+                    fprintf(stderr, "DSS keys have a fixed size of 1024 bits\n");
+                    exit(EXIT_FAILURE);			
+                }
+#endif
+                // pass. ecdsa handles checks itself
+        }
+
+        switch (keytype) {
+#ifdef DROPBEAR_RSA
+            case DROPBEAR_SIGNKEY_RSA:
+                bits = RSA_DEFAULT_SIZE;
+                break;
+#endif
+#ifdef DROPBEAR_DSS
+            case DROPBEAR_SIGNKEY_DSS:
+                bits = DSS_DEFAULT_SIZE;
+                break;
+#endif
+#ifdef DROPBEAR_ECDSA
+            case DROPBEAR_SIGNKEY_ECDSA_KEYGEN:
+                bits = ECDSA_DEFAULT_SIZE;
+                break;
+#endif
+            default:
+                exit(EXIT_FAILURE); /* not reached */
 		}
 	}
 

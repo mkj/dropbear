@@ -5,6 +5,8 @@
 #include "buffer.h"
 #include "signkey.h"
 
+#ifdef DROPBEAR_ECDSA
+
 #ifdef DROPBEAR_ECC_256
 #define ECDSA_DEFAULT_SIZE 256
 #elif DROPBEAR_ECC_384
@@ -24,5 +26,7 @@ enum signkey_type ecdsa_signkey_type(ecc_key * key);
 
 void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf);
 int buf_ecdsa_verify(buffer *buf, ecc_key *key, buffer *data_buf);
+
+#endif
 
 #endif // _ECDSA_H_
