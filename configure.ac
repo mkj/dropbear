@@ -211,7 +211,7 @@ AC_ARG_ENABLE(shadow,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h pam/pam_appl.h netinet/in_systm.h, sys/uio.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h pam/pam_appl.h netinet/in_systm.h sys/uio.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
