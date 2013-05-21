@@ -366,9 +366,10 @@ static void addportandaddress(char* spec) {
 
 static void disablekey(int type) {
 	int i;
+	TRACE(("Disabling key type %d", type))
 	for (i = 0; sshhostkey[i].name != NULL; i++) {
 		if (sshhostkey[i].val == type) {
-			sshhostkey[i].usable = 1;
+			sshhostkey[i].usable = 0;
 			break;
 		}
 	}
