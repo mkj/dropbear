@@ -17,9 +17,9 @@ LTC=libtomcrypt/libtomcrypt.a
 LTM=libtommath/libtommath.a
 
 ifeq (@BUNDLED_LIBTOM@, 1)
-LIBTOM_DEPS=$(LTM) $(LTC)
+LIBTOM_DEPS=$(LTC) $(LTM) 
 CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
-LIBS+=$(LTM) $(LTC)
+LIBS+=$(LTC) $(LTM) 
 endif
 
 COMMONOBJS=dbutil.o buffer.o \
