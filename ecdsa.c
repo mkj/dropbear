@@ -242,11 +242,8 @@ out:
 static int buf_get_ecdsa_verify_params(buffer *buf, struct dropbear_ecc_curve *curve,
 	void *r, void* s) {
 	int ret = DROPBEAR_FAILURE;
-	unsigned char* ident = NULL;
-	unsigned int ident_len;
 	unsigned int sig_len;
 	unsigned int sig_pos;
-	unsigned char key_ident[30];
 
 	sig_len = buf_getint(buf);
 	sig_pos = buf->pos;
@@ -262,7 +259,6 @@ static int buf_get_ecdsa_verify_params(buffer *buf, struct dropbear_ecc_curve *c
 	ret = DROPBEAR_SUCCESS;
 
 out:
-	m_free(ident);
 	return ret;
 }
 

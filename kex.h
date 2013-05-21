@@ -61,12 +61,14 @@ struct KEXState {
 
 	unsigned sentkexinit : 1; /*set when we've sent/recv kexinit packet */
 	unsigned recvkexinit : 1;
-	unsigned firstfollows : 1; /* true when first_kex_packet_follows is set */
+	unsigned them_firstfollows : 1; /* true when first_kex_packet_follows is set */
 	unsigned sentnewkeys : 1; /* set once we've send MSG_NEWKEYS (will be cleared once we have also received */
 	unsigned recvnewkeys : 1; /* set once we've received MSG_NEWKEYS (cleared once we have also sent */
 
 	unsigned donefirstkex : 1; /* Set to 1 after the first kex has completed,
 								  ie the transport layer has been set up */
+
+	unsigned our_first_follows_matches : 1;
 
 	time_t lastkextime; /* time of the last kex */
 	unsigned int datatrans; /* data transmitted since last kex */
@@ -80,8 +82,8 @@ extern const unsigned char dh_p_1[DH_P_1_LEN];
 extern const unsigned char dh_p_14[DH_P_14_LEN];
 
 struct kex_dh_param {
-	mp_int pub;
-	mp_int priv;
+	mp_int pub; /* e */
+	mp_int priv; /* x */
 };
 
 #ifdef DROPBEAR_ECDH

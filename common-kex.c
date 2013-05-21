@@ -80,9 +80,10 @@ const unsigned char dh_p_14[DH_P_14_LEN] = {
 static const int DH_G_VAL = 2;
 
 static void kexinitialise();
-void gen_new_keys();
+static void gen_new_keys();
 #ifndef DISABLE_ZLIB
-static void gen_new_zstreams();
+static void gen_new_zstream_recv();
+static void gen_new_zstream_trans();
 #endif
 static void read_kex_algos();
 /* helper function for gen_new_keys */
@@ -132,8 +133,8 @@ void send_msg_kexinit() {
 	/* languages_server_to_client */
 	buf_putstring(ses.writepayload, "", 0);
 
-	/* first_kex_packet_follows - unimplemented for now */
-	buf_putbyte(ses.writepayload, 0x00);
+	/* first_kex_packet_follows */
+	buf_putbyte(ses.writepayload, (ses.send_kex_first_guess != NULL));
 
 	/* reserved unit32 */
 	buf_putint(ses.writepayload, 0);
@@ -145,16 +146,60 @@ void send_msg_kexinit() {
 	encrypt_packet();
 	ses.dataallowed = 0; /* don't send other packets during kex */
 
+	ses.kexstate.sentkexinit = 1;
+
+	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
+
+	if (ses.send_kex_first_guess) {
+		ses.newkeys->algo_kex = sshkex[0].data;
+		ses.newkeys->algo_hostkey = sshhostkey[0].val;
+		ses.send_kex_first_guess();
+	}
+
 	TRACE(("DATAALLOWED=0"))
 	TRACE(("-> KEXINIT"))
-	ses.kexstate.sentkexinit = 1;
+
 }
 
-/* *** NOTE regarding (send|recv)_msg_newkeys *** 
- * Changed by mihnea from the original kex.c to set dataallowed after a 
- * completed key exchange, no matter the order in which it was performed.
- * This enables client mode without affecting server functionality.
- */
+static void switch_keys() {
+	TRACE2(("enter switch_keys"))
+	if (!(ses.kexstate.sentkexinit && ses.kexstate.recvkexinit)) {
+		dropbear_exit("Unexpected newkeys message");
+	}
+
+	if (!ses.keys) {
+		ses.keys = m_malloc(sizeof(*ses.newkeys));
+	}
+	if (ses.kexstate.recvnewkeys && ses.newkeys->recv.valid) {
+		TRACE(("switch_keys recv"))
+#ifndef DISABLE_ZLIB
+		gen_new_zstream_recv();
+#endif
+		ses.keys->recv = ses.newkeys->recv;
+		m_burn(&ses.newkeys->recv, sizeof(ses.newkeys->recv));
+		ses.newkeys->recv.valid = 0;
+	}
+	if (ses.kexstate.sentnewkeys && ses.newkeys->trans.valid) {
+		TRACE(("switch_keys trans"))
+#ifndef DISABLE_ZLIB
+		gen_new_zstream_trans();
+#endif
+		ses.keys->trans = ses.newkeys->trans;
+		m_burn(&ses.newkeys->trans, sizeof(ses.newkeys->trans));
+		ses.newkeys->trans.valid = 0;
+	}
+	if (ses.kexstate.sentnewkeys && ses.kexstate.recvnewkeys)
+	{
+		TRACE(("switch_keys done"))
+		ses.keys->algo_kex = ses.newkeys->algo_kex;
+		ses.keys->algo_hostkey = ses.newkeys->algo_hostkey;
+		ses.keys->allow_compress = 0;
+		m_free(ses.newkeys);
+		ses.newkeys = NULL;
+		kexinitialise();
+	}
+	TRACE2(("leave switch_keys"))
+}
 
 /* Bring new keys into use after a key exchange, and let the client know*/
 void send_msg_newkeys() {
@@ -165,44 +210,25 @@ void send_msg_newkeys() {
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_NEWKEYS);
 	encrypt_packet();
+
 	
-
 	/* set up our state */
-	if (ses.kexstate.recvnewkeys) {
-		TRACE(("while RECVNEWKEYS=1"))
-		gen_new_keys();
-		kexinitialise(); /* we've finished with this kex */
-		TRACE((" -> DATAALLOWED=1"))
-		ses.dataallowed = 1; /* we can send other packets again now */
-		ses.kexstate.donefirstkex = 1;
-	} else {
-		ses.kexstate.sentnewkeys = 1;
-		TRACE(("SENTNEWKEYS=1"))
-	}
+	ses.kexstate.sentnewkeys = 1;
+	ses.kexstate.donefirstkex = 1;
+	ses.dataallowed = 1; /* we can send other packets again now */
+	gen_new_keys();
+	switch_keys();
 
-	TRACE(("-> MSG_NEWKEYS"))
 	TRACE(("leave send_msg_newkeys"))
 }
 
 /* Bring the new keys into use after a key exchange */
 void recv_msg_newkeys() {
 
-	TRACE(("<- MSG_NEWKEYS"))
 	TRACE(("enter recv_msg_newkeys"))
 
-	/* simply check if we've sent SSH_MSG_NEWKEYS, and if so,
-	 * switch to the new keys */
-	if (ses.kexstate.sentnewkeys) {
-		TRACE(("while SENTNEWKEYS=1"))
-		gen_new_keys();
-		kexinitialise(); /* we've finished with this kex */
-	    TRACE((" -> DATAALLOWED=1"))
-	    ses.dataallowed = 1; /* we can send other packets again now */
-		ses.kexstate.donefirstkex = 1;
-	} else {
-		TRACE(("RECVNEWKEYS=1"))
-		ses.kexstate.recvnewkeys = 1;
-	}
+	ses.kexstate.recvnewkeys = 1;
+	switch_keys();
 	
 	TRACE(("leave recv_msg_newkeys"))
 }
@@ -237,10 +263,12 @@ static void kexinitialise() {
 	ses.kexstate.sentnewkeys = 0;
 
 	/* first_packet_follows */
-	ses.kexstate.firstfollows = 0;
+	ses.kexstate.them_firstfollows = 0;
 
 	ses.kexstate.datatrans = 0;
 	ses.kexstate.datarecv = 0;
+
+	ses.kexstate.our_first_follows_matches = 0;
 
 	ses.kexstate.lastkextime = time(NULL);
 
@@ -284,8 +312,7 @@ static void hashkeys(unsigned char *out, unsigned int outlen,
  * ses.newkeys is the new set of keys which are generated, these are only
  * taken into use after both sides have sent a newkeys message */
 
-/* Originally from kex.c, generalized for cli/svr mode --mihnea */
-void gen_new_keys() {
+static void gen_new_keys() {
 
 	unsigned char C2S_IV[MAX_IV_LEN];
 	unsigned char C2S_key[MAX_KEY_LEN];
@@ -367,15 +394,9 @@ void gen_new_keys() {
 		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hash_desc->name);
 	}
 
-#ifndef DISABLE_ZLIB
-	gen_new_zstreams();
-#endif
-	
-	/* Switch over to the new keys */
-	m_burn(ses.keys, sizeof(struct key_context));
-	m_free(ses.keys);
-	ses.keys = ses.newkeys;
-	ses.newkeys = NULL;
+	/* Ready to switch over */
+	ses.newkeys->trans.valid = 1;
+	ses.newkeys->recv.valid = 1;
 
 	m_burn(C2S_IV, sizeof(C2S_IV));
 	m_burn(C2S_key, sizeof(C2S_key));
@@ -401,7 +422,7 @@ int is_compress_recv() {
 
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
-static void gen_new_zstreams() {
+static void gen_new_zstream_recv() {
 
 	/* create new zstreams */
 	if (ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB
@@ -416,6 +437,17 @@ static void gen_new_zstreams() {
 	} else {
 		ses.newkeys->recv.zstream = NULL;
 	}
+	/* clean up old keys */
+	if (ses.keys->recv.zstream != NULL) {
+		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
+			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
+			dropbear_exit("Crypto error");
+		}
+		m_free(ses.keys->recv.zstream);
+	}
+}
+
+static void gen_new_zstream_trans() {
 
 	if (ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB
 			|| ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
@@ -433,14 +465,6 @@ static void gen_new_zstreams() {
 		ses.newkeys->trans.zstream = NULL;
 	}
 
-	/* clean up old keys */
-	if (ses.keys->recv.zstream != NULL) {
-		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
-			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
-			dropbear_exit("Crypto error");
-		}
-		m_free(ses.keys->recv.zstream);
-	}
 	if (ses.keys->trans.zstream != NULL) {
 		if (deflateEnd(ses.keys->trans.zstream) == Z_STREAM_ERROR) {
 			/* Z_DATA_ERROR is ok, just means that stream isn't ended */
@@ -523,7 +547,7 @@ void recv_msg_kexinit() {
 	    buf_putstring(ses.kexhashbuf,
 			ses.transkexinit->data, ses.transkexinit->len);
 
-		ses.requirenext = SSH_MSG_KEXDH_INIT;
+		ses.requirenext[0] = SSH_MSG_KEXDH_INIT;
 	}
 
 	buf_free(ses.transkexinit);
@@ -550,7 +574,7 @@ struct kex_dh_param *gen_kexdh_param() {
 	DEF_MP_INT(dh_q);
 	DEF_MP_INT(dh_g);
 
-	TRACE(("enter send_msg_kexdh_reply"))
+	TRACE(("enter gen_kexdh_vals"))
 
 	struct kex_dh_param *param = m_malloc(sizeof(*param));
 	m_mp_init_multi(&param->pub, &param->priv, NULL);
@@ -739,20 +763,27 @@ static void read_kex_algos() {
 
 	buf_incrpos(ses.payload, 16); /* start after the cookie */
 
-	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
+	memset(ses.newkeys, 0x0, sizeof(*ses.newkeys));
+
+#ifdef USE_KEXGUESS2
+	enum kexguess2_used kexguess2 = KEXGUESS2_LOOK;
+#else
+	enum kexguess2_used kexguess2 = KEXGUESS2_NO;
+#endif
 
 	/* kex_algorithms */
-	algo = ses.buf_match_algo(ses.payload, sshkex, &goodguess);
+	algo = buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);
 	allgood &= goodguess;
-	if (algo == NULL) {
+	if (algo == NULL || algo->val == KEXGUESS2_ALGO_ID) {
 		erralgo = "kex";
 		goto error;
 	}
+	TRACE(("kexguess2 %d", kexguess2))
 	TRACE(("kex algo %s", algo->name))
 	ses.newkeys->algo_kex = algo->data;
 
 	/* server_host_key_algorithms */
-	algo = ses.buf_match_algo(ses.payload, sshhostkey, &goodguess);
+	algo = buf_match_algo(ses.payload, sshhostkey, &kexguess2, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";
@@ -762,7 +793,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_hostkey = algo->val;
 
 	/* encryption_algorithms_client_to_server */
-	c2s_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
+	c2s_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
 	if (c2s_cipher_algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
@@ -770,7 +801,7 @@ static void read_kex_algos() {
 	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
-	s2c_cipher_algo = ses.buf_match_algo(ses.payload, sshciphers, &goodguess);
+	s2c_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
 	if (s2c_cipher_algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
@@ -778,7 +809,7 @@ static void read_kex_algos() {
 	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
-	c2s_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
+	c2s_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
 	if (c2s_hash_algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
@@ -786,7 +817,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_hash_algo->name))
 
 	/* mac_algorithms_server_to_client */
-	s2c_hash_algo = ses.buf_match_algo(ses.payload, sshhashes, &goodguess);
+	s2c_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
 	if (s2c_hash_algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
@@ -794,7 +825,7 @@ static void read_kex_algos() {
 	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
-	c2s_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, &goodguess);
+	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
 	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -802,7 +833,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
-	s2c_comp_algo = ses.buf_match_algo(ses.payload, ses.compress_algos, &goodguess);
+	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
 	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
@@ -815,9 +846,10 @@ static void read_kex_algos() {
 	/* languages_server_to_client */
 	buf_eatstring(ses.payload);
 
-	/* first_kex_packet_follows */
+	/* their first_kex_packet_follows */
 	if (buf_getbool(ses.payload)) {
-		ses.kexstate.firstfollows = 1;
+		TRACE(("them kex firstfollows. allgood %d", allgood))
+		ses.kexstate.them_firstfollows = 1;
 		/* if the guess wasn't good, we ignore the packet sent */
 		if (!allgood) {
 			ses.ignorenext = 1;
@@ -860,6 +892,11 @@ static void read_kex_algos() {
 
 	/* reserved for future extensions */
 	buf_getint(ses.payload);
+
+	if (ses.send_kex_first_guess && allgood) {
+		TRACE(("our_first_follows_matches 1"))
+		ses.kexstate.our_first_follows_matches = 1;
+	}
 	return;
 
 error:

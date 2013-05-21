@@ -113,7 +113,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	int keytype;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter buf_get_pub_key"))
+	TRACE2(("enter buf_get_pub_key"))
 
 	ident = buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
@@ -124,7 +124,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 		return DROPBEAR_FAILURE;
 	}
 	
-	TRACE(("buf_get_pub_key keytype is %d", keytype))
+	TRACE2(("buf_get_pub_key keytype is %d", keytype))
 
 	*type = keytype;
 
@@ -163,7 +163,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 
-	TRACE(("leave buf_get_pub_key"))
+	TRACE2(("leave buf_get_pub_key"))
 
 	return ret;
 	
@@ -179,7 +179,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	int keytype;
 	int ret = DROPBEAR_FAILURE;
 
-	TRACE(("enter buf_get_priv_key"))
+	TRACE2(("enter buf_get_priv_key"))
 
 	ident = buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
@@ -227,7 +227,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 	}
 #endif
 
-	TRACE(("leave buf_get_priv_key"))
+	TRACE2(("leave buf_get_priv_key"))
 
 	return ret;
 	
@@ -238,7 +238,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 
 	buffer *pubkeys;
 
-	TRACE(("enter buf_put_pub_key"))
+	TRACE2(("enter buf_put_pub_key"))
 	pubkeys = buf_new(MAX_PUBKEY_SIZE);
 	
 #ifdef DROPBEAR_DSS
@@ -262,7 +262,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 
 	buf_putbufstring(buf, pubkeys);
 	buf_free(pubkeys);
-	TRACE(("leave buf_put_pub_key"))
+	TRACE2(("leave buf_put_pub_key"))
 }
 
 /* type is either DROPBEAR_SIGNKEY_DSS or DROPBEAR_SIGNKEY_RSA */
@@ -296,7 +296,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 
 void sign_key_free(sign_key *key) {
 
-	TRACE(("enter sign_key_free"))
+	TRACE2(("enter sign_key_free"))
 
 #ifdef DROPBEAR_DSS
 	dss_key_free(key->dsskey);
@@ -316,7 +316,7 @@ void sign_key_free(sign_key *key) {
 	m_free(key->filename);
 
 	m_free(key);
-	TRACE(("leave sign_key_free"))
+	TRACE2(("leave sign_key_free"))
 }
 
 static char hexdig(unsigned char x) {

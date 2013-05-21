@@ -44,8 +44,8 @@ extern int exitflag;
 
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)());
-void common_session_cleanup();
-void session_identification();
+void session_cleanup();
+void send_session_identification();
 void send_msg_ignore();
 
 const char* get_user_shell();
@@ -58,7 +58,6 @@ void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
 void cli_session(int sock_in, int sock_out);
-void cli_session_cleanup();
 void cleantext(unsigned char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
@@ -79,6 +78,7 @@ struct key_context_directional {
 #endif
 	} cipher_state;
 	unsigned char mackey[MAX_MAC_LEN];
+	int valid;
 };
 
 struct key_context {
@@ -111,7 +111,10 @@ struct sshsession {
 	int sock_in;
 	int sock_out;
 
-	unsigned char *remoteident;
+	/* remotehost will be initially NULL as we delay
+	 * reading the remote version string. it will be set
+	 * by the time any recv_() packet methods are called */
+	unsigned char *remoteident; 
 
 	int maxfd; /* the maximum file descriptor to check with select() */
 
@@ -132,8 +135,9 @@ struct sshsession {
 	unsigned dataallowed : 1; /* whether we can send data packets or we are in
 								 the middle of a KEX or something */
 
-	unsigned char requirenext; /* byte indicating what packet we require next, 
-								or 0x00 for any */
+	unsigned char requirenext[2]; /* bytes indicating what packets we require next, 
+									 or 0x00 for any. Second option can only be
+									 used if the first byte is also set */
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
 								 used for kex_follows stuff */
@@ -169,15 +173,11 @@ struct sshsession {
 	   concluded (ie, while dataallowed was unset)*/
 	struct packetlist *reply_queue_head, *reply_queue_tail;
 
-	algo_type*(*buf_match_algo)(buffer*buf, algo_type localalgos[],
-			int *goodguess); /* The function to use to choose which algorithm
-								to use from the ones presented by the remote
-								side. Is specific to the client/server mode,
-								hence the function-pointer callback.*/
-
 	void(*remoteclosed)(); /* A callback to handle closure of the
 									  remote connection */
 
+	void(*extra_session_cleanup)(); /* client or server specific cleanup */
+	void(*send_kex_first_guess)();
 
 	struct AuthState authstate; /* Common amongst client and server, since most
 								   struct elements are common */
@@ -233,10 +233,6 @@ typedef enum {
 
 typedef enum {
 	STATE_NOTHING,
-	SERVICE_AUTH_REQ_SENT,
-	SERVICE_AUTH_ACCEPT_RCVD,
-	SERVICE_CONN_REQ_SENT,
-	SERVICE_CONN_ACCEPT_RCVD,
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
@@ -244,8 +240,12 @@ typedef enum {
 } cli_state;
 
 struct clientsession {
+
+	// XXX - move these to kexstate?
 	struct kex_dh_param *dh_param;
 	struct kex_ecdh_param *ecdh_param;
+	const struct dropbear_kex *param_kex_algo; /* KEX algorithm corresponding to current dh_e and dh_x */
+
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
 	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */

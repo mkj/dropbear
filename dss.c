@@ -101,9 +101,9 @@ int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 /* Clear and free the memory used by a public or private key */
 void dss_key_free(dropbear_dss_key *key) {
 
-	TRACE(("enter dsa_key_free"))
+	TRACE2(("enter dsa_key_free"))
 	if (key == NULL) {
-		TRACE(("enter dsa_key_free: key == NULL"))
+		TRACE2(("enter dsa_key_free: key == NULL"))
 		return;
 	}
 	if (key->p) {
@@ -127,7 +127,7 @@ void dss_key_free(dropbear_dss_key *key) {
 		m_free(key->x);
 	}
 	m_free(key);
-	TRACE(("leave dsa_key_free"))
+	TRACE2(("leave dsa_key_free"))
 }
 
 /* put the dss public key into the buffer in the required format:

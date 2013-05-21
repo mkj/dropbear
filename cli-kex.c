@@ -43,19 +43,35 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
 #define MAX_KNOWNHOSTS_LINE 4500
 
 void send_msg_kexdh_init() {
+	TRACE(("send_msg_kexdh_init()"))	
+
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
 	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
-		cli_ses.dh_param = gen_kexdh_param();
+		if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
+			|| !cli_ses.dh_param) {
+			if (cli_ses.dh_param) {
+				free_kexdh_param(cli_ses.dh_param);
+			}
+			cli_ses.dh_param = gen_kexdh_param();
+		}
 		buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
 	} else {
 #ifdef DROPBEAR_ECDH
-		cli_ses.ecdh_param = gen_kexecdh_param();
+		if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
+			|| !cli_ses.ecdh_param) {
+			if (cli_ses.ecdh_param) {
+				free_kexecdh_param(cli_ses.ecdh_param);
+			}
+			cli_ses.ecdh_param = gen_kexecdh_param();
+		}
 		buf_put_ecc_raw_pubkey_string(ses.writepayload, &cli_ses.ecdh_param->key);
 #endif
 	}
+	cli_ses.param_kex_algo = ses.newkeys->algo_kex;
 	encrypt_packet();
-	ses.requirenext = SSH_MSG_KEXDH_REPLY;
+	ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
+	ses.requirenext[1] = SSH_MSG_KEXINIT;
 }
 
 /* Handle a diffie-hellman key exchange reply. */
@@ -105,11 +121,20 @@ void recv_msg_kexdh_reply() {
 		buf_free(ecdh_qs);
 #endif
 	}
-	free_kexdh_param(cli_ses.dh_param);
-	cli_ses.dh_param = NULL;
 
-	if (buf_verify(ses.payload, hostkey, ses.hash) 
-			!= DROPBEAR_SUCCESS) {
+	if (cli_ses.dh_param) {
+		free_kexdh_param(cli_ses.dh_param);
+		cli_ses.dh_param = NULL;
+	}
+#ifdef DROPBEAR_ECDH
+	if (cli_ses.ecdh_param) {
+		free_kexecdh_param(cli_ses.ecdh_param);
+		cli_ses.ecdh_param = NULL;
+	}
+#endif
+
+	cli_ses.param_kex_algo = NULL;
+	if (buf_verify(ses.payload, hostkey, ses.hash) != DROPBEAR_SUCCESS) {
 		dropbear_exit("Bad hostkey signature");
 	}
 
@@ -117,7 +142,8 @@ void recv_msg_kexdh_reply() {
 	hostkey = NULL;
 
 	send_msg_newkeys();
-	ses.requirenext = SSH_MSG_NEWKEYS;
+	ses.requirenext[0] = SSH_MSG_NEWKEYS;
+	ses.requirenext[1] = 0;
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 
@@ -226,6 +252,11 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 	buffer * line = NULL;
 	int ret;
 
+	if (cli_opts.no_hostkey_check) {
+		fprintf(stderr, "Caution, skipping hostkey check for %s\n", cli_opts.remotehost);
+		return;
+	}
+
 	hostsfile = open_known_hosts_file(&readonly);
 	if (!hostsfile)	{
 		ask_to_confirm(keyblob, keybloblen);
@@ -255,7 +286,6 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		/* Compare hostnames */
 		if (strncmp(cli_opts.remotehost, buf_getptr(line, hostlen),
 					hostlen) != 0) {
-			TRACE(("hosts don't match"))
 			continue;
 		}
 

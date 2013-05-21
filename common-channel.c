@@ -273,10 +273,10 @@ static unsigned int write_pending(struct Channel * channel) {
 static void check_close(struct Channel *channel) {
 	int close_allowed = 0;
 
-	TRACE(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
+	TRACE2(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
 				channel->errfd, channel->sent_close, channel->recv_close))
-	TRACE(("writebuf size %d extrabuf size %d",
+	TRACE2(("writebuf size %d extrabuf size %d",
 				channel->writebuf ? cbuf_getused(channel->writebuf) : 0,
 				channel->extrabuf ? cbuf_getused(channel->extrabuf) : 0))
 
@@ -561,7 +561,11 @@ static void remove_channel(struct Channel * channel) {
 	TRACE(("CLOSE errfd %d", channel->errfd))
 	close(channel->errfd);
 
-	channel->typedata = NULL;
+	if (!channel->close_handler_done
+		&& channel->type->closehandler) {
+		channel->type->closehandler(channel);
+		channel->close_handler_done = 1;
+	}
 
 	ses.channels[channel->index] = NULL;
 	m_free(channel);
@@ -625,7 +629,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	 * exttype if is extended */
 	maxlen = MIN(maxlen, 
 			ses.writepayload->size - 1 - 4 - 4 - (isextended ? 4 : 0));
-	TRACE(("maxlen %d", maxlen))
+	TRACE(("maxlen %zd", maxlen))
 	if (maxlen == 0) {
 		TRACE(("leave send_msg_channel_data: no window"))
 		return;

@@ -71,7 +71,8 @@ void recv_msg_kexdh_init() {
 	}
 
 	send_msg_newkeys();
-	ses.requirenext = SSH_MSG_NEWKEYS;
+	ses.requirenext[0] = SSH_MSG_NEWKEYS;
+	ses.requirenext[1] = 0;
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 	
