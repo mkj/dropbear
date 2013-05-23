@@ -72,11 +72,8 @@ struct dropbear_ecc_curve* curve_for_dp(const ltc_ecc_set_type *dp) {
 
 ecc_key * new_ecc_key(void) {
 	ecc_key *key = m_malloc(sizeof(*key));
-	key->pubkey.x = m_malloc(sizeof(mp_int));
-	key->pubkey.y = m_malloc(sizeof(mp_int));
-	key->pubkey.z = m_malloc(sizeof(mp_int));
-	key->k = m_malloc(sizeof(mp_int));
-	m_mp_init_multi(key->pubkey.x, key->pubkey.y, key->pubkey.z, key->k, NULL);
+	m_mp_alloc_init_multi(&key->pubkey.x, &key->pubkey.y, 
+		&key->pubkey.z, &key->k, NULL);
 	return key;
 }
 
@@ -92,7 +89,7 @@ static int ecc_is_point(ecc_key *key)
 	t1 = m_malloc(sizeof(mp_int));
 	t2 = m_malloc(sizeof(mp_int));
 	
-	m_mp_init_multi(prime, b, t1, t2, NULL);
+	m_mp_alloc_init_multi(&prime, &b, &t1, &t2, NULL);
 	
    /* load prime and b */
 	if ((err = mp_read_radix(prime, key->dp->prime, 16)) != CRYPT_OK)                          { goto error; }

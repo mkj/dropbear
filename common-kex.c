@@ -633,8 +633,7 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	}
 	
 	/* K = e^y mod p = f^x mod p */
-	ses.dh_K = (mp_int*)m_malloc(sizeof(mp_int));
-	m_mp_init(ses.dh_K);
+	m_mp_alloc_init_multi(&ses.dh_K, NULL);
 	if (mp_exptmod(dh_pub_them, &param->priv, &dh_p, ses.dh_K) != MP_OKAY) {
 		dropbear_exit("Diffie-Hellman error");
 	}

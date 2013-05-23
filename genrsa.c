@@ -50,15 +50,8 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 	}
 
 	key = m_malloc(sizeof(*key));
-
-	key->e = (mp_int*)m_malloc(sizeof(mp_int));
-	key->n = (mp_int*)m_malloc(sizeof(mp_int));
-	key->d = (mp_int*)m_malloc(sizeof(mp_int));
-	key->p = (mp_int*)m_malloc(sizeof(mp_int));
-	key->q = (mp_int*)m_malloc(sizeof(mp_int));
-
-	m_mp_init_multi(key->e, key->n, key->d, key->p, key->q,
-			&pminus, &lcm, &qminus, NULL);
+	m_mp_alloc_init_multi(&key->e, &key->n, &key->d, &key->p, &key->q, NULL);
+	m_mp_init_multi(&pminus, &lcm, &qminus, NULL);
 
 	if (mp_set_int(key->e, RSA_E) != MP_OKAY) {
 		fprintf(stderr, "RSA generation failed\n");

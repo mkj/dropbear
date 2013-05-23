@@ -47,11 +47,7 @@ int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 
 	TRACE(("enter buf_get_dss_pub_key"))
 	dropbear_assert(key != NULL);
-	key->p = m_malloc(sizeof(mp_int));
-	key->q = m_malloc(sizeof(mp_int));
-	key->g = m_malloc(sizeof(mp_int));
-	key->y = m_malloc(sizeof(mp_int));
-	m_mp_init_multi(key->p, key->q, key->g, key->y, NULL);
+	m_mp_alloc_init_multi(&key->p, &key->q, &key->g, &key->y, NULL);
 	key->x = NULL;
 
 	buf_incrpos(buf, 4+SSH_SIGNKEY_DSS_LEN); /* int + "ssh-dss" */
@@ -87,8 +83,7 @@ int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 		return DROPBEAR_FAILURE;
 	}
 
-	key->x = m_malloc(sizeof(mp_int));
-	m_mp_init(key->x);
+	m_mp_alloc_init_multi(&key->x, NULL);
 	ret = buf_getmpint(buf, key->x);
 	if (ret == DROPBEAR_FAILURE) {
 		m_free(key->x);
