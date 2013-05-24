@@ -96,7 +96,7 @@ int buf_get_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 	key->p = NULL;
 	key->q = NULL;
 
-	m_mp_alloc_init_multi(&key->d);
+	m_mp_alloc_init_multi(&key->d, NULL);
 	if (buf_getmpint(buf, key->d) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_rsa_priv_key: d: ret == DROPBEAR_FAILURE"))
 	    goto out;

@@ -68,7 +68,15 @@ struct SIGN_key {
 	dropbear_rsa_key * rsakey;
 #endif
 #ifdef DROPBEAR_ECDSA
-	ecc_key * ecckey;
+#ifdef DROPBEAR_ECC_256
+	ecc_key * ecckey256;
+#endif
+#ifdef DROPBEAR_ECC_384
+	ecc_key * ecckey384;
+#endif
+#ifdef DROPBEAR_ECC_521
+	ecc_key * ecckey521;
+#endif
 #endif
 };
 
@@ -92,11 +100,7 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 					buffer * line, char ** fingerprint);
 
 #ifdef DROPBEAR_ECDSA
-#define IS_ECDSA_KEY(type) \
-	((type) == DROPBEAR_SIGNKEY_ECDSA_NISTP256 \
-		|| (type) == DROPBEAR_SIGNKEY_ECDSA_NISTP384 \
-		|| (type) == DROPBEAR_SIGNKEY_ECDSA_NISTP521 \
-		|| (type) == DROPBEAR_SIGNKEY_ECDSA_KEYGEN)
+ecc_key ** signkey_ecc_key_ptr(sign_key *key, enum signkey_type ecc_type);
 #endif
 
 #endif /* _SIGNKEY_H_ */

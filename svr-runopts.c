@@ -375,6 +375,18 @@ static void disablekey(int type) {
 	}
 }
 
+static void loadhostkey_helper(const char *name, void** src, void** dst, int fatal_duplicate) {
+	if (*dst) {
+		if (fatal_duplicate) {
+			dropbear_exit("Only one %s key can be specified", name);
+		}
+	} else {
+		*dst = *src;
+		*src = NULL;
+	}
+
+}
+
 /* Must be called after syslog/etc is working */
 static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 	sign_key * read_key = new_sign_key();
@@ -385,42 +397,33 @@ static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
-		if (svr_opts.hostkey->rsakey) {
-			if (fatal_duplicate) {
-				dropbear_exit("Only one RSA key can be specified");
-			}
-		} else {
-			svr_opts.hostkey->rsakey = read_key->rsakey;
-			read_key->rsakey = NULL;
-		}
+		loadhostkey_helper("RSA", &read_key->rsakey, &svr_opts.hostkey->rsakey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
-		if (svr_opts.hostkey->dsskey) {
-			if (fatal_duplicate) {
-				dropbear_exit("Only one DSS key can be specified");
-			}
-		} else {
-			svr_opts.hostkey->dsskey = read_key->dsskey;
-			read_key->dsskey = NULL;
-		}
+		loadhostkey_helper("DSS", &read_key->dsskey, &svr_opts.hostkey->dsskey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_ECDSA
-	if (IS_ECDSA_KEY(type)) {
-		if (svr_opts.hostkey->ecckey) {
-			if (fatal_duplicate) {
-				dropbear_exit("Only one ECDSA key can be specified");
-			}
-		} else {
-			svr_opts.hostkey->ecckey = read_key->ecckey;
-			read_key->ecckey = NULL;
-		}
+#ifdef DROPBEAR_ECC_256
+	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256) {
+		loadhostkey_helper("ECDSA256", &read_key->ecckey256, &svr_opts.hostkey->ecckey256, fatal_duplicate);
 	}
 #endif
+#ifdef DROPBEAR_ECC_384
+	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP384) {
+		loadhostkey_helper("ECDSA384", &read_key->ecckey384, &svr_opts.hostkey->ecckey384, fatal_duplicate);
+	}
+#endif
+#ifdef DROPBEAR_ECC_521
+	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+		loadhostkey_helper("ECDSA521", &read_key->ecckey521, &svr_opts.hostkey->ecckey521, fatal_duplicate);
+	}
+#endif
+#endif // DROPBEAR_ECDSA
 	sign_key_free(read_key);
 	TRACE(("leave loadhostkey"))
 }
@@ -468,20 +471,17 @@ void load_all_hostkeys() {
 #endif
 #ifdef DROPBEAR_ECDSA
 #ifdef DROPBEAR_ECC_256
-	if (!svr_opts.hostkey->ecckey 
-		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP256) {
+	if (!svr_opts.hostkey->ecckey256) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP256);
 	}
 #endif
 #ifdef DROPBEAR_ECC_384
-	if (!svr_opts.hostkey->ecckey 
-		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP384) {
+	if (!svr_opts.hostkey->ecckey384) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP384);
 	}
 #endif
 #ifdef DROPBEAR_ECC_521
-	if (!svr_opts.hostkey->ecckey 
-		|| ecdsa_signkey_type(svr_opts.hostkey->ecckey) != DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
+	if (!svr_opts.hostkey->ecckey521) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
 	}
 #endif

@@ -680,7 +680,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 		int private_key_len = 0;
 		unsigned char* public_key_bytes = NULL;
 		int public_key_len = 0;
-		ecc_key *ecc;
+		ecc_key *ecc = NULL;
 		const struct dropbear_ecc_curve *curve = NULL;
 
 		// See SEC1 v2, Appendix C.4
@@ -774,7 +774,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 			goto error;
 		}
 
-		retkey->ecckey = ecc;
+		*signkey_ecc_key_ptr(retkey, retkey->type) = ecc;
 	}
 #endif // DROPBEAR_ECDSA
 

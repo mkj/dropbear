@@ -266,8 +266,11 @@ int main(int argc, char ** argv) {
 #endif
 #ifdef DROPBEAR_ECDSA
 		case DROPBEAR_SIGNKEY_ECDSA_KEYGEN:
-			key->ecckey = gen_ecdsa_priv_key(bits);
-			keytype = ecdsa_signkey_type(key->ecckey);
+			{
+				ecc_key *ecckey = gen_ecdsa_priv_key(bits);
+				keytype = ecdsa_signkey_type(ecckey);
+				*signkey_ecc_key_ptr(key, keytype) = ecckey;
+			}
 			break;
 #endif
 		default:
