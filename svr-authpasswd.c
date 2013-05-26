@@ -66,6 +66,14 @@ void svr_auth_password() {
 	m_burn(password, passwordlen);
 	m_free(password);
 
+	if (testcrypt == NULL) {
+		/* crypt() with an invalid salt like "!!" */
+		dropbear_log(LOG_WARNING, "User account '%s' is locked",
+				ses.authstate.pw_name);
+		send_msg_userauth_failure(0, 1);
+		return;
+	}
+
 	/* check for empty password */
 	if (passwdcrypt[0] == '\0') {
 		dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
