@@ -142,6 +142,22 @@ pamConvFunc(int num_msg,
 			(*respp) = resp;
 			break;
 
+		case PAM_ERROR_MSG:
+		case PAM_TEXT_INFO:
+
+			if (msg_len > 0) {
+				buffer * pam_err = buf_new(msg_len + 4);
+				buf_setpos(pam_err, 0);
+				buf_putbytes(pam_err, "\r\n", 2);
+				buf_putbytes(pam_err, (*msg)->msg, msg_len);
+				buf_putbytes(pam_err, "\r\n", 2);
+				buf_setpos(pam_err, 0);
+
+				send_msg_userauth_banner(pam_err);
+				buf_free(pam_err);
+			}
+			break;
+
 		default:
 			TRACE(("Unknown message type"))
 			rc = PAM_CONV_ERR;

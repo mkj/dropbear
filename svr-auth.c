@@ -37,7 +37,6 @@
 
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);
-static void send_msg_userauth_banner();
 
 /* initialise the first time for a session, resetting all parameters */
 void svr_authinitialise() {
@@ -82,24 +81,18 @@ static void authclear() {
 
 /* Send a banner message if specified to the client. The client might
  * ignore this, but possibly serves as a legal "no trespassing" sign */
-static void send_msg_userauth_banner() {
+void send_msg_userauth_banner(buffer *banner) {
 
 	TRACE(("enter send_msg_userauth_banner"))
-	if (svr_opts.banner == NULL) {
-		TRACE(("leave send_msg_userauth_banner: banner is NULL"))
-		return;
-	}
 
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
-	buf_putstring(ses.writepayload, buf_getptr(svr_opts.banner,
-				svr_opts.banner->len), svr_opts.banner->len);
+	buf_putstring(ses.writepayload, buf_getptr(banner, banner->len),
+			banner->len);
 	buf_putstring(ses.writepayload, "en", 2);
 
 	encrypt_packet();
-	buf_free(svr_opts.banner);
-	svr_opts.banner = NULL;
 
 	TRACE(("leave send_msg_userauth_banner"))
 }
@@ -122,7 +115,9 @@ void recv_msg_userauth_request() {
 
 	/* send the banner if it exists, it will only exist once */
 	if (svr_opts.banner) {
-		send_msg_userauth_banner();
+		send_msg_userauth_banner(svr_opts.banner);
+		buf_free(svr_opts.banner);
+		svr_opts.banner = NULL;
 	}
 
 	username = buf_getstring(ses.payload, &userlen);
