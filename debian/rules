@@ -79,12 +79,12 @@ install: deb-checkdir deb-checkuid build-stamp
 	ln -s /var/log/dropbear '$(DIR)'/etc/dropbear/log/main
 	# man pages
 	install -d -m0755 '$(DIR)'/usr/share/man/man8
-	for i in dropbear.8 dropbearkey.8; do \
-	  install -m644 $$i '$(DIR)'/usr/share/man/man8/ || exit 1; \
+	install -d -m0755 '$(DIR)'/usr/share/man/man1
+	install -m644 dropbear.8 '$(DIR)'/usr/share/man/man8/
+	for i in dbclient.1 dropbearkey.1 dropbearconvert.1; do \
+	  install -m644 $$i '$(DIR)'/usr/share/man/man1/ || exit 1; \
 	done
 	gzip -9 '$(DIR)'/usr/share/man/man8/*.8
-	install -d -m0755 '$(DIR)'/usr/share/man/man1
-	install -m644 dbclient.1 '$(DIR)'/usr/share/man/man1/
 	gzip -9 '$(DIR)'/usr/share/man/man1/*.1
 	# copyright, changelog
 	cat debian/copyright.in LICENSE >debian/copyright
