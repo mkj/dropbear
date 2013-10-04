@@ -1,3 +1,35 @@
+2013.59 - Friday 4 October 2013
+
+- Fix crash from -J command 
+  Thanks to Lluís Batlle i Rossell and Arnaud Mouiche for patches
+
+- Avoid reading too much from /proc/net/rt_cache since that causes
+  system slowness. 
+
+- Improve EOF handling for half-closed connections
+  Thanks to Catalin Patulea
+
+- Send a banner message to report PAM error messages intended for the user
+  Patch from Martin Donnelly
+
+- Limit the size of decompressed payloads, avoids memory exhaustion denial
+  of service 
+  Thanks to Logan Lamb for reporting and investigating it
+
+- Avoid disclosing existence of valid users through inconsistent delays
+  Thanks to Logan Lamb for reporting
+
+- Update config.guess and config.sub for newer architectures
+
+- Avoid segfault in server for locked accounts
+
+- "make install" now installs manpages
+  dropbearkey.8 has been renamed to dropbearkey.1
+  manpage added for dropbearconvert
+
+- Get rid of one second delay when running non-interactive commands
+
+
 2013.58 - Thursday 18 April 2013
 
 - Fix building with Zlib disabled, thanks to Hans Harder and cuma@freetz
