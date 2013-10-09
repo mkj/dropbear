@@ -66,6 +66,7 @@ VPATH=@srcdir@
 srcdir=@srcdir@
 
 prefix=@prefix@
+exec_prefix=@exec_prefix@
 datarootdir = @datarootdir@
 bindir=@bindir@
 sbindir=@sbindir@
