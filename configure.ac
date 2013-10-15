@@ -364,10 +364,20 @@ AC_CHECK_FUNCS(setutxent utmpxname)
 AC_CHECK_FUNCS(logout updwtmp logwtmp)
 
 AC_ARG_ENABLE(bundled-libtom,
-	[  --enable-bundled-libtom       Use bundled libtomcrypt/libtommath even if a system version exists],
-	[ 
-		BUNDLED_LIBTOM=1
-		AC_MSG_NOTICE(Forcing bundled libtom*)
+[  --enable-bundled-libtom       Force using bundled libtomcrypt/libtommath even if a system version exists.
+  --disable-bundled-libtom      Force using system libtomcrypt/libtommath, fail if it does not exist.
+                                Default is to use system if available, otherwise bundled.],
+	[
+		if test "x$enableval" = "xyes"; then
+			BUNDLED_LIBTOM=1
+			AC_MSG_NOTICE(Forcing bundled libtom*)
+		else
+			BUNDLED_LIBTOM=0
+			AC_CHECK_LIB(tomcrypt, register_cipher, , 
+				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+			AC_CHECK_LIB(tommath, mp_exptmod, , 
+				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+		fi
 	],
 	[
 		BUNDLED_LIBTOM=0
