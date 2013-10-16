@@ -1,3 +1,13 @@
+2013.60 - Wednesday 16 October 2013
+
+- Fix "make install" so that it doesn't always install to /bin and /sbin
+
+- Fix "make install MULTI=1", installing manpages failed
+
+- Fix "make install" when scp is included since it has no manpage
+
+- Make --disable-bundled-libtom work
+
 2013.59 - Friday 4 October 2013
 
 - Fix crash from -J command 
@@ -14,10 +24,10 @@
 
 - Limit the size of decompressed payloads, avoids memory exhaustion denial
   of service 
-  Thanks to Logan Lamb for reporting and investigating it
+  Thanks to Logan Lamb for reporting and investigating it. CVE-2013-4421
 
 - Avoid disclosing existence of valid users through inconsistent delays
-  Thanks to Logan Lamb for reporting
+  Thanks to Logan Lamb for reporting. CVE-2013-4434
 
 - Update config.guess and config.sub for newer architectures
 
@@ -318,7 +328,7 @@ https://secure.ucc.asn.au/hg/dropbear/graph/default
 
 - Security: dbclient previously would prompt to confirm a 
   mismatching hostkey but wouldn't warn loudly. It will now
-  exit upon a mismatch.
+  exit upon a mismatch. CVE-2007-1099
 
 - Compile fixes, make sure that all variable definitions are at the start
   of a scope.
@@ -380,7 +390,7 @@ https://secure.ucc.asn.au/hg/dropbear/graph/default
   (thanks to Tomas Vanek for helping track it down)
 
 - Implement per-IP pre-authentication connection limits 
-  (after some poking from Pablo Fernandez)
+  (after some poking from Pablo Fernandez) CVE-2006-1206
 
 - Exit gracefully if trying to connect to as SSH v1 server 
   (reported by Rushi Lala)
@@ -401,7 +411,7 @@ https://secure.ucc.asn.au/hg/dropbear/graph/default
 - SECURITY: fix for buffer allocation error in server code, could potentially
   allow authenticated users to gain elevated privileges. All multi-user systems
   running the server should upgrade (or apply the patch available on the
-  Dropbear webpage).
+  Dropbear webpage). CVE-2005-4178
 
 - Fix channel handling code so that redirecting to /dev/null doesn't use
   100% CPU.
@@ -608,7 +618,7 @@ https://secure.ucc.asn.au/hg/dropbear/graph/default
 - SECURITY: Don't try to free() uninitialised variables in DSS verification
   code. Thanks to Arne Bernin for pointing out this bug. This is possibly
   exploitable, all users with DSS and pubkey-auth compiled in are advised to
-  upgrade.
+  upgrade. CVE-2004-2486
 
 - Clean up agent forwarding socket files correctly, patch from Gerrit Pape.
 
