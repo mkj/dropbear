@@ -376,7 +376,7 @@ static int checkmac() {
 
 	/* compare the hash */
 	buf_setpos(ses.readbuf, contents_len);
-	if (memcmp(mac_bytes, buf_getptr(ses.readbuf, mac_size), mac_size) != 0) {
+	if (constant_time_memcmp(mac_bytes, buf_getptr(ses.readbuf, mac_size), mac_size) != 0) {
 		return DROPBEAR_FAILURE;
 	} else {
 		return DROPBEAR_SUCCESS;
