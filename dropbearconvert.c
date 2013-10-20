@@ -28,6 +28,8 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "keyimport.h"
+#include "crypto_desc.h" 
+#include "random.h" 
 
 
 static int do_convert(int intype, const char* infile, int outtype,
@@ -114,7 +116,7 @@ static int do_convert(int intype, const char* infile, int outtype,
 		const char* outfile) {
 
 	sign_key * key = NULL;
-	char * keytype = NULL;
+	const char * keytype = NULL;
 	int ret = 1;
 
 	key = import_read(infile, NULL, intype);
@@ -124,16 +126,7 @@ static int do_convert(int intype, const char* infile, int outtype,
 		goto out;
 	}
 
-#ifdef DROPBEAR_RSA
-	if (key->rsakey != NULL) {
-		keytype = "RSA";
-	}
-#endif
-#ifdef DROPBEAR_DSS
-	if (key->dsskey != NULL) {
-		keytype = "DSS";
-	}
-#endif
+	keytype = signkey_name_from_type(key->type, NULL);
 
 	fprintf(stderr, "Key is a %s key\n", keytype);
 
