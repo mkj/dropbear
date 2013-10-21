@@ -62,6 +62,9 @@ int main(int argc, char ** argv) {
 	const char* infile;
 	const char* outfile;
 
+	crypto_init();
+	seedrandom();
+
 #ifdef DEBUG_TRACE
 	/* It's hard for it to get in the way _too_ much */
 	debug_trace = 1;

@@ -34,9 +34,9 @@
 #include "bignum.h"
 #include "random.h"
 #include "runopts.h"
+#include "ecc.h"
 
-
-static void send_msg_kexdh_reply(mp_int *dh_e);
+static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs);
 
 /* Handle a diffie-hellman key exchange initialisation. This involves
  * calculating a session key reply value, and corresponding hash. These
@@ -45,20 +45,30 @@ static void send_msg_kexdh_reply(mp_int *dh_e);
 void recv_msg_kexdh_init() {
 
 	DEF_MP_INT(dh_e);
+	buffer *ecdh_qs = NULL;
 
 	TRACE(("enter recv_msg_kexdh_init"))
 	if (!ses.kexstate.recvkexinit) {
 		dropbear_exit("Premature kexdh_init message received");
 	}
 
-	m_mp_init(&dh_e);
-	if (buf_getmpint(ses.payload, &dh_e) != DROPBEAR_SUCCESS) {
-		dropbear_exit("Failed to get kex value");
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		m_mp_init(&dh_e);
+		if (buf_getmpint(ses.payload, &dh_e) != DROPBEAR_SUCCESS) {
+			dropbear_exit("Failed to get kex value");
+		}
+	} else {
+#ifdef DROPBEAR_ECDH
+		ecdh_qs = buf_getstringbuf(ses.payload);
+#endif
 	}
 
-	send_msg_kexdh_reply(&dh_e);
+	send_msg_kexdh_reply(&dh_e, ecdh_qs);
 
 	mp_clear(&dh_e);
+	if (ecdh_qs) {
+		buf_free(ecdh_qs);
+	}
 
 	send_msg_newkeys();
 	ses.requirenext[0] = SSH_MSG_NEWKEYS;
@@ -71,19 +81,10 @@ void recv_msg_kexdh_init() {
  * that, the session hash is calculated, and signed with RSA or DSS. The
  * result is sent to the client. 
  *
- * See the transport rfc 4253 section 8 for details */
-static void send_msg_kexdh_reply(mp_int *dh_e) {
-
-	DEF_MP_INT(dh_y);
-	DEF_MP_INT(dh_f);
-
+ * See the transport RFC4253 section 8 for details
+ * or RFC5656 section 4 for elliptic curve variant. */
+static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 	TRACE(("enter send_msg_kexdh_reply"))
-	m_mp_init_multi(&dh_y, &dh_f, NULL);
-	
-	gen_kexdh_vals(&dh_f, &dh_y);
-
-	kexdh_comb_key(&dh_f, &dh_y, dh_e, svr_opts.hostkey);
-	mp_clear(&dh_y);
 
 	/* we can start creating the kexdh_reply packet */
 	CHECKCLEARTOWRITE();
@@ -91,13 +92,27 @@ static void send_msg_kexdh_reply(mp_int *dh_e) {
 	buf_put_pub_key(ses.writepayload, svr_opts.hostkey,
 			ses.newkeys->algo_hostkey);
 
-	/* put f */
-	buf_putmpint(ses.writepayload, &dh_f);
-	mp_clear(&dh_f);
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		// Normal diffie-hellman
+		struct kex_dh_param * dh_param = gen_kexdh_param();
+		kexdh_comb_key(dh_param, dh_e, svr_opts.hostkey);
+
+		/* put f */
+		buf_putmpint(ses.writepayload, &dh_param->pub);
+		free_kexdh_param(dh_param);
+	} else {
+#ifdef DROPBEAR_ECDH
+		struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
+		kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
+
+		buf_put_ecc_raw_pubkey_string(ses.writepayload, &ecdh_param->key);
+		free_kexecdh_param(ecdh_param);
+#endif
+	}
 
 	/* calc the signature */
 	buf_put_sign(ses.writepayload, svr_opts.hostkey, 
-			ses.newkeys->algo_hostkey, ses.hash, SHA1_HASH_SIZE);
+			ses.newkeys->algo_hostkey, ses.hash);
 
 	/* the SSH_MSG_KEXDH_REPLY is done */
 	encrypt_packet();

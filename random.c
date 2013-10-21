@@ -28,6 +28,7 @@
 #include "bignum.h"
 #include "random.h"
 
+
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
 /* the max value for the counter, so it won't integer overflow */

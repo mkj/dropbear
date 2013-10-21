@@ -23,24 +23,28 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
+#include "includes.h"
 #include "algo.h"
 #include "session.h"
 #include "dbutil.h"
+#include "kex.h"
+#include "ltc_prng.h"
+#include "ecc.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
 
 static int void_cipher(const unsigned char* in, unsigned char* out,
-		unsigned long len, void *cipher_state) {
+		unsigned long len, void* UNUSED(cipher_state)) {
 	if (in != out) {
 		memmove(out, in, len);
 	}
 	return CRYPT_OK;
 }
 
-static int void_start(int cipher, const unsigned char *IV, 
-			const unsigned char *key, 
-			int keylen, int num_rounds, void *cipher_state) {
+static int void_start(int UNUSED(cipher), const unsigned char* UNUSED(IV), 
+			const unsigned char* UNUSED(key), 
+			int UNUSED(keylen), int UNUSED(num_rounds), void* UNUSED(cipher_state)) {
 	return CRYPT_OK;
 }
 
@@ -204,6 +208,17 @@ algo_type ssh_nocompress[] = {
 };
 
 algo_type sshhostkey[] = {
+#ifdef DROPBEAR_ECDSA
+#ifdef DROPBEAR_ECC_256
+	{"ecdsa-sha2-nistp256", DROPBEAR_SIGNKEY_ECDSA_NISTP256, NULL, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_384
+	{"ecdsa-sha2-nistp384", DROPBEAR_SIGNKEY_ECDSA_NISTP384, NULL, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_521
+	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNKEY_ECDSA_NISTP521, NULL, 1, NULL},
+#endif
+#endif
 #ifdef DROPBEAR_RSA
 	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1, NULL},
 #endif
@@ -213,64 +228,41 @@ algo_type sshhostkey[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
+static struct dropbear_kex kex_dh_group1 = {dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
+static struct dropbear_kex kex_dh_group14 = {dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
+
+#ifdef DROPBEAR_ECDH
+#ifdef DROPBEAR_ECC_256
+static struct dropbear_kex kex_ecdh_nistp256 = {NULL, 0, &ecc_curve_nistp256, &sha256_desc };
+#endif
+#ifdef DROPBEAR_ECC_384
+static struct dropbear_kex kex_ecdh_nistp384 = {NULL, 0, &ecc_curve_nistp384, &sha384_desc };
+#endif
+#ifdef DROPBEAR_ECC_521
+static struct dropbear_kex kex_ecdh_nistp521 = {NULL, 0, &ecc_curve_nistp521, &sha512_desc };
+#endif
+#endif // DROPBEAR_ECDH
+
+
 algo_type sshkex[] = {
-	{"diffie-hellman-group1-sha1", DROPBEAR_KEX_DH_GROUP1, NULL, 1, NULL},
-	{"diffie-hellman-group14-sha1", DROPBEAR_KEX_DH_GROUP14, NULL, 1, NULL},
+#ifdef DROPBEAR_ECDH
+#ifdef DROPBEAR_ECC_256
+	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_384
+	{"ecdh-sha2-nistp384", 0, &kex_ecdh_nistp384, 1, NULL},
+#endif
+#ifdef DROPBEAR_ECC_521
+	{"ecdh-sha2-nistp521", 0, &kex_ecdh_nistp521, 1, NULL},
+#endif
+#endif
+	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
+	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14, 1, NULL},
 #ifdef USE_KEXGUESS2
 	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };
-
-
-/* Register the compiled in ciphers.
- * This should be run before using any of the ciphers/hashes */
-void crypto_init() {
-
-	const struct ltc_cipher_descriptor *regciphers[] = {
-#ifdef DROPBEAR_AES
-		&aes_desc,
-#endif
-#ifdef DROPBEAR_BLOWFISH
-		&blowfish_desc,
-#endif
-#ifdef DROPBEAR_TWOFISH
-		&twofish_desc,
-#endif
-#ifdef DROPBEAR_3DES
-		&des3_desc,
-#endif
-		NULL
-	};
-
-	const struct ltc_hash_descriptor *reghashes[] = {
-		/* we need sha1 for hostkey stuff regardless */
-		&sha1_desc,
-#ifdef DROPBEAR_MD5_HMAC
-		&md5_desc,
-#endif
-#ifdef DROPBEAR_SHA2_256_HMAC
-		&sha256_desc,
-#endif
-#ifdef DROPBEAR_SHA2_512_HMAC
-		&sha512_desc,
-#endif
-		NULL
-	};	
-	int i;
-	
-	for (i = 0; regciphers[i] != NULL; i++) {
-		if (register_cipher(regciphers[i]) == -1) {
-			dropbear_exit("Error registering crypto");
-		}
-	}
-
-	for (i = 0; reghashes[i] != NULL; i++) {
-		if (register_hash(reghashes[i]) == -1) {
-			dropbear_exit("Error registering crypto");
-		}
-	}
-}
 
 /* algolen specifies the length of algo, algos is our local list to match
  * against.

@@ -101,7 +101,7 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.keys->recv.algo_mac = &dropbear_nohash;
 	ses.keys->trans.algo_mac = &dropbear_nohash;
 
-	ses.keys->algo_kex = -1;
+	ses.keys->algo_kex = NULL;
 	ses.keys->algo_hostkey = -1;
 	ses.keys->recv.algo_comp = DROPBEAR_COMP_NONE;
 	ses.keys->trans.algo_comp = DROPBEAR_COMP_NONE;
@@ -245,7 +245,16 @@ void session_cleanup() {
 		ses.extra_session_cleanup();
 	}
 	
-	m_free(ses.session_id);
+	if (ses.session_id) {
+		buf_burn(ses.session_id);
+		buf_free(ses.session_id);
+		ses.session_id = NULL;
+	}
+	if (ses.hash) {
+		buf_burn(ses.hash);
+		buf_free(ses.hash);
+		ses.hash = NULL;
+	}
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);
 

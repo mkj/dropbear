@@ -36,6 +36,11 @@
 #include "bignum.h"
 #include "buffer.h"
 #include "dbutil.h"
+#include "ecc.h"
+
+const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
+const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
+const unsigned char OID_SEC521R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x23};
 
 #define PUT_32BIT(cp, value) do { \
   (cp)[3] = (unsigned char)(value); \
@@ -158,7 +163,7 @@ static int dropbear_write(const char*filename, sign_key * key) {
 #endif
 
 	buf = buf_new(MAX_PRIVKEY_SIZE);
-	buf_put_priv_key(buf, key, keytype);
+	buf_put_priv_key(buf, key, key->type);
 
 	fp = fopen(filename, "w");
 	if (!fp) {
@@ -349,7 +354,7 @@ struct mpint_pos { void *start; int bytes; };
  * Code to read and write OpenSSH private keys.
  */
 
-enum { OSSH_DSA, OSSH_RSA };
+enum { OSSH_DSA, OSSH_RSA, OSSH_EC };
 struct openssh_key {
 	int type;
 	int encrypted;
@@ -392,6 +397,8 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		ret->type = OSSH_RSA;
 	else if (!strcmp(buffer, "-----BEGIN DSA PRIVATE KEY-----\n"))
 		ret->type = OSSH_DSA;
+	else if (!strcmp(buffer, "-----BEGIN EC PRIVATE KEY-----\n"))
+		ret->type = OSSH_EC;
 	else {
 		errmsg = "Unrecognised key type";
 		goto error;
@@ -521,6 +528,8 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	sign_key *retkey;
 	buffer * blobbuf = NULL;
 
+	retkey = new_sign_key();
+
 	key = load_openssh_key(filename);
 
 	if (!key)
@@ -597,6 +606,8 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 		num_integers = 9;
 	else if (key->type == OSSH_DSA)
 		num_integers = 6;
+	else if (key->type == OSSH_EC)
+		num_integers = 1;
 
 	/*
 	 * Space to create key blob in.
@@ -620,11 +631,18 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 		}
 
 		if (i == 0) {
-			/*
-			 * The first integer should be zero always (I think
-			 * this is some sort of version indication).
-			 */
-			if (len != 1 || p[0] != 0) {
+			/* First integer is a version indicator */
+			int expected;
+			switch (key->type) {
+				case OSSH_RSA:
+				case OSSH_DSA:
+					expected = 0;
+					break;
+				case OSSH_EC:
+					expected = 1;
+					break;
+			}
+			if (len != 1 || p[0] != expected) {
 				errmsg = "Version number mismatch";
 				goto error;
 			}
@@ -655,21 +673,127 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 		p += len;
 	}
 
+#ifdef DROPBEAR_ECDSA
+	if (key->type == OSSH_EC) {
+		const char* ecdsa_name;
+		unsigned char* private_key_bytes = NULL;
+		int private_key_len = 0;
+		unsigned char* public_key_bytes = NULL;
+		int public_key_len = 0;
+		ecc_key *ecc = NULL;
+		const struct dropbear_ecc_curve *curve = NULL;
+
+		// See SEC1 v2, Appendix C.4
+		// OpenSSL (so OpenSSH) seems to include the optional parts.
+
+		// privateKey OCTET STRING,
+		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
+							  &id, &len, &flags);
+		p += ret;
+		// id==4 for octet string
+		if (ret < 0 || id != 4 ||
+			key->keyblob+key->keyblob_len-p < len) {
+			errmsg = "ASN.1 decoding failure";
+			goto error;
+		}
+		private_key_bytes = p;
+		private_key_len = len;
+		p += len;
+
+		// parameters [0] ECDomainParameters {{ SECGCurveNames }} OPTIONAL,
+		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
+							  &id, &len, &flags);
+		p += ret;
+		// id==0
+		if (ret < 0 || id != 0) {
+			errmsg = "ASN.1 decoding failure";
+			goto error;
+		}
+
+		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
+							  &id, &len, &flags);
+		p += ret;
+		// id==6 for object
+		if (ret < 0 || id != 6 ||
+			key->keyblob+key->keyblob_len-p < len) {
+			errmsg = "ASN.1 decoding failure";
+			goto error;
+		}
+
+		if (len == sizeof(OID_SEC256R1_BLOB) 
+			&& memcmp(p, OID_SEC256R1_BLOB, len) == 0) {
+			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
+			curve = &ecc_curve_nistp256;
+		} else if (len == sizeof(OID_SEC384R1_BLOB)
+			&& memcmp(p, OID_SEC384R1_BLOB, len) == 0) {
+			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP384;
+			curve = &ecc_curve_nistp384;
+		} else if (len == sizeof(OID_SEC521R1_BLOB)
+			&& memcmp(p, OID_SEC521R1_BLOB, len) == 0) {
+			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP521;
+			curve = &ecc_curve_nistp521;
+		} else {
+			errmsg = "Unknown ECC key type";
+			goto error;
+		}
+		p += len;
+
+		// publicKey [1] BIT STRING OPTIONAL
+		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
+							  &id, &len, &flags);
+		p += ret;
+		// id==1
+		if (ret < 0 || id != 1) {
+			errmsg = "ASN.1 decoding failure";
+			goto error;
+		}
+
+		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
+							  &id, &len, &flags);
+		p += ret;
+		// id==3 for bit string
+		if (ret < 0 || id != 3 ||
+			key->keyblob+key->keyblob_len-p < len) {
+			errmsg = "ASN.1 decoding failure";
+			goto error;
+		}
+		public_key_bytes = p+1;
+		public_key_len = len-1;
+		p += len;
+
+		buf_putbytes(blobbuf, public_key_bytes, public_key_len);
+		ecc = buf_get_ecc_raw_pubkey(blobbuf, curve);
+		if (!ecc) {
+			errmsg = "Error parsing ECC key";
+			goto error;
+		}
+		m_mp_alloc_init_multi((mp_int**)&ecc->k, NULL);
+		if (mp_read_unsigned_bin(ecc->k, private_key_bytes, private_key_len)
+			!= MP_OKAY) {
+			errmsg = "Error parsing ECC key";
+			goto error;
+		}
+
+		*signkey_ecc_key_ptr(retkey, retkey->type) = ecc;
+	}
+#endif // DROPBEAR_ECDSA
+
 	/*
 	 * Now put together the actual key. Simplest way to do this is
 	 * to assemble our own key blobs and feed them to the createkey
 	 * functions; this is a bit faffy but it does mean we get all
 	 * the sanity checks for free.
 	 */
-	retkey = new_sign_key();
-	buf_setpos(blobbuf, 0);
-	type = DROPBEAR_SIGNKEY_ANY;
-	if (buf_get_priv_key(blobbuf, retkey, &type)
-			!= DROPBEAR_SUCCESS) {
-		errmsg = "unable to create key structure";
-		sign_key_free(retkey);
-		retkey = NULL;
-		goto error;
+	if (key->type == OSSH_RSA || key->type == OSSH_DSA) {
+		buf_setpos(blobbuf, 0);
+		type = DROPBEAR_SIGNKEY_ANY;
+		if (buf_get_priv_key(blobbuf, retkey, &type)
+				!= DROPBEAR_SUCCESS) {
+			errmsg = "unable to create key structure";
+			sign_key_free(retkey);
+			retkey = NULL;
+			goto error;
+		}
 	}
 
 	errmsg = NULL;					 /* no error */

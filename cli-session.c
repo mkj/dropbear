@@ -36,6 +36,7 @@
 #include "runopts.h"
 #include "chansession.h"
 #include "agentfwd.h"
+#include "crypto_desc.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();
@@ -85,10 +86,6 @@ static const struct ChanType *cli_chantypes[] = {
 };
 
 void cli_session(int sock_in, int sock_out) {
-
-	seedrandom();
-
-	crypto_init();
 
 	common_session_init(sock_in, sock_out);
 

@@ -29,6 +29,7 @@
 #include "signkey.h"
 #include "runopts.h"
 #include "random.h"
+#include "crypto_desc.h"
 
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
@@ -383,9 +384,11 @@ static void commonsetup() {
 		dropbear_exit("signal() error");
 	}
 
+	crypto_init();
+
 	/* Now we can setup the hostkeys - needs to be after logging is on,
 	 * otherwise we might end up blatting error messages to the socket */
-	loadhostkeys();
+	load_all_hostkeys();
 
     seedrandom();
 }

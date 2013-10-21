@@ -5,10 +5,10 @@
 #ifndef _OPTIONS_H_
 #define _OPTIONS_H_
 
-/******************************************************************
- * Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
- * parts are to allow for commandline -DDROPBEAR_XXX options etc.
- ******************************************************************/
+/* Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
+ * parts are to allow for commandline -DDROPBEAR_XXX options etc. */
+
+/* Important: Many options will require "make clean" after changes */
 
 #ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"
@@ -25,6 +25,9 @@
 #endif
 #ifndef RSA_PRIV_FILENAME
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
+#endif
+#ifndef ECDSA_PRIV_FILENAME
+#define ECDSA_PRIV_FILENAME "/etc/dropbear/dropbear_ecdsa_host_key"
 #endif
 
 /* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
@@ -49,7 +52,7 @@
 several kB in binary size however will make the symmetrical ciphers and hashes
 slower, perhaps by 50%. Recommended for small systems that aren't doing
 much traffic. */
-/*#define DROPBEAR_SMALL_CODE*/
+#define DROPBEAR_SMALL_CODE
 
 /* Enable X11 Forwarding - server only */
 #define ENABLE_X11FWD
@@ -135,6 +138,9 @@ much traffic. */
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
+
+#define DROPBEAR_ECDH
+#define DROPBEAR_ECDSA
 
 /* RSA can be vulnerable to timing attacks which use the time required for
  * signing to guess the private key. Blinding avoids this attack, though makes

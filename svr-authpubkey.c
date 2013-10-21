@@ -125,15 +125,14 @@ void svr_auth_pubkey() {
 
 	/* create the data which has been signed - this a string containing
 	 * session_id, concatenated with the payload packet up to the signature */
-	signbuf = buf_new(ses.payload->pos + 4 + SHA1_HASH_SIZE);
-	buf_putstring(signbuf, ses.session_id, SHA1_HASH_SIZE);
+	signbuf = buf_new(ses.payload->pos + 4 + ses.session_id->len);
+	buf_putbufstring(signbuf, ses.session_id);
 	buf_putbytes(signbuf, ses.payload->data, ses.payload->pos);
 	buf_setpos(signbuf, 0);
 
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(keyblob, keybloblen);
-	if (buf_verify(ses.payload, key, buf_getptr(signbuf, signbuf->len),
-				signbuf->len) == DROPBEAR_SUCCESS) {
+	if (buf_verify(ses.payload, key, signbuf) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);

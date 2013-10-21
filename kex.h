@@ -27,15 +27,25 @@
 
 #include "includes.h"
 #include "algo.h"
+#include "signkey.h"
 
 void send_msg_kexinit();
 void recv_msg_kexinit();
 void send_msg_newkeys();
 void recv_msg_newkeys();
 void kexfirstinitialise();
-void gen_kexdh_vals(mp_int *dh_pub, mp_int *dh_priv);
-void kexdh_comb_key(mp_int *dh_pub_us, mp_int *dh_priv, mp_int *dh_pub_them,
+
+struct kex_dh_param *gen_kexdh_param();
+void free_kexdh_param(struct kex_dh_param *param);
+void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 		sign_key *hostkey);
+
+#ifdef DROPBEAR_ECDH
+struct kex_ecdh_param *gen_kexecdh_param();
+void free_kexecdh_param(struct kex_ecdh_param *param);
+void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
+		sign_key *hostkey);
+#endif
 
 #ifndef DISABLE_ZLIB
 int is_compress_trans();
@@ -66,6 +76,21 @@ struct KEXState {
 
 };
 
+#define DH_P_1_LEN 128
+extern const unsigned char dh_p_1[DH_P_1_LEN];
+#define DH_P_14_LEN 256
+extern const unsigned char dh_p_14[DH_P_14_LEN];
+
+struct kex_dh_param {
+	mp_int pub; /* e */
+	mp_int priv; /* x */
+};
+
+#ifdef DROPBEAR_ECDH
+struct kex_ecdh_param {
+	ecc_key key;
+};
+#endif
 
 #define MAX_KEXHASHBUF 2000
 

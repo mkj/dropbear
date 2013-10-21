@@ -36,6 +36,7 @@
 #include "random.h"
 #include "runopts.h"
 #include "signkey.h"
+#include "ecc.h"
 
 
 static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
@@ -43,23 +44,31 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
 
 void send_msg_kexdh_init() {
 	TRACE(("send_msg_kexdh_init()"))	
-	if ((cli_ses.dh_e && cli_ses.dh_x 
-				&& cli_ses.dh_val_algo == ses.newkeys->algo_kex)) {
-		TRACE(("reusing existing dh_e from first_kex_packet_follows"))
-	} else {
-		if (!cli_ses.dh_e || !cli_ses.dh_e) {
-			cli_ses.dh_e = (mp_int*)m_malloc(sizeof(mp_int));
-			cli_ses.dh_x = (mp_int*)m_malloc(sizeof(mp_int));
-			m_mp_init_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
-		}
-
-		gen_kexdh_vals(cli_ses.dh_e, cli_ses.dh_x);
-		cli_ses.dh_val_algo = ses.newkeys->algo_kex;
-	}
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
-	buf_putmpint(ses.writepayload, cli_ses.dh_e);
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
+			|| !cli_ses.dh_param) {
+			if (cli_ses.dh_param) {
+				free_kexdh_param(cli_ses.dh_param);
+			}
+			cli_ses.dh_param = gen_kexdh_param();
+		}
+		buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
+	} else {
+#ifdef DROPBEAR_ECDH
+		if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
+			|| !cli_ses.ecdh_param) {
+			if (cli_ses.ecdh_param) {
+				free_kexecdh_param(cli_ses.ecdh_param);
+			}
+			cli_ses.ecdh_param = gen_kexecdh_param();
+		}
+		buf_put_ecc_raw_pubkey_string(ses.writepayload, &cli_ses.ecdh_param->key);
+#endif
+	}
+	cli_ses.param_kex_algo = ses.newkeys->algo_kex;
 	encrypt_packet();
 	ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
 	ses.requirenext[1] = SSH_MSG_KEXINIT;
@@ -68,18 +77,15 @@ void send_msg_kexdh_init() {
 /* Handle a diffie-hellman key exchange reply. */
 void recv_msg_kexdh_reply() {
 
-	DEF_MP_INT(dh_f);
 	sign_key *hostkey = NULL;
 	unsigned int type, keybloblen;
 	unsigned char* keyblob = NULL;
-
 
 	TRACE(("enter recv_msg_kexdh_reply"))
 
 	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
 		dropbear_exit("Received out-of-order kexdhreply");
 	}
-	m_mp_init(&dh_f);
 	type = ses.newkeys->algo_hostkey;
 	TRACE(("type is %d", type))
 
@@ -97,20 +103,38 @@ void recv_msg_kexdh_reply() {
 		dropbear_exit("Bad KEX packet");
 	}
 
-	if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
-		TRACE(("failed getting mpint"))
-		dropbear_exit("Bad KEX packet");
+	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
+		// Normal diffie-hellman
+		DEF_MP_INT(dh_f);
+		m_mp_init(&dh_f);
+		if (buf_getmpint(ses.payload, &dh_f) != DROPBEAR_SUCCESS) {
+			TRACE(("failed getting mpint"))
+			dropbear_exit("Bad KEX packet");
+		}
+
+		kexdh_comb_key(cli_ses.dh_param, &dh_f, hostkey);
+		mp_clear(&dh_f);
+	} else {
+#ifdef DROPBEAR_ECDH
+		buffer *ecdh_qs = buf_getstringbuf(ses.payload);
+		kexecdh_comb_key(cli_ses.ecdh_param, ecdh_qs, hostkey);
+		buf_free(ecdh_qs);
+#endif
 	}
 
-	kexdh_comb_key(cli_ses.dh_e, cli_ses.dh_x, &dh_f, hostkey);
-	mp_clear(&dh_f);
-	mp_clear_multi(cli_ses.dh_e, cli_ses.dh_x, NULL);
-	m_free(cli_ses.dh_e);
-	m_free(cli_ses.dh_x);
-	cli_ses.dh_val_algo = DROPBEAR_KEX_NONE;
+	if (cli_ses.dh_param) {
+		free_kexdh_param(cli_ses.dh_param);
+		cli_ses.dh_param = NULL;
+	}
+#ifdef DROPBEAR_ECDH
+	if (cli_ses.ecdh_param) {
+		free_kexecdh_param(cli_ses.ecdh_param);
+		cli_ses.ecdh_param = NULL;
+	}
+#endif
 
-	if (buf_verify(ses.payload, hostkey, ses.hash, SHA1_HASH_SIZE) 
-			!= DROPBEAR_SUCCESS) {
+	cli_ses.param_kex_algo = NULL;
+	if (buf_verify(ses.payload, hostkey, ses.hash) != DROPBEAR_SUCCESS) {
 		dropbear_exit("Bad hostkey signature");
 	}
 
