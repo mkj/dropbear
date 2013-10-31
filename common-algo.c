@@ -246,14 +246,14 @@ static struct dropbear_kex kex_ecdh_nistp521 = {NULL, 0, &ecc_curve_nistp521, &s
 
 algo_type sshkex[] = {
 #ifdef DROPBEAR_ECDH
-#ifdef DROPBEAR_ECC_256
-	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
+#ifdef DROPBEAR_ECC_521
+	{"ecdh-sha2-nistp521", 0, &kex_ecdh_nistp521, 1, NULL},
 #endif
 #ifdef DROPBEAR_ECC_384
 	{"ecdh-sha2-nistp384", 0, &kex_ecdh_nistp384, 1, NULL},
 #endif
-#ifdef DROPBEAR_ECC_521
-	{"ecdh-sha2-nistp521", 0, &kex_ecdh_nistp521, 1, NULL},
+#ifdef DROPBEAR_ECC_256
+	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #endif
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},

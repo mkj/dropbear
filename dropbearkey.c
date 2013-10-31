@@ -57,7 +57,7 @@
 
 static void printhelp(char * progname);
 
-#define RSA_DEFAULT_SIZE 1024
+#define RSA_DEFAULT_SIZE 2048
 #define DSS_DEFAULT_SIZE 1024
 
 static void buf_writefile(buffer * buf, const char * filename);
