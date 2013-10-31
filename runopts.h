@@ -56,7 +56,8 @@ typedef struct runopts {
 
 extern runopts opts;
 
-int readhostkey(const char * filename, sign_key * hostkey, int *type);
+int readhostkey(const char * filename, sign_key * hostkey, 
+	enum signkey_type *type);
 void load_all_hostkeys();
 
 typedef struct svr_runopts {

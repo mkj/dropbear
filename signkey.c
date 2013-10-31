@@ -103,26 +103,39 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 	return DROPBEAR_SIGNKEY_NONE;
 }
 
-#ifdef DROPBEAR_ECDSA
-ecc_key **
-signkey_ecc_key_ptr(sign_key *key, enum signkey_type ecc_type) {
-	switch (ecc_type) {
+/* Returns a pointer to the key part specific to "type" */
+void **
+signkey_key_ptr(sign_key *key, enum signkey_type type) {
+	switch (type) {
+#ifdef DROPBEAR_ECC_256
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
-			return &key->ecckey256;
+			return (void**)&key->ecckey256;
+#endif
+#ifdef DROPBEAR_ECC_384
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP384:
-			return &key->ecckey384;
+			return (void**)&key->ecckey384;
+#endif
+#ifdef DROPBEAR_ECC_521
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP521:
-			return &key->ecckey521;
+			return (void**)&key->ecckey521;
+#endif
+#ifdef DROPBEAR_RSA
+		case DROPBEAR_SIGNKEY_RSA:
+			return (void**)&key->rsakey;
+#endif
+#ifdef DROPBEAR_DSS
+		case DROPBEAR_SIGNKEY_DSS:
+			return (void**)&key->dsskey;
+#endif
 		default:
 			return NULL;
 	}
 }
-#endif
 
 /* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
  * type should be set by the caller to specify the type to read, and
  * on return is set to the type read (useful when type = _ANY) */
-int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
+int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
 	unsigned char* ident;
 	unsigned int len;
@@ -169,7 +182,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 #endif
 #ifdef DROPBEAR_ECDSA
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, keytype);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
 				ecc_free(*eck);
@@ -192,7 +205,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, int *type) {
 /* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
  * type should be set by the caller to specify the type to read, and
  * on return is set to the type read (useful when type = _ANY) */
-int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
+int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
 	unsigned char* ident;
 	unsigned int len;
@@ -237,7 +250,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 #endif
 #ifdef DROPBEAR_ECDSA
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, keytype);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
 				ecc_free(*eck);
@@ -258,7 +271,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, int *type) {
 }
 
 /* type is either DROPBEAR_SIGNKEY_DSS or DROPBEAR_SIGNKEY_RSA */
-void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
+void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type) {
 
 	buffer *pubkeys;
 
@@ -276,8 +289,11 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
+	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
+		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
+		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521)
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, type);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_pub_key(pubkeys, *eck);
 		}
@@ -293,7 +309,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, int type) {
 }
 
 /* type is either DROPBEAR_SIGNKEY_DSS or DROPBEAR_SIGNKEY_RSA */
-void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
+void buf_put_priv_key(buffer* buf, sign_key *key, enum signkey_type type) {
 
 	TRACE(("enter buf_put_priv_key"))
 	TRACE(("type is %d", type))
@@ -314,7 +330,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, int type) {
 #endif
 #ifdef DROPBEAR_ECDSA
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, type);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_priv_key(buf, *eck);
 			TRACE(("leave buf_put_priv_key: ecdsa done"))
@@ -452,7 +468,7 @@ char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen) {
 #endif
 }
 
-void buf_put_sign(buffer* buf, sign_key *key, int type, 
+void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type, 
 	buffer *data_buf) {
 	buffer *sigblob;
 	sigblob = buf_new(MAX_PUBKEY_SIZE);
@@ -469,7 +485,7 @@ void buf_put_sign(buffer* buf, sign_key *key, int type,
 #endif
 #ifdef DROPBEAR_ECDSA
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, type);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_sign(sigblob, *eck, data_buf);
 		}
@@ -520,7 +536,7 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 #endif
 #ifdef DROPBEAR_ECDSA
 	{
-		ecc_key **eck = signkey_ecc_key_ptr(key, type);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			return buf_ecdsa_verify(buf, *eck, data_buf);
 		}

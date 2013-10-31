@@ -7,12 +7,12 @@
 
 #ifdef DROPBEAR_ECDSA
 
-#if defined(DROPBEAR_ECC_256)
-#define ECDSA_DEFAULT_SIZE 256
+#if defined(DROPBEAR_ECC_521)
+#define ECDSA_DEFAULT_SIZE 521
 #elif defined(DROPBEAR_ECC_384)
 #define ECDSA_DEFAULT_SIZE 384
-#elif defined(DROPBEAR_ECC_521)
-#define ECDSA_DEFAULT_SIZE 521
+#elif defined(DROPBEAR_ECC_256)
+#define ECDSA_DEFAULT_SIZE 256
 #else
 #define ECDSA_DEFAULT_SIZE 0
 #endif
