@@ -57,11 +57,10 @@ typedef struct runopts {
 extern runopts opts;
 
 int readhostkey(const char * filename, sign_key * hostkey, int *type);
+void load_all_hostkeys();
 
 typedef struct svr_runopts {
 
-	char * rsakeyfile;
-	char * dsskeyfile;
 	char * bannerfile;
 
 	int forkbg;
@@ -99,6 +98,10 @@ typedef struct svr_runopts {
 #endif
 
 	sign_key *hostkey;
+
+	char *hostkey_files[MAX_HOSTKEYS];
+	int num_hostkey_files;
+
 	buffer * banner;
 	char * pidfile;
 

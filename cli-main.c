@@ -28,6 +28,8 @@
 #include "dbutil.h"
 #include "runopts.h"
 #include "session.h"
+#include "random.h"
+#include "crypto_desc.h"
 
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 static void cli_dropbear_log(int priority, const char* format, va_list param);
@@ -50,6 +52,9 @@ int main(int argc, char ** argv) {
 	_dropbear_log = cli_dropbear_log;
 
 	disallow_core();
+
+	seedrandom();
+	crypto_init();
 
 	cli_getopts(argc, argv);
 

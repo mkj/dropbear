@@ -455,7 +455,7 @@ do_escape(unsigned char c) {
 }
 
 static
-void cli_escape_handler(struct Channel *channel, unsigned char* buf, int *len) {
+void cli_escape_handler(struct Channel* UNUSED(channel), unsigned char* buf, int *len) {
 	char c;
 	int skip_char = 0;
 

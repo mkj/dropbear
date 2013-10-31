@@ -39,6 +39,7 @@
 #include "service.h"
 #include "auth.h"
 #include "runopts.h"
+#include "crypto_desc.h"
 
 static void svr_remoteclosed();
 
@@ -83,7 +84,6 @@ void svr_session(int sock, int childpipe) {
 	char *host, *port;
 	size_t len;
 
-	crypto_init();
 	common_session_init(sock, sock);
 
 	/* Initialise server specific parts of the session */

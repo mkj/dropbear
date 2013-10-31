@@ -28,6 +28,7 @@
 #include "bignum.h"
 #include "random.h"
 
+
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
 /* the max value for the counter, so it won't integer overflow */
@@ -80,14 +81,14 @@ process_file(hash_state *hs, const char *filename,
 		unsigned char readbuf[4096];
 		if (!already_blocked)
 		{
-			int ret;
+			int res;
 			struct timeval timeout = { .tv_sec = 2, .tv_usec = 0};
 			fd_set read_fds;
 
 			FD_ZERO(&read_fds);
 			FD_SET(readfd, &read_fds);
-			ret = select(readfd + 1, &read_fds, NULL, NULL, &timeout);
-			if (ret == 0)
+			res = select(readfd + 1, &read_fds, NULL, NULL, &timeout);
+			if (res == 0)
 			{
 				dropbear_log(LOG_WARNING, "Warning: Reading the randomness source '%s' seems to have blocked.\nYou may need to find a better entropy source.", filename);
 				already_blocked = 1;
