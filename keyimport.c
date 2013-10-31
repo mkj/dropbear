@@ -774,7 +774,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 			goto error;
 		}
 
-		*signkey_ecc_key_ptr(retkey, retkey->type) = ecc;
+		*signkey_key_ptr(retkey, retkey->type) = ecc;
 	}
 #endif // DROPBEAR_ECDSA
 

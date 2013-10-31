@@ -85,12 +85,12 @@ typedef struct SIGN_key sign_key;
 sign_key * new_sign_key();
 const char* signkey_name_from_type(enum signkey_type type, unsigned int *namelen);
 enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen);
-int buf_get_pub_key(buffer *buf, sign_key *key, int *type);
-int buf_get_priv_key(buffer* buf, sign_key *key, int *type);
-void buf_put_pub_key(buffer* buf, sign_key *key, int type);
-void buf_put_priv_key(buffer* buf, sign_key *key, int type);
+int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type);
+int buf_get_priv_key(buffer* buf, sign_key *key, enum signkey_type *type);
+void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type);
+void buf_put_priv_key(buffer* buf, sign_key *key, enum signkey_type type);
 void sign_key_free(sign_key *key);
-void buf_put_sign(buffer* buf, sign_key *key, int type, buffer *data_buf);
+void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type, buffer *data_buf);
 #ifdef DROPBEAR_SIGNKEY_VERIFY
 int buf_verify(buffer * buf, sign_key *key, buffer *data_buf);
 char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen);
@@ -99,8 +99,6 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 					const unsigned char* algoname, unsigned int algolen, 
 					buffer * line, char ** fingerprint);
 
-#ifdef DROPBEAR_ECDSA
-ecc_key ** signkey_ecc_key_ptr(sign_key *key, enum signkey_type ecc_type);
-#endif
+void** signkey_key_ptr(sign_key *key, enum signkey_type type);
 
 #endif /* _SIGNKEY_H_ */

@@ -57,7 +57,7 @@
 
 static void printhelp(char * progname);
 
-#define RSA_DEFAULT_SIZE 1024
+#define RSA_DEFAULT_SIZE 2048
 #define DSS_DEFAULT_SIZE 1024
 
 static void buf_writefile(buffer * buf, const char * filename);
@@ -185,7 +185,24 @@ int main(int argc, char ** argv) {
 		exit(EXIT_FAILURE);
 	}
 
-	keytype = signkey_type_from_name(typetext, strlen(typetext));
+#ifdef DROPBEAR_RSA
+	if (strcmp(typetext, "rsa") == 0)
+	{
+		keytype = DROPBEAR_SIGNKEY_RSA;
+	}
+#endif
+#ifdef DROPBEAR_DSS
+	if (strcmp(typetext, "dss") == 0)
+	{
+		keytype = DROPBEAR_SIGNKEY_DSS;
+	}
+#endif
+#ifdef DROPBEAR_ECDSA
+	if (strcmp(typetext, "ecdsa") == 0)
+	{
+		keytype = DROPBEAR_SIGNKEY_ECDSA_KEYGEN;
+	}
+#endif
 
 	if (keytype == DROPBEAR_SIGNKEY_NONE) {
 		fprintf(stderr, "Unknown key type '%s'\n", typetext);
@@ -221,10 +238,13 @@ int main(int argc, char ** argv) {
 				(void)0; /* quiet, compiler. ecdsa handles checks itself */
         }
 
+    } else {
+    	/* default key size */
+
         switch (keytype) {
 #ifdef DROPBEAR_RSA
             case DROPBEAR_SIGNKEY_RSA:
-                bits = RSA_DEFAULT_SIZE;
+				bits = RSA_DEFAULT_SIZE;
                 break;
 #endif
 #ifdef DROPBEAR_DSS
@@ -269,7 +289,7 @@ int main(int argc, char ** argv) {
 			{
 				ecc_key *ecckey = gen_ecdsa_priv_key(bits);
 				keytype = ecdsa_signkey_type(ecckey);
-				*signkey_ecc_key_ptr(key, keytype) = ecckey;
+				*signkey_key_ptr(key, keytype) = ecckey;
 			}
 			break;
 #endif
@@ -299,7 +319,7 @@ static void justprintpub(const char* filename) {
 
 	buffer *buf = NULL;
 	sign_key *key = NULL;
-	int keytype;
+	enum signkey_type keytype;
 	int ret;
 	int err = DROPBEAR_FAILURE;
 
