@@ -35,6 +35,7 @@
 #include "random.h"
 #include "runopts.h"
 #include "ecc.h"
+#include "gensignkey.h"
 
 static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs);
 
@@ -75,6 +76,82 @@ void recv_msg_kexdh_init() {
 	ses.requirenext[1] = 0;
 	TRACE(("leave recv_msg_kexdh_init"))
 }
+
+static void svr_ensure_hostkey() {
+
+	const char* fn = NULL;
+	char *fn_temp = NULL;
+	enum signkey_type type = ses.newkeys->algo_hostkey;
+	void **hostkey = signkey_key_ptr(svr_opts.hostkey, type);
+	int ret = DROPBEAR_FAILURE;
+
+	if (hostkey && *hostkey) {
+		return;
+	}
+
+	switch (type)
+	{
+#ifdef DROPBEAR_RSA
+		case DROPBEAR_SIGNKEY_RSA:
+			fn = RSA_PRIV_FILENAME;
+			break;
+#endif
+#ifdef DROPBEAR_DSS
+		case DROPBEAR_SIGNKEY_DSS:
+			fn = DSS_PRIV_FILENAME;
+			break;
+#endif
+#ifdef DROPBEAR_ECDSA
+		case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
+		case DROPBEAR_SIGNKEY_ECDSA_NISTP384:
+		case DROPBEAR_SIGNKEY_ECDSA_NISTP521:
+			fn = ECDSA_PRIV_FILENAME;
+			break;
+#endif
+		default:
+			(void)0;
+	}
+
+	if (readhostkey(fn, svr_opts.hostkey, &type) == DROPBEAR_SUCCESS) {
+		return;
+	}
+
+	fn_temp = m_malloc(strlen(fn) + 20);
+	snprintf(fn_temp, strlen(fn)+20, "%s.tmp%d", fn, getpid());
+
+	if (signkey_generate(type, 0, fn_temp) == DROPBEAR_FAILURE) {
+		goto out;
+	}
+
+	if (link(fn_temp, fn) < 0) {
+		if (errno != EEXIST) {
+			dropbear_log(LOG_ERR, "Failed moving key file to %s", fn);
+			/* XXX fallback to non-atomic copy for some filesystems? */
+			goto out;
+		}
+	}
+
+	ret = readhostkey(fn, svr_opts.hostkey, &type);
+
+out:
+	if (fn_temp) {
+		unlink(fn_temp);
+		m_free(fn_temp);
+	}
+
+	if (ret == DROPBEAR_FAILURE)
+	{
+		dropbear_exit("Couldn't read or generate hostkey");
+	}
+
+	// directory for keys.
+
+	// Create lockfile first, or wait if it exists. PID!
+	// Generate key
+	// write it, load to memory
+	// atomic rename, done.
+
+}
 	
 /* Generate our side of the diffie-hellman key exchange value (dh_f), and
  * calculate the session key using the diffie-hellman algorithm. Following
@@ -88,6 +165,9 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 
 	/* we can start creating the kexdh_reply packet */
 	CHECKCLEARTOWRITE();
+	
+	svr_ensure_hostkey();
+
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_REPLY);
 	buf_put_pub_key(ses.writepayload, svr_opts.hostkey,
 			ses.newkeys->algo_hostkey);

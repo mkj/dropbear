@@ -181,7 +181,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	{
+	if (signkey_is_ecdsa(keytype)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
@@ -249,7 +249,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	{
+	if (signkey_is_ecdsa(keytype)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
@@ -289,10 +289,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521)
-	{
+	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_pub_key(pubkeys, *eck);
@@ -329,7 +326,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, enum signkey_type type) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	{
+	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_priv_key(buf, *eck);
@@ -484,7 +481,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type,
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	{
+	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			buf_put_ecdsa_sign(sigblob, *eck, data_buf);
@@ -535,7 +532,7 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	}
 #endif
 #ifdef DROPBEAR_ECDSA
-	{
+	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
 		if (eck) {
 			return buf_ecdsa_verify(buf, *eck, data_buf);

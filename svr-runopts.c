@@ -482,7 +482,7 @@ void load_all_hostkeys() {
 #endif
 #ifdef DROPBEAR_ECC_521
 	if (!svr_opts.hostkey->ecckey521) {
-		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
+		//disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
 	}
 #endif
 #endif

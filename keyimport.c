@@ -112,7 +112,7 @@ static sign_key *dropbear_read(const char* filename) {
 
 	buffer * buf = NULL;
 	sign_key *ret = NULL;
-	int type;
+	enum signkey_type type;
 
 	buf = buf_new(MAX_PRIVKEY_SIZE);
 	if (buf_readfile(buf, filename) == DROPBEAR_FAILURE) {
@@ -501,7 +501,7 @@ static int openssh_encrypted(const char *filename)
 	return ret;
 }
 
-static sign_key *openssh_read(const char *filename, char *passphrase)
+static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 {
 	struct openssh_key *key;
 	unsigned char *p;
@@ -511,7 +511,7 @@ static sign_key *openssh_read(const char *filename, char *passphrase)
 	char *errmsg;
 	char *modptr = NULL;
 	int modlen = -9999;
-	int type;
+	enum signkey_type type;
 
 	sign_key *retkey;
 	buffer * blobbuf = NULL;
@@ -1018,8 +1018,8 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 		*/
 		buffer *seq_buf = buf_new(400);
-		ecc_key **eck = signkey_ecc_key_ptr(key, key->type);
-		const unsigned long curve_size = (*eck)->dp->size;
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, key->type);
+		const long curve_size = (*eck)->dp->size;
 		int curve_oid_len = 0;
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
