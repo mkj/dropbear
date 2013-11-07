@@ -54,6 +54,7 @@
 #include "ecdsa.h"
 #include "crypto_desc.h"
 #include "random.h"
+#include "gensignkey.h"
 
 static void printhelp(char * progname);
 
@@ -133,8 +134,6 @@ int main(int argc, char ** argv) {
 
 	int i;
 	char ** next = 0;
-	sign_key *key = NULL;
-	buffer *buf = NULL;
 	char * filename = NULL;
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;

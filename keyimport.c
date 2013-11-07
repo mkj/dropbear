@@ -709,19 +709,29 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 			goto error;
 		}
 
-		if (len == sizeof(OID_SEC256R1_BLOB) 
+		if (0) {}
+#ifdef DROPBEAR_ECC_256
+		else if (len == sizeof(OID_SEC256R1_BLOB) 
 			&& memcmp(p, OID_SEC256R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
 			curve = &ecc_curve_nistp256;
-		} else if (len == sizeof(OID_SEC384R1_BLOB)
+		} 
+#endif
+#ifdef DROPBEAR_ECC_384
+		else if (len == sizeof(OID_SEC384R1_BLOB)
 			&& memcmp(p, OID_SEC384R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP384;
 			curve = &ecc_curve_nistp384;
-		} else if (len == sizeof(OID_SEC521R1_BLOB)
+		} 
+#endif
+#ifdef DROPBEAR_ECC_521
+		else if (len == sizeof(OID_SEC521R1_BLOB)
 			&& memcmp(p, OID_SEC521R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP521;
 			curve = &ecc_curve_nistp521;
-		} else {
+		} 
+#endif
+		else {
 			errmsg = "Unknown ECC key type";
 			goto error;
 		}

@@ -77,6 +77,7 @@ void recv_msg_kexdh_init() {
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 
+#ifdef DROPBEAR_DELAY_HOSTKEY
 static void svr_ensure_hostkey() {
 
 	const char* fn = NULL;
@@ -141,7 +142,7 @@ out:
 
 	if (ret == DROPBEAR_FAILURE)
 	{
-		dropbear_exit("Couldn't read or generate hostkey");
+		dropbear_exit("Couldn't read or generate hostkey %s", fn);
 	}
 
 	// directory for keys.
@@ -152,6 +153,7 @@ out:
 	// atomic rename, done.
 
 }
+#endif
 	
 /* Generate our side of the diffie-hellman key exchange value (dh_f), and
  * calculate the session key using the diffie-hellman algorithm. Following
@@ -165,8 +167,13 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 
 	/* we can start creating the kexdh_reply packet */
 	CHECKCLEARTOWRITE();
-	
-	svr_ensure_hostkey();
+
+#ifdef DROPBEAR_DELAY_HOSTKEY
+	if (svr_opts.delay_hostkey)
+	{
+		svr_ensure_hostkey();
+	}
+#endif
 
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_REPLY);
 	buf_put_pub_key(ses.writepayload, svr_opts.hostkey,

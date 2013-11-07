@@ -351,18 +351,24 @@ void sign_key_free(sign_key *key) {
 	key->rsakey = NULL;
 #endif
 #ifdef DROPBEAR_ECDSA
+#ifdef DROPBEAR_ECC_256
 	if (key->ecckey256) {
 		ecc_free(key->ecckey256);
 		key->ecckey256 = NULL;
 	}
+#endif
+#ifdef DROPBEAR_ECC_384
 	if (key->ecckey384) {
 		ecc_free(key->ecckey384);
 		key->ecckey384 = NULL;
 	}
+#endif
+#ifdef DROPBEAR_ECC_521
 	if (key->ecckey521) {
 		ecc_free(key->ecckey521);
 		key->ecckey521 = NULL;
 	}
+#endif
 #endif
 
 	m_free(key->filename);

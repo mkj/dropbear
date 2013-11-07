@@ -72,7 +72,6 @@ static int get_default_bits(enum signkey_type keytype)
 		}
 }
 
-
 int signkey_generate(enum signkey_type keytype, int bits, const char* filename)
 {
 	sign_key * key = NULL;
