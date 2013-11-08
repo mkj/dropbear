@@ -228,23 +228,30 @@ algo_type sshhostkey[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
-static struct dropbear_kex kex_dh_group1 = {dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
-static struct dropbear_kex kex_dh_group14 = {dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
+static const struct dropbear_kex kex_dh_group1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
+static const struct dropbear_kex kex_dh_group14 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
 
 #ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
-static struct dropbear_kex kex_ecdh_nistp256 = {NULL, 0, &ecc_curve_nistp256, &sha256_desc };
+static struct dropbear_kex kex_ecdh_nistp256 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc_curve_nistp256, &sha256_desc };
 #endif
 #ifdef DROPBEAR_ECC_384
-static struct dropbear_kex kex_ecdh_nistp384 = {NULL, 0, &ecc_curve_nistp384, &sha384_desc };
+static struct dropbear_kex kex_ecdh_nistp384 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc_curve_nistp384, &sha384_desc };
 #endif
 #ifdef DROPBEAR_ECC_521
-static struct dropbear_kex kex_ecdh_nistp521 = {NULL, 0, &ecc_curve_nistp521, &sha512_desc };
+static struct dropbear_kex kex_ecdh_nistp521 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc_curve_nistp521, &sha512_desc };
 #endif
-#endif // DROPBEAR_ECDH
+#endif /* DROPBEAR_ECDH */
 
+#ifdef DROPBEAR_CURVE25519
+/* Referred to directly */
+const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL, 0, NULL, &sha256_desc };
+#endif
 
 algo_type sshkex[] = {
+#ifdef DROPBEAR_CURVE25519
+	{"curve25519-sha256@libssh.org", 0, &kex_curve25519, 1, NULL},
+#endif
 #ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_521
 	{"ecdh-sha2-nistp521", 0, &kex_ecdh_nistp521, 1, NULL},
@@ -289,7 +296,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	unsigned int donefirst = 0;
 	buffer *algolist = NULL;
 
-	algolist = buf_new(160);
+	algolist = buf_new(200);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
 			if (donefirst)

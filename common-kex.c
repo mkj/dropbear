@@ -690,8 +690,8 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 
 	ses.dh_K = dropbear_ecc_shared_secret(Q_them, &param->key);
 
-	/* From here on, the code needs to work with the _same_ vars on each side,
-	 * not vice-versaing for client/server */
+	/* Create the remainder of the hash buffer, to generate the exchange hash
+	   See RFC5656 section 4 page 7 */
 	if (IS_DROPBEAR_CLIENT) {
 		Q_C = &param->key;
 		Q_S = Q_them;
@@ -700,7 +700,6 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 		Q_S = &param->key;
 	} 
 
-	/* Create the remainder of the hash buffer, to generate the exchange hash */
 	/* K_S, the host key */
 	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
 	/* Q_C, client's ephemeral public key octet string */
@@ -713,7 +712,72 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	/* calculate the hash H to sign */
 	finish_kexhashbuf();
 }
-#endif
+#endif /* DROPBEAR_ECDH */
+
+#ifdef DROPBEAR_CURVE25519
+struct kex_curve25519_param *gen_kexcurve25519_param () {
+	/* Per http://cr.yp.to/ecdh.html */
+	struct kex_curve25519_param *param = m_malloc(sizeof(*param));
+	const unsigned char basepoint[32] = {9};
+
+	genrandom(param->priv, CURVE25519_LEN);
+	param->priv[0] &= 248;
+	param->priv[31] &= 127;
+	param->priv[31] |= 64;
+
+	curve25519_donna(param->pub, param->priv, basepoint);
+
+	return param;
+}
+
+void free_kexcurve25519_param(struct kex_curve25519_param *param)
+{
+	m_burn(param->priv, CURVE25519_LEN);
+	m_free(param);
+}
+
+void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_them,
+	sign_key *hostkey) {
+	unsigned char* out = m_malloc(CURVE25519_LEN);
+	const unsigned char* Q_C = NULL;
+	const unsigned char* Q_S = NULL;
+
+	if (buf_pub_them->len != CURVE25519_LEN)
+	{
+		dropbear_exit("Bad curve25519");
+	}
+
+	curve25519_donna(out, param->priv, buf_pub_them->data);
+	ses.dh_K = m_malloc(sizeof(*ses.dh_K));
+	m_mp_init(ses.dh_K);
+	bytes_to_mp(ses.dh_K, out, CURVE25519_LEN);
+	m_free(out);
+
+	/* Create the remainder of the hash buffer, to generate the exchange hash.
+	   See RFC5656 section 4 page 7 */
+	if (IS_DROPBEAR_CLIENT) {
+		Q_C = param->pub;
+		Q_S = buf_pub_them->data;
+	} else {
+		Q_S = param->pub;
+		Q_C = buf_pub_them->data;
+	}
+
+	/* K_S, the host key */
+	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
+	/* Q_C, client's ephemeral public key octet string */
+	buf_putstring(ses.kexhashbuf, Q_C, CURVE25519_LEN);
+	/* Q_S, server's ephemeral public key octet string */
+	buf_putstring(ses.kexhashbuf, Q_S, CURVE25519_LEN);
+	/* K, the shared secret */
+	buf_putmpint(ses.kexhashbuf, ses.dh_K);
+
+	/* calculate the hash H to sign */
+	finish_kexhashbuf();
+}
+#endif /* DROPBEAR_CURVE25519 */
+
+
 
 static void finish_kexhashbuf(void) {
 	hash_state hs;

@@ -56,6 +56,7 @@ extern algo_type ssh_nocompress[];
 extern const struct dropbear_cipher dropbear_nocipher;
 extern const struct dropbear_cipher_mode dropbear_mode_none;
 extern const struct dropbear_hash dropbear_nohash;
+extern const struct dropbear_kex kex_curve25519;
 
 struct dropbear_cipher {
 	const struct ltc_cipher_descriptor *cipherdesc;
@@ -81,17 +82,27 @@ struct dropbear_hash {
 	const unsigned char hashsize;
 };
 
+enum dropbear_kex_mode {
+	DROPBEAR_KEX_NORMAL_DH,
+	DROPBEAR_KEX_ECDH,
+	DROPBEAR_KEX_CURVE25519,
+};
+
 struct dropbear_kex {
-	// "normal" DH KEX
+	enum dropbear_kex_mode mode;
+	
+	/* "normal" DH KEX */
 	const unsigned char *dh_p_bytes;
 	const int dh_p_len;
 
-	// elliptic curve DH KEX
+	/* elliptic curve DH KEX */
 #ifdef DROPBEAR_ECDH
 	const struct dropbear_ecc_curve *ecc_curve;
+#else
+	const void* dummy;
 #endif
 
-	// both
+	/* both */
 	const struct ltc_hash_descriptor *hash_desc;
 };
 
@@ -115,12 +126,6 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 int check_user_algos(const char* user_algo_list, algo_type * algos, 
 		const char *algo_desc);
 char * algolist_string(algo_type algos[]);
-#endif
-
-#ifdef DROPBEAR_ECDH
-#define IS_NORMAL_DH(algo) ((algo)->dh_p_bytes != NULL)
-#else
-#define IS_NORMAL_DH(algo) 1
 #endif
 
 enum {

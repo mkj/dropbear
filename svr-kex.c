@@ -52,15 +52,22 @@ void recv_msg_kexdh_init() {
 		dropbear_exit("Premature kexdh_init message received");
 	}
 
-	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
-		m_mp_init(&dh_e);
-		if (buf_getmpint(ses.payload, &dh_e) != DROPBEAR_SUCCESS) {
-			dropbear_exit("Failed to get kex value");
-		}
-	} else {
-#ifdef DROPBEAR_ECDH
-		ecdh_qs = buf_getstringbuf(ses.payload);
+	switch (ses.newkeys->algo_kex->mode) {
+		case DROPBEAR_KEX_NORMAL_DH:
+			m_mp_init(&dh_e);
+			if (buf_getmpint(ses.payload, &dh_e) != DROPBEAR_SUCCESS) {
+				dropbear_exit("Bad kex value");
+			}
+			break;
+		case DROPBEAR_KEX_ECDH:
+		case DROPBEAR_KEX_CURVE25519:
+#if defined(DROPBEAR_ECDH) || defined(DROPBEAR_CURVE25519)
+			ecdh_qs = buf_getstringbuf(ses.payload);
+			if (ses.payload->pos != ses.payload->len) {
+				dropbear_exit("Bad kex value");
+			}
 #endif
+			break;
 	}
 
 	send_msg_kexdh_reply(&dh_e, ecdh_qs);
@@ -92,22 +99,38 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 	buf_put_pub_key(ses.writepayload, svr_opts.hostkey,
 			ses.newkeys->algo_hostkey);
 
-	if (IS_NORMAL_DH(ses.newkeys->algo_kex)) {
-		// Normal diffie-hellman
-		struct kex_dh_param * dh_param = gen_kexdh_param();
-		kexdh_comb_key(dh_param, dh_e, svr_opts.hostkey);
+	switch (ses.newkeys->algo_kex->mode) {
+		case DROPBEAR_KEX_NORMAL_DH:
+			{
+			struct kex_dh_param * dh_param = gen_kexdh_param();
+			kexdh_comb_key(dh_param, dh_e, svr_opts.hostkey);
 
-		/* put f */
-		buf_putmpint(ses.writepayload, &dh_param->pub);
-		free_kexdh_param(dh_param);
-	} else {
+			/* put f */
+			buf_putmpint(ses.writepayload, &dh_param->pub);
+			free_kexdh_param(dh_param);
+			}
+			break;
+		case DROPBEAR_KEX_ECDH:
 #ifdef DROPBEAR_ECDH
-		struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
-		kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
+			{
+			struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
+			kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
 
-		buf_put_ecc_raw_pubkey_string(ses.writepayload, &ecdh_param->key);
-		free_kexecdh_param(ecdh_param);
+			buf_put_ecc_raw_pubkey_string(ses.writepayload, &ecdh_param->key);
+			free_kexecdh_param(ecdh_param);
+			}
 #endif
+			break;
+		case DROPBEAR_KEX_CURVE25519:
+#ifdef DROPBEAR_CURVE25519
+			{
+			struct kex_curve25519_param *param = gen_kexecdh_param();
+			kexcurve25519_comb_key(param, ecdh_qs, svr_opts.hostkey);
+			buf_putstring(ses.writepayload, param->priv, CURVE25519_LEN);
+			free_kexcurve25519_param(param);
+			}
+#endif
+			break;
 	}
 
 	/* calc the signature */

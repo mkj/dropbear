@@ -1018,7 +1018,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 		*/
 		buffer *seq_buf = buf_new(400);
-		ecc_key **eck = signkey_ecc_key_ptr(key, key->type);
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, key->type);
 		const unsigned long curve_size = (*eck)->dp->size;
 		int curve_oid_len = 0;
 		const void* curve_oid = NULL;
