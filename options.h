@@ -146,12 +146,13 @@ much traffic. */
 /* Generate hostkeys as-needed when the first connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
    with badly seeded /dev/urandom when systems first boot.
-   This also requires a runtime flag "-R". */
+   This also requires a runtime flag "-R". This adds ~4kB to binary size (or hardly 
+   anything if dropbearkey is linked in a "dropbearmulti" binary) */
 #define DROPBEAR_DELAY_HOSTKEY
 
 /* Enable Curve25519 for key exchange. This is another elliptic
  * curve method with good security properties. Increases binary size
- * by ~10kB on x86-64 */
+ * by ~8kB on x86-64 */
 #define DROPBEAR_CURVE25519
 
 /* Enable elliptic curve Diffie Hellman key exchange, see note about
