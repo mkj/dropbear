@@ -213,7 +213,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 			{
 			struct kex_curve25519_param *param = gen_kexcurve25519_param();
 			kexcurve25519_comb_key(param, ecdh_qs, svr_opts.hostkey);
-			buf_putstring(ses.writepayload, param->priv, CURVE25519_LEN);
+			buf_putstring(ses.writepayload, param->pub, CURVE25519_LEN);
 			free_kexcurve25519_param(param);
 			}
 #endif

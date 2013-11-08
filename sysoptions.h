@@ -104,8 +104,13 @@
 #define DROPBEAR_LTC_PRNG
 #endif
 
+/* RSA can be vulnerable to timing attacks which use the time required for
+ * signing to guess the private key. Blinding avoids this attack, though makes
+ * signing operations slightly slower. */
+#define RSA_BLINDING
+
 /* hashes which will be linked and registered */
-#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256)
+#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256) || defined(DROPBEAR_CURVE25519)
 #define DROPBEAR_SHA256
 #endif
 #if defined(DROPBEAR_ECC_384)

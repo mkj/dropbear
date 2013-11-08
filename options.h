@@ -138,22 +138,24 @@ much traffic. */
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
+/* ECDSA is significantly faster than RSA or DSS. Compiling in ECC
+ * code (either ECDSA or ECDH) increases binary size - around 30kB
+ * on x86-64 */
 #define DROPBEAR_ECDSA
 
 /* Generate hostkeys as-needed when the first connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
-   with badly seeded random devices when systems first boot.
+   with badly seeded /dev/urandom when systems first boot.
    This also requires a runtime flag "-R". */
 #define DROPBEAR_DELAY_HOSTKEY
 
+/* Enable Curve25519 for key exchange. This is another elliptic
+ * curve method with good security properties. Increases binary size
+ * by ~10kB on x86-64 */
 #define DROPBEAR_CURVE25519
 
-/* RSA can be vulnerable to timing attacks which use the time required for
- * signing to guess the private key. Blinding avoids this attack, though makes
- * signing operations slightly slower. */
-#define RSA_BLINDING
-
-/* Enable elliptic curve Diffie Hellman key exchange */
+/* Enable elliptic curve Diffie Hellman key exchange, see note about
+ * ECDSA above */
 #define DROPBEAR_ECDH
 
 /* Control the memory/performance/compression tradeoff for zlib.
