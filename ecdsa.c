@@ -8,6 +8,13 @@
 
 #ifdef DROPBEAR_ECDSA
 
+int signkey_is_ecdsa(enum signkey_type type)
+{
+	return type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
+		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
+		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521;
+}
+
 enum signkey_type ecdsa_signkey_type(ecc_key * key) {
 #ifdef DROPBEAR_ECC_256
 	if (key->dp == ecc_curve_nistp256.dp) {

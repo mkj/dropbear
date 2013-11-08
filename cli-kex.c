@@ -184,7 +184,8 @@ void recv_msg_kexdh_reply() {
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 
-static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
+static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen,
+	const char* algoname) {
 
 	char* fp = NULL;
 	FILE *tty = NULL;
@@ -192,14 +193,16 @@ static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen) {
 
 	fp = sign_key_fingerprint(keyblob, keybloblen);
 	if (cli_opts.always_accept_key) {
-		fprintf(stderr, "\nHost '%s' key accepted unconditionally.\n(fingerprint %s)\n",
+		fprintf(stderr, "\nHost '%s' key accepted unconditionally.\n(%s fingerprint %s)\n",
 				cli_opts.remotehost,
+				algoname,
 				fp);
 		m_free(fp);
 		return;
 	}
-	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(fingerprint %s)\nDo you want to continue connecting? (y/n) ", 
+	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(%s fingerprint %s)\nDo you want to continue connecting? (y/n) ", 
 			cli_opts.remotehost, 
+			algoname,
 			fp);
 	m_free(fp);
 
@@ -294,16 +297,17 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 		return;
 	}
 
+	algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &algolen);
+
 	hostsfile = open_known_hosts_file(&readonly);
 	if (!hostsfile)	{
-		ask_to_confirm(keyblob, keybloblen);
+		ask_to_confirm(keyblob, keybloblen, algoname);
 		/* ask_to_confirm will exit upon failure */
 		return;
 	}
 	
 	line = buf_new(MAX_KNOWNHOSTS_LINE);
 	hostlen = strlen(cli_opts.remotehost);
-	algoname = signkey_name_from_type(ses.newkeys->algo_hostkey, &algolen);
 
 	do {
 		if (buf_getline(line, hostsfile) == DROPBEAR_FAILURE) {
@@ -356,17 +360,18 @@ static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
 
 		/* The keys didn't match. eep. Note that we're "leaking"
 		   the fingerprint strings here, but we're exiting anyway */
-		dropbear_exit("\n\nHost key mismatch for %s !\n"
+		dropbear_exit("\n\n%s host key mismatch for %s !\n"
 					"Fingerprint is %s\n"
 					"Expected %s\n"
 					"If you know that the host key is correct you can\nremove the bad entry from ~/.ssh/known_hosts", 
+					algoname,
 					cli_opts.remotehost,
 					sign_key_fingerprint(keyblob, keybloblen),
 					fingerprint ? fingerprint : "UNKNOWN");
 	} while (1); /* keep going 'til something happens */
 
 	/* Key doesn't exist yet */
-	ask_to_confirm(keyblob, keybloblen);
+	ask_to_confirm(keyblob, keybloblen, algoname);
 
 	/* If we get here, they said yes */
 

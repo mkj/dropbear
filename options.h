@@ -8,7 +8,7 @@
 /* Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
  * parts are to allow for commandline -DDROPBEAR_XXX options etc. */
 
-/* Important: Many options will require "make clean" after changes */
+/* IMPORTANT: Many options will require "make clean" after changes */
 
 #ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"
@@ -129,7 +129,7 @@ much traffic. */
 
 /* You can also disable integrity. Don't bother disabling this if you're
  * still using a cipher, it's relatively cheap. If you disable this it's dead
- * simple to run arbitrary commands on the remote host. Beware. */
+ * simple for an attacker to run arbitrary commands on the remote host. Beware. */
 /* #define DROPBEAR_NONE_INTEGRITY */
 
 /* Hostkey/public key algorithms - at least one required, these are used
@@ -138,9 +138,13 @@ much traffic. */
  * SSH2 RFC Draft requires dss, recommends rsa */
 #define DROPBEAR_RSA
 #define DROPBEAR_DSS
-
-#define DROPBEAR_ECDH
 #define DROPBEAR_ECDSA
+
+/* Generate hostkeys as-needed when the first connection using that key type occurs.
+   This avoids the need to otherwise run "dropbearkey" and avoids some problems
+   with badly seeded random devices when systems first boot.
+   This also requires a runtime flag "-R". */
+#define DROPBEAR_DELAY_HOSTKEY
 
 #define DROPBEAR_CURVE25519
 
@@ -148,6 +152,9 @@ much traffic. */
  * signing to guess the private key. Blinding avoids this attack, though makes
  * signing operations slightly slower. */
 #define RSA_BLINDING
+
+/* Enable elliptic curve Diffie Hellman key exchange */
+#define DROPBEAR_ECDH
 
 /* Control the memory/performance/compression tradeoff for zlib.
  * Set windowBits=8 for least memory usage, see your system's
@@ -184,7 +191,7 @@ much traffic. */
 
 #define ENABLE_SVR_PASSWORD_AUTH
 /* PAM requires ./configure --enable-pam */
-//#define ENABLE_SVR_PAM_AUTH
+/*#define ENABLE_SVR_PAM_AUTH */
 #define ENABLE_SVR_PUBKEY_AUTH
 
 /* Whether to take public key options in 
