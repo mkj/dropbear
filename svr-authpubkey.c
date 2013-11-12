@@ -89,7 +89,7 @@ void svr_auth_pubkey() {
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;
 	char* fp = NULL;
-	int type = -1;
+	enum signkey_type type = -1;
 
 	TRACE(("enter pubkeyauth"))
 

@@ -64,11 +64,11 @@ void recv_msg_kexdh_init() {
 		case DROPBEAR_KEX_CURVE25519:
 #if defined(DROPBEAR_ECDH) || defined(DROPBEAR_CURVE25519)
 			ecdh_qs = buf_getstringbuf(ses.payload);
-			if (ses.payload->pos != ses.payload->len) {
-				dropbear_exit("Bad kex value");
-			}
 #endif
 			break;
+	}
+	if (ses.payload->pos != ses.payload->len) {
+		dropbear_exit("Bad kex value");
 	}
 
 	send_msg_kexdh_reply(&dh_e, ecdh_qs);
@@ -76,6 +76,7 @@ void recv_msg_kexdh_init() {
 	mp_clear(&dh_e);
 	if (ecdh_qs) {
 		buf_free(ecdh_qs);
+		ecdh_qs = NULL;
 	}
 
 	send_msg_newkeys();
@@ -132,8 +133,11 @@ static void svr_ensure_hostkey() {
 	}
 
 	if (link(fn_temp, fn) < 0) {
+		/* It's OK to get EEXIST - we probably just lost a race
+		with another connection to generate the key */
 		if (errno != EEXIST) {
-			dropbear_log(LOG_ERR, "Failed moving key file to %s", fn);
+			dropbear_log(LOG_ERR, "Failed moving key file to %s: %s", fn,
+				strerror(errno));
 			/* XXX fallback to non-atomic copy for some filesystems? */
 			goto out;
 		}
@@ -151,14 +155,6 @@ out:
 	{
 		dropbear_exit("Couldn't read or generate hostkey %s", fn);
 	}
-
-	// directory for keys.
-
-	// Create lockfile first, or wait if it exists. PID!
-	// Generate key
-	// write it, load to memory
-	// atomic rename, done.
-
 }
 #endif
 	

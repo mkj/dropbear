@@ -231,6 +231,8 @@ algo_type sshhostkey[] = {
 static const struct dropbear_kex kex_dh_group1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
 static const struct dropbear_kex kex_dh_group14 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
 
+/* These can't be const since dropbear_ecc_fill_dp() fills out
+ ecc_curve at runtime */
 #ifdef DROPBEAR_ECDH
 #ifdef DROPBEAR_ECC_256
 static struct dropbear_kex kex_ecdh_nistp256 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc_curve_nistp256, &sha256_desc };
@@ -245,7 +247,7 @@ static struct dropbear_kex kex_ecdh_nistp521 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc
 
 #ifdef DROPBEAR_CURVE25519
 /* Referred to directly */
-const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL, 0, NULL, &sha256_desc };
+static const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL, 0, NULL, &sha256_desc };
 #endif
 
 algo_type sshkex[] = {

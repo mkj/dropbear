@@ -39,8 +39,7 @@ static const char *signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 #ifdef DROPBEAR_ECDSA
 	"ecdsa-sha2-nistp256",
 	"ecdsa-sha2-nistp384",
-	"ecdsa-sha2-nistp521",
-	"ecdsa" // for keygen
+	"ecdsa-sha2-nistp521"
 #endif // DROPBEAR_ECDSA
 };
 

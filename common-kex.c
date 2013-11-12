@@ -577,7 +577,7 @@ struct kex_dh_param *gen_kexdh_param() {
 	TRACE(("enter gen_kexdh_vals"))
 
 	struct kex_dh_param *param = m_malloc(sizeof(*param));
-	m_mp_init_multi(&param->pub, &param->priv, NULL);
+	m_mp_init_multi(&param->pub, &param->priv, &dh_g, &dh_p, &dh_q, NULL);
 
 	/* read the prime and generator*/
 	load_dh_p(&dh_p);
@@ -738,7 +738,7 @@ void free_kexcurve25519_param(struct kex_curve25519_param *param)
 
 void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_them,
 	sign_key *hostkey) {
-	unsigned char* out = m_malloc(CURVE25519_LEN);
+	unsigned char out[CURVE25519_LEN];
 	const unsigned char* Q_C = NULL;
 	const unsigned char* Q_S = NULL;
 
@@ -748,10 +748,9 @@ void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_
 	}
 
 	curve25519_donna(out, param->priv, buf_pub_them->data);
-	ses.dh_K = m_malloc(sizeof(*ses.dh_K));
-	m_mp_init(ses.dh_K);
+	m_mp_alloc_init_multi(&ses.dh_K, NULL);
 	bytes_to_mp(ses.dh_K, out, CURVE25519_LEN);
-	m_free(out);
+	m_burn(out, sizeof(out));
 
 	/* Create the remainder of the hash buffer, to generate the exchange hash.
 	   See RFC5656 section 4 page 7 */

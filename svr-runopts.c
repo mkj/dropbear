@@ -410,30 +410,30 @@ static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
-		loadhostkey_helper("RSA", &read_key->rsakey, &svr_opts.hostkey->rsakey, fatal_duplicate);
+		loadhostkey_helper("RSA", (void**)&read_key->rsakey, (void**)&svr_opts.hostkey->rsakey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
-		loadhostkey_helper("DSS", &read_key->dsskey, &svr_opts.hostkey->dsskey, fatal_duplicate);
+		loadhostkey_helper("DSS", (void**)&read_key->dsskey, (void**)&svr_opts.hostkey->dsskey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_ECDSA
 #ifdef DROPBEAR_ECC_256
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256) {
-		loadhostkey_helper("ECDSA256", &read_key->ecckey256, &svr_opts.hostkey->ecckey256, fatal_duplicate);
+		loadhostkey_helper("ECDSA256", (void**)&read_key->ecckey256, (void**)&svr_opts.hostkey->ecckey256, fatal_duplicate);
 	}
 #endif
 #ifdef DROPBEAR_ECC_384
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP384) {
-		loadhostkey_helper("ECDSA384", &read_key->ecckey384, &svr_opts.hostkey->ecckey384, fatal_duplicate);
+		loadhostkey_helper("ECDSA384", (void**)&read_key->ecckey384, (void**)&svr_opts.hostkey->ecckey384, fatal_duplicate);
 	}
 #endif
 #ifdef DROPBEAR_ECC_521
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
-		loadhostkey_helper("ECDSA521", &read_key->ecckey521, &svr_opts.hostkey->ecckey521, fatal_duplicate);
+		loadhostkey_helper("ECDSA521", (void**)&read_key->ecckey521, (void**)&svr_opts.hostkey->ecckey521, fatal_duplicate);
 	}
 #endif
 #endif // DROPBEAR_ECDSA

@@ -7,6 +7,7 @@
 
 #ifdef DROPBEAR_ECDSA
 
+/* Prefer the larger size - it's fast anyway */
 #if defined(DROPBEAR_ECC_521)
 #define ECDSA_DEFAULT_SIZE 521
 #elif defined(DROPBEAR_ECC_384)

@@ -246,8 +246,8 @@ out:
 
 // returns values in s and r
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
-static int buf_get_ecdsa_verify_params(buffer *buf, struct dropbear_ecc_curve *curve,
-	void *r, void* s) {
+static int buf_get_ecdsa_verify_params(buffer *buf,
+			void *r, void* s) {
 	int ret = DROPBEAR_FAILURE;
 	unsigned int sig_len;
 	unsigned int sig_pos;
@@ -302,7 +302,7 @@ int buf_ecdsa_verify(buffer *buf, ecc_key *key, buffer *data_buf) {
 		dropbear_exit("ECC error");
 	}
 
-	if (buf_get_ecdsa_verify_params(buf, curve, r, s) != DROPBEAR_SUCCESS) {
+	if (buf_get_ecdsa_verify_params(buf, r, s) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 

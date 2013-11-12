@@ -85,6 +85,8 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename)
 	/* now we can generate the key */
 	key = new_sign_key();
 
+	seedrandom();
+
 	switch(keytype) {
 #ifdef DROPBEAR_RSA
 		case DROPBEAR_SIGNKEY_RSA:
@@ -111,6 +113,8 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename)
 		default:
 			dropbear_exit("Internal error");
 	}
+
+	seedrandom();
 
 	buf = buf_new(MAX_PRIVKEY_SIZE); 
 

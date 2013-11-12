@@ -56,7 +56,6 @@ extern algo_type ssh_nocompress[];
 extern const struct dropbear_cipher dropbear_nocipher;
 extern const struct dropbear_cipher_mode dropbear_mode_none;
 extern const struct dropbear_hash dropbear_nohash;
-extern const struct dropbear_kex kex_curve25519;
 
 struct dropbear_cipher {
 	const struct ltc_cipher_descriptor *cipherdesc;
