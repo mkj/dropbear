@@ -28,7 +28,7 @@
 #include "dbutil.h"
 #include "runopts.h"
 #include "session.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "crypto_desc.h"
 
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;

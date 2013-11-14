@@ -26,7 +26,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "bignum.h"
-#include "random.h"
+#include "dbrandom.h"
 
 
 /* this is used to generate unique output from the same hashpool */

@@ -33,7 +33,7 @@
 #include "packet.h"
 #include "auth.h"
 #include "runopts.h"
-#include "random.h"
+#include "dbrandom.h"
 
 static void authclear();
 static int checkusername(unsigned char *username, unsigned int userlen);

@@ -26,7 +26,7 @@
 #include "dbutil.h"
 #include "signkey.h"
 #include "bignum.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "buffer.h"
 #include "gendss.h"
 #include "dss.h"

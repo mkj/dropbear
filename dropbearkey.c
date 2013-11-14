@@ -53,7 +53,7 @@
 #include "gendss.h"
 #include "ecdsa.h"
 #include "crypto_desc.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "gensignkey.h"
 
 static void printhelp(char * progname);

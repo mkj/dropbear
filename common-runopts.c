@@ -29,7 +29,7 @@
 #include "dbutil.h"
 #include "auth.h"
 #include "algo.h"
-#include "random.h"
+#include "dbrandom.h"
 
 runopts opts; /* GLOBAL */
 

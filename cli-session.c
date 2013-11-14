@@ -31,7 +31,7 @@
 #include "packet.h"
 #include "tcpfwd.h"
 #include "channel.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "service.h"
 #include "runopts.h"
 #include "chansession.h"

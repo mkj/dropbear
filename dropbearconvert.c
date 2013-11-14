@@ -29,7 +29,7 @@
 #include "dbutil.h"
 #include "keyimport.h"
 #include "crypto_desc.h" 
-#include "random.h" 
+#include "dbrandom.h" 
 
 
 static int do_convert(int intype, const char* infile, int outtype,

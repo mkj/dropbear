@@ -28,7 +28,7 @@
 #include "dss.h"
 #include "buffer.h"
 #include "ssh.h"
-#include "random.h"
+#include "dbrandom.h"
 
 /* Handle DSS (Digital Signature Standard), aka DSA (D.S. Algorithm),
  * operations, such as key reading, signing, verification. Key generation

@@ -34,7 +34,7 @@
 #include "rsa.h"
 #include "buffer.h"
 #include "ssh.h"
-#include "random.h"
+#include "dbrandom.h"
 
 #ifdef DROPBEAR_RSA 
 

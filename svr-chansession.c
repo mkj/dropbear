@@ -32,7 +32,7 @@
 #include "sshpty.h"
 #include "termcodes.h"
 #include "ssh.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "x11fwd.h"
 #include "agentfwd.h"
 #include "runopts.h"

@@ -25,7 +25,7 @@
 #include "includes.h"
 #include "dbutil.h"
 #include "bignum.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "rsa.h"
 #include "genrsa.h"
 

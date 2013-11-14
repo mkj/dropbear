@@ -13,7 +13,7 @@
  */
 #include "options.h"
 #include "includes.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "ltc_prng.h"
 
 /**

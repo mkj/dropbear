@@ -34,7 +34,7 @@
 #include "channel.h"
 #include "packet.h"
 #include "buffer.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "listener.h"
 #include "runopts.h"
 #include "atomicio.h"

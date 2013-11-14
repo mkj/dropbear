@@ -28,7 +28,7 @@
 #include "buffer.h"
 #include "signkey.h"
 #include "runopts.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "crypto_desc.h"
 
 static size_t listensockets(int *sock, size_t sockcount, int *maxfd);

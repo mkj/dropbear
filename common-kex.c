@@ -32,7 +32,7 @@
 #include "ssh.h"
 #include "packet.h"
 #include "bignum.h"
-#include "random.h"
+#include "dbrandom.h"
 #include "runopts.h"
 #include "ecc.h"
 #include "crypto_desc.h"

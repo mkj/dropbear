@@ -24,7 +24,7 @@ endif
 
 COMMONOBJS=dbutil.o buffer.o \
 		dss.o bignum.o \
-		signkey.o rsa.o random.o \
+		signkey.o rsa.o dbrandom.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
@@ -52,7 +52,7 @@ CONVERTOBJS=dropbearconvert.o keyimport.o
 SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
 
 HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
-		dss.h bignum.h signkey.h rsa.h random.h service.h auth.h \
+		dss.h bignum.h signkey.h rsa.h dbrandom.h service.h auth.h \
 		debug.h channel.h chansession.h config.h queue.h sshpty.h \
 		termcodes.h gendss.h genrsa.h runopts.h includes.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
