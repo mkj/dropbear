@@ -5,6 +5,7 @@
 #include "genrsa.h"
 #include "gendss.h"
 #include "signkey.h"
+#include "random.h"
 
 #define RSA_DEFAULT_SIZE 2048
 #define DSS_DEFAULT_SIZE 1024

@@ -511,12 +511,13 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	unsigned int bloblen;
 	unsigned char * type_name = NULL;
 	unsigned int type_name_len = 0;
+	enum signkey_type type;
 
 	TRACE(("enter buf_verify"))
 
 	bloblen = buf_getint(buf);
 	type_name = buf_getstring(buf, &type_name_len);
-	enum signkey_type type = signkey_type_from_name(type_name, type_name_len);
+	type = signkey_type_from_name(type_name, type_name_len);
 	m_free(type_name);
 
 #ifdef DROPBEAR_DSS

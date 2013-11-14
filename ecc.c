@@ -9,23 +9,26 @@
 /* .dp members are filled out by dropbear_ecc_fill_dp() at startup */
 #ifdef DROPBEAR_ECC_256
 struct dropbear_ecc_curve ecc_curve_nistp256 = {
-	.ltc_size = 32,
-	.hash_desc = &sha256_desc,
-	.name = "nistp256"
+	32,		/* .ltc_size	*/
+	NULL,		/* .dp		*/
+	&sha256_desc,	/* .hash_desc	*/
+	"nistp256"	/* .name	*/
 };
 #endif
 #ifdef DROPBEAR_ECC_384
 struct dropbear_ecc_curve ecc_curve_nistp384 = {
-	.ltc_size = 48,
-	.hash_desc = &sha384_desc,
-	.name = "nistp384"
+	48,		/* .ltc_size	*/
+	NULL,		/* .dp		*/
+	&sha384_desc,	/* .hash_desc	*/
+	"nistp384"	/* .name	*/
 };
 #endif
 #ifdef DROPBEAR_ECC_521
 struct dropbear_ecc_curve ecc_curve_nistp521 = {
-	.ltc_size = 66,
-	.hash_desc = &sha512_desc,
-	.name = "nistp521"
+	66,		/* .ltc_size	*/
+	NULL,		/* .dp		*/
+	&sha512_desc,	/* .hash_desc	*/
+	"nistp521"	/* .name	*/
 };
 #endif
 
@@ -137,8 +140,9 @@ static int ecc_is_point(ecc_key *key)
 /* For the "ephemeral public key octet string" in ECDH (rfc5656 section 4) */
 void buf_put_ecc_raw_pubkey_string(buffer *buf, ecc_key *key) {
 	unsigned long len = key->dp->size*2 + 1;
+	int err;
 	buf_putint(buf, len);
-	int err = ecc_ansi_x963_export(key, buf_getwriteptr(buf, len), &len);
+	err = ecc_ansi_x963_export(key, buf_getwriteptr(buf, len), &len);
 	if (err != CRYPT_OK) {
 		dropbear_exit("ECC error");
 	}

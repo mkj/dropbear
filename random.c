@@ -79,11 +79,14 @@ process_file(hash_state *hs, const char *filename,
 	{
 		int readlen, wantread;
 		unsigned char readbuf[4096];
-		if (!already_blocked)
+		if (!already_blocked && !prngd)
 		{
 			int res;
-			struct timeval timeout = { .tv_sec = 2, .tv_usec = 0};
+			struct timeval timeout;
 			fd_set read_fds;
+
+ 			timeout.tv_sec  = 2;
+ 			timeout.tv_usec = 0;
 
 			FD_ZERO(&read_fds);
 			FD_SET(readfd, &read_fds);

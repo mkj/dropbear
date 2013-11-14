@@ -286,7 +286,7 @@ static void hashkeys(unsigned char *out, unsigned int outlen,
 	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
 	hash_state hs2;
 	unsigned int offset;
-	unsigned char tmpout[hash_desc->hashsize];
+	unsigned char tmpout[MAX_HASH_SIZE];
 
 	memcpy(&hs2, hs, sizeof(hash_state));
 	hash_desc->process(&hs2, &X, 1);
@@ -303,6 +303,7 @@ static void hashkeys(unsigned char *out, unsigned int outlen,
 		hash_desc->done(&hs2, tmpout);
 		memcpy(&out[offset], tmpout, MIN(outlen - offset, hash_desc->hashsize));
 	}
+
 }
 
 /* Generate the actual encryption/integrity keys, using the results of the
@@ -569,6 +570,7 @@ static void load_dh_p(mp_int * dh_p)
  * See the transport rfc 4253 section 8 for details */
 /* dh_pub and dh_priv MUST be already initialised */
 struct kex_dh_param *gen_kexdh_param() {
+	struct kex_dh_param *param = NULL;
 
 	DEF_MP_INT(dh_p);
 	DEF_MP_INT(dh_q);
@@ -576,7 +578,7 @@ struct kex_dh_param *gen_kexdh_param() {
 
 	TRACE(("enter gen_kexdh_vals"))
 
-	struct kex_dh_param *param = m_malloc(sizeof(*param));
+	param = m_malloc(sizeof(*param));
 	m_mp_init_multi(&param->pub, &param->priv, &dh_g, &dh_p, &dh_q, NULL);
 
 	/* read the prime and generator*/
@@ -823,15 +825,15 @@ static void read_kex_algos() {
 	int allgood = 1; /* we AND this with each goodguess and see if its still
 						true after */
 
-	buf_incrpos(ses.payload, 16); /* start after the cookie */
-
-	memset(ses.newkeys, 0x0, sizeof(*ses.newkeys));
-
 #ifdef USE_KEXGUESS2
 	enum kexguess2_used kexguess2 = KEXGUESS2_LOOK;
 #else
 	enum kexguess2_used kexguess2 = KEXGUESS2_NO;
 #endif
+
+	buf_incrpos(ses.payload, 16); /* start after the cookie */
+
+	memset(ses.newkeys, 0x0, sizeof(*ses.newkeys));
 
 	/* kex_algorithms */
 	algo = buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);

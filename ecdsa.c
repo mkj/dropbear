@@ -36,6 +36,7 @@ enum signkey_type ecdsa_signkey_type(ecc_key * key) {
 
 ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
 	const ltc_ecc_set_type *dp = NULL; // curve domain parameters
+	ecc_key *new_key = NULL;
 	switch (bit_size) {
 #ifdef DROPBEAR_ECC_256
 		case 256:
@@ -67,7 +68,7 @@ ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
 			, bit_size);
 	}
 
-	ecc_key *new_key = m_malloc(sizeof(*new_key));
+	new_key = m_malloc(sizeof(*new_key));
 	if (ecc_make_key_ex(NULL, dropbear_ltc_prng, new_key, dp) != CRYPT_OK) {
 		dropbear_exit("ECC error");
 	}

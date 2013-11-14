@@ -76,6 +76,7 @@
 
 #define SHA1_HASH_SIZE 20
 #define MD5_HASH_SIZE 16
+#define MAX_HASH_SIZE 64 /* sha512 */
 
 #define MAX_KEY_LEN 32 /* 256 bits for aes256 etc */
 #define MAX_IV_LEN 20 /* must be same as max blocksize,  */
