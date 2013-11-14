@@ -47,6 +47,13 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 		sign_key *hostkey);
 #endif
 
+#ifdef DROPBEAR_CURVE25519
+struct kex_curve25519_param *gen_kexcurve25519_param();
+void free_kexcurve25519_param(struct kex_curve25519_param *param);
+void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *pub_them,
+		sign_key *hostkey);
+#endif
+
 #ifndef DISABLE_ZLIB
 int is_compress_trans();
 int is_compress_recv();
@@ -91,6 +98,18 @@ struct kex_ecdh_param {
 	ecc_key key;
 };
 #endif
+
+#ifdef DROPBEAR_CURVE25519
+#define CURVE25519_LEN 32
+struct kex_curve25519_param {
+	unsigned char priv[CURVE25519_LEN];
+	unsigned char pub[CURVE25519_LEN];
+};
+
+/* No header file for curve25519_donna */
+int curve25519_donna(unsigned char *out, const unsigned char *secret, const unsigned char *other);
+#endif
+
 
 #define MAX_KEXHASHBUF 2000
 

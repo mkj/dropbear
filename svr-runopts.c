@@ -44,13 +44,19 @@ static void printhelp(const char * progname) {
 					"-b bannerfile	Display the contents of bannerfile"
 					" before user login\n"
 					"		(default: none)\n"
+					"-r keyfile  Specify hostkeys (repeatable)\n"
+					"		defaults: \n"
 #ifdef DROPBEAR_DSS
-					"-d dsskeyfile	Use dsskeyfile for the DSS host key\n"
-					"		(default: %s)\n"
+					"		dss %s\n"
 #endif
 #ifdef DROPBEAR_RSA
-					"-r rsakeyfile	Use rsakeyfile for the RSA host key\n"
-					"		(default: %s)\n"
+					"		rsa %s\n"
+#endif
+#ifdef DROPBEAR_ECDSA
+					"		ecdsa %s\n"
+#endif
+#ifdef DROPBEAR_DELAY_HOSTKEY
+					"-R		Create hostkeys as required\n" 
 #endif
 					"-F		Don't fork into background\n"
 #ifdef DISABLE_SYSLOG
@@ -96,6 +102,9 @@ static void printhelp(const char * progname) {
 #ifdef DROPBEAR_RSA
 					RSA_PRIV_FILENAME,
 #endif
+#ifdef DROPBEAR_ECDSA
+					ECDSA_PRIV_FILENAME,
+#endif
 					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 }
@@ -122,6 +131,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
+	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = DROPBEAR_PIDFILE;
 #ifdef ENABLE_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
@@ -179,6 +189,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'd':
 				case 'r':
 					next = &keyfile;
+					break;
+				case 'R':
+					svr_opts.delay_hostkey = 1;
 					break;
 				case 'F':
 					svr_opts.forkbg = 0;
@@ -390,37 +403,37 @@ static void loadhostkey_helper(const char *name, void** src, void** dst, int fat
 /* Must be called after syslog/etc is working */
 static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 	sign_key * read_key = new_sign_key();
-	int type = DROPBEAR_SIGNKEY_ANY;
+	enum signkey_type type = DROPBEAR_SIGNKEY_ANY;
 	if (readhostkey(keyfile, read_key, &type) == DROPBEAR_FAILURE) {
 		dropbear_log(LOG_WARNING, "Failed loading %s", keyfile);
 	}
 
 #ifdef DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
-		loadhostkey_helper("RSA", &read_key->rsakey, &svr_opts.hostkey->rsakey, fatal_duplicate);
+		loadhostkey_helper("RSA", (void**)&read_key->rsakey, (void**)&svr_opts.hostkey->rsakey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_DSS
 	if (type == DROPBEAR_SIGNKEY_DSS) {
-		loadhostkey_helper("DSS", &read_key->dsskey, &svr_opts.hostkey->dsskey, fatal_duplicate);
+		loadhostkey_helper("DSS", (void**)&read_key->dsskey, (void**)&svr_opts.hostkey->dsskey, fatal_duplicate);
 	}
 #endif
 
 #ifdef DROPBEAR_ECDSA
 #ifdef DROPBEAR_ECC_256
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP256) {
-		loadhostkey_helper("ECDSA256", &read_key->ecckey256, &svr_opts.hostkey->ecckey256, fatal_duplicate);
+		loadhostkey_helper("ECDSA256", (void**)&read_key->ecckey256, (void**)&svr_opts.hostkey->ecckey256, fatal_duplicate);
 	}
 #endif
 #ifdef DROPBEAR_ECC_384
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP384) {
-		loadhostkey_helper("ECDSA384", &read_key->ecckey384, &svr_opts.hostkey->ecckey384, fatal_duplicate);
+		loadhostkey_helper("ECDSA384", (void**)&read_key->ecckey384, (void**)&svr_opts.hostkey->ecckey384, fatal_duplicate);
 	}
 #endif
 #ifdef DROPBEAR_ECC_521
 	if (type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
-		loadhostkey_helper("ECDSA521", &read_key->ecckey521, &svr_opts.hostkey->ecckey521, fatal_duplicate);
+		loadhostkey_helper("ECDSA521", (void**)&read_key->ecckey521, (void**)&svr_opts.hostkey->ecckey521, fatal_duplicate);
 	}
 #endif
 #endif // DROPBEAR_ECDSA
@@ -438,6 +451,7 @@ static void addhostkey(const char *keyfile) {
 
 void load_all_hostkeys() {
 	int i;
+	int disable_unset_keys = 1;
 
 	svr_opts.hostkey = new_sign_key();
 
@@ -459,31 +473,47 @@ void load_all_hostkeys() {
 	loadhostkey(ECDSA_PRIV_FILENAME, 0);
 #endif
 
+#ifdef DROPBEAR_DELAY_HOSTKEY
+	if (svr_opts.delay_hostkey)
+	{
+		disable_unset_keys = 0;
+	}
+#endif
+
 #ifdef DROPBEAR_RSA
-	if (!svr_opts.hostkey->rsakey) {
+	if (disable_unset_keys && !svr_opts.hostkey->rsakey) {
 		disablekey(DROPBEAR_SIGNKEY_RSA);
 	}
 #endif
+
 #ifdef DROPBEAR_DSS
-	if (!svr_opts.hostkey->dsskey) {
+	if (disable_unset_keys && !svr_opts.hostkey->dsskey) {
 		disablekey(DROPBEAR_SIGNKEY_RSA);
 	}
 #endif
+
+
 #ifdef DROPBEAR_ECDSA
 #ifdef DROPBEAR_ECC_256
-	if (!svr_opts.hostkey->ecckey256) {
+	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 256)
+		&& !svr_opts.hostkey->ecckey256) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP256);
 	}
 #endif
+
 #ifdef DROPBEAR_ECC_384
-	if (!svr_opts.hostkey->ecckey384) {
+	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 384)
+		&& !svr_opts.hostkey->ecckey384) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP384);
 	}
 #endif
+
 #ifdef DROPBEAR_ECC_521
-	if (!svr_opts.hostkey->ecckey521) {
+	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 521)
+		&& !svr_opts.hostkey->ecckey521) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
 	}
 #endif
-#endif
+#endif /* DROPBEAR_ECDSA */
+
 }

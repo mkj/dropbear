@@ -6,7 +6,7 @@
 
 #ifdef DROPBEAR_ECC
 
-// .dp members are filled out by dropbear_ecc_fill_dp() at startup
+/* .dp members are filled out by dropbear_ecc_fill_dp() at startup */
 #ifdef DROPBEAR_ECC_256
 struct dropbear_ecc_curve ecc_curve_nistp256 = {
 	.ltc_size = 32,
@@ -44,7 +44,7 @@ struct dropbear_ecc_curve *dropbear_ecc_curves[] = {
 
 void dropbear_ecc_fill_dp() {
 	struct dropbear_ecc_curve **curve;
-	// libtomcrypt guarantees they're ordered by size
+	/* libtomcrypt guarantees they're ordered by size */
 	const ltc_ecc_set_type *dp = ltc_ecc_sets;
 	for (curve = dropbear_ecc_curves; *curve; curve++) {
 		for (;dp->size > 0; dp++) {

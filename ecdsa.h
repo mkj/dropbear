@@ -7,6 +7,7 @@
 
 #ifdef DROPBEAR_ECDSA
 
+/* Prefer the larger size - it's fast anyway */
 #if defined(DROPBEAR_ECC_521)
 #define ECDSA_DEFAULT_SIZE 521
 #elif defined(DROPBEAR_ECC_384)
@@ -26,6 +27,8 @@ enum signkey_type ecdsa_signkey_type(ecc_key * key);
 
 void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf);
 int buf_ecdsa_verify(buffer *buf, ecc_key *key, buffer *data_buf);
+/* Returns 1 on success */
+int signkey_is_ecdsa(enum signkey_type type);
 
 #endif
 

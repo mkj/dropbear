@@ -104,21 +104,27 @@
 #define DROPBEAR_LTC_PRNG
 #endif
 
-// hashes which will be linked and registered
-#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256)
+/* RSA can be vulnerable to timing attacks which use the time required for
+ * signing to guess the private key. Blinding avoids this attack, though makes
+ * signing operations slightly slower. */
+#define RSA_BLINDING
+
+/* hashes which will be linked and registered */
+#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256) || defined(DROPBEAR_CURVE25519)
 #define DROPBEAR_SHA256
 #endif
 #if defined(DROPBEAR_ECC_384)
 #define DROPBEAR_SHA384
 #endif
-#if defined(DROPBEAR_SHA2_512_HMAC) || defined(DROPBEAR_ECC_521)
+/* LTC SHA384 depends on SHA512 */
+#if defined(DROPBEAR_SHA2_512_HMAC) || defined(DROPBEAR_ECC_521) || defined(DROPBEAR_ECC_384)
 #define DROPBEAR_SHA512
 #endif
 #if defined(DROPBEAR_MD5_HMAC)
 #define DROPBEAR_MD5
 #endif
 
-// roughly 2x 521 bits
+/* roughly 2x 521 bits */
 #define MAX_ECC_SIZE 140
 
 #define MAX_NAME_LEN 64 /* maximum length of a protocol name, isn't

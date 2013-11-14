@@ -231,7 +231,7 @@ static int checkusername(unsigned char *username, unsigned int userlen) {
 
 	char* listshell = NULL;
 	char* usershell = NULL;
-	int   uid;
+	uid_t uid;
 	TRACE(("enter checkusername"))
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;

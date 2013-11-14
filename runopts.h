@@ -100,6 +100,8 @@ typedef struct svr_runopts {
 
 	sign_key *hostkey;
 
+	int delay_hostkey;
+
 	char *hostkey_files[MAX_HOSTKEYS];
 	int num_hostkey_files;
 

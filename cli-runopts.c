@@ -450,7 +450,7 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename) {
 	sign_key *key;
-	int keytype;
+	enum signkey_type keytype;
 
 	key = new_sign_key();
 	keytype = DROPBEAR_SIGNKEY_ANY;
