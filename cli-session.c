@@ -175,7 +175,7 @@ static void send_msg_service_request(char* servicename) {
 }
 
 static void recv_msg_service_accept(void) {
-	// do nothing, if it failed then the server MUST have disconnected
+	/* do nothing, if it failed then the server MUST have disconnected */
 }
 
 /* This function drives the progress of the session - it initiates KEX,

@@ -225,8 +225,8 @@ void seedrandom() {
 	pid = getpid();
 	sha1_process(&hs, (void*)&pid, sizeof(pid));
 
-	// gettimeofday() doesn't completely fill out struct timeval on 
-	// OS X (10.8.3), avoid valgrind warnings by clearing it first
+	/* gettimeofday() doesn't completely fill out struct timeval on 
+	   OS X (10.8.3), avoid valgrind warnings by clearing it first */
 	memset(&tv, 0x0, sizeof(tv));
 	gettimeofday(&tv, NULL);
 	sha1_process(&hs, (void*)&tv, sizeof(tv));

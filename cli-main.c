@@ -143,4 +143,4 @@ static void cli_proxy_cmd(int *sock_in, int *sock_out) {
 		*sock_in = *sock_out = -1;
 	}
 }
-#endif // ENABLE_CLI_PROXYCMD
+#endif /* ENABLE_CLI_PROXYCMD */

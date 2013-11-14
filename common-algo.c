@@ -395,7 +395,7 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 	for (i = 0; i < clicount; i++) {
 		for (j = 0; j < servcount; j++) {
 			if (!(servnames[j] && clinames[i])) {
-				// unusable algos are NULL
+				/* unusable algos are NULL */
 				continue;
 			}
 			if (strcmp(servnames[j], clinames[i]) == 0) {
@@ -458,7 +458,7 @@ get_algo_usable(algo_type algos[], const char * algo_name)
 	return 0;
 }
 
-#endif // DROPBEAR_NONE_CIPHER
+#endif /* DROPBEAR_NONE_CIPHER */
 
 #ifdef ENABLE_USER_ALGO_LIST
 
@@ -539,4 +539,4 @@ check_user_algos(const char* user_algo_list, algo_type * algos,
 	memcpy(algos, new_algos, sizeof(*new_algos) * (num_ret+1));
 	return num_ret;
 }
-#endif // ENABLE_USER_ALGO_LIST
+#endif /* ENABLE_USER_ALGO_LIST */

@@ -241,7 +241,7 @@ typedef enum {
 
 struct clientsession {
 
-	// XXX - move these to kexstate?
+	/* XXX - move these to kexstate? */
 	struct kex_dh_param *dh_param;
 	struct kex_ecdh_param *ecdh_param;
 	struct kex_curve25519_param *curve25519_param;

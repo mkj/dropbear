@@ -40,7 +40,7 @@ static const char *signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 	"ecdsa-sha2-nistp256",
 	"ecdsa-sha2-nistp384",
 	"ecdsa-sha2-nistp521"
-#endif // DROPBEAR_ECDSA
+#endif /* DROPBEAR_ECDSA */
 };
 
 /* malloc a new sign_key and set the dss and rsa keys to NULL */

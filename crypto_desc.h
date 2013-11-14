@@ -5,5 +5,5 @@ void crypto_init();
 
 extern int dropbear_ltc_prng;
 
-#endif // _CRYPTO_DESC_H
+#endif /* _CRYPTO_DESC_H */
 

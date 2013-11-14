@@ -35,7 +35,7 @@ enum signkey_type ecdsa_signkey_type(ecc_key * key) {
 }
 
 ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
-	const ltc_ecc_set_type *dp = NULL; // curve domain parameters
+	const ltc_ecc_set_type *dp = NULL; /* curve domain parameters */
 	ecc_key *new_key = NULL;
 	switch (bit_size) {
 #ifdef DROPBEAR_ECC_256
@@ -82,9 +82,9 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 	struct dropbear_ecc_curve **curve;
 	ecc_key *new_key = NULL;
 
-	// string   "ecdsa-sha2-[identifier]"
+	/* string   "ecdsa-sha2-[identifier]" */
 	key_ident = buf_getstring(buf, &key_ident_len);
-	// string   "[identifier]"
+	/* string   "[identifier]" */
 	identifier = buf_getstring(buf, &identifier_len);
 
 	if (key_ident_len != identifier_len + strlen("ecdsa-sha2-")) {
@@ -106,7 +106,7 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 		goto out;
 	}
 
-	// string Q
+	/* string Q */
 	q_buf = buf_getstringbuf(buf);
 	new_key = buf_get_ecc_raw_pubkey(q_buf, *curve);
 
@@ -183,7 +183,7 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 	}
 
 	for (;;) {
-		ecc_key R_key; // ephemeral key
+		ecc_key R_key; /* ephemeral key */
 		if (ecc_make_key_ex(NULL, dropbear_ltc_prng, &R_key, key->dp) != CRYPT_OK) {
 			goto out;
 		}
@@ -191,7 +191,7 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 			goto out;
 		}
 		if (ltc_mp.compare_d(r, 0) == LTC_MP_EQ) {
-			// try again
+			/* try again */
 			ecc_free(&R_key);
 			continue;
 		}
@@ -223,7 +223,7 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 
 	snprintf((char*)key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
 	buf_putstring(buf, key_ident, strlen(key_ident));
-	// enough for nistp521
+	/* enough for nistp521 */
 	sigbuf = buf_new(200);
 	buf_putmpint(sigbuf, (mp_int*)r);
 	buf_putmpint(sigbuf, (mp_int*)s);
@@ -245,8 +245,8 @@ out:
 	}
 }
 
-// returns values in s and r
-// returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
+/* returns values in s and r
+   returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int buf_get_ecdsa_verify_params(buffer *buf,
 			void *r, void* s) {
 	int ret = DROPBEAR_FAILURE;
@@ -417,4 +417,4 @@ out:
 
 
 
-#endif // DROPBEAR_ECDSA
+#endif /* DROPBEAR_ECDSA */

@@ -685,7 +685,7 @@ void free_kexecdh_param(struct kex_ecdh_param *param) {
 void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 		sign_key *hostkey) {
 	const struct dropbear_kex *algo_kex = ses.newkeys->algo_kex;
-	// public keys from client and server
+	/* public keys from client and server */
 	ecc_key *Q_C, *Q_S, *Q_them;
 
 	Q_them = buf_get_ecc_raw_pubkey(pub_them, algo_kex->ecc_curve);

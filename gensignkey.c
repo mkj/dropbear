@@ -10,7 +10,7 @@
 #define RSA_DEFAULT_SIZE 2048
 #define DSS_DEFAULT_SIZE 1024
 
-// Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int buf_writefile(buffer * buf, const char * filename) {
 	int ret = DROPBEAR_FAILURE;
 	int fd = -1;

@@ -436,7 +436,7 @@ static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 		loadhostkey_helper("ECDSA521", (void**)&read_key->ecckey521, (void**)&svr_opts.hostkey->ecckey521, fatal_duplicate);
 	}
 #endif
-#endif // DROPBEAR_ECDSA
+#endif /* DROPBEAR_ECDSA */
 	sign_key_free(read_key);
 	TRACE(("leave loadhostkey"))
 }

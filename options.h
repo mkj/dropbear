@@ -171,7 +171,7 @@ much traffic. */
 #endif
 
 /* Whether to do reverse DNS lookups. */
-//#define DO_HOST_LOOKUP
+/*#define DO_HOST_LOOKUP */
 
 /* Whether to print the message of the day (MOTD). This doesn't add much code
  * size */

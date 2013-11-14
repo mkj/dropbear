@@ -672,14 +672,14 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		ecc_key *ecc = NULL;
 		const struct dropbear_ecc_curve *curve = NULL;
 
-		// See SEC1 v2, Appendix C.4
-		// OpenSSL (so OpenSSH) seems to include the optional parts.
+		/* See SEC1 v2, Appendix C.4 */
+		/* OpenSSL (so OpenSSH) seems to include the optional parts. */
 
-		// privateKey OCTET STRING,
+		/* privateKey OCTET STRING, */
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		// id==4 for octet string
+		/* id==4 for octet string */
 		if (ret < 0 || id != 4 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
@@ -689,11 +689,11 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		private_key_len = len;
 		p += len;
 
-		// parameters [0] ECDomainParameters {{ SECGCurveNames }} OPTIONAL,
+		/* parameters [0] ECDomainParameters {{ SECGCurveNames }} OPTIONAL, */
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		// id==0
+		/* id==0 */
 		if (ret < 0 || id != 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -702,7 +702,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		// id==6 for object
+		/* id==6 for object */
 		if (ret < 0 || id != 6 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
@@ -737,11 +737,11 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		}
 		p += len;
 
-		// publicKey [1] BIT STRING OPTIONAL
+		/* publicKey [1] BIT STRING OPTIONAL */
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		// id==1
+		/* id==1 */
 		if (ret < 0 || id != 1) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -750,7 +750,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		// id==3 for bit string
+		/* id==3 for bit string */
 		if (ret < 0 || id != 3 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
@@ -775,7 +775,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 
 		*signkey_key_ptr(retkey, retkey->type) = ecc;
 	}
-#endif // DROPBEAR_ECDSA
+#endif /* DROPBEAR_ECDSA */
 
 	/*
 	 * Now put together the actual key. Simplest way to do this is
@@ -1012,7 +1012,7 @@ static int openssh_write(const char *filename, sign_key *key,
 			memcpy(outblob+pos, numbers[i].start, numbers[i].bytes);
 			pos += numbers[i].bytes;
 		}
-	} // end RSA and DSS handling
+	} /* end RSA and DSS handling */
 
 #ifdef DROPBEAR_ECDSA
 	if (key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
@@ -1067,7 +1067,7 @@ static int openssh_write(const char *filename, sign_key *key,
 
 		buf_incrwritepos(seq_buf,
 			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 0, 2+curve_oid_len, 0xa0));
-		// object == 6
+		/* object == 6 */
 		buf_incrwritepos(seq_buf,
 			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 6, curve_oid_len, 0));
 		buf_putbytes(seq_buf, curve_oid, curve_oid_len);

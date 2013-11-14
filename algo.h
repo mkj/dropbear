@@ -76,8 +76,8 @@ struct dropbear_cipher_mode {
 struct dropbear_hash {
 	const struct ltc_hash_descriptor *hash_desc;
 	const unsigned long keysize;
-	// hashsize may be truncated from the size returned by hash_desc,
-	// eg sha1-96
+	/* hashsize may be truncated from the size returned by hash_desc,
+	   eg sha1-96 */
 	const unsigned char hashsize;
 };
 

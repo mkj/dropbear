@@ -98,7 +98,7 @@ void write_packet() {
 		writebuf = (buffer*)examine(&ses.writequeue);
 		len = writebuf->len - 1 - writebuf->pos;
 		if (len > written) {
-			// partial buffer write
+			/* partial buffer write */
 			buf_incrpos(writebuf, written);
 			written = 0;
 		} else {

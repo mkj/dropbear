@@ -73,8 +73,8 @@ static int connect_agent() {
 	return fd;
 }
 
-// handle a request for a connection to the locally running ssh-agent
-// or forward.
+/* handle a request for a connection to the locally running ssh-agent
+   or forward. */
 static int new_agent_chan(struct Channel * channel) {
 
 	int fd = -1;
@@ -94,7 +94,6 @@ static int new_agent_chan(struct Channel * channel) {
 	channel->readfd = fd;
 	channel->writefd = fd;
 
-	// success
 	return 0;
 }
 

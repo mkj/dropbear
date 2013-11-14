@@ -433,7 +433,7 @@ void cli_send_chansess_request() {
 
 }
 
-// returns 1 if the character should be consumed, 0 to pass through
+/* returns 1 if the character should be consumed, 0 to pass through */
 static int
 do_escape(unsigned char c) {
 	switch (c) {
@@ -442,10 +442,10 @@ do_escape(unsigned char c) {
 			return 1;
 			break;
 		case 0x1a:
-			// ctrl-z
+			/* ctrl-z */
 			cli_tty_cleanup();
 			kill(getpid(), SIGTSTP);
-			// after continuation
+			/* after continuation */
 			cli_tty_setup();
 			cli_ses.winchange = 1;
 			return 1;
@@ -459,8 +459,8 @@ void cli_escape_handler(struct Channel* UNUSED(channel), unsigned char* buf, int
 	char c;
 	int skip_char = 0;
 
-	// only handle escape characters if they are read one at a time. simplifies
-	// the code and avoids nasty people putting ~. at the start of a line to paste 
+	/* only handle escape characters if they are read one at a time. simplifies 
+	   the code and avoids nasty people putting ~. at the start of a line to paste  */
 	if (*len != 1) {
 		cli_ses.last_char = 0x0;
 		return;

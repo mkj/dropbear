@@ -266,7 +266,7 @@ void session_cleanup() {
 void send_session_identification() {
 	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
 	buf_putbytes(writebuf, LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
-	buf_putbyte(writebuf, 0x0); // packet type
+	buf_putbyte(writebuf, 0x0); /* packet type */
 	buf_setpos(writebuf, 0);
 	enqueue(&ses.writequeue, writebuf);
 }

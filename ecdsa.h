@@ -32,4 +32,4 @@ int signkey_is_ecdsa(enum signkey_type type);
 
 #endif
 
-#endif // _ECDSA_H_
+#endif /* _ECDSA_H_ */
