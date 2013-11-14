@@ -1,3 +1,20 @@
+2013.61test - Thursday 14 November 2013
+
+- ECC (elliptic curve) support. Supports ECDSA hostkeys (requires new keys to
+  be generated) and ECDH for setting up encryption keys (no intervention
+  required). This is significantly faster.
+
+- curve25519-sha256@libssh.org support for setting up encryption keys. This is
+  another elliptic curve mode with less potential of NSA interference in
+  algorithm parameters. curve25519-donna code thanks to Adam Langley
+
+- -R option to automatically generate hostkeys. This is recommended for
+  embedded platforms since it allows the system random number device
+  /dev/urandom a longer startup time to generate a secure seed before the
+  hostkey is required.
+
+- Compile fixes for old vendor compilers like Tru64 from Daniel Richard G.
+
 2013.60 - Wednesday 16 October 2013
 
 - Fix "make install" so that it doesn't always install to /bin and /sbin
