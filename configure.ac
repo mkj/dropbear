@@ -371,16 +371,16 @@ AC_ARG_ENABLE(bundled-libtom,
 			AC_MSG_NOTICE(Forcing bundled libtom*)
 		else
 			BUNDLED_LIBTOM=0
-			AC_CHECK_LIB(tomcrypt, register_cipher, , 
-				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
 			AC_CHECK_LIB(tommath, mp_exptmod, , 
+				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+			AC_CHECK_LIB(tomcrypt, register_cipher, , 
 				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
 		fi
 	],
 	[
 		BUNDLED_LIBTOM=0
-		AC_CHECK_LIB(tomcrypt, register_cipher, , BUNDLED_LIBTOM=1)
 		AC_CHECK_LIB(tommath, mp_exptmod, , BUNDLED_LIBTOM=1)
+		AC_CHECK_LIB(tomcrypt, register_cipher, , BUNDLED_LIBTOM=1)
 	]
 )
 
