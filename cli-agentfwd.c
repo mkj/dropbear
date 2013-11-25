@@ -201,7 +201,7 @@ static void agent_get_key_list(m_list * ret_list)
 	num = buf_getint(inbuf);
 	for (i = 0; i < num; i++) {
 		sign_key * pubkey = NULL;
-		int key_type = DROPBEAR_SIGNKEY_ANY;
+		enum signkey_type key_type = DROPBEAR_SIGNKEY_ANY;
 		buffer * key_buf;
 
 		/* each public key is encoded as a string */

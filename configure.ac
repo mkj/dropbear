@@ -21,7 +21,7 @@ AC_SUBST(LD)
 
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
-	CFLAGS="-Os -W -Wall"
+	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
 fi
 
 # large file support is useful for scp

@@ -881,14 +881,17 @@ void disallow_core() {
 
 /* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
 int m_str_to_uint(const char* str, unsigned int *val) {
+	unsigned long l;
 	errno = 0;
-	*val = strtoul(str, NULL, 10);
+	l = strtoul(str, NULL, 10);
 	/* The c99 spec doesn't actually seem to define EINVAL, but most platforms
 	 * I've looked at mention it in their manpage */
-	if ((*val == 0 && errno == EINVAL)
-		|| (*val == ULONG_MAX && errno == ERANGE)) {
+	if ((l == 0 && errno == EINVAL)
+		|| (l == ULONG_MAX && errno == ERANGE)
+		|| (l > UINT_MAX)) {
 		return DROPBEAR_FAILURE;
 	} else {
+		*val = l;
 		return DROPBEAR_SUCCESS;
 	}
 }
