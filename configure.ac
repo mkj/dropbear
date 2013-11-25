@@ -540,7 +540,9 @@ dnl wtmp detection
 AC_MSG_CHECKING([if your system defines WTMP_FILE])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <utmp.h>
+#ifdef HAVE_UTMP_H
+#  include <utmp.h>
+#endif
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
 #endif
@@ -598,9 +600,11 @@ dnl wtmpx detection
 AC_MSG_CHECKING([if your system defines WTMPX_FILE])
 AC_COMPILE_IFELSE([AC_LANG_PROGRAM([[
 #include <sys/types.h>
-#include <utmp.h>
+#ifdef HAVE_UTMP_H
+#  include <utmp.h>
+#endif
 #ifdef HAVE_UTMPX_H
-#include <utmpx.h>
+#  include <utmpx.h>
 #endif
 #ifdef HAVE_PATHS_H
 #  include <paths.h>
