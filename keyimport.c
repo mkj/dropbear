@@ -1033,6 +1033,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		int curve_oid_len = 0;
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
+		unsigned int k_size;
 
 		/* version. less than 10 bytes */
 		buf_incrwritepos(seq_buf,
@@ -1040,11 +1041,12 @@ static int openssh_write(const char *filename, sign_key *key,
 		buf_putbyte(seq_buf, 1);
 
 		/* privateKey */
-		dropbear_assert(mp_unsigned_bin_size((*eck)->k) == curve_size);
+		k_size = mp_unsigned_bin_size((*eck)->k);
+		dropbear_assert(k_size <= curve_size);
 		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 4, curve_size, 0));
-	    mp_to_unsigned_bin((*eck)->k, buf_getwriteptr(seq_buf, curve_size));
-		buf_incrwritepos(seq_buf, curve_size);
+			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 4, k_size, 0));
+	    mp_to_unsigned_bin((*eck)->k, buf_getwriteptr(seq_buf, k_size));
+		buf_incrwritepos(seq_buf, k_size);
 
 		/* SECGCurveNames */
 		switch (key->type)
@@ -1085,7 +1087,7 @@ static int openssh_write(const char *filename, sign_key *key,
 
 		buf_setpos(seq_buf, 0);
 			
-		outblob = (unsigned char*)m_malloc(200);
+		outblob = (unsigned char*)m_malloc(1000);
 
 		pos = 0;
 		pos += ber_write_id_len(outblob+pos, 16, seq_buf->len, ASN1_CONSTRUCTED);
