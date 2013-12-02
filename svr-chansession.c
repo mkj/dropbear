@@ -580,6 +580,8 @@ static int sessionpty(struct ChanSess * chansess) {
 	/* Read the terminal modes */
 	get_termmodes(chansess);
 
+	set_sock_priority(ses.sock_out);
+
 	TRACE(("leave sessionpty"))
 	return DROPBEAR_SUCCESS;
 }

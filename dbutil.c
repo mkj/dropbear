@@ -177,28 +177,41 @@ void dropbear_trace2(const char* format, ...) {
 }
 #endif /* DEBUG_TRACE */
 
-static void set_sock_priority(int sock) {
-
+void set_sock_nodelay(int sock) {
 	int val;
 
 	/* disable nagle */
 	val = 1;
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+}
+
+void set_sock_priority(int sock) {
+
+	int val, rc;
 
 	/* set the TOS bit for either ipv4 or ipv6 */
 #ifdef IPTOS_LOWDELAY
 	val = IPTOS_LOWDELAY;
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
-	setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&val, sizeof(val));
+	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&val, sizeof(val));
+	if (rc < 0)
+		dropbear_log(LOG_WARNING, "Couldn't set IPV6_TCLASS (%s)",
+				strerror(errno));
 #endif
-	setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
+	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
+	if (rc < 0)
+		dropbear_log(LOG_WARNING, "Couldn't set IP_TOS (%s)",
+				strerror(errno));
 #endif
 
 #ifdef SO_PRIORITY
 	/* linux specific, sets QoS class.
 	 * 6 looks to be optimal for interactive traffic (see tc-prio(8) ). */
-	val = 6;
-	setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
+	val = TC_PRIO_INTERACTIVE;
+	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
+	if (rc < 0)
+		dropbear_log(LOG_WARNING, "Couldn't set SO_PRIORITY (%s)",
+				strerror(errno));
 #endif
 
 }
@@ -290,7 +303,7 @@ int dropbear_listen(const char* address, const char* port,
 		}
 #endif
 
-		set_sock_priority(sock);
+		set_sock_nodelay(sock);
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
 			err = errno;
@@ -429,7 +442,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		TRACE(("Error connecting: %s", strerror(err)))
 	} else {
 		/* Success */
-		set_sock_priority(sock);
+		set_sock_nodelay(sock);
 	}
 
 	freeaddrinfo(res0);
