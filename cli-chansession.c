@@ -400,6 +400,7 @@ void cli_send_netcat_request() {
 	const unsigned char* source_host = "127.0.0.1";
 	const int source_port = 22;
 
+	TRACE(("enter cli_send_netcat_request"))
 	cli_opts.wantpty = 0;
 
 	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_netcat) 
@@ -416,7 +417,7 @@ void cli_send_netcat_request() {
 	buf_putint(ses.writepayload, source_port);
 
 	encrypt_packet();
-	TRACE(("leave cli_send_chansess_request"))
+	TRACE(("leave cli_send_netcat_request"))
 }
 #endif
 
