@@ -92,7 +92,9 @@
 #if defined(DROPBEAR_ECDH) || defined (DROPBEAR_ECDSA)
 #define DROPBEAR_ECC
 /* Debian doesn't define this in system headers */
+#ifndef LTM_DESC
 #define LTM_DESC
+#endif
 #endif
 
 #ifdef DROPBEAR_ECC
