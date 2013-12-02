@@ -580,8 +580,6 @@ static int sessionpty(struct ChanSess * chansess) {
 	/* Read the terminal modes */
 	get_termmodes(chansess);
 
-	set_sock_priority(ses.sock_out);
-
 	TRACE(("leave sessionpty"))
 	return DROPBEAR_SUCCESS;
 }
@@ -666,6 +664,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	if (chansess->term == NULL) {
 		/* no pty */
+		set_sock_priority(ses.sock_out, DROPBEAR_PRIO_BULK);
 		ret = noptycommand(channel, chansess);
 	} else {
 		/* want pty */

@@ -75,6 +75,9 @@ int main(int argc, char ** argv) {
 		int sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
 				0, &error);
 		sock_in = sock_out = sock;
+	 	if (cli_opts.wantpty) {
+			set_sock_priority(sock, DROPBEAR_PRIO_LOWDELAY);
+	 	}
 	}
 
 	if (sock_in < 0) {

@@ -137,6 +137,11 @@ void main_noinetd() {
 		dropbear_exit("No listening ports available.");
 	}
 
+	for (i = 0; i < listensockcount; i++) {
+		set_sock_priority(listensocks[i], DROPBEAR_PRIO_LOWDELAY);
+		FD_SET(listensocks[i], &fds);
+	}
+
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;

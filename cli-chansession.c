@@ -369,7 +369,8 @@ static int cli_initchansess(struct Channel *channel) {
 
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);
-		set_sock_priority(ses.sock_out);
+	} else {
+		set_sock_priority(ses.sock_out, DROPBEAR_PRIO_BULK);
 	}
 
 	send_chansess_shell_req(channel);

@@ -185,30 +185,37 @@ void set_sock_nodelay(int sock) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 }
 
-void set_sock_priority(int sock) {
+void set_sock_priority(int sock, enum dropbear_prio prio) {
 
-	int val, rc;
+	int iptos_val = 0, so_prio_val = 0, rc;
 
 	/* set the TOS bit for either ipv4 or ipv6 */
 #ifdef IPTOS_LOWDELAY
-	val = IPTOS_LOWDELAY;
+	if (prio == DROPBEAR_PRIO_LOWDELAY) {
+		iptos_val = IPTOS_LOWDELAY;
+	} else if (prio == DROPBEAR_PRIO_BULK) {
+		iptos_val = IPTOS_THROUGHPUT;
+	}
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
-	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&val, sizeof(val));
-	if (rc < 0)
-		dropbear_log(LOG_WARNING, "Couldn't set IPV6_TCLASS (%s)",
-				strerror(errno));
+	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&iptos_val, sizeof(iptos_val));
+	if (rc < 0) {
+		TRACE(("Couldn't set IPV6_TCLASS (%s)", strerror(errno)));
+	}
 #endif
-	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
-	if (rc < 0)
-		dropbear_log(LOG_WARNING, "Couldn't set IP_TOS (%s)",
-				strerror(errno));
+	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&iptos_val, sizeof(iptos_val));
+	if (rc < 0) {
+		TRACE(("Couldn't set IP_TOS (%s)", strerror(errno)));
+	}
 #endif
 
 #ifdef SO_PRIORITY
-	/* linux specific, sets QoS class.
-	 * 6 looks to be optimal for interactive traffic (see tc-prio(8) ). */
-	val = TC_PRIO_INTERACTIVE;
-	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
+	if (prio == DROPBEAR_PRIO_LOWDELAY) {
+		so_prio_val = TC_PRIO_INTERACTIVE;
+	} else if (prio == DROPBEAR_PRIO_BULK) {
+		so_prio_val = TC_PRIO_BULK;
+	}
+	/* linux specific, sets QoS class. see tc-prio(8) */
+	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &so_prio_val, sizeof(so_prio_val));
 	if (rc < 0)
 		dropbear_log(LOG_WARNING, "Couldn't set SO_PRIORITY (%s)",
 				strerror(errno));
