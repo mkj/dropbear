@@ -145,6 +145,20 @@ static void svr_ensure_hostkey() {
 
 	ret = readhostkey(fn, svr_opts.hostkey, &type);
 
+	if (ret == DROPBEAR_SUCCESS) {
+		char *fp = NULL;
+		unsigned int len;
+		buffer *key_buf = buf_new(MAX_PUBKEY_SIZE);
+		buf_put_pub_key(key_buf, svr_opts.hostkey, type);
+		buf_setpos(key_buf, 4);
+		len = key_buf->len - key_buf->pos;
+		fp = sign_key_fingerprint(buf_getptr(key_buf, len), len);
+		dropbear_log(LOG_INFO, "Generated hostkey %s, fingerprint is %s",
+			fn, fp);
+		m_free(fp);
+		buf_free(key_buf);
+	}
+
 out:
 	if (fn_temp) {
 		unlink(fn_temp);
