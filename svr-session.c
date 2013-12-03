@@ -142,7 +142,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	if (!sessinitdone) {
 		/* before session init */
 		snprintf(fmtbuf, sizeof(fmtbuf), 
-				"Premature exit: %s", format);
+				"Early exit: %s", format);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fmtbuf, sizeof(fmtbuf),

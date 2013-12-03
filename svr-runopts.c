@@ -475,8 +475,7 @@ void load_all_hostkeys() {
 #endif
 
 #ifdef DROPBEAR_DELAY_HOSTKEY
-	if (svr_opts.delay_hostkey)
-	{
+	if (svr_opts.delay_hostkey) {
 		disable_unset_keys = 0;
 	}
 #endif
@@ -484,19 +483,15 @@ void load_all_hostkeys() {
 #ifdef DROPBEAR_RSA
 	if (disable_unset_keys && !svr_opts.hostkey->rsakey) {
 		disablekey(DROPBEAR_SIGNKEY_RSA);
-	}
-	else
-	{
+	} else {
 		any_keys = 1;
 	}
 #endif
 
 #ifdef DROPBEAR_DSS
 	if (disable_unset_keys && !svr_opts.hostkey->dsskey) {
-		disablekey(DROPBEAR_SIGNKEY_RSA);
-	}
-	else
-	{
+		disablekey(DROPBEAR_SIGNKEY_DSS);
+	} else {
 		any_keys = 1;
 	}
 #endif
@@ -507,9 +502,7 @@ void load_all_hostkeys() {
 	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 256)
 		&& !svr_opts.hostkey->ecckey256) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP256);
-	}
-	else
-	{
+	} else {
 		any_keys = 1;
 	}
 #endif
@@ -518,9 +511,7 @@ void load_all_hostkeys() {
 	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 384)
 		&& !svr_opts.hostkey->ecckey384) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP384);
-	}
-	else
-	{
+	} else {
 		any_keys = 1;
 	}
 #endif
@@ -529,17 +520,13 @@ void load_all_hostkeys() {
 	if ((disable_unset_keys || ECDSA_DEFAULT_SIZE != 521)
 		&& !svr_opts.hostkey->ecckey521) {
 		disablekey(DROPBEAR_SIGNKEY_ECDSA_NISTP521);
-	}
-	else
-	{
+	} else {
 		any_keys = 1;
 	}
 #endif
 #endif /* DROPBEAR_ECDSA */
 
-	if (!any_keys)
-	{
+	if (!any_keys) {
 		dropbear_exit("No hostkeys available");
 	}
-
 }
