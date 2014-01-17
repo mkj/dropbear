@@ -792,6 +792,11 @@ static void finish_kexhashbuf(void) {
 	hash_desc->done(&hs, buf_getwriteptr(ses.hash, hash_desc->hashsize));
 	buf_setlen(ses.hash, hash_desc->hashsize);
 
+#ifdef DEBUG_KEXHASH
+	printhex("kexhashbuf", ses.kexhashbuf->data, ses.kexhashbuf->len);
+	printhex("kexhash", ses.hash->data, ses.hash->len);
+#endif
+
 	buf_burn(ses.kexhashbuf);
 	buf_free(ses.kexhashbuf);
 	ses.kexhashbuf = NULL;

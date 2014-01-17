@@ -233,6 +233,7 @@ typedef enum {
 
 typedef enum {
 	STATE_NOTHING,
+	USERAUTH_WAIT,
 	USERAUTH_REQ_SENT,
 	USERAUTH_FAIL_RCVD,
 	USERAUTH_SUCCESS_RCVD,
@@ -267,6 +268,7 @@ struct clientsession {
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
+	int ignore_next_auth_response;
 #ifdef ENABLE_CLI_INTERACT_AUTH
 	int auth_interact_failed; /* flag whether interactive auth can still
 								 be used */
