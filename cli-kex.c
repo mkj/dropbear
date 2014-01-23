@@ -86,8 +86,6 @@ void send_msg_kexdh_init() {
 
 	cli_ses.param_kex_algo = ses.newkeys->algo_kex;
 	encrypt_packet();
-	ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
-	ses.requirenext[1] = SSH_MSG_KEXINIT;
 }
 
 /* Handle a diffie-hellman key exchange reply. */

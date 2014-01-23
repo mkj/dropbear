@@ -483,9 +483,6 @@ static void gen_new_zstream_trans() {
  * and we calculate the first portion of the key-exchange-hash for used
  * later in the key exchange. No response is sent, as the client should
  * initiate the diffie-hellman key exchange */
-
-/* Originally from kex.c, generalized for cli/svr mode --mihnea  */
-/* Belongs in common_kex.c where it should be moved after review */
 void recv_msg_kexinit() {
 	
 	unsigned int kexhashbuf_len = 0;
@@ -528,7 +525,7 @@ void recv_msg_kexinit() {
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
 	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
-
+		ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
 	} else {
 		/* SERVER */
 
