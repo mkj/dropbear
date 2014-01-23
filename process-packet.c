@@ -74,13 +74,11 @@ void process_packet() {
 
 	/* This applies for KEX, where the spec says the next packet MUST be
 	 * NEWKEYS */
-	if (ses.requirenext[0] != 0) {
-		if (ses.requirenext[0] == type || ses.requirenext[1] == type)
+	if (ses.requirenext != 0) {
+		if (ses.requirenext == type)
 		{
 			/* Got what we expected */
-			TRACE(("got expeced packet %d during kexinit", type))
-			ses.requirenext[0] = 0;
-			ses.requirenext[1] = 0;
+			TRACE(("got expected packet %d during kexinit", type))
 		}
 		else
 		{
@@ -99,8 +97,8 @@ void process_packet() {
 			else
 			{
 				TRACE(("disallowed packet during kexinit"))
-				dropbear_exit("Unexpected packet type %d, expected [%d,%d]", type,
-						ses.requirenext[0], ses.requirenext[1]);
+				dropbear_exit("Unexpected packet type %d, expected %d", type,
+						ses.requirenext);
 			}
 		}
 	}
@@ -111,6 +109,12 @@ void process_packet() {
 		TRACE(("Ignoring packet, type = %d", type))
 		ses.ignorenext = 0;
 		goto out;
+	}
+
+	/* Only clear the flag after we have checked ignorenext */
+	if (ses.requirenext != 0 && ses.requirenext == type)
+	{
+		ses.requirenext = 0;
 	}
 
 

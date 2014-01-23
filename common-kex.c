@@ -525,7 +525,7 @@ void recv_msg_kexinit() {
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, 0);
 	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
-		ses.requirenext[0] = SSH_MSG_KEXDH_REPLY;
+		ses.requirenext = SSH_MSG_KEXDH_REPLY;
 	} else {
 		/* SERVER */
 
@@ -545,7 +545,7 @@ void recv_msg_kexinit() {
 	    buf_putstring(ses.kexhashbuf,
 			ses.transkexinit->data, ses.transkexinit->len);
 
-		ses.requirenext[0] = SSH_MSG_KEXDH_INIT;
+		ses.requirenext = SSH_MSG_KEXDH_INIT;
 	}
 
 	buf_free(ses.transkexinit);

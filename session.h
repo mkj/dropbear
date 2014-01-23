@@ -135,9 +135,8 @@ struct sshsession {
 	unsigned dataallowed : 1; /* whether we can send data packets or we are in
 								 the middle of a KEX or something */
 
-	unsigned char requirenext[2]; /* bytes indicating what packets we require next, 
-									 or 0x00 for any. Second option can only be
-									 used if the first byte is also set */
+	unsigned char requirenext; /* byte indicating what packets we require next, 
+									 or 0x00 for any.  */
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
 								 used for kex_follows stuff */

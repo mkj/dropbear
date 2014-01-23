@@ -16,7 +16,7 @@
 #define KEX_REKEY_TIMEOUT (3600 * 8)
 #endif
 #ifndef KEX_REKEY_DATA
-#define KEX_REKEY_DATA (1<<30) /* 2^30 == 1GB, this value must be < INT_MAX */
+#define KEX_REKEY_DATA (1<<20) /* 2^30 == 1GB, this value must be < INT_MAX */
 #endif
 /* Close connections to clients which haven't authorised after AUTH_TIMEOUT */
 #ifndef AUTH_TIMEOUT
