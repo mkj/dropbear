@@ -19,7 +19,7 @@ LTM=libtommath/libtommath.a
 ifeq (@BUNDLED_LIBTOM@, 1)
 LIBTOM_DEPS=$(LTC) $(LTM) 
 CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
-LIBS+=$(LTC) $(LTM) 
+LIBTOM_LIBS+=$(LTC) $(LTM) 
 endif
 
 COMMONOBJS=dbutil.o buffer.o \
@@ -160,8 +160,11 @@ dbclient: $(dbclientobjs)
 dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
-dropbear dbclient dropbearkey dropbearconvert: $(HEADERS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBS)
+dropbear dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
+
+dropbearkey dropbearconvert: $(HEADERS) $(LIBTOM_DEPS) Makefile
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS)
 
 # scp doesn't use the libs so is special.
 scp: $(SCPOBJS)  $(HEADERS) Makefile
@@ -176,7 +179,7 @@ ifeq ($(MULTI),1)
 endif
 
 dropbearmulti$(EXEEXT): $(HEADERS) $(MULTIOBJS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBS)$
+	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBTOM_LIBS) $(LIBS)$
 
 multibinary: dropbearmulti$(EXEEXT)
 
