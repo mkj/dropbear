@@ -58,7 +58,7 @@ HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		loginrec.h atomicio.h x11fwd.h agentfwd.h tcpfwd.h compat.h \
 		listener.h fake-rfc2553.h ecc.h ecdsa.h
 
-dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS) @CRYPTLIB@ 
+dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS)
 dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
 dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
 dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
@@ -160,7 +160,10 @@ dbclient: $(dbclientobjs)
 dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
-dropbear dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
+dropbear: $(HEADERS) $(LIBTOM_DEPS) Makefile
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
+
+dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
 
 dropbearkey dropbearconvert: $(HEADERS) $(LIBTOM_DEPS) Makefile
@@ -174,12 +177,12 @@ scp: $(SCPOBJS)  $(HEADERS) Makefile
 # multi-binary compilation.
 MULTIOBJS=
 ifeq ($(MULTI),1)
-	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs))) @CRYPTLIB@ 
+	MULTIOBJS=dbmulti.o $(sort $(foreach prog, $(PROGRAMS), $($(prog)objs)))
 	CFLAGS+=$(addprefix -DDBMULTI_, $(PROGRAMS)) -DDROPBEAR_MULTI
 endif
 
 dropbearmulti$(EXEEXT): $(HEADERS) $(MULTIOBJS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBTOM_LIBS) $(LIBS)$
+	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
 
 multibinary: dropbearmulti$(EXEEXT)
 
