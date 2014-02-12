@@ -244,7 +244,11 @@ void session_cleanup() {
 	if (ses.extra_session_cleanup) {
 		ses.extra_session_cleanup();
 	}
+
+	chancleanup();
 	
+	/* Cleaning up keys must happen after other cleanup
+	functions which might queue packets */
 	if (ses.session_id) {
 		buf_burn(ses.session_id);
 		buf_free(ses.session_id);
@@ -257,8 +261,6 @@ void session_cleanup() {
 	}
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);
-
-	chancleanup();
 
 	TRACE(("leave session_cleanup"))
 }
