@@ -52,14 +52,22 @@ void cli_auth_getmethods() {
 	encrypt_packet();
 
 #ifdef DROPBEAR_CLI_IMMEDIATE_AUTH
-	ses.authstate.authtypes = AUTH_TYPE_PUBKEY;
-    if (getenv(DROPBEAR_PASSWORD_ENV)) {
-		ses.authstate.authtypes |= AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
-	}
-	if (cli_auth_try() == DROPBEAR_SUCCESS) {
-		TRACE(("skipped initial none auth query"))
-		/* Note that there will be two auth responses in-flight */
-		cli_ses.ignore_next_auth_response = 1;
+	/* We can't haven't two auth requests in-flight with delayed zlib mode
+	since if the first one succeeds then the remote side will 
+	expect the second one to be compressed. 
+	Race described at
+	http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/zlib-openssh.html
+	*/
+	if (ses.keys->trans.algo_comp != DROPBEAR_COMP_ZLIB_DELAY) {
+		ses.authstate.authtypes = AUTH_TYPE_PUBKEY;
+		if (getenv(DROPBEAR_PASSWORD_ENV)) {
+			ses.authstate.authtypes |= AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
+		}
+		if (cli_auth_try() == DROPBEAR_SUCCESS) {
+			TRACE(("skipped initial none auth query"))
+			/* Note that there will be two auth responses in-flight */
+			cli_ses.ignore_next_auth_response = 1;
+		}
 	}
 #endif
 	TRACE(("leave cli_auth_getmethods"))
