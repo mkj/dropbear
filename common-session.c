@@ -153,10 +153,9 @@ void session_loop(void(*loophandler)()) {
 		   SIGCHLD in svr-chansession is the only one currently. */
 		FD_SET(ses.signal_pipe[0], &readfd);
 
-		/* set up for channels which require reading/writing */
-		if (ses.dataallowed) {
-			setchannelfds(&readfd, &writefd);
-		}
+		/* set up for channels which can be read/written */
+		setchannelfds(&readfd, &writefd);
+
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
 
 		if (exitflag) {
@@ -217,9 +216,7 @@ void session_loop(void(*loophandler)()) {
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
-		if (ses.dataallowed) {
-			channelio(&readfd, &writefd);
-		}
+		channelio(&readfd, &writefd);
 
 		if (loophandler) {
 			loophandler();
