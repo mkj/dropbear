@@ -13,13 +13,15 @@ ifndef PROGRAMS
 	PROGRAMS=dropbear dbclient dropbearkey dropbearconvert
 endif
 
-LTC=libtomcrypt/libtomcrypt.a
-LTM=libtommath/libtommath.a
+STATIC_LTC=libtomcrypt/libtomcrypt.a
+STATIC_LTM=libtommath/libtommath.a
+
+LIBTOM_LIBS=@LIBTOM_LIBS@
 
 ifeq (@BUNDLED_LIBTOM@, 1)
-LIBTOM_DEPS=$(LTC) $(LTM) 
+LIBTOM_DEPS=$(STATIC_LTC) $(STATIC_LTM) 
 CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
-LIBTOM_LIBS+=$(LTC) $(LTM) 
+LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM) 
 endif
 
 COMMONOBJS=dbutil.o buffer.o \
@@ -192,10 +194,10 @@ link%:
 	-rm -f $*$(EXEEXT)
 	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
-$(LTC): options.h
+$(STATIC_LTC): options.h
 	cd libtomcrypt && $(MAKE)
 
-$(LTM): options.h
+$(STATIC_LTM): options.h
 	cd libtommath && $(MAKE)
 
 .PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean
