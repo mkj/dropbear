@@ -222,6 +222,12 @@ much traffic. */
  * return the password on standard output */
 /*#define ENABLE_CLI_ASKPASS_HELPER*/
 
+/* Save a network roundtrip by sendng a real auth request immediately after
+ * sending a query for the available methods.  It is at the expense of < 100
+ * bytes of extra network traffic. This is not yet enabled by default since it
+ * could cause problems with non-compliant servers */
+/* #define DROPBEAR_CLI_IMMEDIATE_AUTH */
+
 /* Source for randomness. This must be able to provide hundreds of bytes per SSH
  * connection without blocking. In addition /dev/random is used for seeding
  * rsa/dss key generation */

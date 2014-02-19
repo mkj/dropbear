@@ -176,11 +176,6 @@
 												accept for keyb-interactive
 												auth */
 
-/* Send a real auth request immediately after sending a query for the available methods.
- * It saves a network round trip at login.
- * If problems are encountered it can be disabled here. */
- #define DROPBEAR_CLI_IMMEDIATE_AUTH
-
 
 #if defined(DROPBEAR_AES256) || defined(DROPBEAR_AES128)
 #define DROPBEAR_AES
