@@ -24,7 +24,7 @@
   still-in-flight packet after initiating rekeying. Reported by Oliver Metz.
   This is a longstanding bug but is triggered more easily since 2013.57
 
-- Fix README for ecdsa keys, from Caralin Patulea
+- Fix README for ecdsa keys, from Catalin Patulea
 
 - Ensure that generated RSA keys are always exactly the length
   requested. Previously Dropbear always generated N+16 or N+15 bit keys.
