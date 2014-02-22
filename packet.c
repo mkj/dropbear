@@ -41,7 +41,11 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 		unsigned char *output_mac);
 static int checkmac();
 
-#define ZLIB_COMPRESS_INCR 100
+/* For exact details see http://www.zlib.net/zlib_tech.html
+ * 5 bytes per 16kB block, plus 6 bytes for the stream.
+ * We might allocate 5 unnecessary bytes here if it's an
+ * exact multiple. */
+#define ZLIB_COMPRESS_EXPANSION (((RECV_MAX_PAYLOAD_LEN/16384)+1)*5 + 6)
 #define ZLIB_DECOMPRESS_INCR 1024
 #ifndef DISABLE_ZLIB
 static buffer* buf_decompress(buffer* buf, unsigned int len);
@@ -333,7 +337,7 @@ void decrypt_packet() {
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
 	len = ses.readbuf->len - padlen - 4 - 1 - macsize;
-	if ((len > RECV_MAX_PAYLOAD_LEN) || (len < 1)) {
+	if ((len > RECV_MAX_PAYLOAD_LEN+ZLIB_COMPRESS_EXPANSION) || (len < 1)) {
 		dropbear_exit("Bad packet size %d", len);
 	}
 
@@ -422,6 +426,8 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 		if (zstream->avail_out == 0) {
 			int new_size = 0;
 			if (ret->size >= RECV_MAX_PAYLOAD_LEN) {
+				/* Already been increased as large as it can go,
+				 * yet didn't finish up the decompression */
 				dropbear_exit("bad packet, oversized decompressed");
 			}
 			new_size = MIN(RECV_MAX_PAYLOAD_LEN, ret->size + ZLIB_DECOMPRESS_INCR);
@@ -526,7 +532,7 @@ void encrypt_packet() {
 				+ mac_size
 #ifndef DISABLE_ZLIB
 	/* some extra in case 'compression' makes it larger */
-				+ ZLIB_COMPRESS_INCR
+				+ ZLIB_COMPRESS_EXPANSION
 #endif
 	/* and an extra cleartext (stripped before transmission) byte for the
 	 * packet type */
@@ -539,14 +545,7 @@ void encrypt_packet() {
 #ifndef DISABLE_ZLIB
 	/* compression */
 	if (is_compress_trans()) {
-		int compress_delta;
 		buf_compress(writebuf, ses.writepayload, ses.writepayload->len);
-		compress_delta = (writebuf->len - PACKET_PAYLOAD_OFF) - ses.writepayload->len;
-
-		/* Handle the case where 'compress' increased the size. */
-		if (compress_delta > ZLIB_COMPRESS_INCR) {
-			buf_resize(writebuf, writebuf->size + compress_delta);
-		}
 	} else
 #endif
 	{
@@ -694,7 +693,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 		/* the buffer has been filled, we must extend. This only happens in
 		 * unusual circumstances where the data grows in size after deflate(),
 		 * but it is possible */
-		buf_resize(dest, dest->size + ZLIB_COMPRESS_INCR);
+		buf_resize(dest, dest->size + ZLIB_COMPRESS_EXPANSION);
 
 	}
 	TRACE2(("leave buf_compress"))

@@ -59,6 +59,13 @@ static void close_chan_fd(struct Channel *channel, int fd, int how);
 #define ERRFD_IS_READ(channel) ((channel)->extrabuf == NULL)
 #define ERRFD_IS_WRITE(channel) (!ERRFD_IS_READ(channel))
 
+/* allow space for:
+ * 1 byte  byte      SSH_MSG_CHANNEL_DATA
+ * 4 bytes uint32    recipient channel
+ * 4 bytes string    data
+ */
+#define RECV_MAX_CHANNEL_DATA_LEN (RECV_MAX_PAYLOAD_LEN-(1+4+4))
+
 /* Initialise all the channels */
 void chaninitialise(const struct ChanType *chantypes[]) {
 
@@ -165,7 +172,7 @@ static struct Channel* newchannel(unsigned int remotechan,
 
 	newchan->extrabuf = NULL; /* The user code can set it up */
 	newchan->recvdonelen = 0;
-	newchan->recvmaxpacket = RECV_MAX_PAYLOAD_LEN;
+	newchan->recvmaxpacket = RECV_MAX_CHANNEL_DATA_LEN;
 
 	ses.channels[i] = newchan;
 	ses.chancount++;
@@ -1028,7 +1035,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	buf_putstring(ses.writepayload, type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
 	buf_putint(ses.writepayload, opts.recv_window);
-	buf_putint(ses.writepayload, RECV_MAX_PAYLOAD_LEN);
+	buf_putint(ses.writepayload, RECV_MAX_CHANNEL_DATA_LEN);
 
 	TRACE(("leave send_msg_channel_open_init()"))
 	return DROPBEAR_SUCCESS;
