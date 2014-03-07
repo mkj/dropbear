@@ -2,7 +2,7 @@ language: c
 compiler:
   - gcc
 
-script: autoconf && autoheader && ./configure && make --$BUNDLEDLIBTOM-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign"
+script: autoconf && autoheader && ./configure --$BUNDLEDLIBTOM-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" && make
 
 before_install:
   - sudo apt-get update -qq
