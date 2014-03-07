@@ -1,0 +1,15 @@
+language: c
+compiler:
+  - gcc
+
+script: autoconf && autoheader && ./configure && make --$BUNDLEDLIBTOM-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign"
+
+before_install:
+  - sudo apt-get update -qq
+  - sudo apt-get install -qq libz-dev
+
+env: 
+  - BUNDLEDLIBTOM=enable
+  - BUNDLEDLIBTOM=disable
+
+
