@@ -3,13 +3,13 @@ compiler:
   - gcc
 
 script: 
-  - autoconf && autoheader && ./configure --$BUNDLEDLIBTOM-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" && make
-  - ./dropbearkey -t rsa -f testrsa
-  - ./dropbearkey -t dss -f testdss
-  - ./dropbearkey -t ecdsa -f testec256 -s 256
-  - ./dropbearkey -t ecdsa -f testec384 -s 384
-  - ./dropbearkey -t ecdsa -f testec521 -s 521
-
+  - mkdir ~/inst
+  - autoconf && autoheader && ./configure --$BUNDLEDLIBTOM-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install
+  - ~/inst/bin/dropbearkey -t rsa -f testrsa
+  - ~/inst/bin/dropbearkey -t dss -f testdss
+  - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
+  - ~/inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
+  - ~/inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
 
 before_install:
   - sudo apt-get update -qq
@@ -18,5 +18,7 @@ before_install:
 env: 
   - BUNDLEDLIBTOM=enable
   - BUNDLEDLIBTOM=disable
+  - MULTI=1
+  - MULTI=0
 
 
