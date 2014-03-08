@@ -28,5 +28,5 @@ addons:
       description: "Dropbear SSH"
     notification_email: matt@ucc.asn.au
     build_command_prepend: autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS='-O2 -Wall -Wno-pointer-sign' --prefix=$HOME/inst
-    build_command: make install MULTI=1
+    build_command: make MULTI=1
     branch_pattern: coverity
