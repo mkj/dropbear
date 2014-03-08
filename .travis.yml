@@ -4,7 +4,7 @@ compiler:
 
 script: 
   - mkdir ~/inst
-  - autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install MULTI=1
+  - autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS='-O2 -Wall -Wno-pointer-sign' --prefix=$HOME/inst && make install MULTI=1
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
   - ~/inst/bin/dropbearkey -t dss -f testdss
   - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
