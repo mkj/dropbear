@@ -3,7 +3,6 @@ compiler:
   - gcc
 
 script: 
-  - mkdir ~/inst
   - autoconf && autoheader && ./configure $BUNDLEDLIBTOM CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
   - ~/inst/bin/dropbearkey -t dss -f testdss
