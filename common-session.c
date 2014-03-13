@@ -434,7 +434,7 @@ static long select_timeout() {
 	if (KEX_REKEY_TIMEOUT > 0)
 		ret = MIN(KEX_REKEY_TIMEOUT, ret);
 	/* AUTH_TIMEOUT is only relevant before authdone */
-	if (sess.authstate.authdone != 1 && AUTH_TIMEOUT > 0)
+	if (ses.authstate.authdone != 1 && AUTH_TIMEOUT > 0)
 		ret = MIN(AUTH_TIMEOUT, ret);
 	if (opts.keepalive_secs > 0)
 		ret = MIN(opts.keepalive_secs, ret);
