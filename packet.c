@@ -87,12 +87,12 @@ void write_packet() {
 	if (written < 0) {
 		if (errno == EINTR) {
 			m_free(iov);
-			TRACE2(("leave writepacket: EINTR"))
+			TRACE2(("leave write_packet: EINTR"))
 			return;
 		} else {
 			dropbear_exit("Error writing");
 		}
-	} 
+	}
 
 	if (written == 0) {
 		ses.remoteclosed();

@@ -52,7 +52,7 @@ void process_packet() {
 
 	ses.lastpacket = type;
 
-    ses.last_packet_time = time(NULL);
+	ses.last_packet_time = time(NULL);
 
 	/* These packets we can receive at any time */
 	switch(type) {
