@@ -151,7 +151,7 @@ void write_packet() {
 	}
 
 #endif
-	now = time(NULL);
+	now = monotonic_now();
 	ses.last_trx_packet_time = now;
 
 	if (!all_ignore) {

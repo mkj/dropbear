@@ -95,7 +95,7 @@ void svr_session(int sock, int childpipe) {
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 
-	ses.connect_time = time(NULL);
+	ses.connect_time = monotonic_now();
 
 	/* for logging the remote address */
 	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);

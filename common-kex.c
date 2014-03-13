@@ -270,7 +270,7 @@ static void kexinitialise() {
 
 	ses.kexstate.our_first_follows_matches = 0;
 
-	ses.kexstate.lastkextime = time(NULL);
+	ses.kexstate.lastkextime = monotonic_now();
 
 }
 

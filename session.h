@@ -106,7 +106,8 @@ struct sshsession {
 
 	time_t connect_time; /* time the connection was established
 							(cleared after auth once we're not
-							respecting AUTH_TIMEOUT any more) */
+							respecting AUTH_TIMEOUT any more).
+							A monotonic time, not realworld */
 
 	int sock_in;
 	int sock_out;
@@ -147,10 +148,10 @@ struct sshsession {
 						   race-free signal handling */
 						
 	time_t last_trx_packet_time; /* time of the last packet transmission, for
-							keepalive purposes */
+							keepalive purposes. Not real-world clock */
 
 	time_t last_packet_time; /* time of the last packet transmission or receive, for
-								idle timeout purposes */
+								idle timeout purposes. Not real-world clock */
 
 
 	/* KEX/encryption related */

@@ -397,8 +397,7 @@ void send_msg_ignore() {
 static void checktimeouts() {
 
 	time_t now;
-
-	now = time(NULL);
+	now = monotonic_now();
 	
 	if (ses.connect_time != 0 && now - ses.connect_time >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before auth");
