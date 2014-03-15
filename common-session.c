@@ -186,13 +186,7 @@ void session_loop(void(*loophandler)()) {
 		/* check for auth timeout, rekeying required etc */
 		checktimeouts();
 
-		/* process session socket's incoming/outgoing data */
-		if (ses.sock_out != -1) {
-			if (FD_ISSET(ses.sock_out, &writefd) && !isempty(&ses.writequeue)) {
-				write_packet();
-			}
-		}
-
+		/* process session socket's incoming data */
 		if (ses.sock_in != -1) {
 			if (FD_ISSET(ses.sock_in, &readfd)) {
 				if (!ses.remoteident) {
@@ -217,6 +211,14 @@ void session_loop(void(*loophandler)()) {
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
 		channelio(&readfd, &writefd);
+
+		/* process session socket's outgoing data */
+		if (ses.sock_out != -1) {
+			if (!isempty(&ses.writequeue)) {
+				write_packet();
+			}
+		}
+
 
 		if (loophandler) {
 			loophandler();
