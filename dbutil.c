@@ -962,7 +962,7 @@ time_t monotonic_now() {
 	return ts.tv_sec;
 #elif defined(HAVE_MACH_ABSOLUTE_TIME)
 	/* OS X, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
-	mach_timebase_info_data_t timebase_info;
+	static mach_timebase_info_data_t timebase_info;
 	if (timebase_info.denom == 0) {
 		mach_timebase_info(&timebase_info);
 	}
