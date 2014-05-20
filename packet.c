@@ -70,7 +70,7 @@ void write_packet() {
 	TRACE2(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
 
-#ifdef HAVE_WRITEV
+#if defined(HAVE_WRITEV) && (defined(IOV_MAX) || defined(UIO_MAXIOV))
 
 #ifndef IOV_MAX
 #define IOV_MAX UIO_MAXIOV
@@ -79,7 +79,9 @@ void write_packet() {
 	/* Make sure the size of the iov is below the maximum allowed by the OS. */
 	iov_max_count = ses.writequeue.count;
 	if (iov_max_count > IOV_MAX)
+	{
 		iov_max_count = IOV_MAX;
+	}
 
 	iov = m_malloc(sizeof(*iov) * iov_max_count);
 	for (l = ses.writequeue.head, i = 0; l; l = l->link, i++)
@@ -124,8 +126,7 @@ void write_packet() {
 	}
 
 	m_free(iov);
-
-#else
+#else /* No writev () */
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
@@ -160,8 +161,8 @@ void write_packet() {
 		/* More packet left to write, leave it in the queue for later */
 		buf_incrpos(writebuf, written);
 	}
+#endif /* writev */
 
-#endif
 	now = monotonic_now();
 	ses.last_trx_packet_time = now;
 
