@@ -64,13 +64,24 @@ void write_packet() {
 	struct iovec *iov = NULL;
 	int i;
 	struct Link *l;
+	int iov_max_count;
 #endif
 	
 	TRACE2(("enter write_packet"))
 	dropbear_assert(!isempty(&ses.writequeue));
 
 #ifdef HAVE_WRITEV
-	iov = m_malloc(sizeof(*iov) * ses.writequeue.count);
+
+#ifndef IOV_MAX
+#define IOV_MAX UIO_MAXIOV
+#endif
+
+	/* Make sure the size of the iov is below the maximum allowed by the OS. */
+	iov_max_count = ses.writequeue.count;
+	if (iov_max_count > IOV_MAX)
+		iov_max_count = IOV_MAX;
+
+	iov = m_malloc(sizeof(*iov) * iov_max_count);
 	for (l = ses.writequeue.head, i = 0; l; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
@@ -83,7 +94,7 @@ void write_packet() {
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
-	written = writev(ses.sock_out, iov, ses.writequeue.count);
+	written = writev(ses.sock_out, iov, iov_max_count);
 	if (written < 0) {
 		if (errno == EINTR) {
 			m_free(iov);
