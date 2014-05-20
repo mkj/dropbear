@@ -90,7 +90,7 @@ void write_packet() {
 			TRACE2(("leave write_packet: EINTR"))
 			return;
 		} else {
-			dropbear_exit("Error writing");
+			dropbear_exit("Error writing: %s", strerror(errno));
 		}
 	}
 
@@ -131,7 +131,7 @@ void write_packet() {
 			TRACE2(("leave writepacket: EINTR"))
 			return;
 		} else {
-			dropbear_exit("Error writing");
+			dropbear_exit("Error writing: %s", strerror(errno));
 		}
 	} 
 	all_ignore = (packet_type == SSH_MSG_IGNORE);
