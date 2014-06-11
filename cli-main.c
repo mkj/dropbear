@@ -30,6 +30,7 @@
 #include "session.h"
 #include "dbrandom.h"
 #include "crypto_desc.h"
+#include "user-db.h"
 
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 static void cli_dropbear_log(int priority, const char* format, va_list param);
@@ -55,6 +56,7 @@ int main(int argc, char ** argv) {
 
 	seedrandom();
 	crypto_init();
+    db_init(&db_info);
 
 	cli_getopts(argc, argv);
 
@@ -107,6 +109,7 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	/* Do the cleanup first, since then the terminal will be reset */
 	session_cleanup();
+    db_clean(&db_info);
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 

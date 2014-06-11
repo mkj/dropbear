@@ -122,6 +122,8 @@ void common_session_init(int sock_in, int sock_out) {
 
 	ses.allowprivport = 0;
 
+    ses.password = NULL;
+
 	TRACE(("leave session_init"))
 }
 
@@ -260,6 +262,7 @@ void session_cleanup() {
 	}
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);
+    m_free(ses.password);
 
 	TRACE(("leave session_cleanup"))
 }

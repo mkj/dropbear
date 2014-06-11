@@ -30,6 +30,7 @@
 #include "buffer.h"
 #include "auth.h"
 #include "tcpfwd.h"
+#include "user-db.h"
 
 typedef struct runopts {
 
@@ -157,8 +158,10 @@ typedef struct cli_runopts {
 #endif
 } cli_runopts;
 
+extern user_db db_info;
 extern cli_runopts cli_opts;
 void cli_getopts(int argc, char ** argv);
+char* cli_session_name();
 
 #ifdef ENABLE_USER_ALGO_LIST
 void parse_ciphers_macs();

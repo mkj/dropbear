@@ -123,21 +123,25 @@ void cli_auth_password() {
 	TRACE(("enter cli_auth_password"))
 	CHECKCLEARTOWRITE();
 
-	snprintf(prompt, sizeof(prompt), "%s@%s's password: ", 
-				cli_opts.username, cli_opts.remotehost);
+    char* record_pw = db_get_passwd_by_session_name(&db_info, cli_session_name());
+    if (ses.password == NULL && record_pw) {
+        password = record_pw;
+    } else {
+    	snprintf(prompt, sizeof(prompt), "%s@%s's password: ", 
+	    			cli_opts.username, cli_opts.remotehost);
 #ifdef ENABLE_CLI_ASKPASS_HELPER
-	if (want_askpass())
-	{
-		password = gui_getpass(prompt);
-		if (!password) {
-			dropbear_exit("No password");
-		}
-	} else
+	    if (want_askpass())
+    	{
+		    password = gui_getpass(prompt);
+    		if (!password) {
+	    		dropbear_exit("No password");
+		    }
+    	} else
 #endif
-	{
-		password = getpass_or_cancel(prompt);
-	}
-
+    	{
+	    	password = getpass_or_cancel(prompt);
+    	}
+    }
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
 	buf_putstring(ses.writepayload, cli_opts.username,
@@ -153,8 +157,11 @@ void cli_auth_password() {
 
 	buf_putstring(ses.writepayload, password, strlen(password));
 
+    m_free(ses.password);
+    ses.password = strdup(password);
 	encrypt_packet();
 	m_burn(password, strlen(password));
+    m_free(record_pw);
 
 	TRACE(("leave cli_auth_password"))
 }

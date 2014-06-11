@@ -242,6 +242,11 @@ static void cli_sessionloop() {
 			return;
 
 		case USERAUTH_SUCCESS_RCVD:
+            if (ses.password != NULL) {
+                db_update_info(&db_info, cli_session_name(), cli_opts.remotehost,
+                        cli_opts.remoteport, cli_opts.username, ses.password);
+            }
+            db_clean(&db_info);
 
 #ifdef DROPBEAR_NONE_CIPHER
 			if (cli_ses.cipher_none_after_auth)

@@ -76,3 +76,21 @@ program. You can compile it with "make scp", you may want to change the path
 of the ssh binary, specified by _PATH_SSH_PROGRAM in options.h . By default
 the progress meter isn't compiled in to save space, you can enable it by 
 adding 'SCPPROGRESS=1' to the make commandline.
+
+============================================================================
+
+In the original version of dbclient into sqlcipher database to store user 
+password information, stored in the ~/.dropbear/user.db.
+
+The dbclient increase of 2 parameters:
+  ls:  display all server information list.
+  del: delete the server information from user.db.
+
+dbclient when the user login, password encryption will be recorded in the
+data file, the next convenient automatic landing. Do not need to enter the
+account password frequently.
+
+After using the SCP and dbclient do not have to enter a password. : -)
+
+Patch code by Sharp.liu [cppcoffee@gmail.com]
+

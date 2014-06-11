@@ -197,6 +197,7 @@ struct sshsession {
 	 * really belong here, but nowhere else fits nicely */
 	int allowprivport;
 
+    char* password;
 };
 
 struct serversession {

@@ -85,6 +85,9 @@ AC_CHECK_DECL(__UCLIBC__,
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, CRYPTLIB="-lcrypt")
 AC_SUBST(CRYPTLIB)	
+AC_DEFINE(SQLITE_HAS_CODEC)
+AC_CHECK_LIB(sqlcipher, sqlite3_key, SQLCIPHERLIB="-lsqlcipher")
+AC_SUBST(SQLCIPHERLIB)
 
 # Check if zlib is needed
 AC_ARG_WITH(zlib,
@@ -355,6 +358,7 @@ AC_CHECK_MEMBERS([struct sockaddr_storage.ss_family],,,[
 #include <sys/socket.h>
 ])
 
+AC_CHECK_FUNCS(bzero)
 AC_CHECK_FUNCS(endutent getutent getutid getutline pututline setutent)
 AC_CHECK_FUNCS(utmpname)
 AC_CHECK_FUNCS(endutxent getutxent getutxid getutxline pututxline )

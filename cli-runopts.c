@@ -30,13 +30,16 @@
 #include "algo.h"
 #include "tcpfwd.h"
 #include "list.h"
+#include "user-db.h"
 
 cli_runopts cli_opts; /* GLOBAL */
+user_db db_info;
 
 static void printhelp();
 static void parse_hostname(const char* orighostarg);
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
 static void fill_own_user();
+char* cli_session_name();
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
 #endif
@@ -93,6 +96,8 @@ static void printhelp() {
 #ifdef DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
+                    "ls    print server lists.\n"
+                    "del   delete session name from database.\n"
 					,DROPBEAR_VERSION, cli_opts.progname,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 					
@@ -165,6 +170,18 @@ void cli_getopts(int argc, char ** argv) {
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 
 	fill_own_user();
+
+    if (argc == 2 && strcmp(argv[1], "ls") == 0) {
+        db_print_server_lists(&db_info, stdout);
+        exit(EXIT_SUCCESS);
+    } else if (argc == 3 && strcmp(argv[1], "del") == 0) {
+        char* session_name = argv[2];
+        char* msg = "Success";
+        if (!db_delete_by_session_name(&db_info, session_name))
+            msg = "Fail";
+        fprintf(stderr, "Delete session name(%s) %s.\n", session_name, msg);
+        exit(EXIT_SUCCESS);
+    }
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -681,6 +698,15 @@ static void fill_own_user() {
 	}
 
 	cli_opts.own_user = m_strdup(pw->pw_name);
+}
+
+char* cli_session_name() {
+    static char sessname[2048];
+    sessname[0] = '\0';
+    strcpy(sessname, cli_opts.username);
+    strcat(sessname, "@");
+    strcat(sessname, cli_opts.remotehost);
+    return sessname;
 }
 
 #ifdef ENABLE_CLI_ANYTCPFWD
