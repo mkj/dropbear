@@ -85,7 +85,7 @@ AC_CHECK_DECL(__UCLIBC__,
 # Checks for libraries.
 AC_CHECK_LIB(crypt, crypt, CRYPTLIB="-lcrypt")
 AC_SUBST(CRYPTLIB)	
-AC_DEFINE(SQLITE_HAS_CODEC)
+AC_DEFINE([SQLITE_HAS_CODEC],[],[Use sqlcipher])
 AC_CHECK_LIB(sqlcipher, sqlite3_key, SQLCIPHERLIB="-lsqlcipher")
 AC_SUBST(SQLCIPHERLIB)
 

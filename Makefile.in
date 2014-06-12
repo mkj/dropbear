@@ -95,7 +95,7 @@ ifneq (,$(strip $(foreach prog, $(PROGRAMS), $(findstring ZdropbearZ, Z$(prog)Z)
 	CFLAGS+= -DDROPBEAR_SERVER
 endif
 ifneq (,$(strip $(foreach prog, $(PROGRAMS), $(findstring ZdbclientZ, Z$(prog)Z))))
-	CFLAGS+= -DDROPBEAR_CLIENT -DSQLITE_HAS_CODEC
+	CFLAGS+= -DDROPBEAR_CLIENT
 endif
 
 
