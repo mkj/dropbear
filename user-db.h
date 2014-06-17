@@ -17,19 +17,22 @@ bool db_init(user_db* db_info);
 void db_clean(user_db* db_info);
 
 
-void db_update_info(user_db* db_info, char* session_name, char* remotehost,
-        char* remoteport, char* username, char* password);
-
-bool db_insert(user_db* db_info, char* session_name, char* remotehost,
+void db_update_session(user_db* db_info, char* session_name, char* remotehost,
         char* remoteport, char* username, char* password);
 
 char* db_get_passwd_by_session_name(user_db* db_info, const char *session_name);
+bool db_query_alias_login_info(user_db* db_info, const char* alias,
+        char** remotehost, char** remoteport, char** username);
 
-bool db_update_passwd_by_session_name(user_db* db_info, const char* session_name);
+bool db_exist_alias(user_db* db_info, const char* alias);
+bool db_exist_session_name(user_db* db_info, const char* session_name);
+
+bool db_delete_alias_name(user_db* db_info, const char* alias_name);
+bool db_delete_session_name(user_db* db_info, const char* session_name);
+
+bool db_update_session_alias(user_db* db, const char* session_name, const char* alias_name);
 
 void db_print_server_lists(user_db* db_info, FILE* fp);
-
-bool db_delete_by_session_name(user_db* db_info, const char* session_name);
 
 
 #endif

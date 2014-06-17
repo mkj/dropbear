@@ -83,8 +83,9 @@ In the original version of dbclient into sqlcipher database to store user
 password information, stored in the ~/.dropbear/user.db.
 
 The dbclient increase of 2 parameters:
-  ls:  display all server information list.
-  del: delete the server information from user.db.
+  ls: display all server information list.
+  rm: delete the server information from user.db.
+  rn: alias session name. next time use alias open ssh session.
 
 dbclient when the user login, password encryption will be recorded in the
 data file, the next convenient automatic landing. Do not need to enter the

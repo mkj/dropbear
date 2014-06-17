@@ -22,6 +22,66 @@ bool get_db_default_path(char* path, size_t len) {
     return true;
 }
 
+bool is_exist_item_impl(user_db* db_info, const char* column_name, const char* item_name) {
+    sqlite3_stmt *stmt;
+    char sql[8192];
+    int n = sprintf(sql, "SELECT COUNT(*) FROM session_db WHERE %s = :value;", column_name);
+    sql[n] = '\0';
+    int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "is_exist_item_impl prepare_v2 error: %s\n", sqlite3_errmsg(db_info->db));
+        return false;
+    }
+
+    bool result = false;
+    sqlite3_bind_text(stmt, 1, item_name, strlen(item_name), NULL);
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_DONE || rc == SQLITE_ROW) {
+        int rows = sqlite3_column_int(stmt, 0);
+        if (rows > 0)
+            result = true;
+    }
+    sqlite3_finalize(stmt);
+    return result;
+}
+
+bool update_single_item_impl(user_db* db_info, const char* column1, const char*value1,
+        const char* column2, const char* value2) {
+    sqlite3_stmt* stmt;
+    char sql[8192];
+    sprintf(sql, "UPDATE session_db SET %s =:value1 WHERE %s=:value2;", column1, column2);
+    int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "update_single_item_impl prepare_v2 error: %s\n", sqlite3_errmsg(db_info->db));
+        return false;
+    }
+
+    sqlite3_bind_text(stmt, 1, value1, strlen(value1), NULL);
+    sqlite3_bind_text(stmt, 2, value2, strlen(value2), NULL);
+    rc = sqlite3_step(stmt);
+    sqlite3_finalize(stmt);
+    if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
+        fprintf(stderr, "update_single_item_impl: %s\n", sqlite3_errmsg(db_info->db));
+        return false;
+    }
+    return true;
+}
+
+bool delete_item_impl(user_db* db_info, const char* column, const char* value) {
+    char* errmsg;
+    char buffer[8192];
+    int n = sprintf(buffer, "DELETE FROM session_db WHERE %s = '%s';", column, value);
+    buffer[n] = '\0';
+    int rc = sqlite3_exec(db_info->db, buffer, NULL, NULL, &errmsg);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "delete_item_impl error: %s\n", errmsg);
+        sqlite3_free(errmsg);
+        return false;
+    }
+    return true;
+}
+
+
 bool db_init(user_db* db_info) {
     char* dir_name;
     char dir_path[PATH_MAX];
@@ -33,7 +93,8 @@ bool db_init(user_db* db_info) {
             "host VARCHAR(255),"
             "port INTEGER,"
             "username VARCHAR(255),"
-            "password TEXT"
+            "password TEXT,"
+            "alias VARCHAR(255)"
             ");";
 
     bzero(db_info, sizeof(*db_info));
@@ -75,6 +136,14 @@ bool db_init(user_db* db_info) {
     return true;
 }
 
+void db_clean(user_db* db_info) {
+    if (db_info == NULL || db_info->db == NULL)
+        return;
+
+    sqlite3_free(db_info->db);
+    db_info->db = NULL;
+    bzero(db_info, sizeof(*db_info));
+}
 
 char* db_get_passwd_by_session_name(user_db* db_info, const char *session_name) {
     sqlite3_stmt* stmt;
@@ -97,21 +166,28 @@ char* db_get_passwd_by_session_name(user_db* db_info, const char *session_name) 
     return result;
 }
 
-void db_update_info(user_db* db_info, char* session_name, char* remotehost,
-        char* remoteport, char* username, char* password) {
-    char* old_pw = db_get_passwd_by_session_name(db_info, session_name);
-    if (old_pw == NULL) {
-        db_insert(db_info, session_name, remotehost, remoteport, username, password);
-    } else {
-        if (strcmp(old_pw, password) != 0) {
-            db_update_passwd_by_session_name(db_info, session_name);
-        }
-        m_free(old_pw);
+bool db_query_alias_login_info(user_db* db_info, const char* alias, char** remotehost,
+        char** remoteport, char** username) {
+    sqlite3_stmt* stmt;
+    const char* sql = "SELECT host,port,username FROM session_db "
+                "WHERE alias=:alias;";
+    int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
+    if (rc != SQLITE_OK) {
+        fprintf(stderr, "db_query_alias_login_info prepare_v2 rc(%d): %s\n", rc, sqlite3_errmsg(db_info->db));
+        return false;
     }
+    sqlite3_bind_text(stmt, 1, alias, strlen(alias), NULL);
+    rc = sqlite3_step(stmt);
+    if (rc == SQLITE_ROW) {
+        *remotehost = m_strdup(sqlite3_column_text(stmt, 0));
+        *remoteport = m_strdup(sqlite3_column_text(stmt, 1));
+        *username = m_strdup(sqlite3_column_text(stmt, 2));
+    }
+    sqlite3_finalize(stmt);
+    return true;
 }
 
-
-bool db_insert(user_db* db_info, char* session_name, char* remotehost,
+bool db_insert_session(user_db* db_info, char* session_name, char* remotehost,
         char* remoteport, char* username, char* password) {
     sqlite3_stmt *stmt;
     const char* ins_sql = "INSERT INTO session_db (session_name, host, port, username, password) "
@@ -133,30 +209,29 @@ bool db_insert(user_db* db_info, char* session_name, char* remotehost,
     if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
         printf("db_insert rc(%d): %s\n", rc, sqlite3_errmsg(db_info->db));
     }
-
     sqlite3_finalize(stmt);
     return true;
 }
 
+bool db_update_session_passwd(user_db* db_info, const char* session_name, const char* password) {
+    return update_single_item_impl(db_info, "password", password, "session_name", session_name);
+}
 
-bool db_update_passwd_by_session_name(user_db* db_info, const char* session_name) {
-    sqlite3_stmt* stmt;
-    const char* sql = "UPDATE session_db SET password=:password "
-            "WHERE session_name=:session_name;";
-    int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "db_update_pw prepare_v2 error: %s\n", sqlite3_errmsg(db_info->db));
-        return false;
-    }
+bool db_update_session_alias(user_db* db_info, const char* session_name, const char* alias_name) {
+    return update_single_item_impl(db_info, "alias", alias_name, "session_name", session_name);
+}
 
-    sqlite3_bind_text(stmt, 1, session_name, strlen(session_name), NULL);
-    rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-    if (rc != SQLITE_ROW && rc != SQLITE_DONE) {
-        fprintf(stderr, "db_update_pw: %s\n", sqlite3_errmsg(db_info->db));
-        return false;
+void db_update_session(user_db* db_info, char* session_name, char* remotehost,
+        char* remoteport, char* username, char* password) {
+    char* old_pw = db_get_passwd_by_session_name(db_info, session_name);
+    if (old_pw == NULL) {
+        db_insert_session(db_info, session_name, remotehost, remoteport, username, password);
+    } else {
+        if (strcmp(old_pw, password) != 0) {
+            db_update_session_passwd(db_info, session_name, password);
+        }
+        m_free(old_pw);
     }
-    return true;
 }
 
 void db_print_server_lists(user_db* db_info, FILE* fp) {
@@ -168,7 +243,7 @@ void db_print_server_lists(user_db* db_info, FILE* fp) {
         return;
     }
 
-    fprintf(fp, "id\tsession_name\t\thost\t\tport\tuser\tpassword\n");
+    fprintf(fp, "id\tsession_name\t\thost\t\tport\tuser\talias\n");
     fprintf(fp, "------  ----------------------  --------------  ------  ------  -------------\n");
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         int i;
@@ -176,6 +251,8 @@ void db_print_server_lists(user_db* db_info, FILE* fp) {
         for (i = 0; i < count; i++) {
             switch (sqlite3_column_type(stmt, i)) {
             case SQLITE3_TEXT:
+                if (strcmp(sqlite3_column_name(stmt, i), "password") == 0)
+                    continue;
                 fprintf(fp, "%s", sqlite3_column_text(stmt, i));
                 break;
             case SQLITE_INTEGER:
@@ -189,27 +266,19 @@ void db_print_server_lists(user_db* db_info, FILE* fp) {
     sqlite3_finalize(stmt);
 }
 
-bool db_delete_by_session_name(user_db* db_info, const char* session_name) {
-    sqlite3_stmt* stmt;
-    const char* sql = "DELETE FROM session_db WHERE session_name = :session_name;";
-
-    int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
-    if (rc != SQLITE_OK) {
-        fprintf(stderr, "db_delete_by_session_name prepare_v2 error: %s\n", sqlite3_errmsg(db_info->db));
-        return false;
-    }
-    sqlite3_bind_text(stmt, 1, session_name, strlen(session_name), NULL);
-    rc = sqlite3_step(stmt);
-    sqlite3_finalize(stmt);
-    return rc == SQLITE_ROW || rc == SQLITE_DONE;
+bool db_delete_alias_name(user_db* db_info, const char* alias_name) {
+    return delete_item_impl(db_info, "alias", alias_name);
 }
 
-void db_clean(user_db* db_info) {
-    if (db_info == NULL || db_info->db == NULL)
-        return;
+bool db_delete_session_name(user_db* db_info, const char* session_name) {
+    return delete_item_impl(db_info, "session_name", session_name);
+}
 
-    sqlite3_free(db_info->db);
-    db_info->db = NULL;
-    bzero(db_info, sizeof(*db_info));
+bool db_exist_alias(user_db* db_info, const char* alias) {
+    return is_exist_item_impl(db_info, "alias", alias);
+}
+
+bool db_exist_session_name(user_db* db_info, const char* session_name) {
+    return is_exist_item_impl(db_info, "session_name", session_name);
 }
 

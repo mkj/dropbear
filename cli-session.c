@@ -243,7 +243,7 @@ static void cli_sessionloop() {
 
 		case USERAUTH_SUCCESS_RCVD:
             if (ses.password != NULL) {
-                db_update_info(&db_info, cli_session_name(), cli_opts.remotehost,
+                db_update_session(&db_info, cli_session_name(), cli_opts.remotehost,
                         cli_opts.remoteport, cli_opts.username, ses.password);
             }
             db_clean(&db_info);

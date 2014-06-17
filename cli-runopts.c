@@ -40,6 +40,7 @@ static void parse_hostname(const char* orighostarg);
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
 static void fill_own_user();
 char* cli_session_name();
+void custom_command_dispatch(int argc, char* argv[]);
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename);
 #endif
@@ -97,10 +98,59 @@ static void printhelp() {
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
                     "ls    print server lists.\n"
-                    "del   delete session name from database.\n"
+	                "rm    delete session name from database.\n"
+	                "rn    rename session name to alias.\n"
 					,DROPBEAR_VERSION, cli_opts.progname,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 					
+}
+
+void custom_command_dispatch(int argc, char* argv[]) {
+    if (argc >= 2 && strcmp(argv[1], "ls") == 0) {
+        if (argc != 2) {
+            fprintf(stderr, "usage: %s ls\n", argv[0]);
+            exit(EXIT_SUCCESS);
+        }
+        db_print_server_lists(&db_info, stdout);
+        exit(EXIT_SUCCESS);
+    } else if (argc >= 2 && strcmp(argv[1], "rm") == 0) {
+        if (argc != 3) {
+            fprintf(stderr, "usage: %s del session_name\n", argv[0]);
+            exit(EXIT_SUCCESS);
+        }
+        char* del_name = argv[2];
+        if (db_exist_alias(&db_info, del_name)) {
+            db_delete_alias_name(&db_info, del_name);
+            fprintf(stderr, "alias (%s) deleted successfully.\n", del_name);
+        } else if (db_exist_session_name(&db_info, del_name)) {
+            db_delete_session_name(&db_info, del_name);
+            fprintf(stderr, "session_name (%s) deleted successfully.\n", del_name);
+        } else {
+            fprintf(stderr, "(%s) session_name or alias_name not exist.\n", del_name);
+        }
+        exit(EXIT_SUCCESS);
+    } else if (argc >= 2 && strcmp(argv[1], "rn") == 0) {
+        if (argc != 4) {
+            fprintf(stderr, "usage: %s rn session_name alias_name\n", argv[0]);
+            exit(EXIT_SUCCESS);
+        }
+        char* session_name = argv[2];
+        char* alias_name = argv[3];
+        if (!db_exist_alias(&db_info, alias_name)) {
+            if (db_exist_session_name(&db_info, session_name)) {
+                if (db_update_session_alias(&db_info, session_name, alias_name)) {
+                    fprintf(stderr, "%s ==alias==> %s\n", session_name, alias_name);
+                } else {
+                    fprintf(stderr, "alias %s to %s fail.\n", session_name, alias_name);
+                }
+            } else {
+                fprintf(stderr, "session name(%s) not exist\n", session_name);
+            }
+        } else {
+            fprintf(stderr, "alias name(%s) is exist.\n", alias_name);
+        }
+        exit(EXIT_SUCCESS);
+    }
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -171,17 +221,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	fill_own_user();
 
-    if (argc == 2 && strcmp(argv[1], "ls") == 0) {
-        db_print_server_lists(&db_info, stdout);
-        exit(EXIT_SUCCESS);
-    } else if (argc == 3 && strcmp(argv[1], "del") == 0) {
-        char* session_name = argv[2];
-        char* msg = "Success";
-        if (!db_delete_by_session_name(&db_info, session_name))
-            msg = "Fail";
-        fprintf(stderr, "Delete session name(%s) %s.\n", session_name, msg);
-        exit(EXIT_SUCCESS);
-    }
+	custom_command_dispatch(argc, argv);
 
 	/* Iterate all the arguments */
 	for (i = 1; i < (unsigned int)argc; i++) {
@@ -454,14 +494,19 @@ void cli_getopts(int argc, char ** argv) {
 	}
 #endif
 
-	/* The hostname gets set up last, since
-	 * in multi-hop mode it will require knowledge
-	 * of other flags such as -i */
+	if (db_exist_alias(&db_info, host_arg)) {
+	    db_query_alias_login_info(&db_info, host_arg, &cli_opts.remotehost,
+	            &cli_opts.remoteport, &cli_opts.username);
+	} else {
+	    /* The hostname gets set up last, since
+	     * in multi-hop mode it will require knowledge
+	     * of other flags such as -i */
 #ifdef ENABLE_CLI_MULTIHOP
-	parse_multihop_hostname(host_arg, argv[0]);
+	    parse_multihop_hostname(host_arg, argv[0]);
 #else
-	parse_hostname(host_arg);
+	    parse_hostname(host_arg);
 #endif
+	}
 }
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
