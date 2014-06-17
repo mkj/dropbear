@@ -10,3 +10,16 @@
   *) 修改del为rm.
   *) 数据库增加alias字段.
   *) 增加使用别名来建立会话连接.
+
+使用例子:
+ rm 可删除 session_name 和 alias
+ rm用法
+  rm root@192.168.1.1   # 删除会话名数据
+  rm test               # 删除别名数据
+  rm neiwang55          # 删除别名数据
+ rn 将会话(session_name)建立一个别名(alias)
+  rn root@192.168.1.1 wangguan    # 把会话名root@192.168.1.1 别名为 wangguan
+  rn root@192.168.1.55 neiwang55  # 把会话名root@192.168.1.55 别名为 neiwang55 
+ dbclient 可直接使用别名建立连接
+  dbclient neiwang55     # 将与 192.168.1.55 建立连接
+  dbclient wangguan      # 将于 192.168.1.1 建立连接

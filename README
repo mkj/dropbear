@@ -82,10 +82,16 @@ adding 'SCPPROGRESS=1' to the make commandline.
 In the original version of dbclient into sqlcipher database to store user 
 password information, stored in the ~/.dropbear/user.db.
 
-The dbclient increase of 2 parameters:
+The dbclient increase of 3 parameters:
   ls: display all server information list.
   rm: delete the server information from user.db.
   rn: alias session name. next time use alias open ssh session.
+  
+example:
+  dbclient ls                       # show all sessions.
+  dbclient rm root@192.168.1.1      # delete session name root@192.168.1.1 from database.
+  dbclient rn root@192.168.1.1 ng   # root@192.168.1.1 alias for ng
+  dbclient ng                       # Establish a connection with root@192.168.1.1
 
 dbclient when the user login, password encryption will be recorded in the
 data file, the next convenient automatic landing. Do not need to enter the
@@ -93,5 +99,5 @@ account password frequently.
 
 After using the SCP and dbclient do not have to enter a password. : -)
 
-Patch code by Sharp.liu [cppcoffee@gmail.com]
+code by Sharp.liu [cppcoffee@gmail.com]
 

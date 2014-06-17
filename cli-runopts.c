@@ -98,8 +98,8 @@ static void printhelp() {
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
                     "ls    print server lists.\n"
-	                "rm    delete session name from database.\n"
-	                "rn    rename session name to alias.\n"
+	                "rm    <session_name | alias_name> delete session name or alias from database.\n"
+	                "rn    <session_name alias_name> rename session name to alias.\n"
 					,DROPBEAR_VERSION, cli_opts.progname,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 					
