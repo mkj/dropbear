@@ -118,15 +118,15 @@ void custom_command_dispatch(int argc, char* argv[]) {
             fprintf(stderr, "usage: %s del session_name\n", argv[0]);
             exit(EXIT_SUCCESS);
         }
-        char* del_name = argv[2];
-        if (db_exist_alias(&db_info, del_name)) {
-            db_delete_alias_name(&db_info, del_name);
-            fprintf(stderr, "alias (%s) deleted successfully.\n", del_name);
-        } else if (db_exist_session_name(&db_info, del_name)) {
-            db_delete_session_name(&db_info, del_name);
-            fprintf(stderr, "session_name (%s) deleted successfully.\n", del_name);
+        char* sessname = argv[2];
+        if (db_exist_alias(&db_info, sessname)) {
+            db_delete_alias_name(&db_info, sessname);
+            fprintf(stderr, "alias (%s) deleted successfully.\n", sessname);
+        } else if (db_exist_session_name(&db_info, sessname)) {
+            db_delete_session_name(&db_info, sessname);
+            fprintf(stderr, "session_name (%s) deleted successfully.\n", sessname);
         } else {
-            fprintf(stderr, "(%s) session_name or alias_name not exist.\n", del_name);
+            fprintf(stderr, "(%s) session_name or alias_name not exist.\n", sessname);
         }
         exit(EXIT_SUCCESS);
     } else if (argc >= 2 && strcmp(argv[1], "rn") == 0) {
@@ -139,9 +139,9 @@ void custom_command_dispatch(int argc, char* argv[]) {
         if (!db_exist_alias(&db_info, alias_name)) {
             if (db_exist_session_name(&db_info, session_name)) {
                 if (db_update_session_alias(&db_info, session_name, alias_name)) {
-                    fprintf(stderr, "%s ==alias==> %s\n", session_name, alias_name);
+                    fprintf(stderr, "(%s) rename to (%s) success.\n", session_name, alias_name);
                 } else {
-                    fprintf(stderr, "alias %s to %s fail.\n", session_name, alias_name);
+                    fprintf(stderr, "alias (%s) to (%s) fail.\n", session_name, alias_name);
                 }
             } else {
                 fprintf(stderr, "session name(%s) not exist\n", session_name);
@@ -494,19 +494,21 @@ void cli_getopts(int argc, char ** argv) {
 	}
 #endif
 
+	char* session_name = NULL;
 	if (db_exist_alias(&db_info, host_arg)) {
-	    db_query_alias_login_info(&db_info, host_arg, &cli_opts.remotehost,
-	            &cli_opts.remoteport, &cli_opts.username);
-	} else {
-	    /* The hostname gets set up last, since
-	     * in multi-hop mode it will require knowledge
-	     * of other flags such as -i */
-#ifdef ENABLE_CLI_MULTIHOP
-	    parse_multihop_hostname(host_arg, argv[0]);
-#else
-	    parse_hostname(host_arg);
-#endif
+	    session_name = db_get_session_name_by_alias(&db_info, host_arg);
+	    host_arg = session_name;
 	}
+	/* The hostname gets set up last, since
+	 * in multi-hop mode it will require knowledge
+	 * of other flags such as -i */
+#ifdef ENABLE_CLI_MULTIHOP
+	parse_multihop_hostname(host_arg, argv[0]);
+#else
+	parse_hostname(host_arg);
+#endif
+
+	m_free(session_name);
 }
 
 #ifdef ENABLE_CLI_PUBKEY_AUTH
@@ -746,11 +748,10 @@ static void fill_own_user() {
 }
 
 char* cli_session_name() {
-    static char sessname[2048];
-    sessname[0] = '\0';
-    strcpy(sessname, cli_opts.username);
-    strcat(sessname, "@");
-    strcat(sessname, cli_opts.remotehost);
+    static char sessname[4096];
+    int n = snprintf(sessname, sizeof(sessname), "%s@%s^%s", cli_opts.username,
+            cli_opts.remotehost, cli_opts.remoteport);
+    sessname[n] = '\0';
     return sessname;
 }
 

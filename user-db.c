@@ -166,25 +166,23 @@ char* db_get_passwd_by_session_name(user_db* db_info, const char *session_name) 
     return result;
 }
 
-bool db_query_alias_login_info(user_db* db_info, const char* alias, char** remotehost,
-        char** remoteport, char** username) {
+char* db_get_session_name_by_alias(user_db* db_info, const char* alias_name) {
     sqlite3_stmt* stmt;
-    const char* sql = "SELECT host,port,username FROM session_db "
-                "WHERE alias=:alias;";
+    const char* sql = "SELECT session_name FROM session_db WHERE alias = :alias;";
     int rc = sqlite3_prepare_v2(db_info->db, sql, strlen(sql), &stmt, NULL);
     if (rc != SQLITE_OK) {
-        fprintf(stderr, "db_query_alias_login_info prepare_v2 rc(%d): %s\n", rc, sqlite3_errmsg(db_info->db));
-        return false;
+        fprintf(stderr, "db_get_session_name_by_alias prepare_v2 rc(%d): %s\n",
+                rc, sqlite3_errmsg(db_info->db));
+        return NULL;
     }
-    sqlite3_bind_text(stmt, 1, alias, strlen(alias), NULL);
+
+    char* result = NULL;
+    sqlite3_bind_text(stmt, 1, alias_name, strlen(alias_name), NULL);
     rc = sqlite3_step(stmt);
     if (rc == SQLITE_ROW) {
-        *remotehost = m_strdup(sqlite3_column_text(stmt, 0));
-        *remoteport = m_strdup(sqlite3_column_text(stmt, 1));
-        *username = m_strdup(sqlite3_column_text(stmt, 2));
+        result = m_strdup(sqlite3_column_text(stmt, 0));
     }
-    sqlite3_finalize(stmt);
-    return true;
+    return result;
 }
 
 bool db_insert_session(user_db* db_info, char* session_name, char* remotehost,
@@ -243,17 +241,27 @@ void db_print_server_lists(user_db* db_info, FILE* fp) {
         return;
     }
 
-    fprintf(fp, "id\tsession_name\t\thost\t\tport\tuser\talias\n");
-    fprintf(fp, "------  ----------------------  --------------  ------  ------  -------------\n");
+    fprintf(fp, "<id>\t%-30s\t%-18s\t<port>\t<user>\t<alias>\n", "<session_name>", "<host>");
+    fprintf(fp, "------  ------------------------------  ----------------------  ------  ------  ---------------\n");
     while ((rc = sqlite3_step(stmt)) == SQLITE_ROW) {
         int i;
+        const char* text;
+        const char* column_name;
         int count = sqlite3_data_count(stmt);
         for (i = 0; i < count; i++) {
             switch (sqlite3_column_type(stmt, i)) {
             case SQLITE3_TEXT:
-                if (strcmp(sqlite3_column_name(stmt, i), "password") == 0)
+                column_name = sqlite3_column_name(stmt, i);
+                if (strcmp(column_name, "password") == 0)
                     continue;
-                fprintf(fp, "%s", sqlite3_column_text(stmt, i));
+
+                text = sqlite3_column_text(stmt, i);
+                if (strcmp(column_name, "session_name") == 0)
+                    fprintf(fp, "%-30s", text);
+                else if (strcmp(column_name, "host") == 0)
+                    fprintf(fp, "%-18s", text);
+                else
+                    fprintf(fp, "%s", text);
                 break;
             case SQLITE_INTEGER:
                 fprintf(fp, "%d", sqlite3_column_int(stmt, i));

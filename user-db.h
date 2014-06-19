@@ -21,8 +21,7 @@ void db_update_session(user_db* db_info, char* session_name, char* remotehost,
         char* remoteport, char* username, char* password);
 
 char* db_get_passwd_by_session_name(user_db* db_info, const char *session_name);
-bool db_query_alias_login_info(user_db* db_info, const char* alias,
-        char** remotehost, char** remoteport, char** username);
+char* db_get_session_name_by_alias(user_db* db_info, const char* alias_name);
 
 bool db_exist_alias(user_db* db_info, const char* alias);
 bool db_exist_session_name(user_db* db_info, const char* session_name);
