@@ -208,11 +208,14 @@ struct Channel* getchannel() {
 /* Iterate through the channels, performing IO if available */
 void channelio(fd_set *readfds, fd_set *writefds) {
 
+	/* Listeners such as TCP, X11, agent-auth */
 	struct Channel *channel;
 	unsigned int i;
 
 	/* foreach channel */
 	for (i = 0; i < ses.chansize; i++) {
+		/* Close checking only needs to occur for channels that had IO events */
+		int do_check_close = 0;
 
 		channel = ses.channels[i];
 		if (channel == NULL) {
@@ -224,6 +227,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		if (channel->readfd >= 0 && FD_ISSET(channel->readfd, readfds)) {
 			TRACE(("send normal readfd"))
 			send_msg_channel_data(channel, 0);
+			do_check_close = 1;
 		}
 
 		/* read stderr data and send it over the wire */
@@ -231,6 +235,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 			&& FD_ISSET(channel->errfd, readfds)) {
 				TRACE(("send normal errfd"))
 				send_msg_channel_data(channel, 1);
+			do_check_close = 1;
 		}
 
 		/* write to program/pipe stdin */
@@ -242,20 +247,22 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 							 check_in_progress(), as it may be NULL */
 			}
 			writechannel(channel, channel->writefd, channel->writebuf);
+			do_check_close = 1;
 		}
 		
 		/* stderr for client mode */
 		if (ERRFD_IS_WRITE(channel)
 				&& channel->errfd >= 0 && FD_ISSET(channel->errfd, writefds)) {
 			writechannel(channel, channel->errfd, channel->extrabuf);
+			do_check_close = 1;
 		}
 	
 		/* handle any channel closing etc */
-		check_close(channel);
-
+		if (do_check_close) {
+			check_close(channel);
+		}
 	}
 
-	/* Listeners such as TCP, X11, agent-auth */
 #ifdef USING_LISTENERS
 	handle_listeners(readfds);
 #endif

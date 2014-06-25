@@ -332,7 +332,7 @@ int dropbear_listen(const char* address, const char* port,
 			continue;
 		}
 
-		if (listen(sock, 20) < 0) {
+		if (listen(sock, DROPBEAR_LISTEN_BACKLOG) < 0) {
 			err = errno;
 			close(sock);
 			TRACE(("listen() failed"))

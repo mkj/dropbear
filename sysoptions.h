@@ -251,4 +251,10 @@
 #define USE_VFORK
 #endif  /* don't HAVE_FORK */
 
+#if MAX_UNAUTH_CLIENTS > MAX_CHANNELS
+#define DROPBEAR_LISTEN_BACKLOG MAX_UNAUTH_CLIENTS
+#else
+#define DROPBEAR_LISTEN_BACKLOG MAX_CHANNELS
+#endif
+
 /* no include guard for this file */
