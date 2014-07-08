@@ -574,14 +574,16 @@ static void remove_channel(struct Channel * channel) {
 	}
 
 
-	/* close the FDs in case they haven't been done
-	 * yet (they might have been shutdown etc) */
-	TRACE(("CLOSE writefd %d", channel->writefd))
-	close(channel->writefd);
-	TRACE(("CLOSE readfd %d", channel->readfd))
-	close(channel->readfd);
-	TRACE(("CLOSE errfd %d", channel->errfd))
-	close(channel->errfd);
+	if (IS_DROPBEAR_SERVER || (channel->writefd != STDOUT_FILENO)) {
+		/* close the FDs in case they haven't been done
+		 * yet (they might have been shutdown etc) */
+		TRACE(("CLOSE writefd %d", channel->writefd))
+		close(channel->writefd);
+		TRACE(("CLOSE readfd %d", channel->readfd))
+		close(channel->readfd);
+		TRACE(("CLOSE errfd %d", channel->errfd))
+		close(channel->errfd);
+	}
 
 	if (!channel->close_handler_done
 		&& channel->type->closehandler) {
