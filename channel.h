@@ -129,4 +129,7 @@ void recv_msg_channel_open_confirmation();
 void recv_msg_channel_open_failure();
 #endif
 
+void send_msg_request_success();
+void send_msg_request_failure();
+
 #endif /* _CHANNEL_H_ */

@@ -34,14 +34,6 @@
 #include "runopts.h"
 #include "auth.h"
 
-static void send_msg_request_failure();
-
-static void send_msg_request_failure() {
-	CHECKCLEARTOWRITE();
-	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
-	encrypt_packet();
-}
-
 #ifndef ENABLE_SVR_REMOTETCPFWD
 
 /* This is better than SSH_MSG_UNIMPLEMENTED */
@@ -53,7 +45,6 @@ void recv_msg_global_request_remotetcp() {
 /* */
 #endif /* !ENABLE_SVR_REMOTETCPFWD */
 
-static void send_msg_request_success();
 static int svr_cancelremotetcp();
 static int svr_remotetcpreq();
 static int newtcpdirect(struct Channel * channel);
@@ -113,15 +104,6 @@ out:
 	m_free(reqname);
 
 	TRACE(("leave recv_msg_global_request"))
-}
-
-
-static void send_msg_request_success() {
-
-	CHECKCLEARTOWRITE();
-	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
-	encrypt_packet();
-
 }
 
 static int matchtcp(void* typedata1, void* typedata2) {

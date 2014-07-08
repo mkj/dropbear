@@ -1099,3 +1099,16 @@ void recv_msg_channel_open_failure() {
 	remove_channel(channel);
 }
 #endif /* USING_LISTENERS */
+
+void send_msg_request_success() {
+	CHECKCLEARTOWRITE();
+	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
+	encrypt_packet();
+}
+
+void send_msg_request_failure() {
+	CHECKCLEARTOWRITE();
+	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
+	encrypt_packet();
+}
+
