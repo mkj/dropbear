@@ -147,11 +147,14 @@ struct sshsession {
 	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
 						
-	time_t last_trx_packet_time; /* time of the last packet transmission, for
-							keepalive purposes. Not real-world clock */
+	/* time of the last packet send/receive, for keepalive. Not real-world clock */
+	time_t last_packet_time_keepalive_sent;
+	time_t last_packet_time_keepalive_recv;
+	time_t last_packet_time_any_sent;
 
-	time_t last_packet_time; /* time of the last packet transmission or receive, for
-								idle timeout purposes. Not real-world clock */
+	time_t last_packet_time_idle; /* time of the last packet transmission or receive, for
+								idle timeout purposes so ignores SSH_MSG_IGNORE
+								or responses to keepalives. Not real-world clock */
 
 
 	/* KEX/encryption related */

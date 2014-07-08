@@ -51,6 +51,7 @@ int exitflag = 0; /* GLOBAL */
 
 /* called only at the start of a session, set up initial state */
 void common_session_init(int sock_in, int sock_out) {
+	time_t now;
 
 	TRACE(("enter session_init"))
 
@@ -58,9 +59,12 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.sock_out = sock_out;
 	ses.maxfd = MAX(sock_in, sock_out);
 
-	ses.connect_time = 0;
-	ses.last_trx_packet_time = 0;
-	ses.last_packet_time = 0;
+	now = monotonic_now();
+	ses.connect_time = now;
+	ses.last_packet_time_keepalive_recv = now;
+	ses.last_packet_time_idle = now;
+	ses.last_packet_time_any_sent = 0;
+	ses.last_packet_time_keepalive_sent = 0;
 	
 	if (pipe(ses.signal_pipe) < 0) {
 		dropbear_exit("Signal pipe failed");
@@ -387,11 +391,21 @@ static int ident_readln(int fd, char* buf, int count) {
 	return pos+1;
 }
 
-void send_msg_ignore() {
+static void send_msg_keepalive() {
 	CHECKCLEARTOWRITE();
-	buf_putbyte(ses.writepayload, SSH_MSG_IGNORE);
-	buf_putstring(ses.writepayload, "", 0);
+	time_t old_time_idle = ses.last_packet_time_idle;
+	/* Try to force a response from the other end. Some peers will
+	reply with SSH_MSG_REQUEST_FAILURE, some will reply with SSH_MSG_UNIMPLEMENTED */
+	buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
+	/* A short string */
+	buf_putstring(ses.writepayload, "k@dropbear.nl", 0);
+	buf_putbyte(ses.writepayload, 1); /* want_reply */
 	encrypt_packet();
+
+	ses.last_packet_time_keepalive_sent = monotonic_now();
+
+	/* keepalives shouldn't update idle timeout, reset it back */
+	ses.last_packet_time_idle = old_time_idle;
 }
 
 /* Check all timeouts which are required. Currently these are the time for
@@ -401,7 +415,7 @@ static void checktimeouts() {
 	time_t now;
 	now = monotonic_now();
 	
-	if (ses.connect_time != 0 && now - ses.connect_time >= AUTH_TIMEOUT) {
+	if (now - ses.connect_time >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before auth");
 	}
 
@@ -417,13 +431,27 @@ static void checktimeouts() {
 		send_msg_kexinit();
 	}
 	
-	if (opts.keepalive_secs > 0 
-			&& now - ses.last_trx_packet_time >= opts.keepalive_secs) {
-		send_msg_ignore();
+	if (opts.keepalive_secs > 0) {
+		/* Send keepalives if we've been idle */
+		if (now - ses.last_packet_time_any_sent >= opts.keepalive_secs) {
+			send_msg_keepalive();
+		}
+
+		/* Also send an explicit keepalive message to trigger a response
+		if the remote end hasn't sent us anything */
+		if (now - ses.last_packet_time_keepalive_recv >= opts.keepalive_secs
+			&& now - ses.last_packet_time_keepalive_sent >= opts.keepalive_secs) {
+			send_msg_keepalive();
+		}
+
+		if (now - ses.last_packet_time_keepalive_recv 
+			>= opts.keepalive_secs * DEFAULT_KEEPALIVE_LIMIT) {
+			dropbear_exit("Keepalive timeout");
+		}
 	}
 
-	if (opts.idle_timeout_secs > 0 && ses.last_packet_time > 0
-			&& now - ses.last_packet_time >= opts.idle_timeout_secs) {
+	if (opts.idle_timeout_secs > 0 
+			&& now - ses.last_packet_time_idle >= opts.idle_timeout_secs) {
 		dropbear_close("Idle timeout");
 	}
 }

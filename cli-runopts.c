@@ -163,6 +163,8 @@ void cli_getopts(int argc, char ** argv) {
 	opts.ipv6 = 1;
 	*/
 	opts.recv_window = DEFAULT_RECV_WINDOW;
+	opts.keepalive_secs = DEFAULT_KEEPALIVE;
+	opts.idle_timeout_secs = DEFAULT_IDLE_TIMEOUT;
 
 	fill_own_user();
 
