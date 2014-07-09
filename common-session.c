@@ -60,7 +60,6 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.maxfd = MAX(sock_in, sock_out);
 
 	now = monotonic_now();
-	ses.connect_time = now;
 	ses.last_packet_time_keepalive_recv = now;
 	ses.last_packet_time_idle = now;
 	ses.last_packet_time_any_sent = 0;
@@ -415,10 +414,6 @@ static void checktimeouts() {
 	time_t now;
 	now = monotonic_now();
 	
-	if (now - ses.connect_time >= AUTH_TIMEOUT) {
-			dropbear_close("Timeout before auth");
-	}
-
 	/* we can't rekey if we haven't done remote ident exchange yet */
 	if (ses.remoteident == NULL) {
 		return;

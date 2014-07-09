@@ -104,11 +104,6 @@ struct sshsession {
 	/* Is it a client or server? */
 	unsigned char isserver;
 
-	time_t connect_time; /* time the connection was established
-							(cleared after auth once we're not
-							respecting AUTH_TIMEOUT any more).
-							A monotonic time, not realworld */
-
 	int sock_in;
 	int sock_out;
 
@@ -220,6 +215,11 @@ struct serversession {
 
 	/* The resolved remote address, used for lastlog etc */
 	char *remotehost;
+
+	time_t connect_time; /* time the connection was established
+							(cleared after auth once we're not
+							respecting AUTH_TIMEOUT any more).
+							A monotonic time, not realworld */
 
 #ifdef USE_VFORK
 	pid_t server_pid;
