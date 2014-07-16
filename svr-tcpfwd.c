@@ -53,7 +53,7 @@ static int newtcpdirect(struct Channel * channel);
 static const struct ChanType svr_chan_tcpremote = {
 	1, /* sepfds */
 	"forwarded-tcpip",
-	NULL,
+	tcp_prio_inithandler,
 	NULL,
 	NULL,
 	NULL
@@ -240,6 +240,8 @@ static int newtcpdirect(struct Channel * channel) {
 	int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
+	TRACE(("newtcpdirect channel %d", channel->index))
+
 	if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()) {
 		TRACE(("leave newtcpdirect: local tcp forwarding disabled"))
 		goto out;
@@ -281,6 +283,8 @@ static int newtcpdirect(struct Channel * channel) {
 	 * progress succeeds */
 	channel->writefd = sock;
 	channel->initconn = 1;
+
+	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
 	
 	err = SSH_OPEN_IN_PROGRESS;
 

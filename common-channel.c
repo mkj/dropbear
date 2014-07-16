@@ -174,6 +174,8 @@ static struct Channel* newchannel(unsigned int remotechan,
 	newchan->recvdonelen = 0;
 	newchan->recvmaxpacket = RECV_MAX_CHANNEL_DATA_LEN;
 
+	newchan->prio = DROPBEAR_CHANNEL_PRIO_EARLY; /* inithandler sets it */
+
 	ses.channels[i] = newchan;
 	ses.chancount++;
 
@@ -595,6 +597,8 @@ static void remove_channel(struct Channel * channel) {
 	m_free(channel);
 	ses.chancount--;
 
+	update_channel_prio();
+
 	TRACE(("leave remove_channel"))
 }
 
@@ -885,6 +889,10 @@ void recv_msg_channel_open() {
 		}
 	}
 
+	if (channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
+		channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
+	}
+
 	chan_initwritebuf(channel);
 
 	/* success */
@@ -898,6 +906,8 @@ failure:
 
 cleanup:
 	m_free(type);
+	
+	update_channel_prio();
 
 	TRACE(("leave recv_msg_channel_open"))
 }
@@ -1013,7 +1023,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
  * for X11, agent, tcp forwarding, and should be filled with channel-specific
  * options, with the calling function calling encrypt_packet() after
  * completion. It is mandatory for the caller to encrypt_packet() if
- * DROPBEAR_SUCCESS is returned */
+ * a channel is returned. NULL is returned on failure. */
 int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 
 	struct Channel* chan;
@@ -1082,6 +1092,10 @@ void recv_msg_channel_open_confirmation() {
 		}
 	}
 
+	if (channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
+		channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
+	}
+	update_channel_prio();
 	
 	TRACE(("leave recv_msg_channel_open_confirmation"))
 }
@@ -1113,4 +1127,3 @@ void send_msg_request_failure() {
 	buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
 	encrypt_packet();
 }
-

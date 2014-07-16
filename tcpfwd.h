@@ -70,5 +70,8 @@ void cli_recv_msg_request_failure();
 
 /* Common */
 int listen_tcpfwd(struct TCPListener* tcpinfo);
+int tcp_prio_inithandler(struct Channel* chan);
+
+#define CHANNEL_ID_TCPFORWARDED 'tcpf'
 
 #endif

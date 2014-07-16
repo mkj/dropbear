@@ -48,6 +48,8 @@ void session_cleanup();
 void send_session_identification();
 void send_msg_ignore();
 
+void update_channel_prio();
+
 const char* get_user_shell();
 void fill_passwd(const char* username);
 
@@ -186,7 +188,9 @@ struct sshsession {
 	unsigned int chancount; /* the number of Channel*s in use */
 	const struct ChanType **chantypes; /* The valid channel types */
 
-	
+	/* TCP priority level for the main "port 22" tcp socket */
+	enum dropbear_prio socket_prio;
+
 	/* TCP forwarding - where manage listeners */
 	struct Listener ** listeners;
 	unsigned int listensize;

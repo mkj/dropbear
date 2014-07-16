@@ -59,6 +59,10 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.sock_out = sock_out;
 	ses.maxfd = MAX(sock_in, sock_out);
 
+	ses.socket_prio = DROPBEAR_PRIO_DEFAULT;
+	/* Sets it to lowdelay */
+	update_channel_prio();
+
 	now = monotonic_now();
 	ses.last_packet_time_keepalive_recv = now;
 	ses.last_packet_time_idle = now;
@@ -509,6 +513,50 @@ void fill_passwd(const char* username) {
 			passwd_crypt = "!!";
 		}
 		ses.authstate.pw_passwd = m_strdup(passwd_crypt);
+	}
+}
+
+/* Called when channels are modified */
+void update_channel_prio() {
+	enum dropbear_prio new_prio;
+	int any = 0;
+	unsigned int i;
+
+	TRACE(("update_channel_prio"))
+
+	new_prio = DROPBEAR_PRIO_BULK;
+	for (i = 0; i < ses.chansize; i++) {
+		struct Channel *channel = ses.channels[i];
+		if (!channel || channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
+			if (channel && channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
+				TRACE(("update_channel_prio: early %d", channel->index))
+			}
+			continue;
+		}
+		any = 1;
+		if (channel->prio == DROPBEAR_CHANNEL_PRIO_INTERACTIVE)
+		{
+			TRACE(("update_channel_prio: lowdelay %d", channel->index))
+			new_prio = DROPBEAR_PRIO_LOWDELAY;
+			break;
+		} else if (channel->prio == DROPBEAR_CHANNEL_PRIO_UNKNOWABLE
+			&& new_prio == DROPBEAR_PRIO_BULK)
+		{
+			TRACE(("update_channel_prio: unknowable %d", channel->index))
+			new_prio = DROPBEAR_PRIO_DEFAULT;
+		}
+	}
+
+	if (any == 0) {
+		/* lowdelay during setup */
+		TRACE(("update_channel_prio: not any"))
+		new_prio = DROPBEAR_PRIO_LOWDELAY;
+	}
+
+	if (new_prio != ses.socket_prio) {
+		TRACE(("Dropbear priority transitioning %4.4s -> %4.4s", (char*)&ses.socket_prio, (char*)&new_prio))
+		set_sock_priority(ses.sock_out, new_prio);
+		ses.socket_prio = new_prio;
 	}
 }
 
