@@ -1089,6 +1089,7 @@ void recv_msg_channel_open_confirmation() {
 		if (ret > 0) {
 			remove_channel(channel);
 			TRACE(("inithandler returned failure %d", ret))
+			return;
 		}
 	}
 
