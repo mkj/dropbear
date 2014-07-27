@@ -33,7 +33,7 @@ hg archive "$RELDIR"  || exit 2
 
 rm -r "$RELDIR/autom4te.cache" || exit 2
 
-(cd $RELDIR/.. && tar czf $ARCHIVE `basename "$RELDIR"`) || exit 2
+(cd $RELDIR/.. && tar cjf $ARCHIVE `basename "$RELDIR"`) || exit 2
 
 ls -l $ARCHIVE
 openssl sha1 $ARCHIVE
