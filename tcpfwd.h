@@ -72,6 +72,7 @@ void cli_recv_msg_request_failure();
 int listen_tcpfwd(struct TCPListener* tcpinfo);
 int tcp_prio_inithandler(struct Channel* chan);
 
-#define CHANNEL_ID_TCPFORWARDED 'tcpf'
+/* A random identifier */
+#define CHANNEL_ID_TCPFORWARDED 0x43612c67
 
 #endif

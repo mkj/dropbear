@@ -268,7 +268,7 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #endif
 				case 'V':
-					print_version("server");
+					print_version();
 					exit(EXIT_SUCCESS);
 					break;
 				default:

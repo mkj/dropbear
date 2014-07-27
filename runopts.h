@@ -164,6 +164,6 @@ void cli_getopts(int argc, char ** argv);
 void parse_ciphers_macs();
 #endif
 
-void print_version(const char* name);
+void print_version(void);
 
 #endif /* _RUNOPTS_H_ */

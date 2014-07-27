@@ -106,8 +106,8 @@ parse_ciphers_macs()
 }
 #endif
 
-void print_version(const char* name) {
-	fprintf(stderr, "Dropbear %s v%s\n", name, DROPBEAR_VERSION);
+void print_version() {
+	fprintf(stderr, "Dropbear v%s\n", DROPBEAR_VERSION);
 }
 
 
