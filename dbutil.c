@@ -161,7 +161,7 @@ void dropbear_trace(const char* format, ...) {
 	gettimeofday(&tv, NULL);
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE  (%d) %d.%d: ", getpid(), tv.tv_sec, tv.tv_usec);
+	fprintf(stderr, "TRACE  (%d) %d.%d: ", getpid(), (int)tv.tv_sec, (int)tv.tv_usec);
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -183,7 +183,7 @@ void dropbear_trace2(const char* format, ...) {
 	gettimeofday(&tv, NULL);
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE2 (%d) %d.%d: ", getpid(), tv.tv_sec, tv.tv_usec);
+	fprintf(stderr, "TRACE2 (%d) %d.%d: ", getpid(), (int)tv.tv_sec, (int)tv.tv_usec);
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -956,6 +956,7 @@ static clockid_t get_linux_clock_source() {
 	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC_COARSE, &ts) == 0) {
 		return CLOCK_MONOTONIC_COARSE;
 	}
+
 	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts) == 0) {
 		return CLOCK_MONOTONIC;
 	}
@@ -968,7 +969,7 @@ time_t monotonic_now() {
 	static clockid_t clock_source = -2;
 
 	if (clock_source == -2) {
-		/* First time, find out which one works. 
+		/* First run, find out which one works. 
 		-1 will fall back to time() */
 		clock_source = get_linux_clock_source();
 	}
