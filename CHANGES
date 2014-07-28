@@ -1,4 +1,4 @@
-2014.64 pending
+2014.64 - Sunday 27 July 2014
 
 - Fix compiling with ECDSA and DSS disabled
 
@@ -23,6 +23,8 @@
 
 - Use monotonic clock where available, timeouts won't be affected by system time
   changes
+
+- Add -V for version
 
 2014.63 - Wednesday 19 February 2014
 
