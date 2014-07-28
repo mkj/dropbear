@@ -945,22 +945,45 @@ int constant_time_memcmp(const void* a, const void *b, size_t n)
 	return c;
 }
 
-time_t monotonic_now() {
-
 #if defined(__linux__) && defined(SYS_clock_gettime)
-	/* CLOCK_MONOTONIC_COARSE was added in Linux 2.6.32. Probably cheaper. */
+/* CLOCK_MONOTONIC_COARSE was added in Linux 2.6.32 but took a while to
+reach userspace include headers */
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE 6
 #endif
-	static clockid_t clock_source = CLOCK_MONOTONIC_COARSE;
+static clockid_t get_linux_clock_source() {
 	struct timespec ts;
-
-	if (syscall(SYS_clock_gettime, clock_source, &ts) == EINVAL) {
-		clock_source = CLOCK_MONOTONIC;
-		syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts);
+	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC_COARSE, &ts) == 0) {
+		return CLOCK_MONOTONIC_COARSE;
 	}
-	return ts.tv_sec;
-#elif defined(HAVE_MACH_ABSOLUTE_TIME)
+	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts) == 0) {
+		return CLOCK_MONOTONIC;
+	}
+	return -1;
+}
+#endif 
+
+time_t monotonic_now() {
+#if defined(__linux__) && defined(SYS_clock_gettime)
+	static clockid_t clock_source = -2;
+
+	if (clock_source == -2) {
+		/* First time, find out which one works. 
+		-1 will fall back to time() */
+		clock_source = get_linux_clock_source();
+	}
+
+	if (clock_source >= 0) {
+		struct timespec ts;
+		if (syscall(SYS_clock_gettime, clock_source, &ts) != 0) {
+			/* Intermittent clock failures should not happen */
+			dropbear_exit("Clock broke");
+		}
+		return ts.tv_sec;
+	}
+#endif /* linux clock_gettime */
+
+#if defined(HAVE_MACH_ABSOLUTE_TIME)
 	/* OS X, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
 	static mach_timebase_info_data_t timebase_info;
 	if (timebase_info.denom == 0) {
@@ -968,10 +991,9 @@ time_t monotonic_now() {
 	}
 	return mach_absolute_time() * timebase_info.numer / timebase_info.denom
 		/ 1e9;
-#else 
+#endif /* osx mach_absolute_time */
+
 	/* Fallback for everything else - this will sometimes go backwards */
 	return time(NULL);
-#endif
-
 }
 
