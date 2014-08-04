@@ -309,6 +309,11 @@ much traffic. */
 be overridden at runtime with -K. 0 disables keepalives */
 #define DEFAULT_KEEPALIVE 0
 
+/* If this many KEEPALIVES are sent with no packets received from the
+other side, exit. Not run-time configurable - if you have a need
+for runtime configuration please mail the Dropbear list */
+#define DEFAULT_KEEPALIVE_LIMIT 3
+
 /* Ensure that data is received within IDLE_TIMEOUT seconds. This can
 be overridden at runtime with -I. 0 disables idle timeouts */
 #define DEFAULT_IDLE_TIMEOUT 0

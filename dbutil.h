@@ -62,9 +62,9 @@ extern int debug_trace;
 #endif
 
 enum dropbear_prio {
-	DROPBEAR_PRIO_DEFAULT,
-	DROPBEAR_PRIO_LOWDELAY,
-	DROPBEAR_PRIO_BULK,
+	DROPBEAR_PRIO_DEFAULT = 10,
+	DROPBEAR_PRIO_LOWDELAY = 11,
+	DROPBEAR_PRIO_BULK = 12,
 };
 
 char * stripcontrol(const char * text);

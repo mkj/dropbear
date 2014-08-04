@@ -57,9 +57,7 @@ void write_packet() {
 
 	int len, written;
 	buffer * writebuf = NULL;
-	time_t now;
 	unsigned packet_type;
-	int all_ignore = 1;
 #ifdef HAVE_WRITEV
 	struct iovec *iov = NULL;
 	int i;
@@ -90,7 +88,6 @@ void write_packet() {
 		packet_type = writebuf->data[writebuf->len-1];
 		len = writebuf->len - 1 - writebuf->pos;
 		dropbear_assert(len > 0);
-		all_ignore &= (packet_type == SSH_MSG_IGNORE);
 		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, packet_type,
 				len, writebuf->len-1))
 		iov[i].iov_base = buf_getptr(writebuf, len);
@@ -146,7 +143,6 @@ void write_packet() {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
 	} 
-	all_ignore = (packet_type == SSH_MSG_IGNORE);
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -162,13 +158,6 @@ void write_packet() {
 		buf_incrpos(writebuf, written);
 	}
 #endif /* writev */
-
-	now = monotonic_now();
-	ses.last_trx_packet_time = now;
-
-	if (!all_ignore) {
-		ses.last_packet_time = now;
-	}
 
 	TRACE2(("leave write_packet"))
 }
@@ -515,6 +504,8 @@ void encrypt_packet() {
 	unsigned char packet_type;
 	unsigned int len, encrypt_buf_size;
 	unsigned char mac_bytes[MAX_MAC_LEN];
+
+	time_t now;
 	
 	TRACE2(("enter encrypt_packet()"))
 
@@ -621,6 +612,18 @@ void encrypt_packet() {
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;
 	ses.transseq++;
+
+	now = monotonic_now();
+	ses.last_packet_time_any_sent = now;
+	/* idle timeout shouldn't be affected by responses to keepalives.
+	send_msg_keepalive() itself also does tricks with 
+	ses.last_packet_idle_time - read that if modifying this code */
+	if (packet_type != SSH_MSG_REQUEST_FAILURE
+		&& packet_type != SSH_MSG_UNIMPLEMENTED
+		&& packet_type != SSH_MSG_IGNORE) {
+		ses.last_packet_time_idle = now;
+
+	}
 
 	TRACE2(("leave encrypt_packet()"))
 }
