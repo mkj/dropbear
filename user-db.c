@@ -108,7 +108,7 @@ bool db_init(user_db* db_info) {
     }
 
     if (0 != access(dir_name, F_OK)) {
-        if (0 != mkdir(dir_name, 666)) {
+        if (0 != mkdir(dir_name, 0777)) {
             fprintf(stderr, "db_info mkdir(%s) fail: %s\n",
                     dir_name, strerror(errno));
         }
