@@ -202,6 +202,9 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 	int iptos_val = 0, so_prio_val = 0, rc;
 
+	/* Don't log ENOTSOCK errors so that this can harmlessly be called
+	 * on a client '-J' proxy pipe */
+
 	/* set the TOS bit for either ipv4 or ipv6 */
 #ifdef IPTOS_LOWDELAY
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
@@ -211,12 +214,12 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	}
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
 	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&iptos_val, sizeof(iptos_val));
-	if (rc < 0) {
+	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set IPV6_TCLASS (%s)", strerror(errno)));
 	}
 #endif
 	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&iptos_val, sizeof(iptos_val));
-	if (rc < 0) {
+	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set IP_TOS (%s)", strerror(errno)));
 	}
 #endif
@@ -229,7 +232,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	}
 	/* linux specific, sets QoS class. see tc-prio(8) */
 	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &so_prio_val, sizeof(so_prio_val));
-	if (rc < 0)
+	if (rc < 0 && errno != ENOTSOCK)
 		dropbear_log(LOG_WARNING, "Couldn't set SO_PRIORITY (%s)",
 				strerror(errno));
 #endif
