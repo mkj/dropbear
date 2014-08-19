@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2014.64"
+#define DROPBEAR_VERSION "2014.65"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -256,5 +256,8 @@
 #else
 #define DROPBEAR_LISTEN_BACKLOG MAX_CHANNELS
 #endif
+
+/* Use this string since some implementations might special-case it */
+#define DROPBEAR_KEEPALIVE_STRING "keepalive@openssh.com"
 
 /* no include guard for this file */
