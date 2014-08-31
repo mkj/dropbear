@@ -3,7 +3,7 @@ compiler:
   - gcc
 
 script: 
-  - autoconf && autoheader && ./configure $BUNDLEDLIBTOM CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install
+  - autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install MULTI=1
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
   - ~/inst/bin/dropbearkey -t dss -f testdss
   - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
@@ -14,7 +14,18 @@ before_install:
   - sudo apt-get update -qq
   - sudo apt-get install -qq libz-dev libtomcrypt-dev libtommath-dev
 
-env: 
-  - BUNDLEDLIBTOM=--disable-bundled-libtom
-  - BUNDLEDLIBTOM=--enable-bundled-libtom
-  - MULTI=1
+env:
+  global:
+   # The next declration is the encrypted COVERITY_SCAN_TOKEN, created
+   #   via the "travis encrypt" command using the project repo's public key
+   - secure: "F4rKQrHK/u58vPo3F9+x0WYXAeMFJvvtH9BIGZqx9yw8bUnL+gk0Ge9wnHHTXRcgCTqoc7B35uMS5njpH+Su/esVjrLAq85f/AmQctlRpmApwGK9LyxkIvx3UJN0nqfeeDXA90/8FUZ+n/qnCydXmYCEgqSaBCNydDxW1oqYUIc="
+
+addons:
+  coverity_scan:
+    project:
+      name: "mkj/dropbear"
+      description: "Dropbear SSH"
+    notification_email: matt@ucc.asn.au
+    build_command_prepend: autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS='-O2 -Wall -Wno-pointer-sign' --prefix=$HOME/inst
+    build_command: make MULTI=1
+    branch_pattern: coverity
