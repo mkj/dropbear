@@ -241,6 +241,7 @@ static int newchansess(struct Channel *channel) {
 	chansess = (struct ChanSess*)m_malloc(sizeof(struct ChanSess));
 	chansess->cmd = NULL;
 	chansess->connection_string = NULL;
+	chansess->client_string = NULL;
 	chansess->pid = 0;
 
 	/* pty details */
@@ -617,6 +618,21 @@ static char* make_connection_string() {
 	return ret;
 }
 
+static char* make_client_string() {
+	char *local_ip, *local_port, *remote_ip, *remote_port;
+	size_t len;
+	char *ret;
+	get_socket_address(ses.sock_in, &local_ip, &local_port, &remote_ip, &remote_port, 0);
+	len = strlen(local_ip) + strlen(local_port) + strlen(remote_ip) + strlen(remote_port) + 4;
+	ret = m_malloc(len);
+	snprintf(ret, len, "%s %s %s", remote_ip, remote_port, local_port);
+	m_free(local_ip);
+	m_free(local_port);
+	m_free(remote_ip);
+	m_free(remote_port);
+	return ret;
+}
+
 /* Handle a command request from the client. This is used for both shell
  * and command-execution requests, and passes the command to
  * noptycommand or ptycommand as appropriate.
@@ -678,6 +694,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	connection_string is freed below. */
 #ifndef USE_VFORK
 	chansess->connection_string = make_connection_string();
+	chansess->client_string = make_client_string();
 #endif
 
 	if (chansess->term == NULL) {
@@ -694,6 +711,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 #ifndef USE_VFORK
 	m_free(chansess->connection_string);
+	m_free(chansess->client_string);
 #endif
 
 	if (ret == DROPBEAR_FAILURE) {
@@ -948,6 +966,10 @@ static void execchild(void *user_data) {
 	
 	if (chansess->connection_string) {
 		addnewvar("SSH_CONNECTION", chansess->connection_string);
+	}
+
+	if (chansess->client_string) {
+		addnewvar("SSH_CLIENT", chansess->client_string);
 	}
 	
 #ifdef ENABLE_SVR_PUBKEY_OPTIONS
