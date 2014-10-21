@@ -54,6 +54,9 @@ struct ChanSess {
 	/* Used to set $SSH_CONNECTION in the child session. 
 	Is only set temporarily before forking */
 	char *connection_string;
+
+	/* Used to set $SSH_CLIENT in the child session. */
+	char *client_string;
 	
 #ifndef DISABLE_X11FWD
 	struct Listener * x11listener;
