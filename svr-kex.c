@@ -84,7 +84,25 @@ void recv_msg_kexdh_init() {
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 
+
 #ifdef DROPBEAR_DELAY_HOSTKEY
+
+static void fsync_parent_dir(const char* fn) {
+#ifdef HAVE_LIBGEN_H
+	char *fn_dir = m_strdup(fn);
+	char *dir = dirname(fn_dir);
+	/* some OSes need the fd to be writable for fsync */
+	int dirfd = open(dir, O_RDWR);
+
+	if (dirfd != -1) {
+		fsync(dirfd);
+		m_close(dirfd);
+	}
+
+	free(fn_dir);
+#endif
+}
+
 static void svr_ensure_hostkey() {
 
 	const char* fn = NULL;
@@ -141,6 +159,10 @@ static void svr_ensure_hostkey() {
 			goto out;
 		}
 	}
+
+	/* ensure directory update is flushed to disk, otherwise we can end up
+	with zero-byte hostkey files if the power goes off */
+	fsync_parent_dir(fn);
 
 	ret = readhostkey(fn, svr_opts.hostkey, &type);
 

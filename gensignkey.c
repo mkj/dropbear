@@ -41,6 +41,7 @@ static int buf_writefile(buffer * buf, const char * filename) {
 
 out:
 	if (fd >= 0) {
+		fsync(fd);
 		m_close(fd);
 	}
 	return ret;
