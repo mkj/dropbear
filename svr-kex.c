@@ -91,12 +91,15 @@ static void fsync_parent_dir(const char* fn) {
 #ifdef HAVE_LIBGEN_H
 	char *fn_dir = m_strdup(fn);
 	char *dir = dirname(fn_dir);
-	/* some OSes need the fd to be writable for fsync */
-	int dirfd = open(dir, O_RDWR);
+	int dirfd = open(dir, O_RDONLY);
 
 	if (dirfd != -1) {
-		fsync(dirfd);
+		if (fsync(dirfd) != 0) {
+			TRACE(("fsync of directory %s failed: %s", dir, strerror(errno)))
+		}
 		m_close(dirfd);
+	} else {
+		TRACE(("error opening directory %s for fsync: %s", dir, strerror(errno)))
 	}
 
 	free(fn_dir);
