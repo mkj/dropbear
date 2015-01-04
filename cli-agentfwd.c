@@ -210,7 +210,7 @@ static void agent_get_key_list(m_list * ret_list)
 		ret = buf_get_pub_key(key_buf, pubkey, &key_type);
 		buf_free(key_buf);
 		if (ret != DROPBEAR_SUCCESS) {
-			TRACE(("Skipping bad pubkey from agent"));
+			TRACE(("Skipping bad/unknown type pubkey from agent"));
 			sign_key_free(pubkey);
 		} else {
 			pubkey->type = key_type;
