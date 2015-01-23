@@ -141,9 +141,6 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_AES128
 	{"aes128-ctr", 0, &dropbear_aes128, 1, &dropbear_mode_ctr},
 #endif
-#ifdef DROPBEAR_3DES
-	{"3des-ctr", 0, &dropbear_3des, 1, &dropbear_mode_ctr},
-#endif
 #ifdef DROPBEAR_AES256
 	{"aes256-ctr", 0, &dropbear_aes256, 1, &dropbear_mode_ctr},
 #endif
@@ -152,9 +149,6 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_ENABLE_CBC_MODE
 #ifdef DROPBEAR_AES128
 	{"aes128-cbc", 0, &dropbear_aes128, 1, &dropbear_mode_cbc},
-#endif
-#ifdef DROPBEAR_3DES
-	{"3des-cbc", 0, &dropbear_3des, 1, &dropbear_mode_cbc},
 #endif
 #ifdef DROPBEAR_AES256
 	{"aes256-cbc", 0, &dropbear_aes256, 1, &dropbear_mode_cbc},
@@ -165,6 +159,12 @@ algo_type sshciphers[] = {
 #endif
 #ifdef DROPBEAR_TWOFISH128
 	{"twofish128-cbc", 0, &dropbear_twofish128, 1, &dropbear_mode_cbc},
+#endif
+#ifdef DROPBEAR_3DES
+	{"3des-ctr", 0, &dropbear_3des, 1, &dropbear_mode_ctr},
+#endif
+#ifdef DROPBEAR_3DES
+	{"3des-cbc", 0, &dropbear_3des, 1, &dropbear_mode_cbc},
 #endif
 #ifdef DROPBEAR_BLOWFISH
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
@@ -200,8 +200,8 @@ algo_type sshhashes[] = {
 
 #ifndef DISABLE_ZLIB
 algo_type ssh_compress[] = {
-	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1, NULL},
 	{"zlib@openssh.com", DROPBEAR_COMP_ZLIB_DELAY, NULL, 1, NULL},
+	{"zlib", DROPBEAR_COMP_ZLIB, NULL, 1, NULL},
 	{"none", DROPBEAR_COMP_NONE, NULL, 1, NULL},
 	{NULL, 0, NULL, 0, NULL}
 };
@@ -270,8 +270,8 @@ algo_type sshkex[] = {
 	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #endif
-	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
 	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14, 1, NULL},
+	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
 #ifdef USE_KEXGUESS2
 	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},
 #endif
