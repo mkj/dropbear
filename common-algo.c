@@ -84,10 +84,14 @@ const struct dropbear_cipher dropbear_nocipher =
 
 /* A few void* s are required to silence warnings
  * about the symmetric_CBC vs symmetric_CTR cipher_state pointer */
+#ifdef DROPBEAR_ENABLE_CBC_MODE
 const struct dropbear_cipher_mode dropbear_mode_cbc =
 	{(void*)cbc_start, (void*)cbc_encrypt, (void*)cbc_decrypt};
+#endif // DROPBEAR_ENABLE_CBC_MODE
+
 const struct dropbear_cipher_mode dropbear_mode_none =
 	{void_start, void_cipher, void_cipher};
+
 #ifdef DROPBEAR_ENABLE_CTR_MODE
 /* a wrapper to make ctr_start and cbc_start look the same */
 static int dropbear_big_endian_ctr_start(int cipher, 
@@ -98,7 +102,7 @@ static int dropbear_big_endian_ctr_start(int cipher,
 }
 const struct dropbear_cipher_mode dropbear_mode_ctr =
 	{(void*)dropbear_big_endian_ctr_start, (void*)ctr_encrypt, (void*)ctr_decrypt};
-#endif
+#endif // DROPBEAR_ENABLE_CTR_MODE
 
 /* Mapping of ssh hashes to libtomcrypt hashes, including keysize etc.
    {&hash_desc, keysize, hashsize} */
@@ -145,7 +149,7 @@ algo_type sshciphers[] = {
 #endif
 #endif /* DROPBEAR_ENABLE_CTR_MODE */
 
-/* CBC modes are always enabled */
+#ifdef DROPBEAR_ENABLE_CBC_MODE
 #ifdef DROPBEAR_AES128
 	{"aes128-cbc", 0, &dropbear_aes128, 1, &dropbear_mode_cbc},
 #endif
@@ -165,6 +169,7 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_BLOWFISH
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
 #endif
+#endif /* DROPBEAR_ENABLE_CBC_MODE */
 #ifdef DROPBEAR_NONE_CIPHER
 	{"none", 0, (void*)&dropbear_nocipher, 1, &dropbear_mode_none},
 #endif
