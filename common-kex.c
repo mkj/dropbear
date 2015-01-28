@@ -238,14 +238,24 @@ void recv_msg_newkeys() {
 void kexfirstinitialise() {
 	ses.kexstate.donefirstkex = 0;
 
-#ifndef DISABLE_ZLIB
-	if (opts.enable_compress) {
-		ses.compress_algos = ssh_compress;
-	} else
-#endif
+#ifdef DISABLE_ZLIB
+	ses.compress_algos = ssh_nocompress;
+#else
+	switch (opts.compress_mode)
 	{
-		ses.compress_algos = ssh_nocompress;
+		case DROPBEAR_COMPRESS_DELAYED:
+			ses.compress_algos = ssh_delaycompress;
+			break;
+
+		case DROPBEAR_COMPRESS_ON:
+			ses.compress_algos = ssh_compress;
+			break;
+
+		case DROPBEAR_COMPRESS_OFF:
+			ses.compress_algos = ssh_nocompress;
+			break;
 	}
+#endif
 	kexinitialise();
 }
 

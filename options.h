@@ -174,6 +174,11 @@ much traffic. */
 #define DROPBEAR_ZLIB_WINDOW_BITS 15 
 #endif
 
+/* Server won't allow zlib compression until after authentication. Prevents
+   flaws in the zlib library being unauthenticated exploitable flaws.
+   Some old ssh clients may not support the alternative zlib@openssh.com method */
+#define DROPBEAR_SERVER_DELAY_ZLIB 1
+
 /* Whether to do reverse DNS lookups. */
 /*#define DO_HOST_LOOKUP */
 

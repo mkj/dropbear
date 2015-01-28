@@ -205,6 +205,12 @@ algo_type ssh_compress[] = {
 	{"none", DROPBEAR_COMP_NONE, NULL, 1, NULL},
 	{NULL, 0, NULL, 0, NULL}
 };
+
+algo_type ssh_delaycompress[] = {
+	{"zlib@openssh.com", DROPBEAR_COMP_ZLIB_DELAY, NULL, 1, NULL},
+	{"none", DROPBEAR_COMP_NONE, NULL, 1, NULL},
+	{NULL, 0, NULL, 0, NULL}
+};
 #endif
 
 algo_type ssh_nocompress[] = {
