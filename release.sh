@@ -7,7 +7,7 @@ if ! head -n1 CHANGES | grep -q $VERSION ; then
 fi
 
 if ! head -n1 debian/changelog | grep -q $VERSION ; then
-	echo "CHANGES needs updating"
+	echo "debian/changelog needs updating"
 	exit 1
 fi
 
