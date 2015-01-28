@@ -810,7 +810,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	}
 	m_burn(key->keyblob, key->keyblob_size);
 	m_free(key->keyblob);
-	m_burn(key, sizeof(key));
+	m_burn(key, sizeof(*key));
 	m_free(key);
 	if (errmsg) {
 		fprintf(stderr, "Error: %s\n", errmsg);
