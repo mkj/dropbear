@@ -91,7 +91,7 @@ void m_close(int fd);
 void * m_malloc(size_t size);
 void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);
-#define m_free(X) free(X); (X) = NULL;
+#define m_free(X) do {free(X); (X) = NULL;} while (0); 
 void m_burn(void* data, unsigned int len);
 void setnonblocking(int fd);
 void disallow_core();
