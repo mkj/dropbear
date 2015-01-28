@@ -177,17 +177,17 @@ algo_type sshciphers[] = {
 };
 
 algo_type sshhashes[] = {
-#ifdef DROPBEAR_SHA2_256_HMAC
-	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
-#endif
-#ifdef DROPBEAR_SHA2_512_HMAC
-	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
-#endif
 #ifdef DROPBEAR_SHA1_96_HMAC
 	{"hmac-sha1-96", 0, &dropbear_sha1_96, 1, NULL},
 #endif
 #ifdef DROPBEAR_SHA1_HMAC
 	{"hmac-sha1", 0, &dropbear_sha1, 1, NULL},
+#endif
+#ifdef DROPBEAR_SHA2_256_HMAC
+	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
+#endif
+#ifdef DROPBEAR_SHA2_512_HMAC
+	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
 #endif
 #ifdef DROPBEAR_MD5_HMAC
 	{"hmac-md5", 0, (void*)&dropbear_md5, 1, NULL},
