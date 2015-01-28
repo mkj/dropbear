@@ -36,5 +36,5 @@ rm -r "$RELDIR/autom4te.cache" || exit 2
 (cd $RELDIR/.. && tar cjf $ARCHIVE `basename "$RELDIR"`) || exit 2
 
 ls -l $ARCHIVE
-openssl sha1 $ARCHIVE
+openssl sha -sha256 $ARCHIVE
 echo "Done to $ARCHIVE"
