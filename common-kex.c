@@ -629,16 +629,20 @@ void free_kexdh_param(struct kex_dh_param *param)
 void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 		sign_key *hostkey) {
 
-	mp_int dh_p;
+	DEF_MP_INT(dh_p);
+	DEF_MP_INT(dh_p_min1);
 	mp_int *dh_e = NULL, *dh_f = NULL;
 
-	/* read the prime and generator*/
-	m_mp_init(&dh_p);
+	m_mp_init_multi(&dh_p, &dh_p_min1, NULL);
 	load_dh_p(&dh_p);
 
-	/* Check that dh_pub_them (dh_e or dh_f) is in the range [1, p-1] */
-	if (mp_cmp(dh_pub_them, &dh_p) != MP_LT 
-			|| mp_cmp_d(dh_pub_them, 0) != MP_GT) {
+	if (mp_sub_d(&dh_p, 1, &dh_p_min1) != MP_OKAY) { 
+		dropbear_exit("Diffie-Hellman error");
+	}
+
+	/* Check that dh_pub_them (dh_e or dh_f) is in the range [2, p-2] */
+	if (mp_cmp(dh_pub_them, &dh_p_min1) != MP_LT 
+			|| mp_cmp_d(dh_pub_them, 1) != MP_GT) {
 		dropbear_exit("Diffie-Hellman error");
 	}
 	
@@ -649,7 +653,7 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	}
 
 	/* clear no longer needed vars */
-	mp_clear_multi(&dh_p, NULL);
+	mp_clear_multi(&dh_p, &dh_p_min1, NULL);
 
 	/* From here on, the code needs to work with the _same_ vars on each side,
 	 * not vice-versaing for client/server */

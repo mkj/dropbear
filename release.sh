@@ -7,7 +7,7 @@ if ! head -n1 CHANGES | grep -q $VERSION ; then
 fi
 
 if ! head -n1 debian/changelog | grep -q $VERSION ; then
-	echo "CHANGES needs updating"
+	echo "debian/changelog needs updating"
 	exit 1
 fi
 
@@ -36,5 +36,5 @@ rm -r "$RELDIR/autom4te.cache" || exit 2
 (cd $RELDIR/.. && tar cjf $ARCHIVE `basename "$RELDIR"`) || exit 2
 
 ls -l $ARCHIVE
-openssl sha1 $ARCHIVE
+openssl sha -sha256 $ARCHIVE
 echo "Done to $ARCHIVE"
