@@ -573,7 +573,7 @@ void update_channel_prio() {
 	}
 
 	if (new_prio != ses.socket_prio) {
-		TRACE(("Dropbear priority transitioning %4.4s -> %4.4s", (char*)&ses.socket_prio, (char*)&new_prio))
+		TRACE(("Dropbear priority transitioning %d -> %d", ses.socket_prio, new_prio))
 		set_sock_priority(ses.sock_out, new_prio);
 		ses.socket_prio = new_prio;
 	}
