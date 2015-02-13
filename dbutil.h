@@ -58,6 +58,7 @@ void dropbear_trace(const char* format, ...) ATTRIB_PRINTF(1,2);
 void dropbear_trace2(const char* format, ...) ATTRIB_PRINTF(1,2);
 void printhex(const char * label, const unsigned char * buf, int len);
 void printmpint(const char *label, mp_int *mp);
+void debug_start_net();
 extern int debug_trace;
 #endif
 

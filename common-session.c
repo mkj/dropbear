@@ -53,6 +53,10 @@ int exitflag = 0; /* GLOBAL */
 void common_session_init(int sock_in, int sock_out) {
 	time_t now;
 
+#ifdef DEBUG_TRACE
+	debug_start_net();
+#endif
+
 	TRACE(("enter session_init"))
 
 	ses.sock_in = sock_in;

@@ -151,19 +151,32 @@ void dropbear_log(int priority, const char* format, ...) {
 
 #ifdef DEBUG_TRACE
 
+static double debug_start_time = -1;
+
+void debug_start_net()
+{
+	if (getenv("DROPBEAR_DEBUG_NET_TIMESTAMP"))
+	{
+    	/* Timestamps start from first network activity */
+	    struct timeval tv;
+	    gettimeofday(&tv, NULL);
+	    debug_start_time = tv.tv_sec + (tv.tv_usec / 1000000.0);
+	    TRACE(("Resetting Dropbear TRACE timestamps"))
+	}
+}
+
 static double time_since_start()
 {
-    static double start_time = -1;
     double nowf;
     struct timeval tv;
     gettimeofday(&tv, NULL);
     nowf = tv.tv_sec + (tv.tv_usec / 1000000.0);
-    if (start_time < 0)
+    if (debug_start_time < 0)
     {
-        start_time = nowf;
+        debug_start_time = nowf;
         return 0;
     }
-    return nowf - start_time;
+    return nowf - debug_start_time;
 }
 
 void dropbear_trace(const char* format, ...) {
