@@ -411,7 +411,7 @@ static void set_piggyback_ack(int sock) {
 	int err = setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, (void*)&val, sizeof(val));
 	if (err)
 	{
-		DEBUG_TRACE(("Failed setsockopt TCP_DEFER_ACCEPT: %s", strerror(errno)))
+		TRACE(("Failed setsockopt TCP_DEFER_ACCEPT: %s", strerror(errno)))
 	}
 }
 #endif
