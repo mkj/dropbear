@@ -150,18 +150,31 @@ void dropbear_log(int priority, const char* format, ...) {
 
 
 #ifdef DEBUG_TRACE
+
+static double time_since_start()
+{
+    static double start_time = -1;
+    double nowf;
+    struct timeval tv;
+    gettimeofday(&tv, NULL);
+    nowf = tv.tv_sec + (tv.tv_usec / 1000000.0);
+    if (start_time < 0)
+    {
+        start_time = nowf;
+        return 0;
+    }
+    return nowf - start_time;
+}
+
 void dropbear_trace(const char* format, ...) {
 	va_list param;
-	struct timeval tv;
 
 	if (!debug_trace) {
 		return;
 	}
 
-	gettimeofday(&tv, NULL);
-
 	va_start(param, format);
-	fprintf(stderr, "TRACE  (%d) %d.%d: ", getpid(), (int)tv.tv_sec, (int)tv.tv_usec);
+	fprintf(stderr, "TRACE  (%d) %f: ", getpid(), time_since_start());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -170,7 +183,6 @@ void dropbear_trace(const char* format, ...) {
 void dropbear_trace2(const char* format, ...) {
 	static int trace_env = -1;
 	va_list param;
-	struct timeval tv;
 
 	if (trace_env == -1) {
 		trace_env = getenv("DROPBEAR_TRACE2") ? 1 : 0;
@@ -180,10 +192,8 @@ void dropbear_trace2(const char* format, ...) {
 		return;
 	}
 
-	gettimeofday(&tv, NULL);
-
 	va_start(param, format);
-	fprintf(stderr, "TRACE2 (%d) %d.%d: ", getpid(), (int)tv.tv_sec, (int)tv.tv_usec);
+	fprintf(stderr, "TRACE2 (%d) %f: ", getpid(), time_since_start());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 	va_end(param);
@@ -390,6 +400,23 @@ int connect_unix(const char* path) {
 }
 #endif
 
+#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
+static void set_piggyback_ack(int sock) {
+	/* Undocumented Linux feature - set TCP_DEFER_ACCEPT and data will be piggybacked
+	on the 3rd packet (ack) of the TCP handshake. Saves a IP packet.
+	http://thread.gmane.org/gmane.linux.network/224627/focus=224727
+	"Piggyback the final ACK of the three way TCP connection establishment with the data" */
+	int val = 1;
+	/* No error checking, this is opportunistic */
+	int err = setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, (void*)&val, sizeof(val));
+	if (err)
+	{
+		DEBUG_TRACE(("Failed setsockopt TCP_DEFER_ACCEPT: %s", strerror(errno)))
+	}
+}
+#endif
+
+
 /* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
  * return immediately if nonblocking is set. On failure, if errstring
  * wasn't null, it will be a newly malloced error message */
@@ -437,6 +464,10 @@ int connect_remote(const char* remotehost, const char* remoteport,
 
 		if (nonblocking) {
 			setnonblocking(sock);
+
+#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
+			set_piggyback_ack(sock);
+#endif
 		}
 
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {

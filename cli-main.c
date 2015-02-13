@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
 #endif
 	{
 		int sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, 
-				0, &error);
+				1, &error);
 		sock_in = sock_out = sock;
 	}
 
