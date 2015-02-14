@@ -83,8 +83,7 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
 #ifdef ENABLE_CONNECT_UNIX
 int connect_unix(const char* addr);
 #endif
-int connect_remote(const char* remotehost, const char* remoteport,
-		int nonblocking, char ** errstring);
+int connect_remote(const char* remotehost, const char* remoteport, char ** errstring);
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 

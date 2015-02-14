@@ -435,8 +435,7 @@ static void set_piggyback_ack(int sock) {
  * wasn't null, it will be a newly malloced error message */
 
 /* TODO: maxfd */
-int connect_remote(const char* remotehost, const char* remoteport,
-		int nonblocking, char ** errstring) {
+int connect_remote(const char* remotehost, const char* remoteport, char ** errstring) {
 
 	struct addrinfo *res0 = NULL, *res = NULL, hints;
 	int sock;
@@ -475,16 +474,14 @@ int connect_remote(const char* remotehost, const char* remoteport,
 			continue;
 		}
 
-		if (nonblocking) {
-			setnonblocking(sock);
+		setnonblocking(sock);
 
 #if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
-			set_piggyback_ack(sock);
+		set_piggyback_ack(sock);
 #endif
-		}
 
 		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-			if (errno == EINPROGRESS && nonblocking) {
+			if (errno == EINPROGRESS) {
 				TRACE(("Connect in progress"))
 				break;
 			} else {
@@ -498,7 +495,7 @@ int connect_remote(const char* remotehost, const char* remoteport,
 		break; /* Success */
 	}
 
-	if (sock < 0 && !(errno == EINPROGRESS && nonblocking)) {
+	if (sock < 0 && !(errno == EINPROGRESS)) {
 		/* Failed */
 		if (errstring != NULL && *errstring == NULL) {
 			int len;
