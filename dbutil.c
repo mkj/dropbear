@@ -221,6 +221,16 @@ void set_sock_nodelay(int sock) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 }
 
+#ifdef DROPBEAR_TCP_FAST_OPEN
+void set_listen_fast_open(int sock) {
+	int qlen = MAX(MAX_UNAUTH_PER_IP, 5);
+	if (setsockopt(sock, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen)) != 0) {
+		TRACE(("set_listen_fast_open failed for socket %d: %s", sock, strerror(errno)))
+	}
+}
+
+#endif
+
 void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 	int iptos_val = 0, so_prio_val = 0, rc;
