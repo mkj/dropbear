@@ -52,10 +52,29 @@ static buffer* buf_decompress(buffer* buf, unsigned int len);
 static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 #endif
 
+struct iovec * dropbear_queue_to_iovec(struct Queue *queue) {
+
+	struct iovec *iov = NULL;
+	struct Link *l;
+	int iov_max_count;
+
+	#ifndef IOV_MAX
+	#define IOV_MAX UIO_MAXIOV
+	#endif
+
+#error incomplete
+
+}
+
+void dropbear_queue_consume(struct Queue *queue, ssize_t written) {
+
+}
+
 /* non-blocking function writing out a current encrypted packet */
 void write_packet() {
 
-	int len, written;
+	ssize_t written;
+	int len;
 	buffer * writebuf = NULL;
 	unsigned packet_type;
 #ifdef HAVE_WRITEV

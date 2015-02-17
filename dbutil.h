@@ -76,7 +76,7 @@ void getaddrstring(struct sockaddr_storage* addr,
 void set_sock_nodelay(int sock);
 void set_sock_priority(int sock, enum dropbear_prio prio);
 
-#ifdef __linux__
+#if defined(__linux__) && HAVE_SENDMSG
 #define DROPBEAR_TCP_FAST_OPEN
 void set_listen_fast_open(int sock);
 #endif
@@ -89,7 +89,6 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
 #ifdef ENABLE_CONNECT_UNIX
 int connect_unix(const char* addr);
 #endif
-int connect_remote(const char* remotehost, const char* remoteport, char ** errstring);
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 
@@ -117,5 +116,17 @@ a real-world clock */
 time_t monotonic_now();
 
 char * expand_tilde(const char *inpath);
+
+struct dropbear_progress_connection;
+
+/* result is DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
+errstring is only set on DROPBEAR_FAILURE, returns failure message for the last attempted socket */
+typedef void(*connect_callback)(int result, int sock, void* data, const char* errstring);
+
+struct dropbear_progress_connection * connect_remote (const char* remotehost, const char* remoteport,
+	connect_callback cb, void *cb_data);
+
+void set_connect_fds(fd_set *writefd);
+void handle_connect_fds(fd_set *writefd);
 
 #endif /* _DBUTIL_H_ */

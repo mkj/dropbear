@@ -439,95 +439,6 @@ static void set_piggyback_ack(int sock) {
 }
 #endif
 
-
-/* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
- * return immediately if nonblocking is set. On failure, if errstring
- * wasn't null, it will be a newly malloced error message */
-
-/* TODO: maxfd */
-int connect_remote(const char* remotehost, const char* remoteport, char ** errstring) {
-
-	struct addrinfo *res0 = NULL, *res = NULL, hints;
-	int sock;
-	int err;
-
-	TRACE(("enter connect_remote"))
-
-	if (errstring != NULL) {
-		*errstring = NULL;
-	}
-
-	memset(&hints, 0, sizeof(hints));
-	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = PF_UNSPEC;
-
-	err = getaddrinfo(remotehost, remoteport, &hints, &res0);
-	if (err) {
-		if (errstring != NULL && *errstring == NULL) {
-			int len;
-			len = 100 + strlen(gai_strerror(err));
-			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error resolving '%s' port '%s'. %s", 
-					remotehost, remoteport, gai_strerror(err));
-		}
-		TRACE(("Error resolving: %s", gai_strerror(err)))
-		return -1;
-	}
-
-	sock = -1;
-	err = EADDRNOTAVAIL;
-	for (res = res0; res; res = res->ai_next) {
-
-		sock = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
-		if (sock < 0) {
-			err = errno;
-			continue;
-		}
-
-		setnonblocking(sock);
-
-#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
-		set_piggyback_ack(sock);
-#endif
-
-		if (connect(sock, res->ai_addr, res->ai_addrlen) < 0) {
-			if (errno == EINPROGRESS) {
-				TRACE(("Connect in progress"))
-				break;
-			} else {
-				err = errno;
-				close(sock);
-				sock = -1;
-				continue;
-			}
-		}
-
-		break; /* Success */
-	}
-
-	if (sock < 0 && !(errno == EINPROGRESS)) {
-		/* Failed */
-		if (errstring != NULL && *errstring == NULL) {
-			int len;
-			len = 20 + strlen(strerror(err));
-			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
-		}
-		TRACE(("Error connecting: %s", strerror(err)))
-	} else {
-		/* Success */
-		set_sock_nodelay(sock);
-	}
-
-	freeaddrinfo(res0);
-	if (sock > 0 && errstring != NULL && *errstring != NULL) {
-		m_free(*errstring);
-	}
-
-	TRACE(("leave connect_remote: sock %d\n", sock))
-	return sock;
-}
-
 /* Sets up a pipe for a, returning three non-blocking file descriptors
  * and the pid. exec_fn is the function that will actually execute the child process,
  * it will be run after the child has fork()ed, and is passed exec_data.
@@ -1069,3 +980,213 @@ time_t monotonic_now() {
 	return time(NULL);
 }
 
+
+struct dropbear_progress_connection
+{
+	struct addrinfo *res;
+	struct addrinfo *res_iter;
+
+	char *remotehost, *remoteport; /* For error reporting */
+
+	connect_callback cb;
+	void *cb_data;
+
+	struct Queue *writequeue; /* A queue of encrypted packets to send with TCP fastopen,
+								or NULL. */
+
+	int sock;
+};
+
+/* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
+Does not close sockets */
+static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *iter) {
+	if (c->res) {
+		freeaddrinfo(c->res);
+	}
+	m_free(c->remotehost);
+	m_free(c->remoteport);
+	m_free(c);
+
+	if (iter) {
+		list_remove(iter);
+	}
+}
+
+static int connect_try_next(struct dropbear_progress_connection *c) {
+	int err = EADDRNOTAVAIL;
+	struct addrinfo *r;
+
+	if (!c->res_iter) {
+		return DROPBEAR_FAILURE;
+	}
+
+	for (r = c->res_iter; r; r = r->ai_next)
+	{
+		assert(c->sock == -1);
+
+		c->sock = socket(c->res_iter->ai_family, c->res_iter->ai_socktype, c->res_iter->ai_protocol);
+		if (c->sock < 0) {
+			err = errno;
+			continue;
+		}
+
+		setnonblocking(c->sock);
+
+#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
+		set_piggyback_ack(sock);
+#endif
+
+		if (connect(c->sock, r->ai_addr, r->ai_addrlen) < 0) {
+			if (errno == EINPROGRESS) {
+				TRACE(("Connect in progress"))
+				break;
+			} else {
+				err = errno;
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			}
+		}
+
+		break; /* Success. Treated the same as EINPROGRESS */
+	}
+
+	if (r) {
+		c->res_iter = r->ai_next;
+	} else {
+		c->res_iter = NULL;
+	}
+
+	if (c->sock >= 0 || (errno == EINPROGRESS)) {
+		/* Success */
+		set_sock_nodelay(c->sock);
+		return DROPBEAR_SUCCESS;
+	} else {
+		/* XXX - returning error message through */
+#if 0
+		/* Failed */
+		if (errstring != NULL && *errstring == NULL) {
+			int len;
+			len = 20 + strlen(strerror(err));
+			*errstring = (char*)m_malloc(len);
+			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
+		}
+		TRACE(("Error connecting: %s", strerror(err)))
+#endif
+		return DROPBEAR_FAILURE;
+	}
+}
+
+/* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
+ * return immediately if nonblocking is set. On failure, if errstring
+ * wasn't null, it will be a newly malloced error message */
+
+/* TODO: maxfd */
+struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
+	connect_callback cb, void* cb_data)
+{
+	struct dropbear_progress_connection *c = NULL;
+	int err;
+	struct addrinfo hints;
+
+	c = m_malloc(sizeof(*c));
+	c->remotehost = m_strdup(remotehost);
+	c->remoteport = m_strdup(remoteport);
+	c->sock = -1;
+	c->cb = cb;
+	c->cb_data = cb_data;
+
+	memset(&hints, 0, sizeof(hints));
+	hints.ai_socktype = SOCK_STREAM;
+	hints.ai_family = PF_UNSPEC;
+
+	err = getaddrinfo(remotehost, remoteport, &hints, &c->res);
+	if (err) {
+		int len;
+		char *errstring;
+		len = 100 + strlen(gai_strerror(err));
+		errstring = (char*)m_malloc(len);
+		snprintf(errstring, len, "Error resolving '%s' port '%s'. %s", 
+				remotehost, remoteport, gai_strerror(err));
+		c->cb(DROPBEAR_FAILURE, -1, c->cb_data, errstring);
+		m_free(errstring);
+		TRACE(("Error resolving: %s", gai_strerror(err)))
+		remove_connect(c, NULL);
+		return NULL;
+	}
+
+	c->res_iter = c->res;
+
+	if (connect_try_next(c) == DROPBEAR_FAILURE) {
+		/* Should not happen - getaddrinfo() should return failure if there are no addresses */
+		c->cb(DROPBEAR_FAILURE, -1, c->cb_data, "No address to try");
+		TRACE(("leave handle_connect_fds - failed"))
+		remove_connect(c, NULL);
+		return NULL;
+	}
+
+	list_append(&ses.conn_pending, c);
+
+	return c;
+}
+
+
+void set_connect_fds(fd_set *writefd) {
+	m_list_elem *iter;
+	TRACE(("enter handle_connect_fds"))
+	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
+		struct dropbear_progress_connection *c = iter->item;
+		if (c->sock >= 0) {
+			FD_SET(c->sock, writefd);
+		}
+		else
+		{
+
+		}
+	}
+}
+
+void handle_connect_fds(fd_set *writefd) {
+	m_list_elem *iter;
+	TRACE(("enter handle_connect_fds"))
+	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
+		int val;
+		socklen_t vallen = sizeof(val);
+		struct dropbear_progress_connection *c = iter->item;
+
+		if (!FD_ISSET(c->sock, writefd)) {
+			continue;
+		}
+
+		TRACE(("handling %s port %s socket %d", c->remotehost, c->remoteport, c->sock));
+
+		if (getsockopt(c->sock, SOL_SOCKET, SO_ERROR, &val, &vallen) != 0) {
+			TRACE(("handle_connect_fds getsockopt(%d) SO_ERROR failed: %s", c->sock, strerror(errno)))
+		} else if (val != 0) {
+			/* Connect failed */
+			TRACE(("connect to %s port %s failed.", c->remotehost, c->remoteport))
+			m_close(c->sock);
+			c->sock = -1;
+
+			if (connect_try_next(c) == DROPBEAR_FAILURE) {
+				c->cb(DROPBEAR_FAILURE, -1, c->cb_data, strerror(val));
+				TRACE(("leave handle_connect_fds - failed"))
+				remove_connect(c, iter);
+				/* Must return here - remove_connect() invalidates iter */
+				return; 
+			} else {
+				/* new connection try was successfuly started, will be finished by a
+				later call to handle_connect_fds() */
+				TRACE(("leave handle_connect_fds - new try"))
+				continue;
+			}
+		}
+		/* New connection has been established */
+		c->cb(DROPBEAR_SUCCESS, c->sock, c->cb_data, "");
+		remove_connect(c, iter);
+		TRACE(("leave handle_connect_fds - success"))
+		/* Must return here - remove_connect() invalidates iter */
+		return; 
+	}
+	TRACE(("leave handle_connect_fds - end iter"))
+}

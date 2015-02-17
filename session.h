@@ -144,6 +144,8 @@ struct sshsession {
 	
 	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
+
+	m_list conn_pending;
 						
 	/* time of the last packet send/receive, for keepalive. Not real-world clock */
 	time_t last_packet_time_keepalive_sent;
