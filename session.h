@@ -60,7 +60,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_N
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out);
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress);
 void cli_connected(int result, int sock, void* userdata, const char *errstring);
 void cleantext(unsigned char* dirtytext);
 

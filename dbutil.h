@@ -28,6 +28,7 @@
 
 #include "includes.h"
 #include "buffer.h"
+#include "queue.h"
 
 #ifndef DISABLE_SYSLOG
 void startsyslog();
@@ -131,5 +132,7 @@ void handle_connect_fds(fd_set *writefd);
 
 /* Doesn't actually stop the connect, but adds a dummy callback instead */
 void cancel_connect(struct dropbear_progress_connection *c);
+
+void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue);
 
 #endif /* _DBUTIL_H_ */

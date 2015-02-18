@@ -27,6 +27,7 @@
 #define _PACKET_H_
 
 #include "includes.h"
+#include "queue.h"
 
 void write_packet();
 void read_packet();
@@ -45,5 +46,9 @@ typedef struct PacketType {
 #define PACKET_PAYLOAD_OFF 5
 
 #define INIT_READBUF 128
+
+/* TODO: writev #ifdef guard */
+struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count);
+void packet_queue_consume(struct Queue *queue, ssize_t written);
 
 #endif /* _PACKET_H_ */

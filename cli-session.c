@@ -102,14 +102,19 @@ void cli_connected(int result, int sock, void* userdata, const char *errstring)
 	ses.sock_in = ses.sock_out = sock;
 }
 
-void cli_session(int sock_in, int sock_out) {
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) {
 
 	common_session_init(sock_in, sock_out);
+
+	if (progress) {
+		connect_set_writequeue(progress, &ses.writequeue);
+	}
 
 	chaninitialise(cli_chantypes);
 
 	/* Set up cli_ses vars */
 	cli_session_init();
+
 
 	/* Ready to go */
 	sessinitdone = 1;

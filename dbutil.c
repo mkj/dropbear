@@ -1049,9 +1049,11 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		setnonblocking(c->sock);
 
 #if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
-		set_piggyback_ack(sock);
+		//set_piggyback_ack(c->sock);
 #endif
 
+#ifdef PROGRESS_CONNECT_FALLBACK
+#if 0
 		if (connect(c->sock, r->ai_addr, r->ai_addrlen) < 0) {
 			if (errno == EINPROGRESS) {
 				TRACE(("Connect in progress"))
@@ -1065,7 +1067,42 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		}
 
 		break; /* Success. Treated the same as EINPROGRESS */
+#endif
+#else
+		{
+			struct msghdr message = {0};
+			int flags;
+			int res;
+			message.msg_name = r->ai_addr;
+			message.msg_namelen = r->ai_addrlen;
+
+			if (c->writequeue) {
+				int iovlen; /* Linux msg_iovlen is a size_t */
+				message.msg_iov = packet_queue_to_iovec(c->writequeue, &iovlen);
+				message.msg_iovlen = iovlen;
+				res = sendmsg(c->sock, &message, MSG_FASTOPEN);
+				if (res < 0 && errno == EOPNOTSUPP) {
+					TRACE(("Fastopen not supported"));
+					/* No kernel MSG_FASTOPEN support. Fall back below */
+					c->writequeue = NULL;
+				}
+			}
+
+			if (!c->writequeue) {
+				res = connect(c->sock, r->ai_addr, r->ai_addrlen);
+			}
+			if (res < 0 && errno != EINPROGRESS) {
+				err = errno;
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			} else {
+				break;
+			}
+		}
+#endif
 	}
+
 
 	if (r) {
 		c->res_iter = r->ai_next;
@@ -1129,9 +1166,6 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	}
 
 	c->res_iter = c->res;
-
-	/* Set one going */
-	connect_try_next(c);
 
 	return c;
 }
@@ -1201,4 +1235,8 @@ void handle_connect_fds(fd_set *writefd) {
 		}
 	}
 	TRACE(("leave handle_connect_fds - end iter"))
+}
+
+void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue) {
+	c->writequeue = writequeue;
 }

@@ -47,6 +47,7 @@ int main(int argc, char ** argv) {
 
 	int sock_in, sock_out;
 	char* error = NULL;
+	struct dropbear_progress_connection *progress = NULL;
 
 	_dropbear_exit = cli_dropbear_exit;
 	_dropbear_log = cli_dropbear_log;
@@ -72,11 +73,11 @@ int main(int argc, char ** argv) {
 	} else
 #endif
 	{
-		connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, NULL);
+		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, NULL);
 		sock_in = sock_out = -1;
 	}
 
-	cli_session(sock_in, sock_out);
+	cli_session(sock_in, sock_out, progress);
 
 	/* not reached */
 	return -1;

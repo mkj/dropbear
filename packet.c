@@ -108,8 +108,6 @@ void write_packet() {
 	unsigned packet_type;
 #ifdef HAVE_WRITEV
 	struct iovec *iov = NULL;
-	int i;
-	struct Link *l;
 	int iov_count;
 #endif
 	
