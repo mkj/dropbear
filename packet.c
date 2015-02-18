@@ -52,6 +52,7 @@ static buffer* buf_decompress(buffer* buf, unsigned int len);
 static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 #endif
 
+#if 0
 struct iovec * dropbear_queue_to_iovec(struct Queue *queue) {
 
 	struct iovec *iov = NULL;
@@ -69,6 +70,7 @@ struct iovec * dropbear_queue_to_iovec(struct Queue *queue) {
 void dropbear_queue_consume(struct Queue *queue, ssize_t written) {
 
 }
+#endif
 
 /* non-blocking function writing out a current encrypted packet */
 void write_packet() {

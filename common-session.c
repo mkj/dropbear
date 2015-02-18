@@ -167,6 +167,9 @@ void session_loop(void(*loophandler)()) {
 		/* set up for channels which can be read/written */
 		setchannelfds(&readfd, &writefd);
 
+		/* Pending connections to test */
+		set_connect_fds(&writefd);
+
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
 
 		if (exitflag) {
@@ -214,10 +217,12 @@ void session_loop(void(*loophandler)()) {
 				process_packet();
 			}
 		}
-		
+
 		/* if required, flush out any queued reply packets that
 		were being held up during a KEX */
 		maybe_flush_reply_queue();
+
+		handle_connect_fds(&writefd);
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */

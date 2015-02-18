@@ -129,4 +129,7 @@ struct dropbear_progress_connection * connect_remote (const char* remotehost, co
 void set_connect_fds(fd_set *writefd);
 void handle_connect_fds(fd_set *writefd);
 
+/* Doesn't actually stop the connect, but adds a dummy callback instead */
+void cancel_connect(struct dropbear_progress_connection *c);
+
 #endif /* _DBUTIL_H_ */

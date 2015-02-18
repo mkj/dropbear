@@ -995,6 +995,8 @@ struct dropbear_progress_connection
 								or NULL. */
 
 	int sock;
+
+	char* errstring;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -1005,6 +1007,7 @@ static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *
 	}
 	m_free(c->remotehost);
 	m_free(c->remoteport);
+	m_free(c->errstring);
 	m_free(c);
 
 	if (iter) {
@@ -1012,12 +1015,24 @@ static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *
 	}
 }
 
-static int connect_try_next(struct dropbear_progress_connection *c) {
+static void cancel_callback(int result, int sock, void* UNUSED(data), const char* UNUSED(errstring)) {
+	if (result == DROPBEAR_SUCCESS)
+	{
+		m_close(sock);
+	}
+}
+
+void cancel_connect(struct dropbear_progress_connection *c) {
+	c->cb = cancel_callback;
+	c->cb_data = NULL;
+}
+
+static void connect_try_next(struct dropbear_progress_connection *c) {
 	int err = EADDRNOTAVAIL;
 	struct addrinfo *r;
 
 	if (!c->res_iter) {
-		return DROPBEAR_FAILURE;
+		return;
 	}
 
 	for (r = c->res_iter; r; r = r->ai_next)
@@ -1030,6 +1045,7 @@ static int connect_try_next(struct dropbear_progress_connection *c) {
 			continue;
 		}
 
+		ses.maxfd = MAX(ses.maxfd, c->sock);
 		setnonblocking(c->sock);
 
 #if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
@@ -1060,8 +1076,12 @@ static int connect_try_next(struct dropbear_progress_connection *c) {
 	if (c->sock >= 0 || (errno == EINPROGRESS)) {
 		/* Success */
 		set_sock_nodelay(c->sock);
-		return DROPBEAR_SUCCESS;
+		return;
 	} else {
+		if (!c->res_iter)
+		{
+
+		}
 		/* XXX - returning error message through */
 #if 0
 		/* Failed */
@@ -1073,15 +1093,10 @@ static int connect_try_next(struct dropbear_progress_connection *c) {
 		}
 		TRACE(("Error connecting: %s", strerror(err)))
 #endif
-		return DROPBEAR_FAILURE;
 	}
 }
 
-/* Connect via TCP to a host. Connection will try ipv4 or ipv6, will
- * return immediately if nonblocking is set. On failure, if errstring
- * wasn't null, it will be a newly malloced error message */
-
-/* TODO: maxfd */
+/* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
 	connect_callback cb, void* cb_data)
 {
@@ -1096,6 +1111,8 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->cb = cb;
 	c->cb_data = cb_data;
 
+	list_append(&ses.conn_pending, c);
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = PF_UNSPEC;
@@ -1103,29 +1120,18 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	err = getaddrinfo(remotehost, remoteport, &hints, &c->res);
 	if (err) {
 		int len;
-		char *errstring;
 		len = 100 + strlen(gai_strerror(err));
-		errstring = (char*)m_malloc(len);
-		snprintf(errstring, len, "Error resolving '%s' port '%s'. %s", 
+		c->errstring = (char*)m_malloc(len);
+		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s", 
 				remotehost, remoteport, gai_strerror(err));
-		c->cb(DROPBEAR_FAILURE, -1, c->cb_data, errstring);
-		m_free(errstring);
 		TRACE(("Error resolving: %s", gai_strerror(err)))
-		remove_connect(c, NULL);
 		return NULL;
 	}
 
 	c->res_iter = c->res;
 
-	if (connect_try_next(c) == DROPBEAR_FAILURE) {
-		/* Should not happen - getaddrinfo() should return failure if there are no addresses */
-		c->cb(DROPBEAR_FAILURE, -1, c->cb_data, "No address to try");
-		TRACE(("leave handle_connect_fds - failed"))
-		remove_connect(c, NULL);
-		return NULL;
-	}
-
-	list_append(&ses.conn_pending, c);
+	/* Set one going */
+	connect_try_next(c);
 
 	return c;
 }
@@ -1136,12 +1142,24 @@ void set_connect_fds(fd_set *writefd) {
 	TRACE(("enter handle_connect_fds"))
 	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
 		struct dropbear_progress_connection *c = iter->item;
+		/* Set one going */
+		while (c->res_iter && c->sock < 0)
+		{
+			connect_try_next(c);
+		}
 		if (c->sock >= 0) {
 			FD_SET(c->sock, writefd);
-		}
-		else
-		{
-
+		} else {
+			m_list_elem *remove_iter;
+			/* Final failure */
+			if (!c->errstring) {
+				c->errstring = m_strdup("unexpected failure");
+			}
+			c->cb(DROPBEAR_FAILURE, -1, c->cb_data, c->errstring);
+			/* Safely remove without invalidating iter */
+			remove_iter = iter;
+			iter = iter->prev;
+			remove_connect(c, remove_iter);
 		}
 	}
 }
@@ -1162,31 +1180,25 @@ void handle_connect_fds(fd_set *writefd) {
 
 		if (getsockopt(c->sock, SOL_SOCKET, SO_ERROR, &val, &vallen) != 0) {
 			TRACE(("handle_connect_fds getsockopt(%d) SO_ERROR failed: %s", c->sock, strerror(errno)))
+			/* This isn't expected to happen - Unix has surprises though, continue gracefully. */
+			m_close(c->sock);
+			c->sock = -1;
 		} else if (val != 0) {
 			/* Connect failed */
 			TRACE(("connect to %s port %s failed.", c->remotehost, c->remoteport))
 			m_close(c->sock);
 			c->sock = -1;
 
-			if (connect_try_next(c) == DROPBEAR_FAILURE) {
-				c->cb(DROPBEAR_FAILURE, -1, c->cb_data, strerror(val));
-				TRACE(("leave handle_connect_fds - failed"))
-				remove_connect(c, iter);
-				/* Must return here - remove_connect() invalidates iter */
-				return; 
-			} else {
-				/* new connection try was successfuly started, will be finished by a
-				later call to handle_connect_fds() */
-				TRACE(("leave handle_connect_fds - new try"))
-				continue;
-			}
+			m_free(c->errstring);
+			c->errstring = strerror(val);
+		} else {
+			/* New connection has been established */
+			c->cb(DROPBEAR_SUCCESS, c->sock, c->cb_data, NULL);
+			remove_connect(c, iter);
+			TRACE(("leave handle_connect_fds - success"))
+			/* Must return here - remove_connect() invalidates iter */
+			return; 
 		}
-		/* New connection has been established */
-		c->cb(DROPBEAR_SUCCESS, c->sock, c->cb_data, "");
-		remove_connect(c, iter);
-		TRACE(("leave handle_connect_fds - success"))
-		/* Must return here - remove_connect() invalidates iter */
-		return; 
 	}
 	TRACE(("leave handle_connect_fds - end iter"))
 }

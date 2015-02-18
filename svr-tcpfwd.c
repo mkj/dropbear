@@ -270,19 +270,7 @@ static int newtcpdirect(struct Channel * channel) {
 	}
 
 	snprintf(portstring, sizeof(portstring), "%d", destport);
-	sock = connect_remote(desthost, portstring, NULL);
-	if (sock < 0) {
-		err = SSH_OPEN_CONNECT_FAILED;
-		TRACE(("leave newtcpdirect: sock failed"))
-		goto out;
-	}
-
-	ses.maxfd = MAX(ses.maxfd, sock);
-
-	 /* We don't set readfd, that will get set after the connection's
-	 * progress succeeds */
-	channel->writefd = sock;
-	channel->initconn = 1;
+	channel->conn_pending = connect_remote(desthost, portstring, channel_connect_done, channel);
 
 	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
 	

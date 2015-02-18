@@ -93,6 +93,15 @@ static const struct ChanType *cli_chantypes[] = {
 	NULL /* Null termination */
 };
 
+void cli_connected(int result, int sock, void* userdata, const char *errstring)
+{
+	if (result == DROPBEAR_FAILURE)
+	{
+		dropbear_exit("Connect failed: %s", errstring);
+	}
+	ses.sock_in = ses.sock_out = sock;
+}
+
 void cli_session(int sock_in, int sock_out) {
 
 	common_session_init(sock_in, sock_out);

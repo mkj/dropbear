@@ -72,12 +72,8 @@ int main(int argc, char ** argv) {
 	} else
 #endif
 	{
-		int sock = connect_remote(cli_opts.remotehost, cli_opts.remoteport, &error);
-		sock_in = sock_out = sock;
-	}
-
-	if (sock_in < 0) {
-		dropbear_exit("%s", error);
+		connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, NULL);
+		sock_in = sock_out = -1;
 	}
 
 	cli_session(sock_in, sock_out);
