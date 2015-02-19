@@ -80,6 +80,13 @@ void set_sock_priority(int sock, enum dropbear_prio prio);
 #if defined(__linux__) && HAVE_SENDMSG
 #define DROPBEAR_TCP_FAST_OPEN
 void set_listen_fast_open(int sock);
+/* may be supported by kernel but not libc */
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 23
+#endif
+#ifndef MSG_FASTOPEN
+#define MSG_FASTOPEN 0x20000000
+#endif
 #endif
 
 int dropbear_listen(const char* address, const char* port,

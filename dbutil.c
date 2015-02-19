@@ -1070,9 +1070,10 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 #endif
 #else
 		{
-			struct msghdr message = {0};
+			struct msghdr message;
 			int flags;
 			int res;
+			memset(&message, 0x0, sizeof(message));
 			message.msg_name = r->ai_addr;
 			message.msg_namelen = r->ai_addrlen;
 
