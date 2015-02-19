@@ -1086,6 +1086,10 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 					/* No kernel MSG_FASTOPEN support. Fall back below */
 					c->writequeue = NULL;
 				}
+				m_free(message.msg_iov);
+				if (res > 0) {
+					packet_queue_consume(c->writequeue, res);
+				}
 			}
 
 			if (!c->writequeue) {
