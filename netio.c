@@ -71,12 +71,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 	int res = 0;
 	int fastopen = 0;
 #ifdef DROPBEAR_TCP_FAST_OPEN
-			struct msghdr message;
+	struct msghdr message;
 #endif
-
-	if (!c->res_iter) {
-		return;
-	}
 
 	for (r = c->res_iter; r; r = r->ai_next)
 	{
@@ -88,6 +84,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		}
 
 		ses.maxfd = MAX(ses.maxfd, c->sock);
+		set_sock_nodelay(c->sock);
 		setnonblocking(c->sock);
 
 #if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
@@ -114,9 +111,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				c->writequeue = NULL;
 			}
 			m_free(message.msg_iov);
-			if (res > 0) {
-				packet_queue_consume(c->writequeue, res);
-			}
+			packet_queue_consume(c->writequeue, res);
 		}
 #endif
 
@@ -126,10 +121,12 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		}
 
 		if (res < 0 && errno != EINPROGRESS) {
+			/* failure */
 			close(c->sock);
 			c->sock = -1;
 			continue;
 		} else {
+			/* new connection was successful, wait for it to complete */
 			break;
 		}
 	}
@@ -138,28 +135,6 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		c->res_iter = r->ai_next;
 	} else {
 		c->res_iter = NULL;
-	}
-
-	if (c->sock >= 0 || (errno == EINPROGRESS)) {
-		/* Success */
-		set_sock_nodelay(c->sock);
-		return;
-	} else {
-		if (!c->res_iter)
-		{
-
-		}
-		/* XXX - returning error message through */
-#if 0
-		/* Failed */
-		if (errstring != NULL && *errstring == NULL) {
-			int len;
-			len = 20 + strlen(strerror(err));
-			*errstring = (char*)m_malloc(len);
-			snprintf(*errstring, len, "Error connecting: %s", strerror(err));
-		}
-		TRACE(("Error connecting: %s", strerror(err)))
-#endif
 	}
 }
 
