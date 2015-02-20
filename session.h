@@ -38,6 +38,7 @@
 #include "tcpfwd.h"
 #include "chansession.h"
 #include "dbutil.h"
+#include "netio.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;

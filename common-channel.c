@@ -35,6 +35,7 @@
 #include "ssh.h"
 #include "listener.h"
 #include "runopts.h"
+#include "netio.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);

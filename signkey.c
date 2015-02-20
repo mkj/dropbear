@@ -140,7 +140,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
 	unsigned char* ident;
 	unsigned int len;
-	int keytype;
+	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE2(("enter buf_get_pub_key"))
@@ -210,7 +210,7 @@ int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
 	unsigned char* ident;
 	unsigned int len;
-	int keytype;
+	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE2(("enter buf_get_priv_key"))

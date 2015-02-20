@@ -63,19 +63,7 @@ void debug_start_net();
 extern int debug_trace;
 #endif
 
-enum dropbear_prio {
-	DROPBEAR_PRIO_DEFAULT = 10,
-	DROPBEAR_PRIO_LOWDELAY = 11,
-	DROPBEAR_PRIO_BULK = 12,
-};
-
 char * stripcontrol(const char * text);
-void get_socket_address(int fd, char **local_host, char **local_port,
-		char **remote_host, char **remote_port, int host_lookup);
-void getaddrstring(struct sockaddr_storage* addr, 
-		char **ret_host, char **ret_port, int host_lookup);
-void set_sock_nodelay(int sock);
-void set_sock_priority(int sock, enum dropbear_prio prio);
 
 #if defined(__linux__) && HAVE_SENDMSG
 #define DROPBEAR_TCP_FAST_OPEN
@@ -89,8 +77,6 @@ void set_listen_fast_open(int sock);
 #endif
 #endif
 
-int dropbear_listen(const char* address, const char* port,
-		int *socks, unsigned int sockcount, char **errstring, int *maxfd);
 int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		int *writefd, int *readfd, int *errfd, pid_t *pid);
 void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
@@ -125,21 +111,5 @@ time_t monotonic_now();
 
 char * expand_tilde(const char *inpath);
 
-struct dropbear_progress_connection;
-
-/* result is DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
-errstring is only set on DROPBEAR_FAILURE, returns failure message for the last attempted socket */
-typedef void(*connect_callback)(int result, int sock, void* data, const char* errstring);
-
-struct dropbear_progress_connection * connect_remote (const char* remotehost, const char* remoteport,
-	connect_callback cb, void *cb_data);
-
-void set_connect_fds(fd_set *writefd);
-void handle_connect_fds(fd_set *writefd);
-
-/* Doesn't actually stop the connect, but adds a dummy callback instead */
-void cancel_connect(struct dropbear_progress_connection *c);
-
-void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue);
 
 #endif /* _DBUTIL_H_ */

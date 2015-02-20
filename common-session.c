@@ -34,6 +34,7 @@
 #include "kex.h"
 #include "channel.h"
 #include "runopts.h"
+#include "netio.h"
 
 static void checktimeouts();
 static long select_timeout();

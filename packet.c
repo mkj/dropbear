@@ -34,6 +34,7 @@
 #include "service.h"
 #include "auth.h"
 #include "channel.h"
+#include "netio.h"
 
 static int read_packet_init();
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -52,60 +53,10 @@ static buffer* buf_decompress(buffer* buf, unsigned int len);
 static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 #endif
 
-struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
-	struct iovec *iov = NULL;
-	struct Link *l;
-	unsigned int i, packet_type;
-	int len;
-	buffer *writebuf;
-
-	#ifndef IOV_MAX
-	#define IOV_MAX UIO_MAXIOV
-	#endif
-
-	*ret_iov_count = MIN(queue->count, IOV_MAX);
-
-	iov = m_malloc(sizeof(*iov) * *ret_iov_count);
-	for (l = queue->head, i = 0; l; l = l->link, i++)
-	{
-		writebuf = (buffer*)l->item;
-		packet_type = writebuf->data[writebuf->len-1];
-		len = writebuf->len - 1 - writebuf->pos;
-		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, packet_type,
-				len, writebuf->len-1))
-		iov[i].iov_base = buf_getptr(writebuf, len);
-		iov[i].iov_len = len;
-	}
-
-	return iov;
-}
-
-void packet_queue_consume(struct Queue *queue, ssize_t written) {
-	buffer *writebuf;
-	int len;
-	while (written > 0) {
-		writebuf = (buffer*)examine(queue);
-		len = writebuf->len - 1 - writebuf->pos;
-		if (len > written) {
-			/* partial buffer write */
-			buf_incrpos(writebuf, written);
-			written = 0;
-		} else {
-			written -= len;
-			dequeue(queue);
-			buf_free(writebuf);
-		}
-	}
-}
-
 /* non-blocking function writing out a current encrypted packet */
 void write_packet() {
 
 	ssize_t written;
-	int len;
-	buffer * writebuf = NULL;
-	unsigned packet_type;
 #ifdef HAVE_WRITEV
 	struct iovec *iov = NULL;
 	int iov_count;

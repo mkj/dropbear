@@ -37,6 +37,7 @@
 #include "chansession.h"
 #include "agentfwd.h"
 #include "crypto_desc.h"
+#include "netio.h"
 
 static void cli_remoteclosed();
 static void cli_sessionloop();
@@ -95,11 +96,11 @@ static const struct ChanType *cli_chantypes[] = {
 
 void cli_connected(int result, int sock, void* userdata, const char *errstring)
 {
-	if (result == DROPBEAR_FAILURE)
-	{
+	struct sshsession *myses = userdata;
+	if (result == DROPBEAR_FAILURE) {
 		dropbear_exit("Connect failed: %s", errstring);
 	}
-	ses.sock_in = ses.sock_out = sock;
+	myses->sock_in = myses->sock_out = sock;
 	update_channel_prio();
 }
 

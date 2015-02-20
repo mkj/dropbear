@@ -58,7 +58,7 @@ void recv_msg_userauth_pk_ok() {
 	buffer* keybuf = NULL;
 	char* algotype = NULL;
 	unsigned int algolen;
-	int keytype;
+	enum signkey_type keytype;
 	unsigned int remotelen;
 
 	TRACE(("enter recv_msg_userauth_pk_ok"))

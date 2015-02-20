@@ -33,6 +33,7 @@
 #include "listener.h"
 #include "runopts.h"
 #include "auth.h"
+#include "netio.h"
 
 #ifndef ENABLE_SVR_REMOTETCPFWD
 
@@ -236,7 +237,6 @@ static int newtcpdirect(struct Channel * channel) {
 	unsigned char* orighost = NULL;
 	unsigned int origport;
 	char portstring[NI_MAXSERV];
-	int sock;
 	int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 

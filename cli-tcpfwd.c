@@ -30,6 +30,7 @@
 #include "runopts.h"
 #include "session.h"
 #include "ssh.h"
+#include "netio.h"
 
 #ifdef ENABLE_CLI_REMOTETCPFWD
 static int newtcpforwarded(struct Channel * channel);
@@ -215,7 +216,6 @@ static int newtcpforwarded(struct Channel * channel) {
 	m_list_elem * iter = NULL;
 	struct TCPFwdEntry *fwd;
 	char portstring[NI_MAXSERV];
-	int sock;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	origaddr = buf_getstring(ses.payload, NULL);

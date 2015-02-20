@@ -47,8 +47,4 @@ typedef struct PacketType {
 
 #define INIT_READBUF 128
 
-/* TODO: writev #ifdef guard */
-struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count);
-void packet_queue_consume(struct Queue *queue, ssize_t written);
-
 #endif /* _PACKET_H_ */

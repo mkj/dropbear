@@ -30,6 +30,7 @@
 #include "session.h"
 #include "dbrandom.h"
 #include "crypto_desc.h"
+#include "netio.h"
 
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 static void cli_dropbear_log(int priority, const char* format, va_list param);
@@ -46,7 +47,6 @@ int main(int argc, char ** argv) {
 #endif
 
 	int sock_in, sock_out;
-	char* error = NULL;
 	struct dropbear_progress_connection *progress = NULL;
 
 	_dropbear_exit = cli_dropbear_exit;
@@ -73,7 +73,7 @@ int main(int argc, char ** argv) {
 	} else
 #endif
 	{
-		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, NULL);
+		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, &ses);
 		sock_in = sock_out = -1;
 	}
 
