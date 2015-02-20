@@ -274,7 +274,7 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
 	struct iovec *iov = NULL;
 	struct Link *l;
-	unsigned int i, packet_type;
+	unsigned int i;
 	int len;
 	buffer *writebuf;
 
@@ -288,10 +288,9 @@ struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
 	for (l = queue->head, i = 0; l; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
-		packet_type = writebuf->data[writebuf->len-1];
 		len = writebuf->len - 1 - writebuf->pos;
 		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, packet_type,
+		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, writebuf->data[writebuf->len-1],
 				len, writebuf->len-1))
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
@@ -338,7 +337,14 @@ void set_listen_fast_open(int sock) {
 
 void set_sock_priority(int sock, enum dropbear_prio prio) {
 
-	int iptos_val = 0, so_prio_val = 0, rc;
+	int rc;
+#ifdef IPTOS_LOWDELAY
+	int iptos_val = 0;
+#endif
+#ifdef SO_PRIORITY
+	int so_prio_val = 0;
+#endif
+
 
 	/* Don't log ENOTSOCK errors so that this can harmlessly be called
 	 * on a client '-J' proxy pipe */
