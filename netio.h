@@ -42,5 +42,17 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count);
 void packet_queue_consume(struct Queue *queue, ssize_t written);
 
+#ifdef DROPBEAR_TCP_FAST_OPEN
+/* Try for any Linux builds, will fall back if the kernel doesn't support it */
+void set_listen_fast_open(int sock);
+/* Define values which may be supported by the kernel even if the libc is too old */
+#ifndef TCP_FASTOPEN
+#define TCP_FASTOPEN 23
+#endif
+#ifndef MSG_FASTOPEN
+#define MSG_FASTOPEN 0x20000000
+#endif
+#endif
+
 #endif
 

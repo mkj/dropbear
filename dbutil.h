@@ -65,18 +65,6 @@ extern int debug_trace;
 
 char * stripcontrol(const char * text);
 
-#if defined(__linux__) && HAVE_SENDMSG
-#define DROPBEAR_TCP_FAST_OPEN
-void set_listen_fast_open(int sock);
-/* may be supported by kernel but not libc */
-#ifndef TCP_FASTOPEN
-#define TCP_FASTOPEN 23
-#endif
-#ifndef MSG_FASTOPEN
-#define MSG_FASTOPEN 0x20000000
-#endif
-#endif
-
 int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		int *writefd, int *readfd, int *errfd, pid_t *pid);
 void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);

@@ -259,4 +259,9 @@
 /* Use this string since some implementations might special-case it */
 #define DROPBEAR_KEEPALIVE_STRING "keepalive@openssh.com"
 
+/* Linux will attempt TCP fast open, falling back if not supported by the kernel */
+#ifdef __linux__
+#define DROPBEAR_TCP_FAST_OPEN 1
+#endif
+
 /* no include guard for this file */

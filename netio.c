@@ -68,6 +68,11 @@ void cancel_connect(struct dropbear_progress_connection *c) {
 
 static void connect_try_next(struct dropbear_progress_connection *c) {
 	struct addrinfo *r;
+	int res = 0;
+	int fastopen = 0;
+#ifdef DROPBEAR_TCP_FAST_OPEN
+			struct msghdr message;
+#endif
 
 	if (!c->res_iter) {
 		return;
@@ -89,59 +94,45 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		set_piggyback_ack(c->sock);
 #endif
 
-#ifdef PROGRESS_CONNECT_FALLBACK
-#if 0
-		if (connect(c->sock, r->ai_addr, r->ai_addrlen) < 0) {
-			if (errno == EINPROGRESS) {
-				TRACE(("Connect in progress"))
-				break;
-			} else {
-				close(c->sock);
-				c->sock = -1;
-				continue;
-			}
-		}
+#ifdef DROPBEAR_TCP_FAST_OPEN
+		fastopen = (c->writequeue != NULL);
 
-		break; /* Success. Treated the same as EINPROGRESS */
-#endif
-#else
-		{
-			struct msghdr message;
-			int res = 0;
-			memset(&message, 0x0, sizeof(message));
-			message.msg_name = r->ai_addr;
-			message.msg_namelen = r->ai_addrlen;
+		memset(&message, 0x0, sizeof(message));
+		message.msg_name = r->ai_addr;
+		message.msg_namelen = r->ai_addrlen;
 
-			if (c->writequeue) {
-				int iovlen; /* Linux msg_iovlen is a size_t */
-				message.msg_iov = packet_queue_to_iovec(c->writequeue, &iovlen);
-				message.msg_iovlen = iovlen;
-				res = sendmsg(c->sock, &message, MSG_FASTOPEN);
-				if (res < 0 && errno == EOPNOTSUPP) {
-					TRACE(("Fastopen not supported"));
-					/* No kernel MSG_FASTOPEN support. Fall back below */
-					c->writequeue = NULL;
-				}
-				m_free(message.msg_iov);
-				if (res > 0) {
-					packet_queue_consume(c->writequeue, res);
-				}
+		if (c->writequeue) {
+			int iovlen; /* Linux msg_iovlen is a size_t */
+			message.msg_iov = packet_queue_to_iovec(c->writequeue, &iovlen);
+			message.msg_iovlen = iovlen;
+			res = sendmsg(c->sock, &message, MSG_FASTOPEN);
+			if (res < 0 && errno == EOPNOTSUPP) {
+				TRACE(("Fastopen not supported"));
+				/* No kernel MSG_FASTOPEN support. Fall back below */
+				fastopen = 0;
+				/* Set to NULL to avoid trying again */
+				c->writequeue = NULL;
 			}
-
-			if (!c->writequeue) {
-				res = connect(c->sock, r->ai_addr, r->ai_addrlen);
-			}
-			if (res < 0 && errno != EINPROGRESS) {
-				close(c->sock);
-				c->sock = -1;
-				continue;
-			} else {
-				break;
+			m_free(message.msg_iov);
+			if (res > 0) {
+				packet_queue_consume(c->writequeue, res);
 			}
 		}
 #endif
+
+		/* Normal connect(), used as fallback for TCP fastopen too */
+		if (!fastopen) {
+			res = connect(c->sock, r->ai_addr, r->ai_addrlen);
+		}
+
+		if (res < 0 && errno != EINPROGRESS) {
+			close(c->sock);
+			c->sock = -1;
+			continue;
+		} else {
+			break;
+		}
 	}
-
 
 	if (r) {
 		c->res_iter = r->ai_next;
