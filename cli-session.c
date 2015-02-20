@@ -100,6 +100,7 @@ void cli_connected(int result, int sock, void* userdata, const char *errstring)
 		dropbear_exit("Connect failed: %s", errstring);
 	}
 	ses.sock_in = ses.sock_out = sock;
+	update_channel_prio();
 }
 
 void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) {

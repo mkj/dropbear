@@ -552,6 +552,11 @@ void update_channel_prio() {
 
 	TRACE(("update_channel_prio"))
 
+	if (ses.sock_out < 0) {
+		TRACE(("leave update_channel_prio: no socket"))
+		return;
+	}
+
 	new_prio = DROPBEAR_PRIO_BULK;
 	for (i = 0; i < ses.chansize; i++) {
 		struct Channel *channel = ses.channels[i];
