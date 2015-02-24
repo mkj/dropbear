@@ -127,7 +127,7 @@ void buf_setpos(buffer* buf, unsigned int pos) {
 	buf->pos = pos;
 }
 
-/* increment the postion by incr, increasing the buffer length if required */
+/* increment the position by incr, increasing the buffer length if required */
 void buf_incrwritepos(buffer* buf, unsigned int incr) {
 	if (incr > BUF_MAX_INCR || buf->pos + incr > buf->size) {
 		dropbear_exit("Bad buf_incrwritepos");

@@ -92,7 +92,7 @@ struct Channel {
 
 struct ChanType {
 
-	int sepfds; /* Whether this channel has seperate pipes for in/out or not */
+	int sepfds; /* Whether this channel has separate pipes for in/out or not */
 	char *name;
 	int (*inithandler)(struct Channel*);
 	int (*check_close)(struct Channel*);
