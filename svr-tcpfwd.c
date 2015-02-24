@@ -270,7 +270,7 @@ static int newtcpdirect(struct Channel * channel) {
 	}
 
 	snprintf(portstring, sizeof(portstring), "%d", destport);
-	sock = connect_remote(desthost, portstring, 1, NULL);
+	sock = connect_remote(desthost, portstring, NULL);
 	if (sock < 0) {
 		err = SSH_OPEN_CONNECT_FAILED;
 		TRACE(("leave newtcpdirect: sock failed"))

@@ -87,7 +87,7 @@ const struct dropbear_cipher dropbear_nocipher =
 #ifdef DROPBEAR_ENABLE_CBC_MODE
 const struct dropbear_cipher_mode dropbear_mode_cbc =
 	{(void*)cbc_start, (void*)cbc_encrypt, (void*)cbc_decrypt};
-#endif // DROPBEAR_ENABLE_CBC_MODE
+#endif /* DROPBEAR_ENABLE_CBC_MODE */
 
 const struct dropbear_cipher_mode dropbear_mode_none =
 	{void_start, void_cipher, void_cipher};
@@ -102,7 +102,7 @@ static int dropbear_big_endian_ctr_start(int cipher,
 }
 const struct dropbear_cipher_mode dropbear_mode_ctr =
 	{(void*)dropbear_big_endian_ctr_start, (void*)ctr_encrypt, (void*)ctr_decrypt};
-#endif // DROPBEAR_ENABLE_CTR_MODE
+#endif /* DROPBEAR_ENABLE_CTR_MODE */
 
 /* Mapping of ssh hashes to libtomcrypt hashes, including keysize etc.
    {&hash_desc, keysize, hashsize} */
@@ -183,17 +183,17 @@ algo_type sshciphers[] = {
 };
 
 algo_type sshhashes[] = {
-#ifdef DROPBEAR_SHA2_256_HMAC
-	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
-#endif
-#ifdef DROPBEAR_SHA2_512_HMAC
-	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
-#endif
 #ifdef DROPBEAR_SHA1_96_HMAC
 	{"hmac-sha1-96", 0, &dropbear_sha1_96, 1, NULL},
 #endif
 #ifdef DROPBEAR_SHA1_HMAC
 	{"hmac-sha1", 0, &dropbear_sha1, 1, NULL},
+#endif
+#ifdef DROPBEAR_SHA2_256_HMAC
+	{"hmac-sha2-256", 0, &dropbear_sha2_256, 1, NULL},
+#endif
+#ifdef DROPBEAR_SHA2_512_HMAC
+	{"hmac-sha2-512", 0, &dropbear_sha2_512, 1, NULL},
 #endif
 #ifdef DROPBEAR_MD5_HMAC
 	{"hmac-md5", 0, (void*)&dropbear_md5, 1, NULL},

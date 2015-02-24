@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _DBUTIL_H_
+#ifndef DROPBEAR_DBUTIL_H_
 
-#define _DBUTIL_H_
+#define DROPBEAR_DBUTIL_H_
 
 #include "includes.h"
 #include "buffer.h"
@@ -58,6 +58,7 @@ void dropbear_trace(const char* format, ...) ATTRIB_PRINTF(1,2);
 void dropbear_trace2(const char* format, ...) ATTRIB_PRINTF(1,2);
 void printhex(const char * label, const unsigned char * buf, int len);
 void printmpint(const char *label, mp_int *mp);
+void debug_start_net();
 extern int debug_trace;
 #endif
 
@@ -82,8 +83,7 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
 #ifdef ENABLE_CONNECT_UNIX
 int connect_unix(const char* addr);
 #endif
-int connect_remote(const char* remotehost, const char* remoteport,
-		int nonblocking, char ** errstring);
+int connect_remote(const char* remotehost, const char* remoteport, char ** errstring);
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 
@@ -112,4 +112,4 @@ time_t monotonic_now();
 
 char * expand_tilde(const char *inpath);
 
-#endif /* _DBUTIL_H_ */
+#endif /* DROPBEAR_DBUTIL_H_ */

@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _CIRCBUFFER_H_
-#define _CIRCBUFFER_H_
+#ifndef DROPBEAR_CIRCBUFFER_H_
+#define DROPBEAR_CIRCBUFFER_H_
 struct circbuf {
 
 	unsigned int size;

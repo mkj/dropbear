@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _BUFFER_H_
+#ifndef DROPBEAR_BUFFER_H_
 
-#define _BUFFER_H_
+#define DROPBEAR_BUFFER_H_
 
 #include "includes.h"
 
@@ -65,4 +65,4 @@ void buf_putmpint(buffer* buf, mp_int * mp);
 int buf_getmpint(buffer* buf, mp_int* mp);
 unsigned int buf_getint(buffer* buf);
 
-#endif /* _BUFFER_H_ */
+#endif /* DROPBEAR_BUFFER_H_ */

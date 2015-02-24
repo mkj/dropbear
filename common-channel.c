@@ -402,7 +402,7 @@ static void check_in_progress(struct Channel *channel) {
 /* Send the close message and set the channel as closed */
 static void send_msg_channel_close(struct Channel *channel) {
 
-	TRACE(("enter send_msg_channel_close %p", channel))
+	TRACE(("enter send_msg_channel_close %p", (void*)channel))
 	if (channel->type->closehandler 
 			&& !channel->close_handler_done) {
 		channel->type->closehandler(channel);
@@ -586,11 +586,11 @@ static void remove_channel(struct Channel * channel) {
 		/* close the FDs in case they haven't been done
 		 * yet (they might have been shutdown etc) */
 		TRACE(("CLOSE writefd %d", channel->writefd))
-		close(channel->writefd);
+		m_close(channel->writefd);
 		TRACE(("CLOSE readfd %d", channel->readfd))
-		close(channel->readfd);
+		m_close(channel->readfd);
 		TRACE(("CLOSE errfd %d", channel->errfd))
-		close(channel->errfd);
+		m_close(channel->errfd);
 	}
 
 	if (!channel->close_handler_done
@@ -616,7 +616,7 @@ void recv_msg_channel_request() {
 
 	channel = getchannel();
 
-	TRACE(("enter recv_msg_channel_request %p", channel))
+	TRACE(("enter recv_msg_channel_request %p", (void*)channel))
 
 	if (channel->sent_close) {
 		TRACE(("leave recv_msg_channel_request: already closed channel"))
@@ -1001,7 +1001,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 		}
 	} else {
 		TRACE(("CLOSE some fd %d", fd))
-		close(fd);
+		m_close(fd);
 		closein = closeout = 1;
 	}
 
@@ -1024,7 +1024,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 	if (channel->type->sepfds && channel->readfd == FD_CLOSED 
 		&& channel->writefd == FD_CLOSED && channel->errfd == FD_CLOSED) {
 		TRACE(("CLOSE (finally) of %d", fd))
-		close(fd);
+		m_close(fd);
 	}
 }
 
@@ -1141,10 +1141,10 @@ void send_msg_request_failure() {
 }
 
 struct Channel* get_any_ready_channel() {
+	size_t i;
 	if (ses.chancount == 0) {
 		return NULL;
 	}
-	size_t i;
 	for (i = 0; i < ses.chansize; i++) {
 		struct Channel *chan = ses.channels[i];
 		if (chan
