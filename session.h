@@ -43,7 +43,7 @@ extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
 void common_session_init(int sock_in, int sock_out);
-void session_loop(void(*loophandler)());
+void session_loop(void(*loophandler)()) ATTRIB_NORETURN;
 void session_cleanup();
 void send_session_identification();
 void send_msg_ignore();
@@ -55,12 +55,12 @@ const char* get_user_shell();
 void fill_passwd(const char* username);
 
 /* Server */
-void svr_session(int sock, int childpipe);
+void svr_session(int sock, int childpipe) ATTRIB_NORETURN;
 void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out);
+void cli_session(int sock_in, int sock_out) ATTRIB_NORETURN;
 void cleantext(unsigned char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
