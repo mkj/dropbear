@@ -1046,6 +1046,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
 		unsigned int k_size;
+		int err = 0;
 
 		/* version. less than 10 bytes */
 		buf_incrwritepos(seq_buf,
@@ -1091,7 +1092,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		buf_incrwritepos(seq_buf,
 			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 3, 1+pubkey_size, 0));
 		buf_putbyte(seq_buf, 0);
-		int err = ecc_ansi_x963_export(*eck, buf_getwriteptr(seq_buf, pubkey_size), &pubkey_size);
+		err = ecc_ansi_x963_export(*eck, buf_getwriteptr(seq_buf, pubkey_size), &pubkey_size);
 		if (err != CRYPT_OK) {
 			dropbear_exit("ECC error");
 		}

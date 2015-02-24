@@ -402,7 +402,7 @@ static void check_in_progress(struct Channel *channel) {
 /* Send the close message and set the channel as closed */
 static void send_msg_channel_close(struct Channel *channel) {
 
-	TRACE(("enter send_msg_channel_close %p", channel))
+	TRACE(("enter send_msg_channel_close %p", (void*)channel))
 	if (channel->type->closehandler 
 			&& !channel->close_handler_done) {
 		channel->type->closehandler(channel);
@@ -616,7 +616,7 @@ void recv_msg_channel_request() {
 
 	channel = getchannel();
 
-	TRACE(("enter recv_msg_channel_request %p", channel))
+	TRACE(("enter recv_msg_channel_request %p", (void*)channel))
 
 	if (channel->sent_close) {
 		TRACE(("leave recv_msg_channel_request: already closed channel"))
@@ -1141,10 +1141,10 @@ void send_msg_request_failure() {
 }
 
 struct Channel* get_any_ready_channel() {
+	size_t i;
 	if (ses.chancount == 0) {
 		return NULL;
 	}
-	size_t i;
 	for (i = 0; i < ses.chansize; i++) {
 		struct Channel *chan = ses.channels[i];
 		if (chan

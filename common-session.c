@@ -399,15 +399,15 @@ static int ident_readln(int fd, char* buf, int count) {
 }
 
 void ignore_recv_response() {
-	// Do nothing
+	/* Do nothing */
 	TRACE(("Ignored msg_request_response"))
 }
 
 static void send_msg_keepalive() {
-	CHECKCLEARTOWRITE();
 	time_t old_time_idle = ses.last_packet_time_idle;
-
 	struct Channel *chan = get_any_ready_channel();
+
+	CHECKCLEARTOWRITE();
 
 	if (chan) {
 		/* Channel requests are preferable, more implementations

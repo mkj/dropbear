@@ -234,7 +234,7 @@ static int newchansess(struct Channel *channel) {
 
 	struct ChanSess *chansess;
 
-	TRACE(("new chansess %p", channel))
+	TRACE(("new chansess %p", (void*)channel))
 
 	dropbear_assert(channel->typedata == NULL);
 
