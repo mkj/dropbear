@@ -60,4 +60,6 @@ struct Listener * get_listener(int type, void* typedata,
 
 void remove_listener(struct Listener* listener);
 
+void remove_all_listeners(void);
+
 #endif /* DROPBEAR_LISTENER_H */

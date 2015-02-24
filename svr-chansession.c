@@ -787,9 +787,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		
 		TRACE(("back to normal sigchld"))
 		/* Revert to normal sigchld handling */
+		/*
 		if (signal(SIGCHLD, SIG_DFL) == SIG_ERR) {
 			dropbear_exit("signal() error");
 		}
+		*/
 		
 		/* redirect stdin/stdout/stderr */
 		close(chansess->master);
@@ -1005,9 +1007,11 @@ void svr_chansessinitialise() {
 	sa_chld.sa_handler = sesssigchild_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
 	sigemptyset(&sa_chld.sa_mask);
+	/*
 	if (sigaction(SIGCHLD, &sa_chld, NULL) < 0) {
 		dropbear_exit("signal() error");
 	}
+	*/
 	
 }
 

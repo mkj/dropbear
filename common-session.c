@@ -240,6 +240,15 @@ void session_loop(void(*loophandler)()) {
 	/* Not reached */
 }
 
+static void cleanup_buf(buffer **buf) {
+	if (!*buf) {
+		return;
+	}
+	buf_burn(*buf);
+	buf_free(*buf);
+	*buf = NULL;
+}
+
 /* clean up a session on exit */
 void session_cleanup() {
 	
@@ -256,19 +265,31 @@ void session_cleanup() {
 	}
 
 	chancleanup();
-	
-	/* Cleaning up keys must happen after other cleanup
-	functions which might queue packets */
-	if (ses.session_id) {
-		buf_burn(ses.session_id);
-		buf_free(ses.session_id);
-		ses.session_id = NULL;
+
+	/* Most dropbear functions are unsafe to run after this point */
+#ifdef DROPBEAR_CLEANUP
+	/* listeners call cleanup functions, this should occur before
+	other session state is freed. */
+	remove_all_listeners();
+
+	while (!isempty(&ses.writequeue)) {
+		buf_free(dequeue(&ses.writequeue));
 	}
-	if (ses.hash) {
-		buf_burn(ses.hash);
-		buf_free(ses.hash);
-		ses.hash = NULL;
-	}
+
+	m_free(ses.remoteident);
+	m_free(ses.authstate.pw_dir);
+	m_free(ses.authstate.pw_name);
+	m_free(ses.authstate.pw_shell);
+	m_free(ses.authstate.pw_passwd);
+	m_free(ses.authstate.username);
+#endif
+
+	cleanup_buf(&ses.session_id);
+	cleanup_buf(&ses.hash);
+	cleanup_buf(&ses.payload);
+	cleanup_buf(&ses.readbuf);
+	cleanup_buf(&ses.writepayload);
+
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);
 

@@ -78,10 +78,13 @@ static const struct ChanType *svr_chantypes[] = {
 };
 
 static void
-svr_session_cleanup(void)
-{
+svr_session_cleanup(void) {
 	/* free potential public key options */
 	svr_pubkey_options_cleanup();
+
+	m_free(svr_ses.addrstring);
+	m_free(svr_ses.childpids);
+	m_free(svr_ses.remotehost);
 }
 
 static void
@@ -150,6 +153,7 @@ void svr_session(int sock, int childpipe) {
 void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	char fmtbuf[300];
+	int i;
 
 	if (!sessinitdone) {
 		/* before session init */
@@ -181,6 +185,15 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	{
 		/* must be after we've done with username etc */
 		session_cleanup();
+	}
+
+	if (svr_opts.hostkey) {
+		sign_key_free(svr_opts.hostkey);
+		svr_opts.hostkey = NULL;
+	}
+	for (i = 0; i < DROPBEAR_MAX_PORTS; i++) {
+		m_free(svr_opts.addresses[i]);
+		m_free(svr_opts.ports[i]);
 	}
 
 	exit(exitcode);
