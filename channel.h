@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
+#ifndef DROPBEAR_CHANNEL_H_
+#define DROPBEAR_CHANNEL_H_
 
 #include "includes.h"
 #include "buffer.h"
@@ -137,4 +137,4 @@ void send_msg_request_success();
 void send_msg_request_failure();
 
 
-#endif /* _CHANNEL_H_ */
+#endif /* DROPBEAR_CHANNEL_H_ */

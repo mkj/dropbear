@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _DEBUG_H_
-#define _DEBUG_H_
+#ifndef DROPBEAR_DEBUG_H_
+#define DROPBEAR_DEBUG_H_
 
 #include "includes.h"
 

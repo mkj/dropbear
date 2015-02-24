@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _SESSION_H_
-#define _SESSION_H_
+#ifndef DROPBEAR_SESSION_H_
+#define DROPBEAR_SESSION_H_
 
 #include "includes.h"
 #include "options.h"
@@ -309,4 +309,4 @@ extern struct serversession svr_ses;
 extern struct clientsession cli_ses;
 #endif /* DROPBEAR_CLIENT */
 
-#endif /* _SESSION_H_ */
+#endif /* DROPBEAR_SESSION_H_ */

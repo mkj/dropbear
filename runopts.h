@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _RUNOPTS_H_
-#define _RUNOPTS_H_
+#ifndef DROPBEAR_RUNOPTS_H_
+#define DROPBEAR_RUNOPTS_H_
 
 #include "includes.h"
 #include "signkey.h"
@@ -170,4 +170,4 @@ void parse_ciphers_macs();
 
 void print_version(void);
 
-#endif /* _RUNOPTS_H_ */
+#endif /* DROPBEAR_RUNOPTS_H_ */

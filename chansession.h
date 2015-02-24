@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _CHANSESSION_H_
-#define _CHANSESSION_H_
+#ifndef DROPBEAR_CHANSESSION_H_
+#define DROPBEAR_CHANSESSION_H_
 
 #include "loginrec.h"
 #include "channel.h"
@@ -103,4 +103,4 @@ struct SigMap {
 
 extern const struct SigMap signames[];
 
-#endif /* _CHANSESSION_H_ */
+#endif /* DROPBEAR_CHANSESSION_H_ */
