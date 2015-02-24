@@ -586,11 +586,11 @@ static void remove_channel(struct Channel * channel) {
 		/* close the FDs in case they haven't been done
 		 * yet (they might have been shutdown etc) */
 		TRACE(("CLOSE writefd %d", channel->writefd))
-		close(channel->writefd);
+		m_close(channel->writefd);
 		TRACE(("CLOSE readfd %d", channel->readfd))
-		close(channel->readfd);
+		m_close(channel->readfd);
 		TRACE(("CLOSE errfd %d", channel->errfd))
-		close(channel->errfd);
+		m_close(channel->errfd);
 	}
 
 	if (!channel->close_handler_done
@@ -1001,7 +1001,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 		}
 	} else {
 		TRACE(("CLOSE some fd %d", fd))
-		close(fd);
+		m_close(fd);
 		closein = closeout = 1;
 	}
 
@@ -1024,7 +1024,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 	if (channel->type->sepfds && channel->readfd == FD_CLOSED 
 		&& channel->writefd == FD_CLOSED && channel->errfd == FD_CLOSED) {
 		TRACE(("CLOSE (finally) of %d", fd))
-		close(fd);
+		m_close(fd);
 	}
 }
 
