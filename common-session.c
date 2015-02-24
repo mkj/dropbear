@@ -260,13 +260,16 @@ void session_cleanup() {
 		return;
 	}
 
+	/* Beware of changing order of functions here. */
+
+	/* Must be before extra_session_cleanup() */
+	chancleanup();
+
 	if (ses.extra_session_cleanup) {
 		ses.extra_session_cleanup();
 	}
 
-	chancleanup();
-
-	/* Most dropbear functions are unsafe to run after this point */
+	/* After these are freed most functions will exit */
 #ifdef DROPBEAR_CLEANUP
 	/* listeners call cleanup functions, this should occur before
 	other session state is freed. */
@@ -289,6 +292,12 @@ void session_cleanup() {
 	cleanup_buf(&ses.payload);
 	cleanup_buf(&ses.readbuf);
 	cleanup_buf(&ses.writepayload);
+	cleanup_buf(&ses.kexhashbuf);
+	cleanup_buf(&ses.transkexinit);
+	if (ses.dh_K) {
+		mp_clear(ses.dh_K);
+	}
+	m_free(ses.dh_K);
 
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);

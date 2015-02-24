@@ -83,8 +83,9 @@ svr_session_cleanup(void) {
 	svr_pubkey_options_cleanup();
 
 	m_free(svr_ses.addrstring);
-	m_free(svr_ses.childpids);
 	m_free(svr_ses.remotehost);
+	m_free(svr_ses.childpids);
+	svr_ses.childpidsize = 0;
 }
 
 static void
