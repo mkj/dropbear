@@ -177,6 +177,13 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	return c;
 }
 
+void remove_connect_pending() {
+	while (ses.conn_pending.first) {
+		struct dropbear_progress_connection *c = ses.conn_pending.first->item;
+		remove_connect(c, ses.conn_pending.first);
+	}
+}
+
 
 void set_connect_fds(fd_set *writefd) {
 	m_list_elem *iter;

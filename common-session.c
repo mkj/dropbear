@@ -281,6 +281,8 @@ void session_cleanup() {
 	other session state is freed. */
 	remove_all_listeners();
 
+	remove_connect_pending();
+
 	while (!isempty(&ses.writequeue)) {
 		buf_free(dequeue(&ses.writequeue));
 	}

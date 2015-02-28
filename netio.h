@@ -30,8 +30,12 @@ typedef void(*connect_callback)(int result, int sock, void* data, const char* er
 struct dropbear_progress_connection * connect_remote (const char* remotehost, const char* remoteport,
 	connect_callback cb, void *cb_data);
 
+/* Sets up for select() */
 void set_connect_fds(fd_set *writefd);
+/* Handles ready sockets after select() */
 void handle_connect_fds(fd_set *writefd);
+/* Cleanup */
+void remove_connect_pending();
 
 /* Doesn't actually stop the connect, but adds a dummy callback instead */
 void cancel_connect(struct dropbear_progress_connection *c);
