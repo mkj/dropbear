@@ -140,7 +140,7 @@ insmulti%: dropbearmulti
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
 	if test -e $*.1; then $(INSTALL) -m 644 $*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
 
-# dropbear should go in sbin, so it needs a seperate rule
+# dropbear should go in sbin, so it needs a separate rule
 inst_dropbear: dropbear
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	$(INSTALL) dropbear$(EXEEXT) $(DESTDIR)$(sbindir)

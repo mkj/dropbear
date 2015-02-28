@@ -2,8 +2,8 @@
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved. See LICENSE for the license. */
 
-#ifndef _OPTIONS_H_
-#define _OPTIONS_H_
+#ifndef DROPBEAR_OPTIONS_H_
+#define DROPBEAR_OPTIONS_H_
 
 /* Define compile-time options below - the "#ifndef DROPBEAR_XXX .... #endif"
  * parts are to allow for commandline -DDROPBEAR_XXX options etc. */
@@ -289,7 +289,7 @@ much traffic. */
 
 /* This is used by the scp binary when used as a client binary. If you're
  * not using the Dropbear client, you'll need to change it */
-#define _PATH_SSH_PROGRAM "/usr/bin/dbclient"
+#define DROPBEAR_PATH_SSH_PROGRAM "/usr/bin/dbclient"
 
 /* Whether to log commands executed by a client. This only logs the 
  * (single) command sent to the server, not what a user did in a 
@@ -337,4 +337,4 @@ be overridden at runtime with -I. 0 disables idle timeouts */
  * in sysoptions.h */
 #include "sysoptions.h"
 
-#endif /* _OPTIONS_H_ */
+#endif /* DROPBEAR_OPTIONS_H_ */

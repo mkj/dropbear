@@ -1,5 +1,5 @@
-#ifndef _DROPBEAR_ECC_H
-#define _DROPBEAR_ECC_H
+#ifndef DROPBEAR_DROPBEAR_ECC_H
+#define DROPBEAR_DROPBEAR_ECC_H
 
 #include "includes.h"
 #include "options.h"
@@ -33,4 +33,4 @@ mp_int * dropbear_ecc_shared_secret(ecc_key *pub_key, ecc_key *priv_key);
 
 #endif
 
-#endif /* _DROPBEAR_ECC_H */
+#endif /* DROPBEAR_DROPBEAR_ECC_H */

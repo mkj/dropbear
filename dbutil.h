@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _DBUTIL_H_
+#ifndef DROPBEAR_DBUTIL_H_
 
-#define _DBUTIL_H_
+#define DROPBEAR_DBUTIL_H_
 
 #include "includes.h"
 #include "buffer.h"
@@ -99,5 +99,4 @@ time_t monotonic_now();
 
 char * expand_tilde(const char *inpath);
 
-
-#endif /* _DBUTIL_H_ */
+#endif /* DROPBEAR_DBUTIL_H_ */

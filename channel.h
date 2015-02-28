@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _CHANNEL_H_
-#define _CHANNEL_H_
+#ifndef DROPBEAR_CHANNEL_H_
+#define DROPBEAR_CHANNEL_H_
 
 #include "includes.h"
 #include "buffer.h"
@@ -93,7 +93,7 @@ struct Channel {
 
 struct ChanType {
 
-	int sepfds; /* Whether this channel has seperate pipes for in/out or not */
+	int sepfds; /* Whether this channel has separate pipes for in/out or not */
 	char *name;
 	int (*inithandler)(struct Channel*);
 	int (*check_close)(struct Channel*);
@@ -141,4 +141,4 @@ void send_msg_request_success();
 void send_msg_request_failure();
 
 
-#endif /* _CHANNEL_H_ */
+#endif /* DROPBEAR_CHANNEL_H_ */

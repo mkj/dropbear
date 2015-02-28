@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _SESSION_H_
-#define _SESSION_H_
+#ifndef DROPBEAR_SESSION_H_
+#define DROPBEAR_SESSION_H_
 
 #include "includes.h"
 #include "options.h"
@@ -44,7 +44,7 @@ extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
 
 void common_session_init(int sock_in, int sock_out);
-void session_loop(void(*loophandler)());
+void session_loop(void(*loophandler)()) ATTRIB_NORETURN;
 void session_cleanup();
 void send_session_identification();
 void send_msg_ignore();
@@ -56,12 +56,12 @@ const char* get_user_shell();
 void fill_passwd(const char* username);
 
 /* Server */
-void svr_session(int sock, int childpipe);
+void svr_session(int sock, int childpipe) ATTRIB_NORETURN;
 void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress);
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) ATTRIB_NORETURN;
 void cli_connected(int result, int sock, void* userdata, const char *errstring);
 void cleantext(unsigned char* dirtytext);
 
@@ -313,4 +313,4 @@ extern struct serversession svr_ses;
 extern struct clientsession cli_ses;
 #endif /* DROPBEAR_CLIENT */
 
-#endif /* _SESSION_H_ */
+#endif /* DROPBEAR_SESSION_H_ */

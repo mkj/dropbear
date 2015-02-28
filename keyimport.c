@@ -464,17 +464,16 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		goto error;
 	}
 
-	memset(buffer, 0, sizeof(buffer));
+	m_burn(buffer, sizeof(buffer));
 	return ret;
 
 	error:
-	memset(buffer, 0, sizeof(buffer));
+	m_burn(buffer, sizeof(buffer));
 	if (ret) {
 		if (ret->keyblob) {
-			memset(ret->keyblob, 0, ret->keyblob_size);
+			m_burn(ret->keyblob, ret->keyblob_size);
 			m_free(ret->keyblob);
 		}
-		memset(&ret, 0, sizeof(ret));
 		m_free(ret);
 	}
 	if (fp) {
@@ -494,9 +493,8 @@ static int openssh_encrypted(const char *filename)
 	if (!key)
 		return 0;
 	ret = key->encrypted;
-	memset(key->keyblob, 0, key->keyblob_size);
+	m_burn(key->keyblob, key->keyblob_size);
 	m_free(key->keyblob);
-	memset(&key, 0, sizeof(key));
 	m_free(key);
 	return ret;
 }
@@ -1046,6 +1044,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
 		unsigned int k_size;
+		int err = 0;
 
 		/* version. less than 10 bytes */
 		buf_incrwritepos(seq_buf,
@@ -1091,7 +1090,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		buf_incrwritepos(seq_buf,
 			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 3, 1+pubkey_size, 0));
 		buf_putbyte(seq_buf, 0);
-		int err = ecc_ansi_x963_export(*eck, buf_getwriteptr(seq_buf, pubkey_size), &pubkey_size);
+		err = ecc_ansi_x963_export(*eck, buf_getwriteptr(seq_buf, pubkey_size), &pubkey_size);
 		if (err != CRYPT_OK) {
 			dropbear_exit("ECC error");
 		}

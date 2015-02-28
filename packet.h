@@ -22,9 +22,9 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _PACKET_H_
+#ifndef DROPBEAR_PACKET_H_
 
-#define _PACKET_H_
+#define DROPBEAR_PACKET_H_
 
 #include "includes.h"
 #include "queue.h"
@@ -47,4 +47,4 @@ typedef struct PacketType {
 
 #define INIT_READBUF 128
 
-#endif /* _PACKET_H_ */
+#endif /* DROPBEAR_PACKET_H_ */

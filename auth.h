@@ -22,8 +22,8 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 
-#ifndef _AUTH_H_
-#define _AUTH_H_
+#ifndef DROPBEAR_AUTH_H_
+#define DROPBEAR_AUTH_H_
 
 #include "includes.h"
 #include "signkey.h"
@@ -137,4 +137,4 @@ struct PubKeyOptions {
 };
 #endif
 
-#endif /* _AUTH_H_ */
+#endif /* DROPBEAR_AUTH_H_ */

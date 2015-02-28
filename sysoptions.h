@@ -256,6 +256,9 @@
 #define DROPBEAR_LISTEN_BACKLOG MAX_CHANNELS
 #endif
 
+/* free memory before exiting */
+#define DROPBEAR_CLEANUP
+
 /* Use this string since some implementations might special-case it */
 #define DROPBEAR_KEEPALIVE_STRING "keepalive@openssh.com"
 

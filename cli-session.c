@@ -39,10 +39,10 @@
 #include "crypto_desc.h"
 #include "netio.h"
 
-static void cli_remoteclosed();
+static void cli_remoteclosed() ATTRIB_NORETURN;
 static void cli_sessionloop();
 static void cli_session_init();
-static void cli_finished();
+static void cli_finished() ATTRIB_NORETURN;
 static void recv_msg_service_accept(void);
 static void cli_session_cleanup(void);
 static void recv_msg_global_request_cli(void);
