@@ -73,6 +73,7 @@ struct Channel {
 	 * to ensure we don't run it twice (nor type->checkclose()). */
 	int close_handler_done;
 
+	struct dropbear_progress_connection *conn_pending;
 	int initconn; /* used for TCP forwarding, whether the channel has been
 					 fully initialised */
 
@@ -99,6 +100,9 @@ struct ChanType {
 	void (*reqhandler)(struct Channel*);
 	void (*closehandler)(struct Channel*);
 };
+
+/* Callback for connect_remote */
+void channel_connect_done(int result, int sock, void* user_data, const char* errstring);
 
 void chaninitialise(const struct ChanType *chantypes[]);
 void chancleanup();

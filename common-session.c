@@ -34,6 +34,7 @@
 #include "kex.h"
 #include "channel.h"
 #include "runopts.h"
+#include "netio.h"
 
 static void checktimeouts();
 static long select_timeout();
@@ -167,6 +168,9 @@ void session_loop(void(*loophandler)()) {
 		/* set up for channels which can be read/written */
 		setchannelfds(&readfd, &writefd);
 
+		/* Pending connections to test */
+		set_connect_fds(&writefd);
+
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
 
 		if (exitflag) {
@@ -214,10 +218,12 @@ void session_loop(void(*loophandler)()) {
 				process_packet();
 			}
 		}
-		
+
 		/* if required, flush out any queued reply packets that
 		were being held up during a KEX */
 		maybe_flush_reply_queue();
+
+		handle_connect_fds(&writefd);
 
 		/* process pipes etc for the channels, ses.dataallowed == 0
 		 * during rekeying ) */
@@ -274,6 +280,8 @@ void session_cleanup() {
 	/* listeners call cleanup functions, this should occur before
 	other session state is freed. */
 	remove_all_listeners();
+
+	remove_connect_pending();
 
 	while (!isempty(&ses.writequeue)) {
 		buf_free(dequeue(&ses.writequeue));
@@ -576,6 +584,11 @@ void update_channel_prio() {
 	unsigned int i;
 
 	TRACE(("update_channel_prio"))
+
+	if (ses.sock_out < 0) {
+		TRACE(("leave update_channel_prio: no socket"))
+		return;
+	}
 
 	new_prio = DROPBEAR_PRIO_BULK;
 	for (i = 0; i < ses.chansize; i++) {

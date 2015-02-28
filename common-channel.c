@@ -35,6 +35,7 @@
 #include "ssh.h"
 #include "listener.h"
 #include "runopts.h"
+#include "netio.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const unsigned char *text, const unsigned char *lang);
@@ -48,7 +49,6 @@ static void send_msg_channel_data(struct Channel *channel, int isextended);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
 static void remove_channel(struct Channel *channel);
-static void check_in_progress(struct Channel *channel);
 static unsigned int write_pending(struct Channel * channel);
 static void check_close(struct Channel *channel);
 static void close_chan_fd(struct Channel *channel, int fd, int how);
@@ -163,7 +163,6 @@ static struct Channel* newchannel(unsigned int remotechan,
 	newchan->writefd = FD_UNINIT;
 	newchan->readfd = FD_UNINIT;
 	newchan->errfd = FD_CLOSED; /* this isn't always set to start with */
-	newchan->initconn = 0;
 	newchan->await_open = 0;
 	newchan->flushing = 0;
 
@@ -242,12 +241,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 		/* write to program/pipe stdin */
 		if (channel->writefd >= 0 && FD_ISSET(channel->writefd, writefds)) {
-			if (channel->initconn) {
-				/* XXX should this go somewhere cleaner? */
-				check_in_progress(channel);
-				continue; /* Important not to use the channel after
-							 check_in_progress(), as it may be NULL */
-			}
 			writechannel(channel, channel->writefd, channel->writebuf);
 			do_check_close = 1;
 		}
@@ -374,27 +367,27 @@ static void check_close(struct Channel *channel) {
  * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
  * it is important that the channel reference isn't used after a call to this
  * function */
-static void check_in_progress(struct Channel *channel) {
+void channel_connect_done(int result, int sock, void* user_data, const char* UNUSED(errstring)) {
 
-	int val;
-	socklen_t vallen = sizeof(val);
+	struct Channel *channel = user_data;
 
-	TRACE(("enter check_in_progress"))
+	TRACE(("enter channel_connect_done"))
 
-	if (getsockopt(channel->writefd, SOL_SOCKET, SO_ERROR, &val, &vallen)
-			|| val != 0) {
-		send_msg_channel_open_failure(channel->remotechan,
-				SSH_OPEN_CONNECT_FAILED, "", "");
-		close(channel->writefd);
-		remove_channel(channel);
-		TRACE(("leave check_in_progress: fail"))
-	} else {
+	if (result == DROPBEAR_SUCCESS)
+	{
+		channel->readfd = channel->writefd = sock;
+		channel->conn_pending = NULL;
 		chan_initwritebuf(channel);
 		send_msg_channel_open_confirmation(channel, channel->recvwindow,
 				channel->recvmaxpacket);
-		channel->readfd = channel->writefd;
-		channel->initconn = 0;
-		TRACE(("leave check_in_progress: success"))
+		TRACE(("leave channel_connect_done: success"))
+	}
+	else
+	{
+		send_msg_channel_open_failure(channel->remotechan,
+				SSH_OPEN_CONNECT_FAILED, "", "");
+		remove_channel(channel);
+		TRACE(("leave check_in_progress: fail"))
 	}
 }
 
@@ -514,8 +507,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 		}
 
 		/* Stuff from the wire */
-		if (channel->initconn
-			||(channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0)) {
+		if (channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0) {
 				FD_SET(channel->writefd, writefds);
 		}
 
@@ -597,6 +589,10 @@ static void remove_channel(struct Channel * channel) {
 		&& channel->type->closehandler) {
 		channel->type->closehandler(channel);
 		channel->close_handler_done = 1;
+	}
+
+	if (channel->conn_pending) {
+		cancel_connect(channel->conn_pending);
 	}
 
 	ses.channels[channel->index] = NULL;
@@ -1149,7 +1145,7 @@ struct Channel* get_any_ready_channel() {
 		struct Channel *chan = ses.channels[i];
 		if (chan
 				&& !(chan->sent_eof || chan->recv_eof)
-				&& !(chan->await_open || chan->initconn)) {
+				&& !(chan->await_open)) {
 			return chan;
 		}
 	}

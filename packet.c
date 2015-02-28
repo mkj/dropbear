@@ -34,6 +34,7 @@
 #include "service.h"
 #include "auth.h"
 #include "channel.h"
+#include "netio.h"
 
 static int read_packet_init();
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -55,14 +56,10 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 /* non-blocking function writing out a current encrypted packet */
 void write_packet() {
 
-	int len, written;
-	buffer * writebuf = NULL;
-	unsigned packet_type;
+	ssize_t written;
 #ifdef HAVE_WRITEV
 	struct iovec *iov = NULL;
-	int i;
-	struct Link *l;
-	int iov_max_count;
+	int iov_count;
 #endif
 	
 	TRACE2(("enter write_packet"))
@@ -70,62 +67,28 @@ void write_packet() {
 
 #if defined(HAVE_WRITEV) && (defined(IOV_MAX) || defined(UIO_MAXIOV))
 
-#ifndef IOV_MAX
-#define IOV_MAX UIO_MAXIOV
-#endif
-
-	/* Make sure the size of the iov is below the maximum allowed by the OS. */
-	iov_max_count = ses.writequeue.count;
-	if (iov_max_count > IOV_MAX)
-	{
-		iov_max_count = IOV_MAX;
-	}
-
-	iov = m_malloc(sizeof(*iov) * iov_max_count);
-	for (l = ses.writequeue.head, i = 0; l; l = l->link, i++)
-	{
-		writebuf = (buffer*)l->item;
-		packet_type = writebuf->data[writebuf->len-1];
-		len = writebuf->len - 1 - writebuf->pos;
-		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, packet_type,
-				len, writebuf->len-1))
-		iov[i].iov_base = buf_getptr(writebuf, len);
-		iov[i].iov_len = len;
-	}
+	iov = packet_queue_to_iovec(&ses.writequeue, &iov_count);
 	/* This may return EAGAIN. The main loop sometimes
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
-	written = writev(ses.sock_out, iov, iov_max_count);
+	written = writev(ses.sock_out, iov, iov_count);
 	if (written < 0) {
 		if (errno == EINTR || errno == EAGAIN) {
-			m_free(iov);
 			TRACE2(("leave write_packet: EINTR"))
+			m_free(iov);
 			return;
 		} else {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
 	}
+	m_free(iov);
+
+	packet_queue_consume(&ses.writequeue, written);
 
 	if (written == 0) {
 		ses.remoteclosed();
 	}
 
-	while (written > 0) {
-		writebuf = (buffer*)examine(&ses.writequeue);
-		len = writebuf->len - 1 - writebuf->pos;
-		if (len > written) {
-			/* partial buffer write */
-			buf_incrpos(writebuf, written);
-			written = 0;
-		} else {
-			written -= len;
-			dequeue(&ses.writequeue);
-			buf_free(writebuf);
-		}
-	}
-
-	m_free(iov);
 #else /* No writev () */
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);

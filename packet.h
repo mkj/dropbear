@@ -27,6 +27,7 @@
 #define DROPBEAR_PACKET_H_
 
 #include "includes.h"
+#include "queue.h"
 
 void write_packet();
 void read_packet();

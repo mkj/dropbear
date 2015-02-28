@@ -38,6 +38,7 @@
 #include "tcpfwd.h"
 #include "chansession.h"
 #include "dbutil.h"
+#include "netio.h"
 
 extern int sessinitdone; /* Is set to 0 somewhere */
 extern int exitflag;
@@ -60,7 +61,8 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_N
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out) ATTRIB_NORETURN;
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) ATTRIB_NORETURN;
+void cli_connected(int result, int sock, void* userdata, const char *errstring);
 void cleantext(unsigned char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
@@ -144,6 +146,8 @@ struct sshsession {
 	
 	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
+
+	m_list conn_pending;
 						
 	/* time of the last packet send/receive, for keepalive. Not real-world clock */
 	time_t last_packet_time_keepalive_sent;
