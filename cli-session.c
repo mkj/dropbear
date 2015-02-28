@@ -37,6 +37,7 @@
 #include "chansession.h"
 #include "agentfwd.h"
 #include "crypto_desc.h"
+#include "netio.h"
 
 static void cli_remoteclosed() ATTRIB_NORETURN;
 static void cli_sessionloop();
@@ -93,14 +94,29 @@ static const struct ChanType *cli_chantypes[] = {
 	NULL /* Null termination */
 };
 
-void cli_session(int sock_in, int sock_out) {
+void cli_connected(int result, int sock, void* userdata, const char *errstring)
+{
+	struct sshsession *myses = userdata;
+	if (result == DROPBEAR_FAILURE) {
+		dropbear_exit("Connect failed: %s", errstring);
+	}
+	myses->sock_in = myses->sock_out = sock;
+	update_channel_prio();
+}
+
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) {
 
 	common_session_init(sock_in, sock_out);
+
+	if (progress) {
+		connect_set_writequeue(progress, &ses.writequeue);
+	}
 
 	chaninitialise(cli_chantypes);
 
 	/* Set up cli_ses vars */
 	cli_session_init();
+
 
 	/* Ready to go */
 	sessinitdone = 1;
