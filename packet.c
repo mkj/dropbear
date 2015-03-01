@@ -257,7 +257,7 @@ static int read_packet_init() {
 	}
 
 	if (len > ses.readbuf->size) {
-		buf_resize(ses.readbuf, len);		
+		ses.readbuf = buf_resize(ses.readbuf, len);		
 	}
 	buf_setlen(ses.readbuf, len);
 	buf_setpos(ses.readbuf, blocksize);
@@ -401,7 +401,7 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 				dropbear_exit("bad packet, oversized decompressed");
 			}
 			new_size = MIN(RECV_MAX_PAYLOAD_LEN, ret->size + ZLIB_DECOMPRESS_INCR);
-			buf_resize(ret, new_size);
+			ret = buf_resize(ret, new_size);
 		}
 	}
 }
@@ -640,7 +640,8 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 
 #ifndef DISABLE_ZLIB
 /* compresses len bytes from src, outputting to dest (starting from the
- * respective current positions. */
+ * respective current positions. dest must have sufficient space,
+ * len+ZLIB_COMPRESS_EXPANSION */
 static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 
 	unsigned int endpos = src->pos + len;
@@ -648,38 +649,28 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 
 	TRACE2(("enter buf_compress"))
 
-	while (1) {
+	dropbear_assert(dest->size - dest->pos >= len+ZLIB_COMPRESS_EXPANSION);
 
-		ses.keys->trans.zstream->avail_in = endpos - src->pos;
-		ses.keys->trans.zstream->next_in = 
-			buf_getptr(src, ses.keys->trans.zstream->avail_in);
+	ses.keys->trans.zstream->avail_in = endpos - src->pos;
+	ses.keys->trans.zstream->next_in = 
+		buf_getptr(src, ses.keys->trans.zstream->avail_in);
 
-		ses.keys->trans.zstream->avail_out = dest->size - dest->pos;
-		ses.keys->trans.zstream->next_out =
-			buf_getwriteptr(dest, ses.keys->trans.zstream->avail_out);
+	ses.keys->trans.zstream->avail_out = dest->size - dest->pos;
+	ses.keys->trans.zstream->next_out =
+		buf_getwriteptr(dest, ses.keys->trans.zstream->avail_out);
 
-		result = deflate(ses.keys->trans.zstream, Z_SYNC_FLUSH);
+	result = deflate(ses.keys->trans.zstream, Z_SYNC_FLUSH);
 
-		buf_setpos(src, endpos - ses.keys->trans.zstream->avail_in);
-		buf_setlen(dest, dest->size - ses.keys->trans.zstream->avail_out);
-		buf_setpos(dest, dest->len);
+	buf_setpos(src, endpos - ses.keys->trans.zstream->avail_in);
+	buf_setlen(dest, dest->size - ses.keys->trans.zstream->avail_out);
+	buf_setpos(dest, dest->len);
 
-		if (result != Z_OK) {
-			dropbear_exit("zlib error");
-		}
-
-		if (ses.keys->trans.zstream->avail_in == 0) {
-			break;
-		}
-
-		dropbear_assert(ses.keys->trans.zstream->avail_out == 0);
-
-		/* the buffer has been filled, we must extend. This only happens in
-		 * unusual circumstances where the data grows in size after deflate(),
-		 * but it is possible */
-		buf_resize(dest, dest->size + ZLIB_COMPRESS_EXPANSION);
-
+	if (result != Z_OK) {
+		dropbear_exit("zlib error");
 	}
+
+	/* fails if destination buffer wasn't large enough */
+	dropbear_assert(ses.keys->trans.zstream->avail_in == 0);
 	TRACE2(("leave buf_compress"))
 }
 #endif

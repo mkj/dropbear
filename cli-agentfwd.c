@@ -155,7 +155,7 @@ static buffer * agent_request(unsigned char type, buffer *data) {
 		goto out;
 	}
 	
-	buf_resize(inbuf, readlen);
+	inbuf = buf_resize(inbuf, readlen);
 	buf_setpos(inbuf, 0);
 	ret = atomicio(read, fd, buf_getwriteptr(inbuf, readlen), readlen);
 	if ((size_t)ret != readlen) {
