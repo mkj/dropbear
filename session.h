@@ -126,7 +126,10 @@ struct sshsession {
 							 buffer with the packet to send. */
 	struct Queue writequeue; /* A queue of encrypted packets to send */
 	buffer *readbuf; /* From the wire, decrypted in-place */
-	buffer *payload; /* Post-decompression, the actual SSH packet */
+	buffer *payload; /* Post-decompression, the actual SSH packet. 
+						May have extra data at the beginning, will be
+						passed to packet processing functions positioned past
+						that, see payload_beginning */
 	unsigned int payload_beginning;
 	unsigned int transseq, recvseq; /* Sequence IDs */
 

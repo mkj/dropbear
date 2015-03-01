@@ -86,6 +86,7 @@ void svr_auth_pubkey() {
 	unsigned int algolen;
 	unsigned char* keyblob = NULL;
 	unsigned int keybloblen;
+	unsigned int sign_payload_length;
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;
 	char* fp = NULL;
@@ -125,9 +126,18 @@ void svr_auth_pubkey() {
 
 	/* create the data which has been signed - this a string containing
 	 * session_id, concatenated with the payload packet up to the signature */
+	assert(ses.payload_beginning <= ses.payload->pos);
+	sign_payload_length = ses.payload->pos - ses.payload_beginning;
 	signbuf = buf_new(ses.payload->pos + 4 + ses.session_id->len);
 	buf_putbufstring(signbuf, ses.session_id);
-	buf_putbytes(signbuf, ses.payload->data, ses.payload->pos);
+
+	/* The entire contents of the payload prior. */
+	buf_setpos(ses.payload, ses.payload_beginning);
+	buf_putbytes(signbuf, 
+		buf_getptr(ses.payload, sign_payload_length),
+		sign_payload_length);
+	buf_incrpos(ses.payload, sign_payload_length);
+
 	buf_setpos(signbuf, 0);
 
 	/* ... and finally verify the signature */
