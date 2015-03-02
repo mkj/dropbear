@@ -1,6 +1,19 @@
 - Improve efficiency of writing data to local program/pipes, measured 30% for
   connections to localhost
 
+- Use TCP Fast Open on Linux if available. saves a round trip at connection
+  to hosts that have previously been connected. 
+  Needs a recent Linux kernel and possibly "sysctl -w net.ipv4.tcp_fastopen=3"
+
+- Forwarded TCP ports connect asynchronously and retry with other available
+  addresses (IPv4 or IPv6)
+
+- Free memory before exiting, patch from Thorsten Horstmann. Useful for
+  Dropbear ports to embedded systems and for checking memory leaks
+  with valgrind. Only partially implemented for client side.
+
+- Fix small ECC memory leaks
+
 2015.67 - Wednesday 28 January 2015
 
 - Call fsync() after generating private keys to ensure they aren't lost if a
