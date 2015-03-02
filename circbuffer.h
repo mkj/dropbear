@@ -44,6 +44,9 @@ unsigned int cbuf_readlen(circbuffer *cbuf); /* max linear read len */
 unsigned int cbuf_writelen(circbuffer *cbuf); /* max linear write len */
 
 unsigned char* cbuf_readptr(circbuffer *cbuf, unsigned int len);
+void cbuf_readptrs(circbuffer *cbuf, 
+	unsigned char **p1, unsigned int *len1, 
+	unsigned char **p2, unsigned int *len2);
 unsigned char* cbuf_writeptr(circbuffer *cbuf, unsigned int len);
 void cbuf_incrwrite(circbuffer *cbuf, unsigned int len);
 void cbuf_incrread(circbuffer *cbuf, unsigned int len);

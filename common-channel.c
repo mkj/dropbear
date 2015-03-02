@@ -42,7 +42,8 @@ static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 static void send_msg_channel_open_confirmation(struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket);
-static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf);
+static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
+	const unsigned char *moredata, unsigned int *morelen);
 static void send_msg_channel_window_adjust(struct Channel *channel, 
 		unsigned int incr);
 static void send_msg_channel_data(struct Channel *channel, int isextended);
@@ -241,14 +242,14 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 		/* write to program/pipe stdin */
 		if (channel->writefd >= 0 && FD_ISSET(channel->writefd, writefds)) {
-			writechannel(channel, channel->writefd, channel->writebuf);
+			writechannel(channel, channel->writefd, channel->writebuf, NULL, NULL);
 			do_check_close = 1;
 		}
 		
 		/* stderr for client mode */
 		if (ERRFD_IS_WRITE(channel)
 				&& channel->errfd >= 0 && FD_ISSET(channel->errfd, writefds)) {
-			writechannel(channel, channel->errfd, channel->extrabuf);
+			writechannel(channel, channel->errfd, channel->extrabuf, NULL, NULL);
 			do_check_close = 1;
 		}
 
@@ -434,13 +435,66 @@ static void send_msg_channel_eof(struct Channel *channel) {
 }
 
 /* Called to write data out to the local side of the channel. 
- * Only called when we know we can write to a channel, writes as much as
- * possible */
-static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
+   Writes the circular buffer contents and also the "moredata" buffer
+   if not null. Will ignore EAGAIN */
+static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
+	const unsigned char *moredata, unsigned int *morelen) {
 
-	int len, maxlen;
+	struct iovec iov[3];
+	unsigned char *circ_p1, *circ_p2;
+	unsigned int circ_len1, circ_len2;
+	int io_count = 0;
+
+	int written;
 
 	TRACE(("enter writechannel fd %d", fd))
+
+	cbuf_readptrs(cbuf, &circ_p1, &circ_len1, &circ_p2, &circ_len2);
+
+	if (circ_len1 > 0) {
+		TRACE(("circ1 %d", circ_len1))
+		iov[io_count].iov_base = circ_p1;
+		iov[io_count].iov_len = circ_len1;
+		io_count++;
+	}
+
+	if (circ_len2 > 0) {
+		TRACE(("circ2 %d", circ_len2))
+		iov[io_count].iov_base = circ_p2;
+		iov[io_count].iov_len = circ_len2;
+		io_count++;
+	}
+
+	if (morelen) {
+		assert(moredata);
+		TRACE(("more %d", *morelen))
+		iov[io_count].iov_base = (void*)moredata;
+		iov[io_count].iov_len  = *morelen;
+		io_count++;
+	}
+
+	if (morelen) {
+		/* Default return value, none consumed */
+		*morelen = 0;
+	}
+
+	written = writev(fd, iov, io_count);
+
+	if (written < 0) {
+		if (errno != EINTR && errno != EAGAIN) {
+			TRACE(("errno %d len %d", errno, len))
+			close_chan_fd(channel, fd, SHUT_WR);
+		}
+	} else {
+		int cbuf_written = MIN(circ_len1+circ_len2, (unsigned int)written);
+		cbuf_incrread(cbuf, cbuf_written);
+		if (morelen) {
+			*morelen = written - cbuf_written;
+		}
+		channel->recvdonelen += written;
+	}
+
+#if 0
 
 	maxlen = cbuf_readlen(cbuf);
 
@@ -458,10 +512,10 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf) {
 
 	cbuf_incrread(cbuf, len);
 	channel->recvdonelen += len;
+#endif
 
 	/* Window adjust handling */
 	if (channel->recvdonelen >= RECV_WINDOWEXTEND) {
-		/* Set it back to max window */
 		send_msg_channel_window_adjust(channel, channel->recvdonelen);
 		channel->recvwindow += channel->recvdonelen;
 		channel->recvdonelen = 0;
@@ -745,6 +799,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 	unsigned int maxdata;
 	unsigned int buflen;
 	unsigned int len;
+	unsigned int consumed;
 
 	TRACE(("enter recv_msg_channel_data"))
 
@@ -771,6 +826,17 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		dropbear_exit("Oversized packet");
 	}
 
+	dropbear_assert(channel->recvwindow >= datalen);
+	channel->recvwindow -= datalen;
+	dropbear_assert(channel->recvwindow <= opts.recv_window);
+
+	consumed = datalen;
+	writechannel(channel, fd, cbuf, buf_getptr(ses.payload, datalen), &consumed);
+
+	datalen -= consumed;
+	buf_incrpos(ses.payload, consumed);
+
+
 	/* We may have to run throught twice, if the buffer wraps around. Can't
 	 * just "leave it for next time" like with writechannel, since this
 	 * is payload data */
@@ -785,10 +851,6 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 		buf_incrpos(ses.payload, buflen);
 		len -= buflen;
 	}
-
-	dropbear_assert(channel->recvwindow >= datalen);
-	channel->recvwindow -= datalen;
-	dropbear_assert(channel->recvwindow <= opts.recv_window);
 
 	TRACE(("leave recv_msg_channel_data"))
 }

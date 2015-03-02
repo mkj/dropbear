@@ -152,8 +152,10 @@ void session_loop(void(*loophandler)()) {
 		FD_ZERO(&readfd);
 		dropbear_assert(ses.payload == NULL);
 
-		/* during initial setup we flush out the KEXINIT packet before
-		 * attempting to read the remote version string, which might block */
+		/* We delay reading from the input socket during initial setup until
+		after we have written out our initial KEXINIT packet (empty writequeue). 
+		This means our initial packet can be in-flight while we're doing a blocking
+		read for the remote ident */
 		if (ses.sock_in != -1 && (ses.remoteident || isempty(&ses.writequeue))) {
 			FD_SET(ses.sock_in, &readfd);
 		}

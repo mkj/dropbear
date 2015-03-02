@@ -169,10 +169,9 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s", 
 				remotehost, remoteport, gai_strerror(err));
 		TRACE(("Error resolving: %s", gai_strerror(err)))
-		return NULL;
+	} else {
+		c->res_iter = c->res;
 	}
-
-	c->res_iter = c->res;
 
 	return c;
 }
@@ -220,7 +219,7 @@ void handle_connect_fds(fd_set *writefd) {
 		socklen_t vallen = sizeof(val);
 		struct dropbear_progress_connection *c = iter->item;
 
-		if (!FD_ISSET(c->sock, writefd)) {
+		if (c->sock < 0 || !FD_ISSET(c->sock, writefd)) {
 			continue;
 		}
 

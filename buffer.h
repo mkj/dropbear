@@ -29,7 +29,8 @@
 #include "includes.h"
 
 struct buf {
-
+	/* don't manipulate data member outside of buffer.c - it
+	is a pointer into the malloc holding buffer itself */
 	unsigned char * data;
 	unsigned int len; /* the used size */
 	unsigned int pos;
@@ -40,7 +41,8 @@ struct buf {
 typedef struct buf buffer;
 
 buffer * buf_new(unsigned int size);
-void buf_resize(buffer *buf, unsigned int newsize);
+/* Possibly returns a new buffer*, like realloc() */
+buffer * buf_resize(buffer *buf, unsigned int newsize);
 void buf_free(buffer* buf);
 void buf_burn(buffer* buf);
 buffer* buf_newcopy(buffer* buf);

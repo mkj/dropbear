@@ -534,8 +534,10 @@ void recv_msg_kexinit() {
 	    buf_putstring(ses.kexhashbuf,
 			ses.transkexinit->data, ses.transkexinit->len);
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
-	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
+	    buf_setpos(ses.payload, ses.payload_beginning);
+	    buf_putstring(ses.kexhashbuf, 
+	    	buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+	    	ses.payload->len-ses.payload->pos);
 		ses.requirenext = SSH_MSG_KEXDH_REPLY;
 	} else {
 		/* SERVER */
@@ -549,8 +551,10 @@ void recv_msg_kexinit() {
 				(unsigned char*)LOCAL_IDENT, local_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
-	    buf_setpos(ses.payload, 0);
-	    buf_putstring(ses.kexhashbuf, ses.payload->data, ses.payload->len);
+	    buf_setpos(ses.payload, ses.payload_beginning);
+	    buf_putstring(ses.kexhashbuf, 
+	    	buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+	    	ses.payload->len-ses.payload->pos);
 
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,

@@ -110,6 +110,21 @@ unsigned char* cbuf_readptr(circbuffer *cbuf, unsigned int len) {
 	return &cbuf->data[cbuf->readpos];
 }
 
+void cbuf_readptrs(circbuffer *cbuf, 
+	unsigned char **p1, unsigned int *len1, 
+	unsigned char **p2, unsigned int *len2) {
+	*p1 = &cbuf->data[cbuf->readpos];
+	*len1 = MIN(cbuf->used, cbuf->size - cbuf->readpos);
+
+	if (*len1 < cbuf->used) {
+		*p2 = cbuf->data;
+		*len2 = cbuf->used - *len1;
+	} else {
+		*p2 = NULL;
+		*len2 = 0;
+	}
+}
+
 unsigned char* cbuf_writeptr(circbuffer *cbuf, unsigned int len) {
 
 	if (len > cbuf_writelen(cbuf)) {
@@ -131,9 +146,11 @@ void cbuf_incrwrite(circbuffer *cbuf, unsigned int len) {
 
 
 void cbuf_incrread(circbuffer *cbuf, unsigned int len) {
+#if 0
 	if (len > cbuf_readlen(cbuf)) {
 		dropbear_exit("Bad cbuf read");
 	}
+#endif
 
 	dropbear_assert(cbuf->used >= len);
 	cbuf->used -= len;
