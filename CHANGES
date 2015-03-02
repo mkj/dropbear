@@ -1,3 +1,6 @@
+- Improve efficiency of writing data to local program/pipes, measured 30% for
+  connections to localhost
+
 2015.67 - Wednesday 28 January 2015
 
 - Call fsync() after generating private keys to ensure they aren't lost if a
