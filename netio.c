@@ -104,6 +104,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			message.msg_iovlen = iovlen;
 			res = sendmsg(c->sock, &message, MSG_FASTOPEN);
 			if (res < 0 && errno != EINPROGRESS) {
+				m_free(c->errstring);
+				c->errstring = m_strdup(strerror(errno));
 				/* Not entirely sure which kind of errors are normal - 2.6.32 seems to 
 				return EPIPE for any (nonblocking?) sendmsg(). just fall back */
 				TRACE(("sendmsg tcp_fastopen failed, falling back. %s", strerror(errno)));
@@ -124,6 +126,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 		if (res < 0 && errno != EINPROGRESS) {
 			/* failure */
+			m_free(c->errstring);
+			c->errstring = m_strdup(strerror(errno));
 			close(c->sock);
 			c->sock = -1;
 			continue;
