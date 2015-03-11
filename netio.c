@@ -241,7 +241,7 @@ void handle_connect_fds(fd_set *writefd) {
 			c->sock = -1;
 
 			m_free(c->errstring);
-			c->errstring = strerror(val);
+			c->errstring = m_strdup(strerror(val));
 		} else {
 			/* New connection has been established */
 			c->cb(DROPBEAR_SUCCESS, c->sock, c->cb_data, NULL);
