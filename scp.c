@@ -96,7 +96,7 @@ int verbose_mode = 0;
 int showprogress = 1;
 
 /* This is the program to execute for the secured connection. ("ssh" or -S) */
-char *ssh_program = _PATH_SSH_PROGRAM;
+char *ssh_program = DROPBEAR_PATH_SSH_PROGRAM;
 
 /* This is used to store the pid of ssh_program */
 pid_t do_cmd_pid = -1;
