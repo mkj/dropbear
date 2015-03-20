@@ -28,11 +28,14 @@
 
 #include "includes.h"
 #include "queue.h"
+#include "buffer.h"
 
 void write_packet();
 void read_packet();
 void decrypt_packet();
 void encrypt_packet();
+
+void writebuf_enqueue(buffer * writebuf, unsigned char packet_type);
 
 void process_packet();
 

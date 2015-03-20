@@ -531,7 +531,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 
 /* Set the file descriptors for the main select in session.c
  * This avoid channels which don't have any window available, are closed, etc*/
-void setchannelfds(fd_set *readfds, fd_set *writefds) {
+void setchannelfds(fd_set *readfds, fd_set *writefds, int allow_reads) {
 	
 	unsigned int i;
 	struct Channel * channel;
@@ -549,7 +549,7 @@ void setchannelfds(fd_set *readfds, fd_set *writefds) {
 		FD if there's the possibility of "~."" to kill an 
 		interactive session (the read_mangler) */
 		if (channel->transwindow > 0
-		   && (ses.dataallowed || channel->read_mangler)) {
+		   && ((ses.dataallowed && allow_reads) || channel->read_mangler)) {
 
 			if (channel->readfd >= 0) {
 				FD_SET(channel->readfd, readfds);

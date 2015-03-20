@@ -59,7 +59,7 @@ void write_packet() {
 	ssize_t written;
 #ifdef HAVE_WRITEV
 	/* 50 is somewhat arbitrary */
-	int iov_count = 50;
+	unsigned int iov_count = 50;
 	struct iovec iov[50];
 #endif
 	
@@ -83,6 +83,7 @@ void write_packet() {
 	}
 
 	packet_queue_consume(&ses.writequeue, written);
+	ses.writequeue_len -= written;
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -112,6 +113,8 @@ void write_packet() {
 	if (written == 0) {
 		ses.remoteclosed();
 	}
+
+	ses.writequeue_len -= written;
 
 	if (written == len) {
 		/* We've finished with the packet, free it */
@@ -570,15 +573,12 @@ void encrypt_packet() {
     /* stick the MAC on it */
     buf_putbytes(writebuf, mac_bytes, mac_size);
 
-	/* The last byte of the buffer stores the cleartext packet_type. It is not
-	 * transmitted but is used for transmit timeout purposes */
-	buf_putbyte(writebuf, packet_type);
-	/* enqueue the packet for sending. It will get freed after transmission. */
-	buf_setpos(writebuf, 0);
-	enqueue(&ses.writequeue, (void*)writebuf);
-
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;
+
+	writebuf_enqueue(writebuf, packet_type);
+
+	/* Update counts */
 	ses.transseq++;
 
 	now = monotonic_now();
@@ -594,6 +594,16 @@ void encrypt_packet() {
 	}
 
 	TRACE2(("leave encrypt_packet()"))
+}
+
+void writebuf_enqueue(buffer * writebuf, unsigned char packet_type) {
+	/* The last byte of the buffer stores the cleartext packet_type. It is not
+	 * transmitted but is used for transmit timeout purposes */
+	buf_putbyte(writebuf, packet_type);
+	/* enqueue the packet for sending. It will get freed after transmission. */
+	buf_setpos(writebuf, 0);
+	enqueue(&ses.writequeue, (void*)writebuf);
+	ses.writequeue_len += writebuf->len-1;
 }
 
 

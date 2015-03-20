@@ -106,7 +106,7 @@ void channel_connect_done(int result, int sock, void* user_data, const char* err
 
 void chaninitialise(const struct ChanType *chantypes[]);
 void chancleanup();
-void setchannelfds(fd_set *readfd, fd_set *writefd);
+void setchannelfds(fd_set *readfds, fd_set *writefds, int allow_reads);
 void channelio(fd_set *readfd, fd_set *writefd);
 struct Channel* getchannel();
 /* Returns an arbitrary channel that is in a ready state - not
