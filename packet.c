@@ -58,8 +58,9 @@ void write_packet() {
 
 	ssize_t written;
 #ifdef HAVE_WRITEV
-	struct iovec *iov = NULL;
-	int iov_count;
+	/* 50 is somewhat arbitrary */
+	int iov_count = 50;
+	struct iovec iov[50];
 #endif
 	
 	TRACE2(("enter write_packet"))
@@ -67,7 +68,7 @@ void write_packet() {
 
 #if defined(HAVE_WRITEV) && (defined(IOV_MAX) || defined(UIO_MAXIOV))
 
-	iov = packet_queue_to_iovec(&ses.writequeue, &iov_count);
+	packet_queue_to_iovec(&ses.writequeue, iov, &iov_count);
 	/* This may return EAGAIN. The main loop sometimes
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
@@ -75,13 +76,11 @@ void write_packet() {
 	if (written < 0) {
 		if (errno == EINTR || errno == EAGAIN) {
 			TRACE2(("leave write_packet: EINTR"))
-			m_free(iov);
 			return;
 		} else {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
 	}
-	m_free(iov);
 
 	packet_queue_consume(&ses.writequeue, written);
 

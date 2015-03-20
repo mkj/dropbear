@@ -482,7 +482,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 
 	if (written < 0) {
 		if (errno != EINTR && errno != EAGAIN) {
-			TRACE(("errno %d len %d", errno, len))
+			TRACE(("errno %d", errno))
 			close_chan_fd(channel, fd, SHUT_WR);
 		}
 	} else {

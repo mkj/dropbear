@@ -72,6 +72,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 	int fastopen = 0;
 #ifdef DROPBEAR_TCP_FAST_OPEN
 	struct msghdr message;
+	struct iovec message;
 #endif
 
 	for (r = c->res_iter; r; r = r->ai_next)
@@ -99,8 +100,11 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		message.msg_namelen = r->ai_addrlen;
 
 		if (c->writequeue) {
-			int iovlen; /* Linux msg_iovlen is a size_t */
-			message.msg_iov = packet_queue_to_iovec(c->writequeue, &iovlen);
+			/* 6 is arbitrary, enough to hold initial packets */
+			int iovlen = 6; /* Linux msg_iovlen is a size_t */
+			struct iov[6];
+			packet_queue_to_iovec(c->writequeue, iov, &iovlen);
+			message.msg_iov = &iov;
 			message.msg_iovlen = iovlen;
 			res = sendmsg(c->sock, &message, MSG_FASTOPEN);
 			if (res < 0 && errno != EINPROGRESS) {
@@ -114,7 +118,6 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				/* Set to NULL to avoid trying again */
 				c->writequeue = NULL;
 			}
-			m_free(message.msg_iov);
 			packet_queue_consume(c->writequeue, res);
 		}
 #endif
@@ -258,8 +261,7 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 	c->writequeue = writequeue;
 }
 
-struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
-	struct iovec *iov = NULL;
+void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int *iov_count) {
 	struct Link *l;
 	unsigned int i;
 	int len;
@@ -269,9 +271,8 @@ struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
 	#define IOV_MAX UIO_MAXIOV
 	#endif
 
-	*ret_iov_count = MIN(queue->count, IOV_MAX);
+	*iov_count = MIN(MIN(queue->count, IOV_MAX), *iov_count);
 
-	iov = m_malloc(sizeof(*iov) * *ret_iov_count);
 	for (l = queue->head, i = 0; l; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
@@ -282,8 +283,6 @@ struct iovec * packet_queue_to_iovec(struct Queue *queue, int *ret_iov_count) {
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
-
-	return iov;
 }
 
 void packet_queue_consume(struct Queue *queue, ssize_t written) {
