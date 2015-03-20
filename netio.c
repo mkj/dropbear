@@ -273,7 +273,7 @@ void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int 
 
 	*iov_count = MIN(MIN(queue->count, IOV_MAX), *iov_count);
 
-	for (l = queue->head, i = 0; l; l = l->link, i++)
+	for (l = queue->head, i = 0; i < *iov_count; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
 		len = writebuf->len - 1 - writebuf->pos;
