@@ -473,6 +473,14 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 		io_count++;
 	}
 
+	if (io_count == 0) {
+		/* writechannel may sometimes be called twice in a main loop iteration.
+		From common_recv_msg_channel_data() then channelio().
+		The second call may not have any data to write, so we just return. */
+		TRACE(("leave writechannel, no data"))
+		return;
+	}
+
 	if (morelen) {
 		/* Default return value, none consumed */
 		*morelen = 0;
@@ -482,7 +490,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 
 	if (written < 0) {
 		if (errno != EINTR && errno != EAGAIN) {
-			TRACE(("errno %d", errno))
+			TRACE(("channel IO write error fd %d %s", fd, strerror(errno)))
 			close_chan_fd(channel, fd, SHUT_WR);
 		}
 	} else {
@@ -830,6 +838,7 @@ void common_recv_msg_channel_data(struct Channel *channel, int fd,
 	channel->recvwindow -= datalen;
 	dropbear_assert(channel->recvwindow <= opts.recv_window);
 
+	/* Attempt to write the data immediately without having to put it in the circular buffer */
 	consumed = datalen;
 	writechannel(channel, fd, cbuf, buf_getptr(ses.payload, datalen), &consumed);
 
