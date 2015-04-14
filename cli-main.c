@@ -87,6 +87,7 @@ int main(int argc, char ** argv) {
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	char fmtbuf[300];
+	char exitmsg[500];
 
 	if (!sessinitdone) {
 		snprintf(fmtbuf, sizeof(fmtbuf), "Exited: %s",
@@ -98,12 +99,15 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 				cli_opts.remoteport, format);
 	}
 
+	/* Arguments to the exit printout may be unsafe to use after session_cleanup() */
+	vsnprintf(exitmsg, sizeof(exitmsg), fmtbuf, param);
+
 	/* Do the cleanup first, since then the terminal will be reset */
 	session_cleanup();
 	/* Avoid printing onwards from terminal cruft */
 	fprintf(stderr, "\n");
 
-	_dropbear_log(LOG_INFO, fmtbuf, param);
+	dropbear_log(LOG_INFO, "%s", exitmsg);;
 	exit(exitcode);
 }
 
