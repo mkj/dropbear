@@ -72,7 +72,6 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 	int fastopen = 0;
 #ifdef DROPBEAR_TCP_FAST_OPEN
 	struct msghdr message;
-	struct iovec message;
 #endif
 
 	for (r = c->res_iter; r; r = r->ai_next)
@@ -102,9 +101,9 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		if (c->writequeue) {
 			/* 6 is arbitrary, enough to hold initial packets */
 			int iovlen = 6; /* Linux msg_iovlen is a size_t */
-			struct iov[6];
+			struct iovec iov[6];
 			packet_queue_to_iovec(c->writequeue, iov, &iovlen);
-			message.msg_iov = &iov;
+			message.msg_iov = iov;
 			message.msg_iovlen = iovlen;
 			res = sendmsg(c->sock, &message, MSG_FASTOPEN);
 			if (res < 0 && errno != EINPROGRESS) {
