@@ -165,7 +165,7 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
-	hints.ai_family = PF_UNSPEC;
+	hints.ai_family = AF_UNSPEC;
 
 	err = getaddrinfo(remotehost, remoteport, &hints, &c->res);
 	if (err) {
