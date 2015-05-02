@@ -75,7 +75,7 @@ void cli_auth_getmethods() {
 
 void recv_msg_userauth_banner() {
 
-	unsigned char* banner = NULL;
+	char* banner = NULL;
 	unsigned int bannerlen;
 	unsigned int i, linecount;
 
@@ -85,7 +85,7 @@ void recv_msg_userauth_banner() {
 		return;
 	}
 
-	banner = buf_getstring(ses.payload, &bannerlen);
+	banner = (char *)buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
 	if (bannerlen > MAX_BANNER_SIZE) {
@@ -151,8 +151,8 @@ void recv_msg_userauth_specific_60() {
 
 void recv_msg_userauth_failure() {
 
-	unsigned char * methods = NULL;
-	unsigned char * tok = NULL;
+	char * methods = NULL;
+	char * tok = NULL;
 	unsigned int methlen = 0;
 	unsigned int partial = 0;
 	unsigned int i = 0;
@@ -201,7 +201,7 @@ void recv_msg_userauth_failure() {
 		cli_ses.lastauthtype = AUTH_TYPE_NONE;
 	}
 
-	methods = buf_getstring(ses.payload, &methlen);
+	methods = (char *)buf_getstring(ses.payload, &methlen);
 
 	partial = buf_getbool(ses.payload);
 
