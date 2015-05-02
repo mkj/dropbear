@@ -4,7 +4,7 @@ compiler:
 
 script: 
   - autoconf && autoheader && ./configure $BUNDLEDLIBTOM CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst 
-  - test "$NOWRITEV" && sed -i s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h
+  - test "$NOWRITEV" && sed -i s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h || true
   - make install
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
   - ~/inst/bin/dropbearkey -t dss -f testdss
