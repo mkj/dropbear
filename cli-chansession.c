@@ -56,12 +56,12 @@ const struct ChanType clichansess = {
 
 static void cli_chansessreq(struct Channel *channel) {
 
-	unsigned char* type = NULL;
+	char* type = NULL;
 	int wantreply;
 
 	TRACE(("enter cli_chansessreq"))
 
-	type = buf_getstring(ses.payload, NULL);
+	type = (char *) buf_getstring(ses.payload, NULL);
 	wantreply = buf_getbool(ses.payload);
 
 	if (strcmp(type, "exit-status") == 0) {
@@ -272,7 +272,7 @@ void cli_chansess_winchange() {
 
 static void send_chansess_pty_req(struct Channel *channel) {
 
-	unsigned char* term = NULL;
+	char* term = NULL;
 
 	TRACE(("enter send_chansess_pty_req"))
 
@@ -286,7 +286,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 	if (term == NULL) {
 		term = "vt100"; /* Seems a safe default */
 	}
-	buf_putstring(ses.writepayload, term, strlen(term));
+	buf_putstring(ses.writepayload, (const unsigned char *)term, strlen(term));
 
 	/* Window size */
 	put_winsize();
