@@ -567,7 +567,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	chansess->term = buf_getstring(ses.payload, &termlen);
+	chansess->term = (char *) buf_getstring(ses.payload, &termlen);
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
 		TRACE(("leave sessionpty: term len too long"))
@@ -583,7 +583,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
-	chansess->tty = (char*)m_strdup(namebuf);
+	chansess->tty = m_strdup(namebuf);
 	if (!chansess->tty) {
 		dropbear_exit("Out of memory"); /* TODO disconnect */
 	}

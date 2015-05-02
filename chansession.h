@@ -45,8 +45,8 @@ struct ChanSess {
 	/* pty details */
 	int master; /* the master terminal fd*/
 	int slave;
-	unsigned char * tty;
-	unsigned char * term;
+	char * tty;
+	char * term;
 
 	/* exit details */
 	struct exitinfo exit;
