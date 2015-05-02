@@ -1244,12 +1244,12 @@ struct Channel* get_any_ready_channel() {
 }
 
 void start_send_channel_request(struct Channel *channel, 
-		unsigned char *type) {
+		char *type) {
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
 
-	buf_putstring(ses.writepayload, type, strlen(type));
+	buf_putstring(ses.writepayload, (const unsigned char *) type, strlen(type));
 
 }

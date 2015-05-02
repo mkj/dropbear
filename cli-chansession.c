@@ -305,7 +305,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 
 static void send_chansess_shell_req(struct Channel *channel) {
 
-	unsigned char* reqtype = NULL;
+	char* reqtype = NULL;
 
 	TRACE(("enter send_chansess_shell_req"))
 
