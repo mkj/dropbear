@@ -145,7 +145,7 @@ void buf_put_ecdsa_pub_key(buffer *buf, ecc_key *key) {
 	curve = curve_for_dp(key->dp);
 	snprintf(key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
 	buf_putstring(buf, (const unsigned char *) key_ident, strlen(key_ident));
-	buf_putstring(buf, curve->name, strlen(curve->name));
+	buf_putstring(buf, (const unsigned char *) curve->name, strlen(curve->name));
 	buf_put_ecc_raw_pubkey_string(buf, key);
 }
 
