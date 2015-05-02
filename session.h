@@ -115,7 +115,7 @@ struct sshsession {
 	/* remotehost will be initially NULL as we delay
 	 * reading the remote version string. it will be set
 	 * by the time any recv_() packet methods are called */
-	unsigned char *remoteident; 
+	char *remoteident;
 
 	int maxfd; /* the maximum file descriptor to check with select() */
 
