@@ -39,7 +39,7 @@ struct exitinfo {
 
 struct ChanSess {
 
-	unsigned char * cmd; /* command to exec */
+	char * cmd; /* command to exec */
 	pid_t pid; /* child process pid */
 
 	/* pty details */

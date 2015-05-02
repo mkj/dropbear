@@ -649,7 +649,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	if (iscmd) {
 		/* "exec" */
 		if (chansess->cmd == NULL) {
-			chansess->cmd = buf_getstring(ses.payload, &cmdlen);
+			chansess->cmd = (char *) buf_getstring(ses.payload, &cmdlen);
 
 			if (cmdlen > MAX_CMD_LEN) {
 				m_free(chansess->cmd);
