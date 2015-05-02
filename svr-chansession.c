@@ -603,6 +603,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
+#ifndef USE_VFORK
 static void make_connection_string(struct ChanSess *chansess) {
 	char *local_ip, *local_port, *remote_ip, *remote_port;
 	size_t len;
@@ -624,6 +625,7 @@ static void make_connection_string(struct ChanSess *chansess) {
 	m_free(remote_ip);
 	m_free(remote_port);
 }
+#endif
 
 /* Handle a command request from the client. This is used for both shell
  * and command-execution requests, and passes the command to
