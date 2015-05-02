@@ -1043,7 +1043,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		int curve_oid_len = 0;
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
-		unsigned int k_size;
+		int k_size;
 		int err = 0;
 
 		/* version. less than 10 bytes */
