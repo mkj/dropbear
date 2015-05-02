@@ -124,6 +124,8 @@ void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection 
 	/* Exchange identification */
 	send_session_identification();
 
+	kexfirstinitialise(); /* initialise the kex state */
+
 	send_msg_kexinit();
 
 	session_loop(cli_sessionloop);

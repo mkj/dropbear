@@ -90,8 +90,6 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
 	
-	kexfirstinitialise(); /* initialise the kex state */
-
 	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
 
