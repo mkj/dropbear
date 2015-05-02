@@ -183,7 +183,7 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
-	buf_putstring(ses.writepayload, "exit-status", 11);
+	buf_putstring(ses.writepayload, (const unsigned char *) "exit-status", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
 	buf_putint(ses.writepayload, chansess->exit.exitstatus);
 
@@ -219,12 +219,12 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
-	buf_putstring(ses.writepayload, "exit-signal", 11);
+	buf_putstring(ses.writepayload, (const unsigned char *) "exit-signal", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
 	buf_putstring(ses.writepayload, signame, strlen(signame));
 	buf_putbyte(ses.writepayload, chansess->exit.exitcore);
-	buf_putstring(ses.writepayload, "", 0); /* error msg */
-	buf_putstring(ses.writepayload, "", 0); /* lang */
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* error msg */
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* lang */
 
 	encrypt_packet();
 }
@@ -557,7 +557,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
-	unsigned char namebuf[65];
+	char namebuf[65];
 	struct passwd * pw = NULL;
 
 	TRACE(("enter sessionpty"))

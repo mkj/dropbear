@@ -58,8 +58,8 @@ int x11req(struct ChanSess * chansess) {
 	}
 
 	chansess->x11singleconn = buf_getbool(ses.payload);
-	chansess->x11authprot = buf_getstring(ses.payload, NULL);
-	chansess->x11authcookie = buf_getstring(ses.payload, NULL);
+	chansess->x11authprot = (char *)buf_getstring(ses.payload, NULL);
+	chansess->x11authcookie = (char *)buf_getstring(ses.payload, NULL);
 	chansess->x11screennum = buf_getint(ses.payload);
 
 	/* create listening socket */
@@ -203,7 +203,7 @@ static int send_msg_channel_open_x11(int fd, struct sockaddr_in* addr) {
 
 	if (send_msg_channel_open_init(fd, &chan_x11) == DROPBEAR_SUCCESS) {
 		ipstring = inet_ntoa(addr->sin_addr);
-		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
+		buf_putstring(ses.writepayload, (const unsigned char *)ipstring, strlen(ipstring));
 		buf_putint(ses.writepayload, addr->sin_port);
 
 		encrypt_packet();

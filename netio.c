@@ -100,7 +100,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 		if (c->writequeue) {
 			/* 6 is arbitrary, enough to hold initial packets */
-			int iovlen = 6; /* Linux msg_iovlen is a size_t */
+			unsigned int iovlen = 6; /* Linux msg_iovlen is a size_t */
 			struct iovec iov[6];
 			packet_queue_to_iovec(c->writequeue, iov, &iovlen);
 			message.msg_iov = iov;

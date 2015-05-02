@@ -128,10 +128,10 @@ void send_msg_kexinit() {
 	buf_put_algolist(ses.writepayload, ses.compress_algos);
 
 	/* languages_client_to_server */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
 
 	/* languages_server_to_client */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
 
 	/* first_kex_packet_follows */
 	buf_putbyte(ses.writepayload, (ses.send_kex_first_guess != NULL));

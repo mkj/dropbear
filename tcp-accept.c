@@ -98,7 +98,7 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 		buf_putint(ses.writepayload, port);
 
 		/* originator ip */
-		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
+		buf_putstring(ses.writepayload, (const unsigned char *)ipstring, strlen(ipstring));
 		/* originator port */
 		buf_putint(ses.writepayload, atol(portstring));
 

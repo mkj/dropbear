@@ -921,7 +921,7 @@ static void send_msg_channel_window_adjust(struct Channel* channel,
 /* Handle a new channel request, performing any channel-type-specific setup */
 void recv_msg_channel_open() {
 
-	unsigned char *type;
+	char *type;
 	unsigned int typelen;
 	unsigned int remotechan, transwindow, transmaxpacket;
 	struct Channel *channel;
@@ -934,7 +934,7 @@ void recv_msg_channel_open() {
 	TRACE(("enter recv_msg_channel_open"))
 
 	/* get the packet contents */
-	type = buf_getstring(ses.payload, &typelen);
+	type = (char *) buf_getstring(ses.payload, &typelen);
 
 	remotechan = buf_getint(ses.payload);
 	transwindow = buf_getint(ses.payload);
@@ -1149,7 +1149,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
-	buf_putstring(ses.writepayload, type->name, strlen(type->name));
+	buf_putstring(ses.writepayload, (const unsigned char *) type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
 	buf_putint(ses.writepayload, opts.recv_window);
 	buf_putint(ses.writepayload, RECV_MAX_CHANNEL_DATA_LEN);

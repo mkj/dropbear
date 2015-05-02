@@ -149,22 +149,22 @@ void cli_auth_interactive() {
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
 	/* username */
-	buf_putstring(ses.writepayload, cli_opts.username,
+	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
 			strlen(cli_opts.username));
 
 	/* service name */
-	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION, 
+	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
 
 	/* method */
-	buf_putstring(ses.writepayload, AUTH_METHOD_INTERACT,
+	buf_putstring(ses.writepayload, (const unsigned char *)AUTH_METHOD_INTERACT,
 			AUTH_METHOD_INTERACT_LEN);
 
 	/* empty language tag */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *)"", 0);
 
 	/* empty submethods */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *)"", 0);
 
 	encrypt_packet();
 	cli_ses.interact_request_received = 0;

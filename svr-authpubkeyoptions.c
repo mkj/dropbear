@@ -120,7 +120,7 @@ static int match_option(buffer *options_buf, const char *opt_name) {
 	if (options_buf->len - options_buf->pos < len) {
 		return DROPBEAR_FAILURE;
 	}
-	if (strncasecmp(buf_getptr(options_buf, len), opt_name, len) == 0) {
+	if (strncasecmp((const char *) buf_getptr(options_buf, len), opt_name, len) == 0) {
 		buf_incrpos(options_buf, len);
 		return DROPBEAR_SUCCESS;
 	}

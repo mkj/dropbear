@@ -133,7 +133,7 @@ struct PubKeyOptions {
 	int no_x11_forwarding_flag;
 	int no_pty_flag;
 	/* "command=" option. */
-	unsigned char * forced_command;
+	char * forced_command;
 };
 #endif
 

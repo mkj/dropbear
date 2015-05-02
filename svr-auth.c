@@ -89,7 +89,7 @@ void send_msg_userauth_banner(buffer *banner) {
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
 	buf_putbufstring(ses.writepayload, banner);
-	buf_putstring(ses.writepayload, "en", 2);
+	buf_putstring(ses.writepayload, (const unsigned char *)"en", 2);
 
 	encrypt_packet();
 
@@ -333,14 +333,14 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	typebuf = buf_new(30); /* long enough for PUBKEY and PASSWORD */
 
 	if (ses.authstate.authtypes & AUTH_TYPE_PUBKEY) {
-		buf_putbytes(typebuf, AUTH_METHOD_PUBKEY, AUTH_METHOD_PUBKEY_LEN);
+		buf_putbytes(typebuf, (const unsigned char *)AUTH_METHOD_PUBKEY, AUTH_METHOD_PUBKEY_LEN);
 		if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
 			buf_putbyte(typebuf, ',');
 		}
 	}
 	
 	if (ses.authstate.authtypes & AUTH_TYPE_PASSWORD) {
-		buf_putbytes(typebuf, AUTH_METHOD_PASSWORD, AUTH_METHOD_PASSWORD_LEN);
+		buf_putbytes(typebuf, (const unsigned char *)AUTH_METHOD_PASSWORD, AUTH_METHOD_PASSWORD_LEN);
 	}
 
 	buf_putbufstring(ses.writepayload, typebuf);

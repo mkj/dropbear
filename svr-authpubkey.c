@@ -260,9 +260,9 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 		/* check the key type - will fail if there are options */
 		TRACE(("a line!"))
 
-		if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) {
+		if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
 			int is_comment = 0;
-			char *options_start = NULL;
+			unsigned char *options_start = NULL;
 			int options_len = 0;
 			int escape, quoted;
 			
@@ -308,7 +308,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 			if (line->pos + algolen+3 > line->len) {
 				continue;
 			}
-			if (strncmp(buf_getptr(line, algolen), algo, algolen) != 0) { 
+			if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
 				continue;
 			}
 		}

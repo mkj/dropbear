@@ -43,11 +43,11 @@ void cli_auth_getmethods() {
 	TRACE(("enter cli_auth_getmethods"))
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
-	buf_putstring(ses.writepayload, cli_opts.username, 
+	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
 			strlen(cli_opts.username));
-	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION, 
+	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
-	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
+	buf_putstring(ses.writepayload, (const unsigned char *)"none", 4); /* 'none' method */
 
 	encrypt_packet();
 

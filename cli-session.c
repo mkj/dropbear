@@ -192,7 +192,7 @@ static void send_msg_service_request(char* servicename) {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_SERVICE_REQUEST);
-	buf_putstring(ses.writepayload, servicename, strlen(servicename));
+	buf_putstring(ses.writepayload, (const unsigned char *)servicename, strlen(servicename));
 
 	encrypt_packet();
 	TRACE(("leave send_msg_service_request"))

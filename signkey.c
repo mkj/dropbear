@@ -138,14 +138,14 @@ signkey_key_ptr(sign_key *key, enum signkey_type type) {
  * on return is set to the type read (useful when type = _ANY) */
 int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
-	unsigned char* ident;
+	char *ident;
 	unsigned int len;
 	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE2(("enter buf_get_pub_key"))
 
-	ident = buf_getstring(buf, &len);
+	ident = (char *) buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
 	m_free(ident);
 
@@ -209,14 +209,14 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
  * on return is set to the type read (useful when type = _ANY) */
 int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
-	unsigned char* ident;
+	char *ident;
 	unsigned int len;
 	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
 
 	TRACE2(("enter buf_get_priv_key"))
 
-	ident = buf_getstring(buf, &len);
+	ident = (char *)buf_getstring(buf, &len);
 	keytype = signkey_type_from_name(ident, len);
 	m_free(ident);
 
@@ -515,14 +515,14 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type,
  * signature blob */
 int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	
-	unsigned char * type_name = NULL;
+	char *type_name = NULL;
 	unsigned int type_name_len = 0;
 	enum signkey_type type;
 
 	TRACE(("enter buf_verify"))
 
 	buf_getint(buf); /* blob length */
-	type_name = buf_getstring(buf, &type_name_len);
+	type_name = (char *) buf_getstring(buf, &type_name_len);
 	type = signkey_type_from_name(type_name, type_name_len);
 	m_free(type_name);
 

@@ -237,7 +237,7 @@ static int newtcpdirect(struct Channel * channel) {
 	unsigned char* orighost = NULL;
 	unsigned int origport;
 	char portstring[NI_MAXSERV];
-	int len;
+	unsigned int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	TRACE(("newtcpdirect channel %d", channel->index))

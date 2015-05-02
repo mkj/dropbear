@@ -193,7 +193,7 @@ out:
 static void base64_encode_fp(FILE * fp, unsigned char *data,
 		int datalen, int cpl)
 {
-    char out[100];
+	unsigned char out[100];
     int n;
 	unsigned long outlen;
 	int rawcpl;
@@ -445,7 +445,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 						ret->keyblob_size);
 			}
 			outlen = ret->keyblob_size - ret->keyblob_len;
-			if (base64_decode(buffer, len, 
+			if (base64_decode((const unsigned char *)buffer, len,
 						ret->keyblob + ret->keyblob_len, &outlen) != CRYPT_OK){
 				errmsg = "Error decoding base64";
 				goto error;
@@ -602,13 +602,13 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 
 #ifdef DROPBEAR_DSS
 	if (key->type == OSSH_DSA) {
-		buf_putstring(blobbuf, "ssh-dss", 7);
+		buf_putstring(blobbuf, (const unsigned char *)"ssh-dss", 7);
 		retkey->type = DROPBEAR_SIGNKEY_DSS;
 	} 
 #endif
 #ifdef DROPBEAR_RSA
 	if (key->type == OSSH_RSA) {
-		buf_putstring(blobbuf, "ssh-rsa", 7);
+		buf_putstring(blobbuf, (const unsigned char *)"ssh-rsa", 7);
 		retkey->type = DROPBEAR_SIGNKEY_RSA;
 	}
 #endif
