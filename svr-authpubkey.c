@@ -70,10 +70,10 @@
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
-static int checkpubkey(unsigned char* algo, unsigned int algolen,
+static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
 static int checkpubkeyperms();
-static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
+static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
 static int checkfileperm(char * filename);
 
@@ -82,7 +82,7 @@ static int checkfileperm(char * filename);
 void svr_auth_pubkey() {
 
 	unsigned char testkey; /* whether we're just checking if a key is usable */
-	unsigned char* algo = NULL; /* pubkey algo */
+	char* algo = NULL; /* pubkey algo */
 	unsigned int algolen;
 	unsigned char* keyblob = NULL;
 	unsigned int keybloblen;
@@ -98,7 +98,7 @@ void svr_auth_pubkey() {
 	 * actual attempt*/
 	testkey = (buf_getbool(ses.payload) == 0);
 
-	algo = buf_getstring(ses.payload, &algolen);
+	algo = (char *) buf_getstring(ses.payload, &algolen);
 	keybloblen = buf_getint(ses.payload);
 	keyblob = buf_getptr(ses.payload, keybloblen);
 
@@ -173,14 +173,14 @@ out:
 /* Reply that the key is valid for auth, this is sent when the user sends
  * a straight copy of their pubkey to test, to avoid having to perform
  * expensive signing operations with a worthless key */
-static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
+static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
 	TRACE(("enter send_msg_userauth_pk_ok"))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_PK_OK);
-	buf_putstring(ses.writepayload, algo, algolen);
+	buf_putstring(ses.writepayload, (const unsigned char *) algo, algolen);
 	buf_putstring(ses.writepayload, keyblob, keybloblen);
 
 	encrypt_packet();
@@ -191,7 +191,7 @@ static void send_msg_userauth_pk_ok(unsigned char* algo, unsigned int algolen,
 /* Checks whether a specified publickey (and associated algorithm) is an
  * acceptable key for authentication */
 /* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
-static int checkpubkey(unsigned char* algo, unsigned int algolen,
+static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
@@ -330,7 +330,7 @@ static int checkpubkey(unsigned char* algo, unsigned int algolen,
 
 		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
 
-		ret = cmp_base64_key(keyblob, keybloblen, algo, algolen, line, NULL);
+		ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
 		if (ret == DROPBEAR_SUCCESS && options_buf) {
 			ret = svr_add_pubkey_options(options_buf, line_num, filename);
