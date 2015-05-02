@@ -343,7 +343,7 @@ static void closechansess(struct Channel *channel) {
  * or x11/authagent forwarding. These are passed to appropriate handlers */
 static void chansessionrequest(struct Channel *channel) {
 
-	unsigned char * type = NULL;
+	char * type = NULL;
 	unsigned int typelen;
 	unsigned char wantreply;
 	int ret = 1;
@@ -351,7 +351,7 @@ static void chansessionrequest(struct Channel *channel) {
 
 	TRACE(("enter chansessionrequest"))
 
-	type = buf_getstring(ses.payload, &typelen);
+	type = (char *) buf_getstring(ses.payload, &typelen);
 	wantreply = buf_getbool(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
