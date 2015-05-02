@@ -1,7 +1,7 @@
 /*
  * Dropbear - a SSH2 server
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -280,7 +280,7 @@ void session_cleanup() {
 		return;
 	}
 
-	/* Beware of changing order of functions here. */
+	/* BEWARE of changing order of functions here. */
 
 	/* Must be before extra_session_cleanup() */
 	chancleanup();
@@ -289,7 +289,7 @@ void session_cleanup() {
 		ses.extra_session_cleanup();
 	}
 
-	/* After these are freed most functions will exit */
+	/* After these are freed most functions will fail */
 #ifdef DROPBEAR_CLEANUP
 	/* listeners call cleanup functions, this should occur before
 	other session state is freed. */
