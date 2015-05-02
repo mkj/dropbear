@@ -728,6 +728,7 @@ int ECB_TEST(void)
 */
 void ECB_DONE(symmetric_key *skey)
 {
+   (void)skey;
 }
 
 
