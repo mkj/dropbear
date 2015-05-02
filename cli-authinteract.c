@@ -66,8 +66,8 @@ static char* get_response(char* prompt)
 
 void recv_msg_userauth_info_request() {
 
-	unsigned char *name = NULL;
-	unsigned char *instruction = NULL;
+	char *name = NULL;
+	char *instruction = NULL;
 	unsigned int num_prompts = 0;
 	unsigned int i;
 
@@ -84,8 +84,8 @@ void recv_msg_userauth_info_request() {
 	}
 	cli_ses.interact_request_received = 1;
 
-	name = buf_getstring(ses.payload, NULL);
-	instruction = buf_getstring(ses.payload, NULL);
+	name = (char *)buf_getstring(ses.payload, NULL);
+	instruction = (char *)buf_getstring(ses.payload, NULL);
 
 	/* language tag */
 	buf_eatstring(ses.payload);
