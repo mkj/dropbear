@@ -107,7 +107,7 @@ static void x11accept(struct Listener* listener, int sock) {
 
 	int fd;
 	struct sockaddr_in addr;
-	int len;
+	socklen_t len;
 	int ret;
 	struct ChanSess * chansess = (struct ChanSess *)(listener->typedata);
 
