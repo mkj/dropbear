@@ -507,7 +507,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	int i, num_integers = 0;
 	sign_key *retval = NULL;
 	char *errmsg;
-	char *modptr = NULL;
+	unsigned char *modptr = NULL;
 	int modlen = -9999;
 	enum signkey_type type;
 
@@ -646,7 +646,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 			 */
 			if (i == 1) {
 				/* Save the details for after we deal with number 2. */
-				modptr = (char *)p;
+				modptr = p;
 				modlen = len;
 			} else if (i >= 2 && i <= 5) {
 				buf_putstring(blobbuf, p, len);
