@@ -36,7 +36,7 @@
 #include "dbrandom.h"
 
 static void authclear();
-static int checkusername(unsigned char *username, unsigned int userlen);
+static int checkusername(char *username, unsigned int userlen);
 
 /* initialise the first time for a session, resetting all parameters */
 void svr_authinitialise() {
@@ -100,7 +100,7 @@ void send_msg_userauth_banner(buffer *banner) {
  * checking, and handle success or failure */
 void recv_msg_userauth_request() {
 
-	unsigned char *username = NULL, *servicename = NULL, *methodname = NULL;
+	char *username = NULL, *servicename = NULL, *methodname = NULL;
 	unsigned int userlen, servicelen, methodlen;
 	int valid_user = 0;
 
@@ -119,9 +119,9 @@ void recv_msg_userauth_request() {
 		svr_opts.banner = NULL;
 	}
 
-	username = buf_getstring(ses.payload, &userlen);
-	servicename = buf_getstring(ses.payload, &servicelen);
-	methodname = buf_getstring(ses.payload, &methodlen);
+	username = (char *)buf_getstring(ses.payload, &userlen);
+	servicename = (char *)buf_getstring(ses.payload, &servicelen);
+	methodname = (char *)buf_getstring(ses.payload, &methodlen);
 
 	/* only handle 'ssh-connection' currently */
 	if (servicelen != SSH_SERVICE_CONNECTION_LEN
@@ -227,7 +227,7 @@ out:
 
 /* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
-static int checkusername(unsigned char *username, unsigned int userlen) {
+static int checkusername(char *username, unsigned int userlen) {
 
 	char* listshell = NULL;
 	char* usershell = NULL;
