@@ -265,7 +265,7 @@ AC_CACHE_CHECK([for struct sockaddr_storage], ac_cv_have_struct_sockaddr_storage
 #include <sys/types.h>
 #include <sys/socket.h>
 		]],
-		[[ struct sockaddr_storage s; ]])],
+		[[ if (sizeof(struct sockaddr_storage)) return 0 ]])],
 		[ ac_cv_have_struct_sockaddr_storage="yes" ],
 		[ ac_cv_have_struct_sockaddr_storage="no" ]
 	)
@@ -279,7 +279,7 @@ AC_CACHE_CHECK([for struct sockaddr_in6], ac_cv_have_struct_sockaddr_in6, [
 #include <sys/types.h>
 #include <netinet/in.h>
 		]],
-		[[ struct sockaddr_in6 s; s.sin6_family = 0; ]])],
+		[[ if (sizeof(struct sockaddr_in6)) return 0 ]])],
 		[ ac_cv_have_struct_sockaddr_in6="yes" ],
 		[ ac_cv_have_struct_sockaddr_in6="no" ]
 	)
@@ -293,7 +293,7 @@ AC_CACHE_CHECK([for struct in6_addr], ac_cv_have_struct_in6_addr, [
 #include <sys/types.h>
 #include <netinet/in.h>
 		]],
-		[[ struct in6_addr s; s.s6_addr[0] = 0; ]])],
+		[[ if (sizeof(struct in6_addr)) return 0 ]])],
 		[ ac_cv_have_struct_in6_addr="yes" ],
 		[ ac_cv_have_struct_in6_addr="no" ]
 	)
@@ -308,7 +308,7 @@ AC_CACHE_CHECK([for struct addrinfo], ac_cv_have_struct_addrinfo, [
 #include <sys/socket.h>
 #include <netdb.h>
 		]],
-		[[ struct addrinfo s; s.ai_flags = AI_PASSIVE; ]])],
+		[[ if (sizeof(struct addrinfo)) return 0 ]])],
 		[ ac_cv_have_struct_addrinfo="yes" ],
 		[ ac_cv_have_struct_addrinfo="no" ]
 	)
