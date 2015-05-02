@@ -221,7 +221,7 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 	buf_putint(ses.writepayload, channel->remotechan);
 	buf_putstring(ses.writepayload, (const unsigned char *) "exit-signal", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
-	buf_putstring(ses.writepayload, signame, strlen(signame));
+	buf_putstring(ses.writepayload, (const unsigned char *) signame, strlen(signame));
 	buf_putbyte(ses.writepayload, chansess->exit.exitcore);
 	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* error msg */
 	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* lang */
@@ -406,7 +406,7 @@ out:
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
-	unsigned char* signame = NULL;
+	char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
@@ -414,7 +414,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	signame = buf_getstring(ses.payload, NULL);
+	signame = (char *) buf_getstring(ses.payload, NULL);
 
 	i = 0;
 	while (signames[i].name != 0) {
