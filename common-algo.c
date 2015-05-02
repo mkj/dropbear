@@ -322,7 +322,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 				buf_putbyte(algolist, ',');
 			donefirst = 1;
 			len = strlen(localalgos[i].name);
-			buf_putbytes(algolist, localalgos[i].name, len);
+			buf_putbytes(algolist, (const unsigned char *) localalgos[i].name, len);
 		}
 	}
 	buf_putstring(buf, algolist->data, algolist->len);
