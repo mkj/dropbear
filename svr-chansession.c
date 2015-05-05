@@ -183,7 +183,7 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
-	buf_putstring(ses.writepayload, "exit-status", 11);
+	buf_putstring(ses.writepayload, (const unsigned char *) "exit-status", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
 	buf_putint(ses.writepayload, chansess->exit.exitstatus);
 
@@ -219,12 +219,12 @@ static void send_msg_chansess_exitsignal(struct Channel * channel,
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
-	buf_putstring(ses.writepayload, "exit-signal", 11);
+	buf_putstring(ses.writepayload, (const unsigned char *) "exit-signal", 11);
 	buf_putbyte(ses.writepayload, 0); /* boolean FALSE */
-	buf_putstring(ses.writepayload, signame, strlen(signame));
+	buf_putstring(ses.writepayload, (const unsigned char *) signame, strlen(signame));
 	buf_putbyte(ses.writepayload, chansess->exit.exitcore);
-	buf_putstring(ses.writepayload, "", 0); /* error msg */
-	buf_putstring(ses.writepayload, "", 0); /* lang */
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* error msg */
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0); /* lang */
 
 	encrypt_packet();
 }
@@ -343,7 +343,7 @@ static void closechansess(struct Channel *channel) {
  * or x11/authagent forwarding. These are passed to appropriate handlers */
 static void chansessionrequest(struct Channel *channel) {
 
-	unsigned char * type = NULL;
+	char * type = NULL;
 	unsigned int typelen;
 	unsigned char wantreply;
 	int ret = 1;
@@ -351,7 +351,7 @@ static void chansessionrequest(struct Channel *channel) {
 
 	TRACE(("enter chansessionrequest"))
 
-	type = buf_getstring(ses.payload, &typelen);
+	type = (char *) buf_getstring(ses.payload, &typelen);
 	wantreply = buf_getbool(ses.payload);
 
 	if (typelen > MAX_NAME_LEN) {
@@ -406,7 +406,7 @@ out:
 static int sessionsignal(struct ChanSess *chansess) {
 
 	int sig = 0;
-	unsigned char* signame = NULL;
+	char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
@@ -414,7 +414,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	signame = buf_getstring(ses.payload, NULL);
+	signame = (char *) buf_getstring(ses.payload, NULL);
 
 	i = 0;
 	while (signames[i].name != 0) {
@@ -557,7 +557,7 @@ static void get_termmodes(struct ChanSess *chansess) {
 static int sessionpty(struct ChanSess * chansess) {
 
 	unsigned int termlen;
-	unsigned char namebuf[65];
+	char namebuf[65];
 	struct passwd * pw = NULL;
 
 	TRACE(("enter sessionpty"))
@@ -567,7 +567,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 
-	chansess->term = buf_getstring(ses.payload, &termlen);
+	chansess->term = (char *) buf_getstring(ses.payload, &termlen);
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
 		TRACE(("leave sessionpty: term len too long"))
@@ -583,7 +583,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
-	chansess->tty = (char*)m_strdup(namebuf);
+	chansess->tty = m_strdup(namebuf);
 	if (!chansess->tty) {
 		dropbear_exit("Out of memory"); /* TODO disconnect */
 	}
@@ -649,7 +649,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	if (iscmd) {
 		/* "exec" */
 		if (chansess->cmd == NULL) {
-			chansess->cmd = buf_getstring(ses.payload, &cmdlen);
+			chansess->cmd = (char *) buf_getstring(ses.payload, &cmdlen);
 
 			if (cmdlen > MAX_CMD_LEN) {
 				m_free(chansess->cmd);

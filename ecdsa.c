@@ -140,12 +140,12 @@ ecc_key *buf_get_ecdsa_priv_key(buffer *buf) {
 
 void buf_put_ecdsa_pub_key(buffer *buf, ecc_key *key) {
 	struct dropbear_ecc_curve *curve = NULL;
-	unsigned char key_ident[30];
+	char key_ident[30];
 
 	curve = curve_for_dp(key->dp);
-	snprintf((char*)key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
-	buf_putstring(buf, key_ident, strlen(key_ident));
-	buf_putstring(buf, curve->name, strlen(curve->name));
+	snprintf(key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
+	buf_putstring(buf, (const unsigned char *) key_ident, strlen(key_ident));
+	buf_putstring(buf, (const unsigned char *) curve->name, strlen(curve->name));
 	buf_put_ecc_raw_pubkey_string(buf, key);
 }
 
@@ -161,7 +161,7 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 	hash_state hs;
 	unsigned char hash[64];
 	void *e = NULL, *p = NULL, *s = NULL, *r;
-	unsigned char key_ident[30];
+	char key_ident[30];
 	buffer *sigbuf = NULL;
 
 	TRACE(("buf_put_ecdsa_sign"))
@@ -222,8 +222,8 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 		}
 	}
 
-	snprintf((char*)key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
-	buf_putstring(buf, key_ident, strlen(key_ident));
+	snprintf(key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
+	buf_putstring(buf, (const unsigned char *) key_ident, strlen(key_ident));
 	/* enough for nistp521 */
 	sigbuf = buf_new(200);
 	buf_putmpint(sigbuf, (mp_int*)r);
