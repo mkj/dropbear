@@ -70,7 +70,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 	struct addrinfo *r;
 	int res = 0;
 	int fastopen = 0;
-#ifdef DROPBEAR_TCP_FAST_OPEN
+#ifdef DROPBEAR_CLIENT_TCP_FAST_OPEN
 	struct msghdr message;
 #endif
 
@@ -91,14 +91,13 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		set_piggyback_ack(c->sock);
 #endif
 
-#ifdef DROPBEAR_TCP_FAST_OPEN
+#ifdef DROPBEAR_CLIENT_TCP_FAST_OPEN
 		fastopen = (c->writequeue != NULL);
 
-		memset(&message, 0x0, sizeof(message));
-		message.msg_name = r->ai_addr;
-		message.msg_namelen = r->ai_addrlen;
-
-		if (c->writequeue) {
+		if (fastopen) {
+			memset(&message, 0x0, sizeof(message));
+			message.msg_name = r->ai_addr;
+			message.msg_namelen = r->ai_addrlen;
 			/* 6 is arbitrary, enough to hold initial packets */
 			int iovlen = 6; /* Linux msg_iovlen is a size_t */
 			struct iovec iov[6];
@@ -106,18 +105,22 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			message.msg_iov = iov;
 			message.msg_iovlen = iovlen;
 			res = sendmsg(c->sock, &message, MSG_FASTOPEN);
-			if (res < 0 && errno != EINPROGRESS) {
-				m_free(c->errstring);
-				c->errstring = m_strdup(strerror(errno));
-				/* Not entirely sure which kind of errors are normal - 2.6.32 seems to 
-				return EPIPE for any (nonblocking?) sendmsg(). just fall back */
-				TRACE(("sendmsg tcp_fastopen failed, falling back. %s", strerror(errno)));
-				/* No kernel MSG_FASTOPEN support. Fall back below */
-				fastopen = 0;
-				/* Set to NULL to avoid trying again */
-				c->writequeue = NULL;
+			/* Returns EINPROGRESS if FASTOPEN wasn't available */
+			if (res < 0) {
+				if (errno != EINPROGRESS) {
+					m_free(c->errstring);
+					c->errstring = m_strdup(strerror(errno));
+					/* Not entirely sure which kind of errors are normal - 2.6.32 seems to 
+					return EPIPE for any (nonblocking?) sendmsg(). just fall back */
+					TRACE(("sendmsg tcp_fastopen failed, falling back. %s", strerror(errno)));
+					/* No kernel MSG_FASTOPEN support. Fall back below */
+					fastopen = 0;
+					/* Set to NULL to avoid trying again */
+					c->writequeue = NULL;
+				}
+			} else {
+				packet_queue_consume(c->writequeue, res);
 			}
-			packet_queue_consume(c->writequeue, res);
 		}
 #endif
 
@@ -310,7 +313,7 @@ void set_sock_nodelay(int sock) {
 	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
 }
 
-#ifdef DROPBEAR_TCP_FAST_OPEN
+#ifdef DROPBEAR_SERVER_TCP_FAST_OPEN
 void set_listen_fast_open(int sock) {
 	int qlen = MAX(MAX_UNAUTH_PER_IP, 5);
 	if (setsockopt(sock, SOL_TCP, TCP_FASTOPEN, &qlen, sizeof(qlen)) != 0) {
