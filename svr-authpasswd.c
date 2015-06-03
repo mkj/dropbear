@@ -33,6 +33,8 @@
 
 #ifdef ENABLE_SVR_PASSWORD_AUTH
 
+/* not constant time when strings are differing lengths. 
+ string content isn't leaked, and crypt hashes are predictable length. */
 static int constant_time_strcmp(const char* a, const char* b) {
 	size_t la = strlen(a);
 	size_t lb = strlen(b);
