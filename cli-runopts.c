@@ -447,7 +447,7 @@ void cli_getopts(int argc, char ** argv) {
 	}
 #endif
 
-#ifdef DROPBEAR_DEFAULT_CLI_AUTHKEY
+#if defined(DROPBEAR_DEFAULT_CLI_AUTHKEY) && defined(ENABLE_CLI_PUBKEY_AUTH)
 	{
 		char *expand_path = expand_tilde(DROPBEAR_DEFAULT_CLI_AUTHKEY);
 		loadidentityfile(expand_path, 0);
@@ -498,11 +498,14 @@ multihop_passthrough_args() {
 	m_list_elem *iter;
 	/* Fill out -i, -y, -W options that make sense for all
 	 * the intermediate processes */
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
 		sign_key * key = (sign_key*)iter->item;
 		len += 3 + strlen(key->filename);
 	}
+#endif /* ENABLE_CLI_PUBKEY_AUTH */
+
 	len += 30; /* space for -W <size>, terminator. */
 	ret = m_malloc(len);
 	total = 0;
@@ -524,6 +527,7 @@ multihop_passthrough_args() {
 		total += written;
 	}
 
+#ifdef ENABLE_CLI_PUBKEY_AUTH
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
 		sign_key * key = (sign_key*)iter->item;
@@ -532,6 +536,7 @@ multihop_passthrough_args() {
 		dropbear_assert((unsigned int)written < size);
 		total += written;
 	}
+#endif /* ENABLE_CLI_PUBKEY_AUTH */
 
 	/* if args were passed, total will be not zero, and it will have a space at the end, so remove that */
 	if (total > 0) 
