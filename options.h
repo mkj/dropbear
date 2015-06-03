@@ -103,9 +103,14 @@ much traffic. */
 #define DROPBEAR_ENABLE_CBC_MODE
 
 /* Enable "Counter Mode" for ciphers. This is more secure than normal
- * CBC mode against certain attacks. This adds around 1kB to binary 
- * size and is recommended for most cases */
+ * CBC mode against certain attacks. It is recommended for security
+ * and forwards compatibility */
 #define DROPBEAR_ENABLE_CTR_MODE
+
+/* Twofish counter mode is disabled by default because it 
+has not been tested for interoperability with other SSH implementations.
+If you test it please contact the Dropbear author */
+/* #define DROPBEAR_TWOFISH_CTR */
 
 /* You can compile with no encryption if you want. In some circumstances
  * this could be safe security-wise, though make sure you know what

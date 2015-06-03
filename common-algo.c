@@ -144,12 +144,15 @@ algo_type sshciphers[] = {
 #ifdef DROPBEAR_AES256
 	{"aes256-ctr", 0, &dropbear_aes256, 1, &dropbear_mode_ctr},
 #endif
+#ifdef DROPBEAR_TWOFISH_CTR
+/* twofish ctr is conditional as it hasn't been tested for interoperability, see options.h */
 #ifdef DROPBEAR_TWOFISH256
 	{"twofish256-ctr", 0, &dropbear_twofish256, 1, &dropbear_mode_ctr},
 #endif
 #ifdef DROPBEAR_TWOFISH128
 	{"twofish128-ctr", 0, &dropbear_twofish128, 1, &dropbear_mode_ctr},
 #endif
+#endif /* DROPBEAR_TWOFISH_CTR */
 #endif /* DROPBEAR_ENABLE_CTR_MODE */
 
 #ifdef DROPBEAR_ENABLE_CBC_MODE
