@@ -374,10 +374,10 @@ static void cli_remoteclosed() {
 /* Operates in-place turning dirty (untrusted potentially containing control
  * characters) text into clean text. 
  * Note: this is safe only with ascii - other charsets could have problems. */
-void cleantext(unsigned char* dirtytext) {
+void cleantext(char* dirtytext) {
 
 	unsigned int i, j;
-	unsigned char c;
+	char c;
 
 	j = 0;
 	for (i = 0; dirtytext[i] != '\0'; i++) {

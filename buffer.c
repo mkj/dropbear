@@ -203,10 +203,10 @@ unsigned char* buf_getwriteptr(buffer* buf, unsigned int len) {
 /* Return a null-terminated string, it is malloced, so must be free()ed
  * Note that the string isn't checked for null bytes, hence the retlen
  * may be longer than what is returned by strlen */
-unsigned char* buf_getstring(buffer* buf, unsigned int *retlen) {
+char* buf_getstring(buffer* buf, unsigned int *retlen) {
 
 	unsigned int len;
-	unsigned char* ret;
+	char* ret;
 	len = buf_getint(buf);
 	if (len > MAX_STRING_LEN) {
 		dropbear_exit("String too long");
@@ -262,16 +262,16 @@ void buf_putint(buffer* buf, int unsigned val) {
 }
 
 /* put a SSH style string into the buffer, increasing buffer len if required */
-void buf_putstring(buffer* buf, const unsigned char* str, unsigned int len) {
+void buf_putstring(buffer* buf, const char* str, unsigned int len) {
 	
 	buf_putint(buf, len);
-	buf_putbytes(buf, str, len);
+	buf_putbytes(buf, (const unsigned char*)str, len);
 
 }
 
 /* puts an entire buffer as a SSH string. ignore pos of buf_str. */
 void buf_putbufstring(buffer *buf, const buffer* buf_str) {
-	buf_putstring(buf, buf_str->data, buf_str->len);
+	buf_putstring(buf, (const char*)buf_str->data, buf_str->len);
 }
 
 /* put the set of len bytes into the buffer, incrementing the pos, increasing

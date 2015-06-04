@@ -65,7 +65,7 @@ static const struct ChanType svr_chan_tcpremote = {
  * similar to the request-switching in chansession.c */
 void recv_msg_global_request_remotetcp() {
 
-	unsigned char* reqname = NULL;
+	char* reqname = NULL;
 	unsigned int namelen;
 	unsigned int wantreply = 0;
 	int ret = DROPBEAR_FAILURE;
@@ -120,7 +120,7 @@ static int matchtcp(void* typedata1, void* typedata2) {
 static int svr_cancelremotetcp() {
 
 	int ret = DROPBEAR_FAILURE;
-	unsigned char * bindaddr = NULL;
+	char * bindaddr = NULL;
 	unsigned int addrlen;
 	unsigned int port;
 	struct Listener * listener = NULL;
@@ -155,7 +155,7 @@ out:
 static int svr_remotetcpreq() {
 
 	int ret = DROPBEAR_FAILURE;
-	unsigned char * request_addr = NULL;
+	char * request_addr = NULL;
 	unsigned int addrlen;
 	struct TCPListener *tcpinfo = NULL;
 	unsigned int port;
@@ -232,12 +232,12 @@ const struct ChanType svr_chan_tcpdirect = {
  * address */
 static int newtcpdirect(struct Channel * channel) {
 
-	unsigned char* desthost = NULL;
+	char* desthost = NULL;
 	unsigned int destport;
-	unsigned char* orighost = NULL;
+	char* orighost = NULL;
 	unsigned int origport;
 	char portstring[NI_MAXSERV];
-	int len;
+	unsigned int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	TRACE(("newtcpdirect channel %d", channel->index))
