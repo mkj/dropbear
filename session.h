@@ -63,7 +63,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param);
 /* Client */
 void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) ATTRIB_NORETURN;
 void cli_connected(int result, int sock, void* userdata, const char *errstring);
-void cleantext(unsigned char* dirtytext);
+void cleantext(char* dirtytext);
 
 /* crypto parameters that are stored individually for transmit and receive */
 struct key_context_directional {
@@ -115,7 +115,7 @@ struct sshsession {
 	/* remotehost will be initially NULL as we delay
 	 * reading the remote version string. it will be set
 	 * by the time any recv_() packet methods are called */
-	unsigned char *remoteident; 
+	char *remoteident;
 
 	int maxfd; /* the maximum file descriptor to check with select() */
 

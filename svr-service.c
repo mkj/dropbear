@@ -30,18 +30,18 @@
 #include "ssh.h"
 #include "auth.h"
 
-static void send_msg_service_accept(unsigned char *name, int len);
+static void send_msg_service_accept(char *name, int len);
 
 /* processes a SSH_MSG_SERVICE_REQUEST, returning 0 if finished,
  * 1 if not */
 void recv_msg_service_request() {
 
-	unsigned char * name;
+	char * name;
 	unsigned int len;
 
 	TRACE(("enter recv_msg_service_request"))
 
-	name = buf_getstring(ses.payload, &len);
+	name = (char *) buf_getstring(ses.payload, &len);
 
 	/* ssh-userauth */
 	if (len == SSH_SERVICE_USERAUTH_LEN && 
@@ -73,14 +73,14 @@ void recv_msg_service_request() {
 
 }
 
-static void send_msg_service_accept(unsigned char *name, int len) {
+static void send_msg_service_accept(char *name, int len) {
 
 	TRACE(("accepting service %s", name))
 
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_SERVICE_ACCEPT);
-	buf_putstring(ses.writepayload, name, len);
+	buf_putstring(ses.writepayload, (const unsigned char *) name, len);
 
 	encrypt_packet();
 

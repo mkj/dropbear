@@ -128,10 +128,10 @@ void send_msg_kexinit() {
 	buf_put_algolist(ses.writepayload, ses.compress_algos);
 
 	/* languages_client_to_server */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
 
 	/* languages_server_to_client */
-	buf_putstring(ses.writepayload, "", 0);
+	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
 
 	/* first_kex_packet_follows */
 	buf_putbyte(ses.writepayload, (ses.send_kex_first_guess != NULL));
@@ -511,7 +511,7 @@ void recv_msg_kexinit() {
 
 	/* start the kex hash */
 	local_ident_len = strlen(LOCAL_IDENT);
-	remote_ident_len = strlen((char*)ses.remoteident);
+	remote_ident_len = strlen(ses.remoteident);
 
 	kexhashbuf_len = local_ident_len + remote_ident_len
 		+ ses.transkexinit->len + ses.payload->len
@@ -528,7 +528,7 @@ void recv_msg_kexinit() {
 	    buf_putstring(ses.kexhashbuf,
 			(unsigned char*)LOCAL_IDENT, local_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
+	    buf_putstring(ses.kexhashbuf, (unsigned char*)ses.remoteident, remote_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
@@ -545,7 +545,7 @@ void recv_msg_kexinit() {
 		/* read the peer's choice of algos */
 		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
+	    buf_putstring(ses.kexhashbuf, (unsigned char*)ses.remoteident, remote_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
 	    buf_putstring(ses.kexhashbuf, 
 				(unsigned char*)LOCAL_IDENT, local_ident_len);

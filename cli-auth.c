@@ -43,11 +43,11 @@ void cli_auth_getmethods() {
 	TRACE(("enter cli_auth_getmethods"))
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
-	buf_putstring(ses.writepayload, cli_opts.username, 
+	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
 			strlen(cli_opts.username));
-	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION, 
+	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
-	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
+	buf_putstring(ses.writepayload, (const unsigned char *)"none", 4); /* 'none' method */
 
 	encrypt_packet();
 
@@ -75,7 +75,7 @@ void cli_auth_getmethods() {
 
 void recv_msg_userauth_banner() {
 
-	unsigned char* banner = NULL;
+	char* banner = NULL;
 	unsigned int bannerlen;
 	unsigned int i, linecount;
 
@@ -85,7 +85,7 @@ void recv_msg_userauth_banner() {
 		return;
 	}
 
-	banner = buf_getstring(ses.payload, &bannerlen);
+	banner = (char *)buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
 	if (bannerlen > MAX_BANNER_SIZE) {
@@ -151,8 +151,8 @@ void recv_msg_userauth_specific_60() {
 
 void recv_msg_userauth_failure() {
 
-	unsigned char * methods = NULL;
-	unsigned char * tok = NULL;
+	char * methods = NULL;
+	char * tok = NULL;
 	unsigned int methlen = 0;
 	unsigned int partial = 0;
 	unsigned int i = 0;
@@ -201,7 +201,7 @@ void recv_msg_userauth_failure() {
 		cli_ses.lastauthtype = AUTH_TYPE_NONE;
 	}
 
-	methods = buf_getstring(ses.payload, &methlen);
+	methods = (char *)buf_getstring(ses.payload, &methlen);
 
 	partial = buf_getbool(ses.payload);
 

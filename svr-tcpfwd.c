@@ -65,7 +65,7 @@ static const struct ChanType svr_chan_tcpremote = {
  * similar to the request-switching in chansession.c */
 void recv_msg_global_request_remotetcp() {
 
-	unsigned char* reqname = NULL;
+	char* reqname = NULL;
 	unsigned int namelen;
 	unsigned int wantreply = 0;
 	int ret = DROPBEAR_FAILURE;
@@ -77,7 +77,7 @@ void recv_msg_global_request_remotetcp() {
 		goto out;
 	}
 
-	reqname = buf_getstring(ses.payload, &namelen);
+	reqname = (char *)buf_getstring(ses.payload, &namelen);
 	wantreply = buf_getbool(ses.payload);
 
 	if (namelen > MAX_NAME_LEN) {
@@ -120,7 +120,7 @@ static int matchtcp(void* typedata1, void* typedata2) {
 static int svr_cancelremotetcp() {
 
 	int ret = DROPBEAR_FAILURE;
-	unsigned char * bindaddr = NULL;
+	char * bindaddr = NULL;
 	unsigned int addrlen;
 	unsigned int port;
 	struct Listener * listener = NULL;
@@ -128,7 +128,7 @@ static int svr_cancelremotetcp() {
 
 	TRACE(("enter cancelremotetcp"))
 
-	bindaddr = buf_getstring(ses.payload, &addrlen);
+	bindaddr = (char *)buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -155,14 +155,14 @@ out:
 static int svr_remotetcpreq() {
 
 	int ret = DROPBEAR_FAILURE;
-	unsigned char * request_addr = NULL;
+	char * request_addr = NULL;
 	unsigned int addrlen;
 	struct TCPListener *tcpinfo = NULL;
 	unsigned int port;
 
 	TRACE(("enter remotetcpreq"))
 
-	request_addr = buf_getstring(ses.payload, &addrlen);
+	request_addr = (char *)buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -232,12 +232,12 @@ const struct ChanType svr_chan_tcpdirect = {
  * address */
 static int newtcpdirect(struct Channel * channel) {
 
-	unsigned char* desthost = NULL;
+	char* desthost = NULL;
 	unsigned int destport;
-	unsigned char* orighost = NULL;
+	char* orighost = NULL;
 	unsigned int origport;
 	char portstring[NI_MAXSERV];
-	int len;
+	unsigned int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	TRACE(("newtcpdirect channel %d", channel->index))
@@ -247,7 +247,7 @@ static int newtcpdirect(struct Channel * channel) {
 		goto out;
 	}
 
-	desthost = buf_getstring(ses.payload, &len);
+	desthost = (char *)buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: desthost too long"))
 		goto out;
@@ -255,7 +255,7 @@ static int newtcpdirect(struct Channel * channel) {
 
 	destport = buf_getint(ses.payload);
 	
-	orighost = buf_getstring(ses.payload, &len);
+	orighost = (char *)buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: orighost too long"))
 		goto out;

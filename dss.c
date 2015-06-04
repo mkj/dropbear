@@ -136,7 +136,7 @@ void dss_key_free(dropbear_dss_key *key) {
 void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
-	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
+	buf_putstring(buf, (const unsigned char*) SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putmpint(buf, key->p);
 	buf_putmpint(buf, key->q);
 	buf_putmpint(buf, key->g);
@@ -165,7 +165,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	DEF_MP_INT(val3);
 	DEF_MP_INT(val4);
 	char * string = NULL;
-	int stringlen;
+	unsigned int stringlen;
 
 	TRACE(("enter buf_dss_verify"))
 	dropbear_assert(key != NULL);
@@ -173,7 +173,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
 
 	/* get blob, check length */
-	string = buf_getstring(buf, &stringlen);
+	string = (char*) buf_getstring(buf, &stringlen);
 	if (stringlen != 2*SHA1_HASH_SIZE) {
 		goto out;
 	}
@@ -186,7 +186,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	/* create the signature - s' and r' are the received signatures in buf */
 	/* w = (s')-1 mod q */
 	/* let val1 = s' */
-	bytes_to_mp(&val1, &string[SHA1_HASH_SIZE], SHA1_HASH_SIZE);
+	bytes_to_mp(&val1, (const unsigned char*) &string[SHA1_HASH_SIZE], SHA1_HASH_SIZE);
 
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, s' >= q"))
@@ -208,7 +208,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 
 	/* u2 = ((r')w) mod q */
 	/* let val1 = r' */
-	bytes_to_mp(&val1, &string[0], SHA1_HASH_SIZE);
+	bytes_to_mp(&val1, (const unsigned char*) &string[0], SHA1_HASH_SIZE);
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, r' >= q"))
 		goto out;
@@ -310,7 +310,7 @@ void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 		dropbear_exit("DSS error");
 	}
 
-	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
+	buf_putstring(buf, (const unsigned char*) SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putint(buf, 2*SHA1_HASH_SIZE);
 
 	writelen = mp_unsigned_bin_size(&dss_r);
