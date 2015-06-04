@@ -934,7 +934,7 @@ void recv_msg_channel_open() {
 	TRACE(("enter recv_msg_channel_open"))
 
 	/* get the packet contents */
-	type = (char *) buf_getstring(ses.payload, &typelen);
+	type = buf_getstring(ses.payload, &typelen);
 
 	remotechan = buf_getint(ses.payload);
 	transwindow = buf_getint(ses.payload);
@@ -1047,8 +1047,8 @@ static void send_msg_channel_open_failure(unsigned int remotechan,
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN_FAILURE);
 	buf_putint(ses.writepayload, remotechan);
 	buf_putint(ses.writepayload, reason);
-	buf_putstring(ses.writepayload, (const unsigned char *) text, strlen(text));
-	buf_putstring(ses.writepayload, (const unsigned char *) lang, strlen(lang));
+	buf_putstring(ses.writepayload, text, strlen(text));
+	buf_putstring(ses.writepayload, lang, strlen(lang));
 
 	encrypt_packet();
 	TRACE(("leave send_msg_channel_open_failure"))
@@ -1149,7 +1149,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN);
-	buf_putstring(ses.writepayload, (const unsigned char *) type->name, strlen(type->name));
+	buf_putstring(ses.writepayload, type->name, strlen(type->name));
 	buf_putint(ses.writepayload, chan->index);
 	buf_putint(ses.writepayload, opts.recv_window);
 	buf_putint(ses.writepayload, RECV_MAX_CHANNEL_DATA_LEN);
@@ -1250,6 +1250,6 @@ void start_send_channel_request(struct Channel *channel,
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 	buf_putint(ses.writepayload, channel->remotechan);
 
-	buf_putstring(ses.writepayload, (const unsigned char *) type, strlen(type));
+	buf_putstring(ses.writepayload, type, strlen(type));
 
 }

@@ -136,9 +136,9 @@ static void send_msg_global_request_remotetcp(const char *addr, int port) {
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
-	buf_putstring(ses.writepayload, (const unsigned char *)"tcpip-forward", 13);
+	buf_putstring(ses.writepayload, "tcpip-forward", 13);
 	buf_putbyte(ses.writepayload, 1); /* want_reply */
-	buf_putstring(ses.writepayload, (const unsigned char *)addr, strlen(addr));
+	buf_putstring(ses.writepayload, addr, strlen(addr));
 	buf_putint(ses.writepayload, port);
 
 	encrypt_packet();
@@ -218,7 +218,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	char portstring[NI_MAXSERV];
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
-	origaddr = (char *)buf_getstring(ses.payload, NULL);
+	origaddr = buf_getstring(ses.payload, NULL);
 	origport = buf_getint(ses.payload);
 
 	/* Find which port corresponds. First try and match address as well as port,

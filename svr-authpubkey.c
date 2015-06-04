@@ -98,7 +98,7 @@ void svr_auth_pubkey() {
 	 * actual attempt*/
 	testkey = (buf_getbool(ses.payload) == 0);
 
-	algo = (char *) buf_getstring(ses.payload, &algolen);
+	algo = buf_getstring(ses.payload, &algolen);
 	keybloblen = buf_getint(ses.payload);
 	keyblob = buf_getptr(ses.payload, keybloblen);
 
@@ -180,8 +180,8 @@ static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_PK_OK);
-	buf_putstring(ses.writepayload, (const unsigned char *) algo, algolen);
-	buf_putstring(ses.writepayload, keyblob, keybloblen);
+	buf_putstring(ses.writepayload, algo, algolen);
+	buf_putstring(ses.writepayload, (const char*)keyblob, keybloblen);
 
 	encrypt_packet();
 	TRACE(("leave send_msg_userauth_pk_ok"))

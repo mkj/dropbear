@@ -83,9 +83,9 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 	ecc_key *new_key = NULL;
 
 	/* string   "ecdsa-sha2-[identifier]" */
-	key_ident = buf_getstring(buf, &key_ident_len);
+	key_ident = (unsigned char*)buf_getstring(buf, &key_ident_len);
 	/* string   "[identifier]" */
-	identifier = buf_getstring(buf, &identifier_len);
+	identifier = (unsigned char*)buf_getstring(buf, &identifier_len);
 
 	if (key_ident_len != identifier_len + strlen("ecdsa-sha2-")) {
 		TRACE(("Bad identifier lengths"))
@@ -144,8 +144,8 @@ void buf_put_ecdsa_pub_key(buffer *buf, ecc_key *key) {
 
 	curve = curve_for_dp(key->dp);
 	snprintf(key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
-	buf_putstring(buf, (const unsigned char *) key_ident, strlen(key_ident));
-	buf_putstring(buf, (const unsigned char *) curve->name, strlen(curve->name));
+	buf_putstring(buf, key_ident, strlen(key_ident));
+	buf_putstring(buf, curve->name, strlen(curve->name));
 	buf_put_ecc_raw_pubkey_string(buf, key);
 }
 
@@ -223,7 +223,7 @@ void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
 	}
 
 	snprintf(key_ident, sizeof(key_ident), "ecdsa-sha2-%s", curve->name);
-	buf_putstring(buf, (const unsigned char *) key_ident, strlen(key_ident));
+	buf_putstring(buf, key_ident, strlen(key_ident));
 	/* enough for nistp521 */
 	sigbuf = buf_new(200);
 	buf_putmpint(sigbuf, (mp_int*)r);

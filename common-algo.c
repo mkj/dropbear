@@ -328,7 +328,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 			buf_putbytes(algolist, (const unsigned char *) localalgos[i].name, len);
 		}
 	}
-	buf_putstring(buf, algolist->data, algolist->len);
+	buf_putstring(buf, (const char*)algolist->data, algolist->len);
 	buf_free(algolist);
 }
 
@@ -353,7 +353,7 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 	}
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
-	algolist = (char *) buf_getstring(buf, &len);
+	algolist = buf_getstring(buf, &len);
 	TRACE(("buf_match_algo: %s", algolist))
 	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
 		goto out;

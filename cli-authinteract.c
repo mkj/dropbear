@@ -84,8 +84,8 @@ void recv_msg_userauth_info_request() {
 	}
 	cli_ses.interact_request_received = 1;
 
-	name = (char *)buf_getstring(ses.payload, NULL);
-	instruction = (char *)buf_getstring(ses.payload, NULL);
+	name = buf_getstring(ses.payload, NULL);
+	instruction = buf_getstring(ses.payload, NULL);
 
 	/* language tag */
 	buf_eatstring(ses.payload);
@@ -115,7 +115,7 @@ void recv_msg_userauth_info_request() {
 
 	for (i = 0; i < num_prompts; i++) {
 		unsigned int response_len = 0;
-		prompt = (char *)buf_getstring(ses.payload, NULL);
+		prompt = buf_getstring(ses.payload, NULL);
 		cleantext(prompt);
 
 		echo = buf_getbool(ses.payload);
@@ -129,7 +129,7 @@ void recv_msg_userauth_info_request() {
 		}
 
 		response_len = strlen(response);
-		buf_putstring(ses.writepayload, (const unsigned char *)response, response_len);
+		buf_putstring(ses.writepayload, response, response_len);
 		m_burn(response, response_len);
 		m_free(prompt);
 		m_free(response);
@@ -149,22 +149,22 @@ void cli_auth_interactive() {
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
 	/* username */
-	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
+	buf_putstring(ses.writepayload, cli_opts.username,
 			strlen(cli_opts.username));
 
 	/* service name */
-	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
+	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
 
 	/* method */
-	buf_putstring(ses.writepayload, (const unsigned char *)AUTH_METHOD_INTERACT,
+	buf_putstring(ses.writepayload, AUTH_METHOD_INTERACT,
 			AUTH_METHOD_INTERACT_LEN);
 
 	/* empty language tag */
-	buf_putstring(ses.writepayload, (const unsigned char *)"", 0);
+	buf_putstring(ses.writepayload, "", 0);
 
 	/* empty submethods */
-	buf_putstring(ses.writepayload, (const unsigned char *)"", 0);
+	buf_putstring(ses.writepayload, "", 0);
 
 	encrypt_packet();
 	cli_ses.interact_request_received = 0;

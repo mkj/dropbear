@@ -467,7 +467,7 @@ static void send_msg_keepalive() {
 		/* Some peers will reply with SSH_MSG_REQUEST_FAILURE, 
 		some will reply with SSH_MSG_UNIMPLEMENTED, some will exit. */
 		buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST); 
-		buf_putstring(ses.writepayload, (const unsigned char *) DROPBEAR_KEEPALIVE_STRING,
+		buf_putstring(ses.writepayload, DROPBEAR_KEEPALIVE_STRING,
 			strlen(DROPBEAR_KEEPALIVE_STRING));
 	}
 	buf_putbyte(ses.writepayload, 1); /* want_reply */

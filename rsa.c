@@ -174,7 +174,7 @@ void buf_put_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 	TRACE(("enter buf_put_rsa_pub_key"))
 	dropbear_assert(key != NULL);
 
-	buf_putstring(buf, (const unsigned char *) SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
+	buf_putstring(buf, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
 	buf_putmpint(buf, key->e);
 	buf_putmpint(buf, key->n);
 
@@ -327,7 +327,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 	mp_clear_multi(&rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 	
 	/* create the signature to return */
-	buf_putstring(buf, (const unsigned char *) SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
+	buf_putstring(buf, SSH_SIGNKEY_RSA, SSH_SIGNKEY_RSA_LEN);
 
 	nsize = mp_unsigned_bin_size(key->n);
 

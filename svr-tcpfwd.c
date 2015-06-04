@@ -77,7 +77,7 @@ void recv_msg_global_request_remotetcp() {
 		goto out;
 	}
 
-	reqname = (char *)buf_getstring(ses.payload, &namelen);
+	reqname = buf_getstring(ses.payload, &namelen);
 	wantreply = buf_getbool(ses.payload);
 
 	if (namelen > MAX_NAME_LEN) {
@@ -128,7 +128,7 @@ static int svr_cancelremotetcp() {
 
 	TRACE(("enter cancelremotetcp"))
 
-	bindaddr = (char *)buf_getstring(ses.payload, &addrlen);
+	bindaddr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -162,7 +162,7 @@ static int svr_remotetcpreq() {
 
 	TRACE(("enter remotetcpreq"))
 
-	request_addr = (char *)buf_getstring(ses.payload, &addrlen);
+	request_addr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_IP_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -247,7 +247,7 @@ static int newtcpdirect(struct Channel * channel) {
 		goto out;
 	}
 
-	desthost = (char *)buf_getstring(ses.payload, &len);
+	desthost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: desthost too long"))
 		goto out;
@@ -255,7 +255,7 @@ static int newtcpdirect(struct Channel * channel) {
 
 	destport = buf_getint(ses.payload);
 	
-	orighost = (char *)buf_getstring(ses.payload, &len);
+	orighost = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave newtcpdirect: orighost too long"))
 		goto out;

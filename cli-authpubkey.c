@@ -63,7 +63,7 @@ void recv_msg_userauth_pk_ok() {
 
 	TRACE(("enter recv_msg_userauth_pk_ok"))
 
-	algotype = (char *)buf_getstring(ses.payload, &algolen);
+	algotype = buf_getstring(ses.payload, &algolen);
 	keytype = signkey_type_from_name(algotype, algolen);
 	TRACE(("recv_msg_userauth_pk_ok: type %d", keytype))
 	m_free(algotype);
@@ -149,20 +149,20 @@ static void send_msg_userauth_pubkey(sign_key *key, int type, int realsign) {
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
 
-	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
+	buf_putstring(ses.writepayload, cli_opts.username,
 			strlen(cli_opts.username));
 
-	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
+	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
 
-	buf_putstring(ses.writepayload, (const unsigned char *)AUTH_METHOD_PUBKEY,
+	buf_putstring(ses.writepayload, AUTH_METHOD_PUBKEY,
 			AUTH_METHOD_PUBKEY_LEN);
 
 	buf_putbyte(ses.writepayload, realsign);
 
 	algoname = signkey_name_from_type(type, &algolen);
 
-	buf_putstring(ses.writepayload, (const unsigned char *)algoname, algolen);
+	buf_putstring(ses.writepayload, algoname, algolen);
 	buf_put_pub_key(ses.writepayload, key, type);
 
 	if (realsign) {

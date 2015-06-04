@@ -61,7 +61,7 @@ static void cli_chansessreq(struct Channel *channel) {
 
 	TRACE(("enter cli_chansessreq"))
 
-	type = (char *) buf_getstring(ses.payload, NULL);
+	type = buf_getstring(ses.payload, NULL);
 	wantreply = buf_getbool(ses.payload);
 
 	if (strcmp(type, "exit-status") == 0) {
@@ -261,7 +261,7 @@ void cli_chansess_winchange() {
 			CHECKCLEARTOWRITE();
 			buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);
 			buf_putint(ses.writepayload, channel->remotechan);
-			buf_putstring(ses.writepayload, (const unsigned char *) "window-change", 13);
+			buf_putstring(ses.writepayload, "window-change", 13);
 			buf_putbyte(ses.writepayload, 0); /* FALSE says the spec */
 			put_winsize();
 			encrypt_packet();
@@ -286,7 +286,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 	if (term == NULL) {
 		term = "vt100"; /* Seems a safe default */
 	}
-	buf_putstring(ses.writepayload, (const unsigned char *)term, strlen(term));
+	buf_putstring(ses.writepayload, term, strlen(term));
 
 	/* Window size */
 	put_winsize();
@@ -324,7 +324,7 @@ static void send_chansess_shell_req(struct Channel *channel) {
 	/* XXX TODO */
 	buf_putbyte(ses.writepayload, 0); /* Don't want replies */
 	if (cli_opts.cmd) {
-		buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.cmd, strlen(cli_opts.cmd));
+		buf_putstring(ses.writepayload, cli_opts.cmd, strlen(cli_opts.cmd));
 	}
 
 	encrypt_packet();
@@ -403,12 +403,12 @@ void cli_send_netcat_request() {
 		dropbear_exit("Couldn't open initial channel");
 	}
 
-	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.netcat_host,
+	buf_putstring(ses.writepayload, cli_opts.netcat_host,
 			strlen(cli_opts.netcat_host));
 	buf_putint(ses.writepayload, cli_opts.netcat_port);
 
 	/* originator ip - localhost is accurate enough */
-	buf_putstring(ses.writepayload, (const unsigned char *)source_host, strlen(source_host));
+	buf_putstring(ses.writepayload, source_host, strlen(source_host));
 	buf_putint(ses.writepayload, source_port);
 
 	encrypt_packet();

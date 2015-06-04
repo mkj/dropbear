@@ -136,7 +136,7 @@ void dss_key_free(dropbear_dss_key *key) {
 void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
-	buf_putstring(buf, (const unsigned char*) SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
+	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putmpint(buf, key->p);
 	buf_putmpint(buf, key->q);
 	buf_putmpint(buf, key->g);
@@ -173,7 +173,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	m_mp_init_multi(&val1, &val2, &val3, &val4, NULL);
 
 	/* get blob, check length */
-	string = (char*) buf_getstring(buf, &stringlen);
+	string = buf_getstring(buf, &stringlen);
 	if (stringlen != 2*SHA1_HASH_SIZE) {
 		goto out;
 	}
@@ -310,7 +310,7 @@ void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 		dropbear_exit("DSS error");
 	}
 
-	buf_putstring(buf, (const unsigned char*) SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
+	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
 	buf_putint(buf, 2*SHA1_HASH_SIZE);
 
 	writelen = mp_unsigned_bin_size(&dss_r);

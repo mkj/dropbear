@@ -94,11 +94,11 @@ static void tcp_acceptor(struct Listener *listener, int sock) {
 		if (addr == NULL) {
 			addr = "localhost";
 		}
-		buf_putstring(ses.writepayload, (const unsigned char *)addr, strlen(addr));
+		buf_putstring(ses.writepayload, addr, strlen(addr));
 		buf_putint(ses.writepayload, port);
 
 		/* originator ip */
-		buf_putstring(ses.writepayload, (const unsigned char *)ipstring, strlen(ipstring));
+		buf_putstring(ses.writepayload, ipstring, strlen(ipstring));
 		/* originator port */
 		buf_putint(ses.writepayload, atol(portstring));
 

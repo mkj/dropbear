@@ -41,7 +41,7 @@ void recv_msg_service_request() {
 
 	TRACE(("enter recv_msg_service_request"))
 
-	name = (char *) buf_getstring(ses.payload, &len);
+	name = buf_getstring(ses.payload, &len);
 
 	/* ssh-userauth */
 	if (len == SSH_SERVICE_USERAUTH_LEN && 
@@ -80,7 +80,7 @@ static void send_msg_service_accept(char *name, int len) {
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_SERVICE_ACCEPT);
-	buf_putstring(ses.writepayload, (const unsigned char *) name, len);
+	buf_putstring(ses.writepayload, name, len);
 
 	encrypt_packet();
 

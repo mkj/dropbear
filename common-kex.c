@@ -128,10 +128,10 @@ void send_msg_kexinit() {
 	buf_put_algolist(ses.writepayload, ses.compress_algos);
 
 	/* languages_client_to_server */
-	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
+	buf_putstring(ses.writepayload, "", 0);
 
 	/* languages_server_to_client */
-	buf_putstring(ses.writepayload, (const unsigned char *) "", 0);
+	buf_putstring(ses.writepayload, "", 0);
 
 	/* first_kex_packet_follows */
 	buf_putbyte(ses.writepayload, (ses.send_kex_first_guess != NULL));
@@ -525,18 +525,17 @@ void recv_msg_kexinit() {
 		read_kex_algos();
 
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf,
-			(unsigned char*)LOCAL_IDENT, local_ident_len);
+	    buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, (unsigned char*)ses.remoteident, remote_ident_len);
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			ses.transkexinit->data, ses.transkexinit->len);
+			(const char*)ses.transkexinit->data, ses.transkexinit->len);
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, ses.payload_beginning);
 	    buf_putstring(ses.kexhashbuf, 
-	    	buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+	    	(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
 	    	ses.payload->len-ses.payload->pos);
 		ses.requirenext = SSH_MSG_KEXDH_REPLY;
 	} else {
@@ -545,20 +544,19 @@ void recv_msg_kexinit() {
 		/* read the peer's choice of algos */
 		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, (unsigned char*)ses.remoteident, remote_ident_len);
+	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, 
-				(unsigned char*)LOCAL_IDENT, local_ident_len);
+	    buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 	    buf_setpos(ses.payload, ses.payload_beginning);
 	    buf_putstring(ses.kexhashbuf, 
-	    	buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+	    	(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
 	    	ses.payload->len-ses.payload->pos);
 
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
 	    buf_putstring(ses.kexhashbuf,
-			ses.transkexinit->data, ses.transkexinit->len);
+			(const char*)ses.transkexinit->data, ses.transkexinit->len);
 
 		ses.requirenext = SSH_MSG_KEXDH_INIT;
 	}
@@ -783,9 +781,9 @@ void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_
 	/* K_S, the host key */
 	buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);
 	/* Q_C, client's ephemeral public key octet string */
-	buf_putstring(ses.kexhashbuf, Q_C, CURVE25519_LEN);
+	buf_putstring(ses.kexhashbuf, (const char*)Q_C, CURVE25519_LEN);
 	/* Q_S, server's ephemeral public key octet string */
-	buf_putstring(ses.kexhashbuf, Q_S, CURVE25519_LEN);
+	buf_putstring(ses.kexhashbuf, (const char*)Q_S, CURVE25519_LEN);
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 

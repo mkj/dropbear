@@ -43,11 +43,11 @@ void cli_auth_getmethods() {
 	TRACE(("enter cli_auth_getmethods"))
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
-	buf_putstring(ses.writepayload, (const unsigned char *)cli_opts.username,
+	buf_putstring(ses.writepayload, cli_opts.username,
 			strlen(cli_opts.username));
-	buf_putstring(ses.writepayload, (const unsigned char *)SSH_SERVICE_CONNECTION,
+	buf_putstring(ses.writepayload, SSH_SERVICE_CONNECTION,
 			SSH_SERVICE_CONNECTION_LEN);
-	buf_putstring(ses.writepayload, (const unsigned char *)"none", 4); /* 'none' method */
+	buf_putstring(ses.writepayload, "none", 4); /* 'none' method */
 
 	encrypt_packet();
 
@@ -85,7 +85,7 @@ void recv_msg_userauth_banner() {
 		return;
 	}
 
-	banner = (char *)buf_getstring(ses.payload, &bannerlen);
+	banner = buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
 	if (bannerlen > MAX_BANNER_SIZE) {
@@ -201,7 +201,7 @@ void recv_msg_userauth_failure() {
 		cli_ses.lastauthtype = AUTH_TYPE_NONE;
 	}
 
-	methods = (char *)buf_getstring(ses.payload, &methlen);
+	methods = buf_getstring(ses.payload, &methlen);
 
 	partial = buf_getbool(ses.payload);
 

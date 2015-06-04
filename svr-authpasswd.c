@@ -52,7 +52,7 @@ void svr_auth_password() {
 	
 	char * passwdcrypt = NULL; /* the crypt from /etc/passwd or /etc/shadow */
 	char * testcrypt = NULL; /* crypt generated from the user's password sent */
-	unsigned char * password;
+	char * password;
 	unsigned int passwordlen;
 
 	unsigned int changepw;
@@ -75,7 +75,7 @@ void svr_auth_password() {
 	password = buf_getstring(ses.payload, &passwordlen);
 
 	/* the first bytes of passwdcrypt are the salt */
-	testcrypt = crypt((char*)password, passwdcrypt);
+	testcrypt = crypt(password, passwdcrypt);
 	m_burn(password, passwordlen);
 	m_free(password);
 

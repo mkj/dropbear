@@ -602,13 +602,13 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 
 #ifdef DROPBEAR_DSS
 	if (key->type == OSSH_DSA) {
-		buf_putstring(blobbuf, (const unsigned char *)"ssh-dss", 7);
+		buf_putstring(blobbuf, "ssh-dss", 7);
 		retkey->type = DROPBEAR_SIGNKEY_DSS;
 	} 
 #endif
 #ifdef DROPBEAR_RSA
 	if (key->type == OSSH_RSA) {
-		buf_putstring(blobbuf, (const unsigned char *)"ssh-rsa", 7);
+		buf_putstring(blobbuf, "ssh-rsa", 7);
 		retkey->type = DROPBEAR_SIGNKEY_RSA;
 	}
 #endif
@@ -649,9 +649,9 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 				modptr = p;
 				modlen = len;
 			} else if (i >= 2 && i <= 5) {
-				buf_putstring(blobbuf, p, len);
+				buf_putstring(blobbuf, (const char*)p, len);
 				if (i == 2) {
-					buf_putstring(blobbuf, modptr, modlen);
+					buf_putstring(blobbuf, (const char*)modptr, modlen);
 				}
 			}
 		} else if (key->type == OSSH_DSA) {
@@ -659,7 +659,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 			 * OpenSSH key order is p, q, g, y, x,
 			 * we want the same.
 			 */
-			buf_putstring(blobbuf, p, len);
+			buf_putstring(blobbuf, (const char*)p, len);
 		}
 
 		/* Skip past the number. */

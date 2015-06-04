@@ -89,7 +89,7 @@ void send_msg_userauth_banner(buffer *banner) {
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_BANNER);
 	buf_putbufstring(ses.writepayload, banner);
-	buf_putstring(ses.writepayload, (const unsigned char *)"en", 2);
+	buf_putstring(ses.writepayload, "en", 2);
 
 	encrypt_packet();
 
@@ -119,9 +119,9 @@ void recv_msg_userauth_request() {
 		svr_opts.banner = NULL;
 	}
 
-	username = (char *)buf_getstring(ses.payload, &userlen);
-	servicename = (char *)buf_getstring(ses.payload, &servicelen);
-	methodname = (char *)buf_getstring(ses.payload, &methodlen);
+	username = buf_getstring(ses.payload, &userlen);
+	servicename = buf_getstring(ses.payload, &servicelen);
+	methodname = buf_getstring(ses.payload, &methodlen);
 
 	/* only handle 'ssh-connection' currently */
 	if (servicelen != SSH_SERVICE_CONNECTION_LEN
