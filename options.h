@@ -295,6 +295,9 @@ If you test it please contact the Dropbear author */
 /* This is used by the scp binary when used as a client binary. If you're
  * not using the Dropbear client, you'll need to change it */
 #define DROPBEAR_PATH_SSH_PROGRAM "/usr/bin/dbclient"
+#ifndef _PATH_SSH_PROGRAM
+#define _PATH_SSH_PROGRAM DROPBEAR_PATH_SSH_PROGRAM
+#endif
 
 /* Whether to log commands executed by a client. This only logs the 
  * (single) command sent to the server, not what a user did in a 
