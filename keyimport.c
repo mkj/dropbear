@@ -193,7 +193,7 @@ out:
 static void base64_encode_fp(FILE * fp, unsigned char *data,
 		int datalen, int cpl)
 {
-    char out[100];
+	unsigned char out[100];
     int n;
 	unsigned long outlen;
 	int rawcpl;
@@ -445,7 +445,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 						ret->keyblob_size);
 			}
 			outlen = ret->keyblob_size - ret->keyblob_len;
-			if (base64_decode(buffer, len, 
+			if (base64_decode((const unsigned char *)buffer, len,
 						ret->keyblob + ret->keyblob_len, &outlen) != CRYPT_OK){
 				errmsg = "Error decoding base64";
 				goto error;
@@ -507,7 +507,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	int i, num_integers = 0;
 	sign_key *retval = NULL;
 	char *errmsg;
-	char *modptr = NULL;
+	unsigned char *modptr = NULL;
 	int modlen = -9999;
 	enum signkey_type type;
 
@@ -646,12 +646,12 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 			 */
 			if (i == 1) {
 				/* Save the details for after we deal with number 2. */
-				modptr = (char *)p;
+				modptr = p;
 				modlen = len;
 			} else if (i >= 2 && i <= 5) {
-				buf_putstring(blobbuf, p, len);
+				buf_putstring(blobbuf, (const char*)p, len);
 				if (i == 2) {
-					buf_putstring(blobbuf, modptr, modlen);
+					buf_putstring(blobbuf, (const char*)modptr, modlen);
 				}
 			}
 		} else if (key->type == OSSH_DSA) {
@@ -659,7 +659,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 			 * OpenSSH key order is p, q, g, y, x,
 			 * we want the same.
 			 */
-			buf_putstring(blobbuf, p, len);
+			buf_putstring(blobbuf, (const char*)p, len);
 		}
 
 		/* Skip past the number. */
@@ -1043,7 +1043,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		int curve_oid_len = 0;
 		const void* curve_oid = NULL;
 		unsigned long pubkey_size = 2*curve_size+1;
-		unsigned int k_size;
+		int k_size;
 		int err = 0;
 
 		/* version. less than 10 bytes */

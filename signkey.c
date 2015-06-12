@@ -138,7 +138,7 @@ signkey_key_ptr(sign_key *key, enum signkey_type type) {
  * on return is set to the type read (useful when type = _ANY) */
 int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
-	unsigned char* ident;
+	char *ident;
 	unsigned int len;
 	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
@@ -209,7 +209,7 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
  * on return is set to the type read (useful when type = _ANY) */
 int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 
-	unsigned char* ident;
+	char *ident;
 	unsigned int len;
 	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
@@ -515,7 +515,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type,
  * signature blob */
 int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 	
-	unsigned char * type_name = NULL;
+	char *type_name = NULL;
 	unsigned int type_name_len = 0;
 	enum signkey_type type;
 

@@ -39,14 +39,14 @@ struct exitinfo {
 
 struct ChanSess {
 
-	unsigned char * cmd; /* command to exec */
+	char * cmd; /* command to exec */
 	pid_t pid; /* child process pid */
 
 	/* pty details */
 	int master; /* the master terminal fd*/
 	int slave;
-	unsigned char * tty;
-	unsigned char * term;
+	char * tty;
+	char * term;
 
 	/* exit details */
 	struct exitinfo exit;

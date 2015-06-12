@@ -141,7 +141,7 @@ out:
 	return ret;
 }
 
-void addrandom(char * buf, unsigned int len)
+void addrandom(unsigned char * buf, unsigned int len)
 {
 	hash_state hs;
 

@@ -1,7 +1,7 @@
 /*
  * Dropbear - a SSH2 server
  * 
- * Copyright (c) 2002,2003 Matt Johnston
+ * Copyright (c) Matt Johnston
  * All rights reserved.
  * 
  * Permission is hereby granted, free of charge, to any person obtaining a copy
@@ -90,8 +90,6 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
 	
-	kexfirstinitialise(); /* initialise the kex state */
-
 	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
 
@@ -280,7 +278,7 @@ void session_cleanup() {
 		return;
 	}
 
-	/* Beware of changing order of functions here. */
+	/* BEWARE of changing order of functions here. */
 
 	/* Must be before extra_session_cleanup() */
 	chancleanup();
@@ -289,7 +287,7 @@ void session_cleanup() {
 		ses.extra_session_cleanup();
 	}
 
-	/* After these are freed most functions will exit */
+	/* After these are freed most functions will fail */
 #ifdef DROPBEAR_CLEANUP
 	/* listeners call cleanup functions, this should occur before
 	other session state is freed. */
@@ -329,7 +327,7 @@ void session_cleanup() {
 
 void send_session_identification() {
 	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
-	buf_putbytes(writebuf, LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
+	buf_putbytes(writebuf, (const unsigned char *) LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
 	writebuf_enqueue(writebuf, 0);
 }
 

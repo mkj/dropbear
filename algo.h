@@ -35,7 +35,7 @@
 
 struct Algo_Type {
 
-	const unsigned char *name; /* identifying name */
+	const char *name; /* identifying name */
 	char val; /* a value for this cipher, or -1 for invalid */
 	const void *data; /* algorithm specific data */
 	char usable; /* whether we can use this algorithm */

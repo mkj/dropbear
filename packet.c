@@ -61,6 +61,10 @@ void write_packet() {
 	/* 50 is somewhat arbitrary */
 	unsigned int iov_count = 50;
 	struct iovec iov[50];
+#else
+	int len;
+	buffer* writebuf;
+	int packet_type;
 #endif
 	
 	TRACE2(("enter write_packet"))
@@ -97,6 +101,8 @@ void write_packet() {
 	 * a cleartext packet_type indicator */
 	packet_type = writebuf->data[writebuf->len-1];
 	len = writebuf->len - 1 - writebuf->pos;
+	TRACE2(("write_packet type %d len %d/%d", packet_type,
+			len, writebuf->len-1))
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock_out, buf_getptr(writebuf, len), len);

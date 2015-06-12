@@ -3,7 +3,9 @@ compiler:
   - gcc
 
 script: 
-  - autoconf && autoheader && ./configure --enable-bundled-libtom CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst && make install MULTI=1
+  - autoconf && autoheader && ./configure $BUNDLEDLIBTOM CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix=$HOME/inst 
+  - test "$NOWRITEV" && sed -i s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h || true
+  - make install
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
   - ~/inst/bin/dropbearkey -t dss -f testdss
   - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
@@ -19,6 +21,10 @@ env:
    # The next declration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "F4rKQrHK/u58vPo3F9+x0WYXAeMFJvvtH9BIGZqx9yw8bUnL+gk0Ge9wnHHTXRcgCTqoc7B35uMS5njpH+Su/esVjrLAq85f/AmQctlRpmApwGK9LyxkIvx3UJN0nqfeeDXA90/8FUZ+n/qnCydXmYCEgqSaBCNydDxW1oqYUIc="
+  - BUNDLEDLIBTOM=--disable-bundled-libtom
+  - BUNDLEDLIBTOM=--enable-bundled-libtom
+  - MULTI=1
+  - NOWRITEV=1
 
 addons:
   coverity_scan:

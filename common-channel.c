@@ -38,7 +38,7 @@
 #include "netio.h"
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
-		const unsigned char *text, const unsigned char *lang);
+		const char *text, const char *lang);
 static void send_msg_channel_open_confirmation(struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket);
@@ -434,10 +434,36 @@ static void send_msg_channel_eof(struct Channel *channel) {
 	TRACE(("leave send_msg_channel_eof"))
 }
 
-/* Called to write data out to the local side of the channel. 
-   Writes the circular buffer contents and also the "moredata" buffer
-   if not null. Will ignore EAGAIN */
-static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
+#ifndef HAVE_WRITEV
+static void writechannel_fallback(struct Channel* channel, int fd, circbuffer *cbuf,
+	const unsigned char *UNUSED(moredata), unsigned int *morelen) {
+
+	unsigned char *circ_p1, *circ_p2;
+	unsigned int circ_len1, circ_len2;
+	ssize_t written;
+
+	if (morelen) {
+		/* fallback doesn't consume moredata */
+		*morelen = 0;
+	}
+
+	/* Write the first portion of the circular buffer */
+	cbuf_readptrs(cbuf, &circ_p1, &circ_len1, &circ_p2, &circ_len2);
+	written = write(fd, circ_p1, circ_len1);
+	if (written < 0) {
+		if (errno != EINTR && errno != EAGAIN) {
+			TRACE(("channel IO write error fd %d %s", fd, strerror(errno)))
+			close_chan_fd(channel, fd, SHUT_WR);
+		}
+	} else {
+		cbuf_incrread(cbuf, written);
+		channel->recvdonelen += written;
+	}
+}
+#endif /* !HAVE_WRITEV */
+
+#ifdef HAVE_WRITEV
+static void writechannel_writev(struct Channel* channel, int fd, circbuffer *cbuf,
 	const unsigned char *moredata, unsigned int *morelen) {
 
 	struct iovec iov[3];
@@ -445,9 +471,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 	unsigned int circ_len1, circ_len2;
 	int io_count = 0;
 
-	int written;
-
-	TRACE(("enter writechannel fd %d", fd))
+	ssize_t written;
 
 	cbuf_readptrs(cbuf, &circ_p1, &circ_len1, &circ_p2, &circ_len2);
 
@@ -502,24 +526,19 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 		channel->recvdonelen += written;
 	}
 
-#if 0
+}
+#endif /* HAVE_WRITEV */
 
-	maxlen = cbuf_readlen(cbuf);
-
-	/* Write the data out */
-	len = write(fd, cbuf_readptr(cbuf, maxlen), maxlen);
-	if (len <= 0) {
-		TRACE(("errno %d len %d", errno, len))
-		if (len < 0 && errno != EINTR) {
-			close_chan_fd(channel, fd, SHUT_WR);
-		}
-		TRACE(("leave writechannel: len <= 0"))
-		return;
-	}
-	TRACE(("writechannel wrote %d", len))
-
-	cbuf_incrread(cbuf, len);
-	channel->recvdonelen += len;
+/* Called to write data out to the local side of the channel. 
+   Writes the circular buffer contents and also the "moredata" buffer
+   if not null. Will ignore EAGAIN */
+static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
+	const unsigned char *moredata, unsigned int *morelen) {
+	TRACE(("enter writechannel fd %d", fd))
+#ifdef HAVE_WRITEV
+	writechannel_writev(channel, fd, cbuf, moredata, morelen);
+#else
+	writechannel_fallback(channel, fd, cbuf, moredata, morelen);
 #endif
 
 	/* Window adjust handling */
@@ -536,6 +555,7 @@ static void writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 	
 	TRACE(("leave writechannel"))
 }
+
 
 /* Set the file descriptors for the main select in session.c
  * This avoid channels which don't have any window available, are closed, etc*/
@@ -901,7 +921,7 @@ static void send_msg_channel_window_adjust(struct Channel* channel,
 /* Handle a new channel request, performing any channel-type-specific setup */
 void recv_msg_channel_open() {
 
-	unsigned char *type;
+	char *type;
 	unsigned int typelen;
 	unsigned int remotechan, transwindow, transmaxpacket;
 	struct Channel *channel;
@@ -1019,7 +1039,7 @@ void send_msg_channel_success(struct Channel *channel) {
 /* Send a channel open failure message, with a corresponding reason
  * code (usually resource shortage or unknown chan type) */
 static void send_msg_channel_open_failure(unsigned int remotechan, 
-		int reason, const unsigned char *text, const unsigned char *lang) {
+		int reason, const char *text, const char *lang) {
 
 	TRACE(("enter send_msg_channel_open_failure"))
 	CHECKCLEARTOWRITE();
@@ -1027,8 +1047,8 @@ static void send_msg_channel_open_failure(unsigned int remotechan,
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_OPEN_FAILURE);
 	buf_putint(ses.writepayload, remotechan);
 	buf_putint(ses.writepayload, reason);
-	buf_putstring(ses.writepayload, text, strlen((char*)text));
-	buf_putstring(ses.writepayload, lang, strlen((char*)lang));
+	buf_putstring(ses.writepayload, text, strlen(text));
+	buf_putstring(ses.writepayload, lang, strlen(lang));
 
 	encrypt_packet();
 	TRACE(("leave send_msg_channel_open_failure"))
@@ -1224,7 +1244,7 @@ struct Channel* get_any_ready_channel() {
 }
 
 void start_send_channel_request(struct Channel *channel, 
-		unsigned char *type) {
+		char *type) {
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);

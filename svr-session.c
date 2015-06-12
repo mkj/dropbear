@@ -138,6 +138,8 @@ void svr_session(int sock, int childpipe) {
 
 	/* exchange identification, version etc */
 	send_session_identification();
+	
+	kexfirstinitialise(); /* initialise the kex state */
 
 	/* start off with key exchange */
 	send_msg_kexinit();
