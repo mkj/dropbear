@@ -21,6 +21,7 @@ env:
    # The next declration is the encrypted COVERITY_SCAN_TOKEN, created
    #   via the "travis encrypt" command using the project repo's public key
    - secure: "F4rKQrHK/u58vPo3F9+x0WYXAeMFJvvtH9BIGZqx9yw8bUnL+gk0Ge9wnHHTXRcgCTqoc7B35uMS5njpH+Su/esVjrLAq85f/AmQctlRpmApwGK9LyxkIvx3UJN0nqfeeDXA90/8FUZ+n/qnCydXmYCEgqSaBCNydDxW1oqYUIc="
+  matrix:
    - BUNDLEDLIBTOM=--disable-bundled-libtom
    - BUNDLEDLIBTOM=--enable-bundled-libtom
    - MULTI=1
