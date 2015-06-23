@@ -703,6 +703,9 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	ecc_key *Q_C, *Q_S, *Q_them;
 
 	Q_them = buf_get_ecc_raw_pubkey(pub_them, algo_kex->ecc_curve);
+	if (Q_them == NULL) {
+		dropbear_exit("ECC error");
+	}
 
 	ses.dh_K = dropbear_ecc_shared_secret(Q_them, &param->key);
 
