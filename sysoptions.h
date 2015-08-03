@@ -47,7 +47,7 @@
  * the clearenv() function */
 #define ENV_SIZE 100
 
-#define MAX_CMD_LEN 1024 /* max length of a command */
+#define MAX_CMD_LEN 9000 /* max length of a command */
 #define MAX_TERM_LEN 200 /* max length of TERM name */
 
 #define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
@@ -153,7 +153,8 @@
 #define MAX_CHANNELS 100 /* simple mem restriction, includes each tcp/x11
 							connection, so can't be _too_ small */
 
-#define MAX_STRING_LEN 2400 /* Sun SSH needs this long for algos */
+#define MAX_STRING_LEN (MAX(MAX_CMD_LEN, 2400)) /* Sun SSH needs 2400 for algos,
+                                                   MAX_CMD_LEN is usually longer */
 
 /* For a 4096 bit DSS key, empirically determined */
 #define MAX_PUBKEY_SIZE 1700
