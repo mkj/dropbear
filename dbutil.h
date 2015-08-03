@@ -97,6 +97,6 @@ int constant_time_memcmp(const void* a, const void *b, size_t n);
 a real-world clock */
 time_t monotonic_now();
 
-char * expand_tilde(const char *inpath);
+char * expand_homedir_path(const char *inpath);
 
 #endif /* DROPBEAR_DBUTIL_H_ */

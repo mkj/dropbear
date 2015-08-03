@@ -449,7 +449,7 @@ void cli_getopts(int argc, char ** argv) {
 
 #if defined(DROPBEAR_DEFAULT_CLI_AUTHKEY) && defined(ENABLE_CLI_PUBKEY_AUTH)
 	{
-		char *expand_path = expand_tilde(DROPBEAR_DEFAULT_CLI_AUTHKEY);
+		char *expand_path = expand_homedir_path(DROPBEAR_DEFAULT_CLI_AUTHKEY);
 		loadidentityfile(expand_path, 0);
 		m_free(expand_path);
 	}
