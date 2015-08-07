@@ -91,7 +91,7 @@ int svr_pubkey_allows_pty() {
 /* Set chansession command to the one forced 
  * by any 'command' public key option. */
 void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
-	if (ses.authstate.pubkey_options) {
+	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->forced_command) {
 		if (chansess->cmd) {
 			/* original_command takes ownership */
 			chansess->original_command = chansess->cmd;
