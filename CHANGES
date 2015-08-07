@@ -8,7 +8,7 @@
   with networks and systems.
 
 - Forwarded TCP ports connect asynchronously and retry with other available
-  addresses (IPv4 or IPv6, round robin IPs)
+  addresses (IPv4 versus IPv6, round robin IPs)
 
 - Free memory before exiting, patch from Thorsten Horstmann. Useful for
   Dropbear ports to embedded systems and for checking memory leaks
@@ -22,10 +22,17 @@
 - Fix small ECC memory leaks
 
 - Tighten validation of Diffie-Hellman parameters, from Florent Daigniere of
-  Matt Consulting. Odds of bad values are around 2**-512 -- improbable.
+  Matta Consulting. Odds of bad values are around 2**-512 -- improbable.
 
 - Twofish-ctr cipher is supported though disabled by default
 
+- Fix pre-authentication timeout when waiting for client SSH-2.0 banner, thanks
+  to CL Ouyang
+
+- Increase maximum command size to 9000 bytes
+
+- DROPBEAR_DEFAULT_CLI_AUTHKEY setting now always prepends home directory unless
+  there is a leading slash (~ isn't treated specially)
 
 2015.67 - Wednesday 28 January 2015
 

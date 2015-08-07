@@ -21,23 +21,6 @@ struct dropbear_progress_connection {
 	char* errstring;
 };
 
-#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
-static void set_piggyback_ack(int sock) {
-	/* Undocumented Linux feature - set TCP_DEFER_ACCEPT and data will be piggybacked
-	on the 3rd packet (ack) of the TCP handshake. Saves a IP packet.
-	http://thread.gmane.org/gmane.linux.network/224627/focus=224727
-	"Piggyback the final ACK of the three way TCP connection establishment with the data" */
-	int val = 1;
-	/* No error checking, this is opportunistic */
-	int err = setsockopt(sock, IPPROTO_TCP, TCP_DEFER_ACCEPT, (void*)&val, sizeof(val));
-	if (err)
-	{
-		TRACE(("Failed setsockopt TCP_DEFER_ACCEPT: %s", strerror(errno)))
-	}
-}
-#endif
-
-
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
 Does not close sockets */
 static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *iter) {
@@ -86,10 +69,6 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		ses.maxfd = MAX(ses.maxfd, c->sock);
 		set_sock_nodelay(c->sock);
 		setnonblocking(c->sock);
-
-#if defined(__linux__) && defined(TCP_DEFER_ACCEPT)
-		set_piggyback_ack(c->sock);
-#endif
 
 #ifdef DROPBEAR_CLIENT_TCP_FAST_OPEN
 		fastopen = (c->writequeue != NULL);

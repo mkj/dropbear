@@ -222,8 +222,8 @@ If you test it please contact the Dropbear author */
 #define ENABLE_CLI_INTERACT_AUTH
 
 /* A default argument for dbclient -i <privatekey>. 
-   leading "~" is expanded */
-#define DROPBEAR_DEFAULT_CLI_AUTHKEY "~/.ssh/id_dropbear"
+Homedir is prepended unless path begins with / */
+#define DROPBEAR_DEFAULT_CLI_AUTHKEY ".ssh/id_dropbear"
 
 /* This variable can be used to set a password for client
  * authentication on the commandline. Beware of platforms

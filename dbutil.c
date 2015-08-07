@@ -613,15 +613,16 @@ int m_str_to_uint(const char* str, unsigned int *val) {
 	}
 }
 
-/* Returns malloced path. Only expands ~ in first character */
-char * expand_tilde(const char *inpath) {
+/* Returns malloced path. inpath beginning with '/' is returned as-is,
+otherwise home directory is prepended */
+char * expand_homedir_path(const char *inpath) {
 	struct passwd *pw = NULL;
-	if (inpath[0] == '~') {
+	if (inpath[0] != '/') {
 		pw = getpwuid(getuid());
 		if (pw && pw->pw_dir) {
-			int len = strlen(inpath) + strlen(pw->pw_dir) + 1;
+			int len = strlen(inpath) + strlen(pw->pw_dir) + 2;
 			char *buf = m_malloc(len);
-			snprintf(buf, len, "%s/%s", pw->pw_dir, &inpath[1]);
+			snprintf(buf, len, "%s/%s", pw->pw_dir, inpath);
 			return buf;
 		}
 	}
