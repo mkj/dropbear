@@ -533,11 +533,11 @@ static void checktimeouts() {
 }
 
 static void update_timeout(long limit, long now, long last_event, long * timeout) {
-	TRACE(("update_timeout limit %ld, now %ld, last %ld, timeout %ld",
+	TRACE2(("update_timeout limit %ld, now %ld, last %ld, timeout %ld",
 		limit, now, last_event, *timeout))
 	if (last_event > 0 && limit > 0) {
 		*timeout = MIN(*timeout, last_event+limit-now);
-		TRACE(("update to %ld", *timeout))
+		TRACE2(("new timeout %ld", *timeout))
 	}
 }
 
@@ -554,14 +554,14 @@ static long select_timeout() {
 		update_timeout(AUTH_TIMEOUT, now, ses.connect_time, &timeout);
 	}
 
-	update_timeout(opts.keepalive_secs, now, 
-		MAX(ses.last_packet_time_keepalive_recv, ses.last_packet_time_keepalive_sent),
-		&timeout);
+	if (ses.authstate.authdone) {
+		update_timeout(opts.keepalive_secs, now, 
+			MAX(ses.last_packet_time_keepalive_recv, ses.last_packet_time_keepalive_sent),
+			&timeout);
+	}
 
 	update_timeout(opts.idle_timeout_secs, now, ses.last_packet_time_idle,
 		&timeout);
-
-	TRACE(("timeout %ld", timeout))
 
 	/* clamp negative timeouts to zero - event has already triggered */
 	return MAX(timeout, 0);
