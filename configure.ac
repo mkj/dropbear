@@ -632,7 +632,7 @@ fi
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_CHECK_FUNCS([dup2 getpass getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo fork writev])
+AC_CHECK_FUNCS([dup2 getpass getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo fork writev crypt])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 
@@ -719,10 +719,21 @@ AC_OUTPUT
 
 AC_MSG_NOTICE()
 if test $BUNDLED_LIBTOM = 1 ; then
-AC_MSG_NOTICE(Using bundled libtomcrypt and libtommath)
+AC_MSG_NOTICE([Using bundled libtomcrypt and libtommath])
 else
-AC_MSG_NOTICE(Using system libtomcrypt and libtommath)
+AC_MSG_NOTICE([Using system libtomcrypt and libtommath])
+fi
+
+
+if test "x$ac_cv_func_getpass" != xyes; then
+AC_MSG_NOTICE()
+AC_MSG_NOTICE([getpass() not available, dbclient will only have public-key authentication])
+fi
+
+if test "x$ac_cv_func_crypt" != xyes; then
+AC_MSG_NOTICE()
+AC_MSG_NOTICE([crypt() not available, dropbear server will not have password authentication])
 fi
 
 AC_MSG_NOTICE()
-AC_MSG_NOTICE(Now edit options.h to choose features.)
+AC_MSG_NOTICE([Now edit options.h to choose features.])
