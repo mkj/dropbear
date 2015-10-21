@@ -218,8 +218,12 @@ void cli_getopts(int argc, char ** argv) {
 
 		if (argv[i][0] == '-') {
 			/* A flag *waves* */
-
-			switch (argv[i][1]) {
+			char c = argv[i][1];
+			if (strlen(argv[i]) != 2) {
+				/* Ensure only one flag per hyphen. '?' falls through to print help */
+				c = '?';
+			}
+			switch (c) {
 				case 'y': /* always accept the remote hostkey */
 					if (cli_opts.always_accept_key) {
 						/* twice means no checking at all */

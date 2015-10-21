@@ -189,7 +189,12 @@ void svr_getopts(int argc, char ** argv) {
 		}
 
 		if (argv[i][0] == '-') {
-			switch (argv[i][1]) {
+			char c = argv[i][1];
+			if (strlen(argv[i]) != 2) {
+				/* Ensure only one flag per hyphen. '?' falls through to print help */
+				c = '?';
+			}
+			switch (c) {
 				case 'b':
 					next = &svr_opts.bannerfile;
 					break;
