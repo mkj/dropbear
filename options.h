@@ -206,7 +206,10 @@ If you test it please contact the Dropbear author */
  * PAM challenge/response.
  * You can't enable both PASSWORD and PAM. */
 
+/* This requires crypt.h & crypt. */
+#ifdef HAVE_CRYPT_H
 #define ENABLE_SVR_PASSWORD_AUTH
+#endif
 /* PAM requires ./configure --enable-pam */
 /*#define ENABLE_SVR_PAM_AUTH */
 #define ENABLE_SVR_PUBKEY_AUTH
