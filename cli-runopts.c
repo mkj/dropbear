@@ -220,8 +220,9 @@ void cli_getopts(int argc, char ** argv) {
 			/* A flag *waves* */
 			char c = argv[i][1];
 			if (strlen(argv[i]) != 2) {
-				/* Ensure only one flag per hyphen. '?' falls through to print help */
-				c = '?';
+				/* We only handle one flag per hyphen */
+				fprintf(stderr, "Warning, trailing '%s' of '%s' is ignored.\n",
+					&argv[i][2], argv[i]);
 			}
 			switch (c) {
 				case 'y': /* always accept the remote hostkey */
