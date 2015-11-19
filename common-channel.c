@@ -971,6 +971,7 @@ void recv_msg_channel_open() {
 
 	if (channel == NULL) {
 		TRACE(("newchannel returned NULL"))
+		errtype = SSH_OPEN_RESOURCE_SHORTAGE;
 		goto failure;
 	}
 
