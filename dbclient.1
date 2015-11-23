@@ -3,13 +3,14 @@
 dbclient \- lightweight SSH client
 .SH SYNOPSIS
 .B dbclient
-[\-Tt] [\-p
+[flag arguments] [\-p
 .I port\fR] [\-i
 .I id\fR] [\-L
-.I l\fR:\fIh\fR:\fIr\fR] [\-R
-.I l\fR:\fIh\fR:\fIr\fR] [\-l
+.I l\fR:\fIh\fR:\fIp\fR] [\-R
+.I l\fR:\fIh\fR:\fIp\fR] [\-l
 .IR user ]
 .I host
+.RI [ more\ flags ]
 .RI [ command ]
 
 .B dbclient
@@ -21,6 +22,13 @@ dbclient \- lightweight SSH client
 .B dbclient
 is a small SSH client 
 .SH OPTIONS
+.TP
+.TP
+.B command
+A command to run on the remote host. This will normally be run by the remote host
+using the user's shell. The command begins at the first hyphen argument after the 
+host argument. If no command is specified an interactive terminal will be opened
+(see -t and -T).
 .TP
 .B \-p \fIport
 Connect to 
@@ -60,10 +68,12 @@ Login as
 on the remote host.
 .TP
 .B \-t
-Allocate a PTY.
+Allocate a PTY. This is the default when no command is given, it gives a full
+interactive remote session. The main effect is that keystrokes are sent remotely 
+immediately as opposed to local line-based editing.
 .TP
 .B \-T
-Don't allocate a PTY.
+Don't allocate a PTY. This is the default a command is given. See -t.
 .TP
 .B \-N
 Don't request a remote shell or run any commands. Any command arguments are ignored.
@@ -129,7 +139,7 @@ Dropbear will also allow multiple "hops" to be specified, separated by commas. I
 this case a connection will be made to the first host, then a TCP forwarded 
 connection will be made through that to the second host, and so on. Hosts other than
 the final destination will not see anything other than the encrypted SSH stream. 
-A port for a host can be specified with a hash (eg matt@martello^44 ).
+A port for a host can be specified with a caret (eg matt@martello^44 ).
 This syntax can also be used with scp or rsync (specifying dbclient as the 
 ssh/rsh command). A file can be "bounced" through multiple SSH hops, eg
 
@@ -157,6 +167,10 @@ SSH_ASKPASS should be set to the path of a program that will return a password
 on standard output. This program will only be used if either DISPLAY is set and
 standard input is not a TTY, or the environment variable SSH_ASKPASS_ALWAYS is
 set.
+.SH NOTES
+If compiled with zlib support and if the server supports it, dbclient will
+always use compression.
+
 .SH AUTHOR
 Matt Johnston (matt@ucc.asn.au).
 .br

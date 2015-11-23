@@ -1,23 +1,31 @@
-- Improve efficiency of writing data to local program/pipes, measured 30% increase
+2015.68 - Saturday 8 August 2015
+
+- Reduce local data copying for improved efficiency. Measured 30%
   increase in throughput for connections to localhost
 
-- Use TCP Fast Open on Linux if available. saves a round trip at connection
+- Forwarded TCP ports connect asynchronously and try all available addresses
+  (IPv4, IPv6, round robin DNS)
+
+- Fix all compile warnings, many patches from Gaël Portay
+  Note that configure with -Werror may not be successful on some platforms (OS X)
+  and some configuration options may still result in unused variable
+  warnings.
+
+- Use TCP Fast Open on Linux if available. Saves a round trip at connection
   to hosts that have previously been connected. 
   Needs a recent Linux kernel and possibly "sysctl -w net.ipv4.tcp_fastopen=3"
   Client side is disabled by default pending further compatibility testing
   with networks and systems.
 
-- Forwarded TCP ports connect asynchronously and retry with other available
-  addresses (IPv4 versus IPv6, round robin IPs)
+- Increase maximum command length to 9000 bytes
 
 - Free memory before exiting, patch from Thorsten Horstmann. Useful for
   Dropbear ports to embedded systems and for checking memory leaks
-  with valgrind. Only partially implemented for client side.
+  with valgrind. Only partially implemented for dbclient.
+  This is disabled by default, enable with DROPBEAR_CLEANUP in sysoptions.h
 
-- Fix all compile warnings, patch from Gaël Portay
-  (note that configure with -Werror may not be successful on some platforms
-  such as OS X and some configuration options may result in unused variable
-  warnings)
+- DROPBEAR_DEFAULT_CLI_AUTHKEY setting now always prepends home directory unless
+  there is a leading slash (~ isn't treated specially)
 
 - Fix small ECC memory leaks
 
@@ -29,10 +37,13 @@
 - Fix pre-authentication timeout when waiting for client SSH-2.0 banner, thanks
   to CL Ouyang
 
-- Increase maximum command size to 9000 bytes
+- Fix null pointer crash with restrictions in authorized_keys without a command, patch from
+  Guilhem Moulin
 
-- DROPBEAR_DEFAULT_CLI_AUTHKEY setting now always prepends home directory unless
-  there is a leading slash (~ isn't treated specially)
+- Ensure authentication timeout is handled while reading the initial banner,
+  thanks to CL Ouyang for finding it.
+
+- Fix null pointer crash when handling bad ECC keys. Found by afl-fuzz
 
 2015.67 - Wednesday 28 January 2015
 
