@@ -177,7 +177,20 @@ void cli_getopts(int argc, char ** argv) {
 
 	fill_own_user();
 
-	for (i = 1; i < (unsigned int)argc && argv[i][0] == '-'; i++) {
+	for (i = 1; i < (unsigned int)argc; i++) {
+		/* Handle non-flag arguments such as hostname or commands for the remote host */
+		if (argv[i][0] != '-')
+		{
+			if (host_arg == NULL) {
+				host_arg = argv[i];
+				continue;
+			}
+			/* Commands to pass to the remote host. No more flag handling,
+			commands are consumed below */
+			break;
+		}
+
+		/* Begins with '-' */
 		opt = OPT_OTHER;
 		for (j = 1; (c = argv[i][j]) != '\0' && !next && opt == OPT_OTHER; j++) {
 			switch (c) {
@@ -348,11 +361,10 @@ void cli_getopts(int argc, char ** argv) {
 	/* Done with options/flags; now handle the hostname (which may not
 	 * start with a hyphen) and optional command */
 
-	if (i >= (unsigned int)argc) { /* missing hostname */
+	if (host_arg == NULL) { /* missing hostname */
 		printhelp();
 		exit(EXIT_FAILURE);
 	}
-	host_arg = argv[i++];
 	TRACE(("host is: %s", host_arg))
 
 	if (i < (unsigned int)argc) {
