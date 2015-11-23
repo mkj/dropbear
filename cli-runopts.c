@@ -105,25 +105,30 @@ static void printhelp() {
 void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
 	char ** next = 0;
-	unsigned int cmdlen;
+	enum {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
-	int nextiskey = 0; /* A flag if the next argument is a keyfile */
+		OPT_AUTHKEY,
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
-	int nextislocal = 0;
+		OPT_LOCALTCPFWD,
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
-	int nextisremote = 0;
+		OPT_REMOTETCPFWD,
 #endif
 #ifdef ENABLE_CLI_NETCAT
-	int nextisnetcat = 0;
+		OPT_NETCAT,
 #endif
+		/* a flag (no arg) if 'next' is NULL, a string-valued option otherwise */
+		OPT_OTHER
+	} opt;
+	unsigned int cmdlen;
 	char* dummy = NULL; /* Not used for anything real */
 
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
 	char *host_arg = NULL;
+	char c;
 
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
@@ -172,58 +177,9 @@ void cli_getopts(int argc, char ** argv) {
 
 	fill_own_user();
 
-	/* Iterate all the arguments */
-	for (i = 1; i < (unsigned int)argc; i++) {
-#ifdef ENABLE_CLI_PUBKEY_AUTH
-		if (nextiskey) {
-			/* Load a hostkey since the previous argument was "-i" */
-			loadidentityfile(argv[i], 1);
-			nextiskey = 0;
-			continue;
-		}
-#endif
-#ifdef ENABLE_CLI_REMOTETCPFWD
-		if (nextisremote) {
-			TRACE(("nextisremote true"))
-			addforward(argv[i], cli_opts.remotefwds);
-			nextisremote = 0;
-			continue;
-		}
-#endif
-#ifdef ENABLE_CLI_LOCALTCPFWD
-		if (nextislocal) {
-			TRACE(("nextislocal true"))
-			addforward(argv[i], cli_opts.localfwds);
-			nextislocal = 0;
-			continue;
-		}
-#endif
-#ifdef ENABLE_CLI_NETCAT
-		if (nextisnetcat) {
-			TRACE(("nextisnetcat true"))
-			add_netcat(argv[i]);
-			nextisnetcat = 0;
-			continue;
-		}
-#endif
-		if (next) {
-			/* The previous flag set a value to assign */
-			*next = argv[i];
-			if (*next == NULL) {
-				dropbear_exit("Invalid null argument");
-			}
-			next = NULL;
-			continue;
-		}
-
-		if (argv[i][0] == '-') {
-			/* A flag *waves* */
-			char c = argv[i][1];
-			if (strlen(argv[i]) != 2) {
-				/* We only handle one flag per hyphen */
-				fprintf(stderr, "Warning, trailing '%s' of '%s' is ignored.\n",
-					&argv[i][2], argv[i]);
-			}
+	for (i = 1; i < (unsigned int)argc && argv[i][0] == '-'; i++) {
+		opt = OPT_OTHER;
+		for (j = 1; (c = argv[i][j]) != '\0' && !next && opt == OPT_OTHER; j++) {
 			switch (c) {
 				case 'y': /* always accept the remote hostkey */
 					if (cli_opts.always_accept_key) {
@@ -237,12 +193,7 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
-					/* Keep scp happy when it changes "-i file" to "-ifile" */
-					if (strlen(argv[i]) > 2) {
-						loadidentityfile(&argv[i][2], 1);
-					} else  {
-						nextiskey = 1;
-					}
+					opt = OPT_AUTHKEY;
 					break;
 #endif
 				case 't': /* we want a pty */
@@ -262,7 +213,7 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':
-					nextislocal = 1;
+					opt = OPT_LOCALTCPFWD;
 					break;
 				case 'g':
 					opts.listen_fwd_all = 1;
@@ -270,12 +221,12 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 				case 'R':
-					nextisremote = 1;
+					opt = OPT_REMOTETCPFWD;
 					break;
 #endif
 #ifdef ENABLE_CLI_NETCAT
 				case 'B':
-					nextisnetcat = 1;
+					opt = OPT_NETCAT;
 					break;
 #endif
 #ifdef ENABLE_CLI_PROXYCMD
@@ -341,50 +292,86 @@ void cli_getopts(int argc, char ** argv) {
 				case 'b':
 					next = &dummy;
 				default:
-					fprintf(stderr, 
-						"WARNING: Ignoring unknown argument '%s'\n", argv[i]);
+					fprintf(stderr,
+						"WARNING: Ignoring unknown option -%c\n", c);
 					break;
 			} /* Switch */
-			
-			/* Now we handle args where they might be "-luser" (no spaces)*/
-			if (next && strlen(argv[i]) > 2) {
-				*next = &argv[i][2];
-				next = NULL;
-			}
-
-			continue; /* next argument */
-
-		} else {
-			TRACE(("non-flag arg: '%s'", argv[i]))
-
-			/* Either the hostname or commands */
-
-			if (host_arg == NULL) {
-				host_arg = argv[i];
-			} else {
-
-				/* this is part of the commands to send - after this we
-				 * don't parse any more options, and flags are sent as the
-				 * command */
-				cmdlen = 0;
-				for (j = i; j < (unsigned int)argc; j++) {
-					cmdlen += strlen(argv[j]) + 1; /* +1 for spaces */
-				}
-				/* Allocate the space */
-				cli_opts.cmd = (char*)m_malloc(cmdlen);
-				cli_opts.cmd[0] = '\0';
-
-				/* Append all the bits */
-				for (j = i; j < (unsigned int)argc; j++) {
-					strlcat(cli_opts.cmd, argv[j], cmdlen);
-					strlcat(cli_opts.cmd, " ", cmdlen);
-				}
-				/* It'll be null-terminated here */
-
-				/* We've eaten all the options and flags */
-				break;
-			}
 		}
+
+		if (!next && opt == OPT_OTHER) /* got a flag */
+			continue;
+
+		if (c == '\0') {
+			i++;
+			j = 0;
+			if (!argv[i])
+				dropbear_exit("Missing argument");
+		}
+
+#ifdef ENABLE_CLI_PUBKEY_AUTH
+		if (opt == OPT_AUTHKEY) {
+			TRACE(("opt authkey"))
+			loadidentityfile(&argv[i][j], 1);
+		}
+		else
+#endif
+#ifdef ENABLE_CLI_REMOTETCPFWD
+		if (opt == OPT_REMOTETCPFWD) {
+			TRACE(("opt remotetcpfwd"))
+			addforward(&argv[i][j], cli_opts.remotefwds);
+		}
+		else
+#endif
+#ifdef ENABLE_CLI_LOCALTCPFWD
+		if (opt == OPT_LOCALTCPFWD) {
+			TRACE(("opt localtcpfwd"))
+			addforward(&argv[i][j], cli_opts.localfwds);
+		}
+		else
+#endif
+#ifdef ENABLE_CLI_NETCAT
+		if (opt == OPT_NETCAT) {
+			TRACE(("opt netcat"))
+			add_netcat(&argv[i][j]);
+		}
+		else
+#endif
+		if (next) {
+			/* The previous flag set a value to assign */
+			*next = &argv[i][j];
+			if (*next == NULL)
+				dropbear_exit("Invalid null argument");
+			next = NULL;
+		}
+	}
+
+	/* Done with options/flags; now handle the hostname (which may not
+	 * start with a hyphen) and optional command */
+
+	if (i >= (unsigned int)argc) { /* missing hostname */
+		printhelp();
+		exit(EXIT_FAILURE);
+	}
+	host_arg = argv[i++];
+	TRACE(("host is: %s", host_arg))
+
+	if (i < (unsigned int)argc) {
+		/* Build the command to send */
+		cmdlen = 0;
+		for (j = i; j < (unsigned int)argc; j++)
+			cmdlen += strlen(argv[j]) + 1; /* +1 for spaces */
+
+		/* Allocate the space */
+		cli_opts.cmd = (char*)m_malloc(cmdlen);
+		cli_opts.cmd[0] = '\0';
+
+		/* Append all the bits */
+		for (j = i; j < (unsigned int)argc; j++) {
+			strlcat(cli_opts.cmd, argv[j], cmdlen);
+			strlcat(cli_opts.cmd, " ", cmdlen);
+		}
+		/* It'll be null-terminated here */
+		TRACE(("cmd is: %s", cli_opts.cmd))
 	}
 
 	/* And now a few sanity checks and setup */
@@ -392,11 +379,6 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_USER_ALGO_LIST
 	parse_ciphers_macs();
 #endif
-
-	if (host_arg == NULL) {
-		printhelp();
-		exit(EXIT_FAILURE);
-	}
 
 #ifdef ENABLE_CLI_PROXYCMD                                                                                                                                   
 	if (cli_opts.proxycmd) {
