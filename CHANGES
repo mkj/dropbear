@@ -1,3 +1,7 @@
+2015.70 - 27 November 2015
+
+- Fix server password authentication on Linux, broke in 2015.69
+
 2015.69 - 25 November 2015
 
 - Fix crash when forwarded TCP connections fail to connect (bug introduced in 2015.68)
