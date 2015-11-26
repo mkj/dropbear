@@ -83,7 +83,7 @@ AC_CHECK_DECL(__UCLIBC__,
 	],,,)
 
 # Checks for libraries.
-AC_SEARCH_LIBS(crypt, crypt, CRYPTLIB="-lcrypt")
+AC_CHECK_LIB(crypt, crypt, CRYPTLIB="-lcrypt")
 AC_SUBST(CRYPTLIB)	
 
 # Check if zlib is needed
