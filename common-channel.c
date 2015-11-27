@@ -255,8 +255,6 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 		}
 	}
 
-	ses.channel_signal_pending = 0;
-
 #ifdef USING_LISTENERS
 	handle_listeners(readfds);
 #endif
