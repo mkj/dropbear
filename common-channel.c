@@ -445,9 +445,10 @@ static int writechannel_fallback(struct Channel* channel, int fd, circbuffer *cb
 			close_chan_fd(channel, fd, SHUT_WR);
 			return DROPBEAR_FAILURE;
 		}
+	} else {
+		cbuf_incrread(cbuf, written);
+		channel->recvdonelen += written;
 	}
-	cbuf_incrread(cbuf, written);
-	channel->recvdonelen += written;
 	return DROPBEAR_SUCCESS;
 }
 #endif /* !HAVE_WRITEV */
@@ -460,7 +461,7 @@ static int writechannel_writev(struct Channel* channel, int fd, circbuffer *cbuf
 	unsigned char *circ_p1, *circ_p2;
 	unsigned int circ_len1, circ_len2;
 	int io_count = 0;
-	int cbuf_written;
+
 	ssize_t written;
 
 	cbuf_readptrs(cbuf, &circ_p1, &circ_len1, &circ_p2, &circ_len2);
@@ -508,14 +509,14 @@ static int writechannel_writev(struct Channel* channel, int fd, circbuffer *cbuf
 			close_chan_fd(channel, fd, SHUT_WR);
 			return DROPBEAR_FAILURE;
 		}
-	} 
-
-	cbuf_written = MIN(circ_len1+circ_len2, (unsigned int)written);
-	cbuf_incrread(cbuf, cbuf_written);
-	if (morelen) {
-		*morelen = written - cbuf_written;
+	} else {
+		int cbuf_written = MIN(circ_len1+circ_len2, (unsigned int)written);
+		cbuf_incrread(cbuf, cbuf_written);
+		if (morelen) {
+			*morelen = written - cbuf_written;
+		}
+		channel->recvdonelen += written;
 	}
-	channel->recvdonelen += written;
 	return DROPBEAR_SUCCESS;
 }
 #endif /* HAVE_WRITEV */
