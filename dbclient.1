@@ -127,6 +127,20 @@ Specify a comma separated list of ciphers to enable. Use \fI-c help\fR to list p
 .B \-m \fIMAClist
 Specify a comma separated list of authentication MACs to enable. Use \fI-m help\fR to list possibilities.
 .TP
+.B \-o \fIoption
+Can be used to give options in the format used by OpenSSH config file. This is
+useful for specifying options for which there is no separate command-line flag.
+For full details of the options listed below, and their possible values, see
+ssh_config(5).
+
+For now only following options have been implemented:
+.RS
+.RS
+.TP
+ExitOnForwardFailure
+.RE
+.RE
+.TP
 .B \-s 
 The specified command will be requested as a subsystem, used for sftp. Dropbear doesn't implement sftp itself but the OpenSSH sftp client can be used eg \fIsftp -S dbclient user@host\fR
 .TP

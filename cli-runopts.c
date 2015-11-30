@@ -148,6 +148,9 @@ void cli_getopts(int argc, char ** argv) {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = list_new();
 #endif
+#ifdef ENABLE_CLI_ANYTCPFWD
+	cli_opts.exit_on_fwd_failure = 0;
+#endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -854,9 +857,20 @@ static void add_extendedopt(const char* origstr) {
 	const char *optstr = origstr;
 
 	if (strcmp(origstr, "help") == 0) {
-		dropbear_log(LOG_INFO, "No options available\n");
+		dropbear_log(LOG_INFO, "Available options:\n"
+#ifdef ENABLE_CLI_ANYTCPFWD
+			"\tExitOnForwardFailure\n"
+#endif
+		);
 		exit(EXIT_SUCCESS);
 	}
+
+#ifdef ENABLE_CLI_ANYTCPFWD
+	if (match_extendedopt(&optstr, "ExitOnForwardFailure") == DROPBEAR_SUCCESS) {
+		cli_opts.exit_on_fwd_failure = parse_flag_value(optstr);
+		return;
+	}
+#endif
 
 	dropbear_exit("Bad configuration option '%s'", origstr);
 }
