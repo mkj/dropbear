@@ -173,6 +173,9 @@ void cli_getopts(int argc, char ** argv) {
 	opts.cipher_list = NULL;
 	opts.mac_list = NULL;
 #endif
+#ifndef DISABLE_SYSLOG
+	opts.usingsyslog = 0;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;

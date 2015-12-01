@@ -40,6 +40,7 @@ typedef struct runopts {
 	unsigned int recv_window;
 	time_t keepalive_secs; /* Time between sending keepalives. 0 is off */
 	time_t idle_timeout_secs; /* Exit if no traffic is sent/received in this time */
+	int usingsyslog;
 
 #ifndef DISABLE_ZLIB
 	/* TODO: add a commandline flag. Currently this is on by default if compression
@@ -70,7 +71,6 @@ typedef struct svr_runopts {
 	char * bannerfile;
 
 	int forkbg;
-	int usingsyslog;
 
 	/* ports and addresses are arrays of the portcount 
 	listening ports. strings are malloced. */
