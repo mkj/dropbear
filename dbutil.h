@@ -31,7 +31,7 @@
 #include "queue.h"
 
 #ifndef DISABLE_SYSLOG
-void startsyslog();
+void startsyslog(const char *ident);
 #endif
 
 #ifdef __GNUC__

@@ -367,8 +367,8 @@ static void commonsetup() {
 
 	struct sigaction sa_chld;
 #ifndef DISABLE_SYSLOG
-		startsyslog();
 	if (opts.usingsyslog) {
+		startsyslog(PROGNAME);
 	}
 #endif
 
