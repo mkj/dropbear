@@ -491,7 +491,7 @@ static void loadidentityfile(const char* filename, int warnfail) {
 	keytype = DROPBEAR_SIGNKEY_ANY;
 	if ( readhostkey(filename, key, &keytype) != DROPBEAR_SUCCESS ) {
 		if (warnfail) {
-			fprintf(stderr, "Failed loading keyfile '%s'\n", filename);
+			dropbear_log(LOG_WARNING, "Failed loading keyfile '%s'\n", filename);
 		}
 		sign_key_free(key);
 	} else {
