@@ -864,6 +864,9 @@ static void add_extendedopt(const char* origstr) {
 #ifdef ENABLE_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
+#ifndef DISABLE_SYSLOG
+			"\tUseSyslog\n"
+#endif
 		);
 		exit(EXIT_SUCCESS);
 	}
@@ -871,6 +874,13 @@ static void add_extendedopt(const char* origstr) {
 #ifdef ENABLE_CLI_ANYTCPFWD
 	if (match_extendedopt(&optstr, "ExitOnForwardFailure") == DROPBEAR_SUCCESS) {
 		cli_opts.exit_on_fwd_failure = parse_flag_value(optstr);
+		return;
+	}
+#endif
+
+#ifndef DISABLE_SYSLOG
+	if (match_extendedopt(&optstr, "UseSyslog") == DROPBEAR_SUCCESS) {
+		opts.usingsyslog = parse_flag_value(optstr);
 		return;
 	}
 #endif

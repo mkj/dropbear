@@ -269,6 +269,11 @@ static void cli_sessionloop() {
 			return;
 
 		case USERAUTH_SUCCESS_RCVD:
+#ifndef DISABLE_SYSLOG
+			if (opts.usingsyslog) {
+				dropbear_log(LOG_INFO, "Authentication succeeded.");
+			}
+#endif
 
 #ifdef DROPBEAR_NONE_CIPHER
 			if (cli_ses.cipher_none_after_auth)
