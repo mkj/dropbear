@@ -33,7 +33,8 @@
 
 typedef struct runopts {
 
-#if defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD)
+#if defined(ENABLE_SVR_REMOTETCPFWD) || defined(ENABLE_CLI_LOCALTCPFWD) \
+    || defined(ENABLE_CLI_REMOTETCPFWD)
 	int listen_fwd_all;
 #endif
 	unsigned int recv_window;

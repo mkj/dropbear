@@ -3,20 +3,19 @@
 dbclient \- lightweight SSH client
 .SH SYNOPSIS
 .B dbclient
-[flag arguments] [\-p
+[\fIflag arguments\fR] [\-p
 .I port\fR] [\-i
 .I id\fR] [\-L
 .I l\fR:\fIh\fR:\fIp\fR] [\-R
 .I l\fR:\fIh\fR:\fIp\fR] [\-l
 .IR user ]
 .I host
-.RI [ more\ flags ]
+.RI [ \fImore\ flags\fR ]
 .RI [ command ]
 
 .B dbclient
-[
-.I args ]
-.I [user1]@host1[^port1],[user2]@host2[^port2],...
+[\fIargs\fR]
+[\fIuser1\fR]@\fIhost1\fR[^\fIport1\fR],[\fIuser2\fR]@\fIhost2\fR[^\fIport2\fR],...
 
 .SH DESCRIPTION
 .B dbclient
@@ -43,7 +42,7 @@ Read the identity key from file
 (multiple allowed). This file is created with dropbearkey(1) or converted
 from OpenSSH with dropbearconvert(1). The default path ~/.ssh/id_dropbear is used
 .TP
-.B \-L [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
+.B \-L\fR [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
 Local port forwarding.
 Forward the port
 .I listenport
@@ -52,7 +51,7 @@ on the local host through the SSH connection to port
 on the host
 .IR host .
 .TP
-.B \-R [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
+.B \-R\fR [\fIlistenaddress\fR]:\fIlistenport\fR:\fIhost\fR:\fIport\fR
 Remote port forwarding.
 Forward the port
 .I listenport

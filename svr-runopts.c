@@ -551,6 +551,6 @@ void load_all_hostkeys() {
 #endif /* DROPBEAR_ECDSA */
 
 	if (!any_keys) {
-		dropbear_exit("No hostkeys available");
+		dropbear_exit("No hostkeys available. 'dropbear -R' may be useful or run dropbearkey.");
 	}
 }
