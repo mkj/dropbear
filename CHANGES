@@ -1,6 +1,6 @@
 2015.71 - December 2015
 
-- Fix "bad buf_incrpos" when data is transferred, broke in 2015.70
+- Fix "bad buf_incrpos" when data is transferred, broke in 2015.69
 
 - Fix crash on exit when -p address:port is used, broke in 2015.68
 
