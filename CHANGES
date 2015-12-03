@@ -2,7 +2,8 @@
 
 - Fix "bad buf_incrpos" when data is transferred, broke in 2015.69
 
-- Fix crash on exit when -p address:port is used, broke in 2015.68
+- Fix crash on exit when -p address:port is used, broke in 2015.68, thanks to
+  Frank Stollenwerk for reporting and investigation
 
 - Fix building with only ENABLE_CLI_REMOTETCPFWD given, patch from Konstantin Tokarev
 
