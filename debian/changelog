@@ -1,3 +1,9 @@
+dropbear (2015.71-0.1) unstable; urgency=low
+
+  * New upstream release.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Thu, 3 Dec 2015 22:52:58 +0800
+
 dropbear (2015.70-0.1) unstable; urgency=low
 
   * New upstream release.

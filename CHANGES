@@ -1,4 +1,4 @@
-2015.71 - December 2015
+2015.71 - 3 December 2015
 
 - Fix "bad buf_incrpos" when data is transferred, broke in 2015.69
 
