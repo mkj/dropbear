@@ -36,7 +36,8 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) A
 static void cli_dropbear_log(int priority, const char* format, va_list param);
 
 #ifdef ENABLE_CLI_PROXYCMD
-static void cli_proxy_cmd(int *sock_in, int *sock_out);
+static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out);
+static void killchild(int signo);
 #endif
 
 #if defined(DBMULTI_dbclient) || !defined(DROPBEAR_MULTI)
@@ -66,10 +67,16 @@ int main(int argc, char ** argv) {
 		dropbear_exit("signal() error");
 	}
 
+	pid_t proxy_cmd_pid = 0;
 #ifdef ENABLE_CLI_PROXYCMD
 	if (cli_opts.proxycmd) {
-		cli_proxy_cmd(&sock_in, &sock_out);
+		cli_proxy_cmd(&sock_in, &sock_out, &proxy_cmd_pid);
 		m_free(cli_opts.proxycmd);
+		if (signal(SIGINT, killchild) == SIG_ERR ||
+			signal(SIGTERM, killchild) == SIG_ERR ||
+			signal(SIGHUP, killchild) == SIG_ERR) {
+			dropbear_exit("signal() error");
+		}
 	} else
 #endif
 	{
@@ -77,7 +84,7 @@ int main(int argc, char ** argv) {
 		sock_in = sock_out = -1;
 	}
 
-	cli_session(sock_in, sock_out, progress);
+	cli_session(sock_in, sock_out, progress, proxy_cmd_pid);
 
 	/* not reached */
 	return -1;
@@ -132,16 +139,24 @@ static void exec_proxy_cmd(void *user_data_cmd) {
 }
 
 #ifdef ENABLE_CLI_PROXYCMD
-static void cli_proxy_cmd(int *sock_in, int *sock_out) {
+static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
 	int ret;
 
 	fill_passwd(cli_opts.own_user);
 
 	ret = spawn_command(exec_proxy_cmd, cli_opts.proxycmd,
-			sock_out, sock_in, NULL, NULL);
+			sock_out, sock_in, NULL, pid_out);
 	if (ret == DROPBEAR_FAILURE) {
 		dropbear_exit("Failed running proxy command");
 		*sock_in = *sock_out = -1;
 	}
+}
+
+static void killchild(int signo)
+{
+	kill_proxy_command();
+	if (signo)
+		_exit(1);
+	exit(1);
 }
 #endif /* ENABLE_CLI_PROXYCMD */
