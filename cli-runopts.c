@@ -46,6 +46,7 @@ static void addforward(const char* str, m_list *fwdlist);
 #ifdef ENABLE_CLI_NETCAT
 static void add_netcat(const char *str);
 #endif
+static void add_extendedopt(const char *str);
 
 static void printhelp() {
 
@@ -64,6 +65,7 @@ static void printhelp() {
 					"-y    Always accept remote host key if unknown\n"
 					"-y -y Don't perform any remote host key checking (caution)\n"
 					"-s    Request a subsystem (use by external sftp)\n"
+					"-o option     Set option in OpenSSH-like format ('-o help' to list options)\n"
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 					"-i <identityfile>   (multiple allowed, default %s)\n"
 #endif
@@ -106,6 +108,7 @@ void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
 	char ** next = 0;
 	enum {
+		OPT_EXTENDED_OPTIONS,
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 		OPT_AUTHKEY,
 #endif
@@ -144,6 +147,9 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.is_subsystem = 0;
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	cli_opts.privkeys = list_new();
+#endif
+#ifdef ENABLE_CLI_ANYTCPFWD
+	cli_opts.exit_on_fwd_failure = 0;
 #endif
 #ifdef ENABLE_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
@@ -224,6 +230,9 @@ void cli_getopts(int argc, char ** argv) {
 				case 's':
 					cli_opts.is_subsystem = 1;
 					break;
+				case 'o':
+					opt = OPT_EXTENDED_OPTIONS;
+					break;
 #ifdef ENABLE_CLI_LOCALTCPFWD
 				case 'L':
 					opt = OPT_LOCALTCPFWD;
@@ -301,7 +310,6 @@ void cli_getopts(int argc, char ** argv) {
 					print_version();
 					exit(EXIT_SUCCESS);
 					break;
-				case 'o':
 				case 'b':
 					next = &dummy;
 				default:
@@ -321,6 +329,11 @@ void cli_getopts(int argc, char ** argv) {
 				dropbear_exit("Missing argument");
 		}
 
+		if (opt == OPT_EXTENDED_OPTIONS) {
+			TRACE(("opt extended"))
+			add_extendedopt(&argv[i][j]);
+		}
+		else
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 		if (opt == OPT_AUTHKEY) {
 			TRACE(("opt authkey"))
@@ -806,3 +819,58 @@ badport:
 	dropbear_exit("Bad TCP port in '%s'", origstr);
 }
 #endif
+
+static int match_extendedopt(const char** strptr, const char *optname) {
+	int seen_eq = 0;
+	int optlen = strlen(optname);
+	const char *str = *strptr;
+
+	while (isspace(*str))
+		++str;
+
+	if (strncasecmp(str, optname, optlen) != 0)
+		return DROPBEAR_FAILURE;
+
+	str += optlen;
+
+	while (isspace(*str) || (!seen_eq && *str == '=')) {
+		if (*str == '=')
+			seen_eq = 1;
+		++str;
+	}
+
+	*strptr = str;
+	return DROPBEAR_SUCCESS;
+}
+
+static int parse_flag_value(const char *value)
+{
+	if (strcmp(value, "yes") == 0 || strcmp(value, "true") == 0)
+		return 1;
+	else if (strcmp(value, "no") == 0 || strcmp(value, "false") == 0)
+		return 0;
+
+	dropbear_exit("Bad yes/no argument '%s'", value);
+}
+
+static void add_extendedopt(const char* origstr) {
+	const char *optstr = origstr;
+
+	if (strcmp(origstr, "help") == 0) {
+		dropbear_log(LOG_INFO, "Available options:\n"
+#ifdef ENABLE_CLI_ANYTCPFWD
+			"\tExitOnForwardFailure\n"
+#endif
+		);
+		exit(EXIT_SUCCESS);
+	}
+
+#ifdef ENABLE_CLI_ANYTCPFWD
+	if (match_extendedopt(&optstr, "ExitOnForwardFailure") == DROPBEAR_SUCCESS) {
+		cli_opts.exit_on_fwd_failure = parse_flag_value(optstr);
+		return;
+	}
+#endif
+
+	dropbear_exit("Bad configuration option '%s'", origstr);
+}

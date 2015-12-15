@@ -140,6 +140,9 @@ typedef struct cli_runopts {
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 	m_list *privkeys; /* Keys to use for public-key auth */
 #endif
+#ifdef ENABLE_CLI_ANYTCPFWD
+	int exit_on_fwd_failure;
+#endif
 #ifdef ENABLE_CLI_REMOTETCPFWD
 	m_list * remotefwds;
 #endif
