@@ -67,10 +67,11 @@ void fwd_failed(const char* format, ...)
 	va_list param;
 	va_start(param, format);
 
-	if (cli_opts.exit_on_fwd_failure)
+	if (cli_opts.exit_on_fwd_failure) {
 		_dropbear_exit(EXIT_FAILURE, format, param);
-	else
+	} else {
 		_dropbear_log(LOG_WARNING, format, param);
+	}
 
 	va_end(param);
 }

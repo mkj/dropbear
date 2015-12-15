@@ -164,11 +164,11 @@ static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
 	}
 }
 
-static void killchild(int signo)
-{
+static void killchild(int signo) {
 	kill_proxy_command();
-	if (signo)
+	if (signo) {
 		_exit(1);
+	}
 	exit(1);
 }
 #endif /* ENABLE_CLI_PROXYCMD */

@@ -828,17 +828,20 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 	int optlen = strlen(optname);
 	const char *str = *strptr;
 
-	while (isspace(*str))
+	while (isspace(*str)) {
 		++str;
+	}
 
-	if (strncasecmp(str, optname, optlen) != 0)
+	if (strncasecmp(str, optname, optlen) != 0) {
 		return DROPBEAR_FAILURE;
+	}
 
 	str += optlen;
 
 	while (isspace(*str) || (!seen_eq && *str == '=')) {
-		if (*str == '=')
+		if (*str == '=') {
 			seen_eq = 1;
+		}
 		++str;
 	}
 
@@ -846,12 +849,12 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 	return DROPBEAR_SUCCESS;
 }
 
-static int parse_flag_value(const char *value)
-{
-	if (strcmp(value, "yes") == 0 || strcmp(value, "true") == 0)
+static int parse_flag_value(const char *value) {
+	if (strcmp(value, "yes") == 0 || strcmp(value, "true") == 0) {
 		return 1;
-	else if (strcmp(value, "no") == 0 || strcmp(value, "false") == 0)
+	} else if (strcmp(value, "no") == 0 || strcmp(value, "false") == 0) {
 		return 0;
+	}
 
 	dropbear_exit("Bad yes/no argument '%s'", value);
 }

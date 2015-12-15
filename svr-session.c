@@ -215,8 +215,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 	havetrace = debug_trace;
 #endif
 
-	if (!opts.usingsyslog || havetrace)
-	{
+	if (!opts.usingsyslog || havetrace) {
 		struct tm * local_tm = NULL;
 		timesec = time(NULL);
 		local_tm = localtime(&timesec);

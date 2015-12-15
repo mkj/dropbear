@@ -305,7 +305,7 @@ struct clientsession {
 	struct AgentkeyList *agentkeys; /* Keys to use for public-key auth */
 #endif
 
-	int proxy_cmd_pid;
+	pid_t proxy_cmd_pid;
 };
 
 /* Global structs storing the state */
