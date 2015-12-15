@@ -61,9 +61,10 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_N
 void svr_dropbear_log(int priority, const char* format, va_list param);
 
 /* Client */
-void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress) ATTRIB_NORETURN;
+void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection *progress, pid_t proxy_cmd_pid) ATTRIB_NORETURN;
 void cli_connected(int result, int sock, void* userdata, const char *errstring);
 void cleantext(char* dirtytext);
+void kill_proxy_command();
 
 /* crypto parameters that are stored individually for transmit and receive */
 struct key_context_directional {
@@ -304,6 +305,7 @@ struct clientsession {
 	struct AgentkeyList *agentkeys; /* Keys to use for public-key auth */
 #endif
 
+	pid_t proxy_cmd_pid;
 };
 
 /* Global structs storing the state */
