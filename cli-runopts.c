@@ -888,5 +888,5 @@ static void add_extendedopt(const char* origstr) {
 	}
 #endif
 
-	dropbear_exit("Bad configuration option '%s'", origstr);
+	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
