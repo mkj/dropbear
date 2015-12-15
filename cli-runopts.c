@@ -824,13 +824,8 @@ badport:
 #endif
 
 static int match_extendedopt(const char** strptr, const char *optname) {
-	int seen_eq = 0;
 	int optlen = strlen(optname);
 	const char *str = *strptr;
-
-	while (isspace(*str)) {
-		++str;
-	}
 
 	if (strncasecmp(str, optname, optlen) != 0) {
 		return DROPBEAR_FAILURE;
@@ -838,15 +833,13 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 
 	str += optlen;
 
-	while (isspace(*str) || (!seen_eq && *str == '=')) {
-		if (*str == '=') {
-			seen_eq = 1;
-		}
-		++str;
+	if (*str == '=') {
+		*strptr = str+1;
+		return DROPBEAR_SUCCESS;
+	} else {
+		return DROPBEAR_FAILURE;
 	}
 
-	*strptr = str;
-	return DROPBEAR_SUCCESS;
 }
 
 static int parse_flag_value(const char *value) {
