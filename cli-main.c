@@ -37,7 +37,7 @@ static void cli_dropbear_log(int priority, const char* format, va_list param);
 
 #ifdef ENABLE_CLI_PROXYCMD
 static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out);
-static void killchild(int signo);
+static void kill_proxy_sighandler(int signo);
 #endif
 
 #if defined(DBMULTI_dbclient) || !defined(DROPBEAR_MULTI)
@@ -78,9 +78,9 @@ int main(int argc, char ** argv) {
 	if (cli_opts.proxycmd) {
 		cli_proxy_cmd(&sock_in, &sock_out, &proxy_cmd_pid);
 		m_free(cli_opts.proxycmd);
-		if (signal(SIGINT, killchild) == SIG_ERR ||
-			signal(SIGTERM, killchild) == SIG_ERR ||
-			signal(SIGHUP, killchild) == SIG_ERR) {
+		if (signal(SIGINT, kill_proxy_sighandler) == SIG_ERR ||
+			signal(SIGTERM, kill_proxy_sighandler) == SIG_ERR ||
+			signal(SIGHUP, kill_proxy_sighandler) == SIG_ERR) {
 			dropbear_exit("signal() error");
 		}
 	} else
@@ -164,11 +164,8 @@ static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
 	}
 }
 
-static void killchild(int signo) {
+static void kill_proxy_sighandler(int UNUSED(signo)) {
 	kill_proxy_command();
-	if (signo) {
-		_exit(1);
-	}
-	exit(1);
+	_exit(1);
 }
 #endif /* ENABLE_CLI_PROXYCMD */
