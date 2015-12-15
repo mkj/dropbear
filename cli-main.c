@@ -60,6 +60,12 @@ int main(int argc, char ** argv) {
 
 	cli_getopts(argc, argv);
 
+#ifndef DISABLE_SYSLOG
+	if (opts.usingsyslog) {
+		startsyslog("dbclient");
+	}
+#endif
+
 	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,
 				cli_opts.remotehost, cli_opts.remoteport))
 
@@ -118,12 +124,18 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 	exit(exitcode);
 }
 
-static void cli_dropbear_log(int UNUSED(priority), 
+static void cli_dropbear_log(int priority,
 		const char* format, va_list param) {
 
 	char printbuf[1024];
 
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
+
+#ifndef DISABLE_SYSLOG
+	if (opts.usingsyslog) {
+		syslog(priority, "%s", printbuf);
+	}
+#endif
 
 	fprintf(stderr, "%s: %s\n", cli_opts.progname, printbuf);
 	fflush(stderr);

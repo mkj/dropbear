@@ -173,6 +173,9 @@ void cli_getopts(int argc, char ** argv) {
 	opts.cipher_list = NULL;
 	opts.mac_list = NULL;
 #endif
+#ifndef DISABLE_SYSLOG
+	opts.usingsyslog = 0;
+#endif
 	/* not yet
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
@@ -488,7 +491,7 @@ static void loadidentityfile(const char* filename, int warnfail) {
 	keytype = DROPBEAR_SIGNKEY_ANY;
 	if ( readhostkey(filename, key, &keytype) != DROPBEAR_SUCCESS ) {
 		if (warnfail) {
-			fprintf(stderr, "Failed loading keyfile '%s'\n", filename);
+			dropbear_log(LOG_WARNING, "Failed loading keyfile '%s'\n", filename);
 		}
 		sign_key_free(key);
 	} else {
@@ -861,6 +864,9 @@ static void add_extendedopt(const char* origstr) {
 #ifdef ENABLE_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
+#ifndef DISABLE_SYSLOG
+			"\tUseSyslog\n"
+#endif
 		);
 		exit(EXIT_SUCCESS);
 	}
@@ -868,6 +874,13 @@ static void add_extendedopt(const char* origstr) {
 #ifdef ENABLE_CLI_ANYTCPFWD
 	if (match_extendedopt(&optstr, "ExitOnForwardFailure") == DROPBEAR_SUCCESS) {
 		cli_opts.exit_on_fwd_failure = parse_flag_value(optstr);
+		return;
+	}
+#endif
+
+#ifndef DISABLE_SYSLOG
+	if (match_extendedopt(&optstr, "UseSyslog") == DROPBEAR_SUCCESS) {
+		opts.usingsyslog = parse_flag_value(optstr);
 		return;
 	}
 #endif

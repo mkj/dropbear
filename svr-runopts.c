@@ -158,7 +158,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.domotd = 1;
 #endif
 #ifndef DISABLE_SYSLOG
-	svr_opts.usingsyslog = 1;
+	opts.usingsyslog = 1;
 #endif
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	opts.keepalive_secs = DEFAULT_KEEPALIVE;
@@ -189,7 +189,7 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #ifndef DISABLE_SYSLOG
 				case 'E':
-					svr_opts.usingsyslog = 0;
+					opts.usingsyslog = 0;
 					break;
 #endif
 #ifdef ENABLE_SVR_LOCALTCPFWD

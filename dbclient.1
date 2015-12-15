@@ -133,12 +133,14 @@ useful for specifying options for which there is no separate command-line flag.
 For full details of the options listed below, and their possible values, see
 ssh_config(5).
 
-For now only following options have been implemented:
-.RS
+For now following options have been implemented:
 .RS
 .TP
-ExitOnForwardFailure
-.RE
+.B ExitOnForwardFailure
+Specifies whether dbclient should terminate the connection if it cannot set up all requested local and remote port forwardings. The argument must be “yes” or “no”.  The default is “no”.
+.TP
+.B UseSyslog
+Send dbclient log messages to syslog in addition to stderr.
 .RE
 .TP
 .B \-s 

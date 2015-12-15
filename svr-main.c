@@ -145,7 +145,7 @@ void main_noinetd() {
 	if (svr_opts.forkbg) {
 		int closefds = 0;
 #ifndef DEBUG_TRACE
-		if (!svr_opts.usingsyslog) {
+		if (!opts.usingsyslog) {
 			closefds = 1;
 		}
 #endif
@@ -367,8 +367,8 @@ static void commonsetup() {
 
 	struct sigaction sa_chld;
 #ifndef DISABLE_SYSLOG
-	if (svr_opts.usingsyslog) {
-		startsyslog();
+	if (opts.usingsyslog) {
+		startsyslog(PROGNAME);
 	}
 #endif
 
