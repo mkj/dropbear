@@ -152,12 +152,19 @@ static void exec_proxy_cmd(void *user_data_cmd) {
 
 #ifdef ENABLE_CLI_PROXYCMD
 static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
+	char * ex_cmd = NULL;
+	size_t ex_cmdlen;
 	int ret;
 
 	fill_passwd(cli_opts.own_user);
 
-	ret = spawn_command(exec_proxy_cmd, cli_opts.proxycmd,
+	ex_cmdlen = strlen(cli_opts.proxycmd) + 6; /* "exec " + command + '\0' */
+	ex_cmd = m_malloc(ex_cmdlen);
+	snprintf(ex_cmd, ex_cmdlen, "exec %s", cli_opts.proxycmd);
+
+	ret = spawn_command(exec_proxy_cmd, ex_cmd,
 			sock_out, sock_in, NULL, pid_out);
+	m_free(ex_cmd);
 	if (ret == DROPBEAR_FAILURE) {
 		dropbear_exit("Failed running proxy command");
 		*sock_in = *sock_out = -1;

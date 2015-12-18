@@ -114,7 +114,8 @@ Disconnect the session if no traffic is transmitted or received for \fIidle_time
 .B \-J \fIproxy_command
 Use the standard input/output of the program \fIproxy_command\fR rather than using
 a normal TCP connection. A hostname should be still be provided, as this is used for
-comparing saved hostkeys.
+comparing saved hostkeys. This command will be executed as "exec proxy_command ..." with the
+default shell.
 .TP
 .B \-B \fIendhost:endport
 "Netcat-alike" mode, where Dropbear will connect to the given host, then create a
