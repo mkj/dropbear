@@ -306,8 +306,8 @@ void main_noinetd() {
 #endif
 
 				/* make sure we close sockets */
-				for (i = 0; i < listensockcount; i++) {
-					m_close(listensocks[i]);
+				for (j = 0; j < listensockcount; j++) {
+					m_close(listensocks[j]);
 				}
 
 				m_close(childpipe[0]);
