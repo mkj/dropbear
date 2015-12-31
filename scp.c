@@ -841,7 +841,7 @@ sink(int argc, char **argv)
 
 #define	atime	tv[0]
 #define	mtime	tv[1]
-#define	SCREWUP(str)	{ why = str; goto screwup; }
+#define	SCREWUP(str)	do { why = str; goto screwup; } while (0)
 
 	setimes = targisdir = 0;
 	mask = umask(0);
