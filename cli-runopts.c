@@ -315,6 +315,7 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'b':
 					next = &dummy;
+					/* FALLTHROUGH */
 				default:
 					fprintf(stderr,
 						"WARNING: Ignoring unknown option -%c\n", c);
