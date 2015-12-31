@@ -438,7 +438,6 @@ do_escape(unsigned char c) {
 		case '.':
 			dropbear_exit("Terminated");
 			return 1;
-			break;
 		case 0x1a:
 			/* ctrl-z */
 			cli_tty_cleanup();
@@ -447,7 +446,6 @@ do_escape(unsigned char c) {
 			cli_tty_setup();
 			cli_ses.winchange = 1;
 			return 1;
-			break;
 	}
 	return 0;
 }
