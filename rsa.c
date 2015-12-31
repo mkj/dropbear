@@ -69,12 +69,12 @@ int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 	}
 
 	TRACE(("leave buf_get_rsa_pub_key: success"))
-    ret = DROPBEAR_SUCCESS;
+	ret = DROPBEAR_SUCCESS;
 out:
-    if (ret == DROPBEAR_FAILURE) {
-        m_free(key->e);
-        m_free(key->n);
-    }
+	if (ret == DROPBEAR_FAILURE) {
+		m_free(key->e);
+		m_free(key->n);
+	}
 	return ret;
 }
 
