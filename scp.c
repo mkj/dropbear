@@ -672,7 +672,7 @@ next:			if (fd != -1) {
 			}
 			continue;
 		}
-#if PROGRESS_METER
+#ifdef PROGRESS_METER
 		if (showprogress)
 			start_progress_meter(curfile, stb.st_size, &statbytes);
 #endif
