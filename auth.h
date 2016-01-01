@@ -81,9 +81,9 @@ void cli_auth_pubkey_cleanup();
 #define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
 
 #define AUTH_TYPE_NONE      1
-#define AUTH_TYPE_PUBKEY    1 << 1
-#define AUTH_TYPE_PASSWORD  1 << 2
-#define AUTH_TYPE_INTERACT  1 << 3
+#define AUTH_TYPE_PUBKEY    (1 << 1)
+#define AUTH_TYPE_PASSWORD  (1 << 2)
+#define AUTH_TYPE_INTERACT  (1 << 3)
 
 #define AUTH_METHOD_NONE "none"
 #define AUTH_METHOD_NONE_LEN 4
