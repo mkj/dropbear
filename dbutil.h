@@ -59,7 +59,7 @@ void dropbear_trace(const char* format, ...) ATTRIB_PRINTF(1,2);
 void dropbear_trace2(const char* format, ...) ATTRIB_PRINTF(1,2);
 void printhex(const char * label, const unsigned char * buf, int len);
 void printmpint(const char *label, mp_int *mp);
-void debug_start_net();
+void debug_start_net(void);
 extern int debug_trace;
 #endif
 
@@ -81,7 +81,7 @@ void * m_realloc(void* ptr, size_t size);
 #define m_free(X) do {free(X); (X) = NULL;} while (0)
 void m_burn(void* data, unsigned int len);
 void setnonblocking(int fd);
-void disallow_core();
+void disallow_core(void);
 int m_str_to_uint(const char* str, unsigned int *val);
 
 /* Used to force mp_ints to be initialised */
@@ -95,7 +95,7 @@ int constant_time_memcmp(const void* a, const void *b, size_t n);
 
 /* Returns a time in seconds that doesn't go backwards - does not correspond to
 a real-world clock */
-time_t monotonic_now();
+time_t monotonic_now(void);
 
 char * expand_homedir_path(const char *inpath);
 

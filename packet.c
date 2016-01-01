@@ -36,11 +36,11 @@
 #include "channel.h"
 #include "netio.h"
 
-static int read_packet_init();
+static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
 		buffer * clear_buf, unsigned int clear_len, 
 		unsigned char *output_mac);
-static int checkmac();
+static int checkmac(void);
 
 /* For exact details see http://www.zlib.net/zlib_tech.html
  * 5 bytes per 16kB block, plus 6 bytes for the stream.

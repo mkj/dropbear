@@ -43,7 +43,7 @@ static void send_chansess_shell_req(struct Channel *channel);
 static void cli_escape_handler(struct Channel *channel, unsigned char* buf, int *len);
 static int cli_init_netcat(struct Channel *channel);
 
-static void cli_tty_setup();
+static void cli_tty_setup(void);
 
 const struct ChanType clichansess = {
 	0, /* sepfds */

@@ -41,7 +41,7 @@
 #include "runopts.h"
 #include "crypto_desc.h"
 
-static void svr_remoteclosed();
+static void svr_remoteclosed(void);
 
 struct serversession svr_ses; /* GLOBAL */
 
