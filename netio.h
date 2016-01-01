@@ -8,7 +8,7 @@
 enum dropbear_prio {
 	DROPBEAR_PRIO_DEFAULT = 10,
 	DROPBEAR_PRIO_LOWDELAY = 11,
-	DROPBEAR_PRIO_BULK = 12,
+	DROPBEAR_PRIO_BULK = 12
 };
 
 void set_sock_nodelay(int sock);

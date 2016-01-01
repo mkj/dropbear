@@ -44,7 +44,7 @@ enum signkey_type {
 	DROPBEAR_SIGNKEY_NUM_NAMED,
 	DROPBEAR_SIGNKEY_ECDSA_KEYGEN = 70, /* just "ecdsa" for keygen */
 	DROPBEAR_SIGNKEY_ANY = 80,
-	DROPBEAR_SIGNKEY_NONE = 90,
+	DROPBEAR_SIGNKEY_NONE = 90
 };
 
 
@@ -52,7 +52,7 @@ enum signkey_type {
 typedef enum {
 	SIGNKEY_SOURCE_RAW_FILE,
 	SIGNKEY_SOURCE_AGENT,
-	SIGNKEY_SOURCE_INVALID,	
+	SIGNKEY_SOURCE_INVALID
 } signkey_source;
 
 struct SIGN_key {

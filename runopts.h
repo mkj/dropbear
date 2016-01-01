@@ -49,7 +49,7 @@ typedef struct runopts {
 	enum {
 		DROPBEAR_COMPRESS_DELAYED, /* Server only */
 		DROPBEAR_COMPRESS_ON,
-		DROPBEAR_COMPRESS_OFF,
+		DROPBEAR_COMPRESS_OFF
 	} compress_mode;
 #endif
 
