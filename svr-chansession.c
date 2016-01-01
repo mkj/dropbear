@@ -139,7 +139,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 		}
 		
 		/* Make sure that the main select() loop wakes up */
-		while (1) {
+		for (;;) {
 			/* isserver is just a random byte to write. We can't do anything
 			about an error so should just ignore it */
 			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1

@@ -380,7 +380,7 @@ static buffer* buf_decompress(buffer* buf, unsigned int len) {
 	zstream->next_in = buf_getptr(buf, len);
 
 	/* decompress the payload, incrementally resizing the output buffer */
-	while (1) {
+	for (;;) {
 
 		zstream->avail_out = ret->size - ret->pos;
 		zstream->next_out = buf_getwriteptr(ret, zstream->avail_out);
