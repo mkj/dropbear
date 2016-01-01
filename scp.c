@@ -772,7 +772,7 @@ void
 bwlimit(int amount)
 {
 	static struct timeval bwstart, bwend;
-	static int lamt, thresh = 16384;
+	static int lamt = 0, thresh = 16384;
 	uint64_t waitlen;
 	struct timespec ts, rm;
 
@@ -940,8 +940,8 @@ sink(int argc, char **argv)
 			exit(1);
 		}
 		if (targisdir) {
-			static char *namebuf;
-			static size_t cursize;
+			static char *namebuf = NULL;
+			static size_t cursize = 0;
 			size_t need;
 
 			need = strlen(targ) + strlen(cp) + 250;
@@ -1153,7 +1153,7 @@ usage(void)
 void
 run_err(const char *fmt,...)
 {
-	static FILE *fp;
+	static FILE *fp = NULL;
 	va_list ap;
 
 	++errs;
