@@ -290,7 +290,7 @@ void decrypt_packet() {
 	buf_setpos(ses.readbuf, blocksize);
 
 	/* decrypt it in-place */
-	len = ses.readbuf->len - macsize - ses.readbuf->pos;
+	len = (ses.readbuf->len - macsize) - ses.readbuf->pos;
 	if (ses.keys->recv.crypt_mode->decrypt(
 				buf_getptr(ses.readbuf, len), 
 				buf_getwriteptr(ses.readbuf, len),
@@ -311,7 +311,7 @@ void decrypt_packet() {
 		
 	/* payload length */
 	/* - 4 - 1 is for LEN and PADLEN values */
-	len = ses.readbuf->len - padlen - 4 - 1 - macsize;
+	len = (((ses.readbuf->len - padlen) - 4) - 1) - macsize;
 	if ((len > RECV_MAX_PAYLOAD_LEN+ZLIB_COMPRESS_EXPANSION) || (len < 1)) {
 		dropbear_exit("Bad packet size %u", len);
 	}

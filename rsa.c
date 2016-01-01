@@ -388,7 +388,7 @@ static void rsa_pad_em(dropbear_rsa_key * key,
 	/* type byte */
 	buf_putbyte(rsa_EM, 0x01);
 	/* Padding with 0xFF bytes */
-	while(rsa_EM->pos != rsa_EM->size - RSA_ASN1_MAGIC_LEN - SHA1_HASH_SIZE) {
+	while(rsa_EM->pos != (rsa_EM->size - RSA_ASN1_MAGIC_LEN) - SHA1_HASH_SIZE) {
 		buf_putbyte(rsa_EM, 0xff);
 	}
 	/* Magic ASN1 stuff */
