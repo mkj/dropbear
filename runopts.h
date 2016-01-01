@@ -64,7 +64,7 @@ extern runopts opts;
 
 int readhostkey(const char * filename, sign_key * hostkey, 
 	enum signkey_type *type);
-void load_all_hostkeys();
+void load_all_hostkeys(void);
 
 typedef struct svr_runopts {
 
@@ -119,7 +119,7 @@ typedef struct svr_runopts {
 extern svr_runopts svr_opts;
 
 void svr_getopts(int argc, char ** argv);
-void loadhostkeys();
+void loadhostkeys(void);
 
 typedef struct cli_runopts {
 
@@ -170,7 +170,7 @@ extern cli_runopts cli_opts;
 void cli_getopts(int argc, char ** argv);
 
 #ifdef ENABLE_USER_ALGO_LIST
-void parse_ciphers_macs();
+void parse_ciphers_macs(void);
 #endif
 
 void print_version(void);

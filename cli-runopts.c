@@ -33,10 +33,10 @@
 
 cli_runopts cli_opts; /* GLOBAL */
 
-static void printhelp();
+static void printhelp(void);
 static void parse_hostname(const char* orighostarg);
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
-static void fill_own_user();
+static void fill_own_user(void);
 #ifdef ENABLE_CLI_PUBKEY_AUTH
 static void loadidentityfile(const char* filename, int warnfail);
 #endif

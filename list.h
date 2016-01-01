@@ -19,7 +19,7 @@ struct _m_list {
 
 typedef struct _m_list m_list;
 
-m_list * list_new();
+m_list * list_new(void);
 void list_append(m_list *list, void *item);
 /* returns the item for the element removed */
 void * list_remove(m_list_elem *elem);

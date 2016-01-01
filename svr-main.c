@@ -36,12 +36,12 @@ static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
 #ifdef INETD_MODE
-static void main_inetd();
+static void main_inetd(void);
 #endif
 #ifdef NON_INETD_MODE
-static void main_noinetd();
+static void main_noinetd(void);
 #endif
-static void commonsetup();
+static void commonsetup(void);
 
 #if defined(DBMULTI_dropbear) || !defined(DROPBEAR_MULTI)
 #if defined(DBMULTI_dropbear) && defined(DROPBEAR_MULTI)
