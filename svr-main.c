@@ -104,7 +104,7 @@ static void main_inetd() {
 #endif /* INETD_MODE */
 
 #ifdef NON_INETD_MODE
-void main_noinetd() {
+static void main_noinetd() {
 	fd_set fds;
 	unsigned int i, j;
 	int val;

@@ -62,7 +62,7 @@ static const struct ChanType cli_chan_tcplocal = {
 
 #ifdef ENABLE_CLI_ANYTCPFWD
 static void fwd_failed(const char* format, ...) ATTRIB_PRINTF(1,2);
-void fwd_failed(const char* format, ...)
+static void fwd_failed(const char* format, ...)
 {
 	va_list param;
 	va_start(param, format);
