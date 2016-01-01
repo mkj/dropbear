@@ -338,7 +338,7 @@ static void sigchld_handler(int UNUSED(unused)) {
 
 	const int saved_errno = errno;
 
-	while(waitpid(-1, NULL, WNOHANG) > 0); 
+	while(waitpid(-1, NULL, WNOHANG) > 0) {}
 
 	sa_chld.sa_handler = sigchld_handler;
 	sa_chld.sa_flags = SA_NOCLDSTOP;
