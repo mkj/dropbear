@@ -441,9 +441,9 @@ main(int argc, char **argv)
 	 */
 	if (do_cmd_pid != -1 && errs == 0) {
 		if (remin != -1)
-		    (void) close(remin);
+			(void) close(remin);
 		if (remout != -1)
-		    (void) close(remout);
+			(void) close(remout);
 		if (waitpid(do_cmd_pid, &status, 0) == -1)
 			errs = 1;
 		else {

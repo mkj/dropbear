@@ -576,8 +576,8 @@ void encrypt_packet() {
 	}
 	buf_incrpos(writebuf, len);
 
-    /* stick the MAC on it */
-    buf_putbytes(writebuf, mac_bytes, mac_size);
+	/* stick the MAC on it */
+	buf_putbytes(writebuf, mac_bytes, mac_size);
 
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;

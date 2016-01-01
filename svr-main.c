@@ -398,7 +398,7 @@ static void commonsetup() {
 	 * otherwise we might end up blatting error messages to the socket */
 	load_all_hostkeys();
 
-    seedrandom();
+	seedrandom();
 }
 
 /* Set up listening sockets for all the requested ports */
