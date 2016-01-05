@@ -1,13 +1,14 @@
 language: c
 
-compiler:
-  - gcc
-
 env:
   - BUNDLEDLIBTOM=--disable-bundled-libtom WEXTRAFLAGS=-Werror
   - BUNDLEDLIBTOM=--enable-bundled-libtom
   - MULTI=1
   - NOWRITEV=1
+
+compiler:
+  - gcc
+  - clang
 
 # container-based builds
 sudo: false
