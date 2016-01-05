@@ -538,7 +538,7 @@ multihop_passthrough_args() {
 
 	if (opts.recv_window != DEFAULT_RECV_WINDOW)
 	{
-		int written = snprintf(ret+total, len-total, "-W %d ", opts.recv_window);
+		int written = snprintf(ret+total, len-total, "-W %u ", opts.recv_window);
 		total += written;
 	}
 

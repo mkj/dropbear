@@ -142,7 +142,7 @@ void x11setauth(struct ChanSess *chansess) {
 	}
 
 	/* create the DISPLAY string */
-	val = snprintf(display, sizeof(display), "localhost:%d.%d",
+	val = snprintf(display, sizeof(display), "localhost:%d.%u",
 			chansess->x11port - X11BASEPORT, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
@@ -152,7 +152,7 @@ void x11setauth(struct ChanSess *chansess) {
 	addnewvar("DISPLAY", display);
 
 	/* create the xauth string */
-	val = snprintf(display, sizeof(display), "unix:%d.%d",
+	val = snprintf(display, sizeof(display), "unix:%d.%u",
 			chansess->x11port - X11BASEPORT, chansess->x11screennum);
 	if (val < 0 || val >= (int)sizeof(display)) {
 		/* string was truncated */
