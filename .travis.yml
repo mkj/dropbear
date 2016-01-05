@@ -22,7 +22,7 @@ addons:
 script:
   - autoconf && autoheader && ./configure $BUNDLEDLIBTOM CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS" --prefix=$HOME/inst
   - test "$NOWRITEV" && sed -i s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h || true
-  - make install
+  - make -j3 install
 
 after_success:
   - ~/inst/bin/dropbearkey -t rsa -f testrsa
