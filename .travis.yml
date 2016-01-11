@@ -36,6 +36,9 @@ addons:
     - libtommath-dev
 
 
+before_install:
+  - if [ "$CC" = "clang" ]; then WEXTRAFLAGS="$WEXTRAFLAGS -Wno-error=incompatible-library-redeclaration" ; fi  # workaround
+
 install:
   - if [ "$TRAVIS_OS_NAME" = "osx" -a "$BUNDLEDLIBTOM" != "--enable-bundled-libtom" ]; then brew update > /dev/null && brew install libtomcrypt libtommath ; fi
 
