@@ -27,7 +27,7 @@
 #include "algo.h"
 #include "session.h"
 #include "dbutil.h"
-#include "kex.h"
+#include "dh_groups.h"
 #include "ltc_prng.h"
 #include "ecc.h"
 
