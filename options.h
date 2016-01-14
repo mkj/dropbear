@@ -152,6 +152,11 @@ If you test it please contact the Dropbear author */
  * on x86-64 */
 #define DROPBEAR_ECDSA
 
+/* These larger DH groups (3072 and 4096 bit respectively) add to binary size 
+    and may be significantly slower. Usually ECDH or curve25519 will be a better option */
+/*#define DROPBEAR_DH_GROUP15*/
+/*#define DROPBEAR_DH_GROUP16*/
+
 /* Generate hostkeys as-needed when the first connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
    with badly seeded /dev/urandom when systems first boot.

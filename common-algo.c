@@ -251,6 +251,12 @@ algo_type sshhostkey[] = {
 static const struct dropbear_kex kex_dh_group1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
 static const struct dropbear_kex kex_dh_group14_sha1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
 static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha256_desc };
+#ifdef DROPBEAR_DH_GROUP15
+static const struct dropbear_kex kex_dh_group15_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_15, DH_P_15_LEN, NULL, &sha256_desc };
+#endif
+#ifdef DROPBEAR_DH_GROUP16
+static const struct dropbear_kex kex_dh_group16_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_16, DH_P_16_LEN, NULL, &sha256_desc };
+#endif
 
 /* These can't be const since dropbear_ecc_fill_dp() fills out
  ecc_curve at runtime */
@@ -289,6 +295,12 @@ algo_type sshkex[] = {
 	{"diffie-hellman-group14-sha256", 0, &kex_dh_group14_sha256, 1, NULL},
 	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
+#ifdef DROPBEAR_DH_GROUP15
+	{"diffie-hellman-group15-sha256", 0, &kex_dh_group15_sha256, 1, NULL},
+#endif
+#ifdef DROPBEAR_DH_GROUP16
+	{"diffie-hellman-group16-sha256", 0, &kex_dh_group16_sha256, 1, NULL},
+#endif
 #ifdef USE_KEXGUESS2
 	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},
 #endif
@@ -320,7 +332,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 	unsigned int donefirst = 0;
 	buffer *algolist = NULL;
 
-	algolist = buf_new(200);
+	algolist = buf_new(300);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
 			if (donefirst)
