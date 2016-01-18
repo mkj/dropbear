@@ -289,7 +289,6 @@ int okname(char *);
 void run_err(const char *,...);
 void verifydir(char *);
 
-struct passwd *pwd;
 uid_t userid;
 int errs, remin, remout;
 int pflag, iamremote, iamrecursive, targetshouldbedirectory;
@@ -395,9 +394,6 @@ main(int argc, char **argv)
 		}
 	argc -= optind;
 	argv += optind;
-
-	if ((pwd = getpwuid(userid = getuid())) == NULL)
-		fatal("unknown user %u", (u_int) userid);
 
 	if (!isatty(STDERR_FILENO))
 		showprogress = 0;
@@ -514,7 +510,7 @@ toremote(char *targ, int argc, char **argv)
 				host = cleanhostname(host);
 				suser = argv[i];
 				if (*suser == '\0')
-					suser = pwd->pw_name;
+					continue; /* pretend there wasn't any @ at all */
 				else if (!okname(suser))
 					continue;
 				addargs(&alist, "-l");
@@ -582,7 +578,7 @@ tolocal(int argc, char **argv)
 			*host++ = 0;
 			suser = argv[i];
 			if (*suser == '\0')
-				suser = pwd->pw_name;
+				suser = NULL;
 		}
 		host = cleanhostname(host);
 		len = strlen(src) + CMDNEEDS + 20;
