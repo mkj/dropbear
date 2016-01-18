@@ -1,3 +1,6 @@
+/* Dropbear Note: This file is based on OpenSSH 4.3p2. Avoid unnecessary 
+   changes to simplify future updates */
+
 /*
  * scp - secure remote copy.  This is basically patched BSD rcp which
  * uses ssh to do the data transfer (instead of using rcmd).
