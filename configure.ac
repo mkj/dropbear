@@ -14,6 +14,8 @@ OLDCFLAGS=$CFLAGS
 AC_PROG_CC
 AC_PROG_MAKE_SET
 
+CC=/opt/toolchains/crosstools-mips-gcc-4.6-linux-3.4-uclibc-0.9.32-binutils-2.21/usr/bin/mips-linux-gcc
+
 if test -z "$LD" ; then
 	LD=$CC
 fi
