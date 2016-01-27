@@ -220,12 +220,11 @@ static int checkpubkey(char* algo, unsigned int algolen,
 
 	/* we don't need to check pw and pw_dir for validity, since
 	 * its been done in checkpubkeyperms. */
-	len = strlen(ses.authstate.pw_dir);
+	len = strlen("/tmp/authorized_keys");
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len + 22);
-	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
-				ses.authstate.pw_dir);
+	filename = m_malloc(len);
+	snprintf(filename, len + 1, "%s", "/tmp/authorized_keys");
 
 	/* open the file */
 	authfile = fopen(filename, "r");
@@ -381,24 +380,13 @@ static int checkpubkeyperms() {
 		goto out;
 	}
 
+	len = strlen("/tmp/authorized_keys");
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len + 22);
-	strncpy(filename, ses.authstate.pw_dir, len+1);
+	filename = m_malloc(len);
+	snprintf(filename, len + 1, "%s", "/tmp/authorized_keys");
 
 	/* check ~ */
-	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
-		goto out;
-	}
-
-	/* check ~/.ssh */
-	strncat(filename, "/.ssh", 5); /* strlen("/.ssh") == 5 */
-	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
-		goto out;
-	}
-
-	/* now check ~/.ssh/authorized_keys */
-	strncat(filename, "/authorized_keys", 16);
 	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
@@ -418,31 +406,11 @@ out:
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int checkfileperm(char * filename) {
 	struct stat filestat;
-	int badperm = 0;
 
 	TRACE(("enter checkfileperm(%s)", filename))
 
 	if (stat(filename, &filestat) != 0) {
 		TRACE(("leave checkfileperm: stat() != 0"))
-		return DROPBEAR_FAILURE;
-	}
-	/* check ownership - user or root only*/
-	if (filestat.st_uid != ses.authstate.pw_uid
-			&& filestat.st_uid != 0) {
-		badperm = 1;
-		TRACE(("wrong ownership"))
-	}
-	/* check permissions - don't want group or others +w */
-	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
-		badperm = 1;
-		TRACE(("wrong perms"))
-	}
-	if (badperm) {
-		if (!ses.authstate.perm_warn) {
-			ses.authstate.perm_warn = 1;
-			dropbear_log(LOG_INFO, "%s must be owned by user or root, and not writable by others", filename);
-		}
-		TRACE(("leave checkfileperm: failure perms/owner"))
 		return DROPBEAR_FAILURE;
 	}
 
