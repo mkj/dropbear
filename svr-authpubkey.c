@@ -218,16 +218,8 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		goto out;
 	}
 
-	/* we don't need to check pw and pw_dir for validity, since
-	 * its been done in checkpubkeyperms. */
-	len = strlen("/tmp/authorized_keys");
-	/* allocate max required pathname storage,
-	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len);
-	snprintf(filename, len + 1, "%s", "/tmp/authorized_keys");
-
 	/* open the file */
-	authfile = fopen(filename, "r");
+	authfile = fopen("/tmp/dropbear/authorized_keys", "r");
 	if (authfile == NULL) {
 		goto out;
 	}
