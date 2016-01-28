@@ -70,8 +70,6 @@
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
-#define AUTHKEYS_FILE "/tmp/dropbear/authorized_keys"
-
 static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
 static int checkpubkeyperms();
@@ -220,7 +218,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 	}
 
 	/* open the file */
-	authfile = fopen(AUTHKEYS_FILE, "r");
+	authfile = fopen(AUTHORIZED_KEYS_FILE, "r");
 	if (authfile == NULL) {
 		goto out;
 	}
@@ -325,7 +323,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
 		if (ret == DROPBEAR_SUCCESS && options_buf) {
-			ret = svr_add_pubkey_options(options_buf, line_num, AUTHKEYS_FILE);
+			ret = svr_add_pubkey_options(options_buf, line_num, AUTHORIZED_KEYS_FILE);
 		}
 
 		if (ret == DROPBEAR_SUCCESS) {
@@ -372,7 +370,7 @@ static int checkpubkeyperms() {
 	}
 
 	/* check ~ */
-	if (checkfileperm(AUTHKEYS_FILE) != DROPBEAR_SUCCESS) {
+	if (checkfileperm(AUTHORIZED_KEYS_FILE) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
