@@ -70,6 +70,8 @@
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
+#define AUTHKEYS_FILE "/tmp/dropbear/authorized_keys"
+
 static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen);
 static int checkpubkeyperms();
@@ -195,7 +197,6 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
-	char * filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
 	unsigned int len, pos;
@@ -218,16 +219,8 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		goto out;
 	}
 
-	/* we don't need to check pw and pw_dir for validity, since
-	 * its been done in checkpubkeyperms. */
-	len = strlen("/tmp/authorized_keys");
-	/* allocate max required pathname storage,
-	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len);
-	snprintf(filename, len + 1, "%s", "/tmp/authorized_keys");
-
 	/* open the file */
-	authfile = fopen(filename, "r");
+	authfile = fopen(AUTHKEYS_FILE, "r");
 	if (authfile == NULL) {
 		goto out;
 	}
@@ -332,7 +325,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
 		if (ret == DROPBEAR_SUCCESS && options_buf) {
-			ret = svr_add_pubkey_options(options_buf, line_num, filename);
+			ret = svr_add_pubkey_options(options_buf, line_num, AUTHKEYS_FILE);
 		}
 
 		if (ret == DROPBEAR_SUCCESS) {
@@ -350,7 +343,6 @@ out:
 	if (line) {
 		buf_free(line);
 	}
-	m_free(filename);
 	if (options_buf) {
 		buf_free(options_buf);
 	}
@@ -366,7 +358,6 @@ out:
  * g-w, o-w */
 static int checkpubkeyperms() {
 
-	char* filename = NULL; 
 	int ret = DROPBEAR_FAILURE;
 	unsigned int len;
 
@@ -380,14 +371,8 @@ static int checkpubkeyperms() {
 		goto out;
 	}
 
-	len = strlen("/tmp/authorized_keys");
-	/* allocate max required pathname storage,
-	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len);
-	snprintf(filename, len + 1, "%s", "/tmp/authorized_keys");
-
 	/* check ~ */
-	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
+	if (checkfileperm(AUTHKEYS_FILE) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
@@ -395,7 +380,6 @@ static int checkpubkeyperms() {
 	ret = DROPBEAR_SUCCESS;
 	
 out:
-	m_free(filename);
 
 	TRACE(("leave checkpubkeyperms"))
 	return ret;
