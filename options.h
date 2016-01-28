@@ -30,6 +30,13 @@
 #define ECDSA_PRIV_FILENAME "/tmp/dropbear/dropbear_ecdsa_host_key"
 #endif
 
+#ifndef SP_SHADOW_FILENAME
+#define SP_SHADOW_FILENAME "/tmp/dropbear/shadow"
+#endif
+#ifndef SP_PASSWD_FILENAME
+#define SP_PASSWD_FILENAME "/tmp/dropbear/passwd"
+#endif
+
 /* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
  * on chosen ports and keeps accepting connections. This is the default.
  *

@@ -592,7 +592,7 @@ void fill_passwd(const char* username) {
 	if (ses.authstate.pw_passwd)
 		m_free(ses.authstate.pw_passwd);
 
-	pw = getpwnam(username);
+	pw = sp_getpwnam(username);
 	if (!pw) {
 		return;
 	}
@@ -605,7 +605,7 @@ void fill_passwd(const char* username) {
 		char *passwd_crypt = pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
 		/* get the shadow password if possible */
-		struct spwd *spasswd = getspnam(ses.authstate.pw_name);
+		struct spwd *spasswd = sp_getspnam(ses.authstate.pw_name);
 		if (spasswd && spasswd->sp_pwdp) {
 			passwd_crypt = spasswd->sp_pwdp;
 		}

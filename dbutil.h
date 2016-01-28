@@ -99,4 +99,8 @@ time_t monotonic_now();
 
 char * expand_homedir_path(const char *inpath);
 
+struct passwd *sp_getpwnam(const char *name);
+struct passwd *sp_getpwuid(uid_t uid);
+struct spwd *sp_getspnam(const char *name);
+
 #endif /* DROPBEAR_DBUTIL_H_ */
