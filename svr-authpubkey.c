@@ -325,7 +325,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
 		if (ret == DROPBEAR_SUCCESS && options_buf) {
-			ret = svr_add_pubkey_options(options_buf, line_num, AUTHKEYS_FILE);
+			ret = svr_add_pubkey_options(options_buf, line_num, filename);
 		}
 
 		if (ret == DROPBEAR_SUCCESS) {
