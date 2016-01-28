@@ -197,7 +197,6 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
-	char * filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
 	unsigned int len, pos;
@@ -344,7 +343,6 @@ out:
 	if (line) {
 		buf_free(line);
 	}
-	m_free(filename);
 	if (options_buf) {
 		buf_free(options_buf);
 	}
