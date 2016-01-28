@@ -339,7 +339,14 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 
 	baseshell = basename(usershell);
 
-	argv[0] = baseshell;
+	if (cmd != NULL) {
+		argv[0] = baseshell;
+	} else {
+		/* a login shell should be "-bash" for "/bin/bash" etc */
+		int len = strlen(baseshell) + 2; /* 2 for "-" */
+		argv[0] = (char*)m_malloc(len);
+		snprintf(argv[0], len, "-%s", baseshell);
+	}
 
 	if (cmd != NULL) {
 		argv[1] = "-c";
