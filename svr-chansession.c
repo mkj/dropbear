@@ -588,7 +588,7 @@ static int sessionpty(struct ChanSess * chansess) {
 		dropbear_exit("Out of memory"); /* TODO disconnect */
 	}
 
-	pw = getpwnam(ses.authstate.pw_name);
+	pw = sp_getpwnam(ses.authstate.pw_name);
 	if (!pw)
 		dropbear_exit("getpwnam failed after succeeding previously");
 	pty_setowner(pw, chansess->tty);

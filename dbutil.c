@@ -339,14 +339,7 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 
 	baseshell = basename(usershell);
 
-	if (cmd != NULL) {
-		argv[0] = baseshell;
-	} else {
-		/* a login shell should be "-bash" for "/bin/bash" etc */
-		int len = strlen(baseshell) + 2; /* 2 for "-" */
-		argv[0] = (char*)m_malloc(len);
-		snprintf(argv[0], len, "-%s", baseshell);
-	}
+	argv[0] = baseshell;
 
 	if (cmd != NULL) {
 		argv[1] = "-c";
@@ -618,7 +611,7 @@ otherwise home directory is prepended */
 char * expand_homedir_path(const char *inpath) {
 	struct passwd *pw = NULL;
 	if (inpath[0] != '/') {
-		pw = getpwuid(getuid());
+		pw = sp_getpwuid(getuid());
 		if (pw && pw->pw_dir) {
 			int len = strlen(inpath) + strlen(pw->pw_dir) + 2;
 			char *buf = m_malloc(len);
@@ -697,3 +690,68 @@ time_t monotonic_now() {
 }
 
 
+struct passwd *sp_getpwnam(const char *name) {
+	FILE *pwd_fh = NULL;
+	struct passwd *ret_pwd = NULL;
+	struct passwd *pwd = NULL;
+
+	pwd_fh = fopen(SP_PASSWD_FILENAME, "r");
+	if (!pwd_fh) {
+		return NULL;
+	}
+
+	while ((pwd = fgetpwent(pwd_fh))) {
+		if (0 == strcmp(pwd->pw_name, name)) {
+			ret_pwd = pwd;
+			break;
+		}
+	}
+
+	fclose(pwd_fh);
+
+	return ret_pwd;
+}
+
+struct passwd *sp_getpwuid(uid_t uid) {
+	FILE *pwd_fh = NULL;
+	struct passwd *ret_pwd = NULL;
+	struct passwd *pwd = NULL;
+
+	pwd_fh = fopen(SP_PASSWD_FILENAME, "r");
+	if (!pwd_fh) {
+		return NULL;
+	}
+
+	while ((pwd = fgetpwent(pwd_fh))) {
+		if (pwd->pw_uid == uid) {
+			ret_pwd = pwd;
+			break;
+		}
+	}
+
+	fclose(pwd_fh);
+
+	return ret_pwd;
+}
+
+struct spwd *sp_getspnam(const char *name) {
+	FILE *pwd_fh = NULL;
+	struct spwd *ret_pwd = NULL;
+	struct spwd *pwd = NULL;
+
+	pwd_fh = fopen(SP_SHADOW_FILENAME, "r");
+	if (!pwd_fh) {
+		return NULL;
+	}
+
+	while ((pwd = fgetspent(pwd_fh))) {
+		if (0 == strcmp(pwd->sp_namp, name)) {
+			ret_pwd = pwd;
+			break;
+		}
+	}
+
+	fclose(pwd_fh);
+
+	return ret_pwd;
+}

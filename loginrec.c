@@ -275,7 +275,7 @@ login_init_entry(struct logininfo *li, int pid, const char *username,
 
 	if (username) {
 		strlcpy(li->username, username, sizeof(li->username));
-		pw = getpwnam(li->username);
+		pw = sp_getpwnam(li->username);
 		if (pw == NULL)
 			dropbear_exit("login_init_entry: Cannot find user \"%s\"",
 					li->username);
