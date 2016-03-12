@@ -248,14 +248,17 @@ algo_type sshhostkey[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
+#if DROPBEAR_DH_GROUP1
 static const struct dropbear_kex kex_dh_group1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
-static const struct dropbear_kex kex_dh_group14_sha1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
-static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha256_desc };
-#ifdef DROPBEAR_DH_GROUP15
-static const struct dropbear_kex kex_dh_group15_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_15, DH_P_15_LEN, NULL, &sha256_desc };
 #endif
-#ifdef DROPBEAR_DH_GROUP16
-static const struct dropbear_kex kex_dh_group16_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_16, DH_P_16_LEN, NULL, &sha256_desc };
+#if DROPBEAR_DH_GROUP14
+static const struct dropbear_kex kex_dh_group14_sha1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
+#if DROPBEAR_DH_GROUP14_256
+static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha256_desc };
+#endif
+#endif
+#if DROPBEAR_DH_GROUP16
+static const struct dropbear_kex kex_dh_group16_sha512 = {DROPBEAR_KEX_NORMAL_DH, dh_p_16, DH_P_16_LEN, NULL, &sha512_desc };
 #endif
 
 /* These can't be const since dropbear_ecc_fill_dp() fills out
@@ -292,14 +295,17 @@ algo_type sshkex[] = {
 	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #endif
+#if DROPBEAR_DH_GROUP14
+#if DROPBEAR_DH_GROUP14_256
 	{"diffie-hellman-group14-sha256", 0, &kex_dh_group14_sha256, 1, NULL},
-	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
-	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
-#ifdef DROPBEAR_DH_GROUP15
-	{"diffie-hellman-group15-sha256", 0, &kex_dh_group15_sha256, 1, NULL},
 #endif
-#ifdef DROPBEAR_DH_GROUP16
-	{"diffie-hellman-group16-sha256", 0, &kex_dh_group16_sha256, 1, NULL},
+	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
+#endif
+#if DROPBEAR_DH_GROUP1
+	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
+#endif
+#if DROPBEAR_DH_GROUP16
+	{"diffie-hellman-group16-sha512", 0, &kex_dh_group16_sha512, 1, NULL},
 #endif
 #ifdef USE_KEXGUESS2
 	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},

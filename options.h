@@ -152,11 +152,6 @@ If you test it please contact the Dropbear author */
  * on x86-64 */
 #define DROPBEAR_ECDSA
 
-/* These larger DH groups (3072 and 4096 bit respectively) add to binary size 
-    and may be significantly slower. Usually ECDH or curve25519 will be a better option */
-/*#define DROPBEAR_DH_GROUP15*/
-/*#define DROPBEAR_DH_GROUP16*/
-
 /* Generate hostkeys as-needed when the first connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
    with badly seeded /dev/urandom when systems first boot.
@@ -172,6 +167,11 @@ If you test it please contact the Dropbear author */
 /* Enable elliptic curve Diffie Hellman key exchange, see note about
  * ECDSA above */
 #define DROPBEAR_ECDH
+
+/* Group14 (2048 bit) is recommended. Group1 is less secure (1024 bit) though
+   is the only option for interoperability with some older SSH programs */
+#define DROPBEAR_DH_GROUP1 1
+#define DROPBEAR_DH_GROUP14 1
 
 /* Control the memory/performance/compression tradeoff for zlib.
  * Set windowBits=8 for least memory usage, see your system's
