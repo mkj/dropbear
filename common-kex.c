@@ -308,17 +308,17 @@ static void gen_new_keys() {
 	ses.hash = NULL;
 
 	if (IS_DROPBEAR_CLIENT) {
-	    trans_IV	= C2S_IV;
-	    recv_IV		= S2C_IV;
-	    trans_key	= C2S_key;
-	    recv_key	= S2C_key;
+		trans_IV	= C2S_IV;
+		recv_IV		= S2C_IV;
+		trans_key	= C2S_key;
+		recv_key	= S2C_key;
 		mactransletter = 'E';
 		macrecvletter = 'F';
 	} else {
-	    trans_IV	= S2C_IV;
-	    recv_IV		= C2S_IV;
-	    trans_key	= S2C_key;
-	    recv_key	= C2S_key;
+		trans_IV	= S2C_IV;
+		recv_IV		= C2S_IV;
+		trans_key	= S2C_key;
+		recv_key	= C2S_key;
 		mactransletter = 'F';
 		macrecvletter = 'E';
 	}
@@ -484,18 +484,18 @@ void recv_msg_kexinit() {
 		read_kex_algos();
 
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
+		buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
+		buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
-	    buf_putstring(ses.kexhashbuf,
+		buf_putstring(ses.kexhashbuf,
 			(const char*)ses.transkexinit->data, ses.transkexinit->len);
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
-	    buf_setpos(ses.payload, ses.payload_beginning);
-	    buf_putstring(ses.kexhashbuf, 
-	    	(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
-	    	ses.payload->len-ses.payload->pos);
+		buf_setpos(ses.payload, ses.payload_beginning);
+		buf_putstring(ses.kexhashbuf,
+			(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+			ses.payload->len-ses.payload->pos);
 		ses.requirenext = SSH_MSG_KEXDH_REPLY;
 	} else {
 		/* SERVER */
@@ -503,18 +503,18 @@ void recv_msg_kexinit() {
 		/* read the peer's choice of algos */
 		read_kex_algos();
 		/* V_C, the client's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
+		buf_putstring(ses.kexhashbuf, ses.remoteident, remote_ident_len);
 		/* V_S, the server's version string (CR and NL excluded) */
-	    buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
+		buf_putstring(ses.kexhashbuf, LOCAL_IDENT, local_ident_len);
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
-	    buf_setpos(ses.payload, ses.payload_beginning);
-	    buf_putstring(ses.kexhashbuf, 
-	    	(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
-	    	ses.payload->len-ses.payload->pos);
+		buf_setpos(ses.payload, ses.payload_beginning);
+		buf_putstring(ses.kexhashbuf, 
+			(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
+			ses.payload->len-ses.payload->pos);
 
 		/* I_S, the payload of the server's SSH_MSG_KEXINIT */
-	    buf_putstring(ses.kexhashbuf,
+		buf_putstring(ses.kexhashbuf,
 			(const char*)ses.transkexinit->data, ses.transkexinit->len);
 
 		ses.requirenext = SSH_MSG_KEXDH_INIT;

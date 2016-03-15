@@ -4,17 +4,17 @@
 struct _m_list;
 
 struct _m_list_elem {
-    void *item;
+	void *item;
 	struct _m_list_elem *next;
 	struct _m_list_elem *prev;
-    struct _m_list *list;
+	struct _m_list *list;
 };
 	
 typedef struct _m_list_elem m_list_elem;
 
 struct _m_list {
-    m_list_elem *first;
-    m_list_elem *last;
+	m_list_elem *first;
+	m_list_elem *last;
 };
 
 typedef struct _m_list m_list;
