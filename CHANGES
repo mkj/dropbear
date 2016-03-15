@@ -1,3 +1,22 @@
+- Fix crash when fallback initshells() is used, reported by Michael Nowak and Mike Tzou
+
+- Support syslog in dbclient, option -o usesyslog=yes. Patch from Konstantin Tokarev
+
+- Kill a proxycommand when dbclient exits, patch from Konstantin Tokarev
+
+- Option to exit when a TCP forward fails, patch from Konstantin Tokarev
+
+- New "-o" option parsing from Konstantin Tokarev. This allows handling some extra options
+  in the style of OpenSSH, though implementing all OpenSSH options is not planned.
+
+- Various cleanups for issues found by a lint tool, patch from Francois Perrad
+
+- Allow specifying commands eg "dropbearmulti dbclient ..." instead of symlinks
+
+- Fix tab indent consistency, patch from Francois Perrad
+
+- Fix issues found by cppcheck, reported by Mike Tzou
+
 2016.72 - 9 March 2016
 
 - Validate X11 forwarding input. Could allow bypass of authorized_keys command= restrictions,
