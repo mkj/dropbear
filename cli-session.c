@@ -361,9 +361,10 @@ static void cli_session_cleanup(void) {
 
 	/* Set std{in,out,err} back to non-blocking - busybox ash dies nastily if
 	 * we don't revert the flags */
-	fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
-	fcntl(cli_ses.stdoutcopy, F_SETFL, cli_ses.stdoutflags);
-	fcntl(cli_ses.stderrcopy, F_SETFL, cli_ses.stderrflags);
+	/* Ignore return value since there's nothing we can do */
+	(void)fcntl(cli_ses.stdincopy, F_SETFL, cli_ses.stdinflags);
+	(void)fcntl(cli_ses.stdoutcopy, F_SETFL, cli_ses.stdoutflags);
+	(void)fcntl(cli_ses.stderrcopy, F_SETFL, cli_ses.stderrflags);
 
 	cli_tty_cleanup();
 

@@ -119,7 +119,7 @@ fail:
 	/* cleanup */
 	m_free(chansess->x11authprot);
 	m_free(chansess->x11authcookie);
-	close(fd);
+	m_close(fd);
 
 	return DROPBEAR_FAILURE;
 }
