@@ -538,7 +538,7 @@ multihop_passthrough_args() {
 
 	if (opts.recv_window != DEFAULT_RECV_WINDOW)
 	{
-		int written = snprintf(ret+total, len-total, "-W %d ", opts.recv_window);
+		int written = snprintf(ret+total, len-total, "-W %u ", opts.recv_window);
 		total += written;
 	}
 
@@ -824,8 +824,13 @@ badport:
 #endif
 
 static int match_extendedopt(const char** strptr, const char *optname) {
+	int seen_eq = 0;
 	int optlen = strlen(optname);
 	const char *str = *strptr;
+
+	while (isspace(*str)) {
+		++str;
+	}
 
 	if (strncasecmp(str, optname, optlen) != 0) {
 		return DROPBEAR_FAILURE;
@@ -833,13 +838,20 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 
 	str += optlen;
 
-	if (*str == '=') {
-		*strptr = str+1;
-		return DROPBEAR_SUCCESS;
-	} else {
+	while (isspace(*str) || (!seen_eq && *str == '=')) {
+		if (*str == '=') {
+			seen_eq = 1;
+		}
+		++str;
+	}
+
+	if (str-*strptr == optlen) {
+		/* matched just a prefix of optname */
 		return DROPBEAR_FAILURE;
 	}
 
+	*strptr = str;
+	return DROPBEAR_SUCCESS;
 }
 
 static int parse_flag_value(const char *value) {

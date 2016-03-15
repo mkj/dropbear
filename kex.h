@@ -83,11 +83,6 @@ struct KEXState {
 
 };
 
-#define DH_P_1_LEN 128
-extern const unsigned char dh_p_1[DH_P_1_LEN];
-#define DH_P_14_LEN 256
-extern const unsigned char dh_p_14[DH_P_14_LEN];
-
 struct kex_dh_param {
 	mp_int pub; /* e */
 	mp_int priv; /* x */

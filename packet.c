@@ -576,8 +576,8 @@ void encrypt_packet() {
 	}
 	buf_incrpos(writebuf, len);
 
-    /* stick the MAC on it */
-    buf_putbytes(writebuf, mac_bytes, mac_size);
+	/* stick the MAC on it */
+	buf_putbytes(writebuf, mac_bytes, mac_size);
 
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;
@@ -645,7 +645,7 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 			dropbear_exit("HMAC error");
 		}
 	
-        bufsize = MAX_MAC_LEN;
+		bufsize = MAX_MAC_LEN;
 		if (hmac_done(&hmac, output_mac, &bufsize) != CRYPT_OK) {
 			dropbear_exit("HMAC error");
 		}

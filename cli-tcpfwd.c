@@ -231,7 +231,7 @@ void setup_remotetcp() {
 
 static int newtcpforwarded(struct Channel * channel) {
 
-    char *origaddr = NULL;
+	char *origaddr = NULL;
 	unsigned int origport;
 	m_list_elem * iter = NULL;
 	struct TCPFwdEntry *fwd;
@@ -267,13 +267,13 @@ static int newtcpforwarded(struct Channel * channel) {
 
 	if (iter == NULL) {
 		/* We didn't request forwarding on that port */
-        	cleantext(origaddr);
+		cleantext(origaddr);
 		dropbear_log(LOG_INFO, "Server sent unrequested forward from \"%s:%d\"", 
                 origaddr, origport);
 		goto out;
 	}
 	
-	snprintf(portstring, sizeof(portstring), "%d", fwd->connectport);
+	snprintf(portstring, sizeof(portstring), "%u", fwd->connectport);
 	channel->conn_pending = connect_remote(fwd->connectaddr, portstring, channel_connect_done, channel);
 
 	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
