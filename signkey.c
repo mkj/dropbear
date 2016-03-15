@@ -93,7 +93,7 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 			}
 #endif
 
-			return i;
+			return (enum signkey_type)i;
 		}
 	}
 
