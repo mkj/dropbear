@@ -16,10 +16,6 @@ matrix:
   exclude:
     - os: osx
       env: BUNDLEDLIBTOM=--disable-bundled-libtom WEXTRAFLAGS=-Werror
-    - os: osx
-      env: MULTI=1
-    - os: osx
-      env: NOWRITEV=1
 
 compiler:
   - gcc
@@ -40,11 +36,11 @@ before_install:
   - if [ "$CC" = "clang" ]; then WEXTRAFLAGS="$WEXTRAFLAGS -Wno-error=incompatible-library-redeclaration" ; fi  # workaround
 
 install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$BUNDLEDLIBTOM" != "--enable-bundled-libtom" ]; then brew update > /dev/null && brew install libtomcrypt libtommath ; fi
+  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$BUNDLEDLIBTOM" = "--disable-bundled-libtom" ]; then brew update > /dev/null && brew install libtomcrypt libtommath ; fi
 
 script:
   - autoconf && autoheader && ./configure "$BUNDLEDLIBTOM" CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS" --prefix="$HOME/inst"
-  - if [ "$NOWRITEV" = "1" ]; then sed -i s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
+  - if [ "$NOWRITEV" = "1" ]; then sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
   - make -j3 install
 
 after_success:
