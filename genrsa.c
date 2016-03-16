@@ -58,7 +58,7 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 		exit(1);
 	}
 
-	while (1) {
+	for (;;) {
 		getrsaprime(key->p, &pminus, key->e, size/16);
 		getrsaprime(key->q, &qminus, key->e, size/16);
 

@@ -219,7 +219,7 @@ static void put_termcodes() {
 	bufpos2 = ses.writepayload->pos;
 
 	buf_setpos(ses.writepayload, bufpos1); /* Jump back */
-	buf_putint(ses.writepayload, bufpos2 - bufpos1 - 4); /* len(termcodes) */
+	buf_putint(ses.writepayload, (bufpos2 - bufpos1) - 4); /* len(termcodes) */
 	buf_setpos(ses.writepayload, bufpos2); /* Back where we were */
 
 	TRACE(("leave put_termcodes"))

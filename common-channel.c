@@ -740,7 +740,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	/* -(1+4+4) is SSH_MSG_CHANNEL_DATA, channel number, string length, and 
 	 * exttype if is extended */
 	maxlen = MIN(maxlen, 
-			ses.writepayload->size - 1 - 4 - 4 - (isextended ? 4 : 0));
+			(((ses.writepayload->size - 1) - 4) - 4) - (isextended ? 4 : 0));
 	TRACE(("maxlen %zd", maxlen))
 	if (maxlen == 0) {
 		TRACE(("leave send_msg_channel_data: no window"))

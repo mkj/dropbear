@@ -85,7 +85,7 @@ struct dropbear_hash {
 enum dropbear_kex_mode {
 	DROPBEAR_KEX_NORMAL_DH,
 	DROPBEAR_KEX_ECDH,
-	DROPBEAR_KEX_CURVE25519,
+	DROPBEAR_KEX_CURVE25519
 };
 
 struct dropbear_kex {
@@ -112,7 +112,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]);
 enum kexguess2_used {
 	KEXGUESS2_LOOK,
 	KEXGUESS2_NO,
-	KEXGUESS2_YES,
+	KEXGUESS2_YES
 };
 
 #define KEXGUESS2_ALGO_NAME "kexguess2@matt.ucc.asn.au"
@@ -131,7 +131,7 @@ char * algolist_string(algo_type algos[]);
 enum {
 	DROPBEAR_COMP_NONE,
 	DROPBEAR_COMP_ZLIB,
-	DROPBEAR_COMP_ZLIB_DELAY,
+	DROPBEAR_COMP_ZLIB_DELAY
 };
 
 #endif /* DROPBEAR_ALGO_H_ */

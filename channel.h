@@ -45,7 +45,7 @@ enum dropbear_channel_prio {
 	DROPBEAR_CHANNEL_PRIO_INTERACTIVE, /* pty shell, x11 */
 	DROPBEAR_CHANNEL_PRIO_UNKNOWABLE, /* tcp - can't know what's being forwarded */
 	DROPBEAR_CHANNEL_PRIO_BULK, /* the rest - probably scp or something */
-	DROPBEAR_CHANNEL_PRIO_EARLY, /* channel is still being set up */
+	DROPBEAR_CHANNEL_PRIO_EARLY /* channel is still being set up */
 };
 
 struct Channel {

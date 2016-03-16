@@ -393,7 +393,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	}
 
 	headers_done = 0;
-	while (1) {
+	for (;;) {
 		if (!fgets(buffer, sizeof(buffer), fp)) {
 			errmsg = "Unexpected end of file";
 			goto error;
@@ -1294,7 +1294,7 @@ static struct sshcom_key *load_sshcom_key(const char *filename)
 	}
 
 	headers_done = 0;
-	while (1) {
+	for (;;) {
 		if (!fgets(buffer, sizeof(buffer), fp)) {
 			errmsg = "Unexpected end of file";
 			goto error;
