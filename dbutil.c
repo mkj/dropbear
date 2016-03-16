@@ -564,6 +564,12 @@ void * m_realloc(void* ptr, size_t size) {
 /* Beware of calling this from within dbutil.c - things might get
  * optimised away */
 void m_burn(void *data, unsigned int len) {
+
+#if defined(HAVE_MEMSET_S)
+	memset_s(data, len, 0x0, len);
+#elif defined(HAVE_EXPLICIT_BZERO)
+	explicit_bzero(data, len);
+#else
 	volatile char *p = data;
 
 	if (data == NULL)
@@ -571,6 +577,7 @@ void m_burn(void *data, unsigned int len) {
 	while (len--) {
 		*p++ = 0x0;
 	}
+#endif
 }
 
 
