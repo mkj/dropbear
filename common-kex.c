@@ -38,13 +38,13 @@
 #include "ecc.h"
 #include "crypto_desc.h"
 
-static void kexinitialise();
-static void gen_new_keys();
+static void kexinitialise(void);
+static void gen_new_keys(void);
 #ifndef DISABLE_ZLIB
-static void gen_new_zstream_recv();
-static void gen_new_zstream_trans();
+static void gen_new_zstream_recv(void);
+static void gen_new_zstream_trans(void);
 #endif
-static void read_kex_algos();
+static void read_kex_algos(void);
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, unsigned int outlen, 
 		const hash_state * hs, const unsigned char X);

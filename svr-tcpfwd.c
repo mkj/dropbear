@@ -46,8 +46,8 @@ void recv_msg_global_request_remotetcp() {
 /* */
 #endif /* !ENABLE_SVR_REMOTETCPFWD */
 
-static int svr_cancelremotetcp();
-static int svr_remotetcpreq();
+static int svr_cancelremotetcp(void);
+static int svr_remotetcpreq(void);
 static int newtcpdirect(struct Channel * channel);
 
 #ifdef ENABLE_SVR_REMOTETCPFWD
