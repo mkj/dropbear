@@ -20,7 +20,7 @@
 2016.72 - 9 March 2016
 
 - Validate X11 forwarding input. Could allow bypass of authorized_keys command= restrictions,
-  found by github.com/tintinweb. Thanks for Damien Miller for a patch.
+  found by github.com/tintinweb. Thanks for Damien Miller for a patch. CVE-2016-3116
 
 2015.71 - 3 December 2015
 
