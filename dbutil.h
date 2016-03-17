@@ -29,19 +29,10 @@
 #include "includes.h"
 #include "buffer.h"
 #include "queue.h"
+#include "dbhelpers.h"
 
 #ifndef DISABLE_SYSLOG
 void startsyslog(const char *ident);
-#endif
-
-#ifdef __GNUC__
-#define ATTRIB_PRINTF(fmt,args) __attribute__((format(printf, fmt, args))) 
-#define ATTRIB_NORETURN __attribute__((noreturn))
-#define ATTRIB_SENTINEL __attribute__((sentinel))
-#else
-#define ATTRIB_PRINTF(fmt,args)
-#define ATTRIB_NORETURN
-#define ATTRIB_SENTINEL
 #endif
 
 extern void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
@@ -79,7 +70,6 @@ void * m_malloc(size_t size);
 void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);
 #define m_free(X) do {free(X); (X) = NULL;} while (0)
-void m_burn(void* data, unsigned int len);
 void setnonblocking(int fd);
 void disallow_core(void);
 int m_str_to_uint(const char* str, unsigned int *val);

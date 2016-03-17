@@ -559,28 +559,6 @@ void * m_realloc(void* ptr, size_t size) {
 	return ret;
 }
 
-/* Clear the data, based on the method in David Wheeler's
- * "Secure Programming for Linux and Unix HOWTO" */
-/* Beware of calling this from within dbutil.c - things might get
- * optimised away */
-void m_burn(void *data, unsigned int len) {
-
-#if defined(HAVE_MEMSET_S)
-	memset_s(data, len, 0x0, len);
-#elif defined(HAVE_EXPLICIT_BZERO)
-	explicit_bzero(data, len);
-#else
-	volatile char *p = data;
-
-	if (data == NULL)
-		return;
-	while (len--) {
-		*p++ = 0x0;
-	}
-#endif
-}
-
-
 void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))
