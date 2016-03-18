@@ -29,7 +29,7 @@
 #include "ssh.h"
 #include "ecdsa.h"
 
-static const char *signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
+static const char * const signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 #ifdef DROPBEAR_RSA
 	"ssh-rsa",
 #endif
