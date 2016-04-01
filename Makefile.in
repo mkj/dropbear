@@ -16,12 +16,12 @@ endif
 STATIC_LTC=libtomcrypt/libtomcrypt.a
 STATIC_LTM=libtommath/libtommath.a
 
-LIBTOM_LIBS=@LIBTOM_LIBS@
+LIBTOM_LIBS=-ltomcrypt -ltommath
 
 ifeq (@BUNDLED_LIBTOM@, 1)
 LIBTOM_DEPS=$(STATIC_LTC) $(STATIC_LTM) 
 CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
-LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM) 
+LDFLAGS+=-L ./libtomcrypt -L ./libtommath
 endif
 
 ifneq ($(wildcard localoptions.h),)
@@ -90,7 +90,7 @@ INSTALL=@INSTALL@
 CPPFLAGS=@CPPFLAGS@
 CFLAGS+=-I. -I$(srcdir) $(CPPFLAGS) @CFLAGS@
 LIBS+=@LIBS@
-LDFLAGS=@LDFLAGS@
+LDFLAGS+=@LDFLAGS@
 
 EXEEXT=@EXEEXT@
 
