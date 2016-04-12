@@ -351,6 +351,10 @@ void svr_getopts(int argc, char ** argv) {
 		}
 		opts.idle_timeout_secs = val;
 	}
+
+	if (svr_opts.forced_command) {
+		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
+	}
 }
 
 static void addportandaddress(const char* spec) {
