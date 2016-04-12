@@ -114,6 +114,8 @@ typedef struct svr_runopts {
 	buffer * banner;
 	char * pidfile;
 
+	char * forced_command;
+
 } svr_runopts;
 
 extern svr_runopts svr_opts;

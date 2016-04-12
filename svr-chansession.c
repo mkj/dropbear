@@ -671,8 +671,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 	
-	/* take public key option 'command' into account */
-	svr_pubkey_set_forced_command(chansess);
+
+	/* take global command into account */
+	if (svr_opts.forced_command) {
+		chansess->original_command = chansess->cmd ? : m_strdup("");
+		chansess->cmd = m_strdup(svr_opts.forced_command);
+	} else {
+		/* take public key option 'command' into account */
+		svr_pubkey_set_forced_command(chansess);
+	}
+
 
 #ifdef LOG_COMMANDS
 	if (chansess->cmd) {

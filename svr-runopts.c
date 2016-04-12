@@ -79,6 +79,7 @@ static void printhelp(const char * progname) {
 #ifdef ENABLE_SVR_REMOTETCPFWD
 					"-k		Disable remote port forwarding\n"
 					"-a		Allow connections to forwarded ports from any host\n"
+					"-c command	Force executed command\n"
 #endif
 					"-p [address:]port\n"
 					"		Listen on specified tcp port (and optionally address),\n"
@@ -125,6 +126,7 @@ void svr_getopts(int argc, char ** argv) {
 	/* see printhelp() for options */
 	svr_opts.bannerfile = NULL;
 	svr_opts.banner = NULL;
+	svr_opts.forced_command = NULL;
 	svr_opts.forkbg = 1;
 	svr_opts.norootlogin = 0;
 	svr_opts.noauthpass = 0;
@@ -176,6 +178,9 @@ void svr_getopts(int argc, char ** argv) {
 			switch (c) {
 				case 'b':
 					next = &svr_opts.bannerfile;
+					break;
+				case 'c':
+					next = &svr_opts.forced_command;
 					break;
 				case 'd':
 				case 'r':
