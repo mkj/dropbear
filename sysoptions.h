@@ -127,11 +127,6 @@
 #define DROPBEAR_MD5
 #endif
 
-/* These are disabled in Dropbear 2016.73 by default since the spec 
-   draft-ietf-curdle-ssh-kex-sha2-02 is under development. */
-#define DROPBEAR_DH_GROUP14_256 0
-#define DROPBEAR_DH_GROUP16 0
-
 /* roughly 2x 521 bits */
 #define MAX_ECC_SIZE 140
 

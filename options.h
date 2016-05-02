@@ -168,10 +168,20 @@ If you test it please contact the Dropbear author */
  * ECDSA above */
 #define DROPBEAR_ECDH
 
-/* Group14 (2048 bit) is recommended. Group1 is less secure (1024 bit) though
-   is the only option for interoperability with some older SSH programs */
+/* Key exchange algorithm.
+ * group1 - 1024 bit, sha1
+ * group14 - 2048 bit, sha1
+ * group14_256 - 2048 bit, sha2-256
+ * group16 - 4096 bit, sha2-512
+ *
+ * group14 is supported by most implementations.
+ * group16 provides a greater strength but is slower and increases binary size
+ * group1 is necessary if compatibility with Dropbear versions < 0.53 is required
+ */ 
 #define DROPBEAR_DH_GROUP1 1
 #define DROPBEAR_DH_GROUP14 1
+#define DROPBEAR_DH_GROUP14_256 1
+#define DROPBEAR_DH_GROUP16 0
 
 /* Control the memory/performance/compression tradeoff for zlib.
  * Set windowBits=8 for least memory usage, see your system's
