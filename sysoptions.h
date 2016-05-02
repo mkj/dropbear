@@ -113,7 +113,7 @@
 #define RSA_BLINDING
 
 /* hashes which will be linked and registered */
-#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256) || defined(DROPBEAR_CURVE25519) || DROPBEAR_DH_GROUP14
+#if defined(DROPBEAR_SHA2_256_HMAC) || defined(DROPBEAR_ECC_256) || defined(DROPBEAR_CURVE25519) || DROPBEAR_DH_GROUP14_SHA256
 #define DROPBEAR_SHA256
 #endif
 #if defined(DROPBEAR_ECC_384)
@@ -125,6 +125,14 @@
 #endif
 #if defined(DROPBEAR_MD5_HMAC)
 #define DROPBEAR_MD5
+#endif
+
+ #if DROPBEAR_DH_GROUP14_SHA256 || DROPBEAR_DH_GROUP14_SHA1
+ #define DROPBEAR_DH_GROUP14 1
+ #endif
+
+#if DROPBEAR_DH_GROUP1 || DROPBEAR_DH_GROUP14 || DROPBEAR_DH_GROUP16
+#define DROPBEAR_NORMAL_DH 1
 #endif
 
 /* roughly 2x 521 bits */

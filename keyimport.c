@@ -36,9 +36,11 @@
 #include "dbutil.h"
 #include "ecc.h"
 
+#ifdef DROPBEAR_ECDSA
 static const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 static const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
 static const unsigned char OID_SEC521R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x23};
+#endif
 
 #define PUT_32BIT(cp, value) do { \
   (cp)[3] = (unsigned char)(value); \

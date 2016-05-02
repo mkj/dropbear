@@ -48,6 +48,7 @@ void send_msg_kexdh_init() {
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_KEXDH_INIT);
 	switch (ses.newkeys->algo_kex->mode) {
+#if DROPBEAR_NORMAL_DH
 		case DROPBEAR_KEX_NORMAL_DH:
 			if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
 				|| !cli_ses.dh_param) {
@@ -58,8 +59,9 @@ void send_msg_kexdh_init() {
 			}
 			buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
 			break;
-		case DROPBEAR_KEX_ECDH:
+#endif
 #ifdef DROPBEAR_ECDH
+		case DROPBEAR_KEX_ECDH:
 			if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
 				|| !cli_ses.ecdh_param) {
 				if (cli_ses.ecdh_param) {
@@ -68,8 +70,8 @@ void send_msg_kexdh_init() {
 				cli_ses.ecdh_param = gen_kexecdh_param();
 			}
 			buf_put_ecc_raw_pubkey_string(ses.writepayload, &cli_ses.ecdh_param->key);
-#endif
 			break;
+#endif
 #ifdef DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 			if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
@@ -80,8 +82,8 @@ void send_msg_kexdh_init() {
 				cli_ses.curve25519_param = gen_kexcurve25519_param();
 			}
 			buf_putstring(ses.writepayload, (const char*)cli_ses.curve25519_param->pub, CURVE25519_LEN);
-#endif
 			break;
+#endif
 	}
 
 	cli_ses.param_kex_algo = ses.newkeys->algo_kex;
@@ -118,6 +120,7 @@ void recv_msg_kexdh_reply() {
 	}
 
 	switch (ses.newkeys->algo_kex->mode) {
+#if DROPBEAR_NORMAL_DH
 		case DROPBEAR_KEX_NORMAL_DH:
 			{
 			DEF_MP_INT(dh_f);
@@ -131,15 +134,16 @@ void recv_msg_kexdh_reply() {
 			mp_clear(&dh_f);
 			}
 			break;
-		case DROPBEAR_KEX_ECDH:
+#endif
 #ifdef DROPBEAR_ECDH
+		case DROPBEAR_KEX_ECDH:
 			{
 			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
 			kexecdh_comb_key(cli_ses.ecdh_param, ecdh_qs, hostkey);
 			buf_free(ecdh_qs);
 			}
-#endif
 			break;
+#endif
 #ifdef DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 			{
@@ -147,8 +151,8 @@ void recv_msg_kexdh_reply() {
 			kexcurve25519_comb_key(cli_ses.curve25519_param, ecdh_qs, hostkey);
 			buf_free(ecdh_qs);
 			}
-#endif
 			break;
+#endif
 	}
 
 	if (cli_ses.dh_param) {

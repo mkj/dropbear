@@ -150,7 +150,7 @@ If you test it please contact the Dropbear author */
 /* ECDSA is significantly faster than RSA or DSS. Compiling in ECC
  * code (either ECDSA or ECDH) increases binary size - around 30kB
  * on x86-64 */
-#define DROPBEAR_ECDSA
+//#define DROPBEAR_ECDSA
 
 /* Generate hostkeys as-needed when the first connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
@@ -169,18 +169,19 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_ECDH
 
 /* Key exchange algorithm.
- * group1 - 1024 bit, sha1
- * group14 - 2048 bit, sha1
- * group14_256 - 2048 bit, sha2-256
+ * group14_sha1 - 2048 bit, sha1
+ * group14_sha256 - 2048 bit, sha2-256
  * group16 - 4096 bit, sha2-512
+ * group1 - 1024 bit, sha1
  *
  * group14 is supported by most implementations.
- * group16 provides a greater strength but is slower and increases binary size
- * group1 is necessary if compatibility with Dropbear versions < 0.53 is required
+ * group16 provides a greater strength level but is slower and increases binary size
+ * group1 is too small for security though is necessary if you need 
+     compatibility with some implementations such as Dropbear versions < 0.53
  */ 
 #define DROPBEAR_DH_GROUP1 1
-#define DROPBEAR_DH_GROUP14 1
-#define DROPBEAR_DH_GROUP14_256 1
+#define DROPBEAR_DH_GROUP14_SHA1 1
+#define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
 
 /* Control the memory/performance/compression tradeoff for zlib.

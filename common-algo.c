@@ -251,11 +251,11 @@ algo_type sshhostkey[] = {
 #if DROPBEAR_DH_GROUP1
 static const struct dropbear_kex kex_dh_group1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_1, DH_P_1_LEN, NULL, &sha1_desc };
 #endif
-#if DROPBEAR_DH_GROUP14
+#if DROPBEAR_DH_GROUP14_SHA1
 static const struct dropbear_kex kex_dh_group14_sha1 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha1_desc };
-#if DROPBEAR_DH_GROUP14_256
-static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha256_desc };
 #endif
+#if DROPBEAR_DH_GROUP14_SHA256
+static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH, dh_p_14, DH_P_14_LEN, NULL, &sha256_desc };
 #endif
 #if DROPBEAR_DH_GROUP16
 static const struct dropbear_kex kex_dh_group16_sha512 = {DROPBEAR_KEX_NORMAL_DH, dh_p_16, DH_P_16_LEN, NULL, &sha512_desc };
@@ -295,11 +295,11 @@ algo_type sshkex[] = {
 	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #endif
-#if DROPBEAR_DH_GROUP14
-#if DROPBEAR_DH_GROUP14_256
-	{"diffie-hellman-group14-sha256", 0, &kex_dh_group14_sha256, 1, NULL},
-#endif
+#if DROPBEAR_DH_GROUP14_SHA1
 	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
+#endif
+#if DROPBEAR_DH_GROUP14_SHA256
+	{"diffie-hellman-group14-sha256", 0, &kex_dh_group14_sha256, 1, NULL},
 #endif
 #if DROPBEAR_DH_GROUP1
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},
@@ -349,6 +349,7 @@ void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
 		}
 	}
 	buf_putstring(buf, (const char*)algolist->data, algolist->len);
+	TRACE(("algolist add '%*s'", algolist->len, algolist->data))
 	buf_free(algolist);
 }
 

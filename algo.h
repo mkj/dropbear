@@ -83,9 +83,15 @@ struct dropbear_hash {
 };
 
 enum dropbear_kex_mode {
+#if DROPBEAR_NORMAL_DH
 	DROPBEAR_KEX_NORMAL_DH,
+#endif
+#ifdef DROPBEAR_ECDH
 	DROPBEAR_KEX_ECDH,
+#endif
+#ifdef DROPBEAR_CURVE25519
 	DROPBEAR_KEX_CURVE25519,
+#endif
 };
 
 struct dropbear_kex {
