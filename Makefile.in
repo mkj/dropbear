@@ -161,7 +161,6 @@ inst_%: %
 
 inst_dropbearmulti: $(addprefix insmulti, $(PROGRAMS)) 
 
-
 # for some reason the rule further down doesn't like $($@objs) as a prereq.
 dropbear: $(dropbearobjs)
 dbclient: $(dbclientobjs)
@@ -200,21 +199,19 @@ link%:
 	-rm -f $*$(EXEEXT)
 	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
-$(STATIC_LTC): options.h default_options.h
-	cd libtomcrypt && $(MAKE)
+$(STATIC_LTC): options.h
+	$(MAKE) -C libtomcrypt
 
-$(STATIC_LTM): options.h default_options.h
-	cd libtommath && $(MAKE)
-
-%.o: default_options.h
+$(STATIC_LTM): options.h
+	$(MAKE) -C libtommath
 
 .PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean
 
 ltc-clean:
-	cd libtomcrypt && $(MAKE) clean
+	$(MAKE) -C libtomcrypt clean
 
 ltm-clean:
-	cd libtommath && $(MAKE) clean
+	$(MAKE) -C libtommath clean
 
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -rn
@@ -223,7 +220,7 @@ clean: ltc-clean ltm-clean thisclean
 
 thisclean:
 	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress \
-			dropbearmulti *.o *.da *.bb *.bbg *.prof default_options.h
+			dropbearmulti *.o *.da *.bb *.bbg *.prof
 
 distclean: clean tidy
 	-rm -f config.h
@@ -232,7 +229,10 @@ distclean: clean tidy
 tidy:
 	-rm -f *~ *.gcov */*~
 
+# default_options.h is stored in version control, could not find a workaround
+# for parallel "make -j" and dependency rules.
 default_options.h: default_options.h.in 
-	echo "# > > > Generated from $^, edit that file instead !" > $@
-	echo >> $@
-	$(srcdir)/ifndef_wrapper.sh < $^ 	> $@
+	echo "# > > > Generated from $^, edit that file instead !" > $@.tmp
+	echo >> $@.tmp
+	$(srcdir)/ifndef_wrapper.sh < $^ > $@.tmp
+	mv $@.tmp $@
