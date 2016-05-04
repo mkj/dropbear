@@ -60,7 +60,7 @@ void send_msg_kexdh_init() {
 			buf_putmpint(ses.writepayload, &cli_ses.dh_param->pub);
 			break;
 #endif
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 		case DROPBEAR_KEX_ECDH:
 			if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
 				|| !cli_ses.ecdh_param) {
@@ -72,7 +72,7 @@ void send_msg_kexdh_init() {
 			buf_put_ecc_raw_pubkey_string(ses.writepayload, &cli_ses.ecdh_param->key);
 			break;
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 			if (ses.newkeys->algo_kex != cli_ses.param_kex_algo
 				|| !cli_ses.curve25519_param) {
@@ -135,7 +135,7 @@ void recv_msg_kexdh_reply() {
 			}
 			break;
 #endif
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 		case DROPBEAR_KEX_ECDH:
 			{
 			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
@@ -144,7 +144,7 @@ void recv_msg_kexdh_reply() {
 			}
 			break;
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 			{
 			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
@@ -159,13 +159,13 @@ void recv_msg_kexdh_reply() {
 		free_kexdh_param(cli_ses.dh_param);
 		cli_ses.dh_param = NULL;
 	}
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 	if (cli_ses.ecdh_param) {
 		free_kexecdh_param(cli_ses.ecdh_param);
 		cli_ses.ecdh_param = NULL;
 	}
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 	if (cli_ses.curve25519_param) {
 		free_kexcurve25519_param(cli_ses.curve25519_param);
 		cli_ses.curve25519_param = NULL;

@@ -47,7 +47,7 @@
 #include "signkey.h"
 #include "auth.h"
 
-#ifdef ENABLE_SVR_PUBKEY_OPTIONS
+#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 
 /* Returns 1 if pubkey allows agent forwarding,
  * 0 otherwise */
@@ -143,14 +143,14 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 			ses.authstate.pubkey_options->no_port_forwarding_flag = 1;
 			goto next_option;
 		}
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 		if (match_option(options_buf, "no-agent-forwarding") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "Agent forwarding disabled.");
 			ses.authstate.pubkey_options->no_agent_forwarding_flag = 1;
 			goto next_option;
 		}
 #endif
-#ifdef ENABLE_X11FWD
+#if DROPBEAR_X11FWD
 		if (match_option(options_buf, "no-X11-forwarding") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "X11 forwarding disabled.");
 			ses.authstate.pubkey_options->no_x11_forwarding_flag = 1;

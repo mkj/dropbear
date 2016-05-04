@@ -36,7 +36,7 @@
 #include "dbutil.h"
 #include "ecc.h"
 
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 static const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 static const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
 static const unsigned char OID_SEC521R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x23};
@@ -602,13 +602,13 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	 */
 	blobbuf = buf_new(3000);
 
-#ifdef DROPBEAR_DSS
+#if DROPBEAR_DSS
 	if (key->type == OSSH_DSA) {
 		buf_putstring(blobbuf, "ssh-dss", 7);
 		retkey->type = DROPBEAR_SIGNKEY_DSS;
 	} 
 #endif
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 	if (key->type == OSSH_RSA) {
 		buf_putstring(blobbuf, "ssh-rsa", 7);
 		retkey->type = DROPBEAR_SIGNKEY_RSA;
@@ -668,7 +668,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		p += len;
 	}
 
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	if (key->type == OSSH_EC) {
 		unsigned char* private_key_bytes = NULL;
 		int private_key_len = 0;
@@ -715,21 +715,21 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		}
 
 		if (0) {}
-#ifdef DROPBEAR_ECC_256
+#if DROPBEAR_ECC_256
 		else if (len == sizeof(OID_SEC256R1_BLOB) 
 			&& memcmp(p, OID_SEC256R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
 			curve = &ecc_curve_nistp256;
 		} 
 #endif
-#ifdef DROPBEAR_ECC_384
+#if DROPBEAR_ECC_384
 		else if (len == sizeof(OID_SEC384R1_BLOB)
 			&& memcmp(p, OID_SEC384R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP384;
 			curve = &ecc_curve_nistp384;
 		} 
 #endif
-#ifdef DROPBEAR_ECC_521
+#if DROPBEAR_ECC_521
 		else if (len == sizeof(OID_SEC521R1_BLOB)
 			&& memcmp(p, OID_SEC521R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP521;
@@ -832,15 +832,15 @@ static int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
 #endif
 
 	if (
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 			key->type == DROPBEAR_SIGNKEY_RSA ||
 #endif
-#ifdef DROPBEAR_DSS
+#if DROPBEAR_DSS
 			key->type == DROPBEAR_SIGNKEY_DSS ||
 #endif
 			0)
@@ -1026,7 +1026,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 	} /* end RSA and DSS handling */
 
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	if (key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
 		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
 		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {

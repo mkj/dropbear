@@ -43,8 +43,8 @@ static void main_noinetd(void);
 #endif
 static void commonsetup(void);
 
-#if defined(DBMULTI_dropbear) || !defined(DROPBEAR_MULTI)
-#if defined(DBMULTI_dropbear) && defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dropbear) || !DROPBEAR_MULTI
+#if defined(DBMULTI_dropbear) && DROPBEAR_MULTI
 int dropbear_main(int argc, char ** argv)
 #else
 int main(int argc, char ** argv)
@@ -144,7 +144,7 @@ static void main_noinetd() {
 	/* fork */
 	if (svr_opts.forkbg) {
 		int closefds = 0;
-#ifndef DEBUG_TRACE
+#if !DEBUG_TRACE
 		if (!opts.usingsyslog) {
 			closefds = 1;
 		}
@@ -429,7 +429,7 @@ static size_t listensockets(int *socks, size_t sockcount, int *maxfd) {
 		for (n = 0; n < (unsigned int)nsock; n++) {
 			int sock = socks[sockpos + n];
 			set_sock_priority(sock, DROPBEAR_PRIO_LOWDELAY);
-#ifdef DROPBEAR_SERVER_TCP_FAST_OPEN
+#if DROPBEAR_SERVER_TCP_FAST_OPEN
 			set_listen_fast_open(sock);
 #endif
 		}

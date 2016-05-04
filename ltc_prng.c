@@ -26,7 +26,7 @@
  * in the various other functions.
  */
 
-#ifdef DROPBEAR_LTC_PRNG
+#if DROPBEAR_LTC_PRNG
 
 /**
   Start the PRNG

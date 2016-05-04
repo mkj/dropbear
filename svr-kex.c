@@ -62,13 +62,13 @@ void recv_msg_kexdh_init() {
 			}
 			break;
 #endif
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 		case DROPBEAR_KEX_ECDH:
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 #endif
-#if defined(DROPBEAR_ECDH) || defined(DROPBEAR_CURVE25519)
+#if DROPBEAR_ECDH || DROPBEAR_CURVE25519
 			ecdh_qs = buf_getstringbuf(ses.payload);
 			break;
 #endif
@@ -91,7 +91,7 @@ void recv_msg_kexdh_init() {
 }
 
 
-#ifdef DROPBEAR_DELAY_HOSTKEY
+#if DROPBEAR_DELAY_HOSTKEY
 
 static void fsync_parent_dir(const char* fn) {
 #ifdef HAVE_LIBGEN_H
@@ -126,17 +126,17 @@ static void svr_ensure_hostkey() {
 
 	switch (type)
 	{
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 		case DROPBEAR_SIGNKEY_RSA:
 			fn = RSA_PRIV_FILENAME;
 			break;
 #endif
-#ifdef DROPBEAR_DSS
+#if DROPBEAR_DSS
 		case DROPBEAR_SIGNKEY_DSS:
 			fn = DSS_PRIV_FILENAME;
 			break;
 #endif
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP384:
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP521:
@@ -215,7 +215,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 	/* we can start creating the kexdh_reply packet */
 	CHECKCLEARTOWRITE();
 
-#ifdef DROPBEAR_DELAY_HOSTKEY
+#if DROPBEAR_DELAY_HOSTKEY
 	if (svr_opts.delay_hostkey)
 	{
 		svr_ensure_hostkey();
@@ -227,7 +227,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 			ses.newkeys->algo_hostkey);
 
 	switch (ses.newkeys->algo_kex->mode) {
-#ifdef DROPBEAR_NORMAL_DH
+#if DROPBEAR_NORMAL_DH
 		case DROPBEAR_KEX_NORMAL_DH:
 			{
 			struct kex_dh_param * dh_param = gen_kexdh_param();
@@ -239,7 +239,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 			}
 			break;
 #endif
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 		case DROPBEAR_KEX_ECDH:
 			{
 			struct kex_ecdh_param *ecdh_param = gen_kexecdh_param();
@@ -250,7 +250,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 			}
 			break;
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 			{
 			struct kex_curve25519_param *param = gen_kexcurve25519_param();

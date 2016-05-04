@@ -79,7 +79,7 @@ void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_N
 void (*_dropbear_log)(int priority, const char* format, va_list param)
 						= generic_dropbear_log;
 
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 int debug_trace = 0;
 #endif
 
@@ -149,7 +149,7 @@ void dropbear_log(int priority, const char* format, ...) {
 }
 
 
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 
 static double debug_start_time = -1;
 
@@ -182,7 +182,7 @@ static double time_since_start()
 void dropbear_trace(const char* format, ...) {
 	va_list param;
 
-	if (!debug_trace) {
+	if (!ses.debug_trace) {
 		return;
 	}
 
@@ -262,7 +262,7 @@ int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
 		return DROPBEAR_FAILURE;
 	}
 
-#ifdef USE_VFORK
+#if DROPBEAR_VFORK
 	pid = vfork();
 #else
 	pid = fork();
@@ -371,7 +371,7 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 	execv(usershell, argv);
 }
 
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 void printhex(const char * label, const unsigned char * buf, int len) {
 
 	int i;
@@ -465,7 +465,7 @@ out:
  * authkeys file.
  * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
 /* Only used for ~/.ssh/known_hosts and ~/.ssh/authorized_keys */
-#if defined(DROPBEAR_CLIENT) || defined(ENABLE_SVR_PUBKEY_AUTH)
+#if DROPBEAR_CLIENT || DROPBEAR_SVR_PUBKEY_AUTH
 int buf_getline(buffer * line, FILE * authfile) {
 
 	int c = EOF;

@@ -86,10 +86,10 @@ enum dropbear_kex_mode {
 #if DROPBEAR_NORMAL_DH
 	DROPBEAR_KEX_NORMAL_DH,
 #endif
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 	DROPBEAR_KEX_ECDH,
 #endif
-#ifdef DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519
 	DROPBEAR_KEX_CURVE25519,
 #endif
 };
@@ -102,7 +102,7 @@ struct dropbear_kex {
 	const int dh_p_len;
 
 	/* elliptic curve DH KEX */
-#ifdef DROPBEAR_ECDH
+#if DROPBEAR_ECDH
 	const struct dropbear_ecc_curve *ecc_curve;
 #else
 	const void* dummy;
@@ -128,7 +128,7 @@ enum kexguess2_used {
 algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 		enum kexguess2_used *kexguess2, int *goodguess);
 
-#ifdef ENABLE_USER_ALGO_LIST
+#if DROPBEAR_USER_ALGO_LIST
 int check_user_algos(const char* user_algo_list, algo_type * algos, 
 		const char *algo_desc);
 char * algolist_string(algo_type algos[]);
