@@ -157,7 +157,7 @@ AC_ARG_ENABLE(pam,
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
 			AC_MSG_NOTICE(Enabling PAM)
-			AC_CHECK_FUNCS(pam_fail_delay)
+			AC_CHECK_FUNC(pam_fail_delay, [AC_DEFINE(WITH_PAM_FAIL_DELAY,1,[Define 1 if pam_fail_delay available])])
 		else
 			AC_DEFINE(DISABLE_PAM,, Use PAM)
 			AC_MSG_NOTICE(Disabling PAM)

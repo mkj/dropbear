@@ -225,7 +225,7 @@ void svr_auth_pam() {
 		goto cleanup;
 	}
 
-#ifdef HAVE_PAM_FAIL_DELAY
+#ifdef WITH_PAM_FAIL_DELAY
 	/* We have our own random delay code already, disable PAM's */
 	(void) pam_fail_delay(pamHandlep, 0 /* musec_delay */);
 #endif
