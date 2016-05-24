@@ -191,10 +191,8 @@ void recv_msg_userauth_request() {
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
-			if (valid_user) {
-				svr_auth_pam();
-				goto out;
-			}
+			svr_auth_pam();
+			goto out;
 		}
 	}
 #endif

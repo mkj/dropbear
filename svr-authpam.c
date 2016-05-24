@@ -207,11 +207,11 @@ void svr_auth_pam() {
 	/* used to pass data to the PAM conversation function - don't bother with
 	 * strdup() etc since these are touched only by our own conversation
 	 * function (above) which takes care of it */
-	userData.user = ses.authstate.pw_name;
+	userData.user = ses.authstate.username;
 	userData.passwd = password;
 
 	/* Init pam */
-	if ((rc = pam_start("sshd", ses.authstate.pw_name, &pamConv, &pamHandlep)) != PAM_SUCCESS) {
+	if ((rc = pam_start("sshd", ses.authstate.username, &pamConv, &pamHandlep)) != PAM_SUCCESS) {
 		dropbear_log(LOG_WARNING, "pam_start() failed, rc=%d, %s", 
 				rc, pam_strerror(pamHandlep, rc));
 		goto cleanup;
@@ -243,7 +243,7 @@ void svr_auth_pam() {
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"Bad PAM password attempt for '%s' from %s",
-				ses.authstate.pw_name,
+				ses.authstate.username,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
@@ -254,7 +254,7 @@ void svr_auth_pam() {
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"Bad PAM password attempt for '%s' from %s",
-				ses.authstate.pw_name,
+				ses.authstate.username,
 				svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 		goto cleanup;
@@ -262,7 +262,7 @@ void svr_auth_pam() {
 
 	/* successful authentication */
 	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s' from %s",
-			ses.authstate.pw_name,
+			ses.authstate.username,
 			svr_ses.addrstring);
 	send_msg_userauth_success();
 
