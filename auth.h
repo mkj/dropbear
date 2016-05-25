@@ -40,6 +40,8 @@ void send_msg_userauth_banner(buffer *msg);
 void svr_auth_password(void);
 void svr_auth_pubkey(void);
 void svr_auth_pam(void);
+void svr_auth_pam_cleanup(void);
+void svr_auth_pam_env(void);
 
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 int svr_pubkey_allows_agentfwd(void);
@@ -121,6 +123,11 @@ struct AuthState {
 	char *pw_passwd;
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	struct PubKeyOptions* pubkey_options;
+#endif
+#if DROPBEAR_SVR_PAM_AUTH
+	pam_handle_t* pam_handle;
+	unsigned pam_sesopen : 1;
+	unsigned pam_credset : 1;
 #endif
 };
 
