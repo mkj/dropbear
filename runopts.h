@@ -116,6 +116,8 @@ typedef struct svr_runopts {
 
 	char * forced_command;
 
+	char * authkeysfile;
+
 } svr_runopts;
 
 extern svr_runopts svr_opts;
