@@ -432,7 +432,8 @@ static int checkfileperm(char * filename) {
 		TRACE(("wrong ownership"))
 	}
 	/* check permissions - don't want group or others +w */
-	if (filestat.st_mode & (S_IWGRP | S_IWOTH)) {
+	if ((filestat.st_mode & (S_IWGRP | S_IWOTH)) &&
+	    !(S_ISDIR(filestat.st_mode) && (filestat.st_mode & S_ISVTX))) {
 		badperm = 1;
 		TRACE(("wrong perms"))
 	}
