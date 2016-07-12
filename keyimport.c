@@ -273,6 +273,11 @@ static int ber_read_id_len(void *source, int sourcelen,
 	p++, sourcelen--;
     }
 
+    if (*length < 0) {
+    	printf("Negative ASN.1 length\n");
+    	return -1;
+    }
+
     return p - (unsigned char *) source;
 }
 
@@ -587,7 +592,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
     p += ret;
     if (ret < 0 || id != 16 || len < 0 ||
         key->keyblob+key->keyblob_len-p < len) {
-		errmsg = "ASN.1 decoding failure - wrong password?";
+		errmsg = "ASN.1 decoding failure";
 	goto error;
     }
 
@@ -687,7 +692,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==4 for octet string */
-		if (ret < 0 || id != 4 ||
+		if (ret < 0 || id != 4 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -701,7 +706,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==0 */
-		if (ret < 0 || id != 0) {
+		if (ret < 0 || id != 0 || len < 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
@@ -710,7 +715,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==6 for object */
-		if (ret < 0 || id != 6 ||
+		if (ret < 0 || id != 6 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -749,7 +754,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==1 */
-		if (ret < 0 || id != 1) {
+		if (ret < 0 || id != 1 || len < 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
@@ -758,7 +763,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==3 for bit string */
-		if (ret < 0 || id != 3 ||
+		if (ret < 0 || id != 3 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
