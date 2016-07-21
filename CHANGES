@@ -24,7 +24,7 @@
   Beyond Security's SecuriTeam Secure Disclosure www.beyondsecurity.com/ssd.html
 
 - Fix port forwarding failure when connecting to domains that have both
-  IPv4 and IPv6 addresses. 
+  IPv4 and IPv6 addresses. The bug was introduced in 2015.68
 
 - Fix 100% CPU use while waiting for rekey to complete. Thanks to Zhang Hui P
   for the patch
