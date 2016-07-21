@@ -16,7 +16,9 @@ addons:
 
 script:
   - autoconf && autoheader && ./configure CFLAGS="-O2 -Wall -Wno-pointer-sign" --prefix="$HOME/inst"
-  - make -j3 install
+  - make -j3 
+  # avoid concurrent install, osx/freebsd is racey (https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=208093)
+  - make install 
 
 env:
   global:

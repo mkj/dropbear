@@ -36,9 +36,11 @@
 #include "dbutil.h"
 #include "ecc.h"
 
+#if DROPBEAR_ECDSA
 static const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 static const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
 static const unsigned char OID_SEC521R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x23};
+#endif
 
 #define PUT_32BIT(cp, value) do { \
   (cp)[3] = (unsigned char)(value); \
@@ -59,6 +61,8 @@ static int openssh_write(const char *filename, sign_key *key,
 
 static int dropbear_write(const char*filename, sign_key * key);
 static sign_key *dropbear_read(const char* filename);
+
+static int toint(unsigned u);
 
 #if 0
 static int sshcom_encrypted(const char *filename, char **comment);
@@ -241,12 +245,11 @@ static int ber_read_id_len(void *source, int sourcelen,
 	if ((*p & 0x1F) == 0x1F) {
 		*id = 0;
 		while (*p & 0x80) {
-			*id = (*id << 7) | (*p & 0x7F);
 			p++, sourcelen--;
 			if (sourcelen == 0)
 				return -1;
+			*id = (*id << 7) | (*p & 0x7F);
 		}
-		*id = (*id << 7) | (*p & 0x7F);
 		p++, sourcelen--;
 	} else {
 		*id = *p & 0x1F;
@@ -257,17 +260,24 @@ static int ber_read_id_len(void *source, int sourcelen,
 		return -1;
 
 	if (*p & 0x80) {
+		unsigned len;
 		int n = *p & 0x7F;
 		p++, sourcelen--;
 		if (sourcelen < n)
 			return -1;
-		*length = 0;
+		len = 0;
 		while (n--)
-			*length = (*length << 8) | (*p++);
+			len = (len << 8) | (*p++);
 		sourcelen -= n;
+		*length = toint(len);
 	} else {
 		*length = *p;
 		p++, sourcelen--;
+	}
+
+	if (*length < 0) {
+		printf("Negative ASN.1 length\n");
+		return -1;
 	}
 
 	return p - (unsigned char *) source;
@@ -467,7 +477,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	m_burn(buffer, sizeof(buffer));
 	return ret;
 
-	error:
+error:
 	m_burn(buffer, sizeof(buffer));
 	if (ret) {
 		if (ret->keyblob) {
@@ -582,8 +592,9 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	/* Expect the SEQUENCE header. Take its absence as a failure to decrypt. */
 	ret = ber_read_id_len(p, key->keyblob_len, &id, &len, &flags);
 	p += ret;
-	if (ret < 0 || id != 16) {
-		errmsg = "ASN.1 decoding failure - wrong password?";
+	if (ret < 0 || id != 16 || len < 0 ||
+		key->keyblob+key->keyblob_len-p < len) {
+				errmsg = "ASN.1 decoding failure";
 		goto error;
 	}
 
@@ -600,13 +611,13 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 	 */
 	blobbuf = buf_new(3000);
 
-#ifdef DROPBEAR_DSS
+#if DROPBEAR_DSS
 	if (key->type == OSSH_DSA) {
 		buf_putstring(blobbuf, "ssh-dss", 7);
 		retkey->type = DROPBEAR_SIGNKEY_DSS;
 	} 
 #endif
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 	if (key->type == OSSH_RSA) {
 		buf_putstring(blobbuf, "ssh-rsa", 7);
 		retkey->type = DROPBEAR_SIGNKEY_RSA;
@@ -617,7 +628,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		ret = ber_read_id_len(p, key->keyblob+key->keyblob_len-p,
 							  &id, &len, &flags);
 		p += ret;
-		if (ret < 0 || id != 2 ||
+		if (ret < 0 || id != 2 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -666,7 +677,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 		p += len;
 	}
 
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	if (key->type == OSSH_EC) {
 		unsigned char* private_key_bytes = NULL;
 		int private_key_len = 0;
@@ -683,7 +694,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==4 for octet string */
-		if (ret < 0 || id != 4 ||
+				if (ret < 0 || id != 4 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -697,7 +708,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==0 */
-		if (ret < 0 || id != 0) {
+				if (ret < 0 || id != 0 || len < 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
@@ -706,28 +717,28 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==6 for object */
-		if (ret < 0 || id != 6 ||
+				if (ret < 0 || id != 6 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
 
 		if (0) {}
-#ifdef DROPBEAR_ECC_256
+#if DROPBEAR_ECC_256
 		else if (len == sizeof(OID_SEC256R1_BLOB) 
 			&& memcmp(p, OID_SEC256R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
 			curve = &ecc_curve_nistp256;
 		} 
 #endif
-#ifdef DROPBEAR_ECC_384
+#if DROPBEAR_ECC_384
 		else if (len == sizeof(OID_SEC384R1_BLOB)
 			&& memcmp(p, OID_SEC384R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP384;
 			curve = &ecc_curve_nistp384;
 		} 
 #endif
-#ifdef DROPBEAR_ECC_521
+#if DROPBEAR_ECC_521
 		else if (len == sizeof(OID_SEC521R1_BLOB)
 			&& memcmp(p, OID_SEC521R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP521;
@@ -745,7 +756,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==1 */
-		if (ret < 0 || id != 1) {
+				if (ret < 0 || id != 1 || len < 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
@@ -754,7 +765,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 							  &id, &len, &flags);
 		p += ret;
 		/* id==3 for bit string */
-		if (ret < 0 || id != 3 ||
+				if (ret < 0 || id != 3 || len < 0 ||
 			key->keyblob+key->keyblob_len-p < len) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
@@ -830,15 +841,15 @@ static int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
 #endif
 
 	if (
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 			key->type == DROPBEAR_SIGNKEY_RSA ||
 #endif
-#ifdef DROPBEAR_DSS
+#if DROPBEAR_DSS
 			key->type == DROPBEAR_SIGNKEY_DSS ||
 #endif
 			0)
@@ -1024,7 +1035,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 	} /* end RSA and DSS handling */
 
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	if (key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
 		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
 		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
@@ -1379,7 +1390,7 @@ static struct sshcom_key *load_sshcom_key(const char *filename)
 			memset(ret->keyblob, 0, ret->keyblob_size);
 			m_free(ret->keyblob);
 		}
-		memset(&ret, 0, sizeof(ret));
+		memset(ret, 0, sizeof(*ret));
 		m_free(ret);
 	}
 	return NULL;
@@ -1407,11 +1418,12 @@ int sshcom_encrypted(const char *filename, char **comment)
 	pos = 8;
 	if (key->keyblob_len < pos+4)
 		goto done;					 /* key is far too short */
-	pos += 4 + GET_32BIT(key->keyblob + pos);   /* skip key type */
-	if (key->keyblob_len < pos+4)
+	len = toint(GET_32BIT(key->keyblob + pos));
+	if (len < 0 || len > key->keyblob_len - pos - 4)
 		goto done;					 /* key is far too short */
-	len = GET_32BIT(key->keyblob + pos);   /* find cipher-type length */
-	if (key->keyblob_len < pos+4+len)
+	pos += 4 + len;                    /* skip key type */
+	len = toint(GET_32BIT(key->keyblob + pos)); /* find cipher-type length */
+	if (len < 0 || len > key->keyblob_len - pos - 4)
 		goto done;					 /* cipher type string is incomplete */
 	if (len != 4 || 0 != memcmp(key->keyblob + pos + 4, "none", 4))
 		answer = 1;
@@ -1420,15 +1432,14 @@ int sshcom_encrypted(const char *filename, char **comment)
 	*comment = dupstr(key->comment);
 	memset(key->keyblob, 0, key->keyblob_size);
 	m_free(key->keyblob);
-	memset(&key, 0, sizeof(key));
+	memset(key, 0, sizeof(*key));
 	m_free(key);
 	return answer;
 }
 
 static int sshcom_read_mpint(void *data, int len, struct mpint_pos *ret)
 {
-	int bits;
-	int bytes;
+	unsigned bits, bytes;
 	unsigned char *d = (unsigned char *) data;
 
 	if (len < 4)
@@ -1481,7 +1492,7 @@ sign_key *sshcom_read(const char *filename, char *passphrase)
 	struct ssh2_userkey *ret = NULL, *retkey;
 	const struct ssh_signkey *alg;
 	unsigned char *blob = NULL;
-	int blobsize, publen, privlen;
+	int blobsize = 0, publen, privlen;
 
 	if (!key)
 		return NULL;
@@ -1601,8 +1612,8 @@ sign_key *sshcom_read(const char *filename, char *passphrase)
 	/*
 	 * Strip away the containing string to get to the real meat.
 	 */
-	len = GET_32BIT(ciphertext);
-	if (len > cipherlen-4) {
+	len = toint(GET_32BIT(ciphertext));
+	if (len < 0 || len > cipherlen-4) {
 		errmsg = "containing string was ill-formed";
 		goto error;
 	}
@@ -1669,7 +1680,8 @@ sign_key *sshcom_read(const char *filename, char *passphrase)
 		publen = pos;
 		pos += put_mp(blob+pos, x.start, x.bytes);
 		privlen = pos - publen;
-	}
+	} else
+		return NULL;
 
 	dropbear_assert(privlen > 0);			   /* should have bombed by now if not */
 
@@ -1693,7 +1705,7 @@ sign_key *sshcom_read(const char *filename, char *passphrase)
 	}
 	memset(key->keyblob, 0, key->keyblob_size);
 	m_free(key->keyblob);
-	memset(&key, 0, sizeof(key));
+	memset(key, 0, sizeof(*key));
 	m_free(key);
 	return ret;
 }
@@ -1906,3 +1918,27 @@ int sshcom_write(const char *filename, sign_key *key,
 	return ret;
 }
 #endif /* ssh.com stuff disabled */
+
+/* From PuTTY misc.c */
+static int toint(unsigned u)
+{
+	/*
+	 * Convert an unsigned to an int, without running into the
+	 * undefined behaviour which happens by the strict C standard if
+	 * the value overflows. You'd hope that sensible compilers would
+	 * do the sensible thing in response to a cast, but actually I
+	 * don't trust modern compilers not to do silly things like
+	 * assuming that _obviously_ you wouldn't have caused an overflow
+	 * and so they can elide an 'if (i < 0)' test immediately after
+	 * the cast.
+	 *
+	 * Sensible compilers ought of course to optimise this entire
+	 * function into 'just return the input value'!
+	 */
+	if (u <= (unsigned)INT_MAX)
+		return (int)u;
+	else if (u >= (unsigned)INT_MIN)   /* wrap in cast _to_ unsigned is OK */
+		return INT_MIN + (int)(u - (unsigned)INT_MIN);
+	else
+		return INT_MIN; /* fallback; should never occur on binary machines */
+}

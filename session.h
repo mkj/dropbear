@@ -79,7 +79,7 @@ struct key_context_directional {
 	/* actual keys */
 	union {
 		symmetric_CBC cbc;
-#ifdef DROPBEAR_ENABLE_CTR_MODE
+#if DROPBEAR_ENABLE_CTR_MODE
 		symmetric_CTR ctr;
 #endif
 	} cipher_state;
@@ -237,7 +237,7 @@ struct serversession {
 	/* The resolved remote address, used for lastlog etc */
 	char *remotehost;
 
-#ifdef USE_VFORK
+#if DROPBEAR_VFORK
 	pid_t server_pid;
 #endif
 
@@ -288,7 +288,7 @@ struct clientsession {
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */
 	int ignore_next_auth_response;
-#ifdef ENABLE_CLI_INTERACT_AUTH
+#if DROPBEAR_CLI_INTERACT_AUTH
 	int auth_interact_failed; /* flag whether interactive auth can still
 								 be used */
 	int interact_request_received; /* flag whether we've received an 
@@ -311,11 +311,11 @@ struct clientsession {
 /* Global structs storing the state */
 extern struct sshsession ses;
 
-#ifdef DROPBEAR_SERVER
+#if DROPBEAR_SERVER
 extern struct serversession svr_ses;
 #endif /* DROPBEAR_SERVER */
 
-#ifdef DROPBEAR_CLIENT
+#if DROPBEAR_CLIENT
 extern struct clientsession cli_ses;
 #endif /* DROPBEAR_CLIENT */
 

@@ -254,13 +254,13 @@ static int newchansess(struct Channel *channel) {
 
 	channel->typedata = chansess;
 
-#ifndef DISABLE_X11FWD
+#if DROPBEAR_X11FWD
 	chansess->x11listener = NULL;
 	chansess->x11authprot = NULL;
 	chansess->x11authcookie = NULL;
 #endif
 
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 	chansess->agentlistener = NULL;
 	chansess->agentfile = NULL;
 	chansess->agentdir = NULL;
@@ -301,7 +301,7 @@ static void closechansess(struct Channel *channel) {
 	m_free(chansess->cmd);
 	m_free(chansess->term);
 
-#ifdef ENABLE_SVR_PUBKEY_OPTIONS
+#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	m_free(chansess->original_command);
 #endif
 
@@ -315,11 +315,11 @@ static void closechansess(struct Channel *channel) {
 		m_free(chansess->tty);
 	}
 
-#ifndef DISABLE_X11FWD
+#if DROPBEAR_X11FWD
 	x11cleanup(chansess);
 #endif
 
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 	svr_agentcleanup(chansess);
 #endif
 
@@ -373,11 +373,11 @@ static void chansessionrequest(struct Channel *channel) {
 		ret = sessioncommand(channel, chansess, 1, 0);
 	} else if (strcmp(type, "subsystem") == 0) {
 		ret = sessioncommand(channel, chansess, 1, 1);
-#ifndef DISABLE_X11FWD
+#if DROPBEAR_X11FWD
 	} else if (strcmp(type, "x11-req") == 0) {
 		ret = x11req(chansess);
 #endif
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 	} else if (strcmp(type, "auth-agent-req@openssh.com") == 0) {
 		ret = svr_agentreq(chansess);
 #endif
@@ -603,7 +603,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-#ifndef USE_VFORK
+#if !DROPBEAR_VFORK
 static void make_connection_string(struct ChanSess *chansess) {
 	char *local_ip, *local_port, *remote_ip, *remote_port;
 	size_t len;
@@ -671,8 +671,16 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		}
 	}
 	
-	/* take public key option 'command' into account */
-	svr_pubkey_set_forced_command(chansess);
+
+	/* take global command into account */
+	if (svr_opts.forced_command) {
+		chansess->original_command = chansess->cmd ? : m_strdup("");
+		chansess->cmd = m_strdup(svr_opts.forced_command);
+	} else {
+		/* take public key option 'command' into account */
+		svr_pubkey_set_forced_command(chansess);
+	}
+
 
 #ifdef LOG_COMMANDS
 	if (chansess->cmd) {
@@ -686,7 +694,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	/* uClinux will vfork(), so there'll be a race as 
 	connection_string is freed below. */
-#ifndef USE_VFORK
+#if !DROPBEAR_VFORK
 	make_connection_string(chansess);
 #endif
 
@@ -702,7 +710,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		ret = ptycommand(channel, chansess);
 	}
 
-#ifndef USE_VFORK
+#if !DROPBEAR_VFORK
 	m_free(chansess->connection_string);
 	m_free(chansess->client_string);
 #endif
@@ -776,7 +784,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		return DROPBEAR_FAILURE;
 	}
 	
-#ifdef USE_VFORK
+#if DROPBEAR_VFORK
 	pid = vfork();
 #else
 	pid = fork();
@@ -896,7 +904,7 @@ static void execchild(void *user_data) {
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
 	 * hostkey. can't think of a workaround to clear it */
-#ifndef USE_VFORK
+#if !DROPBEAR_VFORK
 	/* wipe the hostkey */
 	sign_key_free(svr_opts.hostkey);
 	svr_opts.hostkey = NULL;
@@ -965,7 +973,7 @@ static void execchild(void *user_data) {
 		addnewvar("SSH_CLIENT", chansess->client_string);
 	}
 	
-#ifdef ENABLE_SVR_PUBKEY_OPTIONS
+#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	if (chansess->original_command) {
 		addnewvar("SSH_ORIGINAL_COMMAND", chansess->original_command);
 	}
@@ -976,11 +984,11 @@ static void execchild(void *user_data) {
 		dropbear_exit("Error changing directory");
 	}
 
-#ifndef DISABLE_X11FWD
+#if DROPBEAR_X11FWD
 	/* set up X11 forwarding if enabled */
 	x11setauth(chansess);
 #endif
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 	/* set up agent env variable */
 	svr_agentset(chansess);
 #endif

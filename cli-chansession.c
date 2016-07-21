@@ -355,7 +355,7 @@ static int cli_initchansess(struct Channel *channel) {
 
 	cli_init_stdpipe_sess(channel);
 
-#ifdef ENABLE_CLI_AGENTFWD
+#if DROPBEAR_CLI_AGENTFWD
 	if (cli_opts.agent_fwd) {
 		cli_setup_agent(channel);
 	}
@@ -379,7 +379,7 @@ static int cli_initchansess(struct Channel *channel) {
 	return 0; /* Success */
 }
 
-#ifdef ENABLE_CLI_NETCAT
+#if DROPBEAR_CLI_NETCAT
 
 static const struct ChanType cli_chan_netcat = {
 	0, /* sepfds */

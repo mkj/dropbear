@@ -35,13 +35,13 @@
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 static void cli_dropbear_log(int priority, const char* format, va_list param);
 
-#ifdef ENABLE_CLI_PROXYCMD
+#if DROPBEAR_CLI_PROXYCMD
 static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out);
 static void kill_proxy_sighandler(int signo);
 #endif
 
-#if defined(DBMULTI_dbclient) || !defined(DROPBEAR_MULTI)
-#if defined(DBMULTI_dbclient) && defined(DROPBEAR_MULTI)
+#if defined(DBMULTI_dbclient) || !DROPBEAR_MULTI
+#if defined(DBMULTI_dbclient) && DROPBEAR_MULTI
 int cli_main(int argc, char ** argv) {
 #else
 int main(int argc, char ** argv) {
@@ -74,7 +74,7 @@ int main(int argc, char ** argv) {
 	}
 
 	pid_t proxy_cmd_pid = 0;
-#ifdef ENABLE_CLI_PROXYCMD
+#if DROPBEAR_CLI_PROXYCMD
 	if (cli_opts.proxycmd) {
 		cli_proxy_cmd(&sock_in, &sock_out, &proxy_cmd_pid);
 		m_free(cli_opts.proxycmd);
@@ -98,29 +98,30 @@ int main(int argc, char ** argv) {
 #endif /* DBMULTI stuff */
 
 static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
+	char exitmsg[150];
+	char fullmsg[300];
 
-	char fmtbuf[300];
-	char exitmsg[500];
+	/* Note that exit message must be rendered before session cleanup */
 
+	/* Render the formatted exit message */
+	vsnprintf(exitmsg, sizeof(exitmsg), format, param);
+
+	/* Add the prefix depending on session/auth state */
 	if (!sessinitdone) {
-		snprintf(fmtbuf, sizeof(fmtbuf), "Exited: %s",
-				format);
+		snprintf(fullmsg, sizeof(fullmsg), "Exited: %s", exitmsg);
 	} else {
-		snprintf(fmtbuf, sizeof(fmtbuf), 
+		snprintf(fullmsg, sizeof(fullmsg), 
 				"Connection to %s@%s:%s exited: %s", 
 				cli_opts.username, cli_opts.remotehost, 
-				cli_opts.remoteport, format);
+				cli_opts.remoteport, exitmsg);
 	}
-
-	/* Arguments to the exit printout may be unsafe to use after session_cleanup() */
-	vsnprintf(exitmsg, sizeof(exitmsg), fmtbuf, param);
 
 	/* Do the cleanup first, since then the terminal will be reset */
 	session_cleanup();
 	/* Avoid printing onwards from terminal cruft */
 	fprintf(stderr, "\n");
 
-	dropbear_log(LOG_INFO, "%s", exitmsg);;
+	dropbear_log(LOG_INFO, "%s", fullmsg);
 	exit(exitcode);
 }
 
@@ -150,7 +151,7 @@ static void exec_proxy_cmd(void *user_data_cmd) {
 	dropbear_exit("Failed to run '%s'\n", cmd);
 }
 
-#ifdef ENABLE_CLI_PROXYCMD
+#if DROPBEAR_CLI_PROXYCMD
 static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
 	char * ex_cmd = NULL;
 	size_t ex_cmdlen;
@@ -175,4 +176,4 @@ static void kill_proxy_sighandler(int UNUSED(signo)) {
 	kill_proxy_command();
 	_exit(1);
 }
-#endif /* ENABLE_CLI_PROXYCMD */
+#endif /* DROPBEAR_CLI_PROXYCMD */
