@@ -413,23 +413,43 @@ dnl Added from OpenSSH 3.6.1p2's configure.ac
 dnl allow user to disable some login recording features
 AC_ARG_ENABLE(lastlog,
 	[  --disable-lastlog       Disable use of lastlog even if detected [no]],
-	[ AC_DEFINE(DISABLE_LASTLOG,,Disable use of lastlog()) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_LASTLOG,,Disable use of lastlog())
+		fi
+	]
 )
 AC_ARG_ENABLE(utmp,
 	[  --disable-utmp          Disable use of utmp even if detected [no]],
-	[ AC_DEFINE(DISABLE_UTMP,,Disable use of utmp) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_UTMP,,Disable use of utmp)
+		fi
+	]
 )
 AC_ARG_ENABLE(utmpx,
 	[  --disable-utmpx         Disable use of utmpx even if detected [no]],
-	[ AC_DEFINE(DISABLE_UTMPX,,Disable use of utmpx) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_UTMPX,,Disable use of utmpx)
+		fi
+	]
 )
 AC_ARG_ENABLE(wtmp,
 	[  --disable-wtmp          Disable use of wtmp even if detected [no]],
-	[ AC_DEFINE(DISABLE_WTMP,,Disable use of wtmp) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_WTMP,,Disable use of wtmp)
+		fi
+	]
 )
 AC_ARG_ENABLE(wtmpx,
 	[  --disable-wtmpx         Disable use of wtmpx even if detected [no]],
-	[ AC_DEFINE(DISABLE_WTMPX,,Disable use of wtmpx) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_WTMPX,,Disable use of wtmpx)
+		fi
+	]
 )
 AC_ARG_ENABLE(loginfunc,
 	[  --disable-loginfunc     Disable use of login() etc. [no]],
@@ -438,11 +458,19 @@ AC_ARG_ENABLE(loginfunc,
 )
 AC_ARG_ENABLE(pututline,
 	[  --disable-pututline     Disable use of pututline() etc. ([uw]tmp) [no]],
-	[ AC_DEFINE(DISABLE_PUTUTLINE,,Disable use of pututline()) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_PUTUTLINE,,Disable use of pututline())
+		fi
+	]
 )
 AC_ARG_ENABLE(pututxline,
 	[  --disable-pututxline    Disable use of pututxline() etc. ([uw]tmpx) [no]],
-	[ AC_DEFINE(DISABLE_PUTUTXLINE,,Disable use of pututxline()) ]
+	[
+		if test "x$enableval" = "xno" ; then
+			AC_DEFINE(DISABLE_PUTUTXLINE,,Disable use of pututxline())
+		fi
+	]
 )
 AC_ARG_WITH(lastlog,
   [  --with-lastlog=FILE|DIR specify lastlog location [common locations]],
