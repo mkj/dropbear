@@ -182,7 +182,7 @@ static double time_since_start()
 void dropbear_trace(const char* format, ...) {
 	va_list param;
 
-	if (!ses.debug_trace) {
+	if (!debug_trace) {
 		return;
 	}
 
