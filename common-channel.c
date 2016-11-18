@@ -32,7 +32,6 @@
 #include "circbuffer.h"
 #include "dbutil.h"
 #include "channel.h"
-#include "ssh.h"
 #include "listener.h"
 #include "runopts.h"
 #include "netio.h"
