@@ -136,6 +136,8 @@ int main(int argc, char ** argv) {
 	int i;
 	char ** next = 0;
 	char * filename = NULL;
+	char * filename_bak = NULL;
+	char * filename_bak_ext = ".bak";
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;
 	char * sizetext = NULL;
@@ -241,10 +243,24 @@ int main(int argc, char ** argv) {
 	}
 
 	fprintf(stderr, "Generating key, this may take a while...\n");
-	if (signkey_generate(keytype, bits, filename) == DROPBEAR_FAILURE)
+
+	/* Let's do this atomically */
+	filename_bak = malloc(strlen(filename) + strlen(filename_bak_ext) + 1);
+	if (filename_bak == NULL)
+		dropbear_exit("Failed to allocate backup filename string.\n");
+	strcpy(filename_bak, filename);
+	strcat(filename_bak, filename_bak_ext);
+	if (signkey_generate(keytype, bits, filename_bak) == DROPBEAR_FAILURE)
 	{
+		free(filename_bak);
 		dropbear_exit("Failed to generate key.\n");
 	}
+	if (rename(filename_bak, filename) != 0)
+	{
+		free(filename_bak);
+		dropbear_exit("Failed to rename generated key.\n");
+	}
+	free(filename_bak);
 
 	printpubfile(filename);
 
