@@ -120,6 +120,7 @@ void svr_getopts(int argc, char ** argv) {
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
 	char* keyfile = NULL;
+	char* authkeysfile = NULL;
 	char c;
 
 
@@ -137,6 +138,8 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.hostkey = NULL;
 	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = DROPBEAR_PIDFILE;
+	svr_opts.authkeysfile = NULL;
+
 #if DROPBEAR_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -253,6 +256,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
+				case 'U':
+					next = &authkeysfile;
+					break;
 #if DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -294,6 +300,10 @@ void svr_getopts(int argc, char ** argv) {
 			if (keyfile) {
 				addhostkey(keyfile);
 				keyfile = NULL;
+			}
+			if (authkeysfile) {
+				svr_opts.authkeysfile = m_strdup(authkeysfile);
+				authkeysfile = NULL;
 			}
 		}
 	}
