@@ -256,6 +256,9 @@ Homedir is prepended unless path begins with / */
 /* -T server option overrides */
 #define MAX_AUTH_TRIES 10
 
+/* Delay introduced before closing an unauthenticated session (seconds) */
+#define UNAUTH_CLOSE_DELAY 30
+
 /* The default file to store the daemon's process ID, for shutdown
    scripts etc. This can be overridden with the -P flag */
 #define DROPBEAR_PIDFILE "/var/run/dropbear.pid"

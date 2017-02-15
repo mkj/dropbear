@@ -215,6 +215,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	char fullmsg[300];
 	char fromaddr[60];
 	int i;
+	int add_delay = 0;
 
 #if DROPBEAR_PLUGIN
         if ((ses.plugin_session != NULL)) {
@@ -247,12 +248,32 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		snprintf(fullmsg, sizeof(fullmsg), 
 				"Exit before auth%s: (user '%s', %u fails): %s",
 				fromaddr, ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
+		add_delay = 1;
 	} else {
 		/* before userauth */
 		snprintf(fullmsg, sizeof(fullmsg), "Exit before auth%s: %s", fromaddr, exitmsg);
+		add_delay = 1;
 	}
 
 	dropbear_log(LOG_INFO, "%s", fullmsg);
+
+	/* To make it harder for attackers, introduce a delay to keep an
+	 * unauthenticated session open a bit longer, thus blocking a connection
+	 * slot until after the delay. Without this, while there is a limit on
+	 * the amount of attempts an attacker can make at the same time
+	 * (MAX_UNAUTH_PER_IP), the time taken by dropbear to handle one attempt
+	 * is still short and thus for each of the allowed parallel attempts
+	 * many attempts can be chained one after the other. The attempt rate is
+	 * then:
+	 *     "MAX_UNAUTH_PER_IP / <process time of one attempt>".
+	 * With the delay, this rate becomes:
+	 *     "MAX_UNAUTH_PER_IP / UNAUTH_CLOSE_DELAY".
+	 */
+	if ((add_delay != 0) && (UNAUTH_CLOSE_DELAY > 0)) {
+		TRACE(("svr_dropbear_exit: start delay of %d seconds", UNAUTH_CLOSE_DELAY));
+		sleep(UNAUTH_CLOSE_DELAY);
+		TRACE(("svr_dropbear_exit: end delay of %d seconds", UNAUTH_CLOSE_DELAY));
+	}
 
 #if DROPBEAR_VFORK
 	/* For uclinux only the main server process should cleanup - we don't want
