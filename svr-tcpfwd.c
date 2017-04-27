@@ -47,7 +47,7 @@ void recv_msg_global_request_remotetcp() {
 #endif /* !DROPBEAR_SVR_REMOTETCPFWD */
 
 static int svr_cancelremotetcp(void);
-static int svr_remotetcpreq(void);
+static int svr_remotetcpreq(int *allocated_listen_port);
 static int newtcpdirect(struct Channel * channel);
 
 #if DROPBEAR_SVR_REMOTETCPFWD
@@ -86,7 +86,16 @@ void recv_msg_global_request_remotetcp() {
 	}
 
 	if (strcmp("tcpip-forward", reqname) == 0) {
-		ret = svr_remotetcpreq();
+		int allocated_listen_port;
+		ret = svr_remotetcpreq(&allocated_listen_port);
+		/* client expects-port-number-to-make-use-of-server-allocated-ports */
+		if (DROPBEAR_SUCCESS == ret) {
+			CHECKCLEARTOWRITE();
+			buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
+			buf_putint(ses.writepayload, allocated_listen_port);
+			encrypt_packet();
+			wantreply = 0; //so out does not do so
+	  }
 	} else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
 		ret = svr_cancelremotetcp();
 	} else {
@@ -152,7 +161,7 @@ out:
 	return ret;
 }
 
-static int svr_remotetcpreq() {
+static int svr_remotetcpreq(int *allocated_listen_port) {
 
 	int ret = DROPBEAR_FAILURE;
 	char * request_addr = NULL;
@@ -170,19 +179,16 @@ static int svr_remotetcpreq() {
 
 	port = buf_getint(ses.payload);
 
-	if (port == 0) {
-		dropbear_log(LOG_INFO, "Server chosen tcpfwd ports are unsupported");
-		goto out;
-	}
+	if (port != 0) {
+		if (port < 1 || port > 65535) {
+			TRACE(("invalid port: %d", port))
+			goto out;
+		}
 
-	if (port < 1 || port > 65535) {
-		TRACE(("invalid port: %d", port))
-		goto out;
-	}
-
-	if (!ses.allowprivport && port < IPPORT_RESERVED) {
-		TRACE(("can't assign port < 1024 for non-root"))
-		goto out;
+		if (!ses.allowprivport && port < IPPORT_RESERVED) {
+			TRACE(("can't assign port < 1024 for non-root"))
+			goto out;
+		}
 	}
 
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
@@ -210,8 +216,16 @@ out:
 		 * has to remember it if it's to be cancelled */
 		m_free(request_addr);
 		m_free(tcpinfo);
+	} else {
+		tcpinfo->listenport = get_sock_port(ses.listeners[0]->socks[0], 1);
+		*allocated_listen_port = tcpinfo->listenport;
+		dropbear_log(LOG_INFO, "tcpip-forward %s:%d '%s'", 
+			((NULL == tcpinfo->listenaddr)?"localhost":tcpinfo->listenaddr), 
+			tcpinfo->listenport, ses.authstate.pw_name);
 	}
+
 	TRACE(("leave remotetcpreq"))
+
 	return ret;
 }
 
