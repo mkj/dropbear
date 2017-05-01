@@ -92,6 +92,7 @@ static void printhelp() {
 					"-c <cipher list> Specify preferred ciphers ('-c help' to list options)\n"
 					"-m <MAC list> Specify preferred MACs for packet verification (or '-m help')\n"
 #endif
+					"-b    bind_address\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
@@ -125,7 +126,6 @@ void cli_getopts(int argc, char ** argv) {
 		OPT_OTHER
 	} opt;
 	unsigned int cmdlen;
-	char* dummy = NULL; /* Not used for anything real */
 
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
@@ -166,6 +166,7 @@ void cli_getopts(int argc, char ** argv) {
 #if DROPBEAR_CLI_PROXYCMD
 	cli_opts.proxycmd = NULL;
 #endif
+	cli_opts.bind_address = NULL;
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_ON;
 #endif
@@ -314,8 +315,8 @@ void cli_getopts(int argc, char ** argv) {
 					exit(EXIT_SUCCESS);
 					break;
 				case 'b':
-					next = &dummy;
-					/* FALLTHROUGH */
+					next = &cli_opts.bind_address;
+					break;
 				default:
 					fprintf(stderr,
 						"WARNING: Ignoring unknown option -%c\n", c);

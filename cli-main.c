@@ -66,8 +66,8 @@ int main(int argc, char ** argv) {
 	}
 #endif
 
-	TRACE(("user='%s' host='%s' port='%s'", cli_opts.username,
-				cli_opts.remotehost, cli_opts.remoteport))
+	TRACE(("user='%s' host='%s' port='%s' bind_address='%s'", cli_opts.username,
+				cli_opts.remotehost, cli_opts.remoteport, cli_opts.bind_address))
 
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
 		dropbear_exit("signal() error");
@@ -86,7 +86,7 @@ int main(int argc, char ** argv) {
 	} else
 #endif
 	{
-		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, &ses);
+		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport, cli_connected, &ses, cli_opts.bind_address);
 		sock_in = sock_out = -1;
 	}
 
