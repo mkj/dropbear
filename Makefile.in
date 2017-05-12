@@ -223,3 +223,14 @@ distclean: clean tidy
 
 tidy:
 	-rm -f *~ *.gcov */*~
+
+# run this manually for fuzzing. hostkeys.c is checked in.
+hostkeys:
+	dropbearkey -t rsa -f keyr
+	dropbearkey -t dss -f keyd
+	dropbearkey -t ecdsa -size 256 -f keye
+	echo > hostkeys.c
+	/usr/bin/xxd -i -a keyr >> hostkeys.c
+	/usr/bin/xxd -i -a keye >> hostkeys.c
+	/usr/bin/xxd -i -a keyd >> hostkeys.c
+

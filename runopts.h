@@ -58,6 +58,29 @@ typedef struct runopts {
 	char *mac_list;
 #endif
 
+#ifdef DROPBEAR_FUZZ
+	struct {
+		int fuzzing;
+
+		// to record an unencrypted stream
+		FILE* recordf;
+
+		// fuzzing input
+		buffer *input;
+
+		// dropbear_exit() jumps back
+		sigjmp_buf jmp;
+
+		uid_t pw_uid;
+		gid_t pw_gid;
+		char* pw_name;
+		char* pw_dir;
+		char* pw_shell;
+		char* pw_passwd;
+
+	} fuzz;
+#endif
+
 } runopts;
 
 extern runopts opts;

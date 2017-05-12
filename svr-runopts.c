@@ -346,6 +346,19 @@ void svr_getopts(int argc, char ** argv) {
 		}
 		opts.idle_timeout_secs = val;
 	}
+
+#ifdef DROPBEAR_FUZZ
+	if (opts.fuzz.fuzzing) {
+		struct passwd *pw;
+		/* user lookups might be slow, cache it */
+		pw = getpwuid(getuid());
+		dropbear_assert(pw);
+		opts.fuzz.pw_name = m_strdup(pw->pw_name);
+		opts.fuzz.pw_dir = m_strdup(pw->pw_dir);
+		opts.fuzz.pw_shell = m_strdup(pw->pw_shell);
+		opts.fuzz.pw_passwd = m_strdup("!!zzznope");
+	}
+#endif
 }
 
 static void addportandaddress(const char* spec) {
@@ -475,10 +488,56 @@ static void addhostkey(const char *keyfile) {
 	svr_opts.num_hostkey_files++;
 }
 
+#ifdef DROPBEAR_FUZZ
+static void load_fixed_hostkeys() {
+#include "hostkeys.c"	
+
+	buffer *b = buf_new(3000);
+	enum signkey_type type;
+
+	TRACE(("load fixed hostkeys"))
+
+	svr_opts.hostkey = new_sign_key();
+
+	buf_setlen(b, 0);
+	buf_putbytes(b, keyr, keyr_len);
+	buf_setpos(b, 0);
+	type = DROPBEAR_SIGNKEY_RSA;
+	if (buf_get_priv_key(b, svr_opts.hostkey, &type) == DROPBEAR_FAILURE) {
+		dropbear_exit("failed fixed rsa hostkey");
+	}
+
+	buf_setlen(b, 0);
+	buf_putbytes(b, keyd, keyd_len);
+	buf_setpos(b, 0);
+	type = DROPBEAR_SIGNKEY_DSS;
+	if (buf_get_priv_key(b, svr_opts.hostkey, &type) == DROPBEAR_FAILURE) {
+		dropbear_exit("failed fixed dss hostkey");
+	}
+
+	buf_setlen(b, 0);
+	buf_putbytes(b, keye, keye_len);
+	buf_setpos(b, 0);
+	type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
+	if (buf_get_priv_key(b, svr_opts.hostkey, &type) == DROPBEAR_FAILURE) {
+		dropbear_exit("failed fixed ecdsa hostkey");
+	}
+
+    buf_free(b);
+}
+#endif // DROPBEAR_FUZZ
+
 void load_all_hostkeys() {
 	int i;
 	int disable_unset_keys = 1;
 	int any_keys = 0;
+
+#ifdef DROPBEAR_FUZZ
+	if (opts.fuzz.fuzzing) {
+		load_fixed_hostkeys();
+		return;
+	}
+#endif
 
 	svr_opts.hostkey = new_sign_key();
 

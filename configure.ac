@@ -217,6 +217,15 @@ AC_ARG_ENABLE(shadow,
 		AC_MSG_NOTICE(Using shadow passwords if available)
 	]
 )
+
+AC_ARG_ENABLE(fuzz,
+	[  --enable-fuzz           Build fuzzing],
+	[
+		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
+		AC_MSG_NOTICE(Enabling fuzzing)
+	]
+)
+
 			
 
 # Checks for header files.

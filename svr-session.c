@@ -191,6 +191,12 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		m_free(svr_opts.ports[i]);
 	}
 
+#ifdef DROPBEAR_FUZZ
+    if (opts.fuzz.fuzzing) {
+        longjmp(opts.fuzz.jmp, 1);
+    }
+#endif
+    
 	exit(exitcode);
 
 }
