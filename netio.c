@@ -485,14 +485,36 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 	if (local_host || local_port) {
 		addrlen = sizeof(addr);
 		if (getsockname(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
-			dropbear_exit("Failed socket address: %s", strerror(errno));
+			if (errno == ENOTSOCK) {
+				// FUZZ
+				if (local_host) {
+					*local_host = m_strdup("notsocket");
+				}
+				if (local_port) {
+					*local_port = m_strdup("999");
+				}
+				return;
+			} else {
+				dropbear_exit("Failed socket address: %s", strerror(errno));
+			}
 		}
 		getaddrstring(&addr, local_host, local_port, host_lookup);		
 	}
 	if (remote_host || remote_port) {
 		addrlen = sizeof(addr);
 		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
-			dropbear_exit("Failed socket address: %s", strerror(errno));
+			if (errno == ENOTSOCK) {
+				// FUZZ
+				if (remote_host) {
+					*remote_host = m_strdup("notsocket");
+				}
+				if (remote_port) {
+					*remote_port = m_strdup("999");
+				}
+				return;
+			} else {
+				dropbear_exit("Failed socket address: %s", strerror(errno));
+			}
 		}
 		getaddrstring(&addr, remote_host, remote_port, host_lookup);		
 	}
@@ -546,6 +568,18 @@ void getaddrstring(struct sockaddr_storage* addr,
 			return;
 		} else {
 			/* if we can't do a numeric lookup, something's gone terribly wrong */
+			if (ret == EAI_FAMILY) {
+				// FUZZ
+				// Fake it for non-socket input
+				if (ret_host) {
+					*ret_host = m_strdup("0.0.0.0");
+				}
+				if (ret_port)
+				{
+					*ret_port = m_strdup("999");
+				}
+				return;
+			}
 			dropbear_exit("Failed lookup: %s", gai_strerror(ret));
 		}
 	}
