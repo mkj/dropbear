@@ -359,7 +359,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		/* We delay for 300ms +- 50ms */
 		delay = 250000 + (delay % 100000);
 #ifndef DROPBEAR_FUZZ
-		if (!opts.fuzz.fuzzing) {
+		if (!fuzz.fuzzing) {
 			usleep(delay);
 		}
 #endif

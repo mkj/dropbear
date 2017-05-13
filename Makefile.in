@@ -30,7 +30,7 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
-		gensignkey.o gendss.o genrsa.o
+		gensignkey.o gendss.o genrsa.o fuzz-common.o 
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
@@ -224,8 +224,27 @@ distclean: clean tidy
 tidy:
 	-rm -f *~ *.gcov */*~
 
-# run this manually for fuzzing. hostkeys.c is checked in.
-hostkeys:
+## Fuzzing targets
+
+# exclude svr-main.o to avoid duplicate main
+svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
+CLANG=clang
+
+# fuzzers that don't use libfuzzer, just a standalone harness that feeds inputs
+fuzzstandalone: LIBS+=fuzz-harness.o
+fuzzstandalone: fuzz-harness.o fuzzers
+
+# build all the fuzzers. This will require fail to link unless built with
+# make fuzzers LIBS=-lFuzzer.a 
+# or similar - the library provides main().
+fuzzers: fuzzer-preauth
+
+fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+	$(CC) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
+
+# run this to update hardcoded hostkeys for for fuzzing. 
+# hostkeys.c is checked in to hg.
+fuzz-hostkeys:
 	dropbearkey -t rsa -f keyr
 	dropbearkey -t dss -f keyd
 	dropbearkey -t ecdsa -size 256 -f keye

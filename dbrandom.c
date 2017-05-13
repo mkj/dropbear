@@ -28,6 +28,7 @@
 #include "bignum.h"
 #include "dbrandom.h"
 #include "runopts.h"
+#include "fuzz.h"
 
 
 /* this is used to generate unique output from the same hashpool */
@@ -147,7 +148,7 @@ void addrandom(unsigned char * buf, unsigned int len)
 	hash_state hs;
 
 #ifdef DROPBEAR_FUZZ
-	if (opts.fuzz.fuzzing || opts.fuzz.recordf) {
+	if (fuzz.fuzzing || fuzz.recordf) {
 		return;
 	}
 #endif
@@ -165,7 +166,7 @@ void addrandom(unsigned char * buf, unsigned int len)
 static void write_urandom()
 {
 #ifdef DROPBEAR_FUZZ
-	if (opts.fuzz.fuzzing || opts.fuzz.recordf) {
+	if (fuzz.fuzzing || fuzz.recordf) {
 		return;
 	}
 #endif
@@ -203,7 +204,7 @@ void seedrandom() {
 	clock_t clockval;
 
 #ifdef DROPBEAR_FUZZ
-	if (opts.fuzz.fuzzing || opts.fuzz.recordf) {
+	if (fuzz.fuzzing || fuzz.recordf) {
 		seedfuzz();
 		return;
 	}

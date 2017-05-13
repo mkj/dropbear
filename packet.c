@@ -36,6 +36,7 @@
 #include "channel.h"
 #include "netio.h"
 #include "runopts.h"
+#include "fuzz.h"
 
 static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -78,7 +79,7 @@ void write_packet() {
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
 #ifdef DROPBEAR_FUZZ
-	if (opts.fuzz.fuzzing) {
+	if (fuzz.fuzzing) {
 		// pretend to write one packet at a time
 		// TODO(fuzz): randomise amount written based on the fuzz input
 		written = iov[0].iov_len;
