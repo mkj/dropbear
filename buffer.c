@@ -109,6 +109,7 @@ void buf_setlen(buffer* buf, unsigned int len) {
 		dropbear_exit("Bad buf_setlen");
 	}
 	buf->len = len;
+	buf->pos = 0;
 }
 
 /* Increment the length of the buffer */
