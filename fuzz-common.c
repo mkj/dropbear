@@ -13,6 +13,7 @@ static void load_fixed_hostkeys(void);
 
 static void common_setup_fuzzer(void) {
     fuzz.fuzzing = 1;
+    crypto_init();
 }
 
 void svr_setup_fuzzer(void) {
