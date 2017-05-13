@@ -226,18 +226,23 @@ tidy:
 
 ## Fuzzing targets
 
-# exclude svr-main.o to avoid duplicate main
-svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
-CLANG=clang
+# list of fuzz targets
+FUZZ_TARGETS=fuzzer-preauth
+
+list-fuzz-targets:
+	@echo $(FUZZ_TARGETS)
 
 # fuzzers that don't use libfuzzer, just a standalone harness that feeds inputs
 fuzzstandalone: FUZZLIB=fuzz-harness.o
-fuzzstandalone: fuzz-harness.o fuzzers
+fuzzstandalone: fuzz-harness.o fuzz-targets
+
+# exclude svr-main.o to avoid duplicate main
+svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 
 # build all the fuzzers. This will require fail to link unless built with
 # make fuzzers LIBS=-lFuzzer.a 
 # or similar - the library provides main().
-fuzzers: fuzzer-preauth
+fuzz-targets: $(FUZZ_TARGETS)
 
 fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
