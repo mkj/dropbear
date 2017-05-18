@@ -17,7 +17,7 @@
   This information disclosure is to an already authenticated user.
   Thanks to Jann Horn of Google Project Zero for reporting this.
 
-- Call fsync() to ensure that new hostkeys (dropbear -R) are flushed to disk
+- Generate hostkeys with dropbearkey atomically and flush to disk with fsync
   Thanks to Andrei Gherzan for a patch
 
 - Fix out of tree builds with bundled libtom
