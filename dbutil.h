@@ -45,7 +45,7 @@ void dropbear_log(int priority, const char* format, ...) ATTRIB_PRINTF(2,3) ;
 
 void fail_assert(const char* expr, const char* file, int line) ATTRIB_NORETURN;
 
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 void dropbear_trace(const char* format, ...) ATTRIB_PRINTF(1,2);
 void dropbear_trace2(const char* format, ...) ATTRIB_PRINTF(1,2);
 void printhex(const char * label, const unsigned char * buf, int len);
