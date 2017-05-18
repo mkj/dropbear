@@ -6,6 +6,8 @@
 #include "fuzz.h"
 #include "dbutil.h"
 #include "runopts.h"
+#include "crypto_desc.h"
+#include "session.h"
 
 struct dropbear_fuzz_options fuzz;
 
@@ -20,6 +22,9 @@ void svr_setup_fuzzer(void) {
     struct passwd *pw;
 
     common_setup_fuzzer();
+    
+    _dropbear_exit = svr_dropbear_exit;
+    _dropbear_log = svr_dropbear_log;
 
     char *argv[] = { 
         "-E", 
