@@ -63,7 +63,7 @@ static const packettype svr_packettypes[] = {
 	{SSH_MSG_CHANNEL_FAILURE, ignore_recv_response},
 	{SSH_MSG_REQUEST_FAILURE, ignore_recv_response}, /* for keepalive */
 	{SSH_MSG_REQUEST_SUCCESS, ignore_recv_response}, /* client */
-#ifdef USING_LISTENERS
+#if DROPBEAR_LISTENERS
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 #endif
@@ -72,7 +72,7 @@ static const packettype svr_packettypes[] = {
 
 static const struct ChanType *svr_chantypes[] = {
 	&svrchansess,
-#ifdef ENABLE_SVR_LOCALTCPFWD
+#if DROPBEAR_SVR_LOCALTCPFWD
 	&svr_chan_tcpdirect,
 #endif
 	NULL /* Null termination is mandatory. */
@@ -97,7 +97,7 @@ void svr_session(int sock, int childpipe) {
 
 	/* Initialise server specific parts of the session */
 	svr_ses.childpipe = childpipe;
-#ifdef USE_VFORK
+#if DROPBEAR_VFORK
 	svr_ses.server_pid = getpid();
 #endif
 	svr_authinitialise();
@@ -173,7 +173,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	dropbear_log(LOG_INFO, "%s", fullmsg);
 
-#ifdef USE_VFORK
+#if DROPBEAR_VFORK
 	/* For uclinux only the main server process should cleanup - we don't want
 	 * forked children doing that */
 	if (svr_ses.server_pid == getpid())
@@ -222,7 +222,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 
 	/* if we are using DEBUG_TRACE, we want to print to stderr even if
 	 * syslog is used, so it is included in error reports */
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 	havetrace = debug_trace;
 #endif
 

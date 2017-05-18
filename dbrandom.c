@@ -61,7 +61,7 @@ process_file(hash_state *hs, const char *filename,
 	unsigned int readcount;
 	int ret = DROPBEAR_FAILURE;
 
-#ifdef DROPBEAR_PRNGD_SOCKET
+#if DROPBEAR_PRNGD_SOCKET
 	if (prngd)
 	{
 		readfd = connect_unix(filename);
@@ -109,7 +109,7 @@ process_file(hash_state *hs, const char *filename,
 			wantread = MIN(sizeof(readbuf), len-readcount);
 		}
 
-#ifdef DROPBEAR_PRNGD_SOCKET
+#if DROPBEAR_PRNGD_SOCKET
 		if (prngd)
 		{
 			char egdcmd[2];
@@ -216,7 +216,7 @@ void seedrandom() {
 	/* existing state */
 	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
 
-#ifdef DROPBEAR_PRNGD_SOCKET
+#if DROPBEAR_PRNGD_SOCKET
 	if (process_file(&hs, DROPBEAR_PRNGD_SOCKET, INIT_SEED_SIZE, 1) 
 			!= DROPBEAR_SUCCESS) {
 		dropbear_exit("Failure reading random device %s", 

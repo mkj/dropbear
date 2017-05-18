@@ -33,7 +33,7 @@
 #include "listener.h"
 #include "runopts.h"
 
-#ifdef DROPBEAR_TCP_ACCEPT
+#if DROPBEAR_TCP_ACCEPT
 
 static void cleanup_tcp(struct Listener *listener) {
 

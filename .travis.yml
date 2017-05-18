@@ -41,7 +41,9 @@ install:
 script:
   - autoconf && autoheader && ./configure "$BUNDLEDLIBTOM" CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS" --prefix="$HOME/inst"
   - if [ "$NOWRITEV" = "1" ]; then sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
-  - make -j3 install
+  - make -j3 
+  # avoid concurrent install, osx/freebsd is racey (https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=208093)
+  - make install 
 
 after_success:
   - ~/inst/bin/dropbearkey -t rsa -f testrsa

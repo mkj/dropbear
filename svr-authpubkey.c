@@ -65,7 +65,7 @@
 #include "packet.h"
 #include "algo.h"
 
-#ifdef ENABLE_SVR_PUBKEY_AUTH
+#if DROPBEAR_SVR_PUBKEY_AUTH
 
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
@@ -201,6 +201,8 @@ static int checkpubkey(char* algo, unsigned int algolen,
 	unsigned int len, pos;
 	buffer * options_buf = NULL;
 	int line_num;
+	uid_t origuid;
+	gid_t origgid;
 
 	TRACE(("enter checkpubkey"))
 
@@ -227,8 +229,21 @@ static int checkpubkey(char* algo, unsigned int algolen,
 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
 				ses.authstate.pw_dir);
 
-	/* open the file */
+	/* open the file as the authenticating user. */
+	origuid = getuid();
+	origgid = getgid();
+	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+		(seteuid(ses.authstate.pw_uid)) < 0) {
+		dropbear_exit("Failed to set euid");
+	}
+
 	authfile = fopen(filename, "r");
+
+	if ((seteuid(origuid)) < 0 ||
+		(setegid(origgid)) < 0) {
+		dropbear_exit("Failed to revert euid");
+	}
+
 	if (authfile == NULL) {
 		goto out;
 	}

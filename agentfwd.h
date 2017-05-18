@@ -30,7 +30,7 @@
 #include "auth.h"
 #include "list.h"
 
-#ifdef ENABLE_CLI_AGENTFWD
+#if DROPBEAR_CLI_AGENTFWD
 
 /* An agent reply can be reasonably large, as it can
  * contain a list of all public keys held by the agent.
@@ -50,14 +50,14 @@ void cli_setup_agent(struct Channel *channel);
 
 extern const struct ChanType cli_chan_agent;
 
-#endif /* ENABLE_CLI_AGENTFWD */
+#endif /* DROPBEAR_CLI_AGENTFWD */
 
-#ifdef ENABLE_SVR_AGENTFWD
+#if DROPBEAR_SVR_AGENTFWD
 
 int svr_agentreq(struct ChanSess * chansess);
 void svr_agentcleanup(struct ChanSess * chansess);
 void svr_agentset(struct ChanSess *chansess);
 
-#endif /* ENABLE_SVR_AGENTFWD */
+#endif /* DROPBEAR_SVR_AGENTFWD */
 
 #endif /* DROPBEAR_AGENTFWD_H_ */

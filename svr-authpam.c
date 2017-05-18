@@ -31,7 +31,7 @@
 #include "dbutil.h"
 #include "auth.h"
 
-#ifdef ENABLE_SVR_PAM_AUTH
+#if DROPBEAR_SVR_PAM_AUTH
 
 #if defined(HAVE_SECURITY_PAM_APPL_H)
 #include <security/pam_appl.h>
@@ -270,4 +270,4 @@ cleanup:
 	}
 }
 
-#endif /* ENABLE_SVR_PAM_AUTH */
+#endif /* DROPBEAR_SVR_PAM_AUTH */

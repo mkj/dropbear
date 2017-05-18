@@ -54,7 +54,7 @@ int exitflag = 0; /* GLOBAL */
 void common_session_init(int sock_in, int sock_out) {
 	time_t now;
 
-#ifdef DEBUG_TRACE
+#if DEBUG_TRACE
 	debug_start_net();
 #endif
 
@@ -295,7 +295,7 @@ void session_cleanup() {
 	}
 
 	/* After these are freed most functions will fail */
-#ifdef DROPBEAR_CLEANUP
+#if DROPBEAR_CLEANUP
 	/* listeners call cleanup functions, this should occur before
 	other session state is freed. */
 	remove_all_listeners();
