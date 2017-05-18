@@ -223,10 +223,14 @@ AC_ARG_ENABLE(fuzz,
 	[
 		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
 		AC_MSG_NOTICE(Enabling fuzzing)
+		DROPBEAR_FUZZ=1
+	],
+	[
+		DROPBEAR_FUZZ=0
 	]
-)
 
-			
+)
+AC_SUBST(DROPBEAR_FUZZ)
 
 # Checks for header files.
 AC_HEADER_STDC

@@ -6,7 +6,11 @@
 
 #ifdef DROPBEAR_FUZZ
 
+// once per process
 void svr_setup_fuzzer(void);
+
+// once per input. returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
+int fuzzer_set_input(const uint8_t *Data, size_t Size);
 
 struct dropbear_fuzz_options {
     int fuzzing;
@@ -15,7 +19,7 @@ struct dropbear_fuzz_options {
     FILE* recordf;
 
     // fuzzing input
-    buffer input;
+    buffer *input;
 
     // dropbear_exit() jumps back
     sigjmp_buf jmp;

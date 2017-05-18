@@ -34,7 +34,7 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
-		gensignkey.o gendss.o genrsa.o fuzz-common.o 
+		gensignkey.o gendss.o genrsa.o 
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
@@ -56,6 +56,10 @@ KEYOBJS=dropbearkey.o
 CONVERTOBJS=dropbearconvert.o keyimport.o
 
 SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
+
+ifeq (@DROPBEAR_FUZZ@, 1)
+	COMMONOBJS += fuzz-common.o  fuzz-wrapfd.o
+endif
 
 HEADERS=options.h dbutil.h session.h packet.h algo.h ssh.h buffer.h kex.h \
 		dss.h bignum.h signkey.h rsa.h dbrandom.h service.h auth.h \
@@ -270,3 +274,4 @@ fuzz-hostkeys:
 	/usr/bin/xxd -i -a keyr >> hostkeys.c
 	/usr/bin/xxd -i -a keye >> hostkeys.c
 	/usr/bin/xxd -i -a keyd >> hostkeys.c
+
