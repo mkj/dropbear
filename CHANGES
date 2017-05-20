@@ -5,6 +5,7 @@
   dropbear is running with -a (Allow connections to forwarded ports from any host)
   This could potentially allow arbitrary code execution as root by an authenticated user.
   Affects versions 2013.56 to 2016.74. Thanks to Mark Shepard for reporting the crash.
+  CVE-2017-9078 https://secure.ucc.asn.au/hg/dropbear/rev/c8114a48837c
 
 - Security: Fix information disclosure with ~/.ssh/authorized_keys symlink.
   Dropbear parsed authorized_keys as root, even if it were a symlink. The fix
@@ -16,6 +17,7 @@
   contents of that file.
   This information disclosure is to an already authenticated user.
   Thanks to Jann Horn of Google Project Zero for reporting this.
+  CVE-2017-9079 https://secure.ucc.asn.au/hg/dropbear/rev/0d889b068123
 
 - Generate hostkeys with dropbearkey atomically and flush to disk with fsync
   Thanks to Andrei Gherzan for a patch
