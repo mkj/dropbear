@@ -36,7 +36,6 @@
 #include "channel.h"
 #include "netio.h"
 #include "runopts.h"
-#include "fuzz.h"
 
 static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -370,6 +369,17 @@ static int checkmac() {
 
 	buf_setpos(ses.readbuf, 0);
 	make_mac(ses.recvseq, &ses.keys->recv, ses.readbuf, contents_len, mac_bytes);
+
+#ifdef DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		// fail 1 in 1000 times to test error path
+		unsigned int value = *((unsigned int*)&mac_bytes);
+		if (value % 1000 == 0) {
+			return DROPBEAR_FAILURE;
+		}
+		return DROPBEAR_SUCCESS;
+	}
+#endif
 
 	/* compare the hash */
 	buf_setpos(ses.readbuf, contents_len);

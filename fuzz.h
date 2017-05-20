@@ -1,16 +1,29 @@
 #ifndef DROPBEAR_FUZZ_H
 #define DROPBEAR_FUZZ_H
 
+#include "config.h"
+#ifdef DROPBEAR_FUZZ
+
 #include "includes.h"
 #include "buffer.h"
-
-#ifdef DROPBEAR_FUZZ
+#include "algo.h"
+#include "fuzz-wrapfd.h"
 
 // once per process
 void svr_setup_fuzzer(void);
 
 // once per input. returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzzer_set_input(const uint8_t *Data, size_t Size);
+
+void fuzz_kex_fakealgos(void);
+
+// fake IO wrappers
+#ifndef FUZZ_SKIP_WRAP
+#define select(nfds, readfds, writefds, exceptfds, timeout) \
+        wrapfd_select(nfds, readfds, writefds, exceptfds, timeout)
+#define write(fd, buf, count) wrapfd_write(fd, buf, count)
+#define read(fd, buf, count) wrapfd_read(fd, buf, count)
+#endif // FUZZ_SKIP_WRAP
 
 struct dropbear_fuzz_options {
     int fuzzing;
@@ -20,6 +33,9 @@ struct dropbear_fuzz_options {
 
     // fuzzing input
     buffer *input;
+    struct dropbear_cipher recv_cipher;
+    struct dropbear_hash recv_mac;
+    int wrapfds;
 
     // dropbear_exit() jumps back
     sigjmp_buf jmp;
@@ -34,6 +50,6 @@ struct dropbear_fuzz_options {
 
 extern struct dropbear_fuzz_options fuzz;
 
-#endif
+#endif // DROPBEAR_FUZZ
 
 #endif /* DROPBEAR_FUZZ_H */

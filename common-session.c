@@ -161,7 +161,12 @@ void session_loop(void(*loophandler)()) {
 
 		/* We get woken up when signal handlers write to this pipe.
 		   SIGCHLD in svr-chansession is the only one currently. */
-		FD_SET(ses.signal_pipe[0], &readfd);
+#ifdef DROPBEAR_FUZZ
+		if (!fuzz.fuzzing) 
+#endif
+		{
+			FD_SET(ses.signal_pipe[0], &readfd);
+		}
 		ses.channel_signal_pending = 0;
 
 		/* set up for channels which can be read/written */

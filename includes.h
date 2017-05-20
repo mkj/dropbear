@@ -133,7 +133,6 @@
 #include <tommath.h>
 #endif
 
-
 #include "compat.h"
 
 #ifndef HAVE_U_INT8_T
@@ -163,6 +162,8 @@ typedef u_int32_t uint32_t;
 #endif
 
 #include "fake-rfc2553.h"
+
+#include "fuzz.h"
 
 #ifndef LOG_AUTHPRIV
 #define LOG_AUTHPRIV LOG_AUTH

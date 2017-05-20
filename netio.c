@@ -195,6 +195,7 @@ void set_connect_fds(fd_set *writefd) {
 		}
 		iter = next_iter;
 	}
+	TRACE(("leave set_connect_fds"))
 }
 
 void handle_connect_fds(fd_set *writefd) {

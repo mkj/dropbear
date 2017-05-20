@@ -8,6 +8,10 @@ int main(int argc, char ** argv) {
     int i;
     buffer *input = buf_new(100000);
 
+#if DROPBEAR_TRACE
+    debug_trace = 1;
+#endif
+
     for (i = 1; i < argc; i++) {
         char* fn = argv[i];
         buf_setlen(input, 0);

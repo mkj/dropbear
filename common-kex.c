@@ -944,14 +944,9 @@ static void read_kex_algos() {
 	}
 
 #ifdef DROPBEAR_FUZZ
-	ses.newkeys->recv.algo_crypt = &dropbear_nocipher;
-	ses.newkeys->trans.algo_crypt = &dropbear_nocipher;
-	ses.newkeys->recv.crypt_mode = &dropbear_mode_none;
-	ses.newkeys->trans.crypt_mode = &dropbear_mode_none;
-	ses.newkeys->recv.algo_mac = &dropbear_nohash;
-	ses.newkeys->trans.algo_mac = &dropbear_nohash;
-	ses.newkeys->recv.algo_comp = DROPBEAR_COMP_NONE;
-	ses.newkeys->trans.algo_comp = DROPBEAR_COMP_NONE;
+	if (fuzz.fuzzing) {
+		fuzz_kex_fakealgos();
+	}
 #endif
 
 	/* reserved for future extensions */

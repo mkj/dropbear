@@ -24,6 +24,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	if (setjmp(fuzz.jmp) == 0) {
 		svr_session(fakesock, fakesock);
 	} else {
+		TRACE(("dropbear_exit longjmped"))
 		// dropbear_exit jumped here
 	}
 

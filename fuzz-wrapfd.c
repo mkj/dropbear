@@ -1,5 +1,8 @@
+#define FUZZ_SKIP_WRAP 1
 #include "includes.h"
 #include "fuzz-wrapfd.h"
+
+#include "fuzz.h"
 
 static const int IOWRAP_MAXFD = FD_SETSIZE-1;
 static const int MAX_RANDOM_IN = 50000;
@@ -22,6 +25,7 @@ static unsigned int nused;
 static unsigned short rand_state[3];
 
 void wrapfd_setup(uint32_t seed) {
+	TRACE(("wrapfd_setup %x", seed))
 	nused = 0;
 	memset(wrap_fds, 0x0, sizeof(wrap_fds));
 
@@ -34,6 +38,8 @@ void wrapfd_add(int fd, buffer *buf, enum wrapfd_mode mode) {
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode == UNUSED);
 	assert(buf || mode == RANDOMIN);
+
+	TRACE(("wrapfd_add %d buf %p mode %d", fd, buf, mode))
 
 	wrap_fds[fd].mode = mode;
 	wrap_fds[fd].buf = buf;
@@ -48,6 +54,8 @@ void wrapfd_remove(int fd) {
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode != UNUSED);
 	wrap_fds[fd].mode = UNUSED;
+
+	TRACE(("wrapfd_remove %d", fd))
 
 	// remove from used list
 	for (i = 0, j = 0; i < nused; i++) {
@@ -64,7 +72,12 @@ int wrapfd_read(int fd, void *out, size_t count) {
 	size_t maxread;
 	buffer *buf;
 
-	if (fd < 0 || fd > IOWRAP_MAXFD || wrap_fds[fd].mode != UNUSED) {
+	if (!fuzz.wrapfds) {
+		return read(fd, out, count);
+	}
+
+	if (fd < 0 || fd > IOWRAP_MAXFD || wrap_fds[fd].mode == UNUSED) {
+		// XXX - assertion failure?
 		TRACE(("Bad read descriptor %d\n", fd))
 		errno = EBADF;
 		return -1;
@@ -86,7 +99,9 @@ int wrapfd_read(int fd, void *out, size_t count) {
 	if (buf) {
 		maxread = MIN(buf->len - buf->pos, count);
 		// returns 0 if buf is EOF, as intended
-		maxread = nrand48(rand_state) % maxread + 1;
+		if (maxread > 0) {
+			maxread = nrand48(rand_state) % maxread + 1;
+		}
 		memcpy(out, buf_getptr(buf, maxread), maxread);
 		buf_incrpos(buf, maxread);
 		return maxread;
@@ -101,7 +116,13 @@ int wrapfd_read(int fd, void *out, size_t count) {
 int wrapfd_write(int fd, const void* in, size_t count) {
 	unsigned const volatile char* volin = in;
 	unsigned int i;
-	if (fd < 0 || fd > IOWRAP_MAXFD || wrap_fds[fd].mode != UNUSED) {
+
+	if (!fuzz.wrapfds) {
+		return write(fd, in, count);
+	}
+
+	if (fd < 0 || fd > IOWRAP_MAXFD || wrap_fds[fd].mode == UNUSED) {
+		// XXX - assertion failure?
 		TRACE(("Bad read descriptor %d\n", fd))
 		errno = EBADF;
 		return -1;
@@ -128,10 +149,14 @@ int wrapfd_write(int fd, const void* in, size_t count) {
 }
 
 int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds, 
-	fd_set *UNUSED(exceptfds), struct timeval *UNUSED(timeout)) {
-	int i, nset;
+	fd_set *exceptfds, struct timeval *timeout) {
+	int i, nset, sel;
 	int ret = 0;
 	int fdlist[IOWRAP_MAXFD+1] = {0};
+
+	if (!fuzz.wrapfds) {
+		return select(nfds, readfds, writefds, exceptfds, timeout);
+	}
 
 	assert(nfds <= IOWRAP_MAXFD+1);
 
@@ -141,24 +166,26 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	}
 
 	// read
-	if (erand48(rand_state) < CHANCE_READ1) {
+	if (readfds != NULL && erand48(rand_state) < CHANCE_READ1) {
 		for (i = 0, nset = 0; i < nfds; i++) {
 			if (FD_ISSET(i, readfds)) {
 				assert(wrap_fds[i].mode != UNUSED);
 				fdlist[nset] = i;
+				nset++;
 			}
 		}
 		FD_ZERO(readfds);
 
 		if (nset > 0) {
 			// set one
-			FD_SET(fdlist[random() % nset], readfds);
+			sel = fdlist[nrand48(rand_state) % nset];
+			FD_SET(sel, readfds);
 			ret++;
 
 			if (erand48(rand_state) < CHANCE_READ2) {
-				i = fdlist[random() % nset];
-				if (!FD_ISSET(i, readfds)) {
-					FD_SET(i, readfds);
+				sel = fdlist[nrand48(rand_state) % nset];
+				if (!FD_ISSET(sel, readfds)) {
+					FD_SET(sel, readfds);
 					ret++;
 				}
 			}
@@ -166,24 +193,26 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	}
 
 	// write
-	if (erand48(rand_state) < CHANCE_WRITE1) {
+	if (writefds != NULL && erand48(rand_state) < CHANCE_WRITE1) {
 		for (i = 0, nset = 0; i < nfds; i++) {
 			if (FD_ISSET(i, writefds)) {
 				assert(wrap_fds[i].mode != UNUSED);
 				fdlist[nset] = i;
+				nset++;
 			}
 		}
 		FD_ZERO(writefds);
 
 		// set one
 		if (nset > 0) {
-			FD_SET(fdlist[nrand48(rand_state) % nset], writefds);
+			sel = fdlist[nrand48(rand_state) % nset];
+			FD_SET(sel, writefds);
 			ret++;
 
 			if (erand48(rand_state) < CHANCE_WRITE2) {
-				i = fdlist[nrand48(rand_state) % nset];
-				if (!FD_ISSET(i, writefds)) {
-					FD_SET(i, writefds);
+				sel = fdlist[nrand48(rand_state) % nset];
+				if (!FD_ISSET(sel, writefds)) {
+					FD_SET(sel, writefds);
 					ret++;
 				}
 			}
@@ -191,3 +220,4 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	}
 	return ret;
 }
+

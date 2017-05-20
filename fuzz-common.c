@@ -1,7 +1,5 @@
 #include "includes.h"
 
-#ifdef DROPBEAR_FUZZ
-
 #include "includes.h"
 #include "fuzz.h"
 #include "dbutil.h"
@@ -17,6 +15,7 @@ static void load_fixed_hostkeys(void);
 
 static void common_setup_fuzzer(void) {
     fuzz.fuzzing = 1;
+    fuzz.wrapfds = 1;
     fuzz.input = m_malloc(sizeof(buffer));
     crypto_init();
 }
@@ -30,7 +29,7 @@ int fuzzer_set_input(const uint8_t *Data, size_t Size) {
 
     // get prefix. input format is
     // string prefix
-    //     uint32_t seed
+    //     uint32 wrapfd seed
     //     ... to be extended later
     // [bytes] ssh input stream
 
@@ -114,4 +113,6 @@ static void load_fixed_hostkeys(void) {
     buf_free(b);
 }
 
-#endif /* DROPBEAR_FUZZ */
+void fuzz_kex_fakealgos(void) {
+    ses.newkeys->recv.crypt_mode = &dropbear_mode_none;
+}
