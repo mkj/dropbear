@@ -27,6 +27,9 @@ int fuzzer_set_input(const uint8_t *Data, size_t Size) {
     fuzz.input->len = Size;
     fuzz.input->pos = 0;
 
+    memset(&ses, 0x0, sizeof(ses));
+    memset(&svr_ses, 0x0, sizeof(svr_ses));
+
     // get prefix. input format is
     // string prefix
     //     uint32 wrapfd seed
@@ -44,7 +47,7 @@ int fuzzer_set_input(const uint8_t *Data, size_t Size) {
     uint32_t wrapseed = buf_getint(fuzz.input);
     wrapfd_setup(wrapseed);
 
-    seedrandom();
+    seedfuzz();
 
     return DROPBEAR_SUCCESS;
 }

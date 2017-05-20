@@ -64,6 +64,7 @@
 
 /* you don't need to touch this block */
 #if DEBUG_TRACE
+extern int debug_trace;
 #define TRACE(X) dropbear_trace X;
 #define TRACE2(X) dropbear_trace2 X;
 #else /*DEBUG_TRACE*/

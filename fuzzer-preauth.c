@@ -2,9 +2,11 @@
 #include "dbrandom.h"
 #include "session.h"
 #include "fuzz-wrapfd.h"
+#include "debug.h"
 
 static void setup_fuzzer(void) {
 	svr_setup_fuzzer();
+	//debug_trace = 1;
 }
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {

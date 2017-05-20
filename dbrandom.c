@@ -181,7 +181,8 @@ static void write_urandom()
 #endif
 }
 
-static void seedfuzz(void) {
+#ifdef DROPBEAR_FUZZ
+void seedfuzz(void) {
 	hash_state hs;
 	sha1_init(&hs);
 	sha1_process(&hs, "fuzzfuzzfuzz", strlen("fuzzfuzzfuzz"));
@@ -190,6 +191,7 @@ static void seedfuzz(void) {
 	counter = 0;
 	donerandinit = 1;
 }
+#endif
 
 /* Initialise the prng from /dev/urandom or prngd. This function can
  * be called multiple times */
@@ -203,7 +205,6 @@ void seedrandom() {
 
 #ifdef DROPBEAR_FUZZ
 	if (fuzz.fuzzing || fuzz.recordf) {
-		seedfuzz();
 		return;
 	}
 #endif

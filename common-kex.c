@@ -403,6 +403,7 @@ static void gen_new_zstream_recv() {
 		ses.newkeys->recv.zstream->zfree = Z_NULL;
 		
 		if (inflateInit(ses.newkeys->recv.zstream) != Z_OK) {
+			m_free(ses.newkeys->recv.zstream);
 			dropbear_exit("zlib error");
 		}
 	} else {

@@ -18,7 +18,9 @@ int main(int argc, char ** argv) {
         buf_readfile(input, fn);
         buf_setpos(input, 0);
 
-        printf("Running %s\n", fn);
+        printf("Running %s once \n", fn);
+        LLVMFuzzerTestOneInput(input->data, input->len);
+        printf("Running %s twice \n", fn);
         LLVMFuzzerTestOneInput(input->data, input->len);
         printf("Done %s\n", fn);
     }

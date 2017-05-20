@@ -16,6 +16,8 @@ static const double CHANCE_WRITE2 = 0.3;
 struct fdwrap {
 	enum wrapfd_mode mode;
 	buffer *buf;
+	int closein;
+	int closeout;
 };
 
 static struct fdwrap wrap_fds[IOWRAP_MAXFD+1];
@@ -28,21 +30,25 @@ void wrapfd_setup(uint32_t seed) {
 	TRACE(("wrapfd_setup %x", seed))
 	nused = 0;
 	memset(wrap_fds, 0x0, sizeof(wrap_fds));
+	memset(wrap_used, 0x0, sizeof(wrap_used));
 
+	memset(rand_state, 0x0, sizeof(rand_state));
 	*((uint32_t*)rand_state) = seed;
 	nrand48(rand_state);
 }
 
 void wrapfd_add(int fd, buffer *buf, enum wrapfd_mode mode) {
+	TRACE(("wrapfd_add %d buf %p mode %d", fd, buf, mode))
 	assert(fd >= 0);
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode == UNUSED);
 	assert(buf || mode == RANDOMIN);
 
-	TRACE(("wrapfd_add %d buf %p mode %d", fd, buf, mode))
 
 	wrap_fds[fd].mode = mode;
 	wrap_fds[fd].buf = buf;
+	wrap_fds[fd].closein = 0;
+	wrap_fds[fd].closeout = 0;
 	wrap_used[nused] = fd;
 
 	nused++;
@@ -50,12 +56,12 @@ void wrapfd_add(int fd, buffer *buf, enum wrapfd_mode mode) {
 
 void wrapfd_remove(int fd) {
 	unsigned int i, j;
+	TRACE(("wrapfd_remove %d", fd))
 	assert(fd >= 0);
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode != UNUSED);
 	wrap_fds[fd].mode = UNUSED;
 
-	TRACE(("wrapfd_remove %d", fd))
 
 	// remove from used list
 	for (i = 0, j = 0; i < nused; i++) {
@@ -67,6 +73,9 @@ void wrapfd_remove(int fd) {
 	nused--;
 }
 
+void wrapfd_close(int fd) {
+	wrapfd_remove(fd);
+}
 
 int wrapfd_read(int fd, void *out, size_t count) {
 	size_t maxread;
@@ -85,9 +94,10 @@ int wrapfd_read(int fd, void *out, size_t count) {
 
 	assert(count != 0);
 
-	if (erand48(rand_state) < CHANCE_CLOSE) {
-		wrapfd_remove(fd);
-		return 0;
+	if (wrap_fds[fd].closein || erand48(rand_state) < CHANCE_CLOSE) {
+		wrap_fds[fd].closein = 1;
+		errno = ECONNRESET;
+		return -1;
 	}
 
 	if (erand48(rand_state) < CHANCE_INTR) {
@@ -135,9 +145,10 @@ int wrapfd_write(int fd, const void* in, size_t count) {
 		(void)volin[i];
 	}
 
-	if (erand48(rand_state) < CHANCE_CLOSE) {
-		wrapfd_remove(fd);
-		return 0;
+	if (wrap_fds[fd].closeout || erand48(rand_state) < CHANCE_CLOSE) {
+		wrap_fds[fd].closeout = 1;
+		errno = ECONNRESET;
+		return -1;
 	}
 
 	if (erand48(rand_state) < CHANCE_INTR) {

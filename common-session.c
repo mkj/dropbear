@@ -82,14 +82,18 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.last_packet_time_any_sent = 0;
 	ses.last_packet_time_keepalive_sent = 0;
 	
-	if (pipe(ses.signal_pipe) < 0) {
-		dropbear_exit("Signal pipe failed");
+#ifdef DROPBEAR_FUZZ
+	if (!fuzz.fuzzing)
+#endif
+	{
+		if (pipe(ses.signal_pipe) < 0) {
+			dropbear_exit("Signal pipe failed");
+		}
+		setnonblocking(ses.signal_pipe[0]);
+		setnonblocking(ses.signal_pipe[1]);
+		ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
+		ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
 	}
-	setnonblocking(ses.signal_pipe[0]);
-	setnonblocking(ses.signal_pipe[1]);
-
-	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
-	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
 	
 	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
@@ -310,6 +314,16 @@ void session_cleanup() {
 	while (!isempty(&ses.writequeue)) {
 		buf_free(dequeue(&ses.writequeue));
 	}
+
+	m_free(ses.newkeys);
+#ifndef DISABLE_ZLIB
+	if (ses.keys->recv.zstream != NULL) {
+		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
+			dropbear_exit("Crypto error");
+		}
+		m_free(ses.keys->recv.zstream);
+	}
+#endif
 
 	m_free(ses.remoteident);
 	m_free(ses.authstate.pw_dir);

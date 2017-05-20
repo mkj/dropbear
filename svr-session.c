@@ -245,7 +245,9 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 static void svr_remoteclosed() {
 
 	m_close(ses.sock_in);
-	m_close(ses.sock_out);
+	if (ses.sock_in != ses.sock_out) {
+		m_close(ses.sock_out);
+	}
 	ses.sock_in = -1;
 	ses.sock_out = -1;
 	dropbear_close("Exited normally");

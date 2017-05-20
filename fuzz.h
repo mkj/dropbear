@@ -23,6 +23,7 @@ void fuzz_kex_fakealgos(void);
         wrapfd_select(nfds, readfds, writefds, exceptfds, timeout)
 #define write(fd, buf, count) wrapfd_write(fd, buf, count)
 #define read(fd, buf, count) wrapfd_read(fd, buf, count)
+#define close(fd) wrapfd_close(fd)
 #endif // FUZZ_SKIP_WRAP
 
 struct dropbear_fuzz_options {
