@@ -1,5 +1,4 @@
 #include "fuzz.h"
-#include "dbrandom.h"
 #include "session.h"
 #include "fuzz-wrapfd.h"
 #include "debug.h"
