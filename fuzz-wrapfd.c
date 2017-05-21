@@ -44,7 +44,6 @@ void wrapfd_add(int fd, buffer *buf, enum wrapfd_mode mode) {
 	assert(wrap_fds[fd].mode == UNUSED);
 	assert(buf || mode == RANDOMIN);
 
-
 	wrap_fds[fd].mode = mode;
 	wrap_fds[fd].buf = buf;
 	wrap_fds[fd].closein = 0;
@@ -73,8 +72,15 @@ void wrapfd_remove(int fd) {
 	nused--;
 }
 
-void wrapfd_close(int fd) {
-	wrapfd_remove(fd);
+int wrapfd_close(int fd) {
+	if (fd >= 0 && fd <= IOWRAP_MAXFD && wrap_fds[fd].mode != UNUSED) 
+	{
+		wrapfd_remove(fd);
+		return 0;
+	}
+	else {
+		return close(fd);
+	}
 }
 
 int wrapfd_read(int fd, void *out, size_t count) {

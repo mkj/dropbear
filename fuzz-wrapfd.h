@@ -19,5 +19,6 @@ int wrapfd_read(int fd, void *out, size_t count);
 int wrapfd_write(int fd, const void* in, size_t count);
 int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds, 
     fd_set *exceptfds, struct timeval *timeout);
+int wrapfd_close(int fd);
 
 #endif // FUZZ_WRAPFD_H
