@@ -520,45 +520,6 @@ void m_close(int fd) {
 	}
 }
 	
-void * m_malloc(size_t size) {
-
-	void* ret;
-
-	if (size == 0) {
-		dropbear_exit("m_malloc failed");
-	}
-	ret = calloc(1, size);
-	if (ret == NULL) {
-		dropbear_exit("m_malloc failed");
-	}
-	return ret;
-
-}
-
-void * m_strdup(const char * str) {
-	char* ret;
-
-	ret = strdup(str);
-	if (ret == NULL) {
-		dropbear_exit("m_strdup failed");
-	}
-	return ret;
-}
-
-void * m_realloc(void* ptr, size_t size) {
-
-	void *ret;
-
-	if (size == 0) {
-		dropbear_exit("m_realloc failed");
-	}
-	ret = realloc(ptr, size);
-	if (ret == NULL) {
-		dropbear_exit("m_realloc failed");
-	}
-	return ret;
-}
-
 void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))

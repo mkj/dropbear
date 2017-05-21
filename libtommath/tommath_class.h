@@ -1000,6 +1000,17 @@
 #undef BN_MP_TOOM_MUL_C
 #undef BN_MP_TOOM_SQR_C
 
+void * m_malloc(size_t size);
+/* m_calloc is limited in size, enough for libtomcrypt */
+void * m_calloc(size_t nmemb, size_t size);
+void * m_realloc(void* ptr, size_t size);
+void m_free_direct(void* ptr);
+
+#define XMALLOC m_malloc
+#define XFREE m_free_direct
+#define XREALLOC m_realloc
+#define XCALLOC m_calloc
+
 /* $Source: /cvs/libtom/libtommath/tommath_class.h,v $ */
 /* $Revision: 1.3 $ */
 /* $Date: 2005/07/28 11:59:32 $ */

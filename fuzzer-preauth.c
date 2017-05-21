@@ -23,9 +23,11 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	int fakesock = 1;
 	wrapfd_add(fakesock, fuzz.input, PLAIN);
 
+	m_malloc_set_epoch(1);
 	if (setjmp(fuzz.jmp) == 0) {
 		svr_session(fakesock, fakesock);
 	} else {
+		m_malloc_free_epoch(1);
 		TRACE(("dropbear_exit longjmped"))
 		// dropbear_exit jumped here
 	}

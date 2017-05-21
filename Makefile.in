@@ -34,6 +34,7 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
+		dbmalloc.o \
 		gensignkey.o gendss.o genrsa.o 
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \

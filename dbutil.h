@@ -30,6 +30,7 @@
 #include "buffer.h"
 #include "queue.h"
 #include "dbhelpers.h"
+#include "dbmalloc.h"
 
 #ifndef DISABLE_SYSLOG
 void startsyslog(const char *ident);
@@ -66,10 +67,6 @@ int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
 
 void m_close(int fd);
-void * m_malloc(size_t size);
-void * m_strdup(const char * str);
-void * m_realloc(void* ptr, size_t size);
-#define m_free(X) do {free(X); (X) = NULL;} while (0)
 void setnonblocking(int fd);
 void disallow_core(void);
 int m_str_to_uint(const char* str, unsigned int *val);
