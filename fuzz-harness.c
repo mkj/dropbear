@@ -8,11 +8,20 @@ int main(int argc, char ** argv) {
     int i;
     buffer *input = buf_new(100000);
 
-#if DROPBEAR_TRACE
-    debug_trace = 1;
+    for (i = 1; i < argc; i++) {
+#if DEBUG_TRACE
+        if (strcmp(argv[i], "-v") == 0) {
+            debug_trace = 1;
+        }
 #endif
+    }
 
     for (i = 1; i < argc; i++) {
+        if (argv[i][0] == '-') {
+            // ignore arguments
+            continue;
+        }
+
         char* fn = argv[i];
         buf_setlen(input, 0);
         buf_readfile(input, fn);
