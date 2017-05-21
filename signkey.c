@@ -102,7 +102,8 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 	return DROPBEAR_SIGNKEY_NONE;
 }
 
-/* Returns a pointer to the key part specific to "type" */
+/* Returns a pointer to the key part specific to "type".
+Be sure to check both (ret != NULL) and (*ret != NULL) */
 void **
 signkey_key_ptr(sign_key *key, enum signkey_type type) {
 	switch (type) {
@@ -294,7 +295,7 @@ void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type) {
 #if DROPBEAR_ECDSA
 	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
-		if (eck) {
+		if (eck && *eck) {
 			buf_put_ecdsa_pub_key(pubkeys, *eck);
 		}
 	}
@@ -331,7 +332,7 @@ void buf_put_priv_key(buffer* buf, sign_key *key, enum signkey_type type) {
 #if DROPBEAR_ECDSA
 	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
-		if (eck) {
+		if (eck && *eck) {
 			buf_put_ecdsa_priv_key(buf, *eck);
 			TRACE(("leave buf_put_priv_key: ecdsa done"))
 			return;
@@ -495,7 +496,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type,
 #if DROPBEAR_ECDSA
 	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
-		if (eck) {
+		if (eck && *eck) {
 			buf_put_ecdsa_sign(sigblob, *eck, data_buf);
 		}
 	}
