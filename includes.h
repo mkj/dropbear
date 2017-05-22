@@ -156,6 +156,10 @@ typedef unsigned int u_int32_t;
 typedef u_int32_t uint32_t;
 #endif /* HAVE_UINT32_T */
 
+#ifndef SIZE_T_MAX
+#define SIZE_T_MAX ULONG_MAX
+#endif /* SIZE_T_MAX */
+
 #ifdef SO_PRIORITY
 #include <linux/types.h>
 #include <linux/pkt_sched.h>
