@@ -391,6 +391,14 @@ int is_compress_recv() {
 			&& ses.keys->recv.algo_comp == DROPBEAR_COMP_ZLIB_DELAY);
 }
 
+static void* dropbear_zalloc(void* UNUSED(opaque), uInt items, uInt size) {
+	return m_calloc(items, size);
+}
+
+static void dropbear_zfree(void* UNUSED(opaque), void* ptr) {
+	m_free(ptr);
+}
+
 /* Set up new zlib compression streams, close the old ones. Only
  * called from gen_new_keys() */
 static void gen_new_zstream_recv() {
@@ -399,11 +407,10 @@ static void gen_new_zstream_recv() {
 	if (ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB
 			|| ses.newkeys->recv.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->recv.zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->recv.zstream->zalloc = Z_NULL;
-		ses.newkeys->recv.zstream->zfree = Z_NULL;
+		ses.newkeys->recv.zstream->zalloc = dropbear_zalloc;
+		ses.newkeys->recv.zstream->zfree = dropbear_zfree;
 		
 		if (inflateInit(ses.newkeys->recv.zstream) != Z_OK) {
-			m_free(ses.newkeys->recv.zstream);
 			dropbear_exit("zlib error");
 		}
 	} else {
@@ -424,8 +431,8 @@ static void gen_new_zstream_trans() {
 	if (ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB
 			|| ses.newkeys->trans.algo_comp == DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.newkeys->trans.zstream = (z_streamp)m_malloc(sizeof(z_stream));
-		ses.newkeys->trans.zstream->zalloc = Z_NULL;
-		ses.newkeys->trans.zstream->zfree = Z_NULL;
+		ses.newkeys->trans.zstream->zalloc = dropbear_zalloc;
+		ses.newkeys->trans.zstream->zfree = dropbear_zfree;
 	
 		if (deflateInit2(ses.newkeys->trans.zstream, Z_DEFAULT_COMPRESSION,
 					Z_DEFLATED, DROPBEAR_ZLIB_WINDOW_BITS, 

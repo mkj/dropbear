@@ -77,7 +77,9 @@ void * m_malloc(size_t size) {
 }
 
 void * m_calloc(size_t nmemb, size_t size) {
-    assert(nmemb <= 1000 && size <= 10000);
+    if (SIZE_T_MAX / nmemb < size) {
+        dropbear_exit("m_calloc failed");
+    }
     return m_malloc(nmemb*size);
 }
 

@@ -4,7 +4,6 @@
 #include "includes.h"
 
 void * m_malloc(size_t size);
-/* m_calloc is limited in size, enough for libtomcrypt */
 void * m_calloc(size_t nmemb, size_t size);
 void * m_strdup(const char * str);
 void * m_realloc(void* ptr, size_t size);
