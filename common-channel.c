@@ -88,10 +88,6 @@ void chancleanup() {
 
 	unsigned int i;
 
-	if (!ses.channels) {
-		return;
-	}
-
 	TRACE(("enter chancleanup"))
 	for (i = 0; i < ses.chansize; i++) {
 		if (ses.channels[i] != NULL) {
