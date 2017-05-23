@@ -188,6 +188,103 @@ static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
 
 }
 
+static int checkpubkey_line(buffer* line, int line_num, char* filename,
+		const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen) {
+	buffer *options_buf = NULL;
+	unsigned int pos, len;
+	int ret = DROPBEAR_FAILURE;
+
+	if (line->len < MIN_AUTHKEYS_LINE) {
+		TRACE(("checkpubkey: line too short"))
+		return DROPBEAR_FAILURE; /* line is too short for it to be a valid key */
+	}
+
+	/* check the key type */
+	if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
+		int is_comment = 0;
+		unsigned char *options_start = NULL;
+		int options_len = 0;
+		int escape, quoted;
+		
+		/* skip over any comments or leading whitespace */
+		while (line->pos < line->len) {
+			const char c = buf_getbyte(line);
+			if (c == ' ' || c == '\t') {
+				continue;
+			} else if (c == '#') {
+				is_comment = 1;
+				break;
+			}
+			buf_incrpos(line, -1);
+			break;
+		}
+		if (is_comment) {
+			/* next line */
+			goto out;
+		}
+
+		/* remember start of options */
+		options_start = buf_getptr(line, 1);
+		quoted = 0;
+		escape = 0;
+		options_len = 0;
+		
+		/* figure out where the options are */
+		while (line->pos < line->len) {
+			const char c = buf_getbyte(line);
+			if (!quoted && (c == ' ' || c == '\t')) {
+				break;
+			}
+			escape = (!escape && c == '\\');
+			if (!escape && c == '"') {
+				quoted = !quoted;
+			}
+			options_len++;
+		}
+		options_buf = buf_new(options_len);
+		buf_putbytes(options_buf, options_start, options_len);
+
+		/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */
+		if (line->pos + algolen+3 > line->len) {
+			goto out;
+		}
+		if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
+			goto out;
+		}
+	}
+	buf_incrpos(line, algolen);
+	
+	/* check for space (' ') character */
+	if (buf_getbyte(line) != ' ') {
+		TRACE(("checkpubkey: space character expected, isn't there"))
+		goto out;
+	}
+
+	/* truncate the line at the space after the base64 data */
+	pos = line->pos;
+	for (len = 0; line->pos < line->len; len++) {
+		if (buf_getbyte(line) == ' ') break;
+	}	
+	buf_setpos(line, pos);
+	buf_setlen(line, line->pos + len);
+
+	TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
+
+	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
+
+	if (ret == DROPBEAR_SUCCESS && options_buf) {
+		ret = svr_add_pubkey_options(options_buf, line_num, filename);
+	}
+
+out:
+	if (options_buf) {
+		buf_free(options_buf);
+	}
+	return ret;
+}
+
+
 /* Checks whether a specified publickey (and associated algorithm) is an
  * acceptable key for authentication */
 /* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
@@ -198,8 +295,7 @@ static int checkpubkey(char* algo, unsigned int algolen,
 	char * filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
-	unsigned int len, pos;
-	buffer * options_buf = NULL;
+	unsigned int len;
 	int line_num;
 	uid_t origuid;
 	gid_t origgid;
@@ -254,12 +350,6 @@ static int checkpubkey(char* algo, unsigned int algolen,
 
 	/* iterate through the lines */
 	do {
-		/* new line : potentially new options */
-		if (options_buf) {
-			buf_free(options_buf);
-			options_buf = NULL;
-		}
-
 		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
 			TRACE(("checkpubkey: authorized_keys EOF reached"))
@@ -267,91 +357,8 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		}
 		line_num++;
 
-		if (line->len < MIN_AUTHKEYS_LINE) {
-			TRACE(("checkpubkey: line too short"))
-			continue; /* line is too short for it to be a valid key */
-		}
-
-		/* check the key type - will fail if there are options */
-		TRACE(("a line!"))
-
-		if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
-			int is_comment = 0;
-			unsigned char *options_start = NULL;
-			int options_len = 0;
-			int escape, quoted;
-			
-			/* skip over any comments or leading whitespace */
-			while (line->pos < line->len) {
-				const char c = buf_getbyte(line);
-				if (c == ' ' || c == '\t') {
-					continue;
-				} else if (c == '#') {
-					is_comment = 1;
-					break;
-				}
-				buf_incrpos(line, -1);
-				break;
-			}
-			if (is_comment) {
-				/* next line */
-				continue;
-			}
-
-			/* remember start of options */
-			options_start = buf_getptr(line, 1);
-			quoted = 0;
-			escape = 0;
-			options_len = 0;
-			
-			/* figure out where the options are */
-			while (line->pos < line->len) {
-				const char c = buf_getbyte(line);
-				if (!quoted && (c == ' ' || c == '\t')) {
-					break;
-				}
-				escape = (!escape && c == '\\');
-				if (!escape && c == '"') {
-					quoted = !quoted;
-				}
-				options_len++;
-			}
-			options_buf = buf_new(options_len);
-			buf_putbytes(options_buf, options_start, options_len);
-
-			/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */
-			if (line->pos + algolen+3 > line->len) {
-				continue;
-			}
-			if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
-				continue;
-			}
-		}
-		buf_incrpos(line, algolen);
-		
-		/* check for space (' ') character */
-		if (buf_getbyte(line) != ' ') {
-			TRACE(("checkpubkey: space character expected, isn't there"))
-			continue;
-		}
-
-		/* truncate the line at the space after the base64 data */
-		pos = line->pos;
-		for (len = 0; line->pos < line->len; len++) {
-			if (buf_getbyte(line) == ' ') break;
-		}	
-		buf_setpos(line, pos);
-		buf_setlen(line, line->pos + len);
-
-		TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
-
-		ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
-
-		if (ret == DROPBEAR_SUCCESS && options_buf) {
-			ret = svr_add_pubkey_options(options_buf, line_num, filename);
-		}
-
-		if (ret == DROPBEAR_SUCCESS) {
+		if (checkpubkey_line(line, line_num, filename,
+				algo, algolen, keyblob, keybloblen) == DROPBEAR_SUCCESS) {
 			break;
 		}
 
@@ -367,9 +374,6 @@ out:
 		buf_free(line);
 	}
 	m_free(filename);
-	if (options_buf) {
-		buf_free(options_buf);
-	}
 	TRACE(("leave checkpubkey: ret=%d", ret))
 	return ret;
 }
@@ -464,5 +468,13 @@ static int checkfileperm(char * filename) {
 	TRACE(("leave checkfileperm: success"))
 	return DROPBEAR_SUCCESS;
 }
+
+#ifdef DROPBEAR_FUZZ
+int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
+		const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen) {
+	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
+}
+#endif
 
 #endif
