@@ -245,7 +245,7 @@ default_options.h: default_options.h.in
 ## Fuzzing targets
 
 # list of fuzz targets
-FUZZ_TARGETS=fuzzer-preauth
+FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey
 
 list-fuzz-targets:
 	@echo $(FUZZ_TARGETS)
@@ -263,6 +263,9 @@ svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 fuzz-targets: $(FUZZ_TARGETS)
 
 fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
+
+fuzzer-pubkey: fuzzer-pubkey.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 # run this to update hardcoded hostkeys for for fuzzing. 

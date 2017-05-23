@@ -182,7 +182,7 @@ static void write_urandom()
 }
 
 #ifdef DROPBEAR_FUZZ
-void seedfuzz(void) {
+void fuzz_seed(void) {
 	hash_state hs;
 	sha1_init(&hs);
 	sha1_process(&hs, "fuzzfuzzfuzz", strlen("fuzzfuzzfuzz"));

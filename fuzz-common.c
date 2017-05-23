@@ -13,7 +13,7 @@ struct dropbear_fuzz_options fuzz;
 
 static void load_fixed_hostkeys(void);
 
-static void common_setup_fuzzer(void) {
+void common_setup_fuzzer(void) {
     fuzz.fuzzing = 1;
     fuzz.wrapfds = 1;
     fuzz.input = m_malloc(sizeof(buffer));
@@ -47,7 +47,7 @@ int fuzzer_set_input(const uint8_t *Data, size_t Size) {
     uint32_t wrapseed = buf_getint(fuzz.input);
     wrapfd_setup(wrapseed);
 
-    seedfuzz();
+    fuzz_seed();
 
     return DROPBEAR_SUCCESS;
 }

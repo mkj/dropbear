@@ -620,3 +620,8 @@ out:
 	return ret;
 }
 #endif
+
+#ifdef DROPBEAR_FUZZ
+const char * const * fuzz_signkey_names = signkey_names;
+
+#endif

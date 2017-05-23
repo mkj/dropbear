@@ -120,6 +120,13 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
+#ifdef DROPBEAR_FUZZ
+	// longjmp before cleaning up svr_opts
+    if (fuzz.fuzzing) {
+        longjmp(fuzz.jmp, 1);
+    }
+#endif
+
 	exit(exitcode);
 }
 

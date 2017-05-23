@@ -10,12 +10,19 @@
 #include "fuzz-wrapfd.h"
 
 // once per process
+void common_setup_fuzzer(void);
 void svr_setup_fuzzer(void);
 
 // once per input. returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzzer_set_input(const uint8_t *Data, size_t Size);
 
+// fuzzer functions that intrude into general code
 void fuzz_kex_fakealgos(void);
+int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
+        const char* algo, unsigned int algolen,
+        const unsigned char* keyblob, unsigned int keybloblen);
+extern const char * const * fuzz_signkey_names;
+void fuzz_seed(void);
 
 // fake IO wrappers
 #ifndef FUZZ_SKIP_WRAP
