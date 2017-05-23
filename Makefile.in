@@ -247,6 +247,8 @@ default_options.h: default_options.h.in
 # list of fuzz targets
 FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey
 
+FUZZER_OPTIONS = $(addsuffix .options, $(FUZZ_TARGETS))
+
 list-fuzz-targets:
 	@echo $(FUZZ_TARGETS)
 
@@ -260,13 +262,17 @@ svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 # build all the fuzzers. This will require fail to link unless built with
 # make fuzzers LIBS=-lFuzzer.a 
 # or similar - the library provides main().
-fuzz-targets: $(FUZZ_TARGETS)
+fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 
 fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 fuzzer-pubkey: fuzzer-pubkey.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
+
+fuzzer-%.options: Makefile
+	echo "[libfuzzer]"               > $@
+	echo "max_len = 50000"          >> $@
 
 # run this to update hardcoded hostkeys for for fuzzing. 
 # hostkeys.c is checked in to hg.
