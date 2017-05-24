@@ -11,12 +11,14 @@
 
 struct dropbear_fuzz_options fuzz;
 
+static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param);
 static void load_fixed_hostkeys(void);
 
 void common_setup_fuzzer(void) {
     fuzz.fuzzing = 1;
     fuzz.wrapfds = 1;
     fuzz.input = m_malloc(sizeof(buffer));
+    _dropbear_log = fuzz_dropbear_log;
     crypto_init();
 }
 
@@ -52,6 +54,17 @@ int fuzzer_set_input(const uint8_t *Data, size_t Size) {
     return DROPBEAR_SUCCESS;
 }
 
+static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param) {
+
+    char printbuf[1024];
+
+#if DEBUG_TRACE
+    if (debug_trace) {
+        vsnprintf(printbuf, sizeof(printbuf), format, param);
+        fprintf(stderr, "%s\n", printbuf);
+    }
+#endif
+}
 
 void svr_setup_fuzzer(void) {
     struct passwd *pw;
@@ -59,7 +72,6 @@ void svr_setup_fuzzer(void) {
     common_setup_fuzzer();
     
     _dropbear_exit = svr_dropbear_exit;
-    _dropbear_log = svr_dropbear_log;
 
     char *argv[] = { 
         "-E", 

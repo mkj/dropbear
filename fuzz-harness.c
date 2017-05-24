@@ -12,6 +12,7 @@ int main(int argc, char ** argv) {
 #if DEBUG_TRACE
         if (strcmp(argv[i], "-v") == 0) {
             debug_trace = 1;
+            TRACE(("debug printing on"))
         }
 #endif
     }
