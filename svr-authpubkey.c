@@ -200,6 +200,10 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 		return DROPBEAR_FAILURE; /* line is too short for it to be a valid key */
 	}
 
+	/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */
+	if (line->pos + algolen+3 > line->len) {
+		goto out;
+	}
 	/* check the key type */
 	if (strncmp((const char *) buf_getptr(line, algolen), algo, algolen) != 0) {
 		int is_comment = 0;
