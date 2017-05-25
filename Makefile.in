@@ -245,7 +245,7 @@ default_options.h: default_options.h.in
 ## Fuzzing targets
 
 # list of fuzz targets
-FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey
+FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey fuzzer-verify
 
 FUZZER_OPTIONS = $(addsuffix .options, $(FUZZ_TARGETS))
 
@@ -268,6 +268,9 @@ fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobj
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 fuzzer-pubkey: fuzzer-pubkey.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
+
+fuzzer-verify: fuzzer-verify.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 fuzzer-%.options: Makefile
