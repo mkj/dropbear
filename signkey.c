@@ -547,7 +547,7 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
 #if DROPBEAR_ECDSA
 	if (signkey_is_ecdsa(type)) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, type);
-		if (eck) {
+		if (eck && *eck) {
 			return buf_ecdsa_verify(buf, *eck, data_buf);
 		}
 	}
