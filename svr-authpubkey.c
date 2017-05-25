@@ -195,9 +195,9 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	unsigned int pos, len;
 	int ret = DROPBEAR_FAILURE;
 
-	if (line->len < MIN_AUTHKEYS_LINE) {
-		TRACE(("checkpubkey: line too short"))
-		return DROPBEAR_FAILURE; /* line is too short for it to be a valid key */
+	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
+		TRACE(("checkpubkey: bad line length %d", line->len))
+		return DROPBEAR_FAILURE;
 	}
 
 	/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */
