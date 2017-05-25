@@ -26,13 +26,17 @@ static int wrap_used[IOWRAP_MAXFD+1];
 static unsigned int nused;
 static unsigned short rand_state[3];
 
-void wrapfd_setup(uint32_t seed) {
+void wrapfd_setup() {
 	TRACE(("wrapfd_setup %x", seed))
 	nused = 0;
 	memset(wrap_fds, 0x0, sizeof(wrap_fds));
 	memset(wrap_used, 0x0, sizeof(wrap_used));
 
 	memset(rand_state, 0x0, sizeof(rand_state));
+	wrapfd_setseed(50);
+}
+
+void wrapfd_setseed(uint32_t seed) {
 	*((uint32_t*)rand_state) = seed;
 	nrand48(rand_state);
 }

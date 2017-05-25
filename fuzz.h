@@ -13,7 +13,8 @@
 void common_setup_fuzzer(void);
 void svr_setup_fuzzer(void);
 
-// once per input. returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
+// must be called once per fuzz iteration. 
+// returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzzer_set_input(const uint8_t *Data, size_t Size);
 
 // fuzzer functions that intrude into general code
