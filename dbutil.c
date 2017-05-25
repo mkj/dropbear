@@ -625,7 +625,14 @@ static clockid_t get_linux_clock_source() {
 #endif 
 
 time_t monotonic_now() {
+#ifdef DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		/* time stands still when fuzzing */
+		return 5;
+	}
+#endif
 #if defined(__linux__) && defined(SYS_clock_gettime)
+	{
 	static clockid_t clock_source = -2;
 
 	if (clock_source == -2) {
@@ -642,9 +649,11 @@ time_t monotonic_now() {
 		}
 		return ts.tv_sec;
 	}
+	}
 #endif /* linux clock_gettime */
 
 #if defined(HAVE_MACH_ABSOLUTE_TIME)
+	{
 	/* OS X, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
 	static mach_timebase_info_data_t timebase_info;
 	if (timebase_info.denom == 0) {
@@ -652,6 +661,7 @@ time_t monotonic_now() {
 	}
 	return mach_absolute_time() * timebase_info.numer / timebase_info.denom
 		/ 1e9;
+	}
 #endif /* osx mach_absolute_time */
 
 	/* Fallback for everything else - this will sometimes go backwards */
