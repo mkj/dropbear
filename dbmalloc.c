@@ -1,14 +1,17 @@
 #include "dbmalloc.h"
 #include "dbutil.h"
 
-#define LIST_SIZE 1000
-
 struct dbmalloc_header {
-    unsigned int index;
     unsigned int epoch;
+    struct dbmalloc_header *prev;
+    struct dbmalloc_header *next;
 };
 
-static struct dbmalloc_header* dbmalloc_list[LIST_SIZE];
+static void put_alloc(struct dbmalloc_header *header);
+static void remove_alloc(struct dbmalloc_header *header);
+
+/* end of the linked list */
+static struct dbmalloc_header* staple;
 
 unsigned int current_epoch = 0;
 
@@ -16,39 +19,50 @@ void m_malloc_set_epoch(unsigned int epoch) {
     current_epoch = epoch;
 }
 
-void m_malloc_free_epoch(unsigned int epoch) {
-    unsigned int i;
-    unsigned int freed = 0;
-    for (i = 0; i < LIST_SIZE; i++) {
-        if (dbmalloc_list[i] != NULL) {
-            assert(dbmalloc_list[i]->index == i);
-            if (dbmalloc_list[i]->epoch == epoch) {
-                free(dbmalloc_list[i]);
-                dbmalloc_list[i] = NULL;
-                freed++;
+void m_malloc_free_epoch(unsigned int epoch, int dofree) {
+    struct dbmalloc_header* header;
+    struct dbmalloc_header* nextheader = NULL;
+    struct dbmalloc_header* oldstaple = staple;
+    staple = NULL;
+    /* free allocations from this epoch, create a new staple-anchored list from
+    the remainder */
+    for (header = oldstaple; header; header = nextheader)
+    {
+        nextheader = header->next;
+        if (header->epoch == epoch) {
+            if (dofree) {
+                free(header);
             }
+        } else {
+            header->prev = NULL;
+            header->next = NULL;
+            put_alloc(header);
         }
     }
-    TRACE(("free_epoch freed %d", freed))
 }
 
 static void put_alloc(struct dbmalloc_header *header) {
-    unsigned int i;
-    for (i = 0; i < LIST_SIZE; i++) {
-        if (dbmalloc_list[i] == NULL) {
-            dbmalloc_list[i] = header;
-            header->index = i;
-            return;
-        }
+    assert(header->next == NULL);
+    assert(header->prev == NULL);
+    if (staple) {
+        staple->prev = header;
     }
-    dropbear_exit("ran out of dbmalloc entries");
+    header->next = staple;
+    staple = header;
 }
 
 static void remove_alloc(struct dbmalloc_header *header) {
-    assert(header->index < LIST_SIZE);
-    assert(dbmalloc_list[header->index] == header);
-    assert(header->epoch == current_epoch);
-    dbmalloc_list[header->index] = NULL;
+    if (header->prev) {
+        header->prev->next = header->next;
+    }
+    if (header->next) {
+        header->next->prev = header->prev;
+    }
+    if (staple == header) {
+        staple = header->next;
+    }
+    header->prev = NULL;
+    header->next = NULL;
 }
 
 static struct dbmalloc_header* get_header(void* ptr) {

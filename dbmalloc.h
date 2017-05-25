@@ -11,6 +11,6 @@ void m_free_direct(void* ptr);
 #define m_free(X) do {m_free_direct(X); (X) = NULL;} while (0)
 
 void m_malloc_set_epoch(unsigned int epoch);
-void m_malloc_free_epoch(unsigned int epoch);
+void m_malloc_free_epoch(unsigned int epoch, int dofree);
 
 #endif /* DBMALLOC_H_ */
