@@ -36,7 +36,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
     uint32_t wrapseed = buf_getint(fuzz.input);
     wrapfd_setseed(wrapseed);
 
-	int fakesock = 1;
+	int fakesock = 20;
 	wrapfd_add(fakesock, fuzz.input, PLAIN);
 
 	m_malloc_set_epoch(1);

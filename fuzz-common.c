@@ -115,3 +115,19 @@ static void load_fixed_hostkeys(void) {
 void fuzz_kex_fakealgos(void) {
     ses.newkeys->recv.crypt_mode = &dropbear_mode_none;
 }
+
+void fuzz_get_socket_address(int UNUSED(fd), char **local_host, char **local_port,
+                        char **remote_host, char **remote_port, int UNUSED(host_lookup)) {
+    if (local_host) {
+        *local_host = m_strdup("fuzzlocalhost");
+    }
+    if (local_port) {
+        *local_port = m_strdup("1234");
+    }
+    if (remote_host) {
+        *remote_host = m_strdup("fuzzremotehost");
+    }
+    if (remote_port) {
+        *remote_port = m_strdup("9876");
+    }
+}

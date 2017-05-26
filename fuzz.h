@@ -24,6 +24,8 @@ int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
         const unsigned char* keyblob, unsigned int keybloblen);
 extern const char * const * fuzz_signkey_names;
 void fuzz_seed(void);
+void fuzz_get_socket_address(int fd, char **local_host, char **local_port,
+                        char **remote_host, char **remote_port, int host_lookup);
 
 // fake IO wrappers
 #ifndef FUZZ_SKIP_WRAP

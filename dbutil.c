@@ -531,22 +531,21 @@ void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))
 
+#ifdef DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return;
+	}
+#endif
+
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		if (errno == ENODEV) {
 			/* Some devices (like /dev/null redirected in)
 			 * can't be set to non-blocking */
 			TRACE(("ignoring ENODEV for setnonblocking"))
 		} else {
-#ifdef DROPBEAR_FUZZ
-			if (fuzz.fuzzing) 
-			{
-				TRACE(("fuzzing ignore setnonblocking failure for %d", fd))
-			} 
-			else 
-#endif
-			{
-				dropbear_exit("Couldn't set nonblocking");
-			}
+		{
+			dropbear_exit("Couldn't set nonblocking");
+		}
 		}
 	}
 	TRACE(("leave setnonblocking"))
