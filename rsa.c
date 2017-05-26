@@ -72,8 +72,7 @@ int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 	ret = DROPBEAR_SUCCESS;
 out:
 	if (ret == DROPBEAR_FAILURE) {
-		m_free(key->e);
-		m_free(key->n);
+		m_mp_free_multi(&key->e, &key->n, NULL);
 	}
 	return ret;
 }
@@ -121,9 +120,7 @@ int buf_get_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 	ret = DROPBEAR_SUCCESS;
 out:
 	if (ret == DROPBEAR_FAILURE) {
-		m_free(key->d);
-		m_free(key->p);
-		m_free(key->q);
+		m_mp_free_multi(&key->d, &key->p, &key->q, NULL);
 	}
 	TRACE(("leave buf_get_rsa_priv_key"))
 	return ret;
@@ -139,26 +136,7 @@ void rsa_key_free(dropbear_rsa_key *key) {
 		TRACE2(("leave rsa_key_free: key == NULL"))
 		return;
 	}
-	if (key->d) {
-		mp_clear(key->d);
-		m_free(key->d);
-	}
-	if (key->e) {
-		mp_clear(key->e);
-		m_free(key->e);
-	}
-	if (key->n) {
-		 mp_clear(key->n);
-		 m_free(key->n);
-	}
-	if (key->p) {
-		mp_clear(key->p);
-		m_free(key->p);
-	}
-	if (key->q) {
-		mp_clear(key->q);
-		m_free(key->q);
-	}
+	m_mp_free_multi(&key->d, &key->e, &key->p, &key->q, &key->n, NULL);
 	m_free(key);
 	TRACE2(("leave rsa_key_free"))
 }

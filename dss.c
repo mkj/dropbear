@@ -44,6 +44,7 @@
  * These should be freed with dss_key_free.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
+	int ret = DROPBEAR_FAILURE;
 
 	TRACE(("enter buf_get_dss_pub_key"))
 	dropbear_assert(key != NULL);
@@ -56,17 +57,24 @@ int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 	 || buf_getmpint(buf, key->g) == DROPBEAR_FAILURE
 	 || buf_getmpint(buf, key->y) == DROPBEAR_FAILURE) {
 		TRACE(("leave buf_get_dss_pub_key: failed reading mpints"))
-		return DROPBEAR_FAILURE;
+		ret = DROPBEAR_FAILURE;
+		goto out;
 	}
 
 	if (mp_count_bits(key->p) < MIN_DSS_KEYLEN) {
 		dropbear_log(LOG_WARNING, "DSS key too short");
 		TRACE(("leave buf_get_dss_pub_key: short key"))
-		return DROPBEAR_FAILURE;
+		ret = DROPBEAR_FAILURE;
+		goto out;
 	}
 
+	ret = DROPBEAR_SUCCESS;
 	TRACE(("leave buf_get_dss_pub_key: success"))
-	return DROPBEAR_SUCCESS;
+out:
+	if (ret == DROPBEAR_FAILURE) {
+		m_mp_free_multi(&key->p, &key->q, &key->g, &key->y, NULL);
+	}
+	return ret;
 }
 
 /* Same as buf_get_dss_pub_key, but reads a private "x" key at the end.
@@ -86,7 +94,7 @@ int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 	m_mp_alloc_init_multi(&key->x, NULL);
 	ret = buf_getmpint(buf, key->x);
 	if (ret == DROPBEAR_FAILURE) {
-		m_free(key->x);
+		m_mp_free_multi(&key->x);
 	}
 
 	return ret;
@@ -101,26 +109,7 @@ void dss_key_free(dropbear_dss_key *key) {
 		TRACE2(("enter dsa_key_free: key == NULL"))
 		return;
 	}
-	if (key->p) {
-		mp_clear(key->p);
-		m_free(key->p);
-	}
-	if (key->q) {
-		mp_clear(key->q);
-		m_free(key->q);
-	}
-	if (key->g) {
-		mp_clear(key->g);
-		m_free(key->g);
-	}
-	if (key->y) {
-		mp_clear(key->y);
-		m_free(key->y);
-	}
-	if (key->x) {
-		mp_clear(key->x);
-		m_free(key->x);
-	}
+	m_mp_free_multi(&key->p, &key->q, &key->g, &key->y, &key->x, NULL);
 	m_free(key);
 	TRACE2(("leave dsa_key_free"))
 }
