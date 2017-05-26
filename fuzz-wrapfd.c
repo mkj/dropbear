@@ -27,7 +27,7 @@ static unsigned int nused;
 static unsigned short rand_state[3];
 
 void wrapfd_setup() {
-	TRACE(("wrapfd_setup %x", seed))
+	TRACE(("wrapfd_setup"))
 	nused = 0;
 	memset(wrap_fds, 0x0, sizeof(wrap_fds));
 	memset(wrap_used, 0x0, sizeof(wrap_used));
