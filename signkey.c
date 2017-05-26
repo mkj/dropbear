@@ -168,7 +168,8 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 		key->dsskey = m_malloc(sizeof(*key->dsskey));
 		ret = buf_get_dss_pub_key(buf, key->dsskey);
 		if (ret == DROPBEAR_FAILURE) {
-			m_free(key->dsskey);
+			dss_key_free(key->dsskey);
+			key->dsskey = NULL;
 		}
 	}
 #endif
@@ -178,7 +179,8 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 		key->rsakey = m_malloc(sizeof(*key->rsakey));
 		ret = buf_get_rsa_pub_key(buf, key->rsakey);
 		if (ret == DROPBEAR_FAILURE) {
-			m_free(key->rsakey);
+			rsa_key_free(key->rsakey);
+			key->rsakey = NULL;
 		}
 	}
 #endif
@@ -202,7 +204,6 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	TRACE2(("leave buf_get_pub_key"))
 
 	return ret;
-	
 }
 
 /* returns DROPBEAR_SUCCESS on success, DROPBEAR_FAILURE on fail.
@@ -237,7 +238,8 @@ int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 		key->dsskey = m_malloc(sizeof(*key->dsskey));
 		ret = buf_get_dss_priv_key(buf, key->dsskey);
 		if (ret == DROPBEAR_FAILURE) {
-			m_free(key->dsskey);
+			dss_key_free(key->dsskey);
+			key->dsskey = NULL;
 		}
 	}
 #endif
@@ -247,7 +249,8 @@ int buf_get_priv_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 		key->rsakey = m_malloc(sizeof(*key->rsakey));
 		ret = buf_get_rsa_priv_key(buf, key->rsakey);
 		if (ret == DROPBEAR_FAILURE) {
-			m_free(key->rsakey);
+			rsa_key_free(key->rsakey);
+			key->rsakey = NULL;
 		}
 	}
 #endif
