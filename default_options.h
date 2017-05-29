@@ -385,6 +385,12 @@ Homedir is prepended unless path begins with / */
 #define MAX_AUTH_TRIES 10
 #endif
 
+/* Default maximum number of failed authentication tries.
+ * defaults to MAX_AUTH_TRIES */
+#ifndef DEFAULT_AUTH_TRIES
+#define DEFAULT_AUTH_TRIES MAX_AUTH_TRIES
+#endif
+
 /* The default file to store the daemon's process ID, for shutdown
    scripts etc. This can be overridden with the -P flag */
 #ifndef DROPBEAR_PIDFILE
