@@ -12,8 +12,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	static int once = 0;
 	if (!once) {
 		setup_fuzzer();
-		// XXX temporarily disable setjmp to debug asan segv
-		fuzz.do_jmp = 0;
 		once = 1;
 	}
 
@@ -42,9 +40,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	wrapfd_add(fakesock, fuzz.input, PLAIN);
 
 	m_malloc_set_epoch(1);
-	// XXX temporarily disable setjmp to debug asan segv
-	svr_session(fakesock, fakesock);
-	#if 0
 	if (setjmp(fuzz.jmp) == 0) {
 		svr_session(fakesock, fakesock);
 		m_malloc_free_epoch(1, 0);
@@ -53,7 +48,6 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		TRACE(("dropbear_exit longjmped"))
 		// dropbear_exit jumped here
 	}
-	#endif
 
 	return 0;
 }

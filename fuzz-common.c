@@ -66,11 +66,9 @@ void svr_setup_fuzzer(void) {
     svr_getopts(argc, argv);
 
     /* user lookups might be slow, cache it */
-    pw = getpwuid(getuid());
-    dropbear_assert(pw);
-    fuzz.pw_name = m_strdup(pw->pw_name);
-    fuzz.pw_dir = m_strdup(pw->pw_dir);
-    fuzz.pw_shell = m_strdup(pw->pw_shell);
+    fuzz.pw_name = m_strdup("person");
+    fuzz.pw_dir = m_strdup("/tmp");
+    fuzz.pw_shell = m_strdup("/bin/zsh");
     fuzz.pw_passwd = m_strdup("!!zzznope");
 
     load_fixed_hostkeys();
