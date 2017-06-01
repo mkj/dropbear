@@ -49,6 +49,7 @@ struct dropbear_fuzz_options {
     int wrapfds;
 
     // dropbear_exit() jumps back
+    int do_jmp;
     sigjmp_buf jmp;
 
     uid_t pw_uid;

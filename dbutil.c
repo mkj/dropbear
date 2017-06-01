@@ -122,7 +122,7 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 
 #ifdef DROPBEAR_FUZZ
 	// longjmp before cleaning up svr_opts
-    if (fuzz.fuzzing) {
+    if (fuzz.do_jmp) {
         longjmp(fuzz.jmp, 1);
     }
 #endif

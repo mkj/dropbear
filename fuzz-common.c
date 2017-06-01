@@ -17,6 +17,7 @@ static void load_fixed_hostkeys(void);
 void common_setup_fuzzer(void) {
     fuzz.fuzzing = 1;
     fuzz.wrapfds = 1;
+    fuzz.do_jmp = 1;
     fuzz.input = m_malloc(sizeof(buffer));
     _dropbear_log = fuzz_dropbear_log;
     crypto_init();
