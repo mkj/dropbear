@@ -134,7 +134,7 @@ int main(int argc, char ** argv) {
 #endif
 
 	int i;
-	char ** next = 0;
+	char ** next = NULL;
 	char * filename = NULL;
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;

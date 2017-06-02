@@ -81,7 +81,7 @@ static const packettype cli_packettypes[] = {
 	{SSH_MSG_REQUEST_SUCCESS, ignore_recv_response},
 	{SSH_MSG_REQUEST_FAILURE, ignore_recv_response},
 #endif
-	{0, 0} /* End */
+	{0, NULL} /* End */
 };
 
 static const struct ChanType *cli_chantypes[] = {
