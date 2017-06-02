@@ -45,8 +45,8 @@ case "$host" in
 	sol2ver=`echo "$host"| sed -e 's/.*[[0-9]]\.//'`
 	if test "$sol2ver" -ge 8; then
 		AC_MSG_RESULT(yes)
-		AC_DEFINE(DISABLE_UTMP,,Disable utmp)
-		AC_DEFINE(DISABLE_WTMP,,Disable wtmp)
+		AC_DEFINE(DISABLE_UTMP,1,Disable utmp)
+		AC_DEFINE(DISABLE_WTMP,1,Disable wtmp)
 	else
 		AC_MSG_RESULT(no)
 	fi
@@ -55,18 +55,18 @@ case "$host" in
 	;;
 
 *-*-aix*)
-	AC_DEFINE(AIX,,Using AIX)
+	AC_DEFINE(AIX,1,Using AIX)
 	# OpenSSH thinks it's broken. If it isn't, let me know.
-	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
+	AC_DEFINE(BROKEN_GETADDRINFO,1,Broken getaddrinfo)
 	;;
 	
 *-*-hpux*)
 	LIBS="$LIBS -lsec"
 	# It's probably broken.
-	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
+	AC_DEFINE(BROKEN_GETADDRINFO,1,Broken getaddrinfo)
 	;;
 *-dec-osf*)
-	AC_DEFINE(BROKEN_GETADDRINFO,,Broken getaddrinfo)
+	AC_DEFINE(BROKEN_GETADDRINFO,1,Broken getaddrinfo)
 	;;
 esac
 
@@ -80,7 +80,7 @@ AC_CHECK_DECL(__UCLIBC__,
 	[
 	no_loginfunc_check=1
 	AC_MSG_NOTICE([Using uClibc - login() and logout() probably don't work, so we won't use them.])
-	],,,)
+	],,)
 
 dnl We test for crypt() specially. On Linux (and others?) it resides in libcrypt
 dnl but we don't want link all binaries to -lcrypt, just dropbear server.
@@ -118,7 +118,7 @@ AC_ARG_ENABLE(zlib,
 	[  --disable-zlib          Don't include zlib support],
 	[
 		if test "x$enableval" = "xno"; then
-			AC_DEFINE(DISABLE_ZLIB,, Use zlib)
+			AC_DEFINE(DISABLE_ZLIB,1,Use zlib)
 			AC_MSG_NOTICE(Disabling zlib)
 		else
 			AC_CHECK_LIB(z, deflate, , AC_MSG_ERROR([*** zlib missing - install first or check config.log ***]))
@@ -159,13 +159,13 @@ AC_ARG_ENABLE(pam,
 			AC_MSG_NOTICE(Enabling PAM)
 			AC_CHECK_FUNCS(pam_fail_delay)
 		else
-			AC_DEFINE(DISABLE_PAM,, Use PAM)
+			AC_DEFINE(DISABLE_PAM,1,Use PAM)
 			AC_MSG_NOTICE(Disabling PAM)
 		fi
 	],
 	[
 		# disable it by default
-		AC_DEFINE(DISABLE_PAM,, Use PAM)
+		AC_DEFINE(DISABLE_PAM,1,Use PAM)
 		AC_MSG_NOTICE(Disabling PAM)
 	]
 )
@@ -177,7 +177,7 @@ AC_ARG_ENABLE(openpty,
 			AC_MSG_NOTICE(Not using openpty)
 		else
 			AC_MSG_NOTICE(Using openpty if available)
-			AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY,,Have openpty() function)])
+			AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY,1,[Have openpty() function])])
 		fi
 	],
 	[
@@ -191,7 +191,7 @@ AC_ARG_ENABLE(syslog,
 	[  --disable-syslog        Don't include syslog support],
 	[
 		if test "x$enableval" = "xno"; then
-			AC_DEFINE(DISABLE_SYSLOG,, Using syslog)
+			AC_DEFINE(DISABLE_SYSLOG,1,Using syslog)
 			AC_MSG_NOTICE(Disabling syslog)
 		else
 			AC_MSG_NOTICE(Enabling syslog)
@@ -295,7 +295,7 @@ AC_CACHE_CHECK([for struct sockaddr_in6], ac_cv_have_struct_sockaddr_in6, [
 	)
 ])
 if test "x$ac_cv_have_struct_sockaddr_in6" = "xyes" ; then
-	AC_DEFINE(HAVE_STRUCT_SOCKADDR_IN6,,Have struct sockaddr_in6)
+	AC_DEFINE(HAVE_STRUCT_SOCKADDR_IN6,1,Have struct sockaddr_in6)
 fi
 
 AC_CACHE_CHECK([for struct in6_addr], ac_cv_have_struct_in6_addr, [
@@ -309,7 +309,7 @@ AC_CACHE_CHECK([for struct in6_addr], ac_cv_have_struct_in6_addr, [
 	)
 ])
 if test "x$ac_cv_have_struct_in6_addr" = "xyes" ; then
-	AC_DEFINE(HAVE_STRUCT_IN6_ADDR,,Have struct in6_addr)
+	AC_DEFINE(HAVE_STRUCT_IN6_ADDR,1,Have struct in6_addr)
 fi
 
 AC_CACHE_CHECK([for struct addrinfo], ac_cv_have_struct_addrinfo, [
@@ -324,7 +324,7 @@ AC_CACHE_CHECK([for struct addrinfo], ac_cv_have_struct_addrinfo, [
 	)
 ])
 if test "x$ac_cv_have_struct_addrinfo" = "xyes" ; then
-	AC_DEFINE(HAVE_STRUCT_ADDRINFO,,Have struct addrinfo)
+	AC_DEFINE(HAVE_STRUCT_ADDRINFO,1,Have struct addrinfo)
 fi
 
 
@@ -402,7 +402,7 @@ AC_ARG_ENABLE(bundled-libtom,
 )
 
 if test $BUNDLED_LIBTOM = 1 ; then
-	AC_DEFINE(BUNDLED_LIBTOM,,Use bundled libtom) 
+	AC_DEFINE(BUNDLED_LIBTOM,1,Use bundled libtom) 
 fi
 
 AC_SUBST(LIBTOM_LIBS)
@@ -415,7 +415,7 @@ AC_ARG_ENABLE(lastlog,
 	[  --disable-lastlog       Disable use of lastlog even if detected [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_LASTLOG,,Disable use of lastlog())
+			AC_DEFINE(DISABLE_LASTLOG,1,Disable use of lastlog())
 		fi
 	]
 )
@@ -423,7 +423,7 @@ AC_ARG_ENABLE(utmp,
 	[  --disable-utmp          Disable use of utmp even if detected [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_UTMP,,Disable use of utmp)
+			AC_DEFINE(DISABLE_UTMP,1,Disable use of utmp)
 		fi
 	]
 )
@@ -431,7 +431,7 @@ AC_ARG_ENABLE(utmpx,
 	[  --disable-utmpx         Disable use of utmpx even if detected [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_UTMPX,,Disable use of utmpx)
+			AC_DEFINE(DISABLE_UTMPX,1,Disable use of utmpx)
 		fi
 	]
 )
@@ -439,7 +439,7 @@ AC_ARG_ENABLE(wtmp,
 	[  --disable-wtmp          Disable use of wtmp even if detected [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_WTMP,,Disable use of wtmp)
+			AC_DEFINE(DISABLE_WTMP,1,Disable use of wtmp)
 		fi
 	]
 )
@@ -447,20 +447,20 @@ AC_ARG_ENABLE(wtmpx,
 	[  --disable-wtmpx         Disable use of wtmpx even if detected [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_WTMPX,,Disable use of wtmpx)
+			AC_DEFINE(DISABLE_WTMPX,1,Disable use of wtmpx)
 		fi
 	]
 )
 AC_ARG_ENABLE(loginfunc,
 	[  --disable-loginfunc     Disable use of login() etc. [no]],
 	[ no_loginfunc_check=1
-	AC_MSG_NOTICE(Not using login() etc) ]
+	AC_MSG_NOTICE([Not using login() etc]) ]
 )
 AC_ARG_ENABLE(pututline,
 	[  --disable-pututline     Disable use of pututline() etc. ([uw]tmp) [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_PUTUTLINE,,Disable use of pututline())
+			AC_DEFINE(DISABLE_PUTUTLINE,1,Disable use of pututline())
 		fi
 	]
 )
@@ -468,7 +468,7 @@ AC_ARG_ENABLE(pututxline,
 	[  --disable-pututxline    Disable use of pututxline() etc. ([uw]tmpx) [no]],
 	[
 		if test "x$enableval" = "xno" ; then
-			AC_DEFINE(DISABLE_PUTUTXLINE,,Disable use of pututxline())
+			AC_DEFINE(DISABLE_PUTUTXLINE,1,Disable use of pututxline())
 		fi
 	]
 )
@@ -485,7 +485,7 @@ AC_ARG_WITH(lastlog,
 
 if test -z "$no_loginfunc_check"; then
 	dnl    Checks for libutil functions (login(), logout() etc, not openpty() )
-	AC_SEARCH_LIBS(login, util bsd, [AC_DEFINE(HAVE_LOGIN,,Have login() function)])
+	AC_SEARCH_LIBS(login, util bsd, [AC_DEFINE(HAVE_LOGIN,1,[Have login() function])])
 	AC_CHECK_FUNCS(logout updwtmp logwtmp)
 fi
 
@@ -681,7 +681,7 @@ AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 if test -z "$no_ptmx_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
 		if test -e /dev/ptmx ; then
-			AC_DEFINE(USE_DEV_PTMX,,Use /dev/ptmx)
+			AC_DEFINE(USE_DEV_PTMX,1,Use /dev/ptmx)
 		fi
 	else
 		AC_MSG_NOTICE([Not checking for /dev/ptmx, we're cross-compiling])
@@ -691,7 +691,7 @@ fi
 if test -z "$no_ptc_check" ; then
 	if test x"$cross_compiling" = x"no" ; then
 		if test -e /dev/ptc ; then
-			AC_DEFINE(HAVE_DEV_PTS_AND_PTC,,Use /dev/ptc & /dev/pts)
+			AC_DEFINE(HAVE_DEV_PTS_AND_PTC,1,Use /dev/ptc & /dev/pts)
 		fi
 	else
 		AC_MSG_NOTICE([Not checking for /dev/ptc & /dev/pts since we're cross-compiling])
