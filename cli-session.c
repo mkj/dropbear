@@ -287,7 +287,7 @@ static void cli_sessionloop() {
 				int devnull;
 				/* keeping stdin open steals input from the terminal and
 				   is confusing, though stdout/stderr could be useful. */
-				devnull = open(_PATH_DEVNULL, O_RDONLY);
+				devnull = open(DROPBEAR_PATH_DEVNULL, O_RDONLY);
 				if (devnull < 0) {
 					dropbear_exit("Opening /dev/null: %d %s",
 							errno, strerror(errno));
