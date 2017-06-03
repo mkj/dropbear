@@ -774,7 +774,7 @@ static void finish_kexhashbuf(void) {
 	hash_desc->done(&hs, buf_getwriteptr(ses.hash, hash_desc->hashsize));
 	buf_setlen(ses.hash, hash_desc->hashsize);
 
-#if (DEBUG_KEXHASH) && (DEBUG_TRACE)
+#if defined(DEBUG_KEXHASH) && DEBUG_TRACE
 	if (!debug_trace) {
 		printhex("kexhashbuf", ses.kexhashbuf->data, ses.kexhashbuf->len);
 		printhex("kexhash", ses.hash->data, ses.hash->len);

@@ -66,7 +66,7 @@ static const packettype svr_packettypes[] = {
 	{SSH_MSG_CHANNEL_OPEN_CONFIRMATION, recv_msg_channel_open_confirmation},
 	{SSH_MSG_CHANNEL_OPEN_FAILURE, recv_msg_channel_open_failure},
 #endif
-	{0, 0} /* End */
+	{0, NULL} /* End */
 };
 
 static const struct ChanType *svr_chantypes[] = {

@@ -106,7 +106,7 @@ static void printhelp() {
 
 void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
-	char ** next = 0;
+	char ** next = NULL;
 	enum {
 		OPT_EXTENDED_OPTIONS,
 #if DROPBEAR_CLI_PUBKEY_AUTH
