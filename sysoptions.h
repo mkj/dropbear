@@ -156,16 +156,16 @@
 #define MAX_STRING_LEN (MAX(MAX_CMD_LEN, 2400)) /* Sun SSH needs 2400 for algos,
                                                    MAX_CMD_LEN is usually longer */
 
-/* For a 4096 bit DSS key, empirically determined */
-#define MAX_PUBKEY_SIZE 1700
-/* For a 4096 bit DSS key, empirically determined */
-#define MAX_PRIVKEY_SIZE 1700
+/* For a 16384 bit DSS key, empirically determined */
+#define MAX_PUBKEY_SIZE 2500
+/* For a 16384 bit DSS key, empirically determined */
+#define MAX_PRIVKEY_SIZE 2500
 
 #define MAX_HOSTKEYS 3
 
 /* The maximum size of the bignum portion of the kexhash buffer */
 /* Sect. 8 of the transport rfc 4253, K_S + e + f + K */
-#define KEXHASHBUF_MAX_INTS (1700 + 130 + 130 + 130)
+#define KEXHASHBUF_MAX_INTS (2500 + 130 + 130 + 130)
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
 								in a few years time.... */
