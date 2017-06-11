@@ -372,9 +372,10 @@ static int checkmac() {
 
 #ifdef DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
-		// fail 1 in 1000 times to test error path
+		// fail 1 in 2000 times to test error path.
+		// note that mac_bytes is all zero prior to kex, so don't test ==0 !
 		unsigned int value = *((unsigned int*)&mac_bytes);
-		if (value % 1000 == 0) {
+		if (value % 2000 == 99) {
 			return DROPBEAR_FAILURE;
 		}
 		return DROPBEAR_SUCCESS;
