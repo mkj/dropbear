@@ -349,7 +349,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 }
 
 /* from openssh/canohost.c avoid premature-optimization */
-int get_sock_port(int sock, int local) {
+int get_sock_port(int sock) {
 	struct sockaddr_storage from;
 	socklen_t fromlen;
 	char strport[NI_MAXSERV];
@@ -358,16 +358,9 @@ int get_sock_port(int sock, int local) {
 	/* Get IP address of client. */
 	fromlen = sizeof(from);
 	memset(&from, 0, sizeof(from));
-	if (local) {
-		if (getsockname(sock, (struct sockaddr *)&from, &fromlen) < 0) {
-			TRACE(("getsockname failed: %d", errno))
-			return 0;
-		}
-	} else {
-		if (getpeername(sock, (struct sockaddr *)&from, &fromlen) < 0) {
-			TRACE(("getpeername failed: %d", errno))
-			return -1;
-		}
+	if (getsockname(sock, (struct sockaddr *)&from, &fromlen) < 0) {
+		TRACE(("getsockname failed: %d", errno))
+		return 0;
 	}
 
 	/* Work around Linux IPv6 weirdness */
@@ -452,12 +445,14 @@ int dropbear_listen(const char* address, const char* port,
 	for (res = res0; res != NULL && nsock < sockcount;
 			res = res->ai_next) {
 
-		if (AF_INET == res->ai_family) {
-			allocated_lport_p = &((struct sockaddr_in *)res->ai_addr)->sin_port;
-		} else if (AF_INET == res->ai_family) {
-			allocated_lport_p = &((struct sockaddr_in6 *)res->ai_addr)->sin6_port;
+		if (allocated_lport > 0) {
+			if (AF_INET == res->ai_family) {
+				allocated_lport_p = &((struct sockaddr_in *)res->ai_addr)->sin_port;
+			} else if (AF_INET6 == res->ai_family) {
+				allocated_lport_p = &((struct sockaddr_in6 *)res->ai_addr)->sin6_port;
+			}
+			*allocated_lport_p = htons(allocated_lport);
 		}
-		if (allocated_lport > 0) *allocated_lport_p = htons(allocated_lport);
 
 		/* Get a socket */
 		socks[nsock] = socket(res->ai_family, res->ai_socktype,
@@ -505,7 +500,9 @@ int dropbear_listen(const char* address, const char* port,
 			continue;
 		}
 
-		if (0 == allocated_lport) allocated_lport = get_sock_port(sock, 1);
+		if (0 == allocated_lport) {
+			allocated_lport = get_sock_port(sock);
+		}
 
 		*maxfd = MAX(*maxfd, sock);
 
