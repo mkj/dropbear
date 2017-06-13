@@ -209,6 +209,13 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 	}
 
 	ret = listen_tcpfwd(tcpinfo);
+	if (DROPBEAR_SUCCESS == ret) {
+		tcpinfo->listenport = get_sock_port(ses.listeners[0]->socks[0]);
+		*allocated_listen_port = tcpinfo->listenport;
+		dropbear_log(LOG_INFO, "tcpip-forward %s:%d '%s'", 
+			((NULL == tcpinfo->listenaddr)?"localhost":tcpinfo->listenaddr), 
+			tcpinfo->listenport, ses.authstate.pw_name);
+	}
 
 out:
 	if (ret == DROPBEAR_FAILURE) {
@@ -216,12 +223,6 @@ out:
 		 * has to remember it if it's to be cancelled */
 		m_free(request_addr);
 		m_free(tcpinfo);
-	} else {
-		tcpinfo->listenport = get_sock_port(ses.listeners[0]->socks[0], 1);
-		*allocated_listen_port = tcpinfo->listenport;
-		dropbear_log(LOG_INFO, "tcpip-forward %s:%d '%s'", 
-			((NULL == tcpinfo->listenaddr)?"localhost":tcpinfo->listenaddr), 
-			tcpinfo->listenport, ses.authstate.pw_name);
 	}
 
 	TRACE(("leave remotetcpreq"))
