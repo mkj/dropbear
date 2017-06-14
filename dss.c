@@ -181,6 +181,10 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 		TRACE(("verify failed, s' >= q"))
 		goto out;
 	}
+	if (mp_cmp_d(&val1, 0) != MP_GT) {
+		TRACE(("verify failed, s' <= 0"))
+		goto out;
+	}
 	/* let val2 = w = (s')^-1 mod q*/
 	if (mp_invmod(&val1, key->q, &val2) != MP_OKAY) {
 		goto out;
@@ -200,6 +204,10 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	bytes_to_mp(&val1, (const unsigned char*) &string[0], SHA1_HASH_SIZE);
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, r' >= q"))
+		goto out;
+	}
+	if (mp_cmp_d(&val1, 0) != MP_GT) {
+		TRACE(("verify failed, r' <= 0"))
 		goto out;
 	}
 	/* let val4 = u2 = ((r')w) mod q */

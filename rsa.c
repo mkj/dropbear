@@ -324,7 +324,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 	buf_incrwritepos(buf, ssize);
 	mp_clear(&rsa_s);
 
-#if defined(DEBUG_RSA) && defined(DEBUG_TRACE)
+#if defined(DEBUG_RSA) && DEBUG_TRACE
 	if (!debug_trace) {
 		printhex("RSA sig", buf->data, buf->len);
 	}

@@ -114,7 +114,7 @@ static void printhelp(const char * progname) {
 void svr_getopts(int argc, char ** argv) {
 
 	unsigned int i, j;
-	char ** next = 0;
+	char ** next = NULL;
 	int nextisport = 0;
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
@@ -289,7 +289,7 @@ void svr_getopts(int argc, char ** argv) {
 			if (*next == NULL) {
 				dropbear_exit("Invalid null argument");
 			}
-			next = 0x00;
+			next = NULL;
 
 			if (keyfile) {
 				addhostkey(keyfile);

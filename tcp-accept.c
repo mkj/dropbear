@@ -55,19 +55,19 @@ int tcp_prio_inithandler(struct Channel* channel)
 static void tcp_acceptor(struct Listener *listener, int sock) {
 
 	int fd;
-	struct sockaddr_storage addr;
+	struct sockaddr_storage sa;
 	socklen_t len;
 	char ipstring[NI_MAXHOST], portstring[NI_MAXSERV];
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 
-	len = sizeof(addr);
+	len = sizeof(sa);
 
-	fd = accept(sock, (struct sockaddr*)&addr, &len);
+	fd = accept(sock, (struct sockaddr*)&sa, &len);
 	if (fd < 0) {
 		return;
 	}
 
-	if (getnameinfo((struct sockaddr*)&addr, len, ipstring, sizeof(ipstring),
+	if (getnameinfo((struct sockaddr*)&sa, len, ipstring, sizeof(ipstring),
 				portstring, sizeof(portstring), 
 				NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
 		m_close(fd);
