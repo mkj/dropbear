@@ -94,7 +94,7 @@ int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 	m_mp_alloc_init_multi(&key->x, NULL);
 	ret = buf_getmpint(buf, key->x);
 	if (ret == DROPBEAR_FAILURE) {
-		m_mp_free_multi(&key->x);
+		m_mp_free_multi(&key->x, NULL);
 	}
 
 	return ret;
