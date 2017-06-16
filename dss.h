@@ -41,6 +41,9 @@ typedef struct {
 
 } dropbear_dss_key;
 
+#define DSS_P_BITS 1024
+#define DSS_Q_BITS 160
+
 void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
 #if DROPBEAR_SIGNKEY_VERIFY
 int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
