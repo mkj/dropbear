@@ -40,10 +40,10 @@
 
 /* Minimum key sizes for DSS and RSA */
 #ifndef MIN_DSS_KEYLEN
-#define MIN_DSS_KEYLEN 512
+#define MIN_DSS_KEYLEN 1024
 #endif
 #ifndef MIN_RSA_KEYLEN
-#define MIN_RSA_KEYLEN 512
+#define MIN_RSA_KEYLEN 1024
 #endif
 
 #define MAX_BANNER_SIZE 2000 /* this is 25*80 chars, any more is foolish */
