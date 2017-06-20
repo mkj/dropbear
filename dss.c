@@ -174,6 +174,13 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 		goto out;
 	}
 
+#if DEBUG_DSS_VERIFY
+	printmpint("dss verify p", key->p);
+	printmpint("dss verify q", key->q);
+	printmpint("dss verify g", key->g);
+	printmpint("dss verify x", key->x);
+#endif
+
 	/* hash the data */
 	sha1_init(&hs);
 	sha1_process(&hs, data_buf->data, data_buf->len);
@@ -183,6 +190,9 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	/* w = (s')-1 mod q */
 	/* let val1 = s' */
 	bytes_to_mp(&val1, (const unsigned char*) &string[SHA1_HASH_SIZE], SHA1_HASH_SIZE);
+#if DEBUG_DSS_VERIFY
+	printmpint("dss verify s'", &val1);
+#endif
 
 	if (mp_cmp(&val1, key->q) != MP_LT) {
 		TRACE(("verify failed, s' >= q"))
@@ -200,6 +210,9 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	/* u1 = ((SHA(M')w) mod q */
 	/* let val1 = SHA(M') = msghash */
 	bytes_to_mp(&val1, msghash, SHA1_HASH_SIZE);
+#if DEBUG_DSS_VERIFY
+	printmpint("dss verify r'", &val1);
+#endif
 
 	/* let val3 = u1 = ((SHA(M')w) mod q */
 	if (mp_mulmod(&val1, &val2, key->q, &val3) != MP_OKAY) {
