@@ -9,7 +9,7 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
-OLDCFLAGS=$CFLAGS
+OLDCFLAGS="$CFLAGS"
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
@@ -23,6 +23,17 @@ if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
 	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
 fi
+
+AC_MSG_CHECKING([if compiler '$CC' supports -fno-strict-overflow])
+OLDCFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fno-strict-overflow"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+    [AC_MSG_RESULT(yes)], 
+    [
+        AC_MSG_RESULT(no)
+        CFLAGS=$OLDCFLAGS
+    ]
+    )
 
 # large file support is useful for scp
 AC_SYS_LARGEFILE
