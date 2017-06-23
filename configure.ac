@@ -58,7 +58,15 @@ if test "$hardenbuild" -eq 1; then
 	LDFLAGS="$LDFLAGS $TESTFLAGS"
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
 	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+		[
+			LDFLAGS="$OLDLDFLAGS"
+			TESTFLAGS="-pie"
+			LDFLAGS="$LDFLAGS $TESTFLAGS"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+				[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+				[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+				)
+		]
 	    )
 	# readonly elf relocation sections (relro)
 	OLDLDFLAGS="$LDFLAGS"
