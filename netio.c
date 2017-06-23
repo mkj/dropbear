@@ -307,7 +307,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 #ifdef IPTOS_LOWDELAY
 	int iptos_val = 0;
 #endif
-#ifdef SO_PRIORITY
+#ifdef HAVE_LINUX_PKT_SCHED_H
 	int so_prio_val = 0;
 #endif
 
@@ -340,7 +340,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	}
 #endif
 
-#ifdef SO_PRIORITY
+#ifdef HAVE_LINUX_PKT_SCHED_H
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
 		so_prio_val = TC_PRIO_INTERACTIVE;
 	} else if (prio == DROPBEAR_PRIO_BULK) {

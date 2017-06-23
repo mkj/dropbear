@@ -160,7 +160,7 @@ typedef u_int32_t uint32_t;
 #define SIZE_T_MAX ULONG_MAX
 #endif /* SIZE_T_MAX */
 
-#ifdef SO_PRIORITY
+#ifdef HAVE_LINUX_PKT_SCHED_H
 #include <linux/types.h>
 #include <linux/pkt_sched.h>
 #endif
