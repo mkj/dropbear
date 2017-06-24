@@ -333,6 +333,8 @@ kernels, from Steve Dover
 
 2013.61test - Thursday 14 November 2013
 
+- Default generated RSA key size changed from 1024 to 2048 bits
+
 - ECC (elliptic curve) support. Supports ECDSA hostkeys (requires new keys to
   be generated) and ECDH for setting up encryption keys (no intervention
   required). This is significantly faster.
