@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,13 +15,13 @@
    RMD128 Hash function
 */   
 
-/* Implementation of RIPEMD-128 based on the source by Antoon Bosselaers, ESAT-COSIC
+/* Implementation of LTC_RIPEMD-128 based on the source by Antoon Bosselaers, ESAT-COSIC
  *
  * This source has been radically overhauled to be portable and work within
  * the LibTomCrypt API by Tom St Denis
  */
 
-#ifdef RIPEMD128
+#ifdef LTC_RIPEMD128
 
 const struct ltc_hash_descriptor rmd128_desc =
 {
@@ -405,6 +405,6 @@ int rmd128_test(void)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/rmd128.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

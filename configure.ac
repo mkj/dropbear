@@ -9,7 +9,7 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
-OLDCFLAGS=$CFLAGS
+OLDCFLAGS="$CFLAGS"
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
@@ -19,9 +19,87 @@ if test -z "$LD" ; then
 fi
 AC_SUBST(LD)	
 
+# set compile flags prior to other tests
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
 	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
+fi
+
+AC_MSG_CHECKING([if compiler '$CC' supports -fno-strict-overflow])
+OLDCFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -fno-strict-overflow"
+AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+    [AC_MSG_RESULT(yes)], 
+    [AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS" ]
+    )
+
+hardenbuild=1
+AC_ARG_ENABLE(harden,
+	[  --disable-harden          Don't set hardened build flags],
+	[
+		if test "x$enableval" = "xno"; then
+			hardenbuild=0
+			AC_MSG_NOTICE(Disabling hardened build flags)
+		fi
+	], [])
+
+if test "$hardenbuild" -eq 1; then
+	AC_MSG_NOTICE(Checking for available hardened build flags:)
+	# pie
+	OLDCFLAGS="$CFLAGS"
+	TESTFLAGS="-fPIE"
+	CFLAGS="$CFLAGS $TESTFLAGS"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
+	    )
+	OLDLDFLAGS="$LDFLAGS"
+	TESTFLAGS="-Wl,-pie"
+	LDFLAGS="$LDFLAGS $TESTFLAGS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+		[
+			LDFLAGS="$OLDLDFLAGS"
+			TESTFLAGS="-pie"
+			LDFLAGS="$LDFLAGS $TESTFLAGS"
+			AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+				[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+				[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+				)
+		]
+	    )
+	# readonly elf relocation sections (relro)
+	OLDLDFLAGS="$LDFLAGS"
+	TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
+	LDFLAGS="$LDFLAGS $TESTFLAGS"
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+	    )
+	# stack protector. -strong is good but only in gcc 4.9 or later
+	OLDCFLAGS="$CFLAGS"
+	TESTFLAGS="-fstack-protector-strong"
+	CFLAGS="$CFLAGS $TESTFLAGS"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+	    [
+			CFLAGS="$OLDCFLAGS"
+			TESTFLAGS="-fstack-protector --param=ssp-buffer-size=4"
+			CFLAGS="$CFLAGS $TESTFLAGS"
+			AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+			    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
+			    )
+	    ]
+	    )
+	# FORTIFY_SOURCE
+	OLDCFLAGS="$CFLAGS"
+	TESTFLAGS="-D_FORTIFY_SOURCE=2"
+	CFLAGS="$CFLAGS $TESTFLAGS"
+	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
+	    )
 fi
 
 # large file support is useful for scp
@@ -222,7 +300,11 @@ AC_ARG_ENABLE(shadow,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h pam/pam_appl.h netinet/in_systm.h sys/uio.h])
+AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h \
+	string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h \
+	pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
+	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
+	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -388,16 +470,16 @@ AC_ARG_ENABLE(bundled-libtom,
 			AC_MSG_NOTICE(Forcing bundled libtom*)
 		else
 			BUNDLED_LIBTOM=0
-			AC_CHECK_LIB(tommath, mp_exptmod, LIBTOM_LIBS="$LIBTOM_LIBS -ltommath", 
+			AC_CHECK_LIB(tommath, mp_exptmod, LIBTOM_LIBS="-ltommath $LIBTOM_LIBS",
 				[AC_MSG_ERROR([Missing system libtommath and --disable-bundled-libtom was specified])] )
-			AC_CHECK_LIB(tomcrypt, register_cipher, LIBTOM_LIBS="$LIBTOM_LIBS -ltomcrypt", 
+			AC_CHECK_LIB(tomcrypt, register_cipher, LIBTOM_LIBS="-ltomcrypt $LIBTOM_LIBS",
 				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
 		fi
 	],
 	[
 		BUNDLED_LIBTOM=0
-		AC_CHECK_LIB(tommath, mp_exptmod, LIBTOM_LIBS="$LIBTOM_LIBS -ltommath", BUNDLED_LIBTOM=1)
-		AC_CHECK_LIB(tomcrypt, register_cipher, LIBTOM_LIBS="$LIBTOM_LIBS -ltomcrypt", BUNDLED_LIBTOM=1)
+		AC_CHECK_LIB(tommath, mp_exptmod, LIBTOM_LIBS="-ltommath $LIBTOM_LIBS", BUNDLED_LIBTOM=1)
+		AC_CHECK_LIB(tomcrypt, register_cipher, LIBTOM_LIBS="-ltomcrypt $LIBTOM_LIBS", BUNDLED_LIBTOM=1)
 	]
 )
 

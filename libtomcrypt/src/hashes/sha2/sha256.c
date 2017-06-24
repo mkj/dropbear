@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file sha256.c
-  SHA256 by Tom St Denis 
+  LTC_SHA256 by Tom St Denis 
 */
 
-#ifdef SHA256 
+#ifdef LTC_SHA256 
 
 const struct ltc_hash_descriptor sha256_desc =
 {
@@ -327,7 +327,7 @@ int  sha256_test(void)
  #endif
 }
 
-#ifdef SHA224
+#ifdef LTC_SHA224
 #include "sha224.c"
 #endif
 
@@ -335,6 +335,6 @@ int  sha256_test(void)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha256.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

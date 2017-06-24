@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 #include "tomcrypt.h"
@@ -16,7 +16,7 @@
    Tiger hash function, Tom St Denis
 */
 
-#ifdef TIGER
+#ifdef LTC_TIGER
 
 const struct ltc_hash_descriptor tiger_desc =
 {
@@ -809,6 +809,6 @@ Hash of "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+-ABCDEFG
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/tiger.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

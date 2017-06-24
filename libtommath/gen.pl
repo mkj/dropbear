@@ -15,3 +15,5 @@ foreach my $filename (glob "bn*.c") {
 }
 print OUT "\n/* EOF */\n";
 close OUT or die "Error closing mpi.c after writing: $!";
+
+system('perl -pli -e "s/\s*$//" mpi.c');

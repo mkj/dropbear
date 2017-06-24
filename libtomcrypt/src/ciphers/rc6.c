@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
    @file rc6.c
-   RC6 code by Tom St Denis 
+   LTC_RC6 code by Tom St Denis 
 */
 #include "tomcrypt.h"
 
-#ifdef RC6
+#ifdef LTC_RC6
 
 const struct ltc_cipher_descriptor rc6_desc =
 {
@@ -40,7 +40,7 @@ static const ulong32 stab[44] = {
 0x708c564bUL, 0x0ec3d004UL, 0xacfb49bdUL, 0x4b32c376UL };
 
  /**
-    Initialize the RC6 block cipher
+    Initialize the LTC_RC6 block cipher
     @param key The symmetric key you wish to pass
     @param keylen The key length in bytes
     @param num_rounds The number of rounds desired (0 for default)
@@ -114,7 +114,7 @@ int rc6_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 #endif
 
 /**
-  Encrypts a block of text with RC6
+  Encrypts a block of text with LTC_RC6
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
@@ -168,7 +168,7 @@ int rc6_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *s
 #endif
 
 /**
-  Decrypts a block of text with RC6
+  Decrypts a block of text with LTC_RC6
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
@@ -224,7 +224,7 @@ int rc6_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *s
 #endif
 
 /**
-  Performs a self-test of the RC6 block cipher
+  Performs a self-test of the LTC_RC6 block cipher
   @return CRYPT_OK if functional, CRYPT_NOP if self-test has been disabled
 */
 int rc6_test(void)
@@ -339,10 +339,10 @@ int rc6_keysize(int *keysize)
    return CRYPT_OK;
 }
 
-#endif /*RC6*/
+#endif /*LTC_RC6*/
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/rc6.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

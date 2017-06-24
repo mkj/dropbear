@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    DSA implementation, import a DSA key, Tom St Denis
 */
 
-#ifdef MDSA
+#ifdef LTC_MDSA
 
 /**
    Import a DSA key 
@@ -71,8 +71,8 @@ int dsa_import(const unsigned char *in, unsigned long inlen, dsa_key *key)
   }
   key->qord = mp_unsigned_bin_size(key->q);
 
-  if (key->qord >= MDSA_MAX_GROUP || key->qord <= 15 ||
-      (unsigned long)key->qord >= mp_unsigned_bin_size(key->p) || (mp_unsigned_bin_size(key->p) - key->qord) >= MDSA_DELTA) {
+  if (key->qord >= LTC_MDSA_MAX_GROUP || key->qord <= 15 ||
+      (unsigned long)key->qord >= mp_unsigned_bin_size(key->p) || (mp_unsigned_bin_size(key->p) - key->qord) >= LTC_MDSA_DELTA) {
       err = CRYPT_INVALID_PACKET;
       goto error;
    }
@@ -85,6 +85,6 @@ error:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_import.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

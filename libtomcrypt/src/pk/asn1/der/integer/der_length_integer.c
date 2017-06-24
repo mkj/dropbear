@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -77,6 +77,6 @@ int der_length_integer(void *num, unsigned long *outlen)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/integer/der_length_integer.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/04/22 01:22:55 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

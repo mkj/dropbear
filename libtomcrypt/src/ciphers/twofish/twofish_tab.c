@@ -6,14 +6,14 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
  /**
     @file twofish_tab.c
     Twofish tables, Tom St Denis
  */
-#ifdef TWOFISH_TABLES
+#ifdef LTC_TWOFISH_TABLES
 
 /* pre generated 8x8 tables from the four 4x4s */
 static const unsigned char SBOX[2][256] = {
@@ -212,7 +212,7 @@ static const ulong32 mds_tab[4][256] = {
 0xc6baf8c6UL, 0x9d55f99dUL, 0x700dfa70UL, 0x2be2fb2bUL, 0xc3bdfcc3UL, 0x9852fd98UL, 0x750afe75UL, 0x2ee5ff2eUL
 }};
 
-#ifdef TWOFISH_ALL_TABLES
+#ifdef LTC_TWOFISH_ALL_TABLES
 
 /* the 4x8 RS transform */
 static const ulong32 rs_tab0[256] = {
@@ -487,10 +487,10 @@ static const ulong32 rs_tab7[256] = {
 0x5d8218b2LU, 0x5e9bfd2cLU, 0x5bb09fc3LU, 0x58a97a5dLU, 0x51e65b50LU, 0x52ffbeceLU, 0x57d4dc21LU, 0x54cd39bfLU, 
 0x454a9e3bLU, 0x46537ba5LU, 0x4378194aLU, 0x4061fcd4LU, 0x492eddd9LU, 0x4a373847LU, 0x4f1c5aa8LU, 0x4c05bf36LU };
 
-#endif /* TWOFISH_ALL_TABLES */
+#endif /* LTC_TWOFISH_ALL_TABLES */
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/twofish/twofish_tab.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

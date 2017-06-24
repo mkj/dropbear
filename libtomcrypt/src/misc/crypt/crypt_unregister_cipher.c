@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -40,6 +40,6 @@ int unregister_cipher(const struct ltc_cipher_descriptor *cipher)
    return CRYPT_ERROR;
 }
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_unregister_cipher.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

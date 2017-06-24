@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file katja_encrypt_key.c
-  Katja PKCS-style OAEP encryption, Tom St Denis
+  Katja LTC_PKCS-style OAEP encryption, Tom St Denis
 */  
 
 #ifdef MKAT
 
 /**
-    (PKCS #1 v2.0) OAEP pad then encrypt
+    (LTC_PKCS #1 v2.0) OAEP pad then encrypt
     @param in          The plaintext
     @param inlen       The length of the plaintext (octets)
     @param out         [out] The ciphertext
@@ -80,8 +80,8 @@ int katja_encrypt_key(const unsigned char *in,     unsigned long inlen,
   return katja_exptmod(out, x, out, outlen, PK_PUBLIC, key);
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/katja/katja_encrypt_key.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/06/16 21:53:41 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

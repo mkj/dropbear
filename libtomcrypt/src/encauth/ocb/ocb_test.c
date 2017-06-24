@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /** 
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#ifdef OCB_MODE
+#ifdef LTC_OCB_MODE
 
 /** 
   Test the OCB protocol
@@ -222,7 +222,7 @@ int ocb_test(void)
 #endif /* LTC_TEST */
 }
 
-#endif /* OCB_MODE */
+#endif /* LTC_OCB_MODE */
 
 
 /* some comments
@@ -232,6 +232,6 @@ int ocb_test(void)
    -- The setup is somewhat complicated...
 */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_test.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

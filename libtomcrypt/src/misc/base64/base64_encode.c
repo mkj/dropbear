@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef BASE64
+#ifdef LTC_BASE64
 
 static const char *codes = 
 "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz0123456789+/";
@@ -76,6 +76,6 @@ int base64_encode(const unsigned char *in,  unsigned long inlen,
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/base64/base64_encode.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/06/16 21:53:41 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

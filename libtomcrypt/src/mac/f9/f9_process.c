@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -72,7 +72,7 @@ int f9_process(f9_state *f9, const unsigned char *in, unsigned long inlen)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/f9/f9_process.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2006/12/16 17:41:21 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
 

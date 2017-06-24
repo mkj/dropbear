@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -45,118 +45,124 @@ const char *crypt_build_settings =
    "disabled\n"
 #endif
    "Ciphers built-in:\n"
-#if defined(BLOWFISH)
+#if defined(LTC_BLOWFISH)
    "   Blowfish\n"
 #endif
-#if defined(RC2)
-   "   RC2\n"
+#if defined(LTC_RC2)
+   "   LTC_RC2\n"
 #endif
-#if defined(RC5)
-   "   RC5\n"
+#if defined(LTC_RC5)
+   "   LTC_RC5\n"
 #endif
-#if defined(RC6)
-   "   RC6\n"
+#if defined(LTC_RC6)
+   "   LTC_RC6\n"
 #endif
-#if defined(SAFERP)
+#if defined(LTC_SAFERP)
    "   Safer+\n"
 #endif
-#if defined(SAFER)
+#if defined(LTC_SAFER)
    "   Safer\n"
 #endif
-#if defined(RIJNDAEL)
+#if defined(LTC_RIJNDAEL)
    "   Rijndael\n"
 #endif
-#if defined(XTEA)
-   "   XTEA\n"
+#if defined(LTC_XTEA)
+   "   LTC_XTEA\n"
 #endif
-#if defined(TWOFISH)
+#if defined(LTC_TWOFISH)
    "   Twofish "
-   #if defined(TWOFISH_SMALL) && defined(TWOFISH_TABLES) && defined(TWOFISH_ALL_TABLES)
+   #if defined(LTC_TWOFISH_SMALL) && defined(LTC_TWOFISH_TABLES) && defined(LTC_TWOFISH_ALL_TABLES)
        "(small, tables, all_tables)\n"
-   #elif defined(TWOFISH_SMALL) && defined(TWOFISH_TABLES)
+   #elif defined(LTC_TWOFISH_SMALL) && defined(LTC_TWOFISH_TABLES)
        "(small, tables)\n"
-   #elif defined(TWOFISH_SMALL) && defined(TWOFISH_ALL_TABLES)
+   #elif defined(LTC_TWOFISH_SMALL) && defined(LTC_TWOFISH_ALL_TABLES)
        "(small, all_tables)\n"
-   #elif defined(TWOFISH_TABLES) && defined(TWOFISH_ALL_TABLES)
+   #elif defined(LTC_TWOFISH_TABLES) && defined(LTC_TWOFISH_ALL_TABLES)
        "(tables, all_tables)\n"
-   #elif defined(TWOFISH_SMALL)
+   #elif defined(LTC_TWOFISH_SMALL)
        "(small)\n"
-   #elif defined(TWOFISH_TABLES)
+   #elif defined(LTC_TWOFISH_TABLES)
        "(tables)\n"
-   #elif defined(TWOFISH_ALL_TABLES)
+   #elif defined(LTC_TWOFISH_ALL_TABLES)
        "(all_tables)\n"
    #else
        "\n"
    #endif
 #endif
-#if defined(DES)
-   "   DES\n"
+#if defined(LTC_DES)
+   "   LTC_DES\n"
 #endif
-#if defined(CAST5)
-   "   CAST5\n"
+#if defined(LTC_CAST5)
+   "   LTC_CAST5\n"
 #endif
-#if defined(NOEKEON)
+#if defined(LTC_NOEKEON)
    "   Noekeon\n"
 #endif
-#if defined(SKIPJACK)
+#if defined(LTC_SKIPJACK)
    "   Skipjack\n"
 #endif
-#if defined(KHAZAD)
+#if defined(LTC_KHAZAD)
    "   Khazad\n"
 #endif
-#if defined(ANUBIS)
+#if defined(LTC_ANUBIS)
    "   Anubis "
 #endif
-#if defined(ANUBIS_TWEAK)
+#if defined(LTC_ANUBIS_TWEAK)
    " (tweaked)"
 #endif
    "\n"
-#if defined(KSEED)
-   "   KSEED\n"
+#if defined(LTC_KSEED)
+   "   LTC_KSEED\n"
 #endif
 #if defined(LTC_KASUMI)
    "   KASUMI\n"
 #endif
 
     "\nHashes built-in:\n"
-#if defined(SHA512)
-   "   SHA-512\n"
+#if defined(LTC_SHA512)
+   "   LTC_SHA-512\n"
 #endif
-#if defined(SHA384)
-   "   SHA-384\n"
+#if defined(LTC_SHA384)
+   "   LTC_SHA-384\n"
 #endif
-#if defined(SHA256)
-   "   SHA-256\n"
+#if defined(LTC_SHA256)
+   "   LTC_SHA-256\n"
 #endif
-#if defined(SHA224)
-   "   SHA-224\n"
+#if defined(LTC_SHA224)
+   "   LTC_SHA-224\n"
 #endif
-#if defined(TIGER)
-   "   TIGER\n"
+#if defined(LTC_TIGER)
+   "   LTC_TIGER\n"
 #endif
-#if defined(SHA1)
-   "   SHA1\n"
+#if defined(LTC_SHA1)
+   "   LTC_SHA1\n"
 #endif
-#if defined(MD5)
-   "   MD5\n"
+#if defined(LTC_MD5)
+   "   LTC_MD5\n"
 #endif
-#if defined(MD4)
-   "   MD4\n"
+#if defined(LTC_MD4)
+   "   LTC_MD4\n"
 #endif
-#if defined(MD2)
-   "   MD2\n"
+#if defined(LTC_MD2)
+   "   LTC_MD2\n"
 #endif
-#if defined(RIPEMD128)
-   "   RIPEMD128\n"
+#if defined(LTC_RIPEMD128)
+   "   LTC_RIPEMD128\n"
 #endif
-#if defined(RIPEMD160)
-   "   RIPEMD160\n"
+#if defined(LTC_RIPEMD160)
+   "   LTC_RIPEMD160\n"
 #endif
-#if defined(WHIRLPOOL)
-   "   WHIRLPOOL\n"
+#if defined(LTC_RIPEMD256)
+   "   LTC_RIPEMD256\n"
 #endif
-#if defined(CHC_HASH)
-   "   CHC_HASH \n"
+#if defined(LTC_RIPEMD320)
+   "   LTC_RIPEMD320\n"
+#endif
+#if defined(LTC_WHIRLPOOL)
+   "   LTC_WHIRLPOOL\n"
+#endif
+#if defined(LTC_CHC_HASH)
+   "   LTC_CHC_HASH \n"
 #endif
 
     "\nBlock Chaining Modes:\n"
@@ -189,19 +195,22 @@ const char *crypt_build_settings =
 #if defined(LTC_F8_MODE)
     "   F8 MODE\n"
 #endif    
+#if defined(LTC_XTS_MODE)
+    "   LTC_XTS_MODE\n"
+#endif
 
     "\nMACs:\n"
 #if defined(LTC_HMAC)
-    "   HMAC\n"
+    "   LTC_HMAC\n"
 #endif
 #if defined(LTC_OMAC)
-    "   OMAC\n"
+    "   LTC_OMAC\n"
 #endif
 #if defined(LTC_PMAC)
     "   PMAC\n"
 #endif
-#if defined(PELICAN)
-    "   PELICAN\n"
+#if defined(LTC_PELICAN)
+    "   LTC_PELICAN\n"
 #endif
 #if defined(LTC_XCBC)
     "   XCBC-MAC\n"
@@ -211,48 +220,48 @@ const char *crypt_build_settings =
 #endif
 
     "\nENC + AUTH modes:\n"
-#if defined(EAX_MODE)
-    "   EAX_MODE\n"
+#if defined(LTC_EAX_MODE)
+    "   LTC_EAX_MODE\n"
 #endif
-#if defined(OCB_MODE)
-    "   OCB_MODE\n"
+#if defined(LTC_OCB_MODE)
+    "   LTC_OCB_MODE\n"
 #endif
-#if defined(CCM_MODE)
-    "   CCM_MODE\n"
+#if defined(LTC_CCM_MODE)
+    "   LTC_CCM_MODE\n"
 #endif
-#if defined(GCM_MODE)
-    "   GCM_MODE "
+#if defined(LTC_GCM_MODE)
+    "   LTC_GCM_MODE "
 #endif
-#if defined(GCM_TABLES)
-    " (GCM_TABLES) "
+#if defined(LTC_GCM_TABLES)
+    " (LTC_GCM_TABLES) "
 #endif
    "\n"
 
     "\nPRNG:\n"
-#if defined(YARROW)
+#if defined(LTC_YARROW)
     "   Yarrow\n"
 #endif
-#if defined(SPRNG)
-    "   SPRNG\n"
+#if defined(LTC_SPRNG)
+    "   LTC_SPRNG\n"
 #endif
-#if defined(RC4)
-    "   RC4\n"
+#if defined(LTC_RC4)
+    "   LTC_RC4\n"
 #endif
-#if defined(FORTUNA)
+#if defined(LTC_FORTUNA)
     "   Fortuna\n"
 #endif
-#if defined(SOBER128)
-    "   SOBER128\n"
+#if defined(LTC_SOBER128)
+    "   LTC_SOBER128\n"
 #endif
 
     "\nPK Algs:\n"
-#if defined(MRSA)
+#if defined(LTC_MRSA)
     "   RSA \n"
 #endif
-#if defined(MECC)
+#if defined(LTC_MECC)
     "   ECC\n"
 #endif
-#if defined(MDSA)
+#if defined(LTC_MDSA)
     "   DSA\n"
 #endif
 #if defined(MKAT)
@@ -286,8 +295,8 @@ const char *crypt_build_settings =
 #endif    
 
     "\nVarious others: "
-#if defined(BASE64)
-    " BASE64 "
+#if defined(LTC_BASE64)
+    " LTC_BASE64 "
 #endif
 #if defined(MPI)
     " MPI "
@@ -298,11 +307,11 @@ const char *crypt_build_settings =
 #if defined(LTC_TEST)
     " LTC_TEST "
 #endif
-#if defined(PKCS_1)
-    " PKCS#1 "
+#if defined(LTC_PKCS_1)
+    " LTC_PKCS#1 "
 #endif
-#if defined(PKCS_5)
-    " PKCS#5 "
+#if defined(LTC_PKCS_5)
+    " LTC_PKCS#5 "
 #endif
 #if defined(LTC_SMALL_CODE)
     " LTC_SMALL_CODE "
@@ -334,23 +343,23 @@ const char *crypt_build_settings =
 #if defined(LTC_PTHREAD)
     " LTC_PTHREAD "
 #endif
-#if defined(LTM_DESC)
+#if defined(LTM_LTC_DESC)
     " LTM_DESC "
 #endif
-#if defined(TFM_DESC)
+#if defined(TFM_LTC_DESC)
     " TFM_DESC "
 #endif
-#if defined(MECC_ACCEL)
-    " MECC_ACCEL "
+#if defined(LTC_MECC_ACCEL)
+    " LTC_MECC_ACCEL "
 #endif
-#if defined(GMP_DESC)
+#if defined(GMP_LTC_DESC)
     " GMP_DESC "
 #endif
 #if defined(LTC_EASY)
     " (easy) "
 #endif    
-#if defined(MECC_FP)
-   " MECC_FP "
+#if defined(LTC_MECC_FP)
+   " LTC_MECC_FP "
 #endif
 #if defined(LTC_ECC_SHAMIR)
    " LTC_ECC_SHAMIR "
@@ -361,6 +370,6 @@ const char *crypt_build_settings =
 	*/
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt.c,v $ */
-/* $Revision: 1.27 $ */
-/* $Date: 2006/12/03 03:50:45 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

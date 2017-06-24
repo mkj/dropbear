@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** 
   @file pkcs_1_oaep_decode.c
-  OAEP Padding for PKCS #1, Tom St Denis 
+  OAEP Padding for LTC_PKCS #1, Tom St Denis 
 */
 
-#ifdef PKCS_1
+#ifdef LTC_PKCS_1
 
 /**
-   PKCS #1 v2.00 OAEP decode
+   LTC_PKCS #1 v2.00 OAEP decode
    @param msg              The encoded data to decode
    @param msglen           The length of the encoded data (octets)
    @param lparam           The session or system data (can be NULL)
@@ -182,8 +182,8 @@ LBL_ERR:
    return err;
 }
 
-#endif /* PKCS_1 */
+#endif /* LTC_PKCS_1 */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_oaep_decode.c,v $ */
-/* $Revision: 1.11 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

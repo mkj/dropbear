@@ -190,7 +190,7 @@ The project is hereby released as public domain.
 \mysection{Patent Disclosure}
 
 The author (Tom St Denis) is not a patent lawyer so this section is not to be treated as legal advice.  To the best
-of the authors knowledge the only patent related issues within the library are the RC5 and RC6 symmetric block ciphers.  
+of the author's knowledge the only patent related issues within the library are the RC5 and RC6 symmetric block ciphers.  
 They can be removed from a build by simply commenting out the two appropriate lines in \textit{tomcrypt\_custom.h}.  The rest
 of the ciphers and hashes are patent free or under patents that have since expired.
 
@@ -616,8 +616,8 @@ As of this release the current cipher\_descriptors elements are the following:
      \hline AES & aes\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
                 & aes\_enc\_desc & 16 & 16, 24, 32 & 10, 12, 14 \\
      \hline Twofish & twofish\_desc & 16 & 16, 24, 32 & 16 \\
-     \hline DES & des\_desc & 8 & 7 & 16 \\
-     \hline 3DES (EDE mode) & des3\_desc & 8 & 21 & 16 \\
+     \hline DES & des\_desc & 8 & 8 & 16 \\
+     \hline 3DES (EDE mode) & des3\_desc & 8 & 24 & 16 \\
      \hline CAST5 (CAST-128) & cast5\_desc & 8 & 5 $\ldots$ 16 & 12, 16 \\
      \hline Noekeon & noekeon\_desc & 16 & 16 & 16 \\
      \hline Skipjack & skipjack\_desc & 8 & 10 & 32 \\
@@ -879,14 +879,37 @@ of the cipher you choose.  It is important that the IV  be random for each uniqu
 parameters \textit{key}, \textit{keylen} and \textit{num\_rounds} are the same as in the XXX\_setup() function call.  The final parameter 
 is a pointer to the structure you want to hold the information for the mode of operation.
 
+The routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise, they return an error code.  
 
+\subsubsection{CTR Mode}
 In the case of CTR mode there is an additional parameter \textit{ctr\_mode} which specifies the mode that the counter is to be used in.
 If \textbf{CTR\_COUNTER\_ LITTLE\_ENDIAN} was specified then the counter will be treated as a little endian value.  Otherwise, if 
 \textbf{CTR\_COUNTER\_BIG\_ENDIAN} was specified the counter will be treated as a big endian value.  As of v1.15 the RFC 3686 style of
 increment then encrypt is also supported.  By OR'ing \textbf{LTC\_CTR\_RFC3686} with the CTR \textit{mode} value, ctr\_start() will increment
 the counter before encrypting it for the first time.
 
-The routines return {\bf CRYPT\_OK} if the cipher initialized correctly, otherwise, they return an error code.  
+As of V1.17, the library supports variable length counters for CTR mode.  The (optional) counter length is specified by OR'ing the octet
+length of the counter against the \textit{ctr\_mode} parameter.  The default, zero, indicates that a full block length counter will be used.  This also
+ensures backwards compatibility with software that uses older versions of the library.
+
+\begin{small}
+\begin{verbatim}
+symmetric_CTR ctr;
+int           err;
+unsigned char IV[16], key[16];
+
+/* use a 32-bit little endian counter */
+if ((err = ctr_start(find_cipher("aes"),
+                     IV, key, 16, 0,
+                     CTR_COUNTER_LITTLE_ENDIAN | 4, 
+                     &ctr)) != CRYPT_OK) {
+   handle_error(err);
+}
+\end{verbatim}
+\end{small}
+
+Changing the counter size has little (really no) effect on the performance of the CTR chaining mode.  It is provided for compatibility
+with other software (and hardware) which have smaller fixed sized counters.
 
 \subsection{Encryption and Decryption}
 To actually encrypt or decrypt the following routines are provided:
@@ -1092,6 +1115,55 @@ To terminate the LRW state use the following:
 \begin{verbatim}
 int lrw_done(symmetric_LRW *lrw);
 \end{verbatim}
+
+\subsection{XTS Mode}
+As of v1.17, LibTomCrypt supports XTS mode with code donated by Elliptic Semiconductor Inc.\footnote{www.ellipticsemi.com}.  
+XTS is a chaining mode for 128--bit block ciphers, recommended by IEEE (P1619) 
+for disk encryption.  It is meant to be an encryption mode with random access to the message data without compromising privacy.  It requires two private keys (of equal 
+length) to perform the encryption process.  Each encryption invocation includes a sector number or unique identifier specified as a 128--bit string.  
+
+To initialize XTS mode use the following function call:
+
+\index{xts\_start()}
+\begin{verbatim}
+int xts_start(                int  cipher,
+              const unsigned char *key1, 
+              const unsigned char *key2, 
+                    unsigned long  keylen,
+                              int  num_rounds, 
+                    symmetric_xts *xts)
+\end{verbatim}
+This will start the XTS mode with the two keys pointed to by \textit{key1} and \textit{key2} of length \textit{keylen} octets each.  
+
+To encrypt or decrypt a sector use the following calls:
+
+\index{xts\_encrypt()} \index{xts\_decrypt()}
+\begin{verbatim}
+int xts_encrypt(
+   const unsigned char *pt, unsigned long ptlen,
+         unsigned char *ct,
+   const unsigned char *tweak,
+         symmetric_xts *xts);
+
+int xts_decrypt(
+   const unsigned char *ct, unsigned long ptlen,
+         unsigned char *pt,
+   const unsigned char *tweak,
+         symmetric_xts *xts);
+\end{verbatim}
+The first will encrypt the plaintext pointed to by \textit{pt} of length \textit{ptlen} octets, and store the ciphertext in the array pointed to by 
+\textit{ct}.  It uses the 128--bit tweak pointed to by \textit{tweak} to encrypt the block.  The decrypt function performs the opposite operation.  Both 
+functions support ciphertext stealing (blocks that are not multiples of 16 bytes).  
+
+The P1619 specification states the tweak for sector number shall be represented as a 128--bit little endian string.  
+
+To terminate the XTS state call the following function:
+
+\index{xts\_done()}
+\begin{verbatim}
+void xts_done(symmetric_xts *xts);
+\end{verbatim}
+
 
 \subsection{F8 Mode}
 \index{F8 Mode}
@@ -2098,8 +2170,8 @@ int hmac_process(         hmac_state *hmac,
                  const unsigned char *in, 
                        unsigned long  inlen);
 \end{verbatim}
-\textit{hmac} is the HMAC state you are working with. \textit{buf} is the array of octets to send into the HMAC process.  \textit{len} is the
-number of octets to process.  Like the hash process routines you can send the data in arbitrarily sized chunks. When you 
+\textit{hmac} is the HMAC state you are working with. \textit{in} is the array of octets to send into the HMAC process.  \textit{inlen} is the
+number of octets to process.  Like the hash process routines, you can send the data in arbitrarily sized chunks. When you 
 are finished with the HMAC process you must call the following function to get the HMAC code:
 \index{hmac\_done()}
 \begin{verbatim}
@@ -2510,6 +2582,13 @@ int xcbc_init(         xcbc_state *xcbc,
 
 This will initialize the XCBC--MAC state \textit{xcbc}, with the key specified in \textit{key} of length \textit{keylen} octets.  The cipher indicated
 by the \textit{cipher} index can be either a 64 or 128--bit block cipher.  This will return \textbf{CRYPT\_OK} on success.
+
+\index{LTC\_XCBC\_PURE}
+It is possible to use XCBC in a three key mode by OR'ing the value \textbf{LTC\_XCBC\_PURE} against the \textit{keylen} parameter.  In this mode, the key is
+interpretted as three keys.  If the cipher has a block size of $n$ octets, the first key is then $keylen - 2n$ octets and is the encryption key.  The next 
+$2n$ octets are the $K_1$ and $K_2$ padding keys (used on the last block).  For example, to use AES--192 \textit{keylen} should be $24 + 2 \cdot 16 = 56$ octets.
+The three keys are interpretted as if they were concatenated in the \textit{key} buffer.
+
 
 To process data through XCBC--MAC use the following function:
 
@@ -6485,5 +6564,5 @@ Since the function is given the entire RSA key (for private keys only) CRT is po
 \end{document}
 
 % $Source: /cvs/libtom/libtomcrypt/crypt.tex,v $   
-% $Revision: 1.123 $   
-% $Date: 2006/12/16 19:08:17 $ 
+% $Revision: 1.128 $   
+% $Date: 2007/03/10 23:59:54 $ 

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    DSA implementation, sign a hash, Tom St Denis
 */
 
-#ifdef MDSA
+#ifdef LTC_MDSA
 
 /**
   Sign a hash with DSA
@@ -49,11 +49,11 @@ int dsa_sign_hash_raw(const unsigned char *in,  unsigned long inlen,
    }
 
    /* check group order size  */
-   if (key->qord >= MDSA_MAX_GROUP) {
+   if (key->qord >= LTC_MDSA_MAX_GROUP) {
       return CRYPT_INVALID_ARG;
    }
 
-   buf = XMALLOC(MDSA_MAX_GROUP);
+   buf = XMALLOC(LTC_MDSA_MAX_GROUP);
    if (buf == NULL) {
       return CRYPT_MEM;
    }
@@ -102,7 +102,7 @@ error:
    mp_clear_multi(k, kinv, tmp, NULL);
 ERRBUF:
 #ifdef LTC_CLEAN_STACK
-   zeromem(buf, MDSA_MAX_GROUP);
+   zeromem(buf, LTC_MDSA_MAX_GROUP);
 #endif
    XFREE(buf);
    return err;
@@ -151,6 +151,6 @@ error:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_sign_hash.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/12/04 22:27:56 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
