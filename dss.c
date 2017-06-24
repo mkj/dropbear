@@ -176,7 +176,7 @@ int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
 	printmpint("dss verify p", key->p);
 	printmpint("dss verify q", key->q);
 	printmpint("dss verify g", key->g);
-	printmpint("dss verify x", key->x);
+	printmpint("dss verify y", key->y);
 #endif
 
 	/* hash the data */
