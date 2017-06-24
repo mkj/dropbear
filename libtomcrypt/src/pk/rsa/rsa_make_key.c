@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   RSA key generation, Tom St Denis
 */  
 
-#ifdef MRSA
+#ifdef LTC_MRSA
 
 /** 
    Create an RSA key
@@ -107,6 +107,6 @@ cleanup:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_make_key.c,v $ */
-/* $Revision: 1.14 $ */
-/* $Date: 2006/12/04 22:23:27 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

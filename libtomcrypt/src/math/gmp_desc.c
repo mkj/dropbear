@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 #define DESC_DEF_ONLY
@@ -439,29 +439,29 @@ const ltc_math_descriptor gmp_desc = {
    &exptmod,
    &isprime,
 
-#ifdef MECC
-#ifdef MECC_FP
+#ifdef LTC_MECC
+#ifdef LTC_MECC_FP
    &ltc_ecc_fp_mulmod,
 #else
    &ltc_ecc_mulmod,
-#endif /* MECC_FP */
+#endif /* LTC_MECC_FP */
    &ltc_ecc_projective_add_point,
    &ltc_ecc_projective_dbl_point,
    &ltc_ecc_map,
 #ifdef LTC_ECC_SHAMIR
-#ifdef MECC_FP
+#ifdef LTC_MECC_FP
    &ltc_ecc_fp_mul2add,
 #else
    &ltc_ecc_mul2add,
-#endif /* MECC_FP */
+#endif /* LTC_MECC_FP */
 #else
    NULL,
 #endif /* LTC_ECC_SHAMIR */
 #else
    NULL, NULL, NULL, NULL, NULL
-#endif /* MECC */
+#endif /* LTC_MECC */
 
-#ifdef MRSA
+#ifdef LTC_MRSA
    &rsa_make_key,
    &rsa_exptmod,
 #else
@@ -473,6 +473,6 @@ const ltc_math_descriptor gmp_desc = {
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/math/gmp_desc.c,v $ */
-/* $Revision: 1.14 $ */
-/* $Date: 2006/12/03 00:39:56 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

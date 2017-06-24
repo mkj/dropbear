@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rc4.c
-  RC4 PRNG, Tom St Denis
+  LTC_RC4 PRNG, Tom St Denis
 */  
 
-#ifdef RC4
+#ifdef LTC_RC4
 
 const struct ltc_prng_descriptor rc4_desc = 
 {
@@ -93,7 +93,7 @@ int rc4_ready(prng_state *prng)
     XMEMCPY(key, s, 256);
     keylen = prng->rc4.x;
 
-    /* make RC4 perm and shuffle */
+    /* make LTC_RC4 perm and shuffle */
     for (x = 0; x < 256; x++) {
         s[x] = x;
     }
@@ -250,7 +250,7 @@ int rc4_test(void)
        if (XMEMCMP(dst, tests[x].ct, 8)) {
 #if 0
           int y;
-          printf("\n\nRC4 failed, I got:\n"); 
+          printf("\n\nLTC_RC4 failed, I got:\n"); 
           for (y = 0; y < 8; y++) printf("%02x ", dst[y]);
           printf("\n");
 #endif
@@ -264,6 +264,6 @@ int rc4_test(void)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/prngs/rc4.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/11/16 00:32:18 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

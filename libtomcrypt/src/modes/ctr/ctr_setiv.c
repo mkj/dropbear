@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -51,6 +51,6 @@ int ctr_setiv(const unsigned char *IV, unsigned long len, symmetric_CTR *ctr)
 #endif 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_setiv.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/06/29 01:46:46 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

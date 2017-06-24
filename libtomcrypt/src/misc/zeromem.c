@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 #include "dbhelpers.h"
@@ -26,6 +26,6 @@ void zeromem(void *out, size_t outlen)
    m_burn(out, outlen);
 }
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/zeromem.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/06/09 01:38:13 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

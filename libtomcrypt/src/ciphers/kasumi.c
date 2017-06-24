@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -313,6 +313,6 @@ int kasumi_test(void)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/kasumi.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2006/11/09 03:05:44 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

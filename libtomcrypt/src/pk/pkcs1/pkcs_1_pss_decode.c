@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** 
   @file pkcs_1_pss_decode.c
-  PKCS #1 PSS Signature Padding, Tom St Denis 
+  LTC_PKCS #1 PSS Signature Padding, Tom St Denis 
 */
 
-#ifdef PKCS_1
+#ifdef LTC_PKCS_1
 
 /**
-   PKCS #1 v2.00 PSS decode
+   LTC_PKCS #1 v2.00 PSS decode
    @param  msghash         The hash to verify
    @param  msghashlen      The length of the hash (octets)
    @param  sig             The signature data (encoded data)
@@ -170,8 +170,8 @@ LBL_ERR:
    return err;
 }
 
-#endif /* PKCS_1 */
+#endif /* LTC_PKCS_1 */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_pss_decode.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/11/30 02:37:21 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

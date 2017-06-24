@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 #include <stdarg.h>
@@ -85,6 +85,6 @@ LBL_ERR:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/f9/f9_memory_multi.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2006/11/08 21:50:13 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

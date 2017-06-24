@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -94,6 +94,6 @@ int der_decode_object_identifier(const unsigned char *in,    unsigned long  inle
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/asn1/der/object_identifier/der_decode_object_identifier.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/11/21 00:18:23 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

@@ -6,17 +6,17 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
    @file rc5.c
-   RC5 code by Tom St Denis 
+   LTC_RC5 code by Tom St Denis 
 */
 
 #include "tomcrypt.h"
 
-#ifdef RC5
+#ifdef LTC_RC5
 
 const struct ltc_cipher_descriptor rc5_desc =
 {
@@ -43,7 +43,7 @@ static const ulong32 stab[50] = {
 };
 
  /**
-    Initialize the RC5 block cipher
+    Initialize the LTC_RC5 block cipher
     @param key The symmetric key you wish to pass
     @param keylen The key length in bytes
     @param num_rounds The number of rounds desired (0 for default)
@@ -119,7 +119,7 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 #endif
 
 /**
-  Encrypts a block of text with RC5
+  Encrypts a block of text with LTC_RC5
   @param pt The input plaintext (8 bytes)
   @param ct The output ciphertext (8 bytes)
   @param skey The key as scheduled
@@ -174,7 +174,7 @@ int rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *s
 #endif
 
 /**
-  Decrypts a block of text with RC5
+  Decrypts a block of text with LTC_RC5
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
   @param skey The key as scheduled 
@@ -230,7 +230,7 @@ int rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *s
 #endif
 
 /**
-  Performs a self-test of the RC5 block cipher
+  Performs a self-test of the LTC_RC5 block cipher
   @return CRYPT_OK if functional, CRYPT_NOP if self-test has been disabled
 */
 int rc5_test(void)
@@ -317,6 +317,6 @@ int rc5_keysize(int *keysize)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/rc5.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

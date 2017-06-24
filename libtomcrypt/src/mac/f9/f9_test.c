@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -72,7 +72,7 @@ int f9_test(void)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/f9/f9_test.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/21 23:02:42 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
 

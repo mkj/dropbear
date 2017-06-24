@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /*******************************************************************************
 *
 * FILE:           safer.c
 *
-* DESCRIPTION:    block-cipher algorithm SAFER (Secure And Fast Encryption
-*                 Routine) in its four versions: SAFER K-64, SAFER K-128,
-*                 SAFER SK-64 and SAFER SK-128.
+* LTC_DESCRIPTION:    block-cipher algorithm LTC_SAFER (Secure And Fast Encryption
+*                 Routine) in its four versions: LTC_SAFER K-64, LTC_SAFER K-128,
+*                 LTC_SAFER SK-64 and LTC_SAFER SK-128.
 *
 * AUTHOR:         Richard De Moliner (demoliner@isi.ee.ethz.ch)
 *                 Signal and Information Processing Laboratory
@@ -30,12 +30,12 @@
 
 #include <tomcrypt.h>
 
-#ifdef SAFER
+#ifdef LTC_SAFER
 
 const struct ltc_cipher_descriptor 
    safer_k64_desc = {
    "safer-k64", 
-   8, 8, 8, 8, SAFER_K64_DEFAULT_NOF_ROUNDS,
+   8, 8, 8, 8, LTC_SAFER_K64_DEFAULT_NOF_ROUNDS,
    &safer_k64_setup,
    &safer_ecb_encrypt,
    &safer_ecb_decrypt,
@@ -47,7 +47,7 @@ const struct ltc_cipher_descriptor
 
    safer_sk64_desc = {
    "safer-sk64",
-   9, 8, 8, 8, SAFER_SK64_DEFAULT_NOF_ROUNDS,
+   9, 8, 8, 8, LTC_SAFER_SK64_DEFAULT_NOF_ROUNDS,
    &safer_sk64_setup,
    &safer_ecb_encrypt,
    &safer_ecb_decrypt,
@@ -59,7 +59,7 @@ const struct ltc_cipher_descriptor
 
    safer_k128_desc = {
    "safer-k128",
-   10, 16, 16, 8, SAFER_K128_DEFAULT_NOF_ROUNDS,
+   10, 16, 16, 8, LTC_SAFER_K128_DEFAULT_NOF_ROUNDS,
    &safer_k128_setup,
    &safer_ecb_encrypt,
    &safer_ecb_decrypt,
@@ -71,7 +71,7 @@ const struct ltc_cipher_descriptor
 
    safer_sk128_desc = {
    "safer-sk128",
-   11, 16, 16, 8, SAFER_SK128_DEFAULT_NOF_ROUNDS,
+   11, 16, 16, 8, LTC_SAFER_SK128_DEFAULT_NOF_ROUNDS,
    &safer_sk128_setup,
    &safer_ecb_encrypt,
    &safer_ecb_decrypt,
@@ -111,48 +111,48 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
                                  safer_key_t key)
 #endif
 {   unsigned int i, j, k;
-    unsigned char ka[SAFER_BLOCK_LEN + 1];
-    unsigned char kb[SAFER_BLOCK_LEN + 1];
+    unsigned char ka[LTC_SAFER_BLOCK_LEN + 1];
+    unsigned char kb[LTC_SAFER_BLOCK_LEN + 1];
 
-    if (SAFER_MAX_NOF_ROUNDS < nof_rounds)
-        nof_rounds = SAFER_MAX_NOF_ROUNDS;
+    if (LTC_SAFER_MAX_NOF_ROUNDS < nof_rounds)
+        nof_rounds = LTC_SAFER_MAX_NOF_ROUNDS;
     *key++ = (unsigned char)nof_rounds;
-    ka[SAFER_BLOCK_LEN] = (unsigned char)0;
-    kb[SAFER_BLOCK_LEN] = (unsigned char)0;
+    ka[LTC_SAFER_BLOCK_LEN] = (unsigned char)0;
+    kb[LTC_SAFER_BLOCK_LEN] = (unsigned char)0;
     k = 0;
-    for (j = 0; j < SAFER_BLOCK_LEN; j++) {
+    for (j = 0; j < LTC_SAFER_BLOCK_LEN; j++) {
         ka[j] = ROL8(userkey_1[j], 5);
-        ka[SAFER_BLOCK_LEN] ^= ka[j];
+        ka[LTC_SAFER_BLOCK_LEN] ^= ka[j];
         kb[j] = *key++ = userkey_2[j];
-        kb[SAFER_BLOCK_LEN] ^= kb[j];
+        kb[LTC_SAFER_BLOCK_LEN] ^= kb[j];
     }
     for (i = 1; i <= nof_rounds; i++) {
-        for (j = 0; j < SAFER_BLOCK_LEN + 1; j++) {
+        for (j = 0; j < LTC_SAFER_BLOCK_LEN + 1; j++) {
             ka[j] = ROL8(ka[j], 6);
             kb[j] = ROL8(kb[j], 6);
         }
         if (strengthened) {
            k = 2 * i - 1;
-           while (k >= (SAFER_BLOCK_LEN + 1)) { k -= SAFER_BLOCK_LEN + 1; }
+           while (k >= (LTC_SAFER_BLOCK_LEN + 1)) { k -= LTC_SAFER_BLOCK_LEN + 1; }
         }
-        for (j = 0; j < SAFER_BLOCK_LEN; j++) {
+        for (j = 0; j < LTC_SAFER_BLOCK_LEN; j++) {
             if (strengthened) {
                 *key++ = (ka[k]
                                 + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 1)&0xFF)]]) & 0xFF;
-                if (++k == (SAFER_BLOCK_LEN + 1)) { k = 0; }
+                if (++k == (LTC_SAFER_BLOCK_LEN + 1)) { k = 0; }
             } else {
                 *key++ = (ka[j] + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 1)&0xFF)]]) & 0xFF;
             }
         }
         if (strengthened) {
            k = 2 * i;
-           while (k >= (SAFER_BLOCK_LEN + 1)) { k -= SAFER_BLOCK_LEN + 1; }
+           while (k >= (LTC_SAFER_BLOCK_LEN + 1)) { k -= LTC_SAFER_BLOCK_LEN + 1; }
         }
-        for (j = 0; j < SAFER_BLOCK_LEN; j++) {
+        for (j = 0; j < LTC_SAFER_BLOCK_LEN; j++) {
             if (strengthened) {
                 *key++ = (kb[k]
                                 + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 10)&0xFF)]]) & 0xFF;
-                if (++k == (SAFER_BLOCK_LEN + 1)) { k = 0; }
+                if (++k == (LTC_SAFER_BLOCK_LEN + 1)) { k = 0; }
             } else {
                 *key++ = (kb[j] + safer_ebox[(int)safer_ebox[(int)((18 * i + j + 10)&0xFF)]]) & 0xFF;
             }
@@ -173,7 +173,7 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
                                  safer_key_t key)
 {
    _Safer_Expand_Userkey(userkey_1, userkey_2, nof_rounds, strengthened, key);
-   burn_stack(sizeof(unsigned char) * (2 * (SAFER_BLOCK_LEN + 1)) + sizeof(unsigned int)*2);
+   burn_stack(sizeof(unsigned char) * (2 * (LTC_SAFER_BLOCK_LEN + 1)) + sizeof(unsigned int)*2);
 }
 #endif
 
@@ -182,7 +182,7 @@ int safer_k64_setup(const unsigned char *key, int keylen, int numrounds, symmetr
    LTC_ARGCHK(key != NULL);
    LTC_ARGCHK(skey != NULL);
 
-   if (numrounds != 0 && (numrounds < 6 || numrounds > SAFER_MAX_NOF_ROUNDS)) {
+   if (numrounds != 0 && (numrounds < 6 || numrounds > LTC_SAFER_MAX_NOF_ROUNDS)) {
       return CRYPT_INVALID_ROUNDS;
    }
 
@@ -190,7 +190,7 @@ int safer_k64_setup(const unsigned char *key, int keylen, int numrounds, symmetr
       return CRYPT_INVALID_KEYSIZE;
    }
 
-   Safer_Expand_Userkey(key, key, (unsigned int)(numrounds != 0 ?numrounds:SAFER_K64_DEFAULT_NOF_ROUNDS), 0, skey->safer.key);
+   Safer_Expand_Userkey(key, key, (unsigned int)(numrounds != 0 ?numrounds:LTC_SAFER_K64_DEFAULT_NOF_ROUNDS), 0, skey->safer.key);
    return CRYPT_OK;
 }
    
@@ -199,7 +199,7 @@ int safer_sk64_setup(const unsigned char *key, int keylen, int numrounds, symmet
    LTC_ARGCHK(key != NULL);
    LTC_ARGCHK(skey != NULL);
 
-   if (numrounds != 0 && (numrounds < 6 || numrounds > SAFER_MAX_NOF_ROUNDS)) {
+   if (numrounds != 0 && (numrounds < 6 || numrounds > LTC_SAFER_MAX_NOF_ROUNDS)) {
       return CRYPT_INVALID_ROUNDS;
    }
 
@@ -207,7 +207,7 @@ int safer_sk64_setup(const unsigned char *key, int keylen, int numrounds, symmet
       return CRYPT_INVALID_KEYSIZE;
    }
 
-   Safer_Expand_Userkey(key, key, (unsigned int)(numrounds != 0 ?numrounds:SAFER_SK64_DEFAULT_NOF_ROUNDS), 1, skey->safer.key);
+   Safer_Expand_Userkey(key, key, (unsigned int)(numrounds != 0 ?numrounds:LTC_SAFER_SK64_DEFAULT_NOF_ROUNDS), 1, skey->safer.key);
    return CRYPT_OK;
 }
 
@@ -216,7 +216,7 @@ int safer_k128_setup(const unsigned char *key, int keylen, int numrounds, symmet
    LTC_ARGCHK(key != NULL);
    LTC_ARGCHK(skey != NULL);
 
-   if (numrounds != 0 && (numrounds < 6 || numrounds > SAFER_MAX_NOF_ROUNDS)) {
+   if (numrounds != 0 && (numrounds < 6 || numrounds > LTC_SAFER_MAX_NOF_ROUNDS)) {
       return CRYPT_INVALID_ROUNDS;
    }
 
@@ -224,7 +224,7 @@ int safer_k128_setup(const unsigned char *key, int keylen, int numrounds, symmet
       return CRYPT_INVALID_KEYSIZE;
    }
 
-   Safer_Expand_Userkey(key, key+8, (unsigned int)(numrounds != 0 ?numrounds:SAFER_K128_DEFAULT_NOF_ROUNDS), 0, skey->safer.key);
+   Safer_Expand_Userkey(key, key+8, (unsigned int)(numrounds != 0 ?numrounds:LTC_SAFER_K128_DEFAULT_NOF_ROUNDS), 0, skey->safer.key);
    return CRYPT_OK;
 }
 
@@ -233,7 +233,7 @@ int safer_sk128_setup(const unsigned char *key, int keylen, int numrounds, symme
    LTC_ARGCHK(key != NULL);
    LTC_ARGCHK(skey != NULL);
 
-   if (numrounds != 0 && (numrounds < 6 || numrounds > SAFER_MAX_NOF_ROUNDS)) {
+   if (numrounds != 0 && (numrounds < 6 || numrounds > LTC_SAFER_MAX_NOF_ROUNDS)) {
       return CRYPT_INVALID_ROUNDS;
    }
 
@@ -241,7 +241,7 @@ int safer_sk128_setup(const unsigned char *key, int keylen, int numrounds, symme
       return CRYPT_INVALID_KEYSIZE;
    }
 
-   Safer_Expand_Userkey(key, key+8, (unsigned int)(numrounds != 0?numrounds:SAFER_SK128_DEFAULT_NOF_ROUNDS), 1, skey->safer.key);
+   Safer_Expand_Userkey(key, key+8, (unsigned int)(numrounds != 0?numrounds:LTC_SAFER_SK128_DEFAULT_NOF_ROUNDS), 1, skey->safer.key);
    return CRYPT_OK;
 }
 
@@ -265,7 +265,7 @@ int safer_ecb_encrypt(const unsigned char *block_in,
     key = skey->safer.key;
     a = block_in[0]; b = block_in[1]; c = block_in[2]; d = block_in[3];
     e = block_in[4]; f = block_in[5]; g = block_in[6]; h = block_in[7];
-    if (SAFER_MAX_NOF_ROUNDS < (round = *key)) round = SAFER_MAX_NOF_ROUNDS;
+    if (LTC_SAFER_MAX_NOF_ROUNDS < (round = *key)) round = LTC_SAFER_MAX_NOF_ROUNDS;
     while(round-- > 0)
     {
         a ^= *++key; b += *++key; c += *++key; d ^= *++key;
@@ -319,8 +319,8 @@ int safer_ecb_decrypt(const unsigned char *block_in,
     key = skey->safer.key;
     a = block_in[0]; b = block_in[1]; c = block_in[2]; d = block_in[3];
     e = block_in[4]; f = block_in[5]; g = block_in[6]; h = block_in[7];
-    if (SAFER_MAX_NOF_ROUNDS < (round = *key)) round = SAFER_MAX_NOF_ROUNDS;
-    key += SAFER_BLOCK_LEN * (1 + 2 * round);
+    if (LTC_SAFER_MAX_NOF_ROUNDS < (round = *key)) round = LTC_SAFER_MAX_NOF_ROUNDS;
+    key += LTC_SAFER_BLOCK_LEN * (1 + 2 * round);
     h ^= *key; g -= *--key; f -= *--key; e ^= *--key;
     d ^= *--key; c -= *--key; b -= *--key; a ^= *--key;
     while (round--)
@@ -486,6 +486,6 @@ int safer_sk128_test(void)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/safer/safer.c,v $ */
-/* $Revision: 1.13 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

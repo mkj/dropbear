@@ -6,18 +6,18 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** @file pkcs_1_v1_5_decode.c
  *
- *  PKCS #1 v1.5 Padding. (Andreas Lange)
+ *  LTC_PKCS #1 v1.5 Padding. (Andreas Lange)
  */
 
-#ifdef PKCS_1
+#ifdef LTC_PKCS_1
 
-/** @brief PKCS #1 v1.5 decode.
+/** @brief LTC_PKCS #1 v1.5 decode.
  *
  *  @param msg              The encoded data to decode
  *  @param msglen           The length of the encoded data (octets)
@@ -58,7 +58,7 @@ int pkcs_1_v1_5_decode(const unsigned char *msg,
     goto bail;
   }
 
-  if (block_type == LTC_PKCS_1_EME) {
+  if (block_type == LTC_LTC_PKCS_1_EME) {
     for (i = 2; i < modulus_len; i++) {
       /* separator */
       if (msg[i] == 0x00) { break; }
@@ -103,8 +103,8 @@ bail:
   return result;
 } /* pkcs_1_v1_5_decode */
 
-#endif /* #ifdef PKCS_1 */
+#endif /* #ifdef LTC_PKCS_1 */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_v1_5_decode.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/12/16 17:41:21 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

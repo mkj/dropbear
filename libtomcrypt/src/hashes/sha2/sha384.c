@@ -6,11 +6,11 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 /** 
    @param sha384.c
-   SHA384 hash included in sha512.c, Tom St Denis
+   LTC_SHA384 hash included in sha512.c, Tom St Denis
 */
 
 const struct ltc_hash_descriptor sha384_desc =
@@ -130,6 +130,6 @@ int  sha384_test(void)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha384.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

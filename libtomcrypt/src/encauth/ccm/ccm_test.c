@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   CCM support, process a block of memory, Tom St Denis
 */
 
-#ifdef CCM_MODE
+#ifdef LTC_CCM_MODE
 
 int ccm_test(void)
 {
@@ -175,6 +175,6 @@ int ccm_test(void)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ccm/ccm_test.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/21 00:18:23 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

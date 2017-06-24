@@ -80,6 +80,13 @@ void m_free_direct(void* ptr);
 #endif
 /* These spit out warnings etc */
 #define LTC_NO_ROLC
+#ifndef XQSORT
+   #ifdef qsort
+   #define LTC_NO_PROTOTYPES
+   #endif
+#define XQSORT qsort
+#endif
+
 
 /* Enable self-test test vector checking */
 /* Not for dropbear */
@@ -102,25 +109,27 @@ void m_free_direct(void* ptr);
 
 
 #ifdef DROPBEAR_BLOWFISH
-#define BLOWFISH
+#define LTC_BLOWFISH
 #endif
 
 #ifdef DROPBEAR_AES
-#define RIJNDAEL
+#define LTC_RIJNDAEL
 #endif
 
 #ifdef DROPBEAR_TWOFISH
-#define TWOFISH
+#define LTC_TWOFISH
 
+/* _TABLES tells it to use tables during setup, _SMALL means to use the smaller scheduled key format
+ * (saves 4KB of ram), _ALL_TABLES enables all tables during setup */
 /* enabling just TWOFISH_SMALL will make the binary ~1kB smaller, turning on
  * TWOFISH_TABLES will make it a few kB bigger, but perhaps reduces runtime
  * memory usage? */
-#define TWOFISH_SMALL
-/*#define TWOFISH_TABLES*/
+#define LTC_TWOFISH_SMALL
+/*#define LTC_TWOFISH_TABLES*/
 #endif
 
 #ifdef DROPBEAR_3DES
-#define DES
+#define LTC_DES
 #endif
 
 #define LTC_CBC_MODE
@@ -129,26 +138,26 @@ void m_free_direct(void* ptr);
 #define LTC_CTR_MODE
 #endif
 
-#define SHA1
+#define LTC_SHA1
 
 #ifdef DROPBEAR_MD5
-#define MD5
+#define LTC_MD5
 #endif
 
 #ifdef DROPBEAR_SHA256
-#define SHA256
+#define LTC_SHA256
 #endif
 #ifdef DROPBEAR_SHA384
-#define SHA384
+#define LTC_SHA384
 #endif
 #ifdef DROPBEAR_SHA512
-#define SHA512
+#define LTC_SHA512
 #endif
 
 #define LTC_HMAC
 
 #ifdef DROPBEAR_ECC
-#define MECC
+#define LTC_MECC
 #define LTC_ECC_SHAMIR
 #define LTC_ECC_TIMING_RESISTANT
 #define MPI
@@ -165,7 +174,7 @@ void m_free_direct(void* ptr);
 #endif
 
 /* Various tidbits of modern neatoness */
-#define BASE64
+#define LTC_BASE64
 
 /* default no pthread functions */
 #define LTC_MUTEX_GLOBAL(x)
@@ -178,13 +187,13 @@ void m_free_direct(void* ptr);
 
 /* Debuggers */
 
-/* define this if you use Valgrind, note: it CHANGES the way SOBER-128 and RC4 work (see the code) */
+/* define this if you use Valgrind, note: it CHANGES the way SOBER-128 and LTC_RC4 work (see the code) */
 /* #define LTC_VALGRIND */
 
 #endif
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_custom.h,v $ */
-/* $Revision: 1.66 $ */
-/* $Date: 2006/12/04 02:50:11 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

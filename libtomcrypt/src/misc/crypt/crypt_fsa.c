@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 #include <stdarg.h>
@@ -54,6 +54,6 @@ int crypt_fsa(void *mp, ...)
 }
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_fsa.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/11/13 23:14:33 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

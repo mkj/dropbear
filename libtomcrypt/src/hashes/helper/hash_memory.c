@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -64,6 +64,6 @@ LBL_ERR:
     return err;
 }
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/helper/hash_memory.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/06/16 21:53:41 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

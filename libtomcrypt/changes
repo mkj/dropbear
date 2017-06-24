@@ -1,3 +1,18 @@
+May 12th, 2007
+v1.17 -- Cryptography Research Inc. contributed another small volley of patches, one to fix __WCHAR_DEFINED__ for BSD platforms, 
+         another to silence MSVC warnings.
+      -- Added LTC_XCBC_PURE to XCBC mode which lets you use it in three-key mode. 
+      -- [CRI] Added libtomcrypt.dsp for Visual C++ users.
+      -- [CRI] Added more functions for manipulating the ECC fixed point cache (including saving and loading)
+      -- [CRI] Modified ecc_make_key() to always produce keys smaller than base point order, for standards-compliance
+      -- Elliptic Semiconductor contributed XTS chaining mode to the cipher suite (subsequently optimized it)
+      -- Fixed xcbc_init() keylen when using single key mode.
+      -- Bruce Fortune pointed out a typo in the hmac_process() description in the manual.  Fixed.
+      -- Added variable width counter support to CTR mode
+      -- Fixed CMAC (aka OMAC) when using 64-bit block ciphers and LTC_FAST ... my bad.
+      -- Fixed bug in ecc_is_valid() that would basically always return true
+      -- renamed a lot of macros to add the LTC_ prefix [e.g. RIJNDAEL => LTC_RIJNDAEL]
+
 December 16th, 2006
 v1.16 -- Brian Gladman pointed out that a recent change to GCM broke how the IV was handled.  Currently the code complies against his test vectors
          so the code should be considered frozen now.
@@ -1551,6 +1566,6 @@ v0.02  -- Changed RC5 to only allow 12 to 24 rounds
 v0.01  -- We will call this the first version.
 
 /* $Source: /cvs/libtom/libtomcrypt/changes,v $ */
-/* $Revision: 1.274 $ */
-/* $Date: 2006/12/16 19:08:17 $ */
+/* $Revision: 1.288 $ */
+/* $Date: 2007/05/12 14:37:41 $ */
 
