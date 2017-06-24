@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
  /** 
@@ -15,12 +15,12 @@
  */
 #include "tomcrypt.h"
 
-#ifdef TWOFISH
+#ifdef LTC_TWOFISH
 
-/* first TWOFISH_ALL_TABLES must ensure TWOFISH_TABLES is defined */
-#ifdef TWOFISH_ALL_TABLES
-#ifndef TWOFISH_TABLES
-#define TWOFISH_TABLES
+/* first LTC_TWOFISH_ALL_TABLES must ensure LTC_TWOFISH_TABLES is defined */
+#ifdef LTC_TWOFISH_ALL_TABLES
+#ifndef LTC_TWOFISH_TABLES
+#define LTC_TWOFISH_TABLES
 #endif
 #endif
 
@@ -68,7 +68,7 @@ static const unsigned char qord[4][5] = {
    { 1, 0, 1, 1, 0 }
 };
 
-#ifdef TWOFISH_TABLES
+#ifdef LTC_TWOFISH_TABLES
 
 #include "twofish_tab.c"
 
@@ -142,7 +142,7 @@ static ulong32 sbox(int i, ulong32 x)
 }
 #endif /* LTC_CLEAN_STACK */
 
-#endif /* TWOFISH_TABLES */
+#endif /* LTC_TWOFISH_TABLES */
 
 /* computes ab mod p */
 static ulong32 gf_mult(ulong32 a, ulong32 b, ulong32 p)
@@ -167,7 +167,7 @@ static ulong32 gf_mult(ulong32 a, ulong32 b, ulong32 p)
 }
 
 /* computes [y0 y1 y2 y3] = MDS . [x0] */
-#ifndef TWOFISH_TABLES
+#ifndef LTC_TWOFISH_TABLES
 static ulong32 mds_column_mult(unsigned char in, int col)
 {
    ulong32 x01, x5B, xEF;
@@ -202,11 +202,11 @@ static ulong32 mds_column_mult(unsigned char in, int col)
    return 0;
 }
 
-#else /* !TWOFISH_TABLES */
+#else /* !LTC_TWOFISH_TABLES */
 
 #define mds_column_mult(x, i) mds_tab[i][x]
 
-#endif /* TWOFISH_TABLES */
+#endif /* LTC_TWOFISH_TABLES */
 
 /* Computes [y0 y1 y2 y3] = MDS . [x0 x1 x2 x3] */
 static void mds_mult(const unsigned char *in, unsigned char *out)
@@ -219,7 +219,7 @@ static void mds_mult(const unsigned char *in, unsigned char *out)
   STORE32L(tmp, out);
 }
 
-#ifdef TWOFISH_ALL_TABLES
+#ifdef LTC_TWOFISH_ALL_TABLES
 /* computes [y0 y1 y2 y3] = RS . [x0 x1 x2 x3 x4 x5 x6 x7] */
 static void rs_mult(const unsigned char *in, unsigned char *out)
 {
@@ -229,7 +229,7 @@ static void rs_mult(const unsigned char *in, unsigned char *out)
    STORE32L(tmp, out);
 }
 
-#else /* !TWOFISH_ALL_TABLES */
+#else /* !LTC_TWOFISH_ALL_TABLES */
 
 /* computes [y0 y1 y2 y3] = RS . [x0 x1 x2 x3 x4 x5 x6 x7] */
 static void rs_mult(const unsigned char *in, unsigned char *out)
@@ -273,7 +273,7 @@ static void h_func(const unsigned char *in, unsigned char *out, unsigned char *M
   mds_mult(y, out);
 }
 
-#ifndef TWOFISH_SMALL
+#ifndef LTC_TWOFISH_SMALL
 
 /* for GCC we don't use pointer aliases */
 #if defined(__GNUC__)
@@ -332,7 +332,7 @@ static ulong32 g_func(ulong32 x, symmetric_key *key)
 }
 #endif /* LTC_CLEAN_STACK */
 
-#endif /* TWOFISH_SMALL */
+#endif /* LTC_TWOFISH_SMALL */
 
  /**
     Initialize the Twofish block cipher
@@ -348,7 +348,7 @@ static int _twofish_setup(const unsigned char *key, int keylen, int num_rounds, 
 int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_key *skey)
 #endif
 {
-#ifndef TWOFISH_SMALL
+#ifndef LTC_TWOFISH_SMALL
    unsigned char S[4*4], tmpx0, tmpx1;
 #endif
    int k, x, y;
@@ -376,7 +376,7 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
    }
 
    /* create the S[..] words */
-#ifndef TWOFISH_SMALL
+#ifndef LTC_TWOFISH_SMALL
    for (x = 0; x < k; x++) {
        rs_mult(M+(x*8), S+(x*4));
    }
@@ -410,7 +410,7 @@ int twofish_setup(const unsigned char *key, int keylen, int num_rounds, symmetri
        skey->twofish.K[x+x+1] = ROLc(B + B + A, 9);
    }
 
-#ifndef TWOFISH_SMALL
+#ifndef LTC_TWOFISH_SMALL
    /* make the sboxes (large ram variant) */
    if (k == 2) {
         for (x = 0; x < 256; x++) {
@@ -477,7 +477,7 @@ int twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_ke
 {
     ulong32 a,b,c,d,ta,tb,tc,td,t1,t2, *k;
     int r;
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+#if !defined(LTC_TWOFISH_SMALL) && !defined(__GNUC__)
     ulong32 *S1, *S2, *S3, *S4;
 #endif    
 
@@ -485,7 +485,7 @@ int twofish_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_ke
     LTC_ARGCHK(ct   != NULL);
     LTC_ARGCHK(skey != NULL);
     
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+#if !defined(LTC_TWOFISH_SMALL) && !defined(__GNUC__)
     S1 = skey->twofish.S[0];
     S2 = skey->twofish.S[1];
     S3 = skey->twofish.S[2];
@@ -550,7 +550,7 @@ int twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_ke
 {
     ulong32 a,b,c,d,ta,tb,tc,td,t1,t2, *k;
     int r;
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+#if !defined(LTC_TWOFISH_SMALL) && !defined(__GNUC__)
     ulong32 *S1, *S2, *S3, *S4;
 #endif    
 
@@ -558,7 +558,7 @@ int twofish_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_ke
     LTC_ARGCHK(ct   != NULL);
     LTC_ARGCHK(skey != NULL);
     
-#if !defined(TWOFISH_SMALL) && !defined(__GNUC__)
+#if !defined(LTC_TWOFISH_SMALL) && !defined(__GNUC__)
     S1 = skey->twofish.S[0];
     S2 = skey->twofish.S[1];
     S3 = skey->twofish.S[2];
@@ -714,6 +714,6 @@ int twofish_keysize(int *keysize)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/twofish/twofish.c,v $ */
-/* $Revision: 1.14 $ */
-/* $Date: 2006/12/04 21:34:03 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

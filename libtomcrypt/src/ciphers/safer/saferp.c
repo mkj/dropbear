@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /** 
    @file saferp.c
-   SAFER+ Implementation by Tom St Denis 
+   LTC_SAFER+ Implementation by Tom St Denis 
 */
 #include "tomcrypt.h"
 
-#ifdef SAFERP
+#ifdef LTC_SAFERP
 
 const struct ltc_cipher_descriptor saferp_desc =
 {
@@ -37,7 +37,7 @@ const struct ltc_cipher_descriptor saferp_desc =
  * key addition, substitution, key addition.  The safer_ebox and safer_lbox 
  * are the exponentiation box and logarithm boxes respectively.  
  * The value of 'i' is the current round number which allows this 
- * function to be unrolled massively.  Most of SAFER+'s speed 
+ * function to be unrolled massively.  Most of LTC_SAFER+'s speed 
  * comes from not having to compute indirect accesses into the 
  * array of 16 bytes b[0..15] which is the block of data
 */
@@ -206,7 +206,7 @@ static const unsigned char safer_bias[33][16] = {
 {  62, 220, 134, 119, 215, 166,  17, 251, 244, 186, 146, 145, 100, 131, 241,  51}};
 
  /**
-    Initialize the SAFER+ block cipher
+    Initialize the LTC_SAFER+ block cipher
     @param key The symmetric key you wish to pass
     @param keylen The key length in bytes
     @param num_rounds The number of rounds desired (0 for default)
@@ -325,7 +325,7 @@ int saferp_setup(const unsigned char *key, int keylen, int num_rounds, symmetric
 }
 
 /**
-  Encrypts a block of text with SAFER+
+  Encrypts a block of text with LTC_SAFER+
   @param pt The input plaintext (16 bytes)
   @param ct The output ciphertext (16 bytes)
   @param skey The key as scheduled
@@ -389,7 +389,7 @@ int saferp_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key
 }
 
 /**
-  Decrypts a block of text with SAFER+
+  Decrypts a block of text with LTC_SAFER+
   @param ct The input ciphertext (16 bytes)
   @param pt The output plaintext (16 bytes)
   @param skey The key as scheduled 
@@ -453,7 +453,7 @@ int saferp_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key
 }
 
 /**
-  Performs a self-test of the SAFER+ block cipher
+  Performs a self-test of the LTC_SAFER+ block cipher
   @return CRYPT_OK if functional, CRYPT_NOP if self-test has been disabled
 */
 int saferp_test(void)
@@ -554,6 +554,6 @@ int saferp_keysize(int *keysize)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/safer/saferp.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

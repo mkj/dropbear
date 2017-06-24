@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#ifdef OCB_MODE
+#ifdef LTC_OCB_MODE
 
 static const struct {
     int           len;
@@ -132,6 +132,6 @@ int ocb_init(ocb_state *ocb, int cipher,
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/ocb/ocb_init.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

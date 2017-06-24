@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    DSA implementation, export key, Tom St Denis
 */
 
-#ifdef MDSA
+#ifdef LTC_MDSA
 
 /**
   Export a DSA key to a binary packet
@@ -67,6 +67,6 @@ int dsa_export(unsigned char *out, unsigned long *outlen, int type, dsa_key *key
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_export.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

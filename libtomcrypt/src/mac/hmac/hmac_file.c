@@ -6,24 +6,24 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file hmac_file.c
-  HMAC support, process a file, Tom St Denis/Dobes Vandermeer
+  LTC_HMAC support, process a file, Tom St Denis/Dobes Vandermeer
 */
 
 #ifdef LTC_HMAC
 
 /**
-  HMAC a file
+  LTC_HMAC a file
   @param hash     The index of the hash you wish to use
-  @param fname    The name of the file you wish to HMAC
+  @param fname    The name of the file you wish to LTC_HMAC
   @param key      The secret key
   @param keylen   The length of the secret key
-  @param out      [out] The HMAC authentication tag
+  @param out      [out] The LTC_HMAC authentication tag
   @param outlen   [in/out]  The max size and resulting size of the authentication tag
   @return CRYPT_OK if successful, CRYPT_NOP if file support has been disabled
 */
@@ -89,6 +89,6 @@ int hmac_file(int hash, const char *fname,
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/hmac/hmac_file.c,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/11/03 00:39:49 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

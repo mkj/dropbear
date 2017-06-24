@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_exptmod.c
-  RSA PKCS exptmod, Tom St Denis
+  RSA LTC_PKCS exptmod, Tom St Denis
 */  
 
-#ifdef MRSA
+#ifdef LTC_MRSA
 
 /** 
    Compute an RSA modular exponentiation 
@@ -108,6 +108,6 @@ error:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_exptmod.c,v $ */
-/* $Revision: 1.16 $ */
-/* $Date: 2006/12/04 03:09:28 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

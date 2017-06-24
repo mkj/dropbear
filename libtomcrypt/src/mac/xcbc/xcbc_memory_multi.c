@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 #include <stdarg.h>
@@ -85,6 +85,6 @@ LBL_ERR:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/xcbc/xcbc_memory_multi.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2006/11/03 01:53:25 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

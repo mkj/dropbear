@@ -6,24 +6,24 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** 
   @file omac_memory.c
-  OMAC1 support, process a block of memory, Tom St Denis
+  LTC_OMAC1 support, process a block of memory, Tom St Denis
 */
 
 #ifdef LTC_OMAC
 
 /**
-   OMAC a block of memory 
+   LTC_OMAC a block of memory 
    @param cipher    The index of the desired cipher
    @param key       The secret key
    @param keylen    The length of the secret key (octets)
-   @param in        The data to send through OMAC
-   @param inlen     The length of the data to send through OMAC (octets)
+   @param in        The data to send through LTC_OMAC
+   @param inlen     The length of the data to send through LTC_OMAC (octets)
    @param out       [out] The destination of the authentication tag
    @param outlen    [in/out]  The max size and resulting size of the authentication tag (octets)
    @return CRYPT_OK if successful
@@ -80,6 +80,6 @@ LBL_ERR:
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_memory.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

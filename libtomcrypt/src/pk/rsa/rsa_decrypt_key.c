@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_decrypt_key.c
-  RSA PKCS #1 Decryption, Tom St Denis and Andreas Lange
+  RSA LTC_PKCS #1 Decryption, Tom St Denis and Andreas Lange
 */
 
-#ifdef MRSA
+#ifdef LTC_MRSA
 
 /**
-   PKCS #1 decrypt then v1.5 or OAEP depad
+   LTC_PKCS #1 decrypt then v1.5 or OAEP depad
    @param in          The ciphertext
    @param inlen       The length of the ciphertext (octets)
    @param out         [out] The plaintext
@@ -26,7 +26,7 @@
    @param lparam      The system "lparam" value
    @param lparamlen   The length of the lparam value (octets)
    @param hash_idx    The index of the hash desired
-   @param padding     Type of padding (LTC_PKCS_1_OAEP or LTC_PKCS_1_V1_5)
+   @param padding     Type of padding (LTC_LTC_PKCS_1_OAEP or LTC_LTC_PKCS_1_V1_5)
    @param stat        [out] Result of the decryption, 1==valid, 0==invalid
    @param key         The corresponding private RSA key
    @return CRYPT_OK if succcessul (even if invalid)
@@ -51,12 +51,12 @@ int rsa_decrypt_key_ex(const unsigned char *in,       unsigned long  inlen,
 
   /* valid padding? */
 
-  if ((padding != LTC_PKCS_1_V1_5) &&
-      (padding != LTC_PKCS_1_OAEP)) {
+  if ((padding != LTC_LTC_PKCS_1_V1_5) &&
+      (padding != LTC_LTC_PKCS_1_OAEP)) {
     return CRYPT_PK_INVALID_PADDING;
   }
 
-  if (padding == LTC_PKCS_1_OAEP) {
+  if (padding == LTC_LTC_PKCS_1_OAEP) {
     /* valid hash ? */
     if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
        return err;
@@ -85,21 +85,21 @@ int rsa_decrypt_key_ex(const unsigned char *in,       unsigned long  inlen,
      return err;
   }
 
-  if (padding == LTC_PKCS_1_OAEP) {
+  if (padding == LTC_LTC_PKCS_1_OAEP) {
     /* now OAEP decode the packet */
     err = pkcs_1_oaep_decode(tmp, x, lparam, lparamlen, modulus_bitlen, hash_idx,
                              out, outlen, stat);
   } else {
-    /* now PKCS #1 v1.5 depad the packet */
-    err = pkcs_1_v1_5_decode(tmp, x, LTC_PKCS_1_EME, modulus_bitlen, out, outlen, stat);
+    /* now LTC_PKCS #1 v1.5 depad the packet */
+    err = pkcs_1_v1_5_decode(tmp, x, LTC_LTC_PKCS_1_EME, modulus_bitlen, out, outlen, stat);
   }
 
   XFREE(tmp);
   return err;
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_decrypt_key.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/01 09:18:22 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

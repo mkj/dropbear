@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
    @param md2.c
-   MD2 (RFC 1319) hash function implementation by Tom St Denis 
+   LTC_MD2 (RFC 1319) hash function implementation by Tom St Denis 
 */
 
-#ifdef MD2
+#ifdef LTC_MD2
 
 const struct ltc_hash_descriptor md2_desc =
 {
@@ -102,7 +102,7 @@ int md2_init(hash_state *md)
 {
    LTC_ARGCHK(md != NULL);
 
-   /* MD2 uses a zero'ed state... */
+   /* LTC_MD2 uses a zero'ed state... */
    zeromem(md->md2.X, sizeof(md->md2.X));
    zeromem(md->md2.chksum, sizeof(md->md2.chksum));
    zeromem(md->md2.buf, sizeof(md->md2.buf));
@@ -246,6 +246,6 @@ int md2_test(void)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/md2.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

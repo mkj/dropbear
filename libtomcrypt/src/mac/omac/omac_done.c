@@ -6,20 +6,20 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** 
   @file omac_done.c
-  OMAC1 support, terminate a stream, Tom St Denis
+  LTC_OMAC1 support, terminate a stream, Tom St Denis
 */
 
 #ifdef LTC_OMAC
 
 /**
-  Terminate an OMAC stream
-  @param omac   The OMAC state
+  Terminate an LTC_OMAC stream
+  @param omac   The LTC_OMAC state
   @param out    [out] Destination for the authentication tag
   @param outlen [in/out]  The max size and resulting size of the authentication tag
   @return CRYPT_OK if successful
@@ -81,6 +81,6 @@ int omac_done(omac_state *omac, unsigned char *out, unsigned long *outlen)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_done.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2006/11/03 00:39:49 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

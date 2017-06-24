@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
   Yarrow PRNG, Tom St Denis
 */  
 
-#ifdef YARROW
+#ifdef LTC_YARROW
 
 const struct ltc_prng_descriptor yarrow_desc =
 {
@@ -42,77 +42,77 @@ int yarrow_start(prng_state *prng)
    LTC_ARGCHK(prng != NULL);
 
    /* these are the default hash/cipher combo used */
-#ifdef RIJNDAEL
-#if    YARROW_AES==0
+#ifdef LTC_RIJNDAEL
+#if    LTC_YARROW_AES==0
    prng->yarrow.cipher = register_cipher(&rijndael_enc_desc);
-#elif  YARROW_AES==1
+#elif  LTC_YARROW_AES==1
    prng->yarrow.cipher = register_cipher(&aes_enc_desc);
-#elif  YARROW_AES==2
+#elif  LTC_YARROW_AES==2
    prng->yarrow.cipher = register_cipher(&rijndael_desc);
-#elif  YARROW_AES==3
+#elif  LTC_YARROW_AES==3
    prng->yarrow.cipher = register_cipher(&aes_desc);
 #endif
-#elif defined(BLOWFISH)
+#elif defined(LTC_BLOWFISH)
    prng->yarrow.cipher = register_cipher(&blowfish_desc);
-#elif defined(TWOFISH)
+#elif defined(LTC_TWOFISH)
    prng->yarrow.cipher = register_cipher(&twofish_desc);
-#elif defined(RC6)
+#elif defined(LTC_RC6)
    prng->yarrow.cipher = register_cipher(&rc6_desc);
-#elif defined(RC5)
+#elif defined(LTC_RC5)
    prng->yarrow.cipher = register_cipher(&rc5_desc);
-#elif defined(SAFERP)
+#elif defined(LTC_SAFERP)
    prng->yarrow.cipher = register_cipher(&saferp_desc);
-#elif defined(RC2)
+#elif defined(LTC_RC2)
    prng->yarrow.cipher = register_cipher(&rc2_desc);
-#elif defined(NOEKEON)   
+#elif defined(LTC_NOEKEON)   
    prng->yarrow.cipher = register_cipher(&noekeon_desc);
-#elif defined(ANUBIS)   
+#elif defined(LTC_ANUBIS)   
    prng->yarrow.cipher = register_cipher(&anubis_desc);
-#elif defined(KSEED)   
+#elif defined(LTC_KSEED)   
    prng->yarrow.cipher = register_cipher(&kseed_desc);
-#elif defined(KHAZAD)   
+#elif defined(LTC_KHAZAD)   
    prng->yarrow.cipher = register_cipher(&khazad_desc);
-#elif defined(CAST5)
+#elif defined(LTC_CAST5)
    prng->yarrow.cipher = register_cipher(&cast5_desc);
-#elif defined(XTEA)
+#elif defined(LTC_XTEA)
    prng->yarrow.cipher = register_cipher(&xtea_desc);
-#elif defined(SAFER)
+#elif defined(LTC_SAFER)
    prng->yarrow.cipher = register_cipher(&safer_sk128_desc);
-#elif defined(DES)
+#elif defined(LTC_DES)
    prng->yarrow.cipher = register_cipher(&des3_desc);
 #else
-   #error YARROW needs at least one CIPHER
+   #error LTC_YARROW needs at least one CIPHER
 #endif
    if ((err = cipher_is_valid(prng->yarrow.cipher)) != CRYPT_OK) {
       return err;
    }
 
-#ifdef SHA256
+#ifdef LTC_SHA256
    prng->yarrow.hash   = register_hash(&sha256_desc);
-#elif defined(SHA512)
+#elif defined(LTC_SHA512)
    prng->yarrow.hash   = register_hash(&sha512_desc);
-#elif defined(TIGER)
+#elif defined(LTC_TIGER)
    prng->yarrow.hash   = register_hash(&tiger_desc);
-#elif defined(SHA1)
+#elif defined(LTC_SHA1)
    prng->yarrow.hash   = register_hash(&sha1_desc);
-#elif defined(RIPEMD320)
+#elif defined(LTC_RIPEMD320)
    prng->yarrow.hash   = register_hash(&rmd320_desc);
-#elif defined(RIPEMD256)
+#elif defined(LTC_RIPEMD256)
    prng->yarrow.hash   = register_hash(&rmd256_desc);
-#elif defined(RIPEMD160)
+#elif defined(LTC_RIPEMD160)
    prng->yarrow.hash   = register_hash(&rmd160_desc);
-#elif defined(RIPEMD128)
+#elif defined(LTC_RIPEMD128)
    prng->yarrow.hash   = register_hash(&rmd128_desc);
-#elif defined(MD5)
+#elif defined(LTC_MD5)
    prng->yarrow.hash   = register_hash(&md5_desc);
-#elif defined(MD4)
+#elif defined(LTC_MD4)
    prng->yarrow.hash   = register_hash(&md4_desc);
-#elif defined(MD2)
+#elif defined(LTC_MD2)
    prng->yarrow.hash   = register_hash(&md2_desc);
-#elif defined(WHIRLPOOL)
+#elif defined(LTC_WHIRLPOOL)
    prng->yarrow.hash   = register_hash(&whirlpool_desc);
 #else
-   #error YARROW needs at least one HASH
+   #error LTC_YARROW needs at least one HASH
 #endif
    if ((err = hash_is_valid(prng->yarrow.hash)) != CRYPT_OK) {
       return err;
@@ -357,6 +357,6 @@ int yarrow_test(void)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/prngs/yarrow.c,v $ */
-/* $Revision: 1.10 $ */
-/* $Date: 2006/11/14 04:21:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

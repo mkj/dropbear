@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -77,9 +77,9 @@ int ctr_test(void)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_test.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2006/11/05 02:06:49 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
 
 
 

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -93,6 +93,6 @@ int f8_start(                int  cipher, const unsigned char *IV,
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/modes/f8/f8_start.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2006/11/05 01:36:43 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

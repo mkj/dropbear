@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#if defined(GCM_TABLES) || defined(LRW_TABLES) || ((defined(GCM_MODE) || defined(GCM_MODE)) && defined(LTC_FAST))
+#if defined(LTC_GCM_TABLES) || defined(LRW_TABLES) || ((defined(LTC_GCM_MODE) || defined(LTC_GCM_MODE)) && defined(LTC_FAST))
 
 /* this is x*2^128 mod p(x) ... the results are 16 bytes each stored in a packed format.  Since only the 
  * lower 16 bits are not zero'ed I removed the upper 14 bytes */
@@ -56,7 +56,7 @@ const unsigned char gcm_shift_table[256*2] = {
 #endif
 
 
-#if defined(GCM_MODE) || defined(LRW_MODE)
+#if defined(LTC_GCM_MODE) || defined(LRW_MODE)
 
 #ifndef LTC_FAST
 /* right shift */
@@ -215,7 +215,7 @@ void gcm_gf_mult(const unsigned char *a, const unsigned char *b, unsigned char *
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_gf_mult.c,v $ */
-/* $Revision: 1.23 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
  

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#ifdef GCM_MODE
+#ifdef LTC_GCM_MODE
 
 /**
   Process an entire GCM packet in one call.
@@ -65,7 +65,7 @@ int gcm_memory(      int           cipher,
 
 
 
-#ifndef GCM_TABLES_SSE2
+#ifndef LTC_GCM_TABLES_SSE2
     orig = gcm = XMALLOC(sizeof(*gcm));
 #else
     orig = gcm = XMALLOC(sizeof(*gcm) + 16);
@@ -78,7 +78,7 @@ int gcm_memory(      int           cipher,
     * note that we only modify gcm and keep orig intact.  This code is not portable
     * but again it's only for SSE2 anyways, so who cares?
     */
-#ifdef GCM_TABLES_SSE2
+#ifdef LTC_GCM_TABLES_SSE2
    if ((unsigned long)gcm & 15) {
       gcm = (gcm_state *)((unsigned long)gcm + (16 - ((unsigned long)gcm & 15)));
    }
@@ -104,6 +104,6 @@ LTC_ERR:
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_memory.c,v $ */
-/* $Revision: 1.23 $ */
-/* $Date: 2006/09/07 10:00:57 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

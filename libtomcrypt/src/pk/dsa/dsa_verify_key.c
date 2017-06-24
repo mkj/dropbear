@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -15,7 +15,7 @@
    DSA implementation, verify a key, Tom St Denis
 */
 
-#ifdef MDSA
+#ifdef LTC_MDSA
 
 /**
    Verify a DSA key for validity
@@ -95,6 +95,6 @@ error:
 }
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_verify_key.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/12/04 03:18:43 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

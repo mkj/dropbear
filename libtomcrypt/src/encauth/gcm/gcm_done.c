@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#ifdef GCM_MODE
+#ifdef LTC_GCM_MODE
 
 /**
   Terminate a GCM stream
@@ -43,7 +43,7 @@ int gcm_done(gcm_state *gcm,
    }
 
 
-   if (gcm->mode != GCM_MODE_TEXT) {
+   if (gcm->mode != LTC_GCM_MODE_TEXT) {
       return CRYPT_INVALID_ARG;
    }
 
@@ -78,6 +78,6 @@ int gcm_done(gcm_state *gcm,
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_done.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

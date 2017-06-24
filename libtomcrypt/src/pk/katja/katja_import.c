@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file katja_import.c
-  Import a PKCS-style Katja key, Tom St Denis
+  Import a LTC_PKCS-style Katja key, Tom St Denis
 */  
 
 #ifdef MKAT
 
 /**
-  Import an KatjaPublicKey or KatjaPrivateKey [two-prime only, only support >= 1024-bit keys, defined in PKCS #1 v2.1]
+  Import an KatjaPublicKey or KatjaPrivateKey [two-prime only, only support >= 1024-bit keys, defined in LTC_PKCS #1 v2.1]
   @param in      The packet to import from
   @param inlen   It's length (octets)
   @param key     [out] Destination for newly imported key
@@ -73,9 +73,9 @@ LBL_ERR:
    return err;
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/katja/katja_import.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
