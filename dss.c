@@ -61,16 +61,14 @@ int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 		goto out;
 	}
 
-	if (mp_count_bits(key->p) < DSS_P_BITS) {
+	if (mp_count_bits(key->p) != DSS_P_BITS) {
 		dropbear_log(LOG_WARNING, "Bad DSS p");
-		TRACE(("leave buf_get_dss_pub_key: short key"))
 		ret = DROPBEAR_FAILURE;
 		goto out;
 	}
 
-	if (mp_count_bits(key->q) < DSS_Q_BITS) {
+	if (mp_count_bits(key->q) != DSS_Q_BITS) {
 		dropbear_log(LOG_WARNING, "Bad DSS q");
-		TRACE(("leave buf_get_dss_pub_key: short key"))
 		ret = DROPBEAR_FAILURE;
 		goto out;
 	}
