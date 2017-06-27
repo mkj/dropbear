@@ -22,7 +22,11 @@ recompiling - bad things will happen otherwise)
 
 See MULTI for instructions on making all-in-one binaries.
 
-If you want to compile statically, add "STATIC=1" to the make command-line.
+If you want to compile statically use ./configure --enable-static
+
+By default Dropbear adds various build flags that improve robustness 
+against programming bugs (good for security) - if these cause problems
+they can be disabled with ./configure --disable-harden
 
 Binaries can be stripped with "make strip"
 

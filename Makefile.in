@@ -2,12 +2,11 @@
 # @configure_input@
 
 # invocation:
-# make PROGRAMS="dropbear dbclient scp" MULTI=1 STATIC=1 SCPPROGRESS=1
+# make PROGRAMS="dropbear dbclient scp" MULTI=1 SCPPROGRESS=1
 #
-# to make a multiple-program statically linked binary "staticdropbearmulti".
+# to make a multiple-program binary "dropbearmulti".
 # This example will include dropbear, scp, dropbearkey, dropbearconvert, and
 # dbclient functionality, and includes the progress-bar functionality in scp.
-# Hopefully that seems intuitive.
 
 ifndef PROGRAMS
 	PROGRAMS=dropbear dbclient dropbearkey dropbearconvert

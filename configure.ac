@@ -35,7 +35,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
 
 STATIC=0
 AC_ARG_ENABLE(static,
-	[  --enable-static        Build static binaries],
+	[  --enable-static         Build static binaries],
 	[
 		if test "x$enableval" = "xyes"; then
 			STATIC=1
