@@ -94,6 +94,8 @@ LDFLAGS=@LDFLAGS@
 
 EXEEXT=@EXEEXT@
 
+STATIC=@STATIC@
+
 # whether we're building client, server, or both for the common objects.
 # evilness so we detect 'dropbear' by itself as a word
 space:= $(empty) $(empty)
