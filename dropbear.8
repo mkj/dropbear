@@ -92,7 +92,7 @@ if 0 disables keepalives. If no response is received for 3 consecutive keepalive
 Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
 .TP
 .B \-T \fImax_authentication_attempts
-Disconnect the session if number of authentication attempts is exceeded. default is set at compile time to DEFAULT_AUTH_TRIES which itself defaults to MAX_AUTH_TRIES (10)
+Set the number of authentication attempts allowed per connection. If unspecified the default is 10 (MAX_AUTH_TRIES)
 .TP
 .B \-c \fIforced_command
 Disregard the command provided by the user and always run \fIforced_command\fR. This also

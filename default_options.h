@@ -380,15 +380,10 @@ Homedir is prepended unless path begins with / */
 #define MAX_UNAUTH_CLIENTS 30
 #endif
 
-/* Maximum number of failed authentication tries (server option) */
+/* Default maximum number of failed authentication tries (server option) */
+/* -T runtime option overrides */
 #ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
-#endif
-
-/* Default maximum number of failed authentication tries.
- * defaults to MAX_AUTH_TRIES */
-#ifndef DEFAULT_AUTH_TRIES
-#define DEFAULT_AUTH_TRIES MAX_AUTH_TRIES
 #endif
 
 /* The default file to store the daemon's process ID, for shutdown

@@ -73,7 +73,7 @@ static void printhelp(const char * progname) {
 					"-g		Disable password logins for root\n"
 					"-B		Allow blank password logins\n"
 #endif
-					"-T <1 to %d> 	Maximum authentication tries (default %d)\n"
+					"-T		Maximum authentication tries (default %d)\n"
 #if DROPBEAR_SVR_LOCALTCPFWD
 					"-j		Disable local port forwarding\n"
 #endif
@@ -108,7 +108,7 @@ static void printhelp(const char * progname) {
 #if DROPBEAR_ECDSA
 					ECDSA_PRIV_FILENAME,
 #endif
-					MAX_AUTH_TRIES, DEFAULT_AUTH_TRIES,
+					MAX_AUTH_TRIES,
 					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE,
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 }
@@ -135,7 +135,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
 	svr_opts.allowblankpass = 0;
-	svr_opts.maxauthtries = DEFAULT_AUTH_TRIES;
+	svr_opts.maxauthtries = MAX_AUTH_TRIES;
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
@@ -341,8 +341,8 @@ void svr_getopts(int argc, char ** argv) {
 
 	if (maxauthtries_arg) {
 		unsigned int val = 0;
-		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE ||
-			val == 0 || val > MAX_AUTH_TRIES) {
+		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE 
+			|| val == 0) {
 			dropbear_exit("Bad maxauthtries '%s'", maxauthtries_arg);
 		}
 		svr_opts.maxauthtries = val;
