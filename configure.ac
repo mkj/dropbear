@@ -35,7 +35,7 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
 
 hardenbuild=1
 AC_ARG_ENABLE(harden,
-	[  --disable-harden          Don't set hardened build flags],
+	[  --disable-harden        Don't set hardened build flags],
 	[
 		if test "x$enableval" = "xno"; then
 			hardenbuild=0
@@ -230,7 +230,7 @@ AC_ARG_WITH(pam,
 
 
 AC_ARG_ENABLE(pam,
-	[  --enable-pam          Try to include PAM support],
+	[  --enable-pam            Try to include PAM support],
 	[
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
