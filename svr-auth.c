@@ -358,10 +358,12 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		genrandom((unsigned char*)&delay, sizeof(delay));
 		/* We delay for 300ms +- 50ms */
 		delay = 250000 + (delay % 100000);
-#ifndef DROPBEAR_FUZZ
+#ifdef DROPBEAR_FUZZ
 		if (!fuzz.fuzzing) {
 			usleep(delay);
 		}
+#else
+		usleep(delay);
 #endif
 		ses.authstate.failcount++;
 	}
