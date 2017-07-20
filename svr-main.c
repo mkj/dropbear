@@ -35,10 +35,10 @@ static size_t listensockets(int *sock, size_t sockcount, int *maxfd);
 static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
-#ifdef INETD_MODE
+#if INETD_MODE
 static void main_inetd(void);
 #endif
-#ifdef NON_INETD_MODE
+#if NON_INETD_MODE
 static void main_noinetd(void);
 #endif
 static void commonsetup(void);
@@ -58,7 +58,7 @@ int main(int argc, char ** argv)
 	/* get commandline options */
 	svr_getopts(argc, argv);
 
-#ifdef INETD_MODE
+#if INETD_MODE
 	/* service program mode */
 	if (svr_opts.inetdmode) {
 		main_inetd();
@@ -66,7 +66,7 @@ int main(int argc, char ** argv)
 	}
 #endif
 
-#ifdef NON_INETD_MODE
+#if NON_INETD_MODE
 	main_noinetd();
 	/* notreached */
 #endif
@@ -76,7 +76,7 @@ int main(int argc, char ** argv)
 }
 #endif
 
-#ifdef INETD_MODE
+#if INETD_MODE
 static void main_inetd() {
 	char *host, *port = NULL;
 
@@ -103,7 +103,7 @@ static void main_inetd() {
 }
 #endif /* INETD_MODE */
 
-#ifdef NON_INETD_MODE
+#if NON_INETD_MODE
 static void main_noinetd() {
 	fd_set fds;
 	unsigned int i, j;

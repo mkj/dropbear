@@ -663,7 +663,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			}
 		}
 		if (issubsys) {
-#ifdef SFTPSERVER_PATH
+#if DROPBEAR_SFTPSERVER
 			if ((cmdlen == 4) && strncmp(chansess->cmd, "sftp", 4) == 0) {
 				m_free(chansess->cmd);
 				chansess->cmd = m_strdup(SFTPSERVER_PATH);
@@ -687,7 +687,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	}
 
 
-#ifdef LOG_COMMANDS
+#if LOG_COMMANDS
 	if (chansess->cmd) {
 		dropbear_log(LOG_INFO, "User %s executing '%s'", 
 						ses.authstate.pw_name, chansess->cmd);
@@ -774,7 +774,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
 	struct logininfo *li = NULL;
-#ifdef DO_MOTD
+#if DO_MOTD
 	buffer * motdbuf = NULL;
 	int len;
 	struct stat sb;
@@ -826,7 +826,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		login_login(li);
 		login_free_entry(li);
 
-#ifdef DO_MOTD
+#if DO_MOTD
 		if (svr_opts.domotd && !chansess->cmd) {
 			/* don't show the motd if ~/.hushlogin exists */
 

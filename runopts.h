@@ -86,7 +86,7 @@ typedef struct svr_runopts {
 	int ipv6;
 	*/
 
-#ifdef DO_MOTD
+#if DO_MOTD
 	/* whether to print the MOTD */
 	int domotd;
 #endif

@@ -78,13 +78,13 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 #if DROPBEAR_ECDSA
 			/* Some of the ECDSA key sizes are defined even if they're not compiled in */
 			if (0
-#ifndef DROPBEAR_ECC_256
+#if !DROPBEAR_ECC_256
 				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP256
 #endif
-#ifndef DROPBEAR_ECC_384
+#if !DROPBEAR_ECC_384
 				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP384
 #endif
-#ifndef DROPBEAR_ECC_521
+#if !DROPBEAR_ECC_521
 				|| i == DROPBEAR_SIGNKEY_ECDSA_NISTP521
 #endif
 				) {

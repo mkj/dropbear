@@ -35,7 +35,7 @@
 #include "auth.h"
 #include "netio.h"
 
-#ifndef DROPBEAR_SVR_REMOTETCPFWD
+#if !DROPBEAR_SVR_REMOTETCPFWD
 
 /* This is better than SSH_MSG_UNIMPLEMENTED */
 void recv_msg_global_request_remotetcp() {

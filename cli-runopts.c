@@ -306,10 +306,10 @@ void cli_getopts(int argc, char ** argv) {
 				case 'm':
 #endif
 				case 'D':
-#ifndef DROPBEAR_CLI_REMOTETCPFWD
+#if !DROPBEAR_CLI_REMOTETCPFWD
 				case 'R':
 #endif
-#ifndef DROPBEAR_CLI_LOCALTCPFWD
+#if !DROPBEAR_CLI_LOCALTCPFWD
 				case 'L':
 #endif
 				case 'V':

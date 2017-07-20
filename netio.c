@@ -613,7 +613,7 @@ void getaddrstring(struct sockaddr_storage* addr,
 	
 	int flags = NI_NUMERICSERV | NI_NUMERICHOST;
 
-#ifndef DO_HOST_LOOKUP
+#if !DO_HOST_LOOKUP
 	host_lookup = 0;
 #endif
 	

@@ -214,7 +214,7 @@ void dropbear_trace2(const char* format, ...) {
 #endif /* DEBUG_TRACE */
 
 /* Connect to a given unix socket. The socket is blocking */
-#ifdef ENABLE_CONNECT_UNIX
+#if ENABLE_CONNECT_UNIX
 int connect_unix(const char* path) {
 	struct sockaddr_un addr;
 	int fd = -1;
