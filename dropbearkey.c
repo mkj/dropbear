@@ -241,7 +241,7 @@ int main(int argc, char ** argv) {
 	}
 
 	genbits = signkey_generate_get_bits(keytype, bits);
-	fprintf(stderr, "Generating %d bit %s key, this may take a while...\n", genbits, typetext);
+	fprintf(stderr, "Generating %u bit %s key, this may take a while...\n", genbits, typetext);
 	if (signkey_generate(keytype, bits, filename, 0) == DROPBEAR_FAILURE)
 	{
 		dropbear_exit("Failed to generate key.\n");
