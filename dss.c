@@ -73,6 +73,18 @@ int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 		goto out;
 	}
 
+	/* test 1 < g < p */
+	if (mp_cmp_d(key->g, 1) != MP_GT) {
+		dropbear_log(LOG_WARNING, "Bad DSS g");
+		ret = DROPBEAR_FAILURE;
+		goto out;
+	}
+	if (mp_cmp(key->g, key->p) != MP_LT) {
+		dropbear_log(LOG_WARNING, "Bad DSS g");
+		ret = DROPBEAR_FAILURE;
+		goto out;
+	}
+
 	ret = DROPBEAR_SUCCESS;
 	TRACE(("leave buf_get_dss_pub_key: success"))
 out:
