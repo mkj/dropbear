@@ -47,10 +47,10 @@ static int sessionsignal(const struct ChanSess *chansess);
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int sessionwinchange(const struct ChanSess *chansess);
-static void execchild(void *user_data_chansess);
+static void execchild(const void *user_data_chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
-static void closechansess(struct Channel *channel);
+static void closechansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
 static int sesscheckclose(const struct Channel *channel);
@@ -281,7 +281,7 @@ chansess_login_alloc(const struct ChanSess *chansess) {
 }
 
 /* clean a session channel */
-static void closechansess(struct Channel *channel) {
+static void closechansess(const struct Channel *channel) {
 
 	struct ChanSess *chansess;
 	unsigned int i;
@@ -898,7 +898,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
-static void execchild(void *user_data) {
+static void execchild(const void *user_data) {
 	struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
 

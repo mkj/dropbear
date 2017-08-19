@@ -142,7 +142,7 @@ static void cli_dropbear_log(int priority,
 	fflush(stderr);
 }
 
-static void exec_proxy_cmd(void *user_data_cmd) {
+static void exec_proxy_cmd(const void *user_data_cmd) {
 	const char *cmd = user_data_cmd;
 	char *usershell;
 

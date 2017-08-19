@@ -38,7 +38,7 @@
 #define X11BASEPORT 6000
 #define X11BINDBASE 6010
 
-static void x11accept(struct Listener* listener, int sock);
+static void x11accept(const struct Listener* listener, int sock);
 static int bindport(int fd);
 static int send_msg_channel_open_x11(int fd, const struct sockaddr_in* addr);
 
@@ -126,7 +126,7 @@ fail:
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-static void x11accept(struct Listener* listener, int sock) {
+static void x11accept(const struct Listener* listener, int sock) {
 
 	int fd;
 	struct sockaddr_in addr;

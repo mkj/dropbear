@@ -84,7 +84,7 @@ struct Channel {
 	int flushing;
 
 	/* Used by client chansession to handle ~ escaping, NULL ignored otherwise */
-	void (*read_mangler)(struct Channel*, unsigned char* bytes, int *len);
+	void (*read_mangler)(const struct Channel*, const unsigned char* bytes, int *len);
 
 	const struct ChanType* type;
 
@@ -98,7 +98,7 @@ struct ChanType {
 	int (*inithandler)(struct Channel*);
 	int (*check_close)(struct Channel*);
 	void (*reqhandler)(struct Channel*);
-	void (*closehandler)(struct Channel*);
+	void (*closehandler)(const struct Channel*);
 };
 
 /* Callback for connect_remote */
