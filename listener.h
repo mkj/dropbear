@@ -47,10 +47,10 @@ struct Listener {
 };
 
 void listeners_initialise(void);
-void handle_listeners(fd_set * readfds);
+void handle_listeners(const fd_set * readfds);
 void set_listener_fds(fd_set * readfds);
 
-struct Listener* new_listener(int socks[], unsigned int nsocks, 
+struct Listener* new_listener(const int socks[], unsigned int nsocks,
 		int type, void* typedata, 
 		void (*acceptor)(struct Listener* listener, int sock), 
 		void (*cleanup)(struct Listener*));

@@ -36,7 +36,7 @@ void cli_authinitialise(void);
 void recv_msg_userauth_request(void);
 void send_msg_userauth_failure(int partial, int incrfail);
 void send_msg_userauth_success(void);
-void send_msg_userauth_banner(buffer *msg);
+void send_msg_userauth_banner(const buffer *msg);
 void svr_auth_password(void);
 void svr_auth_pubkey(void);
 void svr_auth_pam(void);
@@ -74,7 +74,7 @@ void cli_pubkeyfail(void);
 void cli_auth_password(void);
 int cli_auth_pubkey(void);
 void cli_auth_interactive(void);
-char* getpass_or_cancel(char* prompt);
+char* getpass_or_cancel(const char* prompt);
 void cli_auth_pubkey_cleanup(void);
 
 

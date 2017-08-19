@@ -118,7 +118,7 @@ static void agentaccept(struct Listener *UNUSED(listener), int sock) {
 
 /* set up the environment variable pointing to the socket. This is called
  * just before command/shell execution, after dropping privileges */
-void svr_agentset(struct ChanSess * chansess) {
+void svr_agentset(const struct ChanSess * chansess) {
 
 	char *path = NULL;
 	int len;

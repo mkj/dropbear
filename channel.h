@@ -107,7 +107,7 @@ void channel_connect_done(int result, int sock, void* user_data, const char* err
 void chaninitialise(const struct ChanType *chantypes[]);
 void chancleanup(void);
 void setchannelfds(fd_set *readfds, fd_set *writefds, int allow_reads);
-void channelio(fd_set *readfd, fd_set *writefd);
+void channelio(const fd_set *readfd, const fd_set *writefd);
 struct Channel* getchannel(void);
 /* Returns an arbitrary channel that is in a ready state - not
 being initialised and no EOF in either direction. NULL if none. */
@@ -115,8 +115,8 @@ struct Channel* get_any_ready_channel(void);
 
 void recv_msg_channel_open(void);
 void recv_msg_channel_request(void);
-void send_msg_channel_failure(struct Channel *channel);
-void send_msg_channel_success(struct Channel *channel);
+void send_msg_channel_failure(const struct Channel *channel);
+void send_msg_channel_success(const struct Channel *channel);
 void recv_msg_channel_data(void);
 void recv_msg_channel_extended_data(void);
 void recv_msg_channel_window_adjust(void);
@@ -135,7 +135,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type);
 void recv_msg_channel_open_confirmation(void);
 void recv_msg_channel_open_failure(void);
 #endif
-void start_send_channel_request(struct Channel *channel, char *type);
+void start_send_channel_request(const struct Channel *channel, const char *type);
 
 void send_msg_request_success(void);
 void send_msg_request_failure(void);

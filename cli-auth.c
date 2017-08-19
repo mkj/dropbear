@@ -331,7 +331,7 @@ int cli_auth_try() {
 #if DROPBEAR_CLI_PASSWORD_AUTH || DROPBEAR_CLI_INTERACT_AUTH
 /* A helper for getpass() that exits if the user cancels. The returned
  * password is statically allocated by getpass() */
-char* getpass_or_cancel(char* prompt)
+char* getpass_or_cancel(const char* prompt)
 {
 	char* password = NULL;
 	

@@ -38,8 +38,8 @@
 static void cli_closechansess(struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
 static void cli_chansessreq(struct Channel *channel);
-static void send_chansess_pty_req(struct Channel *channel);
-static void send_chansess_shell_req(struct Channel *channel);
+static void send_chansess_pty_req(const struct Channel *channel);
+static void send_chansess_shell_req(const struct Channel *channel);
 static void cli_escape_handler(struct Channel *channel, unsigned char* buf, int *len);
 static int cli_init_netcat(struct Channel *channel);
 
@@ -270,7 +270,7 @@ void cli_chansess_winchange() {
 	cli_ses.winchange = 0;
 }
 
-static void send_chansess_pty_req(struct Channel *channel) {
+static void send_chansess_pty_req(const struct Channel *channel) {
 
 	char* term = NULL;
 
@@ -303,7 +303,7 @@ static void send_chansess_pty_req(struct Channel *channel) {
 	TRACE(("leave send_chansess_pty_req"))
 }
 
-static void send_chansess_shell_req(struct Channel *channel) {
+static void send_chansess_shell_req(const struct Channel *channel) {
 
 	char* reqtype = NULL;
 

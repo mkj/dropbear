@@ -55,9 +55,9 @@ static const unsigned char OID_SEC521R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x23};
 	((unsigned long)(unsigned char)(cp)[3]))
 
 static int openssh_encrypted(const char *filename);
-static sign_key *openssh_read(const char *filename, char *passphrase);
+static sign_key *openssh_read(const char *filename, const char *passphrase);
 static int openssh_write(const char *filename, sign_key *key,
-				  char *passphrase);
+				  const char *passphrase);
 
 static int dropbear_write(const char*filename, sign_key * key);
 static sign_key *dropbear_read(const char* filename);
@@ -83,7 +83,7 @@ int import_encrypted(const char* filename, int filetype) {
 	return 0;
 }
 
-sign_key *import_read(const char *filename, char *passphrase, int filetype) {
+sign_key *import_read(const char *filename, const char *passphrase, int filetype) {
 
 	if (filetype == KEYFILE_OPENSSH) {
 		return openssh_read(filename, passphrase);
@@ -97,7 +97,7 @@ sign_key *import_read(const char *filename, char *passphrase, int filetype) {
 	return NULL;
 }
 
-int import_write(const char *filename, sign_key *key, char *passphrase,
+int import_write(const char *filename, sign_key *key, const char *passphrase,
 		int filetype) {
 
 	if (filetype == KEYFILE_OPENSSH) {
@@ -194,7 +194,7 @@ out:
 						 )
 
 /* cpl has to be less than 100 */
-static void base64_encode_fp(FILE * fp, unsigned char *data,
+static void base64_encode_fp(FILE * fp, const unsigned char *data,
 		int datalen, int cpl)
 {
 	unsigned char out[100];
@@ -509,7 +509,7 @@ static int openssh_encrypted(const char *filename)
 	return ret;
 }
 
-static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
+static sign_key *openssh_read(const char *filename, const char * UNUSED(passphrase))
 {
 	struct openssh_key *key;
 	unsigned char *p;
@@ -828,7 +828,7 @@ static sign_key *openssh_read(const char *filename, char * UNUSED(passphrase))
 }
 
 static int openssh_write(const char *filename, sign_key *key,
-				  char *passphrase)
+				  const char *passphrase)
 {
 	buffer * keyblob = NULL;
 	buffer * extrablob = NULL; /* used for calculated values to write */

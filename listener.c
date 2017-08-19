@@ -53,7 +53,7 @@ void set_listener_fds(fd_set * readfds) {
 }
 
 
-void handle_listeners(fd_set * readfds) {
+void handle_listeners(const fd_set * readfds) {
 
 	unsigned int i, j;
 	struct Listener *listener;
@@ -76,7 +76,7 @@ void handle_listeners(fd_set * readfds) {
 
 /* acceptor(int fd, void* typedata) is a function to accept connections, 
  * cleanup(void* typedata) happens when cleaning up */
-struct Listener* new_listener(int socks[], unsigned int nsocks,
+struct Listener* new_listener(const int socks[], unsigned int nsocks,
 		int type, void* typedata, 
 		void (*acceptor)(struct Listener* listener, int sock), 
 		void (*cleanup)(struct Listener*)) {
