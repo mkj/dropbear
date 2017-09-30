@@ -64,7 +64,8 @@ static const gf
   I = {0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83};
 
 static u64 dl64(const u8 *x) {
-  u64 i,u=0;
+  u64 u=0;
+  u32 i;
   FOR(i,8) u=(u<<8)|x[i];
   return u;
 }
@@ -229,7 +230,7 @@ static const u64 K[80] = {
   0x4cc5d4becb3e42b6ULL, 0x597f299cfc657e2aULL, 0x5fcb6fab3ad6faecULL, 0x6c44198c4a475817ULL
 };
 
-static int crypto_hashblocks(u8 *x,const u8 *m,u64 n) {
+static int crypto_hashblocks(u8 *x,const u8 *m,u32 n) {
   u64 z[8],b[8],a[8],w[16],t;
   int i,j;
   FOR(i,8) z[i] = a[i] = dl64(x + 8 * i);
@@ -264,9 +265,9 @@ static const u8 iv[64] = {
   0x5b,0xe0,0xcd,0x19,0x13,0x7e,0x21,0x79
 } ;
 
-static int crypto_hash(u8 *out,const u8 *m,u64 n) {
+static int crypto_hash(u8 *out,const u8 *m,u32 n) {
   u8 h[64],x[256];
-  u64 i,b = n;
+  u32 i,b = n;
   FOR(i,64) h[i] = iv[i];
   crypto_hashblocks(h,m,n);
   m += n;
@@ -276,7 +277,7 @@ static int crypto_hash(u8 *out,const u8 *m,u64 n) {
   FOR(i,n) x[i] = m[i];
   x[n] = 128;
   n = 256-128*(n<112);
-  x[n-9] = b >> 61;
+  x[n-9] = 0;
   ts64(x+n-8,b<<3);
   crypto_hashblocks(h,x,n);
   FOR(i,64) out[i] = h[i];
@@ -380,9 +381,9 @@ static void reduce(u8 *r) {
 }
 
 /* Modified API: removed smlen. */
-static int crypto_sign_m(u8 *sm,const u8 *m,u64 n,const u8 *sk) {
+static int crypto_sign_m(u8 *sm,const u8 *m,u32 n,const u8 *sk) {
   u8 d[64],h[64],r[64];
-  u64 i,j;
+  u32 i,j;
   i64 x[64];
   gf p[4];
   crypto_hash(d, sk, 32);
@@ -437,8 +438,8 @@ static int unpackneg(gf r[4],const u8 p[32]) {
 /* Modified API: removed m and mlen.
  * Overwrites sm as a side effect.
  */
-static int crypto_sign_open_m(u8 *sm,u64 n,const u8 *pk) {
-  u64 i;
+static int crypto_sign_open_m(u8 *sm,u32 n,const u8 *pk) {
+  u32 i;
   u8 t[32],h[64];
   gf p[4],q[4];
   u8 s[32];
@@ -466,7 +467,7 @@ int buf_get_ed25519_pub_key(buffer* buf, dropbear_ed25519_key *key) {
 	/* Format (same as the base64-encoded 2nd word in each line of
 	 * ~/.ssh/authorized_keys used by dropbear and OpenSSH):
 	 *
-	 * "'\0\0\0\x0bssh-ed25519\0\0\0 " + pk,
+	 * "\0\0\0\x0bssh-ed25519\0\0\0 " + pk,
 	 * where pk is 32 bytes of public key.
 	 * It's 51 bytes in total.
 	 */
@@ -484,7 +485,7 @@ int buf_get_ed25519_pub_key(buffer* buf, dropbear_ed25519_key *key) {
 int buf_get_ed25519_priv_key(buffer* buf, dropbear_ed25519_key *key) {
 	/* Format (not shared with OpenSSH):
 	 *
-	 * "'\0\0\0\x0bssh-ed25519\0\0\0@" + sk + pk,
+	 * "\0\0\0\x0bssh-ed25519\0\0\0@" + sk + pk,
 	 * where sk is 32 bytes of secret key (private key).
 	 * where pk is 32 bytes of public key.
 	 * It's 83 bytes in total.
