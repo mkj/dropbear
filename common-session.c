@@ -28,7 +28,6 @@
 #include "packet.h"
 #include "algo.h"
 #include "buffer.h"
-#include "dss.h"
 #include "ssh.h"
 #include "dbrandom.h"
 #include "kex.h"

@@ -184,7 +184,7 @@ If you test it please contact the Dropbear author */
 /* For a 4096 bit DSS key, empirically determined */
 #define MAX_PRIVKEY_SIZE 1700
 
-#define MAX_HOSTKEYS 3
+#define MAX_HOSTKEYS 4
 
 /* The maximum size of the bignum portion of the kexhash buffer */
 /* Sect. 8 of the transport rfc 4253, K_S + e + f + K */

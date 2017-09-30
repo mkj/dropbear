@@ -31,7 +31,7 @@ OPTION_HEADERS += localoptions.h
 endif
 
 COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
-		dss.o bignum.o \
+		dss.o ed25519.o bignum.o \
 		signkey.o rsa.o dbrandom.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \

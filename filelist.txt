@@ -99,6 +99,8 @@ rsa.c			RSA asymmetric crypto routines
 
 dss.c			DSS asymmetric crypto routines
 
+ed25519.c		ed25519 asymmetric crypto routines
+
 gendss.c		DSS key generation
 
 genrsa.c		RSA key generation
