@@ -31,14 +31,7 @@
 #ifdef DROPBEAR_ED25519 
 
 typedef struct {
-
-	mp_int* p;
-	mp_int* q;
-	mp_int* g;
-	mp_int* y;
-	/* x is the private part */
-	mp_int* x;
-
+	char spk[64];  /* The first 32 bytes is th private part. */
 } dropbear_ed25519_key;
 
 void buf_put_ed25519_sign(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf);
