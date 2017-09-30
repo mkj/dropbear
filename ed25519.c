@@ -37,8 +37,11 @@
 
 /* --- Copied from tweetnacl.c.
  *
- * !! TODO(pts): Is tinyssh's implementation faster?
- * !! TODO(pts): Reuse a faster sha512 hash in libtomcrypt?
+ * TODO(pts): Is tinyssh's implementation faster?
+ * TODO(pts): Reuse a faster sha512 hash in libtomcrypt?
+ *            Is it faster? Does it add extra code?
+ *            It can be use do reduce copying in buf_ed25519_verify and
+ *            buf_ed25519_sign, in a multi-step call to sha512.
  */
 
 #define FOR(i,n) for (i = 0;i < n;++i)
@@ -376,7 +379,8 @@ static void reduce(u8 *r) {
   modL(r,x);
 }
 
-static int crypto_sign(u8 *sm,u64 *smlen,const u8 *m,u64 n,const u8 *sk) {
+/* Modified API: removed smlen. */
+static int crypto_sign_m(u8 *sm,const u8 *m,u64 n,const u8 *sk) {
   u8 d[64],h[64],r[64];
   u64 i,j;
   i64 x[64];
@@ -385,7 +389,6 @@ static int crypto_sign(u8 *sm,u64 *smlen,const u8 *m,u64 n,const u8 *sk) {
   d[0] &= 248;
   d[31] &= 127;
   d[31] |= 64;
-  *smlen = n+64;
   FOR(i,n) sm[64 + i] = m[i];
   FOR(i,32) sm[32 + i] = d[32 + i];
   crypto_hash(r, sm+32, n+32);
@@ -527,7 +530,7 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 	/* Typical data_size is 148 bytes for ssh. */
 	sm = m_malloc(64 + (data_size = data_buf->len));
 	/* !! TODO(pts): Do 512 bytes on the stack (without malloc). */
-	/* !! TODO(pts): Do it without too much copying and allocation. */
+	/* !! TODO(pts): Do it with less copying. */
 	memcpy(sm, buf->data + buf->pos, 64);
 	memcpy(sm + 64, data_buf->data, data_size);
 	res = crypto_sign_open_m(sm, data_size + 64, key->spk + 32);
@@ -539,12 +542,12 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 /* Sign the data presented with key, writing the signature contents
  * to buf */
 void buf_put_ed25519_sign(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf) {
+	/* Typical data_size is 32 bytes for ssh. */
 	unsigned data_size = data_buf->len;
 	char *sm;
-	u64 smlen;
 	sm = m_malloc(64 + data_size);
-	/* !! TODO(pts): Do it without too much copying and allocation. */
-	crypto_sign(sm, &smlen, data_buf->data, data_size, key->spk);
+	/* !! TODO(pts): Do it with less copying. */
+	crypto_sign_m(sm, data_buf->data, data_size, key->spk);
 	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
 	buf_putstring(buf, sm, 64);
 	free(sm);
