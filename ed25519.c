@@ -539,10 +539,15 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 /* Sign the data presented with key, writing the signature contents
  * to buf */
 void buf_put_ed25519_sign(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf) {
-	(void)buf; (void)key; (void)data_buf;
-	if (buf) dropbear_exit("!! buf_put_ed25519_sign not implemented.");
-	// crypto_sign(u8 *sm,u64 *smlen,const u8 *m,u64 n,const u8 *sk);
-	crypto_sign(0,0,0,0,0);
+	unsigned data_size = data_buf->len;
+	char *sm;
+	u64 smlen;
+	sm = m_malloc(64 + data_size);
+	/* !! TODO(pts): Do it without too much copying and allocation. */
+	crypto_sign(sm, &smlen, data_buf->data, data_size, key->spk);
+	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
+	buf_putstring(buf, sm, 64);
+	free(sm);
 }
 
 #endif /* DROPBEAR_ED25519 */
