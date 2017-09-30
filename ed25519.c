@@ -35,7 +35,7 @@
 
 #ifdef DROPBEAR_ED25519
 
-/* --- Copied from tweetnacl.c.
+/* --- Based on tweetnacl.c v20140427.
  *
  * TODO(pts): Is tinyssh's implementation faster?
  * TODO(pts): Reuse a faster sha512 hash in libtomcrypt?
@@ -521,20 +521,18 @@ void buf_put_ed25519_priv_key(buffer* buf, dropbear_ed25519_key *key) {
 /* Verify a ed25519 signature (in buf) made on data by the key given.
  * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf) {
-	char *sm;
+	char sm[512];
 	int res;
+	/* Typical data_size is 148 bytes for ssh. */
 	unsigned data_size;
-	if (buf_getint(buf) != 64 || buf->len - buf->pos != 64) {
+	if (buf_getint(buf) != 64 ||
+	    buf->len - buf->pos != 64 ||
+	    (data_size = data_buf->len) > 512 - 64) {
 		return DROPBEAR_FAILURE;
 	}
-	/* Typical data_size is 148 bytes for ssh. */
-	sm = m_malloc(64 + (data_size = data_buf->len));
-	/* !! TODO(pts): Do 512 bytes on the stack (without malloc). */
-	/* !! TODO(pts): Do it with less copying. */
 	memcpy(sm, buf->data + buf->pos, 64);
 	memcpy(sm + 64, data_buf->data, data_size);
 	res = crypto_sign_open_m(sm, data_size + 64, key->spk + 32);
-	free(sm);
 	return res ? DROPBEAR_FAILURE : DROPBEAR_SUCCESS;
 }
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
@@ -542,15 +540,13 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 /* Sign the data presented with key, writing the signature contents
  * to buf */
 void buf_put_ed25519_sign(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf) {
+	char sm[128];
 	/* Typical data_size is 32 bytes for ssh. */
 	unsigned data_size = data_buf->len;
-	char *sm;
-	sm = m_malloc(64 + data_size);
-	/* !! TODO(pts): Do it with less copying. */
+	if (data_size > 64) dropbear_exit("ed25519 message to sign too long");
 	crypto_sign_m(sm, data_buf->data, data_size, key->spk);
 	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
 	buf_putstring(buf, sm, 64);
-	free(sm);
 }
 
 #endif /* DROPBEAR_ED25519 */
