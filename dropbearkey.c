@@ -43,6 +43,14 @@
  * mp_int	y
  * mp_int	x
  *
+ * ECDSA:
+ * string	"ecdsa-sha2-nistp256" or "ecdsa-sha2-nistp384" or "ecdsa-sha2-nistp521"
+ * (not discribed here further)
+ *
+ * ed25519:
+ * string	"ssh-ed25519"
+ * string       64 bytes: private_key (32 bytes) + public_key (32 bytes)
+ *
  */
 #include "includes.h"
 #include "signkey.h"
@@ -76,6 +84,9 @@ static void printhelp(char * progname) {
 #if DROPBEAR_ECDSA
 					"		ecdsa\n"
 #endif
+#ifdef DROPBEAR_ED25519
+					"		ed25519\n"
+#endif
 					"-f filename    Use filename for the secret key.\n"
 					"               ~/.ssh/id_dropbear is recommended for client keys.\n"
 					"-s bits	Key size in bits, should be a multiple of 8 (optional)\n"
@@ -94,6 +105,9 @@ static void printhelp(char * progname) {
 					"521 "
 #endif
 					"\n"
+#endif
+#ifdef DROPBEAR_ED25519
+					"           ed25519 has a fixed size of 256 bits\n"
 #endif
 					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n"
 #if DEBUG_TRACE
@@ -222,6 +236,12 @@ int main(int argc, char ** argv) {
 	if (strcmp(typetext, "ecdsa") == 0)
 	{
 		keytype = DROPBEAR_SIGNKEY_ECDSA_KEYGEN;
+	}
+#endif
+#ifdef DROPBEAR_ED25519
+	if (strcmp(typetext, "ed25519") == 0)
+	{
+		keytype = DROPBEAR_SIGNKEY_ED25519;
 	}
 #endif
 
