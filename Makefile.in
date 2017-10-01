@@ -31,13 +31,13 @@ OPTION_HEADERS += localoptions.h
 endif
 
 COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
-		dss.o ed25519.o bignum.o \
+		dss.o ed25519.o ed25519_crypto.o bignum.o \
 		signkey.o rsa.o dbrandom.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
 		dbmalloc.o \
-		gensignkey.o gendss.o genrsa.o
+		gensignkey.o gendss.o gened25519.o genrsa.o
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
