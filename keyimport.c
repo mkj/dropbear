@@ -352,7 +352,7 @@ struct mpint_pos { void *start; int bytes; };
  * Code to read and write OpenSSH private keys.
  */
 
-enum { OSSH_DSA, OSSH_RSA, OSSH_EC };
+enum { OSSH_DSA, OSSH_RSA, OSSH_EC, OSSH_OSSH };
 struct openssh_key {
 	int type;
 	int encrypted;
@@ -365,7 +365,14 @@ static struct openssh_key *load_openssh_key(const char *filename)
 {
 	struct openssh_key *ret;
 	FILE *fp = NULL;
-	char buffer[256];
+	char buffer0[256], *buffer = buffer0 + 4;
+	/* This is to support base64-encoded lines with base64 digit count
+	 * not divisible by 4. `BEGIN OPENSSH PRIVATE KEY' has it.
+	 *
+	 * Number of extra characters to prepend for base64 encoding. Can be 0, 1, 2 or 3.
+	 * They are in buffer - b64extra ... buffer.
+	 */
+	int b64extra = 0, b64len, b64xlen;
 	char *errmsg = NULL, *p = NULL;
 	int headers_done;
 	unsigned long len, outlen;
@@ -385,7 +392,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		errmsg = "Unable to open key file";
 		goto error;
 	}
-	if (!fgets(buffer, sizeof(buffer), fp) ||
+	if (!fgets(buffer, sizeof(buffer0) - 4, fp) ||
 		0 != strncmp(buffer, "-----BEGIN ", 11) ||
 		0 != strcmp(buffer+strlen(buffer)-17, "PRIVATE KEY-----\n")) {
 		errmsg = "File does not begin with OpenSSH key header";
@@ -397,15 +404,23 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		ret->type = OSSH_DSA;
 	else if (!strcmp(buffer, "-----BEGIN EC PRIVATE KEY-----\n"))
 		ret->type = OSSH_EC;
+	else if (!strcmp(buffer, "-----BEGIN OPENSSH PRIVATE KEY-----\n"))
+		ret->type = OSSH_OSSH;
 	else {
 		errmsg = "Unrecognised key type";
 		goto error;
 	}
 
 	headers_done = 0;
+	buffer = buffer0 + 4;
 	while (1) {
-		if (!fgets(buffer, sizeof(buffer), fp)) {
+		if (!fgets(buffer, sizeof(buffer0) - 4, fp) || buffer[0] == '\0') {
 			errmsg = "Unexpected end of file";
+			goto error;
+		}
+		len = strlen(buffer);
+		if (len == sizeof(buffer) - 5) {
+			errmsg = "Line too long";
 			goto error;
 		}
 		if (0 == strncmp(buffer, "-----END ", 9) &&
@@ -447,7 +462,6 @@ static struct openssh_key *load_openssh_key(const char *filename)
 			}
 		} else {
 			headers_done = 1;
-			len = strlen(buffer);
 			outlen = len*4/3;
 			if (ret->keyblob_len + outlen > ret->keyblob_size) {
 				ret->keyblob_size = ret->keyblob_len + outlen + 256;
@@ -455,13 +469,22 @@ static struct openssh_key *load_openssh_key(const char *filename)
 						ret->keyblob_size);
 			}
 			outlen = ret->keyblob_size - ret->keyblob_len;
-			if (base64_decode((const unsigned char *)buffer, len,
-						ret->keyblob + ret->keyblob_len, &outlen) != CRYPT_OK){
+			if (buffer[len - 1] == '\n') buffer[--len] = '\0';
+			b64len = len + b64extra;
+			b64xlen = b64len & ~3;
+			if (b64xlen != 0 && base64_decode((const unsigned char *)(buffer - b64extra), b64xlen, ret->keyblob + ret->keyblob_len, &outlen) != CRYPT_OK) {
 				errmsg = "Error decoding base64";
 				goto error;
 			}
+			if ((b64extra = (b64len & 3)) != 0) {
+				memcpy(buffer - b64extra, buffer + b64xlen, b64extra);
+			}
 			ret->keyblob_len += outlen;
 		}
+	}
+	if (b64extra) {
+		errmsg = "bas64 junk in the end";
+		goto error;
 	}
 
 	if (ret->keyblob_len == 0 || !ret->keyblob) {
@@ -474,11 +497,11 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		goto error;
 	}
 
-	m_burn(buffer, sizeof(buffer));
+	m_burn(buffer0, sizeof(buffer0));
 	return ret;
 
 error:
-	m_burn(buffer, sizeof(buffer));
+	m_burn(buffer0, sizeof(buffer0));
 	if (ret) {
 		if (ret->keyblob) {
 			m_burn(ret->keyblob, ret->keyblob_size);
@@ -569,6 +592,29 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 #endif 
 	}
 
+	p = key->keyblob;
+	len = key->keyblob_len;
+	if (key->type != OSSH_OSSH) {
+#ifdef DROPBEAR_ED25519
+	} else if (len >= 64 && 0 == memcmp(p, "openssh-key-v1\0\0\0\0\4none\0\0\0\4none\0\0\0\0\0\0\0\1\0\0\0\x33\0\0\0\x0bssh-ed25519\0\0\0 ", 62)) {
+		if (len < 229 ||
+		    0 != memcmp(p + 106, "\0\0\0\x0bssh-ed25519\0\0\0 ", 19) ||
+		    0 != memcmp(p + 157, "\0\0\0@", 4)) {
+			errmsg = "bad ssh-ed25519 private key";
+			goto error;
+		}
+		retkey->type = DROPBEAR_SIGNKEY_ED25519;
+		retkey->ed25519key = m_malloc(sizeof(*retkey->ed25519key));
+		memcpy(retkey->ed25519key->spk, p + 161, 64);
+		/* At p[225:], there is struct.pack('>L', len(comment)) + comment, but there is no way for us to return it in retkey. */
+		goto no_error;
+#endif
+	} else {
+		errmsg = "unknown OpenSSH private key type";
+		goto error;
+	}
+
+
 	/*
 	 * Now we have a decrypted key blob, which contains an ASN.1
 	 * encoded private key. We must now untangle the ASN.1.
@@ -587,10 +633,9 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 	 *	order.
 	 */
 	
-	p = key->keyblob;
 
 	/* Expect the SEQUENCE header. Take its absence as a failure to decrypt. */
-	ret = ber_read_id_len(p, key->keyblob_len, &id, &len, &flags);
+	ret = ber_read_id_len(p, len, &id, &len, &flags);
 	p += ret;
 	if (ret < 0 || id != 16 || len < 0 ||
 		key->keyblob+key->keyblob_len-p < len) {
@@ -809,6 +854,9 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 		}
 	}
 
+#ifdef DROPBEAR_ED25519
+	no_error:
+#endif
 	errmsg = NULL;					 /* no error */
 	retval = retkey;
 
@@ -843,6 +891,21 @@ static int openssh_write(const char *filename, sign_key *key,
 
 #if DROPBEAR_RSA
 	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
+#endif
+
+#ifdef DROPBEAR_ED25519
+	if (key->type == DROPBEAR_SIGNKEY_ED25519) {
+		const char *spk = key->ed25519key->spk;
+		header = "-----BEGIN OPENSSH PRIVATE KEY-----\n";
+		footer = "-----END OPENSSH PRIVATE KEY-----\n";
+		outblob = m_malloc(outlen = 234);
+		/* checkstr is "Dror", mentioned twice below. */
+		memcpy(outblob, "openssh-key-v1\0\0\0\0\x04none\0\0\0\x04none\0\0\0\0\0\0\0\x01\0\0\0""3\0\0\0\x0bssh-ed25519\0\0\0 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x88""DrorDror\0\0\0\x0bssh-ed25519\0\0\0 \0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0@\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\0\x01\x02\x03\x04\x05", 234);
+		memcpy(outblob + 161, spk, 64);  /* private_key + public_key. */
+		memcpy(outblob + 62, spk + 32, 32);  /* public_key. */
+		memcpy(outblob + 125, spk + 32, 32);  /* public_key. */
+		goto write_file;
+	}
 #endif
 
 	if (
@@ -1156,6 +1219,10 @@ static int openssh_write(const char *filename, sign_key *key,
 		fprintf(stderr, "Encrypted keys aren't supported currently\n");
 		goto error;
 	}
+
+#ifdef DROPBEAR_ED25519
+	write_file:
+#endif
 
 	/*
 	 * And save it. We'll use Unix line endings just in case it's
