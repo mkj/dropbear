@@ -196,7 +196,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	int ret = DROPBEAR_FAILURE;
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
-		TRACE(("checkpubkey: bad line length %d", line->len))
+		TRACE(("checkpubkey_line: bad line length %d", line->len))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -261,7 +261,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	
 	/* check for space (' ') character */
 	if (buf_getbyte(line) != ' ') {
-		TRACE(("checkpubkey: space character expected, isn't there"))
+		TRACE(("checkpubkey_line: space character expected, isn't there"))
 		goto out;
 	}
 
@@ -273,7 +273,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	buf_setpos(line, pos);
 	buf_setlen(line, line->pos + len);
 
-	TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
+	TRACE(("checkpubkey_line: line pos = %d len = %d", line->pos, line->len))
 
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
