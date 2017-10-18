@@ -506,7 +506,7 @@ out:
 void m_close(int fd) {
 	int val;
 
-	if (fd == -1) {
+	if (fd < 0) {
 		return;
 	}
 
