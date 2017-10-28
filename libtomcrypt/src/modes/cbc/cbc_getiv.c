@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -41,6 +41,6 @@ int cbc_getiv(unsigned char *IV, unsigned long *len, symmetric_CBC *cbc)
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/modes/cbc/cbc_getiv.c,v $ */
-/* $Revision: 1.6 $ */
-/* $Date: 2006/06/29 01:46:46 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

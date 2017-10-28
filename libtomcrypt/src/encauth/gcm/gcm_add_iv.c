@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#ifdef GCM_MODE
+#ifdef LTC_GCM_MODE
 
 /**
   Add IV data to the GCM state
@@ -36,7 +36,7 @@ int gcm_add_iv(gcm_state *gcm,
    }
 
    /* must be in IV mode */
-   if (gcm->mode != GCM_MODE_IV) {
+   if (gcm->mode != LTC_GCM_MODE_IV) {
       return CRYPT_INVALID_ARG;
    }
  
@@ -89,6 +89,6 @@ int gcm_add_iv(gcm_state *gcm,
 #endif
    
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_add_iv.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

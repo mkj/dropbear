@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -15,7 +15,7 @@
 */
 #include "tomcrypt.h"
 
-#if defined(GCM_MODE)
+#if defined(LTC_GCM_MODE)
 /**
   GCM multiply by H
   @param gcm   The GCM state which holds the H value
@@ -24,9 +24,9 @@
 void gcm_mult_h(gcm_state *gcm, unsigned char *I)
 {
    unsigned char T[16];
-#ifdef GCM_TABLES
+#ifdef LTC_GCM_TABLES
    int x, y;
-#ifdef GCM_TABLES_SSE2
+#ifdef LTC_GCM_TABLES_SSE2
    asm("movdqa (%0),%%xmm0"::"r"(&gcm->PC[0][I[0]][0]));
    for (x = 1; x < 16; x++) {
       asm("pxor (%0),%%xmm0"::"r"(&gcm->PC[x][I[x]][0]));
@@ -45,7 +45,7 @@ void gcm_mult_h(gcm_state *gcm, unsigned char *I)
        }
 #endif /* LTC_FAST */
    }
-#endif /* GCM_TABLES_SSE2 */
+#endif /* LTC_GCM_TABLES_SSE2 */
 #else     
    gcm_gf_mult(gcm->H, I, T); 
 #endif
@@ -53,6 +53,6 @@ void gcm_mult_h(gcm_state *gcm, unsigned char *I)
 }
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/encauth/gcm/gcm_mult_h.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/08/23 20:40:23 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

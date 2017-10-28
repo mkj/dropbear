@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_import.c
-  Import a PKCS RSA key, Tom St Denis
+  Import a LTC_PKCS RSA key, Tom St Denis
 */  
 
-#ifdef MRSA
+#ifdef LTC_MRSA
 
 /**
-  Import an RSAPublicKey or RSAPrivateKey [two-prime only, only support >= 1024-bit keys, defined in PKCS #1 v2.1]
+  Import an RSAPublicKey or RSAPrivateKey [two-prime only, only support >= 1024-bit keys, defined in LTC_PKCS #1 v2.1]
   @param in      The packet to import from
   @param inlen   It's length (octets)
   @param key     [out] Destination for newly imported key
@@ -87,7 +87,7 @@ int rsa_import(const unsigned char *in, unsigned long inlen, rsa_key *key)
    }
    XFREE(tmpbuf);
 
-   /* not SSL public key, try to match against PKCS #1 standards */
+   /* not SSL public key, try to match against LTC_PKCS #1 standards */
    if ((err = der_decode_sequence_multi(in, inlen, 
                                   LTC_ASN1_INTEGER, 1UL, key->N, 
                                   LTC_ASN1_EOL,     0UL, NULL)) != CRYPT_OK) {
@@ -135,9 +135,9 @@ LBL_ERR:
    return err;
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_import.c,v $ */
-/* $Revision: 1.21 $ */
-/* $Date: 2006/12/04 22:23:27 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

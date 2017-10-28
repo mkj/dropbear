@@ -1,4 +1,4 @@
-#include <tommath.h>
+#include <tommath_private.h>
 #ifdef BN_MP_EXTEUCLID_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -12,10 +12,10 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://math.libtomcrypt.com
+ * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
-/* Extended euclidean algorithm of (a, b) produces 
+/* Extended euclidean algorithm of (a, b) produces
    a*u1 + b*u2 = u3
  */
 int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3)
@@ -61,9 +61,9 @@ int mp_exteuclid(mp_int *a, mp_int *b, mp_int *U1, mp_int *U2, mp_int *U3)
 
    /* make sure U3 >= 0 */
    if (u3.sign == MP_NEG) {
-      mp_neg(&u1, &u1);
-      mp_neg(&u2, &u2);
-      mp_neg(&u3, &u3);
+       if ((err = mp_neg(&u1, &u1)) != MP_OKAY)                                   { goto _ERR; }
+       if ((err = mp_neg(&u2, &u2)) != MP_OKAY)                                   { goto _ERR; }
+       if ((err = mp_neg(&u3, &u3)) != MP_OKAY)                                   { goto _ERR; }
    }
 
    /* copy result out */
@@ -77,6 +77,6 @@ _ERR: mp_clear_multi(&u1, &u2, &u3, &v1, &v2, &v3, &t1, &t2, &t3, &q, &tmp, NULL
 }
 #endif
 
-/* $Source: /cvs/libtom/libtommath/bn_mp_exteuclid.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2006/03/31 14:18:44 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

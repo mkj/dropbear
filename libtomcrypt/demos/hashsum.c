@@ -68,43 +68,43 @@ void register_algs(void)
 {
   int err;
 
-#ifdef TIGER
+#ifdef LTC_TIGER
   register_hash (&tiger_desc);
 #endif
-#ifdef MD2
+#ifdef LTC_MD2
   register_hash (&md2_desc);
 #endif
-#ifdef MD4
+#ifdef LTC_MD4
   register_hash (&md4_desc);
 #endif
-#ifdef MD5
+#ifdef LTC_MD5
   register_hash (&md5_desc);
 #endif
-#ifdef SHA1
+#ifdef LTC_SHA1
   register_hash (&sha1_desc);
 #endif
-#ifdef SHA224
+#ifdef LTC_SHA224
   register_hash (&sha224_desc);
 #endif
-#ifdef SHA256
+#ifdef LTC_SHA256
   register_hash (&sha256_desc);
 #endif
-#ifdef SHA384
+#ifdef LTC_SHA384
   register_hash (&sha384_desc);
 #endif
-#ifdef SHA512
+#ifdef LTC_SHA512
   register_hash (&sha512_desc);
 #endif
-#ifdef RIPEMD128
+#ifdef LTC_RIPEMD128
   register_hash (&rmd128_desc);
 #endif
-#ifdef RIPEMD160
+#ifdef LTC_RIPEMD160
   register_hash (&rmd160_desc);
 #endif
-#ifdef WHIRLPOOL
+#ifdef LTC_WHIRLPOOL
   register_hash (&whirlpool_desc);
 #endif
-#ifdef CHC_HASH
+#ifdef LTC_CHC_HASH
   register_hash(&chc_desc);
   if ((err = chc_register(register_cipher(&aes_enc_desc))) != CRYPT_OK) {
      printf("chc_register error: %s\n", error_to_string(err));
@@ -114,6 +114,6 @@ void register_algs(void)
 
 }
 
-/* $Source: /cvs/libtom/libtomcrypt/demos/hashsum.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2005/05/05 14:35:56 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

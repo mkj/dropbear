@@ -2,12 +2,11 @@
 # @configure_input@
 
 # invocation:
-# make PROGRAMS="dropbear dbclient scp" MULTI=1 STATIC=1 SCPPROGRESS=1
+# make PROGRAMS="dropbear dbclient scp" MULTI=1 SCPPROGRESS=1
 #
-# to make a multiple-program statically linked binary "staticdropbearmulti".
+# to make a multiple-program binary "dropbearmulti".
 # This example will include dropbear, scp, dropbearkey, dropbearconvert, and
 # dbclient functionality, and includes the progress-bar functionality in scp.
-# Hopefully that seems intuitive.
 
 ifndef PROGRAMS
 	PROGRAMS=dropbear dbclient dropbearkey dropbearconvert
@@ -22,6 +21,10 @@ ifeq (@BUNDLED_LIBTOM@, 1)
 LIBTOM_DEPS=$(STATIC_LTC) $(STATIC_LTM) 
 CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
 LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM) 
+endif
+
+ifneq ($(wildcard localoptions.h),)
+CFLAGS+=-DLOCALOPTIONS_H_EXISTS
 endif
 
 COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
@@ -76,6 +79,8 @@ bindir=@bindir@
 sbindir=@sbindir@
 mandir=@mandir@
 
+.DELETE_ON_ERROR:
+
 CC=@CC@
 AR=@AR@
 RANLIB=@RANLIB@
@@ -87,6 +92,8 @@ LIBS+=@LIBS@
 LDFLAGS=@LDFLAGS@
 
 EXEEXT=@EXEEXT@
+
+STATIC=@STATIC@
 
 # whether we're building client, server, or both for the common objects.
 # evilness so we detect 'dropbear' by itself as a word
@@ -109,7 +116,7 @@ ifeq ($(STATIC), 1)
 endif
 
 ifeq ($(MULTI), 1)
-	TARGETS=dropbearmulti
+	TARGETS=dropbearmulti$(EXEEXT)
 else
 	TARGETS=$(PROGRAMS)
 endif
@@ -126,14 +133,14 @@ strip: $(TARGETS)
 
 install: $(addprefix inst_, $(TARGETS))
 
-insmultidropbear: dropbearmulti
+insmultidropbear: dropbearmulti$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	-rm -f $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
 	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/dropbear$(EXEEXT) 
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 644 $(srcdir)/dropbear.8  $(DESTDIR)$(mandir)/man8/dropbear.8
 
-insmulti%: dropbearmulti
+insmulti%: dropbearmulti$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	-rm -f $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
@@ -154,7 +161,6 @@ inst_%: %
 	if test -e $*.1; then $(INSTALL) -m 644 $*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
 
 inst_dropbearmulti: $(addprefix insmulti, $(PROGRAMS)) 
-
 
 # for some reason the rule further down doesn't like $($@objs) as a prereq.
 dropbear: $(dropbearobjs)
@@ -195,18 +201,18 @@ link%:
 	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
 $(STATIC_LTC): options.h
-	cd libtomcrypt && $(MAKE)
+	$(MAKE) -C libtomcrypt
 
 $(STATIC_LTM): options.h
-	cd libtommath && $(MAKE)
+	$(MAKE) -C libtommath
 
 .PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean
 
 ltc-clean:
-	cd libtomcrypt && $(MAKE) clean
+	$(MAKE) -C libtomcrypt clean
 
 ltm-clean:
-	cd libtommath && $(MAKE) clean
+	$(MAKE) -C libtommath clean
 
 sizes: dropbear
 	objdump -t dropbear|grep ".text"|cut -d "." -f 2|sort -rn
@@ -214,8 +220,9 @@ sizes: dropbear
 clean: ltc-clean ltm-clean thisclean
 
 thisclean:
-	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress \
-			dropbearmulti *.o *.da *.bb *.bbg *.prof 
+	-rm -f dropbear$(EXEEXT) dbclient$(EXEEXT) dropbearkey$(EXEEXT) \
+			dropbearconvert$(EXEEXT) scp$(EXEEXT) scp-progress$(EXEEXT) \
+			dropbearmulti$(EXEEXT) *.o *.da *.bb *.bbg *.prof
 
 distclean: clean tidy
 	-rm -f config.h
@@ -223,3 +230,11 @@ distclean: clean tidy
 
 tidy:
 	-rm -f *~ *.gcov */*~
+
+# default_options.h is stored in version control, could not find a workaround
+# for parallel "make -j" and dependency rules.
+default_options.h: default_options.h.in 
+	echo "# > > > Generated from $^, edit that file instead !" > $@.tmp
+	echo >> $@.tmp
+	$(srcdir)/ifndef_wrapper.sh < $^ > $@.tmp
+	mv $@.tmp $@

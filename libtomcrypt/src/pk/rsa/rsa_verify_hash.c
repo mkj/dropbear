@@ -6,24 +6,24 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_verify_hash.c
-  RSA PKCS #1 v1.5 or v2 PSS signature verification, Tom St Denis and Andreas Lange
+  RSA LTC_PKCS #1 v1.5 or v2 PSS signature verification, Tom St Denis and Andreas Lange
 */
 
-#ifdef MRSA
+#ifdef LTC_MRSA
 
 /**
-  PKCS #1 de-sign then v1.5 or PSS depad
+  LTC_PKCS #1 de-sign then v1.5 or PSS depad
   @param sig              The signature data
   @param siglen           The length of the signature data (octets)
   @param hash             The hash of the message that was signed
   @param hashlen          The length of the hash of the message that was signed (octets)
-  @param padding          Type of padding (LTC_PKCS_1_PSS or LTC_PKCS_1_V1_5)
+  @param padding          Type of padding (LTC_LTC_PKCS_1_PSS or LTC_LTC_PKCS_1_V1_5)
   @param hash_idx         The index of the desired hash
   @param saltlen          The length of the salt used during signature
   @param stat             [out] The result of the signature comparison, 1==valid, 0==invalid
@@ -50,12 +50,12 @@ int rsa_verify_hash_ex(const unsigned char *sig,      unsigned long siglen,
 
   /* valid padding? */
 
-  if ((padding != LTC_PKCS_1_V1_5) &&
-      (padding != LTC_PKCS_1_PSS)) {
+  if ((padding != LTC_LTC_PKCS_1_V1_5) &&
+      (padding != LTC_LTC_PKCS_1_PSS)) {
     return CRYPT_PK_INVALID_PADDING;
   }
 
-  if (padding == LTC_PKCS_1_PSS) {
+  if (padding == LTC_LTC_PKCS_1_PSS) {
     /* valid hash ? */
     if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
        return err;
@@ -90,11 +90,11 @@ int rsa_verify_hash_ex(const unsigned char *sig,      unsigned long siglen,
      return CRYPT_INVALID_PACKET;
   }
 
-  if (padding == LTC_PKCS_1_PSS) {
+  if (padding == LTC_LTC_PKCS_1_PSS) {
     /* PSS decode and verify it */
     err = pkcs_1_pss_decode(hash, hashlen, tmpbuf, x, saltlen, hash_idx, modulus_bitlen, stat);
   } else {
-    /* PKCS #1 v1.5 decode it */
+    /* LTC_PKCS #1 v1.5 decode it */
     unsigned char *out;
     unsigned long outlen, loid[16];
     int           decoded;
@@ -114,7 +114,7 @@ int rsa_verify_hash_ex(const unsigned char *sig,      unsigned long siglen,
       goto bail_2;
     }
 
-    if ((err = pkcs_1_v1_5_decode(tmpbuf, x, LTC_PKCS_1_EMSA, modulus_bitlen, out, &outlen, &decoded)) != CRYPT_OK) {
+    if ((err = pkcs_1_v1_5_decode(tmpbuf, x, LTC_LTC_PKCS_1_EMSA, modulus_bitlen, out, &outlen, &decoded)) != CRYPT_OK) {
       XFREE(out);       
       goto bail_2;
     }
@@ -160,8 +160,8 @@ bail_2:
   return err;
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/rsa/rsa_verify_hash.c,v $ */
-/* $Revision: 1.11 $ */
-/* $Date: 2006/12/04 03:09:28 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

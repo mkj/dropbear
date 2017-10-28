@@ -6,19 +6,19 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file katja_decrypt_key.c
-  Katja PKCS #1 OAEP Decryption, Tom St Denis
+  Katja LTC_PKCS #1 OAEP Decryption, Tom St Denis
 */  
 
 #ifdef MKAT
 
 /**
-   (PKCS #1 v2.0) decrypt then OAEP depad  
+   (LTC_PKCS #1 v2.0) decrypt then OAEP depad  
    @param in          The ciphertext
    @param inlen       The length of the ciphertext (octets)
    @param out         [out] The plaintext
@@ -94,12 +94,12 @@ int katja_decrypt_key(const unsigned char *in,       unsigned long  inlen,
   return err;
 }
 
-#endif /* MRSA */
+#endif /* LTC_MRSA */
 
 
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/katja/katja_decrypt_key.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/03/31 14:15:35 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

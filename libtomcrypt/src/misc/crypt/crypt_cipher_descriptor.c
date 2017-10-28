@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -22,6 +22,6 @@ struct ltc_cipher_descriptor cipher_descriptor[TAB_SIZE] = {
 LTC_MUTEX_GLOBAL(ltc_cipher_mutex)
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/misc/crypt/crypt_cipher_descriptor.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/11/08 23:01:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

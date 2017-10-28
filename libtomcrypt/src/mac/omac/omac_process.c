@@ -6,28 +6,28 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /** 
   @file omac_process.c
-  OMAC1 support, process data, Tom St Denis
+  LTC_OMAC1 support, process data, Tom St Denis
 */
 
 
 #ifdef LTC_OMAC
 
 /** 
-   Process data through OMAC
-   @param omac     The OMAC state
-   @param in       The input data to send through OMAC
+   Process data through LTC_OMAC
+   @param omac     The LTC_OMAC state
+   @param in       The input data to send through LTC_OMAC
    @param inlen    The length of the input (octets)
    @return CRYPT_OK if successful
 */
 int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 {
-   unsigned long n, x;
+   unsigned long n, x, blklen;
    int           err;
 
    LTC_ARGCHK(omac  != NULL);
@@ -42,13 +42,14 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
    }
 
 #ifdef LTC_FAST
-   if (omac->buflen == 0 && inlen > 16) {
-      int y;
-      for (x = 0; x < (inlen - 16); x += 16) {
-          for (y = 0; y < 16; y += sizeof(LTC_FAST_TYPE)) {
+   blklen = cipher_descriptor[omac->cipher_idx].block_length;
+   if (omac->buflen == 0 && inlen > blklen) {
+      unsigned long y;
+      for (x = 0; x < (inlen - blklen); x += blklen) {
+          for (y = 0; y < blklen; y += sizeof(LTC_FAST_TYPE)) {
               *((LTC_FAST_TYPE*)(&omac->prev[y])) ^= *((LTC_FAST_TYPE*)(&in[y]));
           }
-          in += 16;
+          in += blklen;
           if ((err = cipher_descriptor[omac->cipher_idx].ecb_encrypt(omac->prev, omac->prev, &omac->key)) != CRYPT_OK) {
              return err;
           }
@@ -83,6 +84,6 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/omac/omac_process.c,v $ */
-/* $Revision: 1.9 $ */
-/* $Date: 2006/11/03 00:39:49 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

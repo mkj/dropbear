@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -64,7 +64,7 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
          /* increment counter */
          if (ctr->mode == CTR_COUNTER_LITTLE_ENDIAN) {
             /* little-endian */
-            for (x = 0; x < ctr->blocklen; x++) {
+            for (x = 0; x < ctr->ctrlen; x++) {
                ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
                if (ctr->ctr[x] != (unsigned char)0) {
                   break;
@@ -72,7 +72,7 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
             }
          } else {
             /* big-endian */
-            for (x = ctr->blocklen-1; x >= 0; x--) {
+            for (x = ctr->blocklen-1; x >= ctr->ctrlen; x--) {
                ctr->ctr[x] = (ctr->ctr[x] + (unsigned char)1) & (unsigned char)255;
                if (ctr->ctr[x] != (unsigned char)0) {
                   break;
@@ -107,6 +107,6 @@ int ctr_encrypt(const unsigned char *pt, unsigned char *ct, unsigned long len, s
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/modes/ctr/ctr_encrypt.c,v $ */
-/* $Revision: 1.20 $ */
-/* $Date: 2006/11/21 00:18:23 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -16,7 +16,7 @@
 */
 
 
-#ifdef MDSA
+#ifdef LTC_MDSA
 
 /**
   Verify a DSA signature
@@ -121,6 +121,6 @@ LBL_ERR:
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/dsa/dsa_verify_hash.c,v $ */
-/* $Revision: 1.13 $ */
-/* $Date: 2006/12/04 03:18:43 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

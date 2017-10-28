@@ -6,25 +6,25 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /*! \file pkcs_1_v1_5_encode.c
  *
- *  PKCS #1 v1.5 Padding (Andreas Lange)
+ *  LTC_PKCS #1 v1.5 Padding (Andreas Lange)
  */
 
-#ifdef PKCS_1
+#ifdef LTC_PKCS_1
 
-/*! \brief PKCS #1 v1.5 encode.
+/*! \brief LTC_PKCS #1 v1.5 encode.
  *
  *  \param msg              The data to encode
  *  \param msglen           The length of the data to encode (octets)
  *  \param block_type       Block type to use in padding (\sa ltc_pkcs_1_v1_5_blocks)
  *  \param modulus_bitlen   The bit length of the RSA modulus
- *  \param prng             An active PRNG state (only for LTC_PKCS_1_EME)
- *  \param prng_idx         The index of the PRNG desired (only for LTC_PKCS_1_EME)
+ *  \param prng             An active PRNG state (only for LTC_LTC_PKCS_1_EME)
+ *  \param prng_idx         The index of the PRNG desired (only for LTC_LTC_PKCS_1_EME)
  *  \param out              [out] The destination for the encoded data
  *  \param outlen           [in/out] The max size and resulting size of the encoded data
  *
@@ -44,12 +44,12 @@ int pkcs_1_v1_5_encode(const unsigned char *msg,
   int result;
 
   /* valid block_type? */
-  if ((block_type != LTC_PKCS_1_EMSA) &&
-      (block_type != LTC_PKCS_1_EME)) {
+  if ((block_type != LTC_LTC_PKCS_1_EMSA) &&
+      (block_type != LTC_LTC_PKCS_1_EME)) {
      return CRYPT_PK_INVALID_PADDING;
   }
 
-  if (block_type == LTC_PKCS_1_EME) {    /* encryption padding, we need a valid PRNG */
+  if (block_type == LTC_LTC_PKCS_1_EME) {    /* encryption padding, we need a valid PRNG */
     if ((result = prng_is_valid(prng_idx)) != CRYPT_OK) {
        return result;
     }
@@ -72,7 +72,7 @@ int pkcs_1_v1_5_encode(const unsigned char *msg,
   ps = &out[2];
   ps_len = modulus_len - msglen - 3;
 
-  if (block_type == LTC_PKCS_1_EME) {
+  if (block_type == LTC_LTC_PKCS_1_EME) {
     /* now choose a random ps */
     if (prng_descriptor[prng_idx].read(ps, ps_len, prng) != ps_len) {
       result = CRYPT_ERROR_READPRNG;
@@ -104,8 +104,8 @@ bail:
   return result;
 } /* pkcs_1_v1_5_encode */
 
-#endif /* #ifdef PKCS_1 */
+#endif /* #ifdef LTC_PKCS_1 */
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/pkcs1/pkcs_1_v1_5_encode.c,v $ */
-/* $Revision: 1.2 $ */
-/* $Date: 2006/11/01 09:12:06 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

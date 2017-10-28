@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -19,22 +19,22 @@
 
 We deviate slightly here for reasons of simplicity [and to fit in the API].  First all "sources"
 in the AddEntropy function are fixed to 0.  Second since no reliable timer is provided 
-we reseed automatically when len(pool0) >= 64 or every FORTUNA_WD calls to the read function */
+we reseed automatically when len(pool0) >= 64 or every LTC_FORTUNA_WD calls to the read function */
 
-#ifdef FORTUNA 
+#ifdef LTC_FORTUNA 
 
-/* requries SHA256 and AES  */
-#if !(defined(RIJNDAEL) && defined(SHA256))
-   #error FORTUNA requires SHA256 and RIJNDAEL (AES)
+/* requries LTC_SHA256 and AES  */
+#if !(defined(LTC_RIJNDAEL) && defined(LTC_SHA256))
+   #error LTC_FORTUNA requires LTC_SHA256 and LTC_RIJNDAEL (AES)
 #endif
 
-#ifndef FORTUNA_POOLS
-   #warning FORTUNA_POOLS was not previously defined (old headers?)
-   #define FORTUNA_POOLS 32
+#ifndef LTC_FORTUNA_POOLS
+   #warning LTC_FORTUNA_POOLS was not previously defined (old headers?)
+   #define LTC_FORTUNA_POOLS 32
 #endif
 
-#if FORTUNA_POOLS < 4 || FORTUNA_POOLS > 32
-   #error FORTUNA_POOLS must be in [4..32]
+#if LTC_FORTUNA_POOLS < 4 || LTC_FORTUNA_POOLS > 32
+   #error LTC_FORTUNA_POOLS must be in [4..32]
 #endif
 
 const struct ltc_prng_descriptor fortuna_desc = {
@@ -71,14 +71,14 @@ static int fortuna_reseed(prng_state *prng)
 
    ++prng->fortuna.reset_cnt;
 
-   /* new K == SHA256(K || s) where s == SHA256(P0) || SHA256(P1) ... */
+   /* new K == LTC_SHA256(K || s) where s == LTC_SHA256(P0) || LTC_SHA256(P1) ... */
    sha256_init(&md);
    if ((err = sha256_process(&md, prng->fortuna.K, 32)) != CRYPT_OK) {
       sha256_done(&md, tmp);
       return err;
    }
 
-   for (x = 0; x < FORTUNA_POOLS; x++) {
+   for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
        if (x == 0 || ((prng->fortuna.reset_cnt >> (x-1)) & 1) == 0) { 
           /* terminate this hash */
           if ((err = sha256_done(&prng->fortuna.pool[x], tmp)) != CRYPT_OK) {
@@ -135,7 +135,7 @@ int fortuna_start(prng_state *prng)
    LTC_ARGCHK(prng != NULL);
    
    /* initialize the pools */
-   for (x = 0; x < FORTUNA_POOLS; x++) {
+   for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
        if ((err = sha256_init(&prng->fortuna.pool[x])) != CRYPT_OK) {
           for (y = 0; y < x; y++) {
               sha256_done(&prng->fortuna.pool[y], tmp);
@@ -149,7 +149,7 @@ int fortuna_start(prng_state *prng)
    /* reset bufs */
    zeromem(prng->fortuna.K, 32);
    if ((err = rijndael_setup(prng->fortuna.K, 32, 0, &prng->fortuna.skey)) != CRYPT_OK) {
-      for (x = 0; x < FORTUNA_POOLS; x++) {
+      for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
           sha256_done(&prng->fortuna.pool[x], tmp);
       }
       return err;
@@ -198,7 +198,7 @@ int fortuna_add_entropy(const unsigned char *in, unsigned long inlen, prng_state
    if (prng->fortuna.pool_idx == 0) {
       prng->fortuna.pool0_len += inlen;
    }
-   if (++(prng->fortuna.pool_idx) == FORTUNA_POOLS) {
+   if (++(prng->fortuna.pool_idx) == LTC_FORTUNA_POOLS) {
       prng->fortuna.pool_idx = 0;
    }
 
@@ -235,7 +235,7 @@ unsigned long fortuna_read(unsigned char *out, unsigned long outlen, prng_state 
    LTC_MUTEX_LOCK(&prng->fortuna.prng_lock);
 
    /* do we have to reseed? */
-   if (++prng->fortuna.wd == FORTUNA_WD || prng->fortuna.pool0_len >= 64) {
+   if (++prng->fortuna.wd == LTC_FORTUNA_WD || prng->fortuna.pool0_len >= 64) {
       if ((err = fortuna_reseed(prng)) != CRYPT_OK) {
          LTC_MUTEX_UNLOCK(&prng->fortuna.prng_lock);
          return 0;
@@ -290,7 +290,7 @@ int fortuna_done(prng_state *prng)
    LTC_MUTEX_LOCK(&prng->fortuna.prng_lock);
 
    /* terminate all the hashes */
-   for (x = 0; x < FORTUNA_POOLS; x++) {
+   for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
        if ((err = sha256_done(&(prng->fortuna.pool[x]), tmp)) != CRYPT_OK) {
           LTC_MUTEX_UNLOCK(&prng->fortuna.prng_lock);
           return err; 
@@ -325,9 +325,9 @@ int fortuna_export(unsigned char *out, unsigned long *outlen, prng_state *prng)
    LTC_MUTEX_LOCK(&prng->fortuna.prng_lock);
 
    /* we'll write bytes for s&g's */
-   if (*outlen < 32*FORTUNA_POOLS) {
+   if (*outlen < 32*LTC_FORTUNA_POOLS) {
       LTC_MUTEX_UNLOCK(&prng->fortuna.prng_lock);
-      *outlen = 32*FORTUNA_POOLS;
+      *outlen = 32*LTC_FORTUNA_POOLS;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
@@ -340,7 +340,7 @@ int fortuna_export(unsigned char *out, unsigned long *outlen, prng_state *prng)
    /* to emit the state we copy each pool, terminate it then hash it again so 
     * an attacker who sees the state can't determine the current state of the PRNG 
     */   
-   for (x = 0; x < FORTUNA_POOLS; x++) {
+   for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
       /* copy the PRNG */
       XMEMCPY(md, &(prng->fortuna.pool[x]), sizeof(*md));
 
@@ -360,7 +360,7 @@ int fortuna_export(unsigned char *out, unsigned long *outlen, prng_state *prng)
          goto LBL_ERR;
       }
    }
-   *outlen = 32*FORTUNA_POOLS;
+   *outlen = 32*LTC_FORTUNA_POOLS;
    err = CRYPT_OK;
 
 LBL_ERR:
@@ -386,14 +386,14 @@ int fortuna_import(const unsigned char *in, unsigned long inlen, prng_state *prn
    LTC_ARGCHK(in   != NULL);
    LTC_ARGCHK(prng != NULL);
 
-   if (inlen != 32*FORTUNA_POOLS) {
+   if (inlen != 32*LTC_FORTUNA_POOLS) {
       return CRYPT_INVALID_ARG;
    }
 
    if ((err = fortuna_start(prng)) != CRYPT_OK) {
       return err;
    }
-   for (x = 0; x < FORTUNA_POOLS; x++) {
+   for (x = 0; x < LTC_FORTUNA_POOLS; x++) {
       if ((err = fortuna_add_entropy(in+x*32, 32, prng)) != CRYPT_OK) {
          return err;
       }
@@ -422,6 +422,6 @@ int fortuna_test(void)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/prngs/fortuna.c,v $ */
-/* $Revision: 1.12 $ */
-/* $Date: 2006/12/04 21:34:03 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

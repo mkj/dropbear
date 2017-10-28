@@ -41,6 +41,6 @@ void crypt_argchk(char *v, char *s, int d) ATTRIB_NORETURN;
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/headers/tomcrypt_argchk.h,v $ */
-/* $Revision: 1.5 $ */
-/* $Date: 2006/08/27 20:50:21 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

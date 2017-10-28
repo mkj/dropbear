@@ -6,18 +6,18 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file hmac_test.c
-  HMAC support, self-test, Tom St Denis/Dobes Vandermeer
+  LTC_HMAC support, self-test, Tom St Denis/Dobes Vandermeer
 */
 
 #ifdef LTC_HMAC
 
-#define HMAC_BLOCKSIZE hash_descriptor[hash].blocksize
+#define LTC_HMAC_BLOCKSIZE hash_descriptor[hash].blocksize
 
 /*
     TEST CASES SOURCE:
@@ -27,11 +27,11 @@ Request for Comments: 2202                                          IBM
 Category: Informational                                        R. Glenn
                                                                    NIST
                                                          September 1997
-                 Test Cases for HMAC-MD5 and HMAC-SHA-1
+                 Test Cases for LTC_HMAC-LTC_MD5 and LTC_HMAC-LTC_SHA-1
 */
 
 /**
-  HMAC self-test
+  LTC_HMAC self-test
   @return CRYPT_OK if successful, CRYPT_NOP if tests have been disabled.
 */
 int hmac_test(void)
@@ -52,7 +52,7 @@ int hmac_test(void)
         unsigned char digest[MAXBLOCKSIZE];
     } cases[] = {
         /*
-        3. Test Cases for HMAC-SHA-1
+        3. Test Cases for LTC_HMAC-LTC_SHA-1
 
         test_case =     1
         key =           0x0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c0c
@@ -118,7 +118,7 @@ int hmac_test(void)
              0x6b, 0xba, 0xa7, 0x96, 0x5c, 0x78, 0x08, 0xbb, 0xff, 0x1a, 0x91} },
 
         /*
-        2. Test Cases for HMAC-MD5
+        2. Test Cases for LTC_HMAC-LTC_MD5
 
         test_case =     1
         key =           0x0b 0b 0b 0b 
@@ -272,7 +272,7 @@ Key First"
         outlen = sizeof(digest);
         if((err = hmac_memory(hash, cases[i].key, cases[i].keylen, cases[i].data, cases[i].datalen, digest, &outlen)) != CRYPT_OK) {
 #if 0
-            printf("HMAC-%s test #%d, %s\n", cases[i].algo, cases[i].num, error_to_string(err));
+            printf("LTC_HMAC-%s test #%d, %s\n", cases[i].algo, cases[i].num, error_to_string(err));
 #endif
             return err;
         }
@@ -281,7 +281,7 @@ Key First"
             failed++;
 #if 0
             unsigned int j;
-            printf("\nHMAC-%s test #%d:\n", cases[i].algo, cases[i].num);
+            printf("\nLTC_HMAC-%s test #%d:\n", cases[i].algo, cases[i].num);
             printf(  "Result:  0x");
             for(j=0; j < hash_descriptor[hash].hashsize; j++) {
                 printf("%2x ", digest[j]);
@@ -294,7 +294,7 @@ Key First"
             return CRYPT_ERROR;
 #endif
         } else {
-            /* printf("HMAC-%s test #%d: Passed\n", cases[i].algo, cases[i].num); */
+            /* printf("LTC_HMAC-%s test #%d: Passed\n", cases[i].algo, cases[i].num); */
         }
     }
 
@@ -311,6 +311,6 @@ Key First"
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/hmac/hmac_test.c,v $ */
-/* $Revision: 1.7 $ */
-/* $Date: 2006/11/03 00:39:49 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

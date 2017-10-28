@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -78,6 +78,6 @@ int xcbc_file(int cipher,
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/mac/xcbc/xcbc_file.c,v $ */
-/* $Revision: 1.1 $ */
-/* $Date: 2006/11/03 01:56:41 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

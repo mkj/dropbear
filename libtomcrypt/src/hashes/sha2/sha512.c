@@ -6,16 +6,16 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
    @param sha512.c
-   SHA512 by Tom St Denis 
+   LTC_SHA512 by Tom St Denis 
 */
 
-#ifdef SHA512
+#ifdef LTC_SHA512
 
 const struct ltc_hash_descriptor sha512_desc =
 {
@@ -305,7 +305,7 @@ int  sha512_test(void)
   #endif
 }
 
-#ifdef SHA384
+#ifdef LTC_SHA384
    #include "sha384.c"
 #endif
 
@@ -314,6 +314,6 @@ int  sha512_test(void)
 
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/hashes/sha2/sha512.c,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/11/01 09:28:17 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

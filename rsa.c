@@ -36,7 +36,7 @@
 #include "ssh.h"
 #include "dbrandom.h"
 
-#ifdef DROPBEAR_RSA 
+#if DROPBEAR_RSA 
 
 static void rsa_pad_em(dropbear_rsa_key * key,
 	buffer *data_buf, mp_int * rsa_em);
@@ -72,8 +72,7 @@ int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 	ret = DROPBEAR_SUCCESS;
 out:
 	if (ret == DROPBEAR_FAILURE) {
-		m_free(key->e);
-		m_free(key->n);
+		m_mp_free_multi(&key->e, &key->n, NULL);
 	}
 	return ret;
 }
@@ -121,9 +120,7 @@ int buf_get_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 	ret = DROPBEAR_SUCCESS;
 out:
 	if (ret == DROPBEAR_FAILURE) {
-		m_free(key->d);
-		m_free(key->p);
-		m_free(key->q);
+		m_mp_free_multi(&key->d, &key->p, &key->q, NULL);
 	}
 	TRACE(("leave buf_get_rsa_priv_key"))
 	return ret;
@@ -139,26 +136,7 @@ void rsa_key_free(dropbear_rsa_key *key) {
 		TRACE2(("leave rsa_key_free: key == NULL"))
 		return;
 	}
-	if (key->d) {
-		mp_clear(key->d);
-		m_free(key->d);
-	}
-	if (key->e) {
-		mp_clear(key->e);
-		m_free(key->e);
-	}
-	if (key->n) {
-		 mp_clear(key->n);
-		 m_free(key->n);
-	}
-	if (key->p) {
-		mp_clear(key->p);
-		m_free(key->p);
-	}
-	if (key->q) {
-		mp_clear(key->q);
-		m_free(key->q);
-	}
+	m_mp_free_multi(&key->d, &key->e, &key->p, &key->q, &key->n, NULL);
 	m_free(key);
 	TRACE2(("leave rsa_key_free"))
 }
@@ -204,7 +182,7 @@ void buf_put_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 
 }
 
-#ifdef DROPBEAR_SIGNKEY_VERIFY
+#if DROPBEAR_SIGNKEY_VERIFY
 /* Verify a signature in buf, made on data by the key given.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_rsa_verify(buffer * buf, dropbear_rsa_key *key, buffer *data_buf) {
@@ -279,7 +257,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 
 	/* the actual signing of the padded data */
 
-#ifdef RSA_BLINDING
+#if DROPBEAR_RSA_BLINDING
 
 	/* With blinding, s = (r^(-1))((em)*r^e)^d mod n */
 
@@ -322,7 +300,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 		dropbear_exit("RSA error");
 	}
 
-#endif /* RSA_BLINDING */
+#endif /* DROPBEAR_RSA_BLINDING */
 
 	mp_clear_multi(&rsa_tmp1, &rsa_tmp2, &rsa_tmp3, NULL);
 	
@@ -346,7 +324,7 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
 	buf_incrwritepos(buf, ssize);
 	mp_clear(&rsa_s);
 
-#if defined(DEBUG_RSA) && defined(DEBUG_TRACE)
+#if defined(DEBUG_RSA) && DEBUG_TRACE
 	if (!debug_trace) {
 		printhex("RSA sig", buf->data, buf->len);
 	}

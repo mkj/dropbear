@@ -139,6 +139,6 @@ main (void)
   return 0;
 }
 
-/* $Source: /cvs/libtom/libtommath/etc/mersenne.c,v $ */
-/* $Revision: 1.3 $ */
-/* $Date: 2006/03/31 14:18:47 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

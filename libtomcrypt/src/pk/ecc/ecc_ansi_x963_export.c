@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /* Implements ECC over Z/pZ for curve y^2 = x^3 - 3x + b
@@ -21,7 +21,7 @@
   ECC Crypto, Tom St Denis
 */  
 
-#ifdef MECC
+#ifdef LTC_MECC
 
 /** ECC X9.63 (Sec. 4.3.6) uncompressed export
   @param key     Key to export
@@ -67,6 +67,6 @@ int ecc_ansi_x963_export(ecc_key *key, unsigned char *out, unsigned long *outlen
 
 #endif
 
-/* $Source: /cvs/libtom/libtomcrypt/src/pk/ecc/ecc_ansi_x963_export.c,v $ */
-/* $Revision: 1.4 $ */
-/* $Date: 2006/12/04 02:50:11 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */

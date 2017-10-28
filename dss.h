@@ -28,7 +28,7 @@
 #include "includes.h"
 #include "buffer.h"
 
-#ifdef DROPBEAR_DSS 
+#if DROPBEAR_DSS 
 
 typedef struct {
 
@@ -41,8 +41,11 @@ typedef struct {
 
 } dropbear_dss_key;
 
+#define DSS_P_BITS 1024
+#define DSS_Q_BITS 160
+
 void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
-#ifdef DROPBEAR_SIGNKEY_VERIFY
+#if DROPBEAR_SIGNKEY_VERIFY
 int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
 #endif
 int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key);

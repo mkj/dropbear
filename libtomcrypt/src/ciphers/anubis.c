@@ -6,7 +6,7 @@
  * The library is free for all purposes without any express
  * guarantee it works.
  *
- * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
+ * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -17,7 +17,7 @@
 
 #include "tomcrypt.h"
 
-#ifdef ANUBIS
+#ifdef LTC_ANUBIS
 
 const struct ltc_cipher_descriptor anubis_desc = {
    "anubis",
@@ -48,7 +48,7 @@ const struct ltc_cipher_descriptor anubis_desc = {
  * (but little-endian notation would be equally suitable if consistently
  * employed).
  */
-#if defined(ANUBIS_TWEAK)
+#if defined(LTC_ANUBIS_TWEAK)
 
 static const ulong32 T0[256] = {
     0xba69d2bbU, 0x54a84de5U, 0x2f5ebce2U, 0x74e8cd25U,
@@ -1174,8 +1174,8 @@ int anubis_test(void)
      int keylen;
      unsigned char pt[16], ct[16], key[40];
   } tests[] = {
-#ifndef ANUBIS_TWEAK
-  /**** ORIGINAL ANUBIS ****/
+#ifndef LTC_ANUBIS_TWEAK
+  /**** ORIGINAL LTC_ANUBIS ****/
   /* 128 bit keys */
 {
    16,
@@ -1333,7 +1333,7 @@ int anubis_test(void)
      0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x01 }
 }
 #else
-  /**** Tweaked ANUBIS ****/
+  /**** Tweaked LTC_ANUBIS ****/
   /* 128 bit keys */
 {
    16,
@@ -1553,6 +1553,6 @@ int anubis_keysize(int *keysize)
 #endif
 
 
-/* $Source: /cvs/libtom/libtomcrypt/src/ciphers/anubis.c,v $ */
-/* $Revision: 1.15 $ */
-/* $Date: 2006/11/15 12:41:28 $ */
+/* $Source$ */
+/* $Revision$ */
+/* $Date$ */
