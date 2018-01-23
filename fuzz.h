@@ -10,12 +10,14 @@
 #include "fuzz-wrapfd.h"
 
 // once per process
-void common_setup_fuzzer(void);
-void svr_setup_fuzzer(void);
+void fuzz_common_setup(void);
+void fuzz_svr_setup(void);
 
 // must be called once per fuzz iteration. 
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
-int fuzzer_set_input(const uint8_t *Data, size_t Size);
+int fuzz_set_input(const uint8_t *Data, size_t Size);
+
+int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths);
 
 // fuzzer functions that intrude into general code
 void fuzz_kex_fakealgos(void);
@@ -26,6 +28,7 @@ extern const char * const * fuzz_signkey_names;
 void fuzz_seed(void);
 void fuzz_get_socket_address(int fd, char **local_host, char **local_port,
                         char **remote_host, char **remote_port, int host_lookup);
+void fuzz_fake_send_kexdh_reply(void);
 
 // fake IO wrappers
 #ifndef FUZZ_SKIP_WRAP
@@ -47,6 +50,9 @@ struct dropbear_fuzz_options {
     struct dropbear_cipher recv_cipher;
     struct dropbear_hash recv_mac;
     int wrapfds;
+
+    // whether to skip slow bignum maths
+    int skip_kexmaths;
 
     // dropbear_exit() jumps back
     int do_jmp;

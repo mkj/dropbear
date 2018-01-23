@@ -48,7 +48,6 @@ static void read_kex_algos(void);
 /* helper function for gen_new_keys */
 static void hashkeys(unsigned char *out, unsigned int outlen, 
 		const hash_state * hs, const unsigned char X);
-static void finish_kexhashbuf(void);
 
 
 /* Send our list of algorithms we can use */
@@ -769,8 +768,7 @@ void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_
 #endif /* DROPBEAR_CURVE25519 */
 
 
-
-static void finish_kexhashbuf(void) {
+void finish_kexhashbuf(void) {
 	hash_state hs;
 	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
 

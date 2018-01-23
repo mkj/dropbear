@@ -4,7 +4,7 @@
 #include "debug.h"
 
 static void setup_fuzzer(void) {
-	common_setup_fuzzer();
+	fuzz_common_setup();
 }
 
 static buffer *verifydata;
@@ -19,7 +19,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		once = 1;
 	}
 
-	if (fuzzer_set_input(Data, Size) == DROPBEAR_FAILURE) {
+	if (fuzz_set_input(Data, Size) == DROPBEAR_FAILURE) {
 		return 0;
 	}
 

@@ -14,7 +14,7 @@ struct dropbear_fuzz_options fuzz;
 static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param);
 static void load_fixed_hostkeys(void);
 
-void common_setup_fuzzer(void) {
+void fuzz_common_setup(void) {
     fuzz.fuzzing = 1;
     fuzz.wrapfds = 1;
     fuzz.do_jmp = 1;
@@ -23,7 +23,7 @@ void common_setup_fuzzer(void) {
     crypto_init();
 }
 
-int fuzzer_set_input(const uint8_t *Data, size_t Size) {
+int fuzz_set_input(const uint8_t *Data, size_t Size) {
 
     fuzz.input->data = (unsigned char*)Data;
     fuzz.input->size = Size;
@@ -51,10 +51,10 @@ static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list 
 #endif
 }
 
-void svr_setup_fuzzer(void) {
+void fuzz_svr_setup(void) {
     struct passwd *pw;
 
-    common_setup_fuzzer();
+    fuzz_common_setup();
     
     _dropbear_exit = svr_dropbear_exit;
 
@@ -129,4 +129,58 @@ void fuzz_get_socket_address(int UNUSED(fd), char **local_host, char **local_por
     if (remote_port) {
         *remote_port = m_strdup("9876");
     }
+}
+
+/* cut down version of svr_send_msg_kexdh_reply() that skips slow maths. Still populates structures */
+void fuzz_fake_send_kexdh_reply(void) {
+    assert(!ses.dh_K);
+    m_mp_alloc_init_multi(&ses.dh_K, NULL);
+    mp_set_int(ses.dh_K, 12345678);
+    finish_kexhashbuf();
+    assert(!ses.dh_K);
+}
+
+int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
+    static int once = 0;
+    if (!once) {
+        fuzz_svr_setup();
+        fuzz.skip_kexmaths = skip_kexmaths;
+        once = 1;
+    }
+
+    if (fuzz_set_input(Data, Size) == DROPBEAR_FAILURE) {
+        return 0;
+    }
+
+    // get prefix. input format is
+    // string prefix
+    //     uint32 wrapfd seed
+    //     ... to be extended later
+    // [bytes] ssh input stream
+
+    // be careful to avoid triggering buffer.c assertions
+    if (fuzz.input->len < 8) {
+        return 0;
+    }
+    size_t prefix_size = buf_getint(fuzz.input);
+    if (prefix_size != 4) {
+        return 0;
+    }
+    uint32_t wrapseed = buf_getint(fuzz.input);
+    wrapfd_setseed(wrapseed);
+
+    int fakesock = 20;
+    wrapfd_add(fakesock, fuzz.input, PLAIN);
+
+    m_malloc_set_epoch(1);
+    if (setjmp(fuzz.jmp) == 0) {
+        svr_session(fakesock, fakesock);
+        m_malloc_free_epoch(1, 0);
+    } else {
+        m_malloc_free_epoch(1, 1);
+        TRACE(("dropbear_exit longjmped"))
+        // dropbear_exit jumped here
+    }
+
+    return 0;
 }
