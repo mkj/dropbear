@@ -7,6 +7,7 @@
 #include "crypto_desc.h"
 #include "session.h"
 #include "dbrandom.h"
+#include "bignum.h"
 #include "fuzz-wrapfd.h"
 
 struct dropbear_fuzz_options fuzz;
@@ -137,7 +138,6 @@ void fuzz_fake_send_kexdh_reply(void) {
     m_mp_alloc_init_multi(&ses.dh_K, NULL);
     mp_set_int(ses.dh_K, 12345678);
     finish_kexhashbuf();
-    assert(!ses.dh_K);
 }
 
 int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
