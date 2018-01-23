@@ -139,7 +139,7 @@ int main(int argc, char ** argv) {
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;
 	char * sizetext = NULL;
-	unsigned int bits = 0;
+	unsigned int bits = 0, genbits;
 	int printpub = 0;
 
 	crypto_init();
@@ -240,7 +240,8 @@ int main(int argc, char ** argv) {
 		check_signkey_bits(keytype, bits);;
 	}
 
-	fprintf(stderr, "Generating key, this may take a while...\n");
+	genbits = signkey_generate_get_bits(keytype, bits);
+	fprintf(stderr, "Generating %d bit %s key, this may take a while...\n", genbits, typetext);
 	if (signkey_generate(keytype, bits, filename, 0) == DROPBEAR_FAILURE)
 	{
 		dropbear_exit("Failed to generate key.\n");

@@ -33,9 +33,20 @@ AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])],
     [AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS" ]
     )
 
+STATIC=0
+AC_ARG_ENABLE(static,
+	[  --enable-static         Build static binaries],
+	[
+		if test "x$enableval" = "xyes"; then
+			STATIC=1
+			AC_MSG_NOTICE(Static Build)
+		fi
+	], [])
+AC_SUBST(STATIC)
+
 hardenbuild=1
 AC_ARG_ENABLE(harden,
-	[  --disable-harden          Don't set hardened build flags],
+	[  --disable-harden        Don't set hardened build flags],
 	[
 		if test "x$enableval" = "xno"; then
 			hardenbuild=0
@@ -45,37 +56,40 @@ AC_ARG_ENABLE(harden,
 
 if test "$hardenbuild" -eq 1; then
 	AC_MSG_NOTICE(Checking for available hardened build flags:)
-	# pie
-	OLDCFLAGS="$CFLAGS"
-	TESTFLAGS="-fPIE"
-	CFLAGS="$CFLAGS $TESTFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
-	    )
-	OLDLDFLAGS="$LDFLAGS"
-	TESTFLAGS="-Wl,-pie"
-	LDFLAGS="$LDFLAGS $TESTFLAGS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-		[
-			LDFLAGS="$OLDLDFLAGS"
-			TESTFLAGS="-pie"
-			LDFLAGS="$LDFLAGS $TESTFLAGS"
-			AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-				[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-				[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
-				)
-		]
-	    )
-	# readonly elf relocation sections (relro)
-	OLDLDFLAGS="$LDFLAGS"
-	TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
-	LDFLAGS="$LDFLAGS $TESTFLAGS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
-	    )
+	# relocation flags don't make sense for static builds
+	if test "$STATIC" -ne 1; then
+		# pie
+		OLDCFLAGS="$CFLAGS"
+		TESTFLAGS="-fPIE"
+		CFLAGS="$CFLAGS $TESTFLAGS"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
+			)
+		OLDLDFLAGS="$LDFLAGS"
+		TESTFLAGS="-Wl,-pie"
+		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[
+				LDFLAGS="$OLDLDFLAGS"
+				TESTFLAGS="-pie"
+				LDFLAGS="$LDFLAGS $TESTFLAGS"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+					[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+					[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+					)
+			]
+			)
+		# readonly elf relocation sections (relro)
+		OLDLDFLAGS="$LDFLAGS"
+		TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
+		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+			)
+	fi # non-static
 	# stack protector. -strong is good but only in gcc 4.9 or later
 	OLDCFLAGS="$CFLAGS"
 	TESTFLAGS="-fstack-protector-strong"
@@ -230,7 +244,7 @@ AC_ARG_WITH(pam,
 
 
 AC_ARG_ENABLE(pam,
-	[  --enable-pam          Try to include PAM support],
+	[  --enable-pam            Try to include PAM support],
 	[
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
@@ -827,6 +841,7 @@ AS_MKDIR_P(libtomcrypt/src/modes/ecb)
 AS_MKDIR_P(libtomcrypt/src/modes/ofb)
 AS_MKDIR_P(libtomcrypt/src/modes/f8)
 AS_MKDIR_P(libtomcrypt/src/modes/lrw)
+AS_MKDIR_P(libtomcrypt/src/modes/xts)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/bit)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/boolean)
 AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/choice)

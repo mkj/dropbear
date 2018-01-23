@@ -2,12 +2,11 @@
 # @configure_input@
 
 # invocation:
-# make PROGRAMS="dropbear dbclient scp" MULTI=1 STATIC=1 SCPPROGRESS=1
+# make PROGRAMS="dropbear dbclient scp" MULTI=1 SCPPROGRESS=1
 #
-# to make a multiple-program statically linked binary "staticdropbearmulti".
+# to make a multiple-program binary "dropbearmulti".
 # This example will include dropbear, scp, dropbearkey, dropbearconvert, and
 # dbclient functionality, and includes the progress-bar functionality in scp.
-# Hopefully that seems intuitive.
 
 ifndef PROGRAMS
 	PROGRAMS=dropbear dbclient dropbearkey dropbearconvert
@@ -35,7 +34,7 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
 		dbmalloc.o \
-		gensignkey.o gendss.o genrsa.o 
+		gensignkey.o gendss.o genrsa.o
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
@@ -99,6 +98,8 @@ LDFLAGS=@LDFLAGS@
 
 EXEEXT=@EXEEXT@
 
+STATIC=@STATIC@
+
 # whether we're building client, server, or both for the common objects.
 # evilness so we detect 'dropbear' by itself as a word
 space:= $(empty) $(empty)
@@ -120,7 +121,7 @@ ifeq ($(STATIC), 1)
 endif
 
 ifeq ($(MULTI), 1)
-	TARGETS=dropbearmulti
+	TARGETS=dropbearmulti$(EXEEXT)
 else
 	TARGETS=$(PROGRAMS)
 endif
@@ -137,14 +138,14 @@ strip: $(TARGETS)
 
 install: $(addprefix inst_, $(TARGETS))
 
-insmultidropbear: dropbearmulti
+insmultidropbear: dropbearmulti$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(sbindir)
 	-rm -f $(DESTDIR)$(sbindir)/dropbear$(EXEEXT)
 	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(sbindir)/dropbear$(EXEEXT) 
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man8
 	$(INSTALL) -m 644 $(srcdir)/dropbear.8  $(DESTDIR)$(mandir)/man8/dropbear.8
 
-insmulti%: dropbearmulti
+insmulti%: dropbearmulti$(EXEEXT)
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	-rm -f $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
@@ -224,8 +225,9 @@ sizes: dropbear
 clean: ltc-clean ltm-clean thisclean
 
 thisclean:
-	-rm -f dropbear dbclient dropbearkey dropbearconvert scp scp-progress \
-			dropbearmulti *.o *.da *.bb *.bbg *.prof 
+	-rm -f dropbear$(EXEEXT) dbclient$(EXEEXT) dropbearkey$(EXEEXT) \
+			dropbearconvert$(EXEEXT) scp$(EXEEXT) scp-progress$(EXEEXT) \
+			dropbearmulti$(EXEEXT) *.o *.da *.bb *.bbg *.prof
 
 distclean: clean tidy
 	-rm -f config.h

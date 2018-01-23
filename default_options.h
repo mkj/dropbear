@@ -10,7 +10,7 @@ Local customisation should be added to localoptions.h which is
 used if it exists. Options defined there will override any options in this
 file (#ifndef guards added by ifndef_wrapper.sh).
 
-Options can also be defined with -DDROPBEAR_XXX Makefile CFLAGS
+Options can also be defined with -DDROPBEAR_XXX in Makefile CFLAGS
 
 IMPORTANT: Many options will require "make clean" after changes */
 
@@ -198,6 +198,13 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_ECDSA 1
 #endif
 
+/* RSA must be >=1024 */
+#ifndef DROPBEAR_DEFAULT_RSA_SIZE
+#define DROPBEAR_DEFAULT_RSA_SIZE 2048
+#endif
+/* DSS is always 1024 */
+/* ECDSA defaults to largest size configured, usually 521 */
+
 /* Add runtime flag "-R" to generate hostkeys as-needed when the first 
    connection using that key type occurs.
    This avoids the need to otherwise run "dropbearkey" and avoids some problems
@@ -373,7 +380,8 @@ Homedir is prepended unless path begins with / */
 #define MAX_UNAUTH_CLIENTS 30
 #endif
 
-/* Maximum number of failed authentication tries (server option) */
+/* Default maximum number of failed authentication tries (server option) */
+/* -T runtime option overrides */
 #ifndef MAX_AUTH_TRIES
 #define MAX_AUTH_TRIES 10
 #endif
