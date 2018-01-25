@@ -899,7 +899,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
 static void execchild(const void *user_data) {
-	struct ChanSess *chansess = user_data;
+	const struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
