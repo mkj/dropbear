@@ -488,7 +488,7 @@ int dropbear_listen(const char* address, const char* port,
 	 * caller can do a get_socket_address to discover assigned-port
 	 * hence, use same port for all address families
 	 */
-	u_int16_t *allocated_lport_p = 0;
+	u_int16_t *allocated_lport_p = NULL;
 	int allocated_lport = 0;
 
 	nsock = 0;
