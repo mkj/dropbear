@@ -348,6 +348,37 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 }
 
+/* from openssh/canohost.c avoid premature-optimization */
+int get_sock_port(int sock) {
+	struct sockaddr_storage from;
+	socklen_t fromlen;
+	char strport[NI_MAXSERV];
+	int r;
+
+	/* Get IP address of client. */
+	fromlen = sizeof(from);
+	memset(&from, 0, sizeof(from));
+	if (getsockname(sock, (struct sockaddr *)&from, &fromlen) < 0) {
+		TRACE(("getsockname failed: %d", errno))
+		return 0;
+	}
+
+	/* Work around Linux IPv6 weirdness */
+	if (from.ss_family == AF_INET6)
+		fromlen = sizeof(struct sockaddr_in6);
+
+	/* Non-inet sockets don't have a port number. */
+	if (from.ss_family != AF_INET && from.ss_family != AF_INET6)
+		return 0;
+
+	/* Return port number. */
+	if ((r = getnameinfo((struct sockaddr *)&from, fromlen, NULL, 0,
+	    strport, sizeof(strport), NI_NUMERICSERV)) != 0) {
+		TRACE(("netio.c/get_sock_port/getnameinfo NI_NUMERICSERV failed: %d", r))
+	}
+	return atoi(strport);
+}
+
 /* Listen on address:port. 
  * Special cases are address of "" listening on everything,
  * and address of NULL listening on localhost only.
@@ -400,10 +431,28 @@ int dropbear_listen(const char* address, const char* port,
 		return -1;
 	}
 
+	/*
+	 * when listening on server-assigned-port 0
+	 * the assigned ports may differ for address families (v4/v6)
+	 * causing problems for tcpip-forward
+	 * caller can do a get_socket_address to discover assigned-port
+	 * hence, use same port for all address families
+	 */
+	u_int16_t *allocated_lport_p = 0;
+	int allocated_lport = 0;
 
 	nsock = 0;
 	for (res = res0; res != NULL && nsock < sockcount;
 			res = res->ai_next) {
+
+		if (allocated_lport > 0) {
+			if (AF_INET == res->ai_family) {
+				allocated_lport_p = &((struct sockaddr_in *)res->ai_addr)->sin_port;
+			} else if (AF_INET6 == res->ai_family) {
+				allocated_lport_p = &((struct sockaddr_in6 *)res->ai_addr)->sin6_port;
+			}
+			*allocated_lport_p = htons(allocated_lport);
+		}
 
 		/* Get a socket */
 		socks[nsock] = socket(res->ai_family, res->ai_socktype,
@@ -449,6 +498,10 @@ int dropbear_listen(const char* address, const char* port,
 			close(sock);
 			TRACE(("listen() failed"))
 			continue;
+		}
+
+		if (0 == allocated_lport) {
+			allocated_lport = get_sock_port(sock);
 		}
 
 		*maxfd = MAX(*maxfd, sock);
