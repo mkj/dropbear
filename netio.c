@@ -19,7 +19,7 @@ struct dropbear_progress_connection {
 	int sock;
 
 	char* errstring;
-	struct addrinfo *bind_addrinfo;
+	char *bind_address, *bind_port;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -31,7 +31,8 @@ static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *
 	m_free(c->remotehost);
 	m_free(c->remoteport);
 	m_free(c->errstring);
-	if (c->bind_addrinfo) freeaddrinfo(c->bind_addrinfo);
+	m_free(c->bind_address);
+	m_free(c->bind_port);
 	m_free(c);
 
 	if (iter) {
@@ -53,6 +54,7 @@ void cancel_connect(struct dropbear_progress_connection *c) {
 
 static void connect_try_next(struct dropbear_progress_connection *c) {
 	struct addrinfo *r;
+	int err;
 	int res = 0;
 	int fastopen = 0;
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
@@ -68,11 +70,38 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			continue;
 		}
 
-		if (c->bind_addrinfo) {
-			if (bind(c->sock, c->bind_addrinfo->ai_addr, c->bind_addrinfo->ai_addrlen) < 0) {
-				/* failure */
+		if (c->bind_address || c->bind_port) {
+			/* bind to a source port/address */
+			struct addrinfo hints;
+			struct addrinfo *bindaddr = NULL;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_family = r->ai_family;
+			hints.ai_flags = AI_PASSIVE;
+
+			err = getaddrinfo(c->bind_address, c->bind_port, &hints, &bindaddr);
+			if (err) {
+				int len = 100 + strlen(gai_strerror(err));
 				m_free(c->errstring);
-				c->errstring = m_strdup(strerror(errno));
+				c->errstring = (char*)m_malloc(len);
+				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s", 
+						c->bind_address, c->bind_port, gai_strerror(err));
+				TRACE(("Error resolving bind: %s", gai_strerror(err)))
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			}
+			res = bind(c->sock, bindaddr->ai_addr, bindaddr->ai_addrlen);
+			freeaddrinfo(bindaddr);
+			bindaddr = NULL;
+			if (res < 0) {
+				/* failure */
+				int keep_errno = errno;
+				int len = 300;
+				m_free(c->errstring);
+				c->errstring = m_malloc(len);
+				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s", 
+						c->bind_address, c->bind_port, strerror(keep_errno));
 				close(c->sock);
 				c->sock = -1;
 				continue;
@@ -143,7 +172,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
-	connect_callback cb, void* cb_data, char* bind_address)
+	connect_callback cb, void* cb_data, 
+	const char* bind_address, const char* bind_port)
 {
 	struct dropbear_progress_connection *c = NULL;
 	int err;
@@ -155,7 +185,6 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->sock = -1;
 	c->cb = cb;
 	c->cb_data = cb_data;
-	c->bind_addrinfo = NULL;
 
 	list_append(&ses.conn_pending, c);
 
@@ -175,20 +204,11 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		c->res_iter = c->res;
 	}
 	
-	if (NULL != bind_address) {
-		memset(&hints, 0, sizeof(hints));
-		hints.ai_socktype = SOCK_STREAM;
-		hints.ai_family = AF_UNSPEC;
-		err = getaddrinfo(bind_address, NULL, &hints, &c->bind_addrinfo);
-		if (err) {
-			int len;
-			len = 100 + strlen(gai_strerror(err));
-			c->errstring = (char*)m_malloc(len);
-			snprintf(c->errstring, len, "Error resolving '%s'. %s", 
-					bind_address, gai_strerror(err));
-			TRACE(("Error resolving: %s", gai_strerror(err)))
-			c->res_iter = NULL;
-		}
+	if (bind_address) {
+		c->bind_address = m_strdup(bind_address);
+	}
+	if (bind_port) {
+		c->bind_port = m_strdup(bind_port);
 	}
 
 	return c;
