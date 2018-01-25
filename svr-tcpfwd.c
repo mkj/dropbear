@@ -95,7 +95,7 @@ void recv_msg_global_request_remotetcp() {
 			buf_putint(ses.writepayload, allocated_listen_port);
 			encrypt_packet();
 			wantreply = 0; //so out does not do so
-	  }
+		}
 	} else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
 		ret = svr_cancelremotetcp();
 	} else {
