@@ -19,6 +19,7 @@ struct dropbear_progress_connection {
 	int sock;
 
 	char* errstring;
+	struct addrinfo *bind_addrinfo;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -30,6 +31,7 @@ static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *
 	m_free(c->remotehost);
 	m_free(c->remoteport);
 	m_free(c->errstring);
+	if (c->bind_addrinfo) freeaddrinfo(c->bind_addrinfo);
 	m_free(c);
 
 	if (iter) {
@@ -64,6 +66,17 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		c->sock = socket(r->ai_family, r->ai_socktype, r->ai_protocol);
 		if (c->sock < 0) {
 			continue;
+		}
+
+		if (c->bind_addrinfo) {
+			if (bind(c->sock, c->bind_addrinfo->ai_addr, c->bind_addrinfo->ai_addrlen) < 0) {
+				/* failure */
+				m_free(c->errstring);
+				c->errstring = m_strdup(strerror(errno));
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			}
 		}
 
 		ses.maxfd = MAX(ses.maxfd, c->sock);
@@ -130,7 +143,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
-	connect_callback cb, void* cb_data)
+	connect_callback cb, void* cb_data, char* bind_address)
 {
 	struct dropbear_progress_connection *c = NULL;
 	int err;
@@ -142,6 +155,7 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->sock = -1;
 	c->cb = cb;
 	c->cb_data = cb_data;
+	c->bind_addrinfo = NULL;
 
 	list_append(&ses.conn_pending, c);
 
@@ -159,6 +173,22 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 	} else {
 		c->res_iter = c->res;
+	}
+	
+	if (NULL != bind_address) {
+		memset(&hints, 0, sizeof(hints));
+		hints.ai_socktype = SOCK_STREAM;
+		hints.ai_family = AF_UNSPEC;
+		err = getaddrinfo(bind_address, NULL, &hints, &c->bind_addrinfo);
+		if (err) {
+			int len;
+			len = 100 + strlen(gai_strerror(err));
+			c->errstring = (char*)m_malloc(len);
+			snprintf(c->errstring, len, "Error resolving '%s'. %s", 
+					bind_address, gai_strerror(err));
+			TRACE(("Error resolving: %s", gai_strerror(err)))
+			c->res_iter = NULL;
+		}
 	}
 
 	return c;
