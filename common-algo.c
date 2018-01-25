@@ -314,7 +314,7 @@ algo_type sshkex[] = {
  * against.
  * Returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
  * otherwise */
-int have_algo(char* algo, size_t algolen, algo_type algos[]) {
+int have_algo(const char* algo, size_t algolen, const algo_type algos[]) {
 
 	int i;
 
@@ -329,7 +329,7 @@ int have_algo(char* algo, size_t algolen, algo_type algos[]) {
 }
 
 /* Output a comma separated list of algorithms to a buffer */
-void buf_put_algolist(buffer * buf, algo_type localalgos[]) {
+void buf_put_algolist(buffer * buf, const algo_type localalgos[]) {
 
 	unsigned int i, len;
 	unsigned int donefirst = 0;
@@ -501,7 +501,7 @@ get_algo_usable(algo_type algos[], const char * algo_name)
 #if DROPBEAR_USER_ALGO_LIST
 
 char *
-algolist_string(algo_type algos[])
+algolist_string(const algo_type algos[])
 {
 	char *ret_list;
 	buffer *b = buf_new(200);

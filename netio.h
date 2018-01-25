@@ -34,7 +34,7 @@ struct dropbear_progress_connection * connect_remote (const char* remotehost, co
 /* Sets up for select() */
 void set_connect_fds(fd_set *writefd);
 /* Handles ready sockets after select() */
-void handle_connect_fds(fd_set *writefd);
+void handle_connect_fds(const fd_set *writefd);
 /* Cleanup */
 void remove_connect_pending(void);
 
@@ -45,7 +45,7 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 
 /* TODO: writev #ifdef guard */
 /* Fills out iov which contains iov_count slots, returning the number filled in iov_count */
-void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int *iov_count);
+void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigned int *iov_count);
 void packet_queue_consume(struct Queue *queue, ssize_t written);
 
 #if DROPBEAR_SERVER_TCP_FAST_OPEN

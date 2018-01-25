@@ -43,24 +43,24 @@
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys);
 static int sessionpty(struct ChanSess * chansess);
-static int sessionsignal(struct ChanSess *chansess);
+static int sessionsignal(const struct ChanSess *chansess);
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess);
-static int sessionwinchange(struct ChanSess *chansess);
-static void execchild(void *user_data_chansess);
+static int sessionwinchange(const struct ChanSess *chansess);
+static void execchild(const void *user_data_chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
-static void closechansess(struct Channel *channel);
+static void closechansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
-static int sesscheckclose(struct Channel *channel);
+static int sesscheckclose(const struct Channel *channel);
 
-static void send_exitsignalstatus(struct Channel *channel);
-static void send_msg_chansess_exitstatus(struct Channel * channel,
-		struct ChanSess * chansess);
-static void send_msg_chansess_exitsignal(struct Channel * channel,
-		struct ChanSess * chansess);
-static void get_termmodes(struct ChanSess *chansess);
+static void send_exitsignalstatus(const struct Channel *channel);
+static void send_msg_chansess_exitstatus(const struct Channel * channel,
+		const struct ChanSess * chansess);
+static void send_msg_chansess_exitsignal(const struct Channel * channel,
+		const struct ChanSess * chansess);
+static void get_termmodes(const struct ChanSess *chansess);
 
 const struct ChanType svrchansess = {
 	0, /* sepfds */
@@ -74,7 +74,7 @@ const struct ChanType svrchansess = {
 /* required to clear environment */
 extern char** environ;
 
-static int sesscheckclose(struct Channel *channel) {
+static int sesscheckclose(const struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
 	return chansess->exit.exitpid != -1;
@@ -159,7 +159,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 }
 
 /* send the exit status or the signal causing termination for a session */
-static void send_exitsignalstatus(struct Channel *channel) {
+static void send_exitsignalstatus(const struct Channel *channel) {
 
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 
@@ -173,8 +173,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 }
 
 /* send the exitstatus to the client */
-static void send_msg_chansess_exitstatus(struct Channel * channel,
-		struct ChanSess * chansess) {
+static void send_msg_chansess_exitstatus(const struct Channel * channel,
+		const struct ChanSess * chansess) {
 
 	dropbear_assert(chansess->exit.exitpid != -1);
 	dropbear_assert(chansess->exit.exitsignal == -1);
@@ -192,8 +192,8 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 }
 
 /* send the signal causing the exit to the client */
-static void send_msg_chansess_exitsignal(struct Channel * channel,
-		struct ChanSess * chansess) {
+static void send_msg_chansess_exitsignal(const struct Channel * channel,
+		const struct ChanSess * chansess) {
 
 	int i;
 	char* signame = NULL;
@@ -273,7 +273,7 @@ static int newchansess(struct Channel *channel) {
 }
 
 static struct logininfo* 
-chansess_login_alloc(struct ChanSess *chansess) {
+chansess_login_alloc(const struct ChanSess *chansess) {
 	struct logininfo * li;
 	li = login_alloc_entry(chansess->pid, ses.authstate.username,
 			svr_ses.remotehost, chansess->tty);
@@ -281,7 +281,7 @@ chansess_login_alloc(struct ChanSess *chansess) {
 }
 
 /* clean a session channel */
-static void closechansess(struct Channel *channel) {
+static void closechansess(const struct Channel *channel) {
 
 	struct ChanSess *chansess;
 	unsigned int i;
@@ -403,7 +403,7 @@ out:
 
 
 /* Send a signal to a session's process as requested by the client*/
-static int sessionsignal(struct ChanSess *chansess) {
+static int sessionsignal(const struct ChanSess *chansess) {
 
 	int sig = 0;
 	char* signame = NULL;
@@ -441,7 +441,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 
 /* Let the process know that the window size has changed, as notified from the
  * client. Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-static int sessionwinchange(struct ChanSess *chansess) {
+static int sessionwinchange(const struct ChanSess *chansess) {
 
 	int termc, termr, termw, termh;
 
@@ -460,7 +460,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-static void get_termmodes(struct ChanSess *chansess) {
+static void get_termmodes(const struct ChanSess *chansess) {
 
 	struct termios termio;
 	unsigned char opcode;
@@ -898,7 +898,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
-static void execchild(void *user_data) {
+static void execchild(const void *user_data) {
 	struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
 

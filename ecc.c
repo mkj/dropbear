@@ -82,7 +82,7 @@ ecc_key * new_ecc_key(void) {
 
 /* Copied from libtomcrypt ecc_import.c (version there is static), modified
    for different mp_int pointer without LTC_SOURCE */
-static int ecc_is_point(ecc_key *key)
+static int ecc_is_point(const ecc_key *key)
 {
 	mp_int *prime, *b, *t1, *t2;
 	int err;
@@ -213,7 +213,7 @@ ecc_key * buf_get_ecc_raw_pubkey(buffer *buf, const struct dropbear_ecc_curve *c
 
 /* a modified version of libtomcrypt's "ecc_shared_secret" to output
    a mp_int instead. */
-mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, ecc_key *private_key)
+mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, const ecc_key *private_key)
 {
 	ecc_point *result = NULL;
 	mp_int *prime = NULL, *shared_secret = NULL;

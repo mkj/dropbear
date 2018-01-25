@@ -44,14 +44,14 @@ typedef struct {
 #define DSS_P_BITS 1024
 #define DSS_Q_BITS 160
 
-void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
+void buf_put_dss_sign(buffer* buf, const dropbear_dss_key *key, const buffer *data_buf);
 #if DROPBEAR_SIGNKEY_VERIFY
-int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf);
+int buf_dss_verify(buffer* buf, const dropbear_dss_key *key, const buffer *data_buf);
 #endif
 int buf_get_dss_pub_key(buffer* buf, dropbear_dss_key *key);
 int buf_get_dss_priv_key(buffer* buf, dropbear_dss_key *key);
-void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key);
-void buf_put_dss_priv_key(buffer* buf, dropbear_dss_key *key);
+void buf_put_dss_pub_key(buffer* buf, const dropbear_dss_key *key);
+void buf_put_dss_priv_key(buffer* buf, const dropbear_dss_key *key);
 void dss_key_free(dropbear_dss_key *key);
 
 #endif /* DROPBEAR_DSS */

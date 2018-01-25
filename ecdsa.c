@@ -15,7 +15,7 @@ int signkey_is_ecdsa(enum signkey_type type)
 		|| type == DROPBEAR_SIGNKEY_ECDSA_NISTP521;
 }
 
-enum signkey_type ecdsa_signkey_type(ecc_key * key) {
+enum signkey_type ecdsa_signkey_type(const ecc_key * key) {
 #if DROPBEAR_ECC_256
 	if (key->dp == ecc_curve_nistp256.dp) {
 		return DROPBEAR_SIGNKEY_ECDSA_NISTP256;
@@ -154,7 +154,7 @@ void buf_put_ecdsa_priv_key(buffer *buf, ecc_key *key) {
 	buf_putmpint(buf, key->k);
 }
 
-void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf) {
+void buf_put_ecdsa_sign(buffer *buf, const ecc_key *key, const buffer *data_buf) {
 	/* Based on libtomcrypt's ecc_sign_hash but without the asn1 */
 	int err = DROPBEAR_FAILURE;
 	struct dropbear_ecc_curve *curve = NULL;
@@ -272,7 +272,7 @@ out:
 }
 
 
-int buf_ecdsa_verify(buffer *buf, ecc_key *key, buffer *data_buf) {
+int buf_ecdsa_verify(buffer *buf, const ecc_key *key, const buffer *data_buf) {
 	/* Based on libtomcrypt's ecc_verify_hash but without the asn1 */
 	int ret = DROPBEAR_FAILURE;
 	hash_state hs;
