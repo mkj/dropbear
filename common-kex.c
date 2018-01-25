@@ -714,7 +714,7 @@ void free_kexcurve25519_param(struct kex_curve25519_param *param)
 	m_free(param);
 }
 
-void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *buf_pub_them,
+void kexcurve25519_comb_key(const struct kex_curve25519_param *param, const buffer *buf_pub_them,
 	sign_key *hostkey) {
 	unsigned char out[CURVE25519_LEN];
 	const unsigned char* Q_C = NULL;

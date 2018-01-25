@@ -127,7 +127,7 @@ void dss_key_free(dropbear_dss_key *key) {
  * mpint	g
  * mpint	y
  */
-void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
+void buf_put_dss_pub_key(buffer* buf, const dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
 	buf_putstring(buf, SSH_SIGNKEY_DSS, SSH_SIGNKEY_DSS_LEN);
@@ -139,7 +139,7 @@ void buf_put_dss_pub_key(buffer* buf, dropbear_dss_key *key) {
 }
 
 /* Same as buf_put_dss_pub_key, but with the private "x" key appended */
-void buf_put_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
+void buf_put_dss_priv_key(buffer* buf, const dropbear_dss_key *key) {
 
 	dropbear_assert(key != NULL);
 	buf_put_dss_pub_key(buf, key);
@@ -150,7 +150,7 @@ void buf_put_dss_priv_key(buffer* buf, dropbear_dss_key *key) {
 #if DROPBEAR_SIGNKEY_VERIFY
 /* Verify a DSS signature (in buf) made on data by the key given. 
  * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_dss_verify(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
+int buf_dss_verify(buffer* buf, const dropbear_dss_key *key, const buffer *data_buf) {
 	unsigned char msghash[SHA1_HASH_SIZE];
 	hash_state hs;
 	int ret = DROPBEAR_FAILURE;
@@ -255,7 +255,7 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
-void buf_put_dss_sign(buffer* buf, dropbear_dss_key *key, buffer *data_buf) {
+void buf_put_dss_sign(buffer* buf, const dropbear_dss_key *key, const buffer *data_buf) {
 	unsigned char msghash[SHA1_HASH_SIZE];
 	unsigned int writelen;
 	unsigned int i;

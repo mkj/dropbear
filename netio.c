@@ -197,7 +197,7 @@ void set_connect_fds(fd_set *writefd) {
 	}
 }
 
-void handle_connect_fds(fd_set *writefd) {
+void handle_connect_fds(const fd_set *writefd) {
 	m_list_elem *iter;
 	TRACE(("enter handle_connect_fds"))
 	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
@@ -240,7 +240,7 @@ void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue
 	c->writequeue = writequeue;
 }
 
-void packet_queue_to_iovec(struct Queue *queue, struct iovec *iov, unsigned int *iov_count) {
+void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigned int *iov_count) {
 	struct Link *l;
 	unsigned int i;
 	int len;

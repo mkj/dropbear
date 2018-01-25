@@ -241,7 +241,7 @@ int connect_unix(const char* path) {
  * it will be run after the child has fork()ed, and is passed exec_data.
  * If ret_errfd == NULL then stderr will not be captured.
  * ret_pid can be passed as  NULL to discard the pid. */
-int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
+int spawn_command(void(*exec_fn)(const void *user_data), const void *exec_data,
 		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
 	int infds[2];
 	int outfds[2];

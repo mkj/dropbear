@@ -39,7 +39,7 @@
 #include "ecc.h"
 
 
-static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen);
+static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen);
 #define MAX_KNOWNHOSTS_LINE 4500
 
 void send_msg_kexdh_init() {
@@ -185,7 +185,7 @@ void recv_msg_kexdh_reply() {
 	TRACE(("leave recv_msg_kexdh_init"))
 }
 
-static void ask_to_confirm(unsigned char* keyblob, unsigned int keybloblen,
+static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen,
 	const char* algoname) {
 
 	char* fp = NULL;
@@ -282,7 +282,7 @@ out:
 	return hostsfile;
 }
 
-static void checkhostkey(unsigned char* keyblob, unsigned int keybloblen) {
+static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE *hostsfile = NULL;
 	int readonly = 0;

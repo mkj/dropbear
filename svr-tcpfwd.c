@@ -107,7 +107,7 @@ out:
 	TRACE(("leave recv_msg_global_request"))
 }
 
-static int matchtcp(void* typedata1, void* typedata2) {
+static int matchtcp(const void* typedata1, const void* typedata2) {
 
 	const struct TCPListener *info1 = (struct TCPListener*)typedata1;
 	const struct TCPListener *info2 = (struct TCPListener*)typedata2;

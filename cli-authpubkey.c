@@ -121,7 +121,7 @@ void recv_msg_userauth_pk_ok() {
 }
 
 void cli_buf_put_sign(buffer* buf, sign_key *key, int type, 
-			buffer *data_buf) {
+			const buffer *data_buf) {
 #if DROPBEAR_CLI_AGENTFWD
 	if (key->source == SIGNKEY_SOURCE_AGENT) {
 		/* Format the agent signature ourselves, as buf_put_sign would. */
