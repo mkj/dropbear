@@ -19,6 +19,7 @@ struct dropbear_progress_connection {
 	int sock;
 
 	char* errstring;
+	char *bind_address, *bind_port;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -30,6 +31,8 @@ static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *
 	m_free(c->remotehost);
 	m_free(c->remoteport);
 	m_free(c->errstring);
+	m_free(c->bind_address);
+	m_free(c->bind_port);
 	m_free(c);
 
 	if (iter) {
@@ -51,6 +54,7 @@ void cancel_connect(struct dropbear_progress_connection *c) {
 
 static void connect_try_next(struct dropbear_progress_connection *c) {
 	struct addrinfo *r;
+	int err;
 	int res = 0;
 	int fastopen = 0;
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
@@ -64,6 +68,44 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		c->sock = socket(r->ai_family, r->ai_socktype, r->ai_protocol);
 		if (c->sock < 0) {
 			continue;
+		}
+
+		if (c->bind_address || c->bind_port) {
+			/* bind to a source port/address */
+			struct addrinfo hints;
+			struct addrinfo *bindaddr = NULL;
+			memset(&hints, 0, sizeof(hints));
+			hints.ai_socktype = SOCK_STREAM;
+			hints.ai_family = r->ai_family;
+			hints.ai_flags = AI_PASSIVE;
+
+			err = getaddrinfo(c->bind_address, c->bind_port, &hints, &bindaddr);
+			if (err) {
+				int len = 100 + strlen(gai_strerror(err));
+				m_free(c->errstring);
+				c->errstring = (char*)m_malloc(len);
+				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s", 
+						c->bind_address, c->bind_port, gai_strerror(err));
+				TRACE(("Error resolving bind: %s", gai_strerror(err)))
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			}
+			res = bind(c->sock, bindaddr->ai_addr, bindaddr->ai_addrlen);
+			freeaddrinfo(bindaddr);
+			bindaddr = NULL;
+			if (res < 0) {
+				/* failure */
+				int keep_errno = errno;
+				int len = 300;
+				m_free(c->errstring);
+				c->errstring = m_malloc(len);
+				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s", 
+						c->bind_address, c->bind_port, strerror(keep_errno));
+				close(c->sock);
+				c->sock = -1;
+				continue;
+			}
 		}
 
 		ses.maxfd = MAX(ses.maxfd, c->sock);
@@ -130,7 +172,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
-	connect_callback cb, void* cb_data)
+	connect_callback cb, void* cb_data, 
+	const char* bind_address, const char* bind_port)
 {
 	struct dropbear_progress_connection *c = NULL;
 	int err;
@@ -159,6 +202,13 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 	} else {
 		c->res_iter = c->res;
+	}
+	
+	if (bind_address) {
+		c->bind_address = m_strdup(bind_address);
+	}
+	if (bind_port) {
+		c->bind_port = m_strdup(bind_port);
 	}
 
 	return c;

@@ -30,7 +30,7 @@ typedef void(*connect_callback)(int result, int sock, void* data, const char* er
 
 /* Always returns a progress connection, if it fails it will call the callback at a later point */
 struct dropbear_progress_connection * connect_remote (const char* remotehost, const char* remoteport,
-	connect_callback cb, void *cb_data);
+	connect_callback cb, void *cb_data, const char* bind_address, const char* bind_port);
 
 /* Sets up for select() */
 void set_connect_fds(fd_set *writefd);
