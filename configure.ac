@@ -269,15 +269,20 @@ AC_ARG_ENABLE(openpty,
 			AC_MSG_NOTICE(Not using openpty)
 		else
 			AC_MSG_NOTICE(Using openpty if available)
-			AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY,1,[Have openpty() function])])
+			AC_SEARCH_LIBS(openpty, util, [dropbear_cv_func_have_openpty=yes])
 		fi
 	],
 	[
 		AC_MSG_NOTICE(Using openpty if available)
-		AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY)])
+		AC_SEARCH_LIBS(openpty, util, [dropbear_cv_func_have_openpty=yes])
 	]
 )
-		
+
+if test "x$dropbear_cv_func_have_openpty" = "xyes"; then
+	AC_DEFINE(HAVE_OPENPTY,,Have openpty() function)
+	no_ptc_check=yes
+	no_ptmx_check=yes
+fi
 
 AC_ARG_ENABLE(syslog,
 	[  --disable-syslog        Don't include syslog support],
