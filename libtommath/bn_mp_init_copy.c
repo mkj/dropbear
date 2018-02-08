@@ -23,10 +23,15 @@ int mp_init_copy (mp_int * a, mp_int * b)
   if ((res = mp_init_size (a, b->used)) != MP_OKAY) {
     return res;
   }
-  return mp_copy (b, a);
+
+  if((res = mp_copy (b, a)) != MP_OKAY) {
+    mp_clear(a);
+  }
+
+  return res;
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

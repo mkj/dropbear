@@ -167,6 +167,6 @@ int fast_mp_montgomery_reduce (mp_int * x, mp_int * n, mp_digit rho)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

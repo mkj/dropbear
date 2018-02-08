@@ -27,7 +27,12 @@ extern "C" {
 #endif
 
 /* detect 64-bit mode if possible */
-#if defined(__x86_64__)
+#if defined(__x86_64__) || defined(_M_X64) || defined(_M_AMD64) || \
+    defined(__powerpc64__) || defined(__ppc64__) || defined(__PPC64__) || \
+    defined(__s390x__) || defined(__arch64__) || defined(__aarch64__) || \
+    defined(__sparcv9) || defined(__sparc_v9__) || defined(__sparc64__) || \
+    defined(__ia64) || defined(__ia64__) || defined(__itanium__) || defined(_M_IA64) || \
+    defined(__LP64__) || defined(_LP64) || defined(__64BIT__)
    #if !(defined(MP_32BIT) || defined(MP_16BIT) || defined(MP_8BIT))
       #define MP_64BIT
    #endif
@@ -94,16 +99,16 @@ extern "C" {
    typedef mp_digit mp_min_u32;
 #endif
 
-/* platforms that can use a better rand function */
+/* use arc4random on platforms that support it */
 #if defined(__FreeBSD__) || defined(__OpenBSD__) || defined(__NetBSD__) || defined(__DragonFly__)
-    #define MP_USE_ALT_RAND 1
+    #define MP_GEN_RANDOM()    arc4random()
+    #define MP_GEN_RANDOM_MAX  0xffffffff
 #endif
 
-/* use arc4random on platforms that support it */
-#ifdef MP_USE_ALT_RAND
-    #define MP_GEN_RANDOM()    arc4random()
-#else
+/* use rand() as fall-back if there's no better rand function */
+#ifndef MP_GEN_RANDOM
     #define MP_GEN_RANDOM()    rand()
+    #define MP_GEN_RANDOM_MAX  RAND_MAX
 #endif
 
 #define MP_DIGIT_BIT     DIGIT_BIT
@@ -560,6 +565,6 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream);
 #endif
 
 
-/* $Source: /cvs/libtom/libtommath/tommath.h,v $ */
-/* $Revision: 1.8 $ */
-/* $Date: 2006/03/31 14:18:44 $ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

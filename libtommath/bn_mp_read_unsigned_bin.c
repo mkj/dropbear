@@ -50,6 +50,6 @@ int mp_read_unsigned_bin (mp_int * a, const unsigned char *b, int c)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

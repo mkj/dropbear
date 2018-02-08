@@ -15,7 +15,32 @@
  * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
+#if MP_GEN_RANDOM_MAX == 0xffffffff
+  #define MP_GEN_RANDOM_SHIFT  32
+#elif MP_GEN_RANDOM_MAX == 32767
+  /* SHRT_MAX */
+  #define MP_GEN_RANDOM_SHIFT  15
+#elif MP_GEN_RANDOM_MAX == 2147483647
+  /* INT_MAX */
+  #define MP_GEN_RANDOM_SHIFT  31
+#elif !defined(MP_GEN_RANDOM_SHIFT)
+#error Thou shalt define their own valid MP_GEN_RANDOM_SHIFT
+#endif
+
 /* makes a pseudo-random int of a given size */
+static mp_digit s_gen_random(void)
+{
+  mp_digit d = 0, msk = 0;
+  do {
+    d <<= MP_GEN_RANDOM_SHIFT;
+    d |= ((mp_digit) MP_GEN_RANDOM());
+    msk <<= MP_GEN_RANDOM_SHIFT;
+    msk |= (MP_MASK & MP_GEN_RANDOM_MAX);
+  } while ((MP_MASK & msk) != MP_MASK);
+  d &= MP_MASK;
+  return d;
+}
+
 int
 mp_rand (mp_int * a, int digits)
 {
@@ -29,7 +54,7 @@ mp_rand (mp_int * a, int digits)
 
   /* first place a random non-zero digit */
   do {
-    d = ((mp_digit) abs (MP_GEN_RANDOM())) & MP_MASK;
+    d = s_gen_random();
   } while (d == 0);
 
   if ((res = mp_add_d (a, d, a)) != MP_OKAY) {
@@ -41,7 +66,7 @@ mp_rand (mp_int * a, int digits)
       return res;
     }
 
-    if ((res = mp_add_d (a, ((mp_digit) abs (MP_GEN_RANDOM())), a)) != MP_OKAY) {
+    if ((res = mp_add_d (a, s_gen_random(), a)) != MP_OKAY) {
       return res;
     }
   }
@@ -50,6 +75,6 @@ mp_rand (mp_int * a, int digits)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

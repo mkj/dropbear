@@ -25,6 +25,6 @@ int mp_n_root (mp_int * a, mp_digit b, mp_int * c)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

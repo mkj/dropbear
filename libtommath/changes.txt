@@ -1,3 +1,17 @@
+XXX, 2017
+v1.0.1
+       -- Dmitry Kovalenko provided fixes to mp_add_d() and mp_init_copy()
+       -- Matt Johnston contributed some improvements to mp_div_2d(),
+          mp_exptmod_fast(), mp_mod() and mp_mulmod()
+       -- Julien Nabet provided a fix to the error handling in mp_init_multi()
+       -- Ben Gardner provided a fix regarding usage of reserved keywords
+       -- Fixed mp_rand() to fill the correct number of bits
+       -- Fixed mp_invmod()
+       -- Use the same 64-bit detection code as in libtomcrypt
+       -- Correct usage of DESTDIR, PREFIX, etc. when installing the library
+       -- Francois Perrad updated all the perl scripts to an actual perl version
+
+
 Feb 5th, 2016
 v1.0
        -- Bump to 1.0

@@ -4,22 +4,25 @@
 # wrapped at 80 chars
 #
 # Tom St Denis
-@a = split(" ", $ARGV[1]);
-$b = "$ARGV[0]=";
-$len = length($b);
+use strict;
+use warnings;
+
+my @a = split ' ', $ARGV[1];
+my $b = $ARGV[0] . '=';
+my $len = length $b;
 print $b;
 foreach my $obj (@a) {
-   $len = $len + length($obj);
+   $len = $len + length $obj;
    $obj =~ s/\*/\$/;
    if ($len > 100) {
       printf "\\\n";
-      $len = length($obj);
+      $len = length $obj;
    }
-   print "$obj ";
+   print $obj . ' ';
 }
 
 print "\n\n";
 
-# $Source$
-# $Revision$
-# $Date$
+# ref:         $Format:%D$
+# git commit:  $Format:%H$
+# commit time: $Format:%ai$

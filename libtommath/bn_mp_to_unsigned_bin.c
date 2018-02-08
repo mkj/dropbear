@@ -43,6 +43,6 @@ int mp_to_unsigned_bin (mp_int * a, unsigned char *b)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
