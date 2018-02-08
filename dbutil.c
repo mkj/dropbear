@@ -634,6 +634,10 @@ reach userspace include headers */
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE 6
 #endif
+/* Some old toolchains know SYS_clock_gettime but not CLOCK_MONOTONIC */
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
+#endif
 static clockid_t get_linux_clock_source() {
 	struct timespec ts;
 	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC_COARSE, &ts) == 0) {
