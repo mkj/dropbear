@@ -9,7 +9,6 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
-OLDCFLAGS="$CFLAGS"
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
@@ -19,19 +18,28 @@ if test -z "$LD" ; then
 fi
 AC_SUBST(LD)	
 
+AC_DEFUN(DB_TRYADDCFLAGS, 
+[{
+		OLDFLAGS="$CFLAGS"
+		TESTFLAGS="$1"
+		CFLAGS="$CFLAGS $TESTFLAGS"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDFLAGS" ]
+			)
+}])
+
 # set compile flags prior to other tests
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
-	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
+	CFLAGS="-Os -W -Wall"
 fi
 
-AC_MSG_CHECKING([if compiler '$CC' supports -fno-strict-overflow])
-OLDCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fno-strict-overflow"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-    [AC_MSG_RESULT(yes)], 
-    [AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS" ]
-    )
+AC_MSG_NOTICE([Checking if compiler '$CC' supports -Wno-pointer-sign])
+DB_TRYADDCFLAGS([-Wno-pointer-sign])
+
+AC_MSG_NOTICE([Checking if compiler '$CC' supports -fno-strict-overflow])
+DB_TRYADDCFLAGS([-fno-strict-overflow])
 
 STATIC=0
 AC_ARG_ENABLE(static,
@@ -59,13 +67,8 @@ if test "$hardenbuild" -eq 1; then
 	# relocation flags don't make sense for static builds
 	if test "$STATIC" -ne 1; then
 		# pie
-		OLDCFLAGS="$CFLAGS"
-		TESTFLAGS="-fPIE"
-		CFLAGS="$CFLAGS $TESTFLAGS"
-		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
-			)
+		DB_TRYADDCFLAGS([-fPIE])
+
 		OLDLDFLAGS="$LDFLAGS"
 		TESTFLAGS="-Wl,-pie"
 		LDFLAGS="$LDFLAGS $TESTFLAGS"
@@ -107,13 +110,7 @@ if test "$hardenbuild" -eq 1; then
 	    ]
 	    )
 	# FORTIFY_SOURCE
-	OLDCFLAGS="$CFLAGS"
-	TESTFLAGS="-D_FORTIFY_SOURCE=2"
-	CFLAGS="$CFLAGS $TESTFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
-	    )
+	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
 fi
 
 # large file support is useful for scp
