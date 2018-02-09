@@ -222,17 +222,17 @@ src/headers/tomcrypt_prng.h
 default: $(LIBMAIN_S)
 
 #SPECIAL: AES comes in two flavours - enc+dec and enc-only
-src/ciphers/aes/aes_enc.o: src/ciphers/aes/aes.c src/ciphers/aes/aes_tab.c
-	$(CC) $(LTC_CFLAGS) -DENCRYPT_ONLY -c src/ciphers/aes/aes.c -o src/ciphers/aes/aes_enc.o
+src/ciphers/aes/aes_enc.o: $(srcdir)/src/ciphers/aes/aes.c $(srcdir)/src/ciphers/aes/aes_tab.c
+	$(CC) $(LTC_CFLAGS) -DENCRYPT_ONLY -c $(srcdir)/src/ciphers/aes/aes.c -o src/ciphers/aes/aes_enc.o
 
 #SPECIAL: these are the rules to make certain object files
-src/ciphers/aes/aes.o: src/ciphers/aes/aes.c src/ciphers/aes/aes_tab.c
-src/ciphers/twofish/twofish.o: src/ciphers/twofish/twofish.c src/ciphers/twofish/twofish_tab.c
-src/hashes/whirl/whirl.o: src/hashes/whirl/whirl.c src/hashes/whirl/whirltab.c
-src/hashes/sha2/sha512.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha384.c
-src/hashes/sha2/sha512_224.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha512_224.c
-src/hashes/sha2/sha512_256.o: src/hashes/sha2/sha512.c src/hashes/sha2/sha512_256.c
-src/hashes/sha2/sha256.o: src/hashes/sha2/sha256.c src/hashes/sha2/sha224.c
+src/ciphers/aes/aes.o: $(srcdir)/src/ciphers/aes/aes.c $(srcdir)/src/ciphers/aes/aes_tab.c
+src/ciphers/twofish/twofish.o: $(srcdir)/src/ciphers/twofish/twofish.c $(srcdir)/src/ciphers/twofish/twofish_tab.c
+src/hashes/whirl/whirl.o: $(srcdir)/src/hashes/whirl/whirl.c $(srcdir)/src/hashes/whirl/whirltab.c
+src/hashes/sha2/sha512.o: $(srcdir)/src/hashes/sha2/sha512.c $(srcdir)/src/hashes/sha2/sha384.c
+src/hashes/sha2/sha512_224.o: $(srcdir)/src/hashes/sha2/sha512.c $(srcdir)/src/hashes/sha2/sha512_224.c
+src/hashes/sha2/sha512_256.o: $(srcdir)/src/hashes/sha2/sha512.c $(srcdir)/src/hashes/sha2/sha512_256.c
+src/hashes/sha2/sha256.o: $(srcdir)/src/hashes/sha2/sha256.c $(srcdir)/src/hashes/sha2/sha224.c
 
 #Dependencies on *.h
 $(OBJECTS): $(HEADERS)
