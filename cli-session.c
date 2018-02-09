@@ -165,13 +165,6 @@ static void cli_session_init(pid_t proxy_cmd_pid) {
 	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
 
-#if DROPBEAR_NONE_CIPHER
-	cli_ses.cipher_none_after_auth = get_algo_usable(sshciphers, "none");
-	set_algo_usable(sshciphers, "none", 0);
-#else
-	cli_ses.cipher_none_after_auth = 0;
-#endif
-
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
 
@@ -272,14 +265,6 @@ static void cli_sessionloop() {
 #ifndef DISABLE_SYSLOG
 			if (opts.usingsyslog) {
 				dropbear_log(LOG_INFO, "Authentication succeeded.");
-			}
-#endif
-
-#if DROPBEAR_NONE_CIPHER
-			if (cli_ses.cipher_none_after_auth)
-			{
-				set_algo_usable(sshciphers, "none", 1);
-				send_msg_kexinit();
 			}
 #endif
 
