@@ -11,10 +11,11 @@ env:
     - MULTI=1
     - NOWRITEV=1
 
-# TODO: remove this section when libtomcrypt compiles on OSX: https://github.com/libtom/libtomcrypt/issues/82
 matrix:
   exclude:
-    - os: osx
+    # TODO: remove this when libtomcrypt has been updated by ubuntu/homebrew.
+    # https://github.com/libtom/libtomcrypt/issues/82
+    - compiler: clang
       env: BUNDLEDLIBTOM=--disable-bundled-libtom WEXTRAFLAGS=-Werror
 
 compiler:
