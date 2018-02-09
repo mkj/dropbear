@@ -74,6 +74,6 @@ mp_div_3 (mp_int * a, mp_int *c, mp_digit * d)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

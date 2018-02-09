@@ -54,6 +54,6 @@ mp_montgomery_setup (mp_int * n, mp_digit * rho)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

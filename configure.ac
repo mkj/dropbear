@@ -9,7 +9,6 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
-OLDCFLAGS="$CFLAGS"
 # Checks for programs.
 AC_PROG_CC
 AC_PROG_MAKE_SET
@@ -19,23 +18,43 @@ if test -z "$LD" ; then
 fi
 AC_SUBST(LD)	
 
+AC_DEFUN(DB_TRYADDCFLAGS, 
+[{
+		OLDFLAGS="$CFLAGS"
+		TESTFLAGS="$1"
+		CFLAGS="$CFLAGS $TESTFLAGS"
+		AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDFLAGS" ]
+			)
+}])
+
 # set compile flags prior to other tests
 if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
-	CFLAGS="-Os -W -Wall -Wno-pointer-sign"
+	CFLAGS="-Os -W -Wall"
 fi
 
-AC_MSG_CHECKING([if compiler '$CC' supports -fno-strict-overflow])
-OLDCFLAGS="$CFLAGS"
-CFLAGS="$CFLAGS -fno-strict-overflow"
-AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-    [AC_MSG_RESULT(yes)], 
-    [AC_MSG_RESULT(no); CFLAGS="$OLDCFLAGS" ]
-    )
+AC_MSG_NOTICE([Checking if compiler '$CC' supports -Wno-pointer-sign])
+DB_TRYADDCFLAGS([-Wno-pointer-sign])
+
+AC_MSG_NOTICE([Checking if compiler '$CC' supports -fno-strict-overflow])
+DB_TRYADDCFLAGS([-fno-strict-overflow])
+
+STATIC=0
+AC_ARG_ENABLE(static,
+	[  --enable-static         Build static binaries],
+	[
+		if test "x$enableval" = "xyes"; then
+			STATIC=1
+			AC_MSG_NOTICE(Static Build)
+		fi
+	], [])
+AC_SUBST(STATIC)
 
 hardenbuild=1
 AC_ARG_ENABLE(harden,
-	[  --disable-harden          Don't set hardened build flags],
+	[  --disable-harden        Don't set hardened build flags],
 	[
 		if test "x$enableval" = "xno"; then
 			hardenbuild=0
@@ -45,37 +64,35 @@ AC_ARG_ENABLE(harden,
 
 if test "$hardenbuild" -eq 1; then
 	AC_MSG_NOTICE(Checking for available hardened build flags:)
-	# pie
-	OLDCFLAGS="$CFLAGS"
-	TESTFLAGS="-fPIE"
-	CFLAGS="$CFLAGS $TESTFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
-	    )
-	OLDLDFLAGS="$LDFLAGS"
-	TESTFLAGS="-Wl,-pie"
-	LDFLAGS="$LDFLAGS $TESTFLAGS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-		[
-			LDFLAGS="$OLDLDFLAGS"
-			TESTFLAGS="-pie"
-			LDFLAGS="$LDFLAGS $TESTFLAGS"
-			AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-				[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-				[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
-				)
-		]
-	    )
-	# readonly elf relocation sections (relro)
-	OLDLDFLAGS="$LDFLAGS"
-	TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
-	LDFLAGS="$LDFLAGS $TESTFLAGS"
-	AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
-	    )
+	# relocation flags don't make sense for static builds
+	if test "$STATIC" -ne 1; then
+		# pie
+		DB_TRYADDCFLAGS([-fPIE])
+
+		OLDLDFLAGS="$LDFLAGS"
+		TESTFLAGS="-Wl,-pie"
+		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[
+				LDFLAGS="$OLDLDFLAGS"
+				TESTFLAGS="-pie"
+				LDFLAGS="$LDFLAGS $TESTFLAGS"
+				AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+					[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+					[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+					)
+			]
+			)
+		# readonly elf relocation sections (relro)
+		OLDLDFLAGS="$LDFLAGS"
+		TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
+		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		AC_LINK_IFELSE([AC_LANG_PROGRAM([])], 
+			[AC_MSG_NOTICE([Setting $TESTFLAGS])], 
+			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
+			)
+	fi # non-static
 	# stack protector. -strong is good but only in gcc 4.9 or later
 	OLDCFLAGS="$CFLAGS"
 	TESTFLAGS="-fstack-protector-strong"
@@ -93,13 +110,7 @@ if test "$hardenbuild" -eq 1; then
 	    ]
 	    )
 	# FORTIFY_SOURCE
-	OLDCFLAGS="$CFLAGS"
-	TESTFLAGS="-D_FORTIFY_SOURCE=2"
-	CFLAGS="$CFLAGS $TESTFLAGS"
-	AC_COMPILE_IFELSE([AC_LANG_PROGRAM([])], 
-	    [AC_MSG_NOTICE([Setting $TESTFLAGS])], 
-	    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]
-	    )
+	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
 fi
 
 # large file support is useful for scp
@@ -230,7 +241,7 @@ AC_ARG_WITH(pam,
 
 
 AC_ARG_ENABLE(pam,
-	[  --enable-pam          Try to include PAM support],
+	[  --enable-pam            Try to include PAM support],
 	[
 		if test "x$enableval" = "xyes"; then
 			AC_CHECK_LIB(pam, pam_authenticate, , AC_MSG_ERROR([*** PAM missing - install first or check config.log ***]))
@@ -255,15 +266,20 @@ AC_ARG_ENABLE(openpty,
 			AC_MSG_NOTICE(Not using openpty)
 		else
 			AC_MSG_NOTICE(Using openpty if available)
-			AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY,1,[Have openpty() function])])
+			AC_SEARCH_LIBS(openpty, util, [dropbear_cv_func_have_openpty=yes])
 		fi
 	],
 	[
 		AC_MSG_NOTICE(Using openpty if available)
-		AC_SEARCH_LIBS(openpty, util, [AC_DEFINE(HAVE_OPENPTY)])
+		AC_SEARCH_LIBS(openpty, util, [dropbear_cv_func_have_openpty=yes])
 	]
 )
-		
+
+if test "x$dropbear_cv_func_have_openpty" = "xyes"; then
+	AC_DEFINE(HAVE_OPENPTY,,Have openpty() function)
+	no_ptc_check=yes
+	no_ptmx_check=yes
+fi
 
 AC_ARG_ENABLE(syslog,
 	[  --disable-syslog        Don't include syslog support],
@@ -782,60 +798,11 @@ fi
 
 AC_EXEEXT
 
-# XXX there must be a nicer way to do this
 if test $BUNDLED_LIBTOM = 1 ; then
-AS_MKDIR_P(libtomcrypt/src/ciphers/aes)
-AS_MKDIR_P(libtomcrypt/src/ciphers/safer)
-AS_MKDIR_P(libtomcrypt/src/ciphers/twofish)
-AS_MKDIR_P(libtomcrypt/src/encauth/ccm)
-AS_MKDIR_P(libtomcrypt/src/encauth/eax)
-AS_MKDIR_P(libtomcrypt/src/encauth/gcm)
-AS_MKDIR_P(libtomcrypt/src/encauth/ocb)
-AS_MKDIR_P(libtomcrypt/src/hashes)
-AS_MKDIR_P(libtomcrypt/src/hashes/chc)
-AS_MKDIR_P(libtomcrypt/src/hashes/helper)
-AS_MKDIR_P(libtomcrypt/src/hashes/sha2)
-AS_MKDIR_P(libtomcrypt/src/hashes/whirl)
-AS_MKDIR_P(libtomcrypt/src/mac/hmac)
-AS_MKDIR_P(libtomcrypt/src/mac/omac)
-AS_MKDIR_P(libtomcrypt/src/mac/pelican)
-AS_MKDIR_P(libtomcrypt/src/mac/pmac)
-AS_MKDIR_P(libtomcrypt/src/mac/f9)
-AS_MKDIR_P(libtomcrypt/src/mac/xcbc)
-AS_MKDIR_P(libtomcrypt/src/math/fp)
-AS_MKDIR_P(libtomcrypt/src/misc/base64)
-AS_MKDIR_P(libtomcrypt/src/misc/crypt)
-AS_MKDIR_P(libtomcrypt/src/misc/mpi)
-AS_MKDIR_P(libtomcrypt/src/misc/pkcs5)
-AS_MKDIR_P(libtomcrypt/src/modes/cbc)
-AS_MKDIR_P(libtomcrypt/src/modes/cfb)
-AS_MKDIR_P(libtomcrypt/src/modes/ctr)
-AS_MKDIR_P(libtomcrypt/src/modes/ecb)
-AS_MKDIR_P(libtomcrypt/src/modes/ofb)
-AS_MKDIR_P(libtomcrypt/src/modes/f8)
-AS_MKDIR_P(libtomcrypt/src/modes/lrw)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/bit)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/boolean)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/choice)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/ia5)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/integer)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/object_identifier)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/octet)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/printable_string)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/sequence)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/set)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/short_integer)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/utctime)
-AS_MKDIR_P(libtomcrypt/src/pk/asn1/der/utf8)
-AS_MKDIR_P(libtomcrypt/src/pk/dh)
-AS_MKDIR_P(libtomcrypt/src/pk/dsa)
-AS_MKDIR_P(libtomcrypt/src/pk/ecc)
-AS_MKDIR_P(libtomcrypt/src/pk/katja)
-AS_MKDIR_P(libtomcrypt/src/pk/pkcs1)
-AS_MKDIR_P(libtomcrypt/src/pk/rsa)
-AS_MKDIR_P(libtomcrypt/src/prngs)
+(cd $srcdir; find libtomcrypt -type d) | xargs mkdir -pv 
 LIBTOM_FILES="libtomcrypt/Makefile libtommath/Makefile"
 fi
+
 AC_CONFIG_HEADER(config.h)
 AC_CONFIG_FILES(Makefile $LIBTOM_FILES)
 AC_OUTPUT

@@ -5,19 +5,16 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
-#include <signal.h>
 
 /**
   @file crypt_argchk.c
   Perform argument checking, Tom St Denis
-*/  
+*/
 
 #if (ARGTYPE == 0)
-void crypt_argchk(char *v, char *s, int d)
+void crypt_argchk(const char *v, const char *s, int d)
 {
  fprintf(stderr, "LTC_ARGCHK '%s' failure on line %d of file %s\n",
          v, d, s);
@@ -25,6 +22,6 @@ void crypt_argchk(char *v, char *s, int d)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

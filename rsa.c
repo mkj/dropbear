@@ -38,8 +38,8 @@
 
 #if DROPBEAR_RSA 
 
-static void rsa_pad_em(dropbear_rsa_key * key,
-	buffer *data_buf, mp_int * rsa_em);
+static void rsa_pad_em(const dropbear_rsa_key * key,
+	const buffer *data_buf, mp_int * rsa_em);
 
 /* Load a public rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
@@ -147,7 +147,7 @@ void rsa_key_free(dropbear_rsa_key *key) {
  * mp_int	e
  * mp_int	n
  */
-void buf_put_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
+void buf_put_rsa_pub_key(buffer* buf, const dropbear_rsa_key *key) {
 
 	TRACE(("enter buf_put_rsa_pub_key"))
 	dropbear_assert(key != NULL);
@@ -161,7 +161,7 @@ void buf_put_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 }
 
 /* Same as buf_put_rsa_pub_key, but with the private "x" key appended */
-void buf_put_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
+void buf_put_rsa_priv_key(buffer* buf, const dropbear_rsa_key *key) {
 
 	TRACE(("enter buf_put_rsa_priv_key"))
 
@@ -185,7 +185,7 @@ void buf_put_rsa_priv_key(buffer* buf, dropbear_rsa_key *key) {
 #if DROPBEAR_SIGNKEY_VERIFY
 /* Verify a signature in buf, made on data by the key given.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_rsa_verify(buffer * buf, dropbear_rsa_key *key, buffer *data_buf) {
+int buf_rsa_verify(buffer * buf, const dropbear_rsa_key *key, const buffer *data_buf) {
 	unsigned int slen;
 	DEF_MP_INT(rsa_s);
 	DEF_MP_INT(rsa_mdash);
@@ -240,7 +240,7 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
-void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
+void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key, const buffer *data_buf) {
 	unsigned int nsize, ssize;
 	unsigned int i;
 	DEF_MP_INT(rsa_s);
@@ -346,8 +346,8 @@ void buf_put_rsa_sign(buffer* buf, dropbear_rsa_key *key, buffer *data_buf) {
  *
  * rsa_em must be a pointer to an initialised mp_int.
  */
-static void rsa_pad_em(dropbear_rsa_key * key,
-	buffer *data_buf, mp_int * rsa_em) {
+static void rsa_pad_em(const dropbear_rsa_key * key,
+	const buffer *data_buf, mp_int * rsa_em) {
 
 	/* ASN1 designator (including the 0x00 preceding) */
 	const unsigned char rsa_asn1_magic[] = 

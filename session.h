@@ -295,8 +295,6 @@ struct clientsession {
 									  info request from the server for
 									  interactive auth.*/
 #endif
-	int cipher_none_after_auth; /* Set to 1 if the user requested "none"
-								   auth */
 	sign_key *lastprivkey;
 
 	int retval; /* What the command exit status was - we emulate it */

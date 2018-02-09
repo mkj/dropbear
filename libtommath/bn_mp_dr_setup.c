@@ -27,6 +27,6 @@ void mp_dr_setup(mp_int *a, mp_digit *d)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

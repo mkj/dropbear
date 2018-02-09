@@ -2,7 +2,8 @@
 #
 #Tom St Denis
 
-srcdir=.
+VPATH=@srcdir@
+srcdir=@srcdir@
 
 # So that libtommath can include Dropbear headers for options and m_burn()
 CFLAGS += -I$(srcdir) -I../libtomcrypt/src/headers/ -I$(srcdir)/../libtomcrypt/src/headers/ -I../ -I$(srcdir)/../
@@ -13,12 +14,6 @@ else
 silent=@
 endif
 
-%.o: %.c
-ifneq ($V,1)
-	@echo "   * ${CC} $@"
-endif
-	${silent} ${CC} -c ${CFLAGS} $^ -o $@
-
 #default files to install
 ifndef LIBNAME
    LIBNAME=libtommath.a
@@ -26,7 +21,13 @@ endif
 
 coverage: LIBNAME:=-Wl,--whole-archive $(LIBNAME)  -Wl,--no-whole-archive
 
-include makefile.include
+include $(srcdir)/makefile_include.mk
+
+%.o: %.c
+ifneq ($V,1)
+	@echo "   * ${CC} $@"
+endif
+	${silent} ${CC} -c ${CFLAGS} $< -o $@
 
 LCOV_ARGS=--directory .
 
@@ -57,6 +58,8 @@ bn_prime_tab.o bn_reverse.o bn_s_mp_add.o bn_s_mp_exptmod.o bn_s_mp_mul_digs.o b
 bn_s_mp_sqr.o bn_s_mp_sub.o
 
 #END_INS
+
+$(OBJECTS): $(HEADERS)
 
 $(LIBNAME):  $(OBJECTS)
 	$(AR) $(ARFLAGS) $@ $(OBJECTS)
@@ -91,6 +94,10 @@ install: $(LIBNAME)
 	install -m 644 $(LIBNAME) $(DESTDIR)$(LIBPATH)
 	install -m 644 $(HEADERS_PUB) $(DESTDIR)$(INCPATH)
 
+uninstall:
+	rm $(DESTDIR)$(LIBPATH)/$(LIBNAME)
+	rm $(HEADERS_PUB:%=$(DESTDIR)$(INCPATH)/%)
+
 test: $(LIBNAME) demo/demo.o
 	$(CC) $(CFLAGS) demo/demo.o $(LIBNAME) $(LFLAGS) -o test
 
@@ -101,70 +108,29 @@ test_standalone: $(LIBNAME) demo/demo.o
 mtest:
 	cd mtest ; $(CC) $(CFLAGS) -O0 mtest.c $(LFLAGS) -o mtest
 
+travis_mtest: test mtest
+	@ for i in `seq 1 10` ; do sleep 500 && echo alive; done &
+	./mtest/mtest 666666 | ./test > test.log
+
 timing: $(LIBNAME)
 	$(CC) $(CFLAGS) -DTIMER demo/timing.c $(LIBNAME) $(LFLAGS) -o ltmtest
 
-coveralls: coverage
-	cpp-coveralls
+# You have to create a file .coveralls.yml with the content "repo_token: <the token>"
+# in the base folder to be able to submit to coveralls
+coveralls: lcov
+	coveralls-lcov
 
-# makes the LTM book DVI file, requires tetex, perl and makeindex [part of tetex I think]
-docdvi: tommath.src
-	cd pics ; MAKE=${MAKE} ${MAKE}
-	echo "hello" > tommath.ind
-	perl booker.pl
-	latex tommath > /dev/null
-	latex tommath > /dev/null
-	makeindex tommath
-	latex tommath > /dev/null
-
-# poster, makes the single page PDF poster
-poster: poster.tex
-	cp poster.tex poster.bak
-	touch --reference=poster.tex poster.bak
-	(printf "%s" "\def\fixedpdfdate{"; date +'D:%Y%m%d%H%M%S%:z' -d @$$(stat --format=%Y poster.tex) | sed "s/:\([0-9][0-9]\)$$/'\1'}/g") > poster-deterministic.tex
-	printf "%s\n" "\pdfinfo{" >> poster-deterministic.tex
-	printf "%s\n" "  /CreationDate (\fixedpdfdate)" >> poster-deterministic.tex
-	printf "%s\n}\n" "  /ModDate (\fixedpdfdate)" >> poster-deterministic.tex
-	cat poster.tex >> poster-deterministic.tex
-	mv poster-deterministic.tex poster.tex
-	touch --reference=poster.bak poster.tex
-	pdflatex poster
-	sed -b -i 's,^/ID \[.*\]$$,/ID [<0> <0>],g' poster.pdf
-	mv poster.bak poster.tex
-	rm -f poster.aux poster.log poster.out
-
-# makes the LTM book PDF file, requires tetex, cleans up the LaTeX temp files
-docs:   docdvi
-	dvipdf tommath
-	rm -f tommath.log tommath.aux tommath.dvi tommath.idx tommath.toc tommath.lof tommath.ind tommath.ilg
-	cd pics ; MAKE=${MAKE} ${MAKE} clean
-
-#LTM user manual
-mandvi: bn.tex
-	cp bn.tex bn.bak
-	touch --reference=bn.tex bn.bak
-	(printf "%s" "\def\fixedpdfdate{"; date +'D:%Y%m%d%H%M%S%:z' -d @$$(stat --format=%Y bn.tex) | sed "s/:\([0-9][0-9]\)$$/'\1'}/g") > bn-deterministic.tex
-	printf "%s\n" "\pdfinfo{" >> bn-deterministic.tex
-	printf "%s\n" "  /CreationDate (\fixedpdfdate)" >> bn-deterministic.tex
-	printf "%s\n}\n" "  /ModDate (\fixedpdfdate)" >> bn-deterministic.tex
-	cat bn.tex >> bn-deterministic.tex
-	mv bn-deterministic.tex bn.tex
-	touch --reference=bn.bak bn.tex
-	echo "hello" > bn.ind
-	latex bn > /dev/null
-	latex bn > /dev/null
-	makeindex bn
-	latex bn > /dev/null
-
-#LTM user manual [pdf]
-manual:	mandvi
-	pdflatex bn >/dev/null
-	sed -b -i 's,^/ID \[.*\]$$,/ID [<0> <0>],g' bn.pdf
-	mv bn.bak bn.tex
-	rm -f bn.aux bn.dvi bn.log bn.idx bn.lof bn.out bn.toc
+docdvi poster docs mandvi manual:
+	$(MAKE) -C doc/ $@ V=$(V)
 
 pretty:
 	perl pretty.build
+
+#\zipup the project (take that!)
+no_oops: clean
+	cd .. ; cvs commit
+	echo Scanning for scratch/dirty files
+	find . -type f | grep -v CVS | xargs -n 1 bash mess.sh
 
 clean:
 	rm -f *.bat *.pdf *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
@@ -173,29 +139,32 @@ clean:
 	-cd etc && MAKE=${MAKE} ${MAKE} clean
 	-cd pics && MAKE=${MAKE} ${MAKE} clean
 
-#\zipup the project (take that!)
-no_oops: clean
-	cd .. ; cvs commit
-	echo Scanning for scratch/dirty files
-	find . -type f | grep -v CVS | xargs -n 1 bash mess.sh
-
 .PHONY: pre_gen
 pre_gen:
 	perl gen.pl
 	sed -e 's/[[:blank:]]*$$//' mpi.c > pre_gen/mpi.c
 	rm mpi.c
 
-zipup:
-	rm -rf ../libtommath-$(VERSION) \
-		&& rm -f ../ltm-$(VERSION).zip ../ltm-$(VERSION).zip.asc ../ltm-$(VERSION).tar.xz ../ltm-$(VERSION).tar.xz.asc
-	git archive HEAD --prefix=libtommath-$(VERSION)/ > ../libtommath-$(VERSION).tar
-	cd .. ; tar xf libtommath-$(VERSION).tar
-	MAKE=${MAKE} ${MAKE} -C ../libtommath-$(VERSION) clean manual poster docs
-	tar -c ../libtommath-$(VERSION)/* | xz -9 > ../ltm-$(VERSION).tar.xz
-	find ../libtommath-$(VERSION)/ -type f -exec unix2dos -q {} \;
-	cd .. ; zip -9r ltm-$(VERSION).zip libtommath-$(VERSION)
-	gpg -b -a ../ltm-$(VERSION).tar.xz && gpg -b -a ../ltm-$(VERSION).zip
+zipup: clean pre_gen new_file manual poster docs
+	@# Update the index, so diff-index won't fail in case the pdf has been created.
+	@#   As the pdf creation modifies the tex files, git sometimes detects the
+	@#   modified files, but misses that it's put back to its original version.
+	@git update-index --refresh
+	@git diff-index --quiet HEAD -- || ( echo "FAILURE: uncommited changes or not a git" && exit 1 )
+	rm -rf libtommath-$(VERSION) ltm-$(VERSION).*
+	@# files/dirs excluded from "git archive" are defined in .gitattributes
+	git archive --format=tar --prefix=libtommath-$(VERSION)/ HEAD | tar x
+	mkdir -p libtommath-$(VERSION)/doc
+	cp doc/bn.pdf doc/tommath.pdf doc/poster.pdf libtommath-$(VERSION)/doc/
+	tar -c libtommath-$(VERSION)/ | xz -6e -c - > ltm-$(VERSION).tar.xz
+	zip -9rq ltm-$(VERSION).zip libtommath-$(VERSION)
+	rm -rf libtommath-$(VERSION)
+	gpg -b -a ltm-$(VERSION).tar.xz
+	gpg -b -a ltm-$(VERSION).zip
 
 new_file:
 	bash updatemakes.sh
 	perl dep.pl
+
+perlcritic:
+	perlcritic *.pl

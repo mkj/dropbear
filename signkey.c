@@ -400,7 +400,7 @@ static char hexdig(unsigned char x) {
 /* Since we're not sure if we'll have md5 or sha1, we present both.
  * MD5 is used in preference, but sha1 could still be useful */
 #if DROPBEAR_MD5_HMAC
-static char * sign_key_md5_fingerprint(unsigned char* keyblob,
+static char * sign_key_md5_fingerprint(const unsigned char* keyblob,
 		unsigned int keybloblen) {
 
 	char * ret;
@@ -435,7 +435,7 @@ static char * sign_key_md5_fingerprint(unsigned char* keyblob,
 }
 
 #else /* use SHA1 rather than MD5 for fingerprint */
-static char * sign_key_sha1_fingerprint(unsigned char* keyblob, 
+static char * sign_key_sha1_fingerprint(const unsigned char* keyblob,
 		unsigned int keybloblen) {
 
 	char * ret;
@@ -472,7 +472,7 @@ static char * sign_key_sha1_fingerprint(unsigned char* keyblob,
 
 /* This will return a freshly malloced string, containing a fingerprint
  * in either sha1 or md5 */
-char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen) {
+char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloblen) {
 
 #if DROPBEAR_MD5_HMAC
 	return sign_key_md5_fingerprint(keyblob, keybloblen);
@@ -482,7 +482,7 @@ char * sign_key_fingerprint(unsigned char* keyblob, unsigned int keybloblen) {
 }
 
 void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type, 
-	buffer *data_buf) {
+	const buffer *data_buf) {
 	buffer *sigblob;
 	sigblob = buf_new(MAX_PUBKEY_SIZE);
 
@@ -517,7 +517,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type type,
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the
  * signature blob */
-int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
+int buf_verify(buffer * buf, sign_key *key, const buffer *data_buf) {
 	
 	char *type_name = NULL;
 	unsigned int type_name_len = 0;
@@ -570,7 +570,7 @@ int buf_verify(buffer * buf, sign_key *key, buffer *data_buf) {
    of the key if it is successfully decoded */
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
 					const unsigned char* algoname, unsigned int algolen, 
-					buffer * line, char ** fingerprint) {
+					const buffer * line, char ** fingerprint) {
 
 	buffer * decodekey = NULL;
 	int ret = DROPBEAR_FAILURE;

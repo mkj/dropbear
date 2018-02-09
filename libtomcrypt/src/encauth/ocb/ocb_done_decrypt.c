@@ -5,11 +5,9 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
-/** 
+/**
    @file ocb_done_decrypt.c
    OCB implementation, terminate decryption, by Tom St Denis
 */
@@ -28,9 +26,9 @@
    @param stat    [out] The result of the tag comparison
    @return CRYPT_OK if the process was successful regardless if the tag is valid
 */
-int ocb_done_decrypt(ocb_state *ocb, 
+int ocb_done_decrypt(ocb_state *ocb,
                      const unsigned char *ct,  unsigned long ctlen,
-                           unsigned char *pt, 
+                           unsigned char *pt,
                      const unsigned char *tag, unsigned long taglen, int *stat)
 {
    int err;
@@ -57,7 +55,7 @@ int ocb_done_decrypt(ocb_state *ocb,
       goto LBL_ERR;
    }
 
-   if (taglen <= tagbuflen && XMEMCMP(tagbuf, tag, taglen) == 0) {
+   if (taglen <= tagbuflen && XMEM_NEQ(tagbuf, tag, taglen) == 0) {
       *stat = 1;
    }
 
@@ -75,6 +73,6 @@ LBL_ERR:
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

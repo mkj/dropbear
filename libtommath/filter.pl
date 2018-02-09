@@ -2,33 +2,33 @@
 
 # we want to filter every between START_INS and END_INS out and then insert crap from another file (this is fun)
 
-$dst = shift;
-$ins = shift;
+use strict;
+use warnings;
 
-open(SRC,"<$dst");
-open(INS,"<$ins");
-open(TMP,">tmp.delme");
+open(my $src, '<', shift);
+open(my $ins, '<', shift);
+open(my $tmp, '>', 'tmp.delme');
 
-$l = 0;
-while (<SRC>) {
+my $l = 0;
+while (<$src>) {
    if ($_ =~ /START_INS/) {
-      print TMP $_;
+      print {$tmp} $_;
       $l = 1;
-      while (<INS>) {
-         print TMP $_;
+      while (<$ins>) {
+         print {$tmp} $_;
       }
-      close INS;
+      close $ins;
    } elsif ($_ =~ /END_INS/) {
-      print TMP $_;
+      print {$tmp} $_;
       $l = 0;
    } elsif ($l == 0) {
-      print TMP $_;
+      print {$tmp} $_;
    }
 }
 
-close TMP;
-close SRC;
+close $tmp;
+close $src;
 
-# $Source$
-# $Revision$
-# $Date$
+# ref:         $Format:%D$
+# git commit:  $Format:%H$
+# commit time: $Format:%ai$

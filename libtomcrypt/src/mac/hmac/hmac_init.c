@@ -5,14 +5,12 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file hmac_init.c
-  LTC_HMAC support, initialize state, Tom St Denis/Dobes Vandermeer 
+  HMAC support, initialize state, Tom St Denis/Dobes Vandermeer
 */
 
 #ifdef LTC_HMAC
@@ -20,8 +18,8 @@
 #define LTC_HMAC_BLOCKSIZE hash_descriptor[hash].blocksize
 
 /**
-   Initialize an LTC_HMAC context.
-   @param hmac     The LTC_HMAC state 
+   Initialize an HMAC context.
+   @param hmac     The HMAC state
    @param hash     The index of the hash you want to use 
    @param key      The secret key
    @param keylen   The length of the secret key (octets)
@@ -61,18 +59,16 @@ int hmac_init(hmac_state *hmac, int hash, const unsigned char *key, unsigned lon
         if ((err = hash_memory(hash, key, keylen, hmac->key, &z)) != CRYPT_OK) {
            goto LBL_ERR;
         }
-        if(hashsize < LTC_HMAC_BLOCKSIZE) {
-            zeromem((hmac->key) + hashsize, (size_t)(LTC_HMAC_BLOCKSIZE - hashsize));
-        }
         keylen = hashsize;
     } else {
         XMEMCPY(hmac->key, key, (size_t)keylen);
+    }
+
         if(keylen < LTC_HMAC_BLOCKSIZE) {
             zeromem((hmac->key) + keylen, (size_t)(LTC_HMAC_BLOCKSIZE - keylen));
         }
-    }
 
-    /* Create the initial vector for step (3) */
+    /* Create the initialization vector for step (3) */
     for(i=0; i < LTC_HMAC_BLOCKSIZE;   i++) {
        buf[i] = hmac->key[i] ^ 0x36;
     }
@@ -99,6 +95,6 @@ done:
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

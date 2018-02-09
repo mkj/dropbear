@@ -81,7 +81,7 @@ static void authclear() {
 
 /* Send a banner message if specified to the client. The client might
  * ignore this, but possibly serves as a legal "no trespassing" sign */
-void send_msg_userauth_banner(buffer *banner) {
+void send_msg_userauth_banner(const buffer *banner) {
 
 	TRACE(("enter send_msg_userauth_banner"))
 
@@ -362,7 +362,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		ses.authstate.failcount++;
 	}
 
-	if (ses.authstate.failcount >= MAX_AUTH_TRIES) {
+	if (ses.authstate.failcount >= svr_opts.maxauthtries) {
 		char * userstr;
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"))

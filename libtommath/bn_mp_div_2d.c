@@ -20,8 +20,6 @@ int mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
 {
   mp_digit D, r, rr;
   int     x, res;
-  mp_int  t;
-
 
   /* if the shift count is <= 0 then we do no work */
   if (b <= 0) {
@@ -32,22 +30,17 @@ int mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
     return res;
   }
 
-  if ((res = mp_init (&t)) != MP_OKAY) {
+  /* copy */
+  if ((res = mp_copy (a, c)) != MP_OKAY) {
     return res;
   }
+  /* 'a' should not be used after here - it might be the same as d */
 
   /* get the remainder */
   if (d != NULL) {
-    if ((res = mp_mod_2d (a, b, &t)) != MP_OKAY) {
-      mp_clear (&t);
+    if ((res = mp_mod_2d (a, b, d)) != MP_OKAY) {
       return res;
     }
-  }
-
-  /* copy */
-  if ((res = mp_copy (a, c)) != MP_OKAY) {
-    mp_clear (&t);
-    return res;
   }
 
   /* shift by as many digits in the bit count */
@@ -84,14 +77,10 @@ int mp_div_2d (mp_int * a, int b, mp_int * c, mp_int * d)
     }
   }
   mp_clamp (c);
-  if (d != NULL) {
-    mp_exch (&t, d);
-  }
-  mp_clear (&t);
   return MP_OKAY;
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

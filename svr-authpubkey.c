@@ -70,11 +70,11 @@
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
-static int checkpubkey(char* algo, unsigned int algolen,
-		unsigned char* keyblob, unsigned int keybloblen);
+static int checkpubkey(const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen);
 static int checkpubkeyperms(void);
-static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
-		unsigned char* keyblob, unsigned int keybloblen);
+static void send_msg_userauth_pk_ok(const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen);
 static int checkfileperm(char * filename);
 
 /* process a pubkey auth request, sending success or failure message as
@@ -173,8 +173,8 @@ out:
 /* Reply that the key is valid for auth, this is sent when the user sends
  * a straight copy of their pubkey to test, to avoid having to perform
  * expensive signing operations with a worthless key */
-static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
-		unsigned char* keyblob, unsigned int keybloblen) {
+static void send_msg_userauth_pk_ok(const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen) {
 
 	TRACE(("enter send_msg_userauth_pk_ok"))
 	CHECKCLEARTOWRITE();
@@ -188,7 +188,7 @@ static void send_msg_userauth_pk_ok(char* algo, unsigned int algolen,
 
 }
 
-static int checkpubkey_line(buffer* line, int line_num, char* filename,
+static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
 	buffer *options_buf = NULL;
@@ -196,7 +196,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	int ret = DROPBEAR_FAILURE;
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
-		TRACE(("checkpubkey: bad line length %d", line->len))
+		TRACE(("checkpubkey_line: bad line length %d", line->len))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -261,7 +261,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	
 	/* check for space (' ') character */
 	if (buf_getbyte(line) != ' ') {
-		TRACE(("checkpubkey: space character expected, isn't there"))
+		TRACE(("checkpubkey_line: space character expected, isn't there"))
 		goto out;
 	}
 
@@ -273,7 +273,7 @@ static int checkpubkey_line(buffer* line, int line_num, char* filename,
 	buf_setpos(line, pos);
 	buf_setlen(line, line->pos + len);
 
-	TRACE(("checkpubkey: line pos = %d len = %d", line->pos, line->len))
+	TRACE(("checkpubkey_line: line pos = %d len = %d", line->pos, line->len))
 
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
@@ -292,8 +292,8 @@ out:
 /* Checks whether a specified publickey (and associated algorithm) is an
  * acceptable key for authentication */
 /* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
-static int checkpubkey(char* algo, unsigned int algolen,
-		unsigned char* keyblob, unsigned int keybloblen) {
+static int checkpubkey(const char* algo, unsigned int algolen,
+		const unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
 	char * filename = NULL;
@@ -361,8 +361,8 @@ static int checkpubkey(char* algo, unsigned int algolen,
 		}
 		line_num++;
 
-		if (checkpubkey_line(line, line_num, filename,
-				algo, algolen, keyblob, keybloblen) == DROPBEAR_SUCCESS) {
+		ret = checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
+		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}
 

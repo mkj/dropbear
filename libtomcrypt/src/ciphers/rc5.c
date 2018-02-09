@@ -5,13 +5,11 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
    @file rc5.c
-   LTC_RC5 code by Tom St Denis 
+   LTC_RC5 code by Tom St Denis
 */
 
 #include "tomcrypt.h"
@@ -29,7 +27,7 @@ const struct ltc_cipher_descriptor rc5_desc =
     &rc5_test,
     &rc5_done,
     &rc5_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 static const ulong32 stab[50] = {
@@ -60,13 +58,13 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
 
     LTC_ARGCHK(skey != NULL);
     LTC_ARGCHK(key  != NULL);
-    
+
     /* test parameters */
-    if (num_rounds == 0) { 
+    if (num_rounds == 0) {
        num_rounds = rc5_desc.default_rounds;
     }
 
-    if (num_rounds < 12 || num_rounds > 24) { 
+    if (num_rounds < 12 || num_rounds > 24) {
        return CRYPT_INVALID_ROUNDS;
     }
 
@@ -74,12 +72,12 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     if (keylen < 8 || keylen > 128) {
        return CRYPT_INVALID_KEYSIZE;
     }
-    
+
     skey->rc5.rounds = num_rounds;
     S = skey->rc5.K;
 
     /* copy the key into the L array */
-    for (A = i = j = 0; i < (ulong32)keylen; ) { 
+    for (A = i = j = 0; i < (ulong32)keylen; ) {
         A = (A << 8) | ((ulong32)(key[i++] & 255));
         if ((i & 3) == 0) {
            L[j++] = BSWAP(A);
@@ -87,8 +85,8 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
         }
     }
 
-    if ((keylen & 3) != 0) { 
-       A <<= (ulong32)((8 * (4 - (keylen&3)))); 
+    if ((keylen & 3) != 0) {
+       A <<= (ulong32)((8 * (4 - (keylen&3))));
        L[j++] = BSWAP(A);
     }
 
@@ -99,7 +97,7 @@ int rc5_setup(const unsigned char *key, int keylen, int num_rounds, symmetric_ke
     /* mix buffer */
     s = 3 * MAX(t, j);
     l = j;
-    for (A = B = i = j = v = 0; v < s; v++) { 
+    for (A = B = i = j = v = 0; v < s; v++) {
         A = S[i] = ROLc(S[i] + A + B, 3);
         B = L[j] = ROL(L[j] + A + B, (A+B));
         if (++i == t) { i = 0; }
@@ -142,7 +140,7 @@ int rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *s
    A += skey->rc5.K[0];
    B += skey->rc5.K[1];
    K  = skey->rc5.K + 2;
-   
+
    if ((skey->rc5.rounds & 1) == 0) {
       for (r = 0; r < skey->rc5.rounds; r += 2) {
           A = ROL(A ^ B, B) + K[0];
@@ -177,7 +175,7 @@ int rc5_ecb_encrypt(const unsigned char *pt, unsigned char *ct, symmetric_key *s
   Decrypts a block of text with LTC_RC5
   @param ct The input ciphertext (8 bytes)
   @param pt The output plaintext (8 bytes)
-  @param skey The key as scheduled 
+  @param skey The key as scheduled
   @return CRYPT_OK if successful
 */
 #ifdef LTC_CLEAN_STACK
@@ -195,7 +193,7 @@ int rc5_ecb_decrypt(const unsigned char *ct, unsigned char *pt, symmetric_key *s
    LOAD32L(A, &ct[0]);
    LOAD32L(B, &ct[4]);
    K = skey->rc5.K + (skey->rc5.rounds << 1);
-   
+
    if ((skey->rc5.rounds & 1) == 0) {
        K -= 2;
        for (r = skey->rc5.rounds - 1; r >= 0; r -= 2) {
@@ -237,7 +235,7 @@ int rc5_test(void)
 {
  #ifndef LTC_TEST
     return CRYPT_NOP;
- #else    
+ #else
    static const struct {
        unsigned char key[16], pt[8], ct[8];
    } tests[] = {
@@ -275,7 +273,8 @@ int rc5_test(void)
       rc5_ecb_decrypt(tmp[0], tmp[1], &key);
 
       /* compare */
-      if (XMEMCMP(tmp[0], tests[x].ct, 8) != 0 || XMEMCMP(tmp[1], tests[x].pt, 8) != 0) {
+      if (compare_testvector(tmp[0], 8, tests[x].ct, 8, "RC5 Encrypt", x) != 0 ||
+            compare_testvector(tmp[1], 8, tests[x].pt, 8, "RC5 Decrypt", x) != 0) {
          return CRYPT_FAIL_TESTVECTOR;
       }
 
@@ -289,11 +288,12 @@ int rc5_test(void)
   #endif
 }
 
-/** Terminate the context 
+/** Terminate the context
    @param skey    The scheduled key
 */
 void rc5_done(symmetric_key *skey)
 {
+  LTC_UNUSED_PARAM(skey);
 }
 
 /**
@@ -317,6 +317,6 @@ int rc5_keysize(int *keysize)
 
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

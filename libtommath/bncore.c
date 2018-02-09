@@ -31,6 +31,6 @@ int     KARATSUBA_MUL_CUTOFF = 80,      /* Min. number of digits before Karatsub
         TOOM_SQR_CUTOFF      = 400; 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

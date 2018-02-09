@@ -23,10 +23,10 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf);
 ecc_key *buf_get_ecdsa_priv_key(buffer *buf);
 void buf_put_ecdsa_pub_key(buffer *buf, ecc_key *key);
 void buf_put_ecdsa_priv_key(buffer *buf, ecc_key *key);
-enum signkey_type ecdsa_signkey_type(ecc_key * key);
+enum signkey_type ecdsa_signkey_type(const ecc_key * key);
 
-void buf_put_ecdsa_sign(buffer *buf, ecc_key *key, buffer *data_buf);
-int buf_ecdsa_verify(buffer *buf, ecc_key *key, buffer *data_buf);
+void buf_put_ecdsa_sign(buffer *buf, const ecc_key *key, const buffer *data_buf);
+int buf_ecdsa_verify(buffer *buf, const ecc_key *key, const buffer *data_buf);
 /* Returns 1 on success */
 int signkey_is_ecdsa(enum signkey_type type);
 

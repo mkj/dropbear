@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /* Implements ECC over Z/pZ for curve y^2 = x^3 - 3x + b
@@ -19,12 +17,12 @@
 /**
   @file ecc_make_key.c
   ECC Crypto, Tom St Denis
-*/  
+*/
 
 #ifdef LTC_MECC
 
 /**
-  Make a new ECC key 
+  Make a new ECC key
   @param prng         An active PRNG state
   @param wprng        The index of the PRNG you wish to use
   @param keysize      The keysize for the new key (in octets from 20 to 65 bytes)
@@ -124,7 +122,7 @@ ERR_BUF:
 }
 
 #endif
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
 

@@ -5,17 +5,14 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
-/** 
+/**
   Source donated by Elliptic Semiconductor Inc (www.ellipticsemi.com) to the LibTom Projects
 */
 
 #ifdef LTC_XTS_MODE
-
 
 /** Start XTS mode
    @param cipher      The index of the cipher to use
@@ -26,19 +23,15 @@
    @param xts         [out] XTS structure
    Returns CRYPT_OK upon success.
 */
-int xts_start(                int  cipher,
-              const unsigned char *key1, 
-              const unsigned char *key2, 
-                    unsigned long  keylen,
-                              int  num_rounds, 
-                    symmetric_xts *xts)
+int xts_start(int cipher, const unsigned char *key1, const unsigned char *key2, unsigned long keylen, int num_rounds,
+              symmetric_xts *xts)
 {
    int err;
 
    /* check inputs */
-   LTC_ARGCHK(key1  != NULL);
-   LTC_ARGCHK(key2  != NULL);
-   LTC_ARGCHK(xts   != NULL);
+   LTC_ARGCHK(key1 != NULL);
+   LTC_ARGCHK(key2 != NULL);
+   LTC_ARGCHK(xts != NULL);
 
    /* check if valid */
    if ((err = cipher_is_valid(cipher)) != CRYPT_OK) {
@@ -63,7 +56,6 @@ int xts_start(                int  cipher,
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
-
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -15,6 +15,7 @@
  * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
  */
 
+#ifndef LTM_NO_FILE
 int mp_fwrite(mp_int *a, int radix, FILE *stream)
 {
    char *buf;
@@ -44,9 +45,10 @@ int mp_fwrite(mp_int *a, int radix, FILE *stream)
    XFREE (buf);
    return MP_OKAY;
 }
+#endif
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -5,15 +5,13 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file crypt_prng_descriptor.c
   Stores the PRNG descriptors, Tom St Denis
-*/  
+*/
 struct ltc_prng_descriptor prng_descriptor[TAB_SIZE] = {
 { NULL, 0, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL }
 };
@@ -21,6 +19,6 @@ struct ltc_prng_descriptor prng_descriptor[TAB_SIZE] = {
 LTC_MUTEX_GLOBAL(ltc_prng_mutex)
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

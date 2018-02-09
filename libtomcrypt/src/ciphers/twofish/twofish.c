@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
  /** 
@@ -35,22 +33,12 @@ const struct ltc_cipher_descriptor twofish_desc =
     &twofish_test,
     &twofish_done,
     &twofish_keysize,
-    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+    NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
 };
 
 /* the two polynomials */
 #define MDS_POLY          0x169
 #define RS_POLY           0x14D
-
-/* The 4x4 MDS Linear Transform */
-#if 0
-static const unsigned char MDS[4][4] = {
-    { 0x01, 0xEF, 0x5B, 0x5B },
-    { 0x5B, 0xEF, 0xEF, 0x01 },
-    { 0xEF, 0x5B, 0x01, 0xEF },
-    { 0xEF, 0x01, 0xEF, 0x5B }
-};
-#endif
 
 /* The 4x8 RS Linear Transform */
 static const unsigned char RS[4][8] = {
@@ -60,6 +48,7 @@ static const unsigned char RS[4][8] = {
     { 0XA4, 0X55, 0X87, 0X5A, 0X58, 0XDB, 0X9E, 0X03 }
 };
 
+#ifdef LTC_TWOFISH_SMALL
 /* sbox usage orderings */
 static const unsigned char qord[4][5] = {
    { 1, 1, 0, 0, 1 },
@@ -67,9 +56,11 @@ static const unsigned char qord[4][5] = {
    { 0, 0, 0, 1, 1 },
    { 1, 0, 1, 1, 0 }
 };
+#endif /* LTC_TWOFISH_SMALL */
 
 #ifdef LTC_TWOFISH_TABLES
 
+#define __LTC_TWOFISH_TAB_C__
 #include "twofish_tab.c"
 
 #define sbox(i, x) ((ulong32)SBOX[i][(x)&255])
@@ -259,16 +250,19 @@ static void h_func(const unsigned char *in, unsigned char *out, unsigned char *M
             y[1] = (unsigned char)(sbox(0, (ulong32)y[1]) ^ M[4 * (6 + offset) + 1]);
             y[2] = (unsigned char)(sbox(0, (ulong32)y[2]) ^ M[4 * (6 + offset) + 2]);
             y[3] = (unsigned char)(sbox(1, (ulong32)y[3]) ^ M[4 * (6 + offset) + 3]);
+            /* FALLTHROUGH */
      case 3:
             y[0] = (unsigned char)(sbox(1, (ulong32)y[0]) ^ M[4 * (4 + offset) + 0]);
             y[1] = (unsigned char)(sbox(1, (ulong32)y[1]) ^ M[4 * (4 + offset) + 1]);
             y[2] = (unsigned char)(sbox(0, (ulong32)y[2]) ^ M[4 * (4 + offset) + 2]);
             y[3] = (unsigned char)(sbox(0, (ulong32)y[3]) ^ M[4 * (4 + offset) + 3]);
+            /* FALLTHROUGH */
      case 2:
             y[0] = (unsigned char)(sbox(1, sbox(0, sbox(0, (ulong32)y[0]) ^ M[4 * (2 + offset) + 0]) ^ M[4 * (0 + offset) + 0]));
             y[1] = (unsigned char)(sbox(0, sbox(0, sbox(1, (ulong32)y[1]) ^ M[4 * (2 + offset) + 1]) ^ M[4 * (0 + offset) + 1]));
             y[2] = (unsigned char)(sbox(1, sbox(1, sbox(0, (ulong32)y[2]) ^ M[4 * (2 + offset) + 2]) ^ M[4 * (0 + offset) + 2]));
             y[3] = (unsigned char)(sbox(0, sbox(1, sbox(1, (ulong32)y[3]) ^ M[4 * (2 + offset) + 3]) ^ M[4 * (0 + offset) + 3]));
+            /* FALLTHROUGH */
   }
   mds_mult(y, out);
 }
@@ -663,10 +657,8 @@ int twofish_test(void)
     }
     twofish_ecb_encrypt(tests[i].pt, tmp[0], &key);
     twofish_ecb_decrypt(tmp[0], tmp[1], &key);
-    if (XMEMCMP(tmp[0], tests[i].ct, 16) != 0 || XMEMCMP(tmp[1], tests[i].pt, 16) != 0) {
-#if 0
-       printf("Twofish failed test %d, %d, %d\n", i, XMEMCMP(tmp[0], tests[i].ct, 16), XMEMCMP(tmp[1], tests[i].pt, 16));
-#endif
+    if (compare_testvector(tmp[0], 16, tests[i].ct, 16, "Twofish Encrypt", i) != 0 ||
+          compare_testvector(tmp[1], 16, tests[i].pt, 16, "Twofish Decrypt", i) != 0) {
        return CRYPT_FAIL_TESTVECTOR;
     }
       /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
@@ -684,7 +676,7 @@ int twofish_test(void)
 */
 void twofish_done(symmetric_key *skey)
 {
-   (void)skey;
+  LTC_UNUSED_PARAM(skey);
 }
 
 /**
@@ -714,6 +706,6 @@ int twofish_keysize(int *keysize)
 
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

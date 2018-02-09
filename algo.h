@@ -112,8 +112,8 @@ struct dropbear_kex {
 	const struct ltc_hash_descriptor *hash_desc;
 };
 
-int have_algo(char* algo, size_t algolen, algo_type algos[]);
-void buf_put_algolist(buffer * buf, algo_type localalgos[]);
+int have_algo(const char* algo, size_t algolen, const algo_type algos[]);
+void buf_put_algolist(buffer * buf, const algo_type localalgos[]);
 
 enum kexguess2_used {
 	KEXGUESS2_LOOK,
@@ -131,7 +131,7 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 #if DROPBEAR_USER_ALGO_LIST
 int check_user_algos(const char* user_algo_list, algo_type * algos, 
 		const char *algo_desc);
-char * algolist_string(algo_type algos[]);
+char * algolist_string(const algo_type algos[]);
 #endif
 
 enum {

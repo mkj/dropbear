@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -33,12 +31,12 @@ int gcm_reset(gcm_state *gcm)
    gcm->buflen   = 0;
    gcm->totlen   = 0;
    gcm->pttotlen = 0;
-  
+
    return CRYPT_OK;
 }
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

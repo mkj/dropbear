@@ -5,20 +5,18 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_encrypt_key.c
-  RSA LTC_PKCS #1 encryption, Tom St Denis and Andreas Lange
+  RSA PKCS #1 encryption, Tom St Denis and Andreas Lange
 */
 
 #ifdef LTC_MRSA
 
 /**
-    (LTC_PKCS #1 v2.0) OAEP pad then encrypt
+    (PKCS #1 v2.0) OAEP pad then encrypt
     @param in          The plaintext
     @param inlen       The length of the plaintext (octets)
     @param out         [out] The ciphertext
@@ -28,7 +26,7 @@
     @param prng        An active PRNG
     @param prng_idx    The index of the desired prng
     @param hash_idx    The index of the desired hash
-    @param padding     Type of padding (LTC_LTC_PKCS_1_OAEP or LTC_LTC_PKCS_1_V1_5)
+    @param padding     Type of padding (LTC_PKCS_1_OAEP or LTC_PKCS_1_V1_5)
     @param key         The RSA key to encrypt to
     @return CRYPT_OK if successful
 */
@@ -46,8 +44,8 @@ int rsa_encrypt_key_ex(const unsigned char *in,     unsigned long inlen,
   LTC_ARGCHK(key    != NULL);
 
   /* valid padding? */
-  if ((padding != LTC_LTC_PKCS_1_V1_5) &&
-      (padding != LTC_LTC_PKCS_1_OAEP)) {
+  if ((padding != LTC_PKCS_1_V1_5) &&
+      (padding != LTC_PKCS_1_OAEP)) {
     return CRYPT_PK_INVALID_PADDING;
   }
 
@@ -56,7 +54,7 @@ int rsa_encrypt_key_ex(const unsigned char *in,     unsigned long inlen,
      return err;
   }
 
-  if (padding == LTC_LTC_PKCS_1_OAEP) {
+  if (padding == LTC_PKCS_1_OAEP) {
     /* valid hash? */
     if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
        return err;
@@ -73,7 +71,7 @@ int rsa_encrypt_key_ex(const unsigned char *in,     unsigned long inlen,
      return CRYPT_BUFFER_OVERFLOW;
   }
 
-  if (padding == LTC_LTC_PKCS_1_OAEP) {
+  if (padding == LTC_PKCS_1_OAEP) {
     /* OAEP pad the key */
     x = *outlen;
     if ((err = pkcs_1_oaep_encode(in, inlen, lparam,
@@ -82,21 +80,21 @@ int rsa_encrypt_key_ex(const unsigned char *in,     unsigned long inlen,
        return err;
     }
   } else {
-    /* LTC_PKCS #1 v1.5 pad the key */
+    /* PKCS #1 v1.5 pad the key */
     x = *outlen;
-    if ((err = pkcs_1_v1_5_encode(in, inlen, LTC_LTC_PKCS_1_EME,
+    if ((err = pkcs_1_v1_5_encode(in, inlen, LTC_PKCS_1_EME,
                                   modulus_bitlen, prng, prng_idx,
                                   out, &x)) != CRYPT_OK) {
       return err;
     }
   }
 
-  /* rsa exptmod the OAEP or LTC_PKCS #1 v1.5 pad */
+  /* rsa exptmod the OAEP or PKCS #1 v1.5 pad */
   return ltc_mp.rsa_me(out, x, out, outlen, PK_PUBLIC, key);
 }
 
 #endif /* LTC_MRSA */
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

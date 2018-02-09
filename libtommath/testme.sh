@@ -43,6 +43,8 @@ _help()
   echo "                            e.g. --make-option=\"-f makefile.shared\""
   echo "        This is an option that will always be passed as parameter to make."
   echo
+  echo "    --with-low-mp           Also build&run tests with -DMP_{8,16,32}BIT."
+  echo
   echo "Godmode:"
   echo
   echo "    --all                   Choose all architectures and gcc and clang as compilers"
@@ -67,9 +69,18 @@ _runtest()
 {
   echo -ne " Compile $1 $2"
   make clean > /dev/null
-  CC="$1" CFLAGS="$2 $TEST_CFLAGS" make -j$MAKE_JOBS test_standalone $MAKE_OPTIONS > /dev/null 2>test_errors.txt
+  suffix=$(echo ${1}${2}  | tr ' ' '_')
+  CC="$1" CFLAGS="$2 $TEST_CFLAGS" make -j$MAKE_JOBS test_standalone $MAKE_OPTIONS > /dev/null 2>gcc_errors_${suffix}.txt
+  errcnt=$(wc -l < gcc_errors_${suffix}.txt)
+  if [[ ${errcnt} -gt 1 ]]; then
+    echo " failed"
+    cat gcc_errors_${suffix}.txt
+    exit 128
+  fi
   echo -e "\rRun test $1 $2"
-  timeout --foreground 90 ./test > test_$(echo ${1}${2}  | tr ' ' '_').txt || _die "running tests" $?
+  local _timeout=""
+  which timeout >/dev/null && _timeout="timeout --foreground 90"
+  $_timeout ./test > test_${suffix}.txt || _die "running tests" $?
 }
 
 _banner()
@@ -93,6 +104,7 @@ _exit()
 ARCHFLAGS=""
 COMPILERS=""
 CFLAGS=""
+WITH_LOW_MP=""
 
 while [ $# -gt 0 ];
 do
@@ -109,19 +121,29 @@ do
     --make-option=*)
       MAKE_OPTIONS="$MAKE_OPTIONS ${1#*=}"
     ;;
+    --with-low-mp)
+      WITH_LOW_MP="1"
+    ;;
     --all)
       COMPILERS="gcc clang"
       ARCHFLAGS="-m64 -m32 -mx32"
     ;;
-    --help)
+    --help | -h)
       _help
+    ;;
+    *)
+      echo "Ignoring option ${1}"
     ;;
   esac
   shift
 done
 
-# default to gcc if nothing is given
-if [[ "$COMPILERS" == "" ]]
+# default to gcc if no compiler is defined but some other options
+if [[ "$COMPILERS" == "" ]] && [[ "$ARCHFLAGS$MAKE_OPTIONS$CFLAGS" != "" ]]
+then
+   COMPILERS="gcc"
+# default to gcc and run only default config if no option is given
+elif [[ "$COMPILERS" == "" ]]
 then
   _banner gcc
   _runtest "gcc" ""
@@ -158,16 +180,17 @@ do
 
   for a in "${archflags[@]}"
   do
-    if [[ $(expr "$i" : "clang") && "$a" == "-mx32" ]]
+    if [[ $(expr "$i" : "clang") -ne 0 && "$a" == "-mx32" ]]
     then
       echo "clang -mx32 tests skipped"
       continue
     fi
 
-    _runtest "$i $a" ""
-    _runtest "$i $a" "-DMP_8BIT"
-    _runtest "$i $a" "-DMP_16BIT"
-    _runtest "$i $a" "-DMP_32BIT"
+    _runtest "$i $a" "$CFLAGS"
+    [ "$WITH_LOW_MP" != "1" ] && continue
+    _runtest "$i $a" "-DMP_8BIT $CFLAGS"
+    _runtest "$i $a" "-DMP_16BIT $CFLAGS"
+    _runtest "$i $a" "-DMP_32BIT $CFLAGS"
   done
 done
 

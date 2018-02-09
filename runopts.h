@@ -96,6 +96,7 @@ typedef struct svr_runopts {
 	int noauthpass;
 	int norootpass;
 	int allowblankpass;
+	unsigned int maxauthtries;
 
 #if DROPBEAR_SVR_REMOTETCPFWD
 	int noremotetcp;
@@ -166,6 +167,8 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_PROXYCMD
 	char *proxycmd;
 #endif
+	char *bind_address;
+	char *bind_port;
 } cli_runopts;
 
 extern cli_runopts cli_opts;

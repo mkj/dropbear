@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -16,7 +14,7 @@
 */
 
 /**
-   Find a hash flexibly.  First by name then if not present by digest size 
+   Find a hash flexibly.  First by name then if not present by digest size
    @param name        The name of the hash desired
    @param digestlen   The minimum length of the digest size (octets)
    @return >= 0 if found, -1 if not present
@@ -44,6 +42,6 @@
    return z;
 }
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
