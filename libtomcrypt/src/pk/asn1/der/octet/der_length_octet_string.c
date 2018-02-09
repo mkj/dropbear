@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -17,7 +15,7 @@
 
 #ifdef LTC_DER
 /**
-  Gets length of DER encoding of OCTET STRING 
+  Gets length of DER encoding of OCTET STRING
   @param noctets  The number of octets in the string to encode
   @param outlen   [out] The length of the DER encoding for the given string
   @return CRYPT_OK if successful
@@ -48,6 +46,6 @@ int der_length_octet_string(unsigned long noctets, unsigned long *outlen)
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

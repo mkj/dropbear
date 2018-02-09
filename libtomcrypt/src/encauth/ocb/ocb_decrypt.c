@@ -5,13 +5,11 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
    @file ocb_decrypt.c
-   OCB implementation, decrypt data, by Tom St Denis 
+   OCB implementation, decrypt data, by Tom St Denis
 */
 #include "tomcrypt.h"
 
@@ -38,7 +36,7 @@ int ocb_decrypt(ocb_state *ocb, const unsigned char *ct, unsigned char *pt)
       return err;
    }
    LTC_ARGCHK(cipher_descriptor[ocb->cipher].ecb_decrypt != NULL);
-   
+
    /* check length */
    if (ocb->block_len != cipher_descriptor[ocb->cipher].block_length) {
       return CRYPT_INVALID_ARG;
@@ -74,6 +72,6 @@ int ocb_decrypt(ocb_state *ocb, const unsigned char *ct, unsigned char *pt)
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

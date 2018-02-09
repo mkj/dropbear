@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /* Implements ECC over Z/pZ for curve y^2 = x^3 - 3x + b
@@ -19,14 +17,14 @@
 /**
   @file ltc_ecc_is_valid_idx.c
   ECC Crypto, Tom St Denis
-*/  
+*/
 
 #ifdef LTC_MECC
 
 /** Returns whether an ECC idx is valid or not
   @param n   The idx number to check
   @return 1 if valid, 0 if not
-*/  
+*/
 int ltc_ecc_is_valid_idx(int n)
 {
    int x;
@@ -40,7 +38,7 @@ int ltc_ecc_is_valid_idx(int n)
 }
 
 #endif
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
 

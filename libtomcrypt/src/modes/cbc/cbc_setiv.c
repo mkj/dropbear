@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -19,8 +17,8 @@
 #ifdef LTC_CBC_MODE
 
 /**
-   Set an initial vector
-   @param IV   The initial vector
+   Set an initialization vector
+   @param IV   The initialization vector
    @param len  The length of the vector (in octets)
    @param cbc  The CBC state
    @return CRYPT_OK if successful
@@ -36,9 +34,9 @@ int cbc_setiv(const unsigned char *IV, unsigned long len, symmetric_CBC *cbc)
    return CRYPT_OK;
 }
 
-#endif 
+#endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

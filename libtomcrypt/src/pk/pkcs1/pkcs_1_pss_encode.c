@@ -5,20 +5,18 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
-/** 
+/**
   @file pkcs_1_pss_encode.c
-  LTC_PKCS #1 PSS Signature Padding, Tom St Denis 
+  PKCS #1 PSS Signature Padding, Tom St Denis
 */
 
 #ifdef LTC_PKCS_1
 
 /**
-   LTC_PKCS #1 v2.00 Signature Encoding
+   PKCS #1 v2.00 Signature Encoding
    @param msghash          The hash to encode
    @param msghashlen       The length of the hash (octets)
    @param saltlen          The length of the salt desired (octets)
@@ -31,7 +29,7 @@
    @return CRYPT_OK if successful
 */
 int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
-                            unsigned long saltlen,  prng_state   *prng,     
+                            unsigned long saltlen,  prng_state   *prng,
                             int           prng_idx, int           hash_idx,
                             unsigned long modulus_bitlen,
                             unsigned char *out,     unsigned long *outlen)
@@ -54,6 +52,7 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    }
 
    hLen        = hash_descriptor[hash_idx].hashsize;
+   modulus_bitlen--;
    modulus_len = (modulus_bitlen>>3) + (modulus_bitlen & 7 ? 1 : 0);
 
    /* check sizes */
@@ -115,7 +114,7 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    x += modulus_len - saltlen - hLen - 2;
    DB[x++] = 0x01;
    XMEMCPY(DB + x, salt, saltlen);
-   x += saltlen;
+   /* x += saltlen; */
 
    /* generate mask of length modulus_len - hLen - 1 from hash */
    if ((err = pkcs_1_mgf1(hash_idx, hash, hLen, mask, modulus_len - hLen - 1)) != CRYPT_OK) {
@@ -147,17 +146,17 @@ int pkcs_1_pss_encode(const unsigned char *msghash, unsigned long msghashlen,
    out[y] = 0xBC;
 
    /* now clear the 8*modulus_len - modulus_bitlen most significant bits */
-   out[0] &= 0xFF >> ((modulus_len<<3) - (modulus_bitlen-1));
+   out[0] &= 0xFF >> ((modulus_len<<3) - modulus_bitlen);
 
    /* store output size */
    *outlen = modulus_len;
    err = CRYPT_OK;
 LBL_ERR:
 #ifdef LTC_CLEAN_STACK
-   zeromem(DB,   modulus_len);   
-   zeromem(mask, modulus_len);   
-   zeromem(salt, modulus_len);   
-   zeromem(hash, modulus_len);   
+   zeromem(DB,   modulus_len);
+   zeromem(mask, modulus_len);
+   zeromem(salt, modulus_len);
+   zeromem(hash, modulus_len);
 #endif
 
    XFREE(hash);
@@ -170,6 +169,6 @@ LBL_ERR:
 
 #endif /* LTC_PKCS_1 */
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

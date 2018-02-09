@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /*******************************************************************************
@@ -28,13 +26,15 @@
 *
 *******************************************************************************/
 
-#include <tomcrypt.h>
+#include "tomcrypt.h"
 
 #ifdef LTC_SAFER
 
-const struct ltc_cipher_descriptor 
-   safer_k64_desc = {
-   "safer-k64", 
+#define __LTC_SAFER_TAB_C__
+#include "safer_tab.c"
+
+const struct ltc_cipher_descriptor safer_k64_desc = {
+   "safer-k64",
    8, 8, 8, 8, LTC_SAFER_K64_DEFAULT_NOF_ROUNDS,
    &safer_k64_setup,
    &safer_ecb_encrypt,
@@ -42,7 +42,7 @@ const struct ltc_cipher_descriptor
    &safer_k64_test,
    &safer_done,
    &safer_64_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_sk64_desc = {
@@ -54,7 +54,7 @@ const struct ltc_cipher_descriptor
    &safer_sk64_test,
    &safer_done,
    &safer_64_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_k128_desc = {
@@ -66,7 +66,7 @@ const struct ltc_cipher_descriptor
    &safer_sk128_test,
    &safer_done,
    &safer_128_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    },
 
    safer_sk128_desc = {
@@ -78,7 +78,7 @@ const struct ltc_cipher_descriptor
    &safer_sk128_test,
    &safer_done,
    &safer_128_keysize,
-   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
+   NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL, NULL
    };
 
 /******************* Constants ************************************************/
@@ -95,7 +95,6 @@ const struct ltc_cipher_descriptor
 #define IPHT(x, y)   { x -= y; y -= x; }
 
 /******************* Types ****************************************************/
-extern const unsigned char safer_ebox[], safer_lbox[];
 
 #ifdef LTC_CLEAN_STACK
 static void _Safer_Expand_Userkey(const unsigned char *userkey_1,
@@ -158,7 +157,7 @@ static void Safer_Expand_Userkey(const unsigned char *userkey_1,
             }
         }
     }
-    
+
 #ifdef LTC_CLEAN_STACK
     zeromem(ka, sizeof(ka));
     zeromem(kb, sizeof(kb));
@@ -193,7 +192,7 @@ int safer_k64_setup(const unsigned char *key, int keylen, int numrounds, symmetr
    Safer_Expand_Userkey(key, key, (unsigned int)(numrounds != 0 ?numrounds:LTC_SAFER_K64_DEFAULT_NOF_ROUNDS), 0, skey->safer.key);
    return CRYPT_OK;
 }
-   
+
 int safer_sk64_setup(const unsigned char *key, int keylen, int numrounds, symmetric_key *skey)
 {
    LTC_ARGCHK(key != NULL);
@@ -380,7 +379,7 @@ int safer_k64_test(void)
 {
  #ifndef LTC_TEST
     return CRYPT_NOP;
- #else    
+ #else
    static const unsigned char k64_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               k64_key[] = { 8, 7, 6, 5, 4, 3, 2, 1 },
                               k64_ct[]  = { 200, 242, 156, 221, 135, 120, 62, 217 };
@@ -396,7 +395,8 @@ int safer_k64_test(void)
    safer_ecb_encrypt(k64_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (XMEMCMP(buf[0], k64_ct, 8) != 0 || XMEMCMP(buf[1], k64_pt, 8) != 0) {
+   if (compare_testvector(buf[0], 8, k64_ct, 8, "Safer K64 Encrypt", 0) != 0 ||
+         compare_testvector(buf[1], 8, k64_pt, 8, "Safer K64 Decrypt", 0) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
@@ -409,7 +409,7 @@ int safer_sk64_test(void)
 {
  #ifndef LTC_TEST
     return CRYPT_NOP;
- #else    
+ #else
    static const unsigned char sk64_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk64_key[] = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk64_ct[]  = { 95, 206, 155, 162, 5, 132, 56, 199 };
@@ -426,32 +426,34 @@ int safer_sk64_test(void)
    safer_ecb_encrypt(sk64_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (XMEMCMP(buf[0], sk64_ct, 8) != 0 || XMEMCMP(buf[1], sk64_pt, 8) != 0) {
+   if (compare_testvector(buf[0], 8, sk64_ct, 8, "Safer SK64 Encrypt", 0) != 0 ||
+         compare_testvector(buf[1], 8, sk64_pt, 8, "Safer SK64 Decrypt", 0) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
-      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
-      for (y = 0; y < 8; y++) buf[0][y] = 0;
-      for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
-      for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
-      for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
+   /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+   for (y = 0; y < 8; y++) buf[0][y] = 0;
+   for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
+   for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
+   for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
 
    return CRYPT_OK;
   #endif
 }
 
-/** Terminate the context 
+/** Terminate the context
    @param skey    The scheduled key
 */
 void safer_done(symmetric_key *skey)
 {
+  LTC_UNUSED_PARAM(skey);
 }
 
 int safer_sk128_test(void)
 {
  #ifndef LTC_TEST
     return CRYPT_NOP;
- #else    
+ #else
    static const unsigned char sk128_pt[]  = { 1, 2, 3, 4, 5, 6, 7, 8 },
                               sk128_key[] = { 1, 2, 3, 4, 5, 6, 7, 8,
                                               0, 0, 0, 0, 0, 0, 0, 0 },
@@ -468,16 +470,18 @@ int safer_sk128_test(void)
    safer_ecb_encrypt(sk128_pt, buf[0], &skey);
    safer_ecb_decrypt(buf[0], buf[1], &skey);
 
-   if (XMEMCMP(buf[0], sk128_ct, 8) != 0 || XMEMCMP(buf[1], sk128_pt, 8) != 0) {
+   if (compare_testvector(buf[0], 8, sk128_ct, 8, "Safer SK128 Encrypt", 0) != 0 ||
+         compare_testvector(buf[1], 8, sk128_pt, 8, "Safer SK128 Decrypt", 0) != 0) {
       return CRYPT_FAIL_TESTVECTOR;
    }
 
-      /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
-      for (y = 0; y < 8; y++) buf[0][y] = 0;
-      for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
-      for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
-      for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
-  return CRYPT_OK;
+   /* now see if we can encrypt all zero bytes 1000 times, decrypt and come back where we started */
+   for (y = 0; y < 8; y++) buf[0][y] = 0;
+   for (y = 0; y < 1000; y++) safer_ecb_encrypt(buf[0], buf[0], &skey);
+   for (y = 0; y < 1000; y++) safer_ecb_decrypt(buf[0], buf[0], &skey);
+   for (y = 0; y < 8; y++) if (buf[0][y] != 0) return CRYPT_FAIL_TESTVECTOR;
+
+   return CRYPT_OK;
  #endif
 }
 
@@ -486,6 +490,6 @@ int safer_sk128_test(void)
 
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

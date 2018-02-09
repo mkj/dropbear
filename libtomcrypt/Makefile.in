@@ -9,8 +9,7 @@ VERSION=1.17
 PLATFORM := $(shell uname | sed -e 's/_.*//')
 
 
-VPATH=@srcdir@
-srcdir=@srcdir@
+srcdir=.
 
 # Compiler and Linker Names
 #CC=gcc

@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -48,6 +46,8 @@ int gcm_add_aad(gcm_state *gcm,
 
    /* in IV mode? */
    if (gcm->mode == LTC_GCM_MODE_IV) {
+      /* IV length must be > 0 */
+      if (gcm->buflen == 0 && gcm->totlen == 0) return CRYPT_ERROR;
       /* let's process the IV */
       if (gcm->ivmode || gcm->buflen != 12) {
          for (x = 0; x < (unsigned long)gcm->buflen; x++) {
@@ -66,7 +66,7 @@ int gcm_add_aad(gcm_state *gcm,
          }
          gcm_mult_h(gcm, gcm->X);
 
-         /* copy counter out */ 
+         /* copy counter out */
          XMEMCPY(gcm->Y, gcm->X, 16);
          zeromem(gcm->X, 16);
       } else {
@@ -92,7 +92,7 @@ int gcm_add_aad(gcm_state *gcm,
    if (gcm->buflen == 0) {
       for (x = 0; x < (adatalen & ~15); x += 16) {
           for (y = 0; y < 16; y += sizeof(LTC_FAST_TYPE)) {
-              *((LTC_FAST_TYPE*)(&gcm->X[y])) ^= *((LTC_FAST_TYPE*)(&adata[x + y]));
+              *(LTC_FAST_TYPE_PTR_CAST(&gcm->X[y])) ^= *(LTC_FAST_TYPE_PTR_CAST(&adata[x + y]));
           }
           gcm_mult_h(gcm, gcm->X);
           gcm->totlen += 128;
@@ -104,9 +104,9 @@ int gcm_add_aad(gcm_state *gcm,
 
    /* start adding AAD data to the state */
    for (; x < adatalen; x++) {
-       gcm->X[gcm->buflen++] ^= *adata++;
+      gcm->X[gcm->buflen++] ^= *adata++;
 
-       if (gcm->buflen == 16) {
+      if (gcm->buflen == 16) {
          /* GF mult it */
          gcm_mult_h(gcm, gcm->X);
          gcm->buflen = 0;
@@ -117,8 +117,8 @@ int gcm_add_aad(gcm_state *gcm,
    return CRYPT_OK;
 }
 #endif
-   
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

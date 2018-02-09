@@ -5,29 +5,27 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
-/** 
+/**
   @file omac_process.c
-  LTC_OMAC1 support, process data, Tom St Denis
+  OMAC1 support, process data, Tom St Denis
 */
 
 
 #ifdef LTC_OMAC
 
-/** 
-   Process data through LTC_OMAC
-   @param omac     The LTC_OMAC state
-   @param in       The input data to send through LTC_OMAC
+/**
+   Process data through OMAC
+   @param omac     The OMAC state
+   @param in       The input data to send through OMAC
    @param inlen    The length of the input (octets)
    @return CRYPT_OK if successful
 */
 int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 {
-   unsigned long n, x, blklen;
+   unsigned long n, x;
    int           err;
 
    LTC_ARGCHK(omac  != NULL);
@@ -42,23 +40,26 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
    }
 
 #ifdef LTC_FAST
-   blklen = cipher_descriptor[omac->cipher_idx].block_length;
-   if (omac->buflen == 0 && inlen > blklen) {
-      unsigned long y;
-      for (x = 0; x < (inlen - blklen); x += blklen) {
-          for (y = 0; y < blklen; y += sizeof(LTC_FAST_TYPE)) {
-              *((LTC_FAST_TYPE*)(&omac->prev[y])) ^= *((LTC_FAST_TYPE*)(&in[y]));
-          }
-          in += blklen;
-          if ((err = cipher_descriptor[omac->cipher_idx].ecb_encrypt(omac->prev, omac->prev, &omac->key)) != CRYPT_OK) {
-             return err;
-          }
-      }
-      inlen -= x;
-    }
+   {
+     unsigned long blklen = cipher_descriptor[omac->cipher_idx].block_length;
+
+     if (omac->buflen == 0 && inlen > blklen) {
+        unsigned long y;
+        for (x = 0; x < (inlen - blklen); x += blklen) {
+            for (y = 0; y < blklen; y += sizeof(LTC_FAST_TYPE)) {
+                *(LTC_FAST_TYPE_PTR_CAST(&omac->prev[y])) ^= *(LTC_FAST_TYPE_PTR_CAST(&in[y]));
+            }
+            in += blklen;
+            if ((err = cipher_descriptor[omac->cipher_idx].ecb_encrypt(omac->prev, omac->prev, &omac->key)) != CRYPT_OK) {
+               return err;
+            }
+        }
+        inlen -= x;
+     }
+   }
 #endif
 
-   while (inlen != 0) { 
+   while (inlen != 0) {
        /* ok if the block is full we xor in prev, encrypt and replace prev */
        if (omac->buflen == omac->blklen) {
           for (x = 0; x < (unsigned long)omac->blklen; x++) {
@@ -84,6 +85,6 @@ int omac_process(omac_state *omac, const unsigned char *in, unsigned long inlen)
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -5,15 +5,13 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file crypt_hash_is_valid.c
   Determine if hash is valid, Tom St Denis
-*/  
+*/
 
 /*
    Test if a hash index is valid
@@ -31,6 +29,6 @@ int hash_is_valid(int idx)
    return CRYPT_OK;
 }
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -5,14 +5,12 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
-/** 
+/**
   @file pkcs_1_os2ip.c
-  Octet to Integer OS2IP, Tom St Denis 
+  Octet to Integer OS2IP, Tom St Denis
 */
 #ifdef LTC_PKCS_1
 
@@ -31,6 +29,6 @@ int pkcs_1_os2ip(void *n, unsigned char *in, unsigned long inlen)
 #endif /* LTC_PKCS_1 */
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

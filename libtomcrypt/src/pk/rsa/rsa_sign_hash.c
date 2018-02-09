@@ -5,25 +5,23 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file rsa_sign_hash.c
-  RSA LTC_PKCS #1 v1.5 and v2 PSS sign hash, Tom St Denis and Andreas Lange
+  RSA PKCS #1 v1.5 and v2 PSS sign hash, Tom St Denis and Andreas Lange
 */
 
 #ifdef LTC_MRSA
 
 /**
-  LTC_PKCS #1 pad then sign
+  PKCS #1 pad then sign
   @param in        The hash to sign
   @param inlen     The length of the hash to sign (octets)
   @param out       [out] The signature
   @param outlen    [in/out] The max size and resulting size of the signature
-  @param padding   Type of padding (LTC_LTC_PKCS_1_PSS or LTC_LTC_PKCS_1_V1_5)
+  @param padding   Type of padding (LTC_PKCS_1_PSS, LTC_PKCS_1_V1_5 or LTC_PKCS_1_V1_5_NA1)
   @param prng      An active PRNG state
   @param prng_idx  The index of the PRNG desired
   @param hash_idx  The index of the hash desired
@@ -47,15 +45,21 @@ int rsa_sign_hash_ex(const unsigned char *in,       unsigned long  inlen,
    LTC_ARGCHK(key      != NULL);
 
    /* valid padding? */
-   if ((padding != LTC_LTC_PKCS_1_V1_5) && (padding != LTC_LTC_PKCS_1_PSS)) {
+   if ((padding != LTC_PKCS_1_V1_5) &&
+       (padding != LTC_PKCS_1_PSS) &&
+       (padding != LTC_PKCS_1_V1_5_NA1)) {
      return CRYPT_PK_INVALID_PADDING;
    }
 
-   if (padding == LTC_LTC_PKCS_1_PSS) {
-     /* valid prng and hash ? */
+   if (padding == LTC_PKCS_1_PSS) {
+     /* valid prng ? */
      if ((err = prng_is_valid(prng_idx)) != CRYPT_OK) {
         return err;
      }
+   }
+
+   if (padding != LTC_PKCS_1_V1_5_NA1) {
+     /* valid hash ? */
      if ((err = hash_is_valid(hash_idx)) != CRYPT_OK) {
         return err;
      }
@@ -71,7 +75,7 @@ int rsa_sign_hash_ex(const unsigned char *in,       unsigned long  inlen,
      return CRYPT_BUFFER_OVERFLOW;
   }
 
-  if (padding == LTC_LTC_PKCS_1_PSS) {
+  if (padding == LTC_PKCS_1_PSS) {
     /* PSS pad the key */
     x = *outlen;
     if ((err = pkcs_1_pss_encode(in, inlen, saltlen, prng, prng_idx,
@@ -79,48 +83,56 @@ int rsa_sign_hash_ex(const unsigned char *in,       unsigned long  inlen,
        return err;
     }
   } else {
-    /* LTC_PKCS #1 v1.5 pad the hash */
+    /* PKCS #1 v1.5 pad the hash */
     unsigned char *tmpin;
-    ltc_asn1_list digestinfo[2], siginfo[2];
 
-    /* not all hashes have OIDs... so sad */
-    if (hash_descriptor[hash_idx].OIDlen == 0) {
-       return CRYPT_INVALID_ARG;
-    }
-
-    /* construct the SEQUENCE 
-      SEQUENCE {
-         SEQUENCE {hashoid OID
-                   blah    NULL
-         }
-         hash    OCTET STRING 
+    if (padding == LTC_PKCS_1_V1_5) {
+      ltc_asn1_list digestinfo[2], siginfo[2];
+      /* not all hashes have OIDs... so sad */
+      if (hash_descriptor[hash_idx].OIDlen == 0) {
+         return CRYPT_INVALID_ARG;
       }
-   */
-    LTC_SET_ASN1(digestinfo, 0, LTC_ASN1_OBJECT_IDENTIFIER, hash_descriptor[hash_idx].OID, hash_descriptor[hash_idx].OIDlen);
-    LTC_SET_ASN1(digestinfo, 1, LTC_ASN1_NULL,              NULL,                          0);
-    LTC_SET_ASN1(siginfo,    0, LTC_ASN1_SEQUENCE,          digestinfo,                    2);
-    LTC_SET_ASN1(siginfo,    1, LTC_ASN1_OCTET_STRING,      in,                            inlen);
 
-    /* allocate memory for the encoding */
-    y = mp_unsigned_bin_size(key->N);
-    tmpin = XMALLOC(y);
-    if (tmpin == NULL) {
-       return CRYPT_MEM;
-    }
+    /* construct the SEQUENCE
+        SEQUENCE {
+           SEQUENCE {hashoid OID
+                     blah    NULL
+           }
+         hash    OCTET STRING
+        }
+     */
+      LTC_SET_ASN1(digestinfo, 0, LTC_ASN1_OBJECT_IDENTIFIER, hash_descriptor[hash_idx].OID, hash_descriptor[hash_idx].OIDlen);
+      LTC_SET_ASN1(digestinfo, 1, LTC_ASN1_NULL,              NULL,                          0);
+      LTC_SET_ASN1(siginfo,    0, LTC_ASN1_SEQUENCE,          digestinfo,                    2);
+      LTC_SET_ASN1(siginfo,    1, LTC_ASN1_OCTET_STRING,      in,                            inlen);
 
-    if ((err = der_encode_sequence(siginfo, 2, tmpin, &y)) != CRYPT_OK) {
-       XFREE(tmpin);
-       return err;
+      /* allocate memory for the encoding */
+      y = mp_unsigned_bin_size(key->N);
+      tmpin = XMALLOC(y);
+      if (tmpin == NULL) {
+         return CRYPT_MEM;
+      }
+
+      if ((err = der_encode_sequence(siginfo, 2, tmpin, &y)) != CRYPT_OK) {
+         XFREE(tmpin);
+         return err;
+      }
+    } else {
+      /* set the pointer and data-length to the input values */
+      tmpin = (unsigned char *)in;
+      y = inlen;
     }
 
     x = *outlen;
-    if ((err = pkcs_1_v1_5_encode(tmpin, y, LTC_LTC_PKCS_1_EMSA,
-                                  modulus_bitlen, NULL, 0,
-                                  out, &x)) != CRYPT_OK) {
+    err = pkcs_1_v1_5_encode(tmpin, y, LTC_PKCS_1_EMSA, modulus_bitlen, NULL, 0, out, &x);
+
+    if (padding == LTC_PKCS_1_V1_5) {
       XFREE(tmpin);
+    }
+
+    if (err != CRYPT_OK) {
       return err;
     }
-    XFREE(tmpin);
   }
 
   /* RSA encode it */
@@ -129,6 +141,6 @@ int rsa_sign_hash_ex(const unsigned char *in,       unsigned long  inlen,
 
 #endif /* LTC_MRSA */
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

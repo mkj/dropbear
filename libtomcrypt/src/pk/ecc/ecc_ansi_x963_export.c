@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /* Implements ECC over Z/pZ for curve y^2 = x^3 - 3x + b
@@ -19,7 +17,7 @@
 /**
   @file ecc_ansi_x963_export.c
   ECC Crypto, Tom St Denis
-*/  
+*/
 
 #ifdef LTC_MECC
 
@@ -32,33 +30,40 @@
 int ecc_ansi_x963_export(ecc_key *key, unsigned char *out, unsigned long *outlen)
 {
    unsigned char buf[ECC_BUF_SIZE];
-   unsigned long numlen;
+   unsigned long numlen, xlen, ylen;
 
    LTC_ARGCHK(key    != NULL);
-   LTC_ARGCHK(out    != NULL);
    LTC_ARGCHK(outlen != NULL);
 
    if (ltc_ecc_is_valid_idx(key->idx) == 0) {
       return CRYPT_INVALID_ARG;
    }
    numlen = key->dp->size;
+   xlen = mp_unsigned_bin_size(key->pubkey.x);
+   ylen = mp_unsigned_bin_size(key->pubkey.y);
+
+   if (xlen > numlen || ylen > numlen || sizeof(buf) < numlen) {
+      return CRYPT_BUFFER_OVERFLOW;
+   }
 
    if (*outlen < (1 + 2*numlen)) {
       *outlen = 1 + 2*numlen;
       return CRYPT_BUFFER_OVERFLOW;
    }
 
+   LTC_ARGCHK(out    != NULL);
+
    /* store byte 0x04 */
    out[0] = 0x04;
 
    /* pad and store x */
    zeromem(buf, sizeof(buf));
-   mp_to_unsigned_bin(key->pubkey.x, buf + (numlen - mp_unsigned_bin_size(key->pubkey.x)));
+   mp_to_unsigned_bin(key->pubkey.x, buf + (numlen - xlen));
    XMEMCPY(out+1, buf, numlen);
 
    /* pad and store y */
    zeromem(buf, sizeof(buf));
-   mp_to_unsigned_bin(key->pubkey.y, buf + (numlen - mp_unsigned_bin_size(key->pubkey.y)));
+   mp_to_unsigned_bin(key->pubkey.y, buf + (numlen - ylen));
    XMEMCPY(out+1+numlen, buf, numlen);
 
    *outlen = 1 + 2*numlen;
@@ -67,6 +72,6 @@ int ecc_ansi_x963_export(ecc_key *key, unsigned char *out, unsigned long *outlen
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -25,7 +23,7 @@
   @param keylen  The length of the secret key
   @return CRYPT_OK on success
  */
-int gcm_init(gcm_state *gcm, int cipher, 
+int gcm_init(gcm_state *gcm, int cipher,
              const unsigned char *key,  int keylen)
 {
    int           err;
@@ -92,8 +90,8 @@ int gcm_init(gcm_state *gcm, int cipher,
          }
          gcm->PC[x][y][0] = gcm_shift_table[t<<1];
          gcm->PC[x][y][1] ^= gcm_shift_table[(t<<1)+1];
-     }
-  }
+      }
+   }
 
 #endif
 
@@ -102,6 +100,6 @@ int gcm_init(gcm_state *gcm, int cipher,
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
