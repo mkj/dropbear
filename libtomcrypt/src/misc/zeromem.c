@@ -21,7 +21,7 @@
 */
 void zeromem(volatile void *out, size_t outlen)
 {
-   m_burn(out, outlen);
+   m_burn((void*)out, outlen);
 }
 
 /* ref:         $Format:%D$ */
