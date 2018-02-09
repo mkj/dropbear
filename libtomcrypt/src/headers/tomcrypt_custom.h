@@ -10,6 +10,8 @@
 #ifndef TOMCRYPT_CUSTOM_H_
 #define TOMCRYPT_CUSTOM_H_
 
+#include "tomcrypt_dropbear.h"
+
 /* macros for various libc functions you can change for embedded targets */
 #ifndef XMALLOC
 #define XMALLOC  malloc
@@ -138,9 +140,7 @@
 /* #define LTC_TEST_EXT */
 
 /* Use small code where possible */
-#if DROPBEAR_SMALL_CODE
-#define LTC_SMALL_CODE
-#endif
+/* #define LTC_SMALL_CODE */
 
 /* clean the stack of functions which put private information on stack */
 /* #define LTC_CLEAN_STACK */
@@ -174,24 +174,41 @@
 /* ---> Symmetric Block Ciphers <--- */
 #ifndef LTC_NO_CIPHERS
 
-#if DROPBEAR_BLOWFISH
 #define LTC_BLOWFISH
-#endif
-#if DROPBEAR_AES
+#define LTC_RC2
+#define LTC_RC5
+#define LTC_RC6
+#define LTC_SAFERP
 #define LTC_RIJNDAEL
-#endif
+#define LTC_XTEA
 /* _TABLES tells it to use tables during setup, _SMALL means to use the smaller scheduled key format
  * (saves 4KB of ram), _ALL_TABLES enables all tables during setup */
-#if DROPBEAR_TWOFISH
 #define LTC_TWOFISH
-#define LTC_TWOFISH_SMALL
+#ifndef LTC_NO_TABLES
+   #define LTC_TWOFISH_TABLES
+   /* #define LTC_TWOFISH_ALL_TABLES */
+#else
+   #define LTC_TWOFISH_SMALL
 #endif
-
-#if DROPBEAR_3DES
+/* #define LTC_TWOFISH_SMALL */
+/* LTC_DES includes EDE triple-DES */
 #define LTC_DES
-#endif
+#define LTC_CAST5
+#define LTC_NOEKEON
+#define LTC_SKIPJACK
+#define LTC_SAFER
+#define LTC_KHAZAD
+#define LTC_ANUBIS
+#define LTC_ANUBIS_TWEAK
+#define LTC_KSEED
+#define LTC_KASUMI
+#define LTC_MULTI2
+#define LTC_CAMELLIA
 
 /* stream ciphers */
+#define LTC_CHACHA
+#define LTC_RC4_STREAM
+#define LTC_SOBER128_STREAM
 
 #endif /* LTC_NO_CIPHERS */
 
@@ -199,36 +216,54 @@
 /* ---> Block Cipher Modes of Operation <--- */
 #ifndef LTC_NO_MODES
 
-#if DROPBEAR_ENABLE_CTR_MODE
+#define LTC_CFB_MODE
+#define LTC_OFB_MODE
+#define LTC_ECB_MODE
 #define LTC_CBC_MODE
+#define LTC_CTR_MODE
+
+/* F8 chaining mode */
+#define LTC_F8_MODE
+
+/* LRW mode */
+#define LTC_LRW_MODE
+#ifndef LTC_NO_TABLES
+   /* like GCM mode this will enable 16 8x128 tables [64KB] that make
+    * seeking very fast.
+    */
+   #define LTC_LRW_TABLES
 #endif
 
-#if DROPBEAR_ENABLE_CTR_MODE
-#define LTC_CTR_MODE
-#endif
+/* XTS mode */
+#define LTC_XTS_MODE
 
 #endif /* LTC_NO_MODES */
 
 /* ---> One-Way Hash Functions <--- */
 #ifndef LTC_NO_HASHES
 
-#if DROPBEAR_SHA512
+#define LTC_CHC_HASH
+#define LTC_WHIRLPOOL
+#define LTC_SHA3
 #define LTC_SHA512
-#endif
-
-#if DROPBEAR_SHA384
+#define LTC_SHA512_256
+#define LTC_SHA512_224
 #define LTC_SHA384
-#endif
-
-#if DROPBEAR_SHA256
 #define LTC_SHA256
-#endif
-
+#define LTC_SHA224
+#define LTC_TIGER
 #define LTC_SHA1
-
-#if DROPBEAR_MD5
 #define LTC_MD5
-#endif
+#define LTC_MD4
+#define LTC_MD2
+#define LTC_RIPEMD128
+#define LTC_RIPEMD160
+#define LTC_RIPEMD256
+#define LTC_RIPEMD320
+#define LTC_BLAKE2S
+#define LTC_BLAKE2B
+
+#define LTC_HASH_HELPERS
 
 #endif /* LTC_NO_HASHES */
 
@@ -237,8 +272,24 @@
 #ifndef LTC_NO_MACS
 
 #define LTC_HMAC
+#define LTC_OMAC
+#define LTC_PMAC
+#define LTC_XCBC
+#define LTC_F9_MODE
+#define LTC_PELICAN
+#define LTC_POLY1305
+#define LTC_BLAKE2SMAC
+#define LTC_BLAKE2BMAC
 
 /* ---> Encrypt + Authenticate Modes <--- */
+
+#define LTC_EAX_MODE
+
+#define LTC_OCB_MODE
+#define LTC_OCB3_MODE
+#define LTC_CCM_MODE
+#define LTC_GCM_MODE
+#define LTC_CHACHA20POLY1305_MODE
 
 /* Use 64KiB tables */
 #ifndef LTC_NO_TABLES
@@ -256,6 +307,26 @@
 /* --> Pseudo Random Number Generators <--- */
 #ifndef LTC_NO_PRNGS
 
+/* Yarrow */
+#define LTC_YARROW
+
+/* a PRNG that simply reads from an available system source */
+#define LTC_SPRNG
+
+/* The RC4 stream cipher based PRNG */
+#define LTC_RC4
+
+/* The ChaCha20 stream cipher based PRNG */
+#define LTC_CHACHA20_PRNG
+
+/* Fortuna PRNG */
+#define LTC_FORTUNA
+
+/* Greg's SOBER128 stream cipher based PRNG */
+#define LTC_SOBER128
+
+/* the *nix style /dev/random device */
+#define LTC_DEVRANDOM
 /* try /dev/urandom before trying /dev/random
  * are you sure you want to disable this? http://www.2uo.de/myths-about-urandom/ */
 #define LTC_TRY_URANDOM_FIRST
@@ -290,7 +361,7 @@
 
 #ifndef LTC_FORTUNA_POOLS
 /* number of pools (4..32) can save a bit of ram by lowering the count */
-#define LTC_FORTUNA_POOLS 0
+#define LTC_FORTUNA_POOLS 32
 #endif
 
 #endif /* LTC_FORTUNA */
@@ -299,32 +370,41 @@
 /* ---> Public Key Crypto <--- */
 #ifndef LTC_NO_PK
 
+/* Include RSA support */
+#define LTC_MRSA
+
+/* Include Diffie-Hellman support */
+/* is_prime fails for GMP */
+#define LTC_MDH
+/* Supported Key Sizes */
+#define LTC_DH768
+#define LTC_DH1024
+#define LTC_DH1536
+#define LTC_DH2048
+
+#ifndef TFM_DESC
+/* tfm has a problem in fp_isprime for larger key sizes */
+#define LTC_DH3072
+#define LTC_DH4096
+#define LTC_DH6144
+#define LTC_DH8192
+#endif
+
 /* Include Katja (a Rabin variant like RSA) */
 /* #define LTC_MKAT */
 
+/* Digital Signature Algorithm */
+#define LTC_MDSA
+
 /* ECC */
-#if DROPBEAR_ECC
 #define LTC_MECC
-#define LTM_DESC
 
 /* use Shamir's trick for point mul (speeds up signature verification) */
 #define LTC_ECC_SHAMIR
 
-#if DROPBEAR_ECC_256
-#define ECC256
-#endif
-#if DROPBEAR_ECC_384
-#define ECC384
-#endif
-#if DROPBEAR_ECC_521
-#define ECC521
-#endif
-
-#endif /* DROPBEAR_ECC */
-
 #if defined(TFM_DESC) && defined(LTC_MECC)
    #define LTC_MECC_ACCEL
-#endif   
+#endif
 
 /* do we want fixed point ECC */
 /* #define LTC_MECC_FP */
@@ -362,6 +442,8 @@
 
 /* Various tidbits of modern neatoness */
 #define LTC_BASE64
+/* ... and it's URL safe version */
+#define LTC_BASE64_URL
 
 /* Keep LTC_NO_HKDF for compatibility reasons
  * superseeded by LTC_NO_MISC*/
@@ -378,6 +460,20 @@
 
 /* cleanup */
 
+#ifdef LTC_MECC
+/* Supported ECC Key Sizes */
+#ifndef LTC_NO_CURVES
+   #define LTC_ECC112
+   #define LTC_ECC128
+   #define LTC_ECC160
+   #define LTC_ECC192
+   #define LTC_ECC224
+   #define LTC_ECC256
+   #define LTC_ECC384
+   #define LTC_ECC521
+#endif
+#endif
+
 #if defined(LTC_MECC) || defined(LTC_MRSA) || defined(LTC_MDSA) || defined(LTC_MKAT)
    /* Include the MPI functionality?  (required by the PK algorithms) */
    #define LTC_MPI
@@ -390,7 +486,7 @@
 
 #ifdef LTC_MRSA
    #define LTC_PKCS_1
-#endif   
+#endif
 
 #if defined(LTC_PELICAN) && !defined(LTC_RIJNDAEL)
    #error Pelican-MAC requires LTC_RIJNDAEL
@@ -408,7 +504,8 @@
    #error ASN.1 DER requires MPI functionality
 #endif
 
-#if (defined(LTC_MDSA) || defined(LTC_MRSA) || defined(LTC_MECC) || defined(LTC_MKAT)) && !defined(LTC_DER)
+/* Dropbear patched out LTC_MECC */
+#if (defined(LTC_MDSA) || defined(LTC_MRSA) || /*defined(LTC_MECC) ||*/ defined(LTC_MKAT)) && !defined(LTC_DER)
    #error PK requires ASN.1 DER functionality, make sure LTC_DER is enabled
 #endif
 

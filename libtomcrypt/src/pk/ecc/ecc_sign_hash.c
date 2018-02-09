@@ -9,7 +9,7 @@
 
 #include "tomcrypt.h"
 
-#ifdef LTC_MECC
+#if defined(LTC_MECC) && defined(LTC_DER)
 
 /**
   @file ecc_sign_hash.c
