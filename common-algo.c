@@ -179,9 +179,6 @@ algo_type sshciphers[] = {
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
 #endif
 #endif /* DROPBEAR_ENABLE_CBC_MODE */
-#if DROPBEAR_NONE_CIPHER
-	{"none", 0, (void*)&dropbear_nocipher, 1, &dropbear_mode_none},
-#endif
 	{NULL, 0, NULL, 0, NULL}
 };
 
@@ -465,38 +462,6 @@ out:
 	m_free(algolist);
 	return ret;
 }
-
-#if DROPBEAR_NONE_CIPHER
-
-void
-set_algo_usable(algo_type algos[], const char * algo_name, int usable)
-{
-	algo_type *a;
-	for (a = algos; a->name != NULL; a++)
-	{
-		if (strcmp(a->name, algo_name) == 0)
-		{
-			a->usable = usable;
-			return;
-		}
-	}
-}
-
-int
-get_algo_usable(algo_type algos[], const char * algo_name)
-{
-	algo_type *a;
-	for (a = algos; a->name != NULL; a++)
-	{
-		if (strcmp(a->name, algo_name) == 0)
-		{
-			return a->usable;
-		}
-	}
-	return 0;
-}
-
-#endif /* DROPBEAR_NONE_CIPHER */
 
 #if DROPBEAR_USER_ALGO_LIST
 

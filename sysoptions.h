@@ -243,10 +243,6 @@
 #endif
 #endif
 
-#ifndef DROPBEAR_NONE_CIPHER
-#define DROPBEAR_NONE_CIPHER 0
-#endif
-
 /* free memory before exiting */
 #define DROPBEAR_CLEANUP 1
 
