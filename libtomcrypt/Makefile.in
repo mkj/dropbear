@@ -22,6 +22,7 @@
 # make -f makefile.unix CC=icc AR=xiar CFLAGS="-fast -DUSE_LTM -DLTM_DESC -I/path/to/libtommath" EXTRALIBS=/path/to/libtommath/libtommath.a all
 #
 
+# Dropbear can build out of tree
 VPATH=@srcdir@
 srcdir=@srcdir@
 
@@ -32,10 +33,11 @@ LIBPATH   = $(PREFIX)/lib
 INCPATH   = $(PREFIX)/include
 DATAPATH  = $(PREFIX)/share/doc/libtomcrypt/pdf
 BINPATH   = $(PREFIX)/bin
-CC        = cc
-AR        = ar
+# Dropbear passes paths from parent makefile
+#CC        = cc
+#AR        = ar
 ARFLAGS   = r
-RANLIB    = ranlib
+#RANLIB    = ranlib
 #CFLAGS    = -O2 -DUSE_LTM -DLTM_DESC -I../libtommath
 EXTRALIBS = ../libtommath/libtommath.a
 
