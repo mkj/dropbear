@@ -48,3 +48,9 @@ after_success:
   - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
   - ~/inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
   - ~/inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
+
+branches:
+  only:
+    - master
+    - coverity
+
