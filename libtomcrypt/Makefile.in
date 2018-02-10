@@ -40,7 +40,7 @@ RANLIB    = ranlib
 EXTRALIBS = ../libtommath/libtommath.a
 
 #Compilation flags
-LTC_CFLAGS  = -Isrc/headers/ -I$(srcdir)/src/headers/ -I../ -I$(srcdir)/../ -DLTC_SOURCE -I../libtommath/ -I$(srcdir)/../libtommath/
+LTC_CFLAGS  = -Isrc/headers/ -I$(srcdir)/src/headers/ -I../ -I$(srcdir)/../ -DLTC_SOURCE -I../libtommath/ -I$(srcdir)/../libtommath/ $(CFLAGS)
 LTC_LDFLAGS = $(LDFLAGS) $(EXTRALIBS)
 VERSION=1.18.1
 
