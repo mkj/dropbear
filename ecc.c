@@ -221,46 +221,41 @@ mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, const ecc_key *private_
 
    /* type valid? */
 	if (private_key->type != PK_PRIVATE) {
-		goto done;
+		goto out;
 	}
 
 	if (private_key->dp != public_key->dp) {
-		goto done;
+		goto out;
 	}
 
    /* make new point */
 	result = ltc_ecc_new_point();
 	if (result == NULL) {
-		goto done;
+		goto out;
 	}
 
 	prime = m_malloc(sizeof(*prime));
 	m_mp_init(prime);
 
 	if (mp_read_radix(prime, (char *)private_key->dp->prime, 16) != CRYPT_OK) { 
-		goto done; 
+		goto out;
 	}
 	if (ltc_mp.ecc_ptmul(private_key->k, &public_key->pubkey, result, prime, 1) != CRYPT_OK) { 
-		goto done; 
+		goto out;
 	}
+
+	shared_secret = m_malloc(sizeof(*shared_secret));
+	m_mp_init(shared_secret);
+	if (mp_copy(result->x, shared_secret) != CRYPT_OK) {
+		goto out;
+	}
+
+	mp_clear(prime);
+	m_free(prime);
+	ltc_ecc_del_point(result);
 
 	err = DROPBEAR_SUCCESS;
-	done:
-	if (err == DROPBEAR_SUCCESS) {
-		shared_secret = m_malloc(sizeof(*shared_secret));
-		m_mp_init(shared_secret);
-		mp_copy(result->x, shared_secret);
-	}
-
-	if (prime) {
-		mp_clear(prime);
-		m_free(prime);
-	}
-	if (result)
-	{
-		ltc_ecc_del_point(result);
-	}
-
+	out:
 	if (err == DROPBEAR_FAILURE) {
 		dropbear_exit("ECC error");
 	}
