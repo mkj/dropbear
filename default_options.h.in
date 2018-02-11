@@ -3,12 +3,11 @@
 /*
                      > > > Read This < < <
 
-default_options.h.in (this file) documents compile-time options, and provides 
-default values.
+default_options.h.in  documents compile-time options, and provides default values.
 
 Local customisation should be added to localoptions.h which is
 used if it exists. Options defined there will override any options in this
-file (#ifndef guards added by ifndef_wrapper.sh).
+file.
 
 Options can also be defined with -DDROPBEAR_XXX in Makefile CFLAGS
 
