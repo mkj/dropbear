@@ -314,4 +314,8 @@ be overridden at runtime with -I. 0 disables idle timeouts */
 /* The default path. This will often get replaced by the shell */
 #define DEFAULT_PATH "/usr/bin:/bin"
 
+/* Include verbose debug output, enabled with -v at runtime. 
+ * This will add a reasonable amount to your executable size. */
+#define DEBUG_TRACE 0
+
 #endif /* DROPBEAR_DEFAULT_OPTIONS_H_ */
