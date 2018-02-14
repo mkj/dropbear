@@ -53,7 +53,7 @@ static void sesssigchild_handler(int val);
 static void closechansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
-static int sesscheckclose(const struct Channel *channel);
+static int sesscheckclose(struct Channel *channel);
 
 static void send_exitsignalstatus(const struct Channel *channel);
 static void send_msg_chansess_exitstatus(const struct Channel * channel,
@@ -74,7 +74,7 @@ const struct ChanType svrchansess = {
 /* required to clear environment */
 extern char** environ;
 
-static int sesscheckclose(const struct Channel *channel) {
+static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
 	return chansess->exit.exitpid != -1;
@@ -138,7 +138,6 @@ void svr_chansess_checksignal(void) {
  * the parent when it runs. This work correctly at least in the case of a
  * single shell spawned (ie the usual case) */
 static void sesssigchild_handler(int UNUSED(dummy)) {
-	unsigned int i;
 	struct sigaction sa_chld;
 
 	const int saved_errno = errno;
@@ -905,7 +904,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
 static void execchild(const void *user_data) {
-	struct ChanSess *chansess = user_data;
+	const struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
