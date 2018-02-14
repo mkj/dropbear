@@ -108,7 +108,7 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 	vsnprintf(exitmsg, sizeof(exitmsg), format, param);
 
 	/* Add the prefix depending on session/auth state */
-	if (!sessinitdone) {
+	if (!ses.init_done) {
 		snprintf(fullmsg, sizeof(fullmsg), "Exited: %s", exitmsg);
 	} else {
 		snprintf(fullmsg, sizeof(fullmsg), 

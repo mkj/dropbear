@@ -80,6 +80,55 @@ static int sesscheckclose(const struct Channel *channel) {
 	return chansess->exit.exitpid != -1;
 }
 
+void svr_chansess_checksignal(void) {
+	int status;
+	pid_t pid;
+
+	if (!ses.channel_signal_pending) {
+		return;
+	}
+
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		unsigned int i;
+		struct exitinfo *ex = NULL;
+		TRACE(("sigchld handler: pid %d", pid))
+
+		ex = NULL;
+		/* find the corresponding chansess */
+		for (i = 0; i < svr_ses.childpidsize; i++) {
+			if (svr_ses.childpids[i].pid == pid) {
+				TRACE(("found match session"));
+				ex = &svr_ses.childpids[i].chansess->exit;
+				break;
+			}
+		}
+
+		/* If the pid wasn't matched, then we might have hit the race mentioned
+		 * above. So we just store the info for the parent to deal with */
+		if (ex == NULL) {
+			TRACE(("using lastexit"));
+			ex = &svr_ses.lastexit;
+		}
+
+		ex->exitpid = pid;
+		if (WIFEXITED(status)) {
+			ex->exitstatus = WEXITSTATUS(status);
+		}
+		if (WIFSIGNALED(status)) {
+			ex->exitsignal = WTERMSIG(status);
+#if !defined(AIX) && defined(WCOREDUMP)
+			ex->exitcore = WCOREDUMP(status);
+#else
+			ex->exitcore = 0;
+#endif
+		} else {
+			/* we use this to determine how pid exited */
+			ex->exitsignal = -1;
+		}
+		
+	}
+}
+
 /* Handler for childs exiting, store the state for return to the client */
 
 /* There's a particular race we have to watch out for: if the forked child
@@ -89,63 +138,20 @@ static int sesscheckclose(const struct Channel *channel) {
  * the parent when it runs. This work correctly at least in the case of a
  * single shell spawned (ie the usual case) */
 static void sesssigchild_handler(int UNUSED(dummy)) {
-
-	int status;
-	pid_t pid;
 	unsigned int i;
 	struct sigaction sa_chld;
-	struct exitinfo *exit = NULL;
 
 	const int saved_errno = errno;
 
-	/* Make channel handling code look for closed channels */
-	ses.channel_signal_pending = 1;
-
 	TRACE(("enter sigchld handler"))
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		TRACE(("sigchld handler: pid %d", pid))
 
-		exit = NULL;
-		/* find the corresponding chansess */
-		for (i = 0; i < svr_ses.childpidsize; i++) {
-			if (svr_ses.childpids[i].pid == pid) {
-				TRACE(("found match session"));
-				exit = &svr_ses.childpids[i].chansess->exit;
-				break;
-			}
-		}
-
-		/* If the pid wasn't matched, then we might have hit the race mentioned
-		 * above. So we just store the info for the parent to deal with */
-		if (exit == NULL) {
-			TRACE(("using lastexit"));
-			exit = &svr_ses.lastexit;
-		}
-
-		exit->exitpid = pid;
-		if (WIFEXITED(status)) {
-			exit->exitstatus = WEXITSTATUS(status);
-		}
-		if (WIFSIGNALED(status)) {
-			exit->exitsignal = WTERMSIG(status);
-#if !defined(AIX) && defined(WCOREDUMP)
-			exit->exitcore = WCOREDUMP(status);
-#else
-			exit->exitcore = 0;
-#endif
-		} else {
-			/* we use this to determine how pid exited */
-			exit->exitsignal = -1;
-		}
-		
-		/* Make sure that the main select() loop wakes up */
-		while (1) {
-			/* isserver is just a random byte to write. We can't do anything
-			about an error so should just ignore it */
-			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
-					|| errno != EINTR) {
-				break;
-			}
+	/* Make sure that the main select() loop wakes up */
+	while (1) {
+		/* isserver is just a random byte to write. We can't do anything
+		about an error so should just ignore it */
+		if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
+				|| errno != EINTR) {
+			break;
 		}
 	}
 

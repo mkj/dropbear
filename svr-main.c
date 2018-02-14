@@ -188,7 +188,7 @@ static void main_noinetd() {
 
 		val = select(maxsock+1, &fds, NULL, NULL, NULL);
 
-		if (exitflag) {
+		if (ses.exitflag) {
 			unlink(svr_opts.pidfile);
 			dropbear_exit("Terminated by signal");
 		}
@@ -359,7 +359,7 @@ static void sigsegv_handler(int UNUSED(unused)) {
 /* catch ctrl-c or sigterm */
 static void sigintterm_handler(int UNUSED(unused)) {
 
-	exitflag = 1;
+	ses.exitflag = 1;
 }
 
 /* Things used by inetd and non-inetd modes */
