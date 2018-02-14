@@ -124,7 +124,6 @@ int SETUP(const unsigned char *key, int keylen, int num_rounds, symmetric_key *s
     int i;
     ulong32 temp, *rk;
 #ifndef ENCRYPT_ONLY
-    int j;
     ulong32 *rrk;
 #endif    
     LTC_ARGCHK(key  != NULL);
