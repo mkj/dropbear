@@ -86,7 +86,7 @@ static void main_inetd() {
 #if DEBUG_TRACE
 	if (debug_trace) {
 		/* -v output goes to stderr which would get sent over the inetd network socket */
-		dropbear_exit(LOG_ERR, "Dropbear inetd mode is incompatible with debug -v");
+		dropbear_exit("Dropbear inetd mode is incompatible with debug -v");
 	}
 #endif
 
