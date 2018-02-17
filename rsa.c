@@ -68,6 +68,12 @@ int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key) {
 		goto out;
 	}
 
+	/* 64 bit is limit used by openssl, so we won't block any keys in the wild */
+	if (mp_count_bits(key->e) > 64) {
+		dropbear_log(LOG_WARNING, "RSA key bad e");
+		goto out;
+	}
+
 	TRACE(("leave buf_get_rsa_pub_key: success"))
 	ret = DROPBEAR_SUCCESS;
 out:
