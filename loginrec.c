@@ -1330,7 +1330,8 @@ lastlog_openseek(struct logininfo *li, int *fd, int filemode)
 
 		if ( lseek(*fd, offset, SEEK_SET) != offset ) {
 			dropbear_log(LOG_WARNING, "lastlog_openseek: %s->lseek(): %s",
-			 lastlog_file, strerror(errno));
+				lastlog_file, strerror(errno));
+			m_close(*fd);
 			return 0;
 		}
 	}
