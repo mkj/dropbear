@@ -59,7 +59,7 @@ char * stripcontrol(const char * text);
 int spawn_command(void(*exec_fn)(const void *user_data), const void *exec_data,
 		int *writefd, int *readfd, int *errfd, pid_t *pid);
 void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell);
-#ifdef ENABLE_CONNECT_UNIX
+#if ENABLE_CONNECT_UNIX
 int connect_unix(const char* addr);
 #endif
 int buf_readfile(buffer* buf, const char* filename);

@@ -3,12 +3,11 @@
 /*
                      > > > Read This < < <
 
-default_options.h.in (this file) documents compile-time options, and provides 
-default values.
+default_options.h.in  documents compile-time options, and provides default values.
 
 Local customisation should be added to localoptions.h which is
 used if it exists. Options defined there will override any options in this
-file (#ifndef guards added by ifndef_wrapper.sh).
+file.
 
 Options can also be defined with -DDROPBEAR_XXX in Makefile CFLAGS
 
@@ -37,10 +36,9 @@ IMPORTANT: Many options will require "make clean" after changes */
 #define NON_INETD_MODE 1
 #define INETD_MODE 1
 
-/* Setting this disables the fast exptmod bignum code. It saves ~5kB, but is
- * perhaps 20% slower for pubkey operations (it is probably worth experimenting
- * if you want to use this) */
-/*#define NO_FAST_EXPTMOD*/
+#if !(NON_INETD_MODE || INETD_MODE)
+	#error "NON_INETD_MODE or INETD_MODE (or both) must be enabled."
+#endif
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
 several kB in binary size however will make the symmetrical ciphers and hashes
@@ -78,7 +76,7 @@ much traffic. */
 #define DROPBEAR_CLI_NETCAT 1
 
 /* Whether to support "-c" and "-m" flags to choose ciphers/MACs at runtime */
-#define ENABLE_USER_ALGO_LIST 1
+#define DROPBEAR_USER_ALGO_LIST 1
 
 /* Encryption - at least one required.
  * Protocol RFC requires 3DES and recommends AES128 for interoperability.
@@ -87,10 +85,15 @@ much traffic. */
 #define DROPBEAR_AES128 1
 #define DROPBEAR_3DES 1
 #define DROPBEAR_AES256 1
-/* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
-/*#define DROPBEAR_BLOWFISH*/
 #define DROPBEAR_TWOFISH256 1
 #define DROPBEAR_TWOFISH128 1
+/* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
+#define DROPBEAR_BLOWFISH 0
+
+#if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_BLOWFISH \
+      || DROPBEAR_TWOFISH256 || DROPBEAR_TWOFISH128)
+	#error "At least one encryption algorithm must be enabled; 3DES and AES128 are recommended."
+#endif
 
 /* Enable CBC mode for ciphers. This has security issues though
  * is the most compatible with older SSH implementations */
@@ -129,6 +132,10 @@ If you test it please contact the Dropbear author */
  * code (either ECDSA or ECDH) increases binary size - around 30kB
  * on x86-64 */
 #define DROPBEAR_ECDSA 1
+
+#if !(DROPBEAR_RSA || DROPBEAR_DSS || DROPBEAR_ECDSA)
+	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
+#endif
 
 /* RSA must be >=1024 */
 #define DROPBEAR_DEFAULT_RSA_SIZE 2048
@@ -194,15 +201,38 @@ If you test it please contact the Dropbear author */
  * PAM challenge/response.
  * You can't enable both PASSWORD and PAM. */
 
-/* This requires crypt() */
-#ifdef HAVE_CRYPT
-#define DROPBEAR_SVR_PASSWORD_AUTH 1
-#else
-#define DROPBEAR_SVR_PASSWORD_AUTH 0
-#endif
 /* PAM requires ./configure --enable-pam */
-#define DROPBEAR_SVR_PAM_AUTH 0
+#if defined(HAVE_LIBPAM) && !DROPBEAR_SVR_PASSWORD_AUTH
+	#define DROPBEAR_SVR_PAM_AUTH 1
+#else
+	#define DROPBEAR_SVR_PAM_AUTH 0
+#endif
+
+/* This requires crypt() */
+#if defined(HAVE_CRYPT) && !DROPBEAR_SVR_PAM_AUTH
+	#define DROPBEAR_SVR_PASSWORD_AUTH 1
+#else
+	#define DROPBEAR_SVR_PASSWORD_AUTH 0
+#endif
+
 #define DROPBEAR_SVR_PUBKEY_AUTH 1
+
+#if !(DROPBEAR_SVR_PASSWORD_AUTH || DROPBEAR_SVR_PAM_AUTH || DROPBEAR_SVR_PUBKEY_AUTH)
+	#error "At least one server authentication type must be enabled; PUBKEY and PASSWORD are recommended."
+#endif
+
+#if DROPBEAR_SVR_PASSWORD_AUTH && !HAVE_CRYPT
+	#error "DROPBEAR_SVR_PASSWORD_AUTH requires `crypt()'."
+#endif
+
+#if DROPBEAR_SVR_PAM_AUTH
+	#if DISABLE_PAM
+		#error "DROPBEAR_SVR_PAM_AUTH requires 'configure --enable-pam' to succeed."
+	#endif
+	#if DROPBEAR_SVR_PASSWORD_AUTH
+		#error "DROPBEAR_SVR_PASSWORD_AUTH cannot be enabled at the same time as DROPBEAR_SVR_PAM_AUTH."
+	#endif
+#endif
 
 /* Whether to take public key options in 
  * authorized_keys file into account */
@@ -210,10 +240,17 @@ If you test it please contact the Dropbear author */
 
 /* This requires getpass. */
 #ifdef HAVE_GETPASS
-#define DROPBEAR_CLI_PASSWORD_AUTH 1
-#define DROPBEAR_CLI_INTERACT_AUTH 1
+	#define DROPBEAR_CLI_PASSWORD_AUTH 1
+	#define DROPBEAR_CLI_INTERACT_AUTH 1
+#else
+	#define DROPBEAR_CLI_PASSWORD_AUTH 0
+	#define DROPBEAR_CLI_INTERACT_AUTH 0
 #endif
 #define DROPBEAR_CLI_PUBKEY_AUTH 1
+
+#if !(DROPBEAR_CLI_PASSWORD_AUTH || DROPBEAR_CLI_PUBKEY_AUTH)
+	#error "At least one client authentication type must be enabled; PUBKEY and PASSWORD are recommended."
+#endif
 
 /* A default argument for dbclient -i <privatekey>. 
 Homedir is prepended unless path begins with / */
@@ -225,7 +262,7 @@ Homedir is prepended unless path begins with / */
  * note that it will be provided for all "hidden" client-interactive
  * style prompts - if you want something more sophisticated, use 
  * SSH_ASKPASS instead. Comment out this var to remove this functionality.*/
-#define DROPBEAR_PASSWORD_ENV "DROPBEAR_PASSWORD"
+#define DROPBEAR_USE_DROPBEAR_PASSWORD 1
 
 /* Define this (as well as DROPBEAR_CLI_PASSWORD_AUTH) to allow the use of
  * a helper program for the ssh client. The helper program should be
@@ -233,6 +270,10 @@ Homedir is prepended unless path begins with / */
  * should be run with DISPLAY set and no tty. The program should
  * return the password on standard output */
 #define DROPBEAR_CLI_ASKPASS_HELPER 0
+
+#if DROPBEAR_CLI_ASKPASS_HELPER
+	#define DROPBEAR_CLI_PASSWORD_AUTH 1
+#endif
 
 /* Save a network roundtrip by sendng a real auth request immediately after
  * sending a query for the available methods.  It is at the expense of < 100
@@ -246,8 +287,8 @@ Homedir is prepended unless path begins with / */
 #define DROPBEAR_URANDOM_DEV "/dev/urandom"
 
 /* Set this to use PRNGD or EGD instead of /dev/urandom or /dev/random */
-/*#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"*/
-
+#define DROPBEAR_USE_PRNGD 0
+#define DROPBEAR_PRNGD_SOCKET "/var/run/dropbear-rng"
 
 /* Specify the number of clients we will allow to be connected but
  * not yet authenticated. After this limit, connections are rejected */
@@ -269,6 +310,8 @@ Homedir is prepended unless path begins with / */
 /* The command to invoke for xauth when using X11 forwarding.
  * "-q" for quiet */
 #define XAUTH_COMMAND "/usr/bin/xauth -q"
+
+#define DROPBEAR_SFTPSERVER 1
 
 /* if you want to enable running an sftp server (such as the one included with
  * OpenSSH), set the path below. If the path isn't defined, sftp will not
@@ -314,5 +357,9 @@ be overridden at runtime with -I. 0 disables idle timeouts */
 
 /* The default path. This will often get replaced by the shell */
 #define DEFAULT_PATH "/usr/bin:/bin"
+
+/* Include verbose debug output, enabled with -v at runtime. 
+ * This will add a reasonable amount to your executable size. */
+#define DEBUG_TRACE 0
 
 #endif /* DROPBEAR_DEFAULT_OPTIONS_H_ */

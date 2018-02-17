@@ -870,7 +870,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		 */
 		numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
 
-	#ifdef DROPBEAR_RSA
+	#if DROPBEAR_RSA
 		if (key->type == DROPBEAR_SIGNKEY_RSA) {
 
 			if (key->rsakey->p == NULL || key->rsakey->q == NULL) {
@@ -966,7 +966,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		}
 	#endif /* DROPBEAR_RSA */
 
-	#ifdef DROPBEAR_DSS
+	#if DROPBEAR_DSS
 		if (key->type == DROPBEAR_SIGNKEY_DSS) {
 
 			/* p */

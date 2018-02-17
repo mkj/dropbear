@@ -118,7 +118,7 @@ void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection 
 	cli_session_init(proxy_cmd_pid);
 
 	/* Ready to go */
-	sessinitdone = 1;
+	ses.init_done = 1;
 
 	/* Exchange identification */
 	send_session_identification();
@@ -338,7 +338,7 @@ void kill_proxy_command(void) {
 
 static void cli_session_cleanup(void) {
 
-	if (!sessinitdone) {
+	if (!ses.init_done) {
 		return;
 	}
 

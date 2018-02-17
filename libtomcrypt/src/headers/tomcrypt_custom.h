@@ -68,8 +68,8 @@
   #define LTC_NO_MODES
   #define LTC_NO_HASHES
   #define LTC_NO_MACS
-  #define LTC_NO_PRNGS
-  #define LTC_NO_PK
+   #define LTC_NO_PRNGS
+   #define LTC_NO_PK
   #define LTC_NO_PKCS
   #define LTC_NO_MISC
 #endif /* LTC_NOTHING */

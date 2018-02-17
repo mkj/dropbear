@@ -40,9 +40,6 @@
 #include "dbutil.h"
 #include "netio.h"
 
-extern int sessinitdone; /* Is set to 0 somewhere */
-extern int exitflag;
-
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)()) ATTRIB_NORETURN;
 void session_cleanup(void);
@@ -157,6 +154,7 @@ struct sshsession {
 	
 	int signal_pipe[2]; /* stores endpoints of a self-pipe used for
 						   race-free signal handling */
+	int channel_signal_pending; /* Flag set when the signal pipe is triggered */
 
 	m_list conn_pending;
 						
@@ -203,7 +201,6 @@ struct sshsession {
 	unsigned int chansize; /* the number of Channel*s allocated for channels */
 	unsigned int chancount; /* the number of Channel*s in use */
 	const struct ChanType **chantypes; /* The valid channel types */
-	int channel_signal_pending; /* Flag set by sigchld handler */
 
 	/* TCP priority level for the main "port 22" tcp socket */
 	enum dropbear_prio socket_prio;
@@ -216,6 +213,10 @@ struct sshsession {
 	 * really belong here, but nowhere else fits nicely */
 	int allowprivport;
 
+	/* this is set when we get SIGINT or SIGTERM, the handler is in main.c */
+	volatile int exitflag;
+	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
+	int init_done;
 };
 
 struct serversession {
@@ -283,7 +284,7 @@ struct clientsession {
 	/* for escape char handling */
 	int last_char;
 
-	int winchange; /* Set to 1 when a windowchange signal happens */
+	volatile int winchange; /* Set to 1 when a windowchange signal happens */
 
 	int lastauthtype; /* either AUTH_TYPE_PUBKEY or AUTH_TYPE_PASSWORD,
 						 for the last type of auth we tried */

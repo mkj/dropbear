@@ -94,6 +94,7 @@ void cli_send_netcat_request(void);
 #endif
 
 void svr_chansessinitialise(void);
+void svr_chansess_checksignal(void);
 extern const struct ChanType svrchansess;
 
 struct SigMap {

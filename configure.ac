@@ -11,7 +11,6 @@ AC_CONFIG_SRCDIR(buffer.c)
 
 # Checks for programs.
 AC_PROG_CC
-AC_PROG_MAKE_SET
 
 if test -z "$LD" ; then
 	LD=$CC
@@ -111,6 +110,11 @@ if test "$hardenbuild" -eq 1; then
 	    )
 	# FORTIFY_SOURCE
 	DB_TRYADDCFLAGS([-D_FORTIFY_SOURCE=2])
+
+	# Spectre v2 mitigations
+	DB_TRYADDCFLAGS([-mfunction-return=thunk])
+	DB_TRYADDCFLAGS([-mindirect-branch=thunk])
+
 fi
 
 # large file support is useful for scp

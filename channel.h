@@ -94,9 +94,9 @@ struct Channel {
 struct ChanType {
 
 	int sepfds; /* Whether this channel has separate pipes for in/out or not */
-	char *name;
+	const char *name;
 	int (*inithandler)(struct Channel*);
-	int (*check_close)(struct Channel*);
+	int (*check_close)(const struct Channel*);
 	void (*reqhandler)(struct Channel*);
 	void (*closehandler)(const struct Channel*);
 };
