@@ -23,7 +23,11 @@
 #define AUTH_TIMEOUT 300 /* we choose 5 minutes */
 #endif
 
- #define DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT ((DROPBEAR_SVR_PUBKEY_AUTH) && (DROPBEAR_SVR_PUBKEY_OPTIONS))
+#define DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT ((DROPBEAR_SVR_PUBKEY_AUTH) && (DROPBEAR_SVR_PUBKEY_OPTIONS))
+
+#if !(NON_INETD_MODE || INETD_MODE)
+	#error "NON_INETD_MODE or INETD_MODE (or both) must be enabled."
+#endif
 
 /* A client should try and send an initial key exchange packet guessing
  * the algorithm that will match - saves a round trip connecting, has little
@@ -204,6 +208,39 @@
 #if (DROPBEAR_SVR_PASSWORD_AUTH) && (DROPBEAR_SVR_PAM_AUTH)
 #error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
 #endif
+
+/* PAM requires ./configure --enable-pam */
+#if !defined(HAVE_LIBPAM) && DROPBEAR_SVR_PAM_AUTH
+#error "DROPBEAR_SVR_PATM_AUTH requires PAM headers. Perhaps ./configure --enable-pam ?"
+#endif
+
+#if DROPBEAR_SVR_PASSWORD_AUTH && !HAVE_CRYPT
+	#error "DROPBEAR_SVR_PASSWORD_AUTH requires `crypt()'."
+#endif
+
+#if !(DROPBEAR_SVR_PASSWORD_AUTH || DROPBEAR_SVR_PAM_AUTH || DROPBEAR_SVR_PUBKEY_AUTH)
+	#error "At least one server authentication type must be enabled. DROPBEAR_SVR_PUBKEY_AUTH and DROPBEAR_SVR_PASSWORD_AUTH are recommended."
+#endif
+
+
+#if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_BLOWFISH \
+      || DROPBEAR_TWOFISH256 || DROPBEAR_TWOFISH128)
+	#error "At least one encryption algorithm must be enabled. AES128 is recommended."
+#endif
+
+#if !(DROPBEAR_RSA || DROPBEAR_DSS || DROPBEAR_ECDSA)
+	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
+#endif
+
+/* Source for randomness. This must be able to provide hundreds of bytes per SSH
+ * connection without blocking. */
+#ifndef DROPBEAR_URANDOM_DEV
+#define DROPBEAR_URANDOM_DEV "/dev/urandom"
+#endif
+
+/* client keyboard interactive authentication is often used for password auth.
+ rfc4256 */
+#define DROPBEAR_CLI_INTERACT_AUTH (DROPBEAR_CLI_PASSWORD_AUTH)
 
 /* We use dropbear_client and dropbear_server as shortcuts to avoid redundant
  * code, if we're just compiling as client or server */

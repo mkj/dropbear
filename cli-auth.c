@@ -60,7 +60,7 @@ void cli_auth_getmethods() {
 	*/
 	if (ses.keys->trans.algo_comp != DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.authstate.authtypes = AUTH_TYPE_PUBKEY;
-#if DROPBEAR_USE_DROPBEAR_PASSWORD
+#if DROPBEAR_USE_PASSWORD_ENV
 		if (getenv(DROPBEAR_PASSWORD_ENV)) {
 			ses.authstate.authtypes |= AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
 		}
@@ -337,7 +337,7 @@ char* getpass_or_cancel(const char* prompt)
 {
 	char* password = NULL;
 	
-#if DROPBEAR_USE_DROPBEAR_PASSWORD
+#if DROPBEAR_USE_PASSWORD_ENV
 	/* Password provided in an environment var */
 	password = getenv(DROPBEAR_PASSWORD_ENV);
 	if (password)
