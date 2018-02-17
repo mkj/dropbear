@@ -53,7 +53,7 @@ static void sesssigchild_handler(int val);
 static void closechansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
-static int sesscheckclose(struct Channel *channel);
+static int sesscheckclose(const struct Channel *channel);
 
 static void send_exitsignalstatus(const struct Channel *channel);
 static void send_msg_chansess_exitstatus(const struct Channel * channel,
@@ -74,7 +74,7 @@ const struct ChanType svrchansess = {
 /* required to clear environment */
 extern char** environ;
 
-static int sesscheckclose(struct Channel *channel) {
+static int sesscheckclose(const struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
 	return chansess->exit.exitpid != -1;
