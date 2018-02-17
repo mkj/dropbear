@@ -85,6 +85,6 @@ int s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

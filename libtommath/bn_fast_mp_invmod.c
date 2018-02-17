@@ -143,6 +143,6 @@ LBL_ERR:mp_clear_multi (&x, &y, &u, &v, &B, &D, NULL);
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

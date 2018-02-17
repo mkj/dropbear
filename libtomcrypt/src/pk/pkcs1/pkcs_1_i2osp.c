@@ -5,14 +5,12 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
-/** 
+/**
   @file pkcs_1_i2osp.c
-  Integer to Octet I2OSP, Tom St Denis 
+  Integer to Octet I2OSP, Tom St Denis
 */
 
 #ifdef LTC_PKCS_1
@@ -22,7 +20,7 @@
  */
 
 /**
-   LTC_PKCS #1 Integer to binary
+   PKCS #1 Integer to binary
    @param n             The integer to store
    @param modulus_len   The length of the RSA modulus
    @param out           [out] The destination for the integer
@@ -46,6 +44,6 @@ int pkcs_1_i2osp(void *n, unsigned long modulus_len, unsigned char *out)
 #endif /* LTC_PKCS_1 */
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

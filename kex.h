@@ -51,7 +51,7 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 #if DROPBEAR_CURVE25519
 struct kex_curve25519_param *gen_kexcurve25519_param(void);
 void free_kexcurve25519_param(struct kex_curve25519_param *param);
-void kexcurve25519_comb_key(struct kex_curve25519_param *param, buffer *pub_them,
+void kexcurve25519_comb_key(const struct kex_curve25519_param *param, const buffer *pub_them,
 		sign_key *hostkey);
 #endif
 

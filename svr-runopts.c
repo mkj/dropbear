@@ -64,7 +64,7 @@ static void printhelp(const char * progname) {
 #else
 					"-E		Log to stderr rather than syslog\n"
 #endif
-#ifdef DO_MOTD
+#if DO_MOTD
 					"-m		Don't display the motd on login\n"
 #endif
 					"-w		Disallow root logins\n"
@@ -88,7 +88,7 @@ static void printhelp(const char * progname) {
 					"		(default port is %s if none specified)\n"
 					"-P PidFile	Create pid file PidFile\n"
 					"		(default %s)\n"
-#ifdef INETD_MODE
+#if INETD_MODE
 					"-i		Start for inetd\n"
 #endif
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
@@ -156,7 +156,7 @@ void svr_getopts(int argc, char ** argv) {
 	opts.ipv4 = 1;
 	opts.ipv6 = 1;
 	*/
-#ifdef DO_MOTD
+#if DO_MOTD
 	svr_opts.domotd = 1;
 #endif
 #ifndef DISABLE_SYSLOG
@@ -210,7 +210,7 @@ void svr_getopts(int argc, char ** argv) {
 					opts.listen_fwd_all = 1;
 					break;
 #endif
-#ifdef INETD_MODE
+#if INETD_MODE
 				case 'i':
 					svr_opts.inetdmode = 1;
 					break;
@@ -221,7 +221,7 @@ void svr_getopts(int argc, char ** argv) {
 				case 'P':
 					next = &svr_opts.pidfile;
 					break;
-#ifdef DO_MOTD
+#if DO_MOTD
 				/* motd is displayed by default, -m turns it off */
 				case 'm':
 					svr_opts.domotd = 0;

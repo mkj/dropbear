@@ -86,7 +86,7 @@ typedef struct svr_runopts {
 	int ipv6;
 	*/
 
-#ifdef DO_MOTD
+#if DO_MOTD
 	/* whether to print the MOTD */
 	int domotd;
 #endif
@@ -167,6 +167,8 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_PROXYCMD
 	char *proxycmd;
 #endif
+	char *bind_address;
+	char *bind_port;
 } cli_runopts;
 
 extern cli_runopts cli_opts;

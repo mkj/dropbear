@@ -307,13 +307,13 @@ int main(int argc, char *argv[])
       printf("%s\n", buf);
    } else if (n == 10) {
       /* invmod test */
+      do {
       rand_num2(&a);
       rand_num2(&b);
       b.sign = MP_ZPOS;
       a.sign = MP_ZPOS;
       mp_gcd(&a, &b, &c);
-      if (mp_cmp_d(&c, 1) != 0) continue;
-      if (mp_cmp_d(&b, 1) == 0) continue;
+      } while (mp_cmp_d(&c, 1) != 0 || mp_cmp_d(&b, 1) == 0);
       mp_invmod(&a, &b, &c);
       printf("invmod\n");
       mp_to64(&a, buf);

@@ -22,6 +22,6 @@ mp_mod_d (mp_int * a, mp_digit b, mp_digit * c)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -118,7 +118,7 @@ void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection 
 	cli_session_init(proxy_cmd_pid);
 
 	/* Ready to go */
-	sessinitdone = 1;
+	ses.init_done = 1;
 
 	/* Exchange identification */
 	send_session_identification();
@@ -164,13 +164,6 @@ static void cli_session_init(pid_t proxy_cmd_pid) {
 	/* Auth */
 	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
-
-#if DROPBEAR_NONE_CIPHER
-	cli_ses.cipher_none_after_auth = get_algo_usable(sshciphers, "none");
-	set_algo_usable(sshciphers, "none", 0);
-#else
-	cli_ses.cipher_none_after_auth = 0;
-#endif
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
@@ -275,14 +268,6 @@ static void cli_sessionloop() {
 			}
 #endif
 
-#if DROPBEAR_NONE_CIPHER
-			if (cli_ses.cipher_none_after_auth)
-			{
-				set_algo_usable(sshciphers, "none", 1);
-				send_msg_kexinit();
-			}
-#endif
-
 			if (cli_opts.backgrounded) {
 				int devnull;
 				/* keeping stdin open steals input from the terminal and
@@ -353,7 +338,7 @@ void kill_proxy_command(void) {
 
 static void cli_session_cleanup(void) {
 
-	if (!sessinitdone) {
+	if (!ses.init_done) {
 		return;
 	}
 

@@ -5,28 +5,26 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file katja_exptmod.c
-  Katja LTC_PKCS-style exptmod, Tom St Denis
-*/  
+  Katja PKCS-style exptmod, Tom St Denis
+*/
 
-#ifdef MKAT
+#ifdef LTC_MKAT
 
-/** 
-   Compute an RSA modular exponentiation 
+/**
+   Compute an RSA modular exponentiation
    @param in         The input data to send into RSA
    @param inlen      The length of the input (octets)
-   @param out        [out] The destination 
+   @param out        [out] The destination
    @param outlen     [in/out] The max size and resulting size of the output
    @param which      Which exponent to use, e.g. PK_PRIVATE or PK_PUBLIC
-   @param key        The RSA key to use 
+   @param key        The RSA key to use
    @return CRYPT_OK if successful
-*/   
+*/
 int katja_exptmod(const unsigned char *in,   unsigned long inlen,
                         unsigned char *out,  unsigned long *outlen, int which,
                         katja_key *key)
@@ -39,7 +37,7 @@ int katja_exptmod(const unsigned char *in,   unsigned long inlen,
    LTC_ARGCHK(out    != NULL);
    LTC_ARGCHK(outlen != NULL);
    LTC_ARGCHK(key    != NULL);
-  
+
    /* is the key of the right type for the operation? */
    if (which == PK_PRIVATE && (key->type != PK_PRIVATE)) {
       return CRYPT_PK_NOT_PRIVATE;
@@ -110,6 +108,6 @@ done:
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

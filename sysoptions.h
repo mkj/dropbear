@@ -192,7 +192,7 @@
 
 #define DROPBEAR_CLI_MULTIHOP ((DROPBEAR_CLI_NETCAT) && (DROPBEAR_CLI_PROXYCMD))
 
-#define ENABLE_CONNECT_UNIX ((DROPBEAR_CLI_AGENTFWD) || (DROPBEAR_PRNGD_SOCKET))
+#define ENABLE_CONNECT_UNIX ((DROPBEAR_CLI_AGENTFWD) || (DROPBEAR_USE_PRNGD))
 
 /* if we're using authorized_keys or known_hosts */ 
 #define DROPBEAR_KEY_LINES ((DROPBEAR_CLIENT) || (DROPBEAR_SVR_PUBKEY_AUTH))
@@ -241,10 +241,6 @@
 #else
 #define DROPBEAR_LISTEN_BACKLOG MAX_CHANNELS
 #endif
-#endif
-
-#ifndef DROPBEAR_NONE_CIPHER
-#define DROPBEAR_NONE_CIPHER 0
 #endif
 
 /* free memory before exiting */

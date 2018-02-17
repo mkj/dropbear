@@ -92,6 +92,7 @@ static void printhelp() {
 					"-c <cipher list> Specify preferred ciphers ('-c help' to list options)\n"
 					"-m <MAC list> Specify preferred MACs for packet verification (or '-m help')\n"
 #endif
+					"-b    [bind_address][:bind_port]\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
@@ -125,12 +126,12 @@ void cli_getopts(int argc, char ** argv) {
 		OPT_OTHER
 	} opt;
 	unsigned int cmdlen;
-	char* dummy = NULL; /* Not used for anything real */
 
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
 	char *host_arg = NULL;
+	char *bind_arg = NULL;
 	char c;
 
 	/* see printhelp() for options */
@@ -166,6 +167,8 @@ void cli_getopts(int argc, char ** argv) {
 #if DROPBEAR_CLI_PROXYCMD
 	cli_opts.proxycmd = NULL;
 #endif
+	cli_opts.bind_address = NULL;
+	cli_opts.bind_port = NULL;
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_ON;
 #endif
@@ -303,10 +306,10 @@ void cli_getopts(int argc, char ** argv) {
 				case 'm':
 #endif
 				case 'D':
-#ifndef DROPBEAR_CLI_REMOTETCPFWD
+#if !DROPBEAR_CLI_REMOTETCPFWD
 				case 'R':
 #endif
-#ifndef DROPBEAR_CLI_LOCALTCPFWD
+#if !DROPBEAR_CLI_LOCALTCPFWD
 				case 'L':
 #endif
 				case 'V':
@@ -314,8 +317,8 @@ void cli_getopts(int argc, char ** argv) {
 					exit(EXIT_SUCCESS);
 					break;
 				case 'b':
-					next = &dummy;
-					/* FALLTHROUGH */
+					next = &bind_arg;
+					break;
 				default:
 					fprintf(stderr,
 						"WARNING: Ignoring unknown option -%c\n", c);
@@ -418,6 +421,18 @@ void cli_getopts(int argc, char ** argv) {
 
 	if (cli_opts.remoteport == NULL) {
 		cli_opts.remoteport = "22";
+	}
+
+	if (bind_arg) {
+		/* split [host][:port] */
+		char *port = strrchr(bind_arg, ':');
+		if (port) {
+			cli_opts.bind_port = m_strdup(port+1);
+			*port = '\0';
+		}
+		if (strlen(bind_arg) > 0) {
+			cli_opts.bind_address = m_strdup(bind_arg);
+		}
 	}
 
 	/* If not explicitly specified with -t or -T, we don't want a pty if

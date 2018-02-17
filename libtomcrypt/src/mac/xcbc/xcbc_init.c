@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -71,7 +69,7 @@ int xcbc_init(xcbc_state *xcbc, int cipher, const unsigned char *key, unsigned l
       if ((err = cipher_descriptor[cipher].setup(key, keylen, 0, skey)) != CRYPT_OK) {
          goto done;
       }
-   
+
       /* make the three keys */
       for (y = 0; y < 3; y++) {
         for (x = 0; x < cipher_descriptor[cipher].block_length; x++) {
@@ -80,10 +78,10 @@ int xcbc_init(xcbc_state *xcbc, int cipher, const unsigned char *key, unsigned l
         cipher_descriptor[cipher].ecb_encrypt(xcbc->K[y], xcbc->K[y], skey);
       }
    }
-     
+
    /* setup K1 */
    err = cipher_descriptor[cipher].setup(xcbc->K[0], k1, 0, &xcbc->key);
- 
+
    /* setup struct */
    zeromem(xcbc->IV, cipher_descriptor[cipher].block_length);
    xcbc->blocksize = cipher_descriptor[cipher].block_length;
@@ -91,7 +89,7 @@ int xcbc_init(xcbc_state *xcbc, int cipher, const unsigned char *key, unsigned l
    xcbc->buflen    = 0;
 done:
    cipher_descriptor[cipher].done(skey);
-   if (skey != NULL) { 
+   if (skey != NULL) {
 #ifdef LTC_CLEAN_STACK
       zeromem(skey, sizeof(*skey));
 #endif
@@ -102,7 +100,7 @@ done:
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
 

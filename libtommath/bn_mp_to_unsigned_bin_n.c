@@ -26,6 +26,6 @@ int mp_to_unsigned_bin_n (mp_int * a, unsigned char *b, unsigned long *outlen)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -52,7 +50,7 @@ int cfb_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
        }
        cfb->pad[cfb->padlen] = *ct;
        *pt = *ct ^ cfb->IV[cfb->padlen];
-       ++pt; 
+       ++pt;
        ++ct;
        ++(cfb->padlen);
    }
@@ -62,6 +60,6 @@ int cfb_decrypt(const unsigned char *ct, unsigned char *pt, unsigned long len, s
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

@@ -50,6 +50,6 @@ mp_mod_2d (mp_int * a, int b, mp_int * c)
 }
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

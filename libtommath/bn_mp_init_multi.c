@@ -31,9 +31,6 @@ int mp_init_multi(mp_int *mp, ...)
             */
             va_list clean_args;
             
-            /* end the current list */
-            va_end(args);
-            
             /* now start cleaning up */            
             cur_arg = mp;
             va_start(clean_args, mp);
@@ -54,6 +51,6 @@ int mp_init_multi(mp_int *mp, ...)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

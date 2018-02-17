@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -62,7 +60,7 @@ int f9_done(f9_state *f9, unsigned char *out, unsigned long *outlen)
       out[x] = f9->ACC[x];
    }
    *outlen = x;
-  
+
 #ifdef LTC_CLEAN_STACK
    zeromem(f9, sizeof(*f9));
 #endif
@@ -71,7 +69,7 @@ int f9_done(f9_state *f9, unsigned char *out, unsigned long *outlen)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
 

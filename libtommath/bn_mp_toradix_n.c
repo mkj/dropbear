@@ -83,6 +83,6 @@ int mp_toradix_n(mp_int * a, char *str, int radix, int maxlen)
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

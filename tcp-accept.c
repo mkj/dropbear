@@ -35,7 +35,7 @@
 
 #if DROPBEAR_TCP_ACCEPT
 
-static void cleanup_tcp(struct Listener *listener) {
+static void cleanup_tcp(const struct Listener *listener) {
 
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 
@@ -52,7 +52,7 @@ int tcp_prio_inithandler(struct Channel* channel)
 	return 0;
 }
 
-static void tcp_acceptor(struct Listener *listener, int sock) {
+static void tcp_acceptor(const struct Listener *listener, int sock) {
 
 	int fd;
 	struct sockaddr_storage sa;

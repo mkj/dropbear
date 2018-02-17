@@ -38,18 +38,18 @@
 
 static void send_msg_channel_open_failure(unsigned int remotechan, int reason,
 		const char *text, const char *lang);
-static void send_msg_channel_open_confirmation(struct Channel* channel,
+static void send_msg_channel_open_confirmation(const struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket);
 static int writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 	const unsigned char *moredata, unsigned int *morelen);
-static void send_msg_channel_window_adjust(struct Channel *channel, 
+static void send_msg_channel_window_adjust(const struct Channel *channel,
 		unsigned int incr);
 static void send_msg_channel_data(struct Channel *channel, int isextended);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
 static void remove_channel(struct Channel *channel);
-static unsigned int write_pending(struct Channel * channel);
+static unsigned int write_pending(const struct Channel * channel);
 static void check_close(struct Channel *channel);
 static void close_chan_fd(struct Channel *channel, int fd, int how);
 
@@ -198,7 +198,7 @@ struct Channel* getchannel() {
 }
 
 /* Iterate through the channels, performing IO if available */
-void channelio(fd_set *readfds, fd_set *writefds) {
+void channelio(const fd_set *readfds, const fd_set *writefds) {
 
 	/* Listeners such as TCP, X11, agent-auth */
 	struct Channel *channel;
@@ -262,7 +262,7 @@ void channelio(fd_set *readfds, fd_set *writefds) {
 
 /* Returns true if there is data remaining to be written to stdin or
  * stderr of a channel's endpoint. */
-static unsigned int write_pending(struct Channel * channel) {
+static unsigned int write_pending(const struct Channel * channel) {
 
 	if (channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0) {
 		return 1;
@@ -903,7 +903,7 @@ void recv_msg_channel_window_adjust() {
 
 /* Increment the incoming data window for a channel, and let the remote
  * end know */
-static void send_msg_channel_window_adjust(struct Channel* channel, 
+static void send_msg_channel_window_adjust(const struct Channel* channel,
 		unsigned int incr) {
 
 	TRACE(("sending window adjust %d", incr))
@@ -1008,7 +1008,7 @@ cleanup:
 }
 
 /* Send a failure message */
-void send_msg_channel_failure(struct Channel *channel) {
+void send_msg_channel_failure(const struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_failure"))
 	CHECKCLEARTOWRITE();
@@ -1021,7 +1021,7 @@ void send_msg_channel_failure(struct Channel *channel) {
 }
 
 /* Send a success message */
-void send_msg_channel_success(struct Channel *channel) {
+void send_msg_channel_success(const struct Channel *channel) {
 
 	TRACE(("enter send_msg_channel_success"))
 	CHECKCLEARTOWRITE();
@@ -1053,7 +1053,7 @@ static void send_msg_channel_open_failure(unsigned int remotechan,
 
 /* Confirm a channel open, and let the remote end know what number we've
  * allocated and the receive parameters */
-static void send_msg_channel_open_confirmation(struct Channel* channel,
+static void send_msg_channel_open_confirmation(const struct Channel* channel,
 		unsigned int recvwindow, 
 		unsigned int recvmaxpacket) {
 
@@ -1239,8 +1239,8 @@ struct Channel* get_any_ready_channel() {
 	return NULL;
 }
 
-void start_send_channel_request(struct Channel *channel, 
-		char *type) {
+void start_send_channel_request(const struct Channel *channel,
+		const char *type) {
 
 	CHECKCLEARTOWRITE();
 	buf_putbyte(ses.writepayload, SSH_MSG_CHANNEL_REQUEST);

@@ -43,24 +43,24 @@
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		int iscmd, int issubsys);
 static int sessionpty(struct ChanSess * chansess);
-static int sessionsignal(struct ChanSess *chansess);
+static int sessionsignal(const struct ChanSess *chansess);
 static int noptycommand(struct Channel *channel, struct ChanSess *chansess);
 static int ptycommand(struct Channel *channel, struct ChanSess *chansess);
-static int sessionwinchange(struct ChanSess *chansess);
-static void execchild(void *user_data_chansess);
+static int sessionwinchange(const struct ChanSess *chansess);
+static void execchild(const void *user_data_chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
-static void closechansess(struct Channel *channel);
+static void closechansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
-static int sesscheckclose(struct Channel *channel);
+static int sesscheckclose(const struct Channel *channel);
 
-static void send_exitsignalstatus(struct Channel *channel);
-static void send_msg_chansess_exitstatus(struct Channel * channel,
-		struct ChanSess * chansess);
-static void send_msg_chansess_exitsignal(struct Channel * channel,
-		struct ChanSess * chansess);
-static void get_termmodes(struct ChanSess *chansess);
+static void send_exitsignalstatus(const struct Channel *channel);
+static void send_msg_chansess_exitstatus(const struct Channel * channel,
+		const struct ChanSess * chansess);
+static void send_msg_chansess_exitsignal(const struct Channel * channel,
+		const struct ChanSess * chansess);
+static void get_termmodes(const struct ChanSess *chansess);
 
 const struct ChanType svrchansess = {
 	0, /* sepfds */
@@ -74,10 +74,59 @@ const struct ChanType svrchansess = {
 /* required to clear environment */
 extern char** environ;
 
-static int sesscheckclose(struct Channel *channel) {
+static int sesscheckclose(const struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
 	return chansess->exit.exitpid != -1;
+}
+
+void svr_chansess_checksignal(void) {
+	int status;
+	pid_t pid;
+
+	if (!ses.channel_signal_pending) {
+		return;
+	}
+
+	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
+		unsigned int i;
+		struct exitinfo *ex = NULL;
+		TRACE(("sigchld handler: pid %d", pid))
+
+		ex = NULL;
+		/* find the corresponding chansess */
+		for (i = 0; i < svr_ses.childpidsize; i++) {
+			if (svr_ses.childpids[i].pid == pid) {
+				TRACE(("found match session"));
+				ex = &svr_ses.childpids[i].chansess->exit;
+				break;
+			}
+		}
+
+		/* If the pid wasn't matched, then we might have hit the race mentioned
+		 * above. So we just store the info for the parent to deal with */
+		if (ex == NULL) {
+			TRACE(("using lastexit"));
+			ex = &svr_ses.lastexit;
+		}
+
+		ex->exitpid = pid;
+		if (WIFEXITED(status)) {
+			ex->exitstatus = WEXITSTATUS(status);
+		}
+		if (WIFSIGNALED(status)) {
+			ex->exitsignal = WTERMSIG(status);
+#if !defined(AIX) && defined(WCOREDUMP)
+			ex->exitcore = WCOREDUMP(status);
+#else
+			ex->exitcore = 0;
+#endif
+		} else {
+			/* we use this to determine how pid exited */
+			ex->exitsignal = -1;
+		}
+		
+	}
 }
 
 /* Handler for childs exiting, store the state for return to the client */
@@ -89,63 +138,19 @@ static int sesscheckclose(struct Channel *channel) {
  * the parent when it runs. This work correctly at least in the case of a
  * single shell spawned (ie the usual case) */
 static void sesssigchild_handler(int UNUSED(dummy)) {
-
-	int status;
-	pid_t pid;
-	unsigned int i;
 	struct sigaction sa_chld;
-	struct exitinfo *exit = NULL;
 
 	const int saved_errno = errno;
 
-	/* Make channel handling code look for closed channels */
-	ses.channel_signal_pending = 1;
-
 	TRACE(("enter sigchld handler"))
-	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
-		TRACE(("sigchld handler: pid %d", pid))
 
-		exit = NULL;
-		/* find the corresponding chansess */
-		for (i = 0; i < svr_ses.childpidsize; i++) {
-			if (svr_ses.childpids[i].pid == pid) {
-				TRACE(("found match session"));
-				exit = &svr_ses.childpids[i].chansess->exit;
-				break;
-			}
-		}
-
-		/* If the pid wasn't matched, then we might have hit the race mentioned
-		 * above. So we just store the info for the parent to deal with */
-		if (exit == NULL) {
-			TRACE(("using lastexit"));
-			exit = &svr_ses.lastexit;
-		}
-
-		exit->exitpid = pid;
-		if (WIFEXITED(status)) {
-			exit->exitstatus = WEXITSTATUS(status);
-		}
-		if (WIFSIGNALED(status)) {
-			exit->exitsignal = WTERMSIG(status);
-#if !defined(AIX) && defined(WCOREDUMP)
-			exit->exitcore = WCOREDUMP(status);
-#else
-			exit->exitcore = 0;
-#endif
-		} else {
-			/* we use this to determine how pid exited */
-			exit->exitsignal = -1;
-		}
-		
-		/* Make sure that the main select() loop wakes up */
-		while (1) {
-			/* isserver is just a random byte to write. We can't do anything
-			about an error so should just ignore it */
-			if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
-					|| errno != EINTR) {
-				break;
-			}
+	/* Make sure that the main select() loop wakes up */
+	while (1) {
+		/* isserver is just a random byte to write. We can't do anything
+		about an error so should just ignore it */
+		if (write(ses.signal_pipe[1], &ses.isserver, 1) == 1
+				|| errno != EINTR) {
+			break;
 		}
 	}
 
@@ -159,7 +164,7 @@ static void sesssigchild_handler(int UNUSED(dummy)) {
 }
 
 /* send the exit status or the signal causing termination for a session */
-static void send_exitsignalstatus(struct Channel *channel) {
+static void send_exitsignalstatus(const struct Channel *channel) {
 
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 
@@ -173,8 +178,8 @@ static void send_exitsignalstatus(struct Channel *channel) {
 }
 
 /* send the exitstatus to the client */
-static void send_msg_chansess_exitstatus(struct Channel * channel,
-		struct ChanSess * chansess) {
+static void send_msg_chansess_exitstatus(const struct Channel * channel,
+		const struct ChanSess * chansess) {
 
 	dropbear_assert(chansess->exit.exitpid != -1);
 	dropbear_assert(chansess->exit.exitsignal == -1);
@@ -192,8 +197,8 @@ static void send_msg_chansess_exitstatus(struct Channel * channel,
 }
 
 /* send the signal causing the exit to the client */
-static void send_msg_chansess_exitsignal(struct Channel * channel,
-		struct ChanSess * chansess) {
+static void send_msg_chansess_exitsignal(const struct Channel * channel,
+		const struct ChanSess * chansess) {
 
 	int i;
 	char* signame = NULL;
@@ -273,7 +278,7 @@ static int newchansess(struct Channel *channel) {
 }
 
 static struct logininfo* 
-chansess_login_alloc(struct ChanSess *chansess) {
+chansess_login_alloc(const struct ChanSess *chansess) {
 	struct logininfo * li;
 	li = login_alloc_entry(chansess->pid, ses.authstate.username,
 			svr_ses.remotehost, chansess->tty);
@@ -281,7 +286,7 @@ chansess_login_alloc(struct ChanSess *chansess) {
 }
 
 /* clean a session channel */
-static void closechansess(struct Channel *channel) {
+static void closechansess(const struct Channel *channel) {
 
 	struct ChanSess *chansess;
 	unsigned int i;
@@ -403,7 +408,7 @@ out:
 
 
 /* Send a signal to a session's process as requested by the client*/
-static int sessionsignal(struct ChanSess *chansess) {
+static int sessionsignal(const struct ChanSess *chansess) {
 
 	int sig = 0;
 	char* signame = NULL;
@@ -441,7 +446,7 @@ static int sessionsignal(struct ChanSess *chansess) {
 
 /* Let the process know that the window size has changed, as notified from the
  * client. Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-static int sessionwinchange(struct ChanSess *chansess) {
+static int sessionwinchange(const struct ChanSess *chansess) {
 
 	int termc, termr, termw, termh;
 
@@ -460,7 +465,7 @@ static int sessionwinchange(struct ChanSess *chansess) {
 	return DROPBEAR_SUCCESS;
 }
 
-static void get_termmodes(struct ChanSess *chansess) {
+static void get_termmodes(const struct ChanSess *chansess) {
 
 	struct termios termio;
 	unsigned char opcode;
@@ -658,7 +663,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			}
 		}
 		if (issubsys) {
-#ifdef SFTPSERVER_PATH
+#if DROPBEAR_SFTPSERVER
 			if ((cmdlen == 4) && strncmp(chansess->cmd, "sftp", 4) == 0) {
 				m_free(chansess->cmd);
 				chansess->cmd = m_strdup(SFTPSERVER_PATH);
@@ -682,7 +687,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	}
 
 
-#ifdef LOG_COMMANDS
+#if LOG_COMMANDS
 	if (chansess->cmd) {
 		dropbear_log(LOG_INFO, "User %s executing '%s'", 
 						ses.authstate.pw_name, chansess->cmd);
@@ -769,7 +774,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 
 	pid_t pid;
 	struct logininfo *li = NULL;
-#ifdef DO_MOTD
+#if DO_MOTD
 	buffer * motdbuf = NULL;
 	int len;
 	struct stat sb;
@@ -821,7 +826,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		login_login(li);
 		login_free_entry(li);
 
-#ifdef DO_MOTD
+#if DO_MOTD
 		if (svr_opts.domotd && !chansess->cmd) {
 			/* don't show the motd if ~/.hushlogin exists */
 
@@ -898,8 +903,8 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 
 /* Clean up, drop to user privileges, set up the environment and execute
  * the command/shell. This function does not return. */
-static void execchild(void *user_data) {
-	struct ChanSess *chansess = user_data;
+static void execchild(const void *user_data) {
+	const struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the

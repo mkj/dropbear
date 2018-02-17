@@ -150,15 +150,15 @@ int mp_exptmod_fast (mp_int * G, mp_int * X, mp_int * P, mp_int * Y, int redmode
      if ((err = mp_montgomery_calc_normalization (&res, P)) != MP_OKAY) {
        goto LBL_RES;
      }
-#else 
-     err = MP_VAL;
-     goto LBL_RES;
-#endif
 
      /* now set M[1] to G * R mod m */
      if ((err = mp_mulmod (G, &res, P, &M[1])) != MP_OKAY) {
        goto LBL_RES;
      }
+#else
+     err = MP_VAL;
+     goto LBL_RES;
+#endif
   } else {
      mp_set(&res, 1);
      if ((err = mp_mod(G, P, &M[1])) != MP_OKAY) {
@@ -316,6 +316,6 @@ LBL_M:
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

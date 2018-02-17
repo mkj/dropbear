@@ -5,14 +5,12 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
 /**
   @file hmac_done.c
-  LTC_HMAC support, terminate stream, Tom St Denis/Dobes Vandermeer
+  HMAC support, terminate stream, Tom St Denis/Dobes Vandermeer
 */
 
 #ifdef LTC_HMAC
@@ -20,10 +18,10 @@
 #define LTC_HMAC_BLOCKSIZE hash_descriptor[hash].blocksize
 
 /**
-   Terminate an LTC_HMAC session
-   @param hmac    The LTC_HMAC state
-   @param out     [out] The destination of the LTC_HMAC authentication tag
-   @param outlen  [in/out]  The max size and resulting size of the LTC_HMAC authentication tag
+   Terminate an HMAC session
+   @param hmac    The HMAC state
+   @param out     [out] The destination of the HMAC authentication tag
+   @param outlen  [in/out]  The max size and resulting size of the HMAC authentication tag
    @return CRYPT_OK if successful
 */
 int hmac_done(hmac_state *hmac, unsigned char *out, unsigned long *outlen)
@@ -48,7 +46,7 @@ int hmac_done(hmac_state *hmac, unsigned char *out, unsigned long *outlen)
        goto LBL_ERR;
     }
 
-    /* Create the second LTC_HMAC vector vector for step (3) */
+    /* Create the second HMAC vector vector for step (3) */
     for(i=0; i < LTC_HMAC_BLOCKSIZE; i++) {
         buf[i] = hmac->key[i] ^ 0x5C;
     }
@@ -87,6 +85,6 @@ LBL_ERR:
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

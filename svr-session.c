@@ -125,7 +125,7 @@ void svr_session(int sock, int childpipe) {
 	ses.isserver = 1;
 
 	/* We're ready to go now */
-	sessinitdone = 1;
+	ses.init_done = 1;
 
 	/* exchange identification, version etc */
 	send_session_identification();
@@ -137,7 +137,7 @@ void svr_session(int sock, int childpipe) {
 
 	/* Run the main for loop. NULL is for the dispatcher - only the client
 	 * code makes use of it */
-	session_loop(NULL);
+	session_loop(svr_chansess_checksignal);
 
 	/* Not reached */
 
@@ -153,7 +153,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	vsnprintf(exitmsg, sizeof(exitmsg), format, param);
 
 	/* Add the prefix depending on session/auth state */
-	if (!sessinitdone) {
+	if (!ses.init_done) {
 		/* before session init */
 		snprintf(fullmsg, sizeof(fullmsg), "Early exit: %s", exitmsg);
 	} else if (ses.authstate.authdone) {

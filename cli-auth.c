@@ -60,9 +60,11 @@ void cli_auth_getmethods() {
 	*/
 	if (ses.keys->trans.algo_comp != DROPBEAR_COMP_ZLIB_DELAY) {
 		ses.authstate.authtypes = AUTH_TYPE_PUBKEY;
+#if DROPBEAR_USE_DROPBEAR_PASSWORD
 		if (getenv(DROPBEAR_PASSWORD_ENV)) {
 			ses.authstate.authtypes |= AUTH_TYPE_PASSWORD | AUTH_TYPE_INTERACT;
 		}
+#endif
 		if (cli_auth_try() == DROPBEAR_SUCCESS) {
 			TRACE(("skipped initial none auth query"))
 			/* Note that there will be two auth responses in-flight */
@@ -331,11 +333,11 @@ int cli_auth_try() {
 #if DROPBEAR_CLI_PASSWORD_AUTH || DROPBEAR_CLI_INTERACT_AUTH
 /* A helper for getpass() that exits if the user cancels. The returned
  * password is statically allocated by getpass() */
-char* getpass_or_cancel(char* prompt)
+char* getpass_or_cancel(const char* prompt)
 {
 	char* password = NULL;
 	
-#ifdef DROPBEAR_PASSWORD_ENV
+#if DROPBEAR_USE_DROPBEAR_PASSWORD
 	/* Password provided in an environment var */
 	password = getenv(DROPBEAR_PASSWORD_ENV);
 	if (password)

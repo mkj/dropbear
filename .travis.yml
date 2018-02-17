@@ -1,25 +1,25 @@
 language: c
 
-os:
-  - linux
-  - osx
+git:
+  depth: 3
 
-env:
-  matrix:
-    - BUNDLEDLIBTOM=--disable-bundled-libtom WEXTRAFLAGS=-Werror
-    - BUNDLEDLIBTOM=--enable-bundled-libtom
-    - MULTI=1
-    - NOWRITEV=1
-
-# TODO: remove this section when libtomcrypt compiles on OSX: https://github.com/libtom/libtomcrypt/issues/82
 matrix:
-  exclude:
+  include:
+    # subsequent matrix options use these first settings
+    - os: linux
+      compiler: gcc
+      env: WEXTRAFLAGS=-Werror
+    - env: MULTI=1 WEXTRAFLAGS=-Werror
+    # libtom has some warnings, so no WEXTRAFLAGS
+    - env: BUNDLEDLIBTOM=--enable-bundled-libtom WEXTRAFLAGS=""
+    - env: NOWRITEV=1 WEXTRAFLAGS=-Werror
+    # libtomcrypt 1.18.1 fixes clang problems, distro doesn't have that yet
+    - os: linux
+      compiler: clang
+      env: BUNDLEDLIBTOM=--enable-bundled-libtom WEXTRAFLAGS=""
     - os: osx
-      env: BUNDLEDLIBTOM=--disable-bundled-libtom WEXTRAFLAGS=-Werror
-
-compiler:
-  - gcc
-  - clang
+      compiler: clang
+      env: WEXTRAFLAGS=""
 
 # container-based builds
 sudo: false
@@ -35,9 +35,6 @@ addons:
 before_install:
   - if [ "$CC" = "clang" ]; then WEXTRAFLAGS="$WEXTRAFLAGS -Wno-error=incompatible-library-redeclaration" ; fi  # workaround
 
-install:
-  - if [ "$TRAVIS_OS_NAME" = "osx" -a "$BUNDLEDLIBTOM" = "--disable-bundled-libtom" ]; then brew update > /dev/null && brew install libtomcrypt libtommath ; fi
-
 script:
   - autoconf && autoheader && ./configure "$BUNDLEDLIBTOM" CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS" --prefix="$HOME/inst"
   - if [ "$NOWRITEV" = "1" ]; then sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
@@ -51,3 +48,9 @@ after_success:
   - ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
   - ~/inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
   - ~/inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
+
+branches:
+  only:
+    - master
+    - coverity
+

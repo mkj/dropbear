@@ -221,7 +221,7 @@ void dropbear_trace2(const char* format, ...) {
 #endif /* DEBUG_TRACE */
 
 /* Connect to a given unix socket. The socket is blocking */
-#ifdef ENABLE_CONNECT_UNIX
+#if ENABLE_CONNECT_UNIX
 int connect_unix(const char* path) {
 	struct sockaddr_un addr;
 	int fd = -1;
@@ -248,7 +248,7 @@ int connect_unix(const char* path) {
  * it will be run after the child has fork()ed, and is passed exec_data.
  * If ret_errfd == NULL then stderr will not be captured.
  * ret_pid can be passed as  NULL to discard the pid. */
-int spawn_command(void(*exec_fn)(void *user_data), void *exec_data,
+int spawn_command(void(*exec_fn)(const void *user_data), const void *exec_data,
 		int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
 	int infds[2];
 	int outfds[2];
@@ -610,6 +610,10 @@ int constant_time_memcmp(const void* a, const void *b, size_t n)
 reach userspace include headers */
 #ifndef CLOCK_MONOTONIC_COARSE
 #define CLOCK_MONOTONIC_COARSE 6
+#endif
+/* Some old toolchains know SYS_clock_gettime but not CLOCK_MONOTONIC */
+#ifndef CLOCK_MONOTONIC
+#define CLOCK_MONOTONIC 1
 #endif
 static clockid_t get_linux_clock_source() {
 	struct timespec ts;

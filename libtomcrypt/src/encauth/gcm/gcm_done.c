@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 
 /**
@@ -24,7 +22,7 @@
   @param taglen  [in/out]  The length of the MAC tag
   @return CRYPT_OK on success
  */
-int gcm_done(gcm_state *gcm, 
+int gcm_done(gcm_state *gcm,
                      unsigned char *tag,    unsigned long *taglen)
 {
    unsigned long x;
@@ -42,6 +40,15 @@ int gcm_done(gcm_state *gcm,
       return err;
    }
 
+   if (gcm->mode == LTC_GCM_MODE_IV) {
+      /* let's process the IV */
+      if ((err = gcm_add_aad(gcm, NULL, 0)) != CRYPT_OK) return err;
+   }
+
+   if (gcm->mode == LTC_GCM_MODE_AAD) {
+      /* let's process the AAD */
+      if ((err = gcm_process(gcm, NULL, 0, NULL, 0)) != CRYPT_OK) return err;
+   }
 
    if (gcm->mode != LTC_GCM_MODE_TEXT) {
       return CRYPT_INVALID_ARG;
@@ -78,6 +85,6 @@ int gcm_done(gcm_state *gcm,
 #endif
 
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

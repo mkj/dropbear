@@ -184,7 +184,9 @@ int main(void)
 
 #if LTM_DEMO_TEST_VS_MTEST == 0
    // trivial stuff
+   // a: 0->5
    mp_set_int(&a, 5);
+   // a: 5-> b: -5
    mp_neg(&a, &b);
    if (mp_cmp(&a, &b) != MP_GT) {
       return EXIT_FAILURE;
@@ -192,16 +194,40 @@ int main(void)
    if (mp_cmp(&b, &a) != MP_LT) {
       return EXIT_FAILURE;
    }
+   // a: 5-> a: -5
    mp_neg(&a, &a);
    if (mp_cmp(&b, &a) != MP_EQ) {
       return EXIT_FAILURE;
    }
+   // a: -5-> b: 5
    mp_abs(&a, &b);
    if (mp_isneg(&b) != MP_NO) {
       return EXIT_FAILURE;
    }
+   // a: -5-> b: -4
    mp_add_d(&a, 1, &b);
+   if (mp_isneg(&b) != MP_YES) {
+      return EXIT_FAILURE;
+   }
+   if (mp_get_int(&b) != 4) {
+      return EXIT_FAILURE;
+   }
+   // a: -5-> b: 1
    mp_add_d(&a, 6, &b);
+   if (mp_get_int(&b) != 1) {
+      return EXIT_FAILURE;
+   }
+   // a: -5-> a: 1
+   mp_add_d(&a, 6, &a);
+   if (mp_get_int(&a) != 1) {
+      return EXIT_FAILURE;
+   }
+   mp_zero(&a);
+   // a: 0-> a: 6
+   mp_add_d(&a, 6, &a);
+   if (mp_get_int(&a) != 6) {
+      return EXIT_FAILURE;
+   }
 
 
    mp_set_int(&a, 0);
@@ -981,6 +1007,6 @@ printf("compare no compare!\n"); return EXIT_FAILURE; }
    return 0;
 }
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

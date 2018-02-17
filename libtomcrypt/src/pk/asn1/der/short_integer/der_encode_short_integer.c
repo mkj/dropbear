@@ -5,8 +5,6 @@
  *
  * The library is free for all purposes without any express
  * guarantee it works.
- *
- * Tom St Denis, tomstdenis@gmail.com, http://libtom.org
  */
 #include "tomcrypt.h"
 
@@ -26,10 +24,10 @@
   @return CRYPT_OK if successful
 */
 int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned long *outlen)
-{  
+{
    unsigned long len, x, y, z;
    int           err;
-   
+
    LTC_ARGCHK(out    != NULL);
    LTC_ARGCHK(outlen != NULL);
 
@@ -86,12 +84,12 @@ int der_encode_short_integer(unsigned long num, unsigned char *out, unsigned lon
 
    /* we good */
    *outlen = x;
- 
+
    return CRYPT_OK;
 }
 
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */

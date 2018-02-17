@@ -19,6 +19,6 @@
 MP_SET_XLONG(mp_set_long, unsigned long)
 #endif
 
-/* $Source$ */
-/* $Revision$ */
-/* $Date$ */
+/* ref:         $Format:%D$ */
+/* git commit:  $Format:%H$ */
+/* commit time: $Format:%ai$ */
