@@ -26,7 +26,6 @@
 #define DROPBEAR_SESSION_H_
 
 #include "includes.h"
-#include "options.h"
 #include "buffer.h"
 #include "signkey.h"
 #include "kex.h"

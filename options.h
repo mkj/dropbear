@@ -8,6 +8,9 @@ Local compile-time configuration should be defined in localoptions.h
 See default_options.h.in for a description of the available options.
 */
 
+/* Some configuration options or checks depend on system config */
+#include "config.h"
+
 #ifdef LOCALOPTIONS_H_EXISTS
 #include "localoptions.h"
 #endif

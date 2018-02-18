@@ -11,7 +11,6 @@
  *
  * Tom St Denis, tomstdenis@gmail.com, http://libtomcrypt.com
  */
-#include "options.h"
 #include "includes.h"
 #include "dbrandom.h"
 #include "ltc_prng.h"
