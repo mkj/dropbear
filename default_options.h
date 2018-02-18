@@ -16,9 +16,9 @@ Local customisation should be added to localoptions.h which is
 used if it exists. Options defined there will override any options in this
 file.
 
-Options can also be defined with -DDROPBEAR_XXX in Makefile CFLAGS
+Options can also be defined with -DDROPBEAR_XXX=[0,1] in Makefile CFLAGS
 
-IMPORTANT: Many options will require "make clean" after changes */
+IMPORTANT: Some options will require "make clean" after changes */
 
 #ifndef DROPBEAR_DEFPORT
 #define DROPBEAR_DEFPORT "22"
@@ -64,9 +64,9 @@ IMPORTANT: Many options will require "make clean" after changes */
 #endif
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
-several kB in binary size however will make the symmetrical ciphers and hashes
-slower, perhaps by 50%. Recommended for small systems that aren't doing
-much traffic. */
+ * several kB in binary size however will make the symmetrical ciphers and hashes
+ * slower, perhaps by 50%. Recommended for small systems that aren't doing
+ * much traffic. */
 #ifndef DROPBEAR_SMALL_CODE
 #define DROPBEAR_SMALL_CODE 1
 #endif
@@ -79,7 +79,6 @@ much traffic. */
 /* Enable TCP Fowarding */
 /* 'Local' is "-L" style (client listening port forwarded via server)
  * 'Remote' is "-R" style (server listening port forwarded via client) */
-
 #ifndef DROPBEAR_CLI_LOCALTCPFWD
 #define DROPBEAR_CLI_LOCALTCPFWD 1
 #endif
@@ -137,10 +136,10 @@ much traffic. */
 #define DROPBEAR_AES256 1
 #endif
 #ifndef DROPBEAR_TWOFISH256
-#define DROPBEAR_TWOFISH256 1
+#define DROPBEAR_TWOFISH256 0
 #endif
 #ifndef DROPBEAR_TWOFISH128
-#define DROPBEAR_TWOFISH128 1
+#define DROPBEAR_TWOFISH128 0
 #endif
 /* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
 #ifndef DROPBEAR_BLOWFISH
@@ -160,13 +159,6 @@ much traffic. */
 #define DROPBEAR_ENABLE_CTR_MODE 1
 #endif
 
-/* Twofish counter mode is disabled by default because it 
-has not been tested for interoperability with other SSH implementations.
-If you test it please contact the Dropbear author */
-#ifndef DROPBEAR_TWOFISH_CTR
-#define DROPBEAR_TWOFISH_CTR 0
-#endif
-
 /* Message integrity. sha2-256 is recommended as a default, 
    sha1 for compatibility */
 #ifndef DROPBEAR_SHA1_HMAC
@@ -177,15 +169,6 @@ If you test it please contact the Dropbear author */
 #endif
 #ifndef DROPBEAR_SHA2_256_HMAC
 #define DROPBEAR_SHA2_256_HMAC 1
-#endif
-/* Default is to include it if sha512 is being compiled in for ECDSA */
-#ifndef DROPBEAR_SHA2_512_HMAC
-#define DROPBEAR_SHA2_512_HMAC (DROPBEAR_ECDSA)
-#endif
-
-/* XXX needed for fingerprints */
-#ifndef DROPBEAR_MD5_HMAC
-#define DROPBEAR_MD5_HMAC 0
 #endif
 
 /* Hostkey/public key algorithms - at least one required, these are used
@@ -222,29 +205,26 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_DELAY_HOSTKEY 1
 #endif
 
-/* Enable Curve25519 for key exchange. This is another elliptic
- * curve method with good security properties. Increases binary size
- * by ~8kB on x86-64 */
-#ifndef DROPBEAR_CURVE25519
-#define DROPBEAR_CURVE25519 1
-#endif
-
-/* Enable elliptic curve Diffie Hellman key exchange, see note about
- * ECDSA above */
-#ifndef DROPBEAR_ECDH
-#define DROPBEAR_ECDH 1
-#endif
 
 /* Key exchange algorithm.
+
  * group14_sha1 - 2048 bit, sha1
  * group14_sha256 - 2048 bit, sha2-256
  * group16 - 4096 bit, sha2-512
  * group1 - 1024 bit, sha1
+ * curve25519 - elliptic curve DH
+ * ecdh - NIST elliptic curve DH (256, 384, 521)
  *
- * group14 is supported by most implementations.
- * group16 provides a greater strength level but is slower and increases binary size
  * group1 is too small for security though is necessary if you need 
      compatibility with some implementations such as Dropbear versions < 0.53
+ * group14 is supported by most implementations.
+ * group16 provides a greater strength level but is slower and increases binary size
+ * curve25519 and ecdh algorithms are faster than non-elliptic curve methods
+ * curve25519 increases binary size by ~8kB on x86-64
+ * including either ECDH or ECDSA increases binary size by ~30kB on x86-64
+
+ * Small systems should generally include either curve25519 or ecdh for performance.
+ * curve25519 is less widely supported but is faster
  */ 
 #ifndef DROPBEAR_DH_GROUP1
 #define DROPBEAR_DH_GROUP1 1
@@ -257,6 +237,12 @@ If you test it please contact the Dropbear author */
 #endif
 #ifndef DROPBEAR_DH_GROUP16
 #define DROPBEAR_DH_GROUP16 0
+#endif
+#ifndef DROPBEAR_CURVE25519
+#define DROPBEAR_CURVE25519 1
+#endif
+#ifndef DROPBEAR_ECDH
+#define DROPBEAR_ECDH 1
 #endif
 
 /* Control the memory/performance/compression tradeoff for zlib.
@@ -279,8 +265,6 @@ If you test it please contact the Dropbear author */
 #ifndef DO_MOTD
 #define DO_MOTD 0
 #endif
-
-/* The MOTD file path */
 #ifndef MOTD_FILENAME
 #define MOTD_FILENAME "/etc/motd"
 #endif
@@ -344,7 +328,9 @@ Homedir is prepended unless path begins with / */
 /* Save a network roundtrip by sendng a real auth request immediately after
  * sending a query for the available methods. This is not yet enabled by default 
  since it could cause problems with non-compliant servers */ 
- #define DROPBEAR_CLI_IMMEDIATE_AUTH 0
+#ifndef DROPBEAR_CLI_IMMEDIATE_AUTH
+#define DROPBEAR_CLI_IMMEDIATE_AUTH 0
+#endif
 
 /* Set this to use PRNGD or EGD instead of /dev/urandom */
 #ifndef DROPBEAR_USE_PRNGD
