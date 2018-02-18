@@ -99,6 +99,23 @@
 #define MAX_MAC_LEN 20
 #endif
 
+/* sha2-512 is not necessary unless unforseen problems arise with sha2-256 */
+#ifndef DROPBEAR_SHA2_512_HMAC
+#define DROPBEAR_SHA2_512_HMAC 0
+#endif
+
+/* might be needed for compatibility with very old implementations */
+#ifndef DROPBEAR_MD5_HMAC
+#define DROPBEAR_MD5_HMAC 0
+#endif
+
+/* Twofish counter mode is disabled by default because it 
+has not been tested for interoperability with other SSH implementations.
+If you test it please contact the Dropbear author */
+#ifndef DROPBEAR_TWOFISH_CTR
+#define DROPBEAR_TWOFISH_CTR 0
+#endif
+
 
 #define DROPBEAR_ECC ((DROPBEAR_ECDH) || (DROPBEAR_ECDSA))
 
