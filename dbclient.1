@@ -111,11 +111,22 @@ if 0 disables keepalives. If no response is received for 3 consecutive keepalive
 .B \-I \fIidle_timeout
 Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
 .TP
+
+.\" TODO: how to avoid a line break between these two -J arguments?
 .B \-J \fIproxy_command
+.TP
+.B \-J \fI&fd
+.br
 Use the standard input/output of the program \fIproxy_command\fR rather than using
 a normal TCP connection. A hostname should be still be provided, as this is used for
 comparing saved hostkeys. This command will be executed as "exec proxy_command ..." with the
 default shell.
+
+The second form &fd will make dbclient use the numeric file descriptor as a socket. This
+can be used for more complex tunnelling scenarios. Example usage with socat is
+
+socat EXEC:'dbclient -J &38 ev',fdin=38,fdout=38 TCP4:host.example.com:22
+
 .TP
 .B \-B \fIendhost:endport
 "Netcat-alike" mode, where Dropbear will connect to the given host, then create a

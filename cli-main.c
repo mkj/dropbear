@@ -158,6 +158,21 @@ static void cli_proxy_cmd(int *sock_in, int *sock_out, pid_t *pid_out) {
 	size_t ex_cmdlen;
 	int ret;
 
+	/* File descriptor "-j &3" */
+	if (*cli_opts.proxycmd == '&') {
+		char *p = cli_opts.proxycmd + 1;
+		int sock = strtoul(p, &p, 10);
+		/* must be a single number, and not stdin/stdout/stderr */
+		if (sock > 2 && sock < 1024 && *p == '\0') {
+			*sock_in = sock;
+			*sock_out = sock;
+			return;
+		}
+	}
+
+	/* Normal proxycommand */
+
+	/* So that spawn_command knows which shell to run */
 	fill_passwd(cli_opts.own_user);
 
 	ex_cmdlen = strlen(cli_opts.proxycmd) + 6; /* "exec " + command + '\0' */

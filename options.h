@@ -8,11 +8,15 @@ Local compile-time configuration should be defined in localoptions.h
 See default_options.h.in for a description of the available options.
 */
 
+/* Some configuration options or checks depend on system config */
+#include "config.h"
+
 #ifdef LOCALOPTIONS_H_EXISTS
 #include "localoptions.h"
 #endif
 
-#include "default_options.h"
+/* default_options.h is processed to add #ifndef guards */
+#include "default_options_guard.h"
 
 /* Some other defines that mostly should be left alone are defined
  * in sysoptions.h */
