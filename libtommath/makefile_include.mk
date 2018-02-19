@@ -17,12 +17,13 @@ ifndef CROSS_COMPILE
   CROSS_COMPILE=
 endif
 
-ifeq ($(CC),cc)
-  CC = $(CROSS_COMPILE)gcc
-endif
-LD=$(CROSS_COMPILE)ld
-AR=$(CROSS_COMPILE)ar
-RANLIB=$(CROSS_COMPILE)ranlib
+# Dropbear passes these down
+#ifeq ($(CC),cc)
+#  CC = $(CROSS_COMPILE)gcc
+#endif
+#LD=$(CROSS_COMPILE)ld
+#AR=$(CROSS_COMPILE)ar
+#RANLIB=$(CROSS_COMPILE)ranlib
 
 ifndef MAKE
    MAKE=make
@@ -113,5 +114,5 @@ clean:
 	rm -f *.gcda *.gcno *.gcov *.bat *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
         *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find . -type f | grep [~] | xargs` *.lo *.la
 	rm -rf .libs/
-	${MAKE} -C etc/ clean MAKE=${MAKE}
-	${MAKE} -C doc/ clean MAKE=${MAKE}
+	#${MAKE} -C etc/ clean MAKE=${MAKE}
+	#${MAKE} -C doc/ clean MAKE=${MAKE}
