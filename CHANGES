@@ -2,7 +2,7 @@ Upcoming...
 
 - IMPORTANT:
   Custom configuration is now specified in local_options.h rather than options.h
-  Available options and defaults can be seen in default_options.h.in
+  Available options and defaults can be seen in default_options.h
 
   To migrate your configuration, compare your customised options.h against the
   upstream options.h from your relevant version. Any customised options should
