@@ -40,7 +40,7 @@
 #include "netio.h"
 
 void common_session_init(int sock_in, int sock_out);
-void session_loop(void(*loophandler)()) ATTRIB_NORETURN;
+void session_loop(void(*loophandler)(void)) ATTRIB_NORETURN;
 void session_cleanup(void);
 void send_session_identification(void);
 void send_msg_ignore(void);

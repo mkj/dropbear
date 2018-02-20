@@ -136,7 +136,7 @@ void common_session_init(int sock_in, int sock_out) {
 	TRACE(("leave session_init"))
 }
 
-void session_loop(void(*loophandler)()) {
+void session_loop(void(*loophandler)(void)) {
 
 	fd_set readfd, writefd;
 	struct timeval timeout;
