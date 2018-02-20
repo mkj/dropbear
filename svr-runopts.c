@@ -523,7 +523,7 @@ void load_all_hostkeys() {
 #if DROPBEAR_ECDSA
 		loadhostkey(ECDSA_PRIV_FILENAME, 0);
 #endif
-   }
+	}
 
 #if DROPBEAR_DELAY_HOSTKEY
 	if (svr_opts.delay_hostkey) {
