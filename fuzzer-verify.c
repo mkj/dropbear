@@ -29,8 +29,28 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		sign_key *key = new_sign_key();
 		enum signkey_type type = DROPBEAR_SIGNKEY_ANY;
 		if (buf_get_pub_key(fuzz.input, key, &type) == DROPBEAR_SUCCESS) {
-			/* Don't expect random fuzz input to verify */
-			assert(buf_verify(fuzz.input, key, verifydata) == DROPBEAR_FAILURE);
+			if (buf_verify(fuzz.input, key, verifydata) == DROPBEAR_SUCCESS) {
+				/* The fuzzer is capable of generating keys with a signature to match.
+				We don't want false positives if the key is bogus, since a client/server 
+				wouldn't be trusting a bogus key anyway */
+				int boguskey = 0;
+
+				if (type == DROPBEAR_SIGNKEY_DSS) {
+					/* So far have seen dss keys with bad p/q/g domain parameters */
+					int pprime, qprime;
+				    assert(mp_prime_is_prime(key->dsskey->p, 5, &pprime) == MP_OKAY);
+				    assert(mp_prime_is_prime(key->dsskey->q, 18, &qprime) == MP_OKAY);
+				    boguskey = !(pprime && qprime);
+				    /* Could also check g**q mod p == 1 */
+				}
+
+				if (!boguskey) {
+					printf("Random key/signature managed to verify!\n");
+					abort();
+				}
+
+
+			}
 		}
 		sign_key_free(key);
 		m_malloc_free_epoch(1, 0);
