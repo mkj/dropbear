@@ -4,7 +4,7 @@
 
 #include "fuzz.h"
 
-static const int IOWRAP_MAXFD = FD_SETSIZE-1;
+#define IOWRAP_MAXFD (FD_SETSIZE-1)
 static const int MAX_RANDOM_IN = 50000;
 static const double CHANCE_CLOSE = 1.0 / 300;
 static const double CHANCE_INTR = 1.0 / 200;
@@ -37,7 +37,7 @@ void wrapfd_setup() {
 }
 
 void wrapfd_setseed(uint32_t seed) {
-	*((uint32_t*)rand_state) = seed;
+	memcpy(rand_state, &seed, sizeof(seed));
 	nrand48(rand_state);
 }
 
@@ -77,12 +77,10 @@ void wrapfd_remove(int fd) {
 }
 
 int wrapfd_close(int fd) {
-	if (fd >= 0 && fd <= IOWRAP_MAXFD && wrap_fds[fd].mode != UNUSED) 
-	{
+	if (fd >= 0 && fd <= IOWRAP_MAXFD && wrap_fds[fd].mode != UNUSED) {
 		wrapfd_remove(fd);
 		return 0;
-	}
-	else {
+	} else {
 		return close(fd);
 	}
 }
@@ -173,7 +171,9 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	fd_set *exceptfds, struct timeval *timeout) {
 	int i, nset, sel;
 	int ret = 0;
-	int fdlist[IOWRAP_MAXFD+1] = {0};
+	int fdlist[IOWRAP_MAXFD+1];
+
+	memset(fdlist, 0x0, sizeof(fdlist));
 
 	if (!fuzz.wrapfds) {
 		return select(nfds, readfds, writefds, exceptfds, timeout);
