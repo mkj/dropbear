@@ -9,6 +9,12 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
+# Record which revision is being built
+if which -s hg && test -d "$srcdir/.hg"; then
+	hgrev=`hg id -i -R "$srcdir"`
+	echo "Source directory Mercurial base revision $hgrev"
+fi
+
 # Checks for programs.
 AC_PROG_CC
 
