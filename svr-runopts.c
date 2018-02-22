@@ -510,17 +510,20 @@ void load_all_hostkeys() {
 		m_free(hostkey_file);
 	}
 
+	/* Only load default host keys if a host key is not specified by the user */
+	if (svr_opts.num_hostkey_files == 0) {
 #if DROPBEAR_RSA
-	loadhostkey(RSA_PRIV_FILENAME, 0);
+		loadhostkey(RSA_PRIV_FILENAME, 0);
 #endif
 
 #if DROPBEAR_DSS
-	loadhostkey(DSS_PRIV_FILENAME, 0);
+		loadhostkey(DSS_PRIV_FILENAME, 0);
 #endif
 
 #if DROPBEAR_ECDSA
-	loadhostkey(ECDSA_PRIV_FILENAME, 0);
+		loadhostkey(ECDSA_PRIV_FILENAME, 0);
 #endif
+   }
 
 #if DROPBEAR_DELAY_HOSTKEY
 	if (svr_opts.delay_hostkey) {
