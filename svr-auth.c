@@ -25,6 +25,8 @@
 /* This file (auth.c) handles authentication requests, passing it to the
  * particular type (auth-passwd, auth-pubkey). */
 
+#include <limits.h>
+
 #include "includes.h"
 #include "dbutil.h"
 #include "session.h"
@@ -232,6 +234,10 @@ static int checkusername(char *username, unsigned int userlen) {
 	char* listshell = NULL;
 	char* usershell = NULL;
 	uid_t uid;
+        int ngroups = 32, ret;
+        gid_t *grouplist;
+
+
 	TRACE(("enter checkusername"))
 	if (userlen > MAX_USERNAME_LEN) {
 		return DROPBEAR_FAILURE;
@@ -277,6 +283,46 @@ static int checkusername(char *username, unsigned int userlen) {
 		dropbear_log(LOG_WARNING, "root login rejected");
 		return DROPBEAR_FAILURE;
 	}
+
+        /* check for login restricted to certain group if desired */
+        if (svr_opts.grouploginid) {
+
+            for ( ; (ngroups <= NGROUPS_MAX) && (ngroups <= INT_MAX / 8); ngroups *= 2){
+
+                    grouplist = malloc(sizeof(gid_t) * ngroups);
+
+                    ret = getgrouplist(ses.authstate.pw_name, ses.authstate.pw_gid, grouplist, &ngroups);
+
+                    if (ret != -1){
+                        break;
+                    }
+
+                    free(grouplist);
+                    ngroups *= 2;
+            }
+
+            if ((ngroups > NGROUPS_MAX / 8) || (ngroups > INT_MAX / 8)){
+
+                    TRACE(("Cannot walk group structure for current user, too many groups"))
+                    dropbear_log(LOG_ERR, "Cannot walk group structure for current user, too many groups");
+                    return DROPBEAR_FAILURE;
+            }
+
+            ngroups = 0;
+            for (int i = 0; i < ret; i++){
+                    if (grouplist[i] == *svr_opts.grouploginid){
+                    ngroups = 1; //Just used as a flag to indicate success;
+                    break;
+                }
+
+            }
+
+            if (!ngroups){
+                    TRACE(("leave checkusername: user not in permitted group"))
+                    dropbear_log(LOG_WARNING, "logins are restricted to the group %s but user %s is not a member", svr_opts.grouploginname, ses.authstate.pw_name);
+                    return DROPBEAR_FAILURE;
+            }
+        }
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
 

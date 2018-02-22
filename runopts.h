@@ -92,6 +92,8 @@ typedef struct svr_runopts {
 #endif
 
 	int norootlogin;
+        char *grouploginname;
+        gid_t *grouploginid;
 
 	int noauthpass;
 	int norootpass;
