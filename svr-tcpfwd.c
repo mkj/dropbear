@@ -86,7 +86,7 @@ void recv_msg_global_request_remotetcp() {
 	}
 
 	if (strcmp("tcpip-forward", reqname) == 0) {
-		int allocated_listen_port;
+		int allocated_listen_port = 0;
 		ret = svr_remotetcpreq(&allocated_listen_port);
 		/* client expects-port-number-to-make-use-of-server-allocated-ports */
 		if (DROPBEAR_SUCCESS == ret) {
