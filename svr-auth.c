@@ -38,7 +38,7 @@
 #include "dbrandom.h"
 
 static void authclear(void);
-static int checkusername(char *username, unsigned int userlen);
+static int checkusername(const char *username, unsigned int userlen);
 
 /* initialise the first time for a session, resetting all parameters */
 void svr_authinitialise() {
@@ -263,7 +263,7 @@ static int check_group_membership(gid_t check_gid, const char* username, gid_t u
 
 /* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
-static int checkusername(char *username, unsigned int userlen) {
+static int checkusername(const char *username, unsigned int userlen) {
 
 	char* listshell = NULL;
 	char* usershell = NULL;
