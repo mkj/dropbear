@@ -181,7 +181,7 @@ static void cli_session_init(pid_t proxy_cmd_pid) {
 
 }
 
-static void send_msg_service_request(char* servicename) {
+static void send_msg_service_request(const char* servicename) {
 
 	TRACE(("enter send_msg_service_request: servicename='%s'", servicename))
 

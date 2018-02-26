@@ -1,7 +1,6 @@
 #ifndef DROPBEAR_LTC_PRNG_H_DROPBEAR
 #define DROPBEAR_LTC_PRNG_H_DROPBEAR
 
-#include "options.h"
 #include "includes.h"
 
 #if DROPBEAR_LTC_PRNG

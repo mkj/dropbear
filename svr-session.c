@@ -43,6 +43,7 @@
 #include "fuzz.h"
 
 static void svr_remoteclosed(void);
+static void svr_algos_initialise(void);
 
 struct serversession svr_ses; /* GLOBAL */
 
@@ -103,6 +104,7 @@ void svr_session(int sock, int childpipe) {
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
+	svr_algos_initialise();
 
 	/* for logging the remote address */
 	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
@@ -252,5 +254,16 @@ static void svr_remoteclosed() {
 	ses.sock_out = -1;
 	dropbear_close("Exited normally");
 
+}
+
+static void svr_algos_initialise(void) {
+#if DROPBEAR_DH_GROUP1 && DROPBEAR_DH_GROUP1_CLIENTONLY
+	algo_type *algo;
+	for (algo = sshkex; algo->name; algo++) {
+		if (strcmp(algo->name, "diffie-hellman-group1-sha1") == 0) {
+			algo->usable = 0;
+		}
+	}
+#endif
 }
 

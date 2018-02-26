@@ -2,7 +2,6 @@
 #define DROPBEAR_DROPBEAR_ECC_H
 
 #include "includes.h"
-#include "options.h"
 
 #include "buffer.h"
 

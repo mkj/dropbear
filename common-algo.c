@@ -276,6 +276,7 @@ static const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL
 
 algo_type sshkex[] = {
 #if DROPBEAR_CURVE25519
+	{"curve25519-sha256", 0, &kex_curve25519, 1, NULL},
 	{"curve25519-sha256@libssh.org", 0, &kex_curve25519, 1, NULL},
 #endif
 #if DROPBEAR_ECDH
@@ -289,11 +290,11 @@ algo_type sshkex[] = {
 	{"ecdh-sha2-nistp256", 0, &kex_ecdh_nistp256, 1, NULL},
 #endif
 #endif
-#if DROPBEAR_DH_GROUP14_SHA1
-	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
-#endif
 #if DROPBEAR_DH_GROUP14_SHA256
 	{"diffie-hellman-group14-sha256", 0, &kex_dh_group14_sha256, 1, NULL},
+#endif
+#if DROPBEAR_DH_GROUP14_SHA1
+	{"diffie-hellman-group14-sha1", 0, &kex_dh_group14_sha1, 1, NULL},
 #endif
 #if DROPBEAR_DH_GROUP1
 	{"diffie-hellman-group1-sha1", 0, &kex_dh_group1, 1, NULL},

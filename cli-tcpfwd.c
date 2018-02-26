@@ -23,7 +23,6 @@
  * SOFTWARE. */
 
 #include "includes.h"
-#include "options.h"
 #include "dbutil.h"
 #include "tcpfwd.h"
 #include "channel.h"

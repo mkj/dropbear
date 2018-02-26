@@ -26,7 +26,6 @@
 #define DROPBEAR_INCLUDES_H_
 
 
-#include "config.h"
 #include "options.h"
 #include "debug.h"
 

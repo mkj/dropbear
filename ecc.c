@@ -1,5 +1,4 @@
 #include "includes.h"
-#include "options.h"
 #include "ecc.h"
 #include "dbutil.h"
 #include "bignum.h"
