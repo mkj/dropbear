@@ -94,7 +94,7 @@ void recv_msg_global_request_remotetcp() {
 			buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
 			buf_putint(ses.writepayload, allocated_listen_port);
 			encrypt_packet();
-			wantreply = 0; //so out does not do so
+			wantreply = 0; /* avoid out: below sending another reply */
 		}
 	} else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
 		ret = svr_cancelremotetcp();
@@ -212,9 +212,6 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 	if (DROPBEAR_SUCCESS == ret) {
 		tcpinfo->listenport = get_sock_port(ses.listeners[0]->socks[0]);
 		*allocated_listen_port = tcpinfo->listenport;
-		dropbear_log(LOG_INFO, "tcpip-forward %s:%d '%s'", 
-			((NULL == tcpinfo->listenaddr)?"localhost":tcpinfo->listenaddr), 
-			tcpinfo->listenport, ses.authstate.pw_name);
 	}
 
 out:
