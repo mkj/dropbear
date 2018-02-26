@@ -226,6 +226,40 @@ out:
 	m_free(methodname);
 }
 
+/* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+static int check_group_membership(gid_t check_gid, const char* username, gid_t user_gid) {
+	int ngroups, i, ret;
+	gid_t *grouplist = NULL;
+	int match = DROPBEAR_FAILURE;
+
+	for (ngroups = 32; ngroups <= DROPBEAR_NGROUP_MAX; ngroups *= 2) {
+		grouplist = m_malloc(sizeof(gid_t) * ngroups);
+
+		/* BSD returns ret==0 on success. Linux returns ret==ngroups on success */
+		ret = getgrouplist(username, user_gid, grouplist, &ngroups);
+		if (ret >= 0) {
+			break;
+		}
+		m_free(grouplist);
+		grouplist = NULL;
+	}
+
+	if (!grouplist) {
+		dropbear_log(LOG_ERR, "Too many groups for user '%s'", username);
+		return DROPBEAR_FAILURE;
+	}
+
+	for (i = 0; i < ngroups; i++) {
+		if (grouplist[i] == check_gid) {
+			match = DROPBEAR_SUCCESS;
+			break;
+		}
+	}
+	m_free(grouplist);
+
+	return match;
+}
+
 
 /* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
@@ -234,9 +268,6 @@ static int checkusername(char *username, unsigned int userlen) {
 	char* listshell = NULL;
 	char* usershell = NULL;
 	uid_t uid;
-        int ngroups = 32, ret;
-        gid_t *grouplist;
-
 
 	TRACE(("enter checkusername"))
 	if (userlen > MAX_USERNAME_LEN) {
@@ -284,45 +315,16 @@ static int checkusername(char *username, unsigned int userlen) {
 		return DROPBEAR_FAILURE;
 	}
 
-        /* check for login restricted to certain group if desired */
-        if (svr_opts.grouploginid) {
-
-            for ( ; (ngroups <= NGROUPS_MAX) && (ngroups <= INT_MAX / 8); ngroups *= 2){
-
-                    grouplist = malloc(sizeof(gid_t) * ngroups);
-
-                    ret = getgrouplist(ses.authstate.pw_name, ses.authstate.pw_gid, grouplist, &ngroups);
-
-                    if (ret != -1){
-                        break;
-                    }
-
-                    free(grouplist);
-                    ngroups *= 2;
-            }
-
-            if ((ngroups > NGROUPS_MAX / 8) || (ngroups > INT_MAX / 8)){
-
-                    TRACE(("Cannot walk group structure for current user, too many groups"))
-                    dropbear_log(LOG_ERR, "Cannot walk group structure for current user, too many groups");
-                    return DROPBEAR_FAILURE;
-            }
-
-            ngroups = 0;
-            for (int i = 0; i < ret; i++){
-                    if (grouplist[i] == *svr_opts.grouploginid){
-                    ngroups = 1; //Just used as a flag to indicate success;
-                    break;
-                }
-
-            }
-
-            if (!ngroups){
-                    TRACE(("leave checkusername: user not in permitted group"))
-                    dropbear_log(LOG_WARNING, "logins are restricted to the group %s but user %s is not a member", svr_opts.grouploginname, ses.authstate.pw_name);
-                    return DROPBEAR_FAILURE;
-            }
-        }
+	/* check for login restricted to certain group if desired */
+	if (svr_opts.restrict_group) {
+		if (check_group_membership(svr_opts.restrict_group_gid,
+				ses.authstate.pw_name, ses.authstate.pw_gid) == DROPBEAR_FAILURE) {
+			dropbear_log(LOG_WARNING,
+				"Logins are restricted to the group %s but user '%s' is not a member",
+				svr_opts.restrict_group, ses.authstate.pw_name);
+			return DROPBEAR_FAILURE;
+		}
+	}
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
 
