@@ -105,12 +105,14 @@ struct AuthState {
 	unsigned char authtypes; /* Flags indicating which auth types are still 
 								valid */
 	unsigned int failcount; /* Number of (failed) authentication attempts.*/
-	unsigned authdone : 1; /* 0 if we haven't authed, 1 if we have. Applies for
+	unsigned int authdone; /* 0 if we haven't authed, 1 if we have. Applies for
 							  client and server (though has differing 
 							  meanings). */
-	unsigned perm_warn : 1; /* Server only, set if bad permissions on 
+	unsigned int perm_warn; /* Server only, set if bad permissions on 
 							   ~/.ssh/authorized_keys have already been
 							   logged. */
+	unsigned int checkusername_failed;  /* Server only, set if checkusername
+	                                has already failed */
 
 	/* These are only used for the server */
 	uid_t pw_uid;
