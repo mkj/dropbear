@@ -149,7 +149,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * Small systems should generally include either curve25519 or ecdh for performance.
  * curve25519 is less widely supported but is faster
  */ 
-#define DROPBEAR_DH_GROUP1 1
+#define DROPBEAR_DH_GROUP1 0
 #define DROPBEAR_DH_GROUP14_SHA1 1
 #define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
