@@ -1,7 +1,7 @@
 Basic Dropbear build instructions:
 
 - Edit localoptions.h to set which features you want. Available options
-  are described in default_options.h.in, these will be overridden by
+  are described in default_options.h, these will be overridden by
   anything set in localoptions.h
 
 - If using a Mercurial or Git checkout, "autoconf; autoheader"

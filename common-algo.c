@@ -276,6 +276,7 @@ static const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL
 
 algo_type sshkex[] = {
 #if DROPBEAR_CURVE25519
+	{"curve25519-sha256", 0, &kex_curve25519, 1, NULL},
 	{"curve25519-sha256@libssh.org", 0, &kex_curve25519, 1, NULL},
 #endif
 #if DROPBEAR_ECDH
