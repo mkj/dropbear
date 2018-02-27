@@ -320,9 +320,9 @@ AC_ARG_ENABLE(shadow,
 # Checks for header files.
 AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
-AC_CHECK_HEADERS([fcntl.h limits.h netinet/in.h netinet/tcp.h stdlib.h \
-	string.h sys/socket.h sys/time.h termios.h unistd.h crypt.h \
-	pty.h ioctl.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
+AC_CHECK_HEADERS([netinet/in.h netinet/tcp.h \
+	crypt.h \
+	pty.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
 	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
 	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h])
 
@@ -478,7 +478,6 @@ AC_CHECK_HEADERS([mach/mach_time.h])
 AC_CHECK_FUNCS(mach_absolute_time)
 
 AC_CHECK_FUNCS(explicit_bzero memset_s)
-
 
 AC_ARG_ENABLE(bundled-libtom,
 [  --enable-bundled-libtom       Force using bundled libtomcrypt/libtommath even if a system version exists.
@@ -775,7 +774,9 @@ fi
 AC_PROG_GCC_TRADITIONAL
 AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
-AC_CHECK_FUNCS([dup2 getpass getspnam getusershell memset putenv select socket strdup clearenv strlcpy strlcat daemon basename _getpty getaddrinfo freeaddrinfo getnameinfo fork writev])
+AC_CHECK_FUNCS([getpass getspnam getusershell putenv])
+AC_CHECK_FUNCS([clearenv strlcpy strlcat daemon basename _getpty getaddrinfo ])
+AC_CHECK_FUNCS([freeaddrinfo getnameinfo fork writev getgrouplist])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 
