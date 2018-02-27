@@ -312,7 +312,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 			return DROPBEAR_FAILURE;
 		}
 	}
-#endif HAVE_GETGROUPLIST
+#endif /* HAVE_GETGROUPLIST */
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
 
