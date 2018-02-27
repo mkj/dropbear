@@ -92,8 +92,14 @@ typedef struct svr_runopts {
 #endif
 
 	int norootlogin;
+
+#ifdef HAVE_GETGROUPLIST
+	/* restrict_group is the group name if group restriction was enabled, 
+	NULL otherwise */
 	char *restrict_group;
+	/* restrict_group_gid is only valid if restrict_group is set */
 	gid_t restrict_group_gid;
+#endif
 
 	int noauthpass;
 	int norootpass;

@@ -197,6 +197,7 @@ out:
 	m_free(methodname);
 }
 
+#ifdef HAVE_GETGROUPLIST
 /* returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int check_group_membership(gid_t check_gid, const char* username, gid_t user_gid) {
 	int ngroups, i, ret;
@@ -230,7 +231,7 @@ static int check_group_membership(gid_t check_gid, const char* username, gid_t u
 
 	return match;
 }
-
+#endif
 
 /* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */
@@ -300,6 +301,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 	}
 
 	/* check for login restricted to certain group if desired */
+#ifdef HAVE_GETGROUPLIST
 	if (svr_opts.restrict_group) {
 		if (check_group_membership(svr_opts.restrict_group_gid,
 				ses.authstate.pw_name, ses.authstate.pw_gid) == DROPBEAR_FAILURE) {
@@ -310,6 +312,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 			return DROPBEAR_FAILURE;
 		}
 	}
+#endif HAVE_GETGROUPLIST
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
 
