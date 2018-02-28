@@ -10,7 +10,7 @@ enum wrapfd_mode {
     RANDOMIN,
 };
 
-void wrapfd_setup();
+void wrapfd_setup(void);
 void wrapfd_setseed(uint32_t seed);
 // doesn't take ownership of buf. buf is optional.
 void wrapfd_add(int fd, buffer *buf, enum wrapfd_mode mode);
