@@ -43,9 +43,6 @@ void fuzz_fake_send_kexdh_reply(void);
 struct dropbear_fuzz_options {
     int fuzzing;
 
-    // to record an unencrypted stream
-    FILE* recordf;
-
     // fuzzing input
     buffer *input;
     struct dropbear_cipher recv_cipher;

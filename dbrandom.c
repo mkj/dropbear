@@ -146,7 +146,7 @@ void addrandom(const unsigned char * buf, unsigned int len)
 	hash_state hs;
 
 #if DROPBEAR_FUZZ
-	if (fuzz.fuzzing || fuzz.recordf) {
+	if (fuzz.fuzzing) {
 		return;
 	}
 #endif
@@ -164,7 +164,7 @@ void addrandom(const unsigned char * buf, unsigned int len)
 static void write_urandom()
 {
 #if DROPBEAR_FUZZ
-	if (fuzz.fuzzing || fuzz.recordf) {
+	if (fuzz.fuzzing) {
 		return;
 	}
 #endif
@@ -204,7 +204,7 @@ void seedrandom() {
 	clock_t clockval;
 
 #if DROPBEAR_FUZZ
-	if (fuzz.fuzzing || fuzz.recordf) {
+	if (fuzz.fuzzing) {
 		return;
 	}
 #endif
