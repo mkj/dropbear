@@ -2,7 +2,7 @@
 #define DROPBEAR_FUZZ_H
 
 #include "config.h"
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 
 #include "includes.h"
 #include "buffer.h"

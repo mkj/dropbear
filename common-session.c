@@ -75,7 +75,7 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.last_packet_time_any_sent = 0;
 	ses.last_packet_time_keepalive_sent = 0;
 	
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (!fuzz.fuzzing)
 #endif
 	{
@@ -158,7 +158,7 @@ void session_loop(void(*loophandler)(void)) {
 
 		/* We get woken up when signal handlers write to this pipe.
 		   SIGCHLD in svr-chansession is the only one currently. */
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 		if (!fuzz.fuzzing) 
 #endif
 		{

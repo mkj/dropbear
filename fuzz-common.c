@@ -42,21 +42,21 @@ int fuzz_set_input(const uint8_t *Data, size_t Size) {
     return DROPBEAR_SUCCESS;
 }
 
-static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param) {
-
-    char printbuf[1024];
-
 #if DEBUG_TRACE
+static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param) {
     if (debug_trace) {
+        char printbuf[1024];
         vsnprintf(printbuf, sizeof(printbuf), format, param);
         fprintf(stderr, "%s\n", printbuf);
     }
-#endif
 }
+#else
+static void fuzz_dropbear_log(int UNUSED(priority), const char* UNUSED(format), va_list UNUSED(param)) {
+    /* No print */
+}
+#endif /* DEBUG_TRACE */
 
 void fuzz_svr_setup(void) {
-    struct passwd *pw;
-
     fuzz_common_setup();
     
     _dropbear_exit = svr_dropbear_exit;

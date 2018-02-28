@@ -77,7 +77,7 @@ void write_packet() {
 	/* This may return EAGAIN. The main loop sometimes
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		// pretend to write one packet at a time
 		// TODO(fuzz): randomise amount written based on the fuzz input
@@ -105,7 +105,7 @@ void write_packet() {
 	}
 
 #else /* No writev () */
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	_Static_assert(0, "No fuzzing code for no-writev writes");
 #endif
 	/* Get the next buffer in the queue of encrypted packets to write*/
@@ -366,7 +366,7 @@ static int checkmac() {
 	buf_setpos(ses.readbuf, 0);
 	make_mac(ses.recvseq, &ses.keys->recv, ses.readbuf, contents_len, mac_bytes);
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		// fail 1 in 2000 times to test error path.
 		// note that mac_bytes is all zero prior to kex, so don't test ==0 !

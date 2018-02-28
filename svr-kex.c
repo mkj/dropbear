@@ -179,7 +179,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 	}
 #endif
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing && fuzz.skip_kexmaths) {
 		fuzz_fake_send_kexdh_reply();
 		return;

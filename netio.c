@@ -361,7 +361,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	int so_prio_val = 0;
 #endif
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		TRACE(("fuzzing skips set_sock_prio"))
 		return;

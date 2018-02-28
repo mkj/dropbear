@@ -12,7 +12,7 @@ AC_CONFIG_SRCDIR(buffer.c)
 # Record which revision is being built
 if which -s hg && test -d "$srcdir/.hg"; then
 	hgrev=`hg id -i -R "$srcdir"`
-	echo "Source directory Mercurial base revision $hgrev"
+	AC_MSG_NOTICE([Source directory Mercurial base revision $hgrev])
 fi
 
 # Checks for programs.
@@ -330,6 +330,7 @@ AC_ARG_ENABLE(fuzz,
 		DROPBEAR_FUZZ=1
 	],
 	[
+		AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
 		DROPBEAR_FUZZ=0
 	]
 

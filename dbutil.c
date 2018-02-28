@@ -120,7 +120,7 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	// longjmp before cleaning up svr_opts
     if (fuzz.do_jmp) {
         longjmp(fuzz.jmp, 1);
@@ -532,7 +532,7 @@ void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		return;
 	}
@@ -629,7 +629,7 @@ static clockid_t get_linux_clock_source() {
 #endif 
 
 time_t monotonic_now() {
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		/* time stands still when fuzzing */
 		return 5;

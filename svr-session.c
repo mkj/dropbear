@@ -185,7 +185,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		session_cleanup();
 	}
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	// longjmp before cleaning up svr_opts
     if (fuzz.do_jmp) {
         longjmp(fuzz.jmp, 1);

@@ -473,7 +473,7 @@ static int checkfileperm(char * filename) {
 	return DROPBEAR_SUCCESS;
 }
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {

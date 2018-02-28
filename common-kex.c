@@ -949,7 +949,7 @@ static void read_kex_algos() {
 		ses.newkeys->trans.algo_comp = s2c_comp_algo->val;
 	}
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		fuzz_kex_fakealgos();
 	}

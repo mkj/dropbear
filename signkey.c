@@ -628,7 +628,7 @@ out:
 }
 #endif
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 const char * const * fuzz_signkey_names = signkey_names;
 
 #endif
