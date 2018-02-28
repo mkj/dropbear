@@ -323,7 +323,7 @@ AC_ARG_ENABLE(shadow,
 )
 
 AC_ARG_ENABLE(fuzz,
-	[  --enable-fuzz           Build fuzzing],
+	[  --enable-fuzz           Build fuzzing. Not recommended for deployment.],
 	[
 		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
 		AC_MSG_NOTICE(Enabling fuzzing)

@@ -154,13 +154,15 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
         return 0;
     }
 
-    // get prefix. input format is
-    // string prefix
-    //     uint32 wrapfd seed
-    //     ... to be extended later
-    // [bytes] ssh input stream
+    /*
+      get prefix. input format is
+      string prefix
+          uint32 wrapfd seed
+          ... to be extended later
+      [bytes] ssh input stream
+    */
 
-    // be careful to avoid triggering buffer.c assertions
+    /* be careful to avoid triggering buffer.c assertions */
     if (fuzz.input->len < 8) {
         return 0;
     }
@@ -181,7 +183,7 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     } else {
         m_malloc_free_epoch(1, 1);
         TRACE(("dropbear_exit longjmped"))
-        // dropbear_exit jumped here
+        /* dropbear_exit jumped here */
     }
 
     return 0;

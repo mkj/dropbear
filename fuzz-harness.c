@@ -19,7 +19,7 @@ int main(int argc, char ** argv) {
 
     for (i = 1; i < argc; i++) {
         if (argv[i][0] == '-') {
-            // ignore arguments
+            /* ignore arguments */
             continue;
         }
 

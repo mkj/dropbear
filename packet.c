@@ -79,8 +79,8 @@ void write_packet() {
 	it's likely to be necessary */
 #if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
-		// pretend to write one packet at a time
-		// TODO(fuzz): randomise amount written based on the fuzz input
+		/* pretend to write one packet at a time */
+		/* TODO(fuzz): randomise amount written based on the fuzz input */
 		written = iov[0].iov_len;
 	}
 	else
@@ -368,8 +368,8 @@ static int checkmac() {
 
 #if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
-		// fail 1 in 2000 times to test error path.
-		// note that mac_bytes is all zero prior to kex, so don't test ==0 !
+		/* fail 1 in 2000 times to test error path.
+		   note that mac_bytes is all zero prior to kex, so don't test ==0 ! */
 		unsigned int value = *((unsigned int*)&mac_bytes);
 		if (value % 2000 == 99) {
 			return DROPBEAR_FAILURE;

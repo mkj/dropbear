@@ -57,7 +57,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	} else {
 		m_malloc_free_epoch(1, 1);
 		TRACE(("dropbear_exit longjmped"))
-		// dropbear_exit jumped here
+		/* dropbear_exit jumped here */
 	}
 
 	return 0;
