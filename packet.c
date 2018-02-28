@@ -35,6 +35,7 @@
 #include "auth.h"
 #include "channel.h"
 #include "netio.h"
+#include "runopts.h"
 
 static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -76,6 +77,15 @@ void write_packet() {
 	/* This may return EAGAIN. The main loop sometimes
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		/* pretend to write one packet at a time */
+		/* TODO(fuzz): randomise amount written based on the fuzz input */
+		written = iov[0].iov_len;
+	}
+	else
+#endif
+	{
 	written = writev(ses.sock_out, iov, iov_count);
 	if (written < 0) {
 		if (errno == EINTR || errno == EAGAIN) {
@@ -84,6 +94,7 @@ void write_packet() {
 		} else {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
+	}
 	}
 
 	packet_queue_consume(&ses.writequeue, written);
@@ -94,6 +105,9 @@ void write_packet() {
 	}
 
 #else /* No writev () */
+#if DROPBEAR_FUZZ
+	_Static_assert(0, "No fuzzing code for no-writev writes");
+#endif
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
@@ -351,6 +365,18 @@ static int checkmac() {
 
 	buf_setpos(ses.readbuf, 0);
 	make_mac(ses.recvseq, &ses.keys->recv, ses.readbuf, contents_len, mac_bytes);
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		/* fail 1 in 2000 times to test error path.
+		   note that mac_bytes is all zero prior to kex, so don't test ==0 ! */
+		unsigned int value = *((unsigned int*)&mac_bytes);
+		if (value % 2000 == 99) {
+			return DROPBEAR_FAILURE;
+		}
+		return DROPBEAR_SUCCESS;
+	}
+#endif
 
 	/* compare the hash */
 	buf_setpos(ses.readbuf, contents_len);

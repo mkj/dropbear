@@ -245,6 +245,7 @@ void set_connect_fds(fd_set *writefd) {
 		}
 		iter = next_iter;
 	}
+	TRACE(("leave set_connect_fds"))
 }
 
 void handle_connect_fds(const fd_set *writefd) {
@@ -360,6 +361,12 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	int so_prio_val = 0;
 #endif
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		TRACE(("fuzzing skips set_sock_prio"))
+		return;
+	}
+#endif
 
 	/* Don't log ENOTSOCK errors so that this can harmlessly be called
 	 * on a client '-J' proxy pipe */
@@ -584,6 +591,13 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 {
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		fuzz_get_socket_address(fd, local_host, local_port, remote_host, remote_port, host_lookup);
+		return;
+	}
+#endif
 	
 	if (local_host || local_port) {
 		addrlen = sizeof(addr);

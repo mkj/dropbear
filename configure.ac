@@ -9,6 +9,12 @@ AC_PREREQ(2.59)
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
+# Record which revision is being built
+if which -s hg && test -d "$srcdir/.hg"; then
+	hgrev=`hg id -i -R "$srcdir"`
+	AC_MSG_NOTICE([Source directory Mercurial base revision $hgrev])
+fi
+
 # Checks for programs.
 AC_PROG_CC
 
@@ -315,7 +321,21 @@ AC_ARG_ENABLE(shadow,
 		AC_MSG_NOTICE(Using shadow passwords if available)
 	]
 )
-			
+
+AC_ARG_ENABLE(fuzz,
+	[  --enable-fuzz           Build fuzzing. Not recommended for deployment.],
+	[
+		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
+		AC_MSG_NOTICE(Enabling fuzzing)
+		DROPBEAR_FUZZ=1
+	],
+	[
+		AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
+		DROPBEAR_FUZZ=0
+	]
+
+)
+AC_SUBST(DROPBEAR_FUZZ)
 
 # Checks for header files.
 AC_HEADER_STDC

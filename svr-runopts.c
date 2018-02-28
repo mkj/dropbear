@@ -523,6 +523,7 @@ static void addhostkey(const char *keyfile) {
 	svr_opts.num_hostkey_files++;
 }
 
+
 void load_all_hostkeys() {
 	int i;
 	int disable_unset_keys = 1;

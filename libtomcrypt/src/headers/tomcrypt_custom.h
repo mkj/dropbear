@@ -12,6 +12,17 @@
 
 #include "tomcrypt_dropbear.h"
 
+void * m_malloc(size_t size);
+/* m_calloc is limited in size, enough for libtomcrypt */
+void * m_calloc(size_t nmemb, size_t size);
+void * m_realloc(void* ptr, size_t size);
+void m_free_direct(void* ptr);
+
+#define XMALLOC m_malloc
+#define XFREE m_free_direct
+#define XREALLOC m_realloc
+#define XCALLOC m_calloc
+
 /* macros for various libc functions you can change for embedded targets */
 #ifndef XMALLOC
 #define XMALLOC  malloc
