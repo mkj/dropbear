@@ -70,7 +70,9 @@ static void printhelp(const char * progname) {
 					"-m		Don't display the motd on login\n"
 #endif
 					"-w		Disallow root logins\n"
+#ifdef HAVE_GETGROUPLIST
 					"-G		Restrict logins to members of specified group\n"
+#endif
 #if DROPBEAR_SVR_PASSWORD_AUTH || DROPBEAR_SVR_PAM_AUTH
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
@@ -135,8 +137,10 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.forced_command = NULL;
 	svr_opts.forkbg = 1;
 	svr_opts.norootlogin = 0;
+#ifdef HAVE_GETGROUPLIST
 	svr_opts.restrict_group = NULL;
 	svr_opts.restrict_group_gid = 0;
+#endif
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
 	svr_opts.allowblankpass = 0;
@@ -235,9 +239,11 @@ void svr_getopts(int argc, char ** argv) {
 				case 'w':
 					svr_opts.norootlogin = 1;
 					break;
+#ifdef HAVE_GETGROUPLIST
 				case 'G':
 					next = &svr_opts.restrict_group;
 					break;
+#endif
 				case 'W':
 					next = &recv_window_arg;
 					break;
@@ -340,6 +346,7 @@ void svr_getopts(int argc, char ** argv) {
 		buf_setpos(svr_opts.banner, 0);
 	}
 
+#ifdef HAVE_GETGROUPLIST
 	if (svr_opts.restrict_group) {
 		struct group *restrictedgroup = getgrnam(svr_opts.restrict_group);
 
@@ -348,8 +355,8 @@ void svr_getopts(int argc, char ** argv) {
 		} else {
 			dropbear_exit("Cannot restrict logins to group '%s' as the group does not exist", svr_opts.restrict_group);
 		}
-
 	}
+#endif
 	
 	if (recv_window_arg) {
 		opts.recv_window = atol(recv_window_arg);

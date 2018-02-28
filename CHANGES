@@ -1,6 +1,7 @@
-Upcoming...
+2018.76 - 27 February 2018
 
-- IMPORTANT:
+> > > Configuration/compatibility changes
+  IMPORTANT
   Custom configuration is now specified in local_options.h rather than options.h
   Available options and defaults can be seen in default_options.h
 
@@ -9,10 +10,10 @@ Upcoming...
   be put in localoptions.h
 
 - "configure --enable-static" should now be used instead of "make STATIC=1"
+  This will avoid 'hardened build' flags that conflict with static binaries
 
-- Add group14-256 and group16 key exchange options
-
-- Set hardened build flags by default if supported by the compiler.
+- Set 'hardened build' flags by default if supported by the compiler.
+  These can be disabled with configure --disable-harden if needed.
   -Wl,-pie
   -Wl,-z,now -Wl,-z,relro
   -fstack-protector-strong
@@ -21,8 +22,23 @@ Upcoming...
   -mfunction-return=thunk
   -mindirect-branch=thunk
 
-  These can be disabled with configure --disable-harden if needed
   Spectre patch from Loganaden Velvindron
+
+- "dropbear -r" option for hostkeys no longer attempts to load the default
+  hostkey paths as well. If desired these can be specified manually. 
+  Patch from CamVan Nguyen
+
+- group1-sha1 key exchange is disabled in the server by default since
+  the fixed 1024-bit group may be susceptible to attacks
+
+- twofish ciphers are now disabled in the default configuration
+
+- Default generated ECDSA key size is now 256 (rather than 521) 
+  for better interoperability
+
+- Minimum RSA key length has been increased to 1024 bits
+
+> > > Other features and fixes
 
 - Add runtime -T max_auth_tries option from Kevin Darbyshire-Bryant
 
@@ -31,18 +47,25 @@ Upcoming...
 
 - Add "-c forced_command" option. Patch from Jeremy Kerr
 
+- Restricted group -G option added with patch from stellarpower
+
 - Support server-chosen TCP forwarding ports, patch from houseofkodai
 
 - Allow choosing outgoing address for dbclient with -b [bind_address][:bind_port]
   Patch from houseofkodai
 
-- Update bundled libtomcrypt to 1.18.1, libtommath to 1.0.1
+- Makefile will now rebuild object files when header files are modified
 
-- Minimum RSA key length has been increased to 1024 bits
+- Add group14-256 and group16 key exchange options
+
+- curve25519-sha256 also supported without @libssh.org suffix
+
+- Update bundled libtomcrypt to 1.18.1, libtommath to 1.0.1
+  This fixes building with some recent versions of clang
 
 - Set PAM_RHOST which is needed by modules such as pam_abl
 
-- Improvements to DSS public key validation, found by OSS-Fuzz. 
+- Improvements to DSS and RSA public key validation, found by OSS-Fuzz. 
 
 - Don't exit when an authorized_keys file has malformed entries. Found by OSS-Fuzz
 
