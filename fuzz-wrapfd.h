@@ -7,7 +7,7 @@ enum wrapfd_mode {
     UNUSED = 0,
     PLAIN,
     INPROGRESS,
-    RANDOMIN,
+    RANDOMIN
 };
 
 void wrapfd_setup(void);
