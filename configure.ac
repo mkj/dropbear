@@ -10,7 +10,7 @@ AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
 # Record which revision is being built
-if which -s hg && test -d "$srcdir/.hg"; then
+if test -s "`which hg`" && test -d "$srcdir/.hg"; then
 	hgrev=`hg id -i -R "$srcdir"`
 	AC_MSG_NOTICE([Source directory Mercurial base revision $hgrev])
 fi
