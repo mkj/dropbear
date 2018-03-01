@@ -10,7 +10,7 @@ void m_burn(void *data, unsigned int len) {
 	explicit_bzero(data, len);
 #else
 	volatile void *p = data;
-    memset(p, 0x0, len);
+    memset((void*)p, 0x0, len);
 #endif
 }
 
