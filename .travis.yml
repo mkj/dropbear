@@ -23,7 +23,7 @@ matrix:
 
     # TODO: add -fsanitize=address
     # TODO: fuzzing malloc wrapper doesn't replace free() in system libtomcrypt
-    - env: DO_FUZZ=1 CONFIGURE_FLAGS="--enable-fuzz --disable-harden --enable-bundled-libtom"
+    - env: DO_FUZZ=1 CONFIGURE_FLAGS="--enable-fuzz --disable-harden --enable-bundled-libtom" WEXTRAFLAGS=""
       compiler: clang
 
 # container-based builds
