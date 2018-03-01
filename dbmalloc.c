@@ -1,6 +1,64 @@
 #include "dbmalloc.h"
 #include "dbutil.h"
 
+
+void * m_calloc(size_t nmemb, size_t size) {
+    if (SIZE_T_MAX / nmemb < size) {
+        dropbear_exit("m_calloc failed");
+    }
+    return m_malloc(nmemb*size);
+}
+
+void * m_strdup(const char * str) {
+    char* ret;
+    unsigned int len;
+    len = strlen(str);
+
+    ret = m_malloc(len+1);
+    if (ret == NULL) {
+        dropbear_exit("m_strdup failed");
+    }
+    memcpy(ret, str, len+1);
+    return ret;
+}
+
+#if !DROPBEAR_TRACKING_MALLOC
+
+/* Simple wrappers around malloc etc */
+void * m_malloc(size_t size) {
+
+	void* ret;
+
+	if (size == 0) {
+		dropbear_exit("m_malloc failed");
+	}
+	ret = calloc(1, size);
+	if (ret == NULL) {
+		dropbear_exit("m_malloc failed");
+	}
+	return ret;
+
+}
+
+void * m_realloc(void* ptr, size_t size) {
+
+	void *ret;
+
+	if (size == 0) {
+		dropbear_exit("m_realloc failed");
+	}
+	ret = realloc(ptr, size);
+	if (ret == NULL) {
+		dropbear_exit("m_realloc failed");
+	}
+	return ret;
+}
+
+
+#else
+
+/* For fuzzing */
+
 struct dbmalloc_header {
     unsigned int epoch;
     struct dbmalloc_header *prev;
@@ -90,13 +148,6 @@ void * m_malloc(size_t size) {
     return &mem[sizeof(struct dbmalloc_header)];
 }
 
-void * m_calloc(size_t nmemb, size_t size) {
-    if (SIZE_T_MAX / nmemb < size) {
-        dropbear_exit("m_calloc failed");
-    }
-    return m_malloc(nmemb*size);
-}
-
 void * m_realloc(void* ptr, size_t size) {
     char* mem = NULL;
     struct dbmalloc_header* header = NULL;
@@ -128,17 +179,4 @@ void m_free_direct(void* ptr) {
     free(header);
 }
 
-void * m_strdup(const char * str) {
-    char* ret;
-    unsigned int len;
-    len = strlen(str);
-
-    ret = m_malloc(len+1);
-    if (ret == NULL) {
-        dropbear_exit("m_strdup failed");
-    }
-    memcpy(ret, str, len+1);
-    return ret;
-}
-
-
+#endif /* DROPBEAR_TRACKING_MALLOC */

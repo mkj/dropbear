@@ -316,4 +316,6 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_CLIENT_TCP_FAST_OPEN 0
 #endif
 
+#define DROPBEAR_TRACKING_MALLOC (DROPBEAR_FUZZ)
+
 /* no include guard for this file */
