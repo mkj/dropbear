@@ -1062,12 +1062,7 @@
 #undef BN_MP_TOOM_MUL_C
 #undef BN_MP_TOOM_SQR_C
 
-void * m_malloc(size_t size);
-/* m_calloc is limited in size, enough for libtomcrypt */
-void * m_calloc(size_t nmemb, size_t size);
-void * m_realloc(void* ptr, size_t size);
-void m_free_direct(void* ptr);
-
+#include "dbmalloc.h"
 #define XMALLOC m_malloc
 #define XFREE m_free_direct
 #define XREALLOC m_realloc
