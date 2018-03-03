@@ -15,6 +15,7 @@ if test -s "`which hg`" && test -d "$srcdir/.hg"; then
 	AC_MSG_NOTICE([Source directory Mercurial base revision $hgrev])
 fi
 
+ORIGCFLAGS="$CFLAGS"
 # Checks for programs.
 AC_PROG_CC
 
@@ -35,7 +36,7 @@ AC_DEFUN(DB_TRYADDCFLAGS,
 }])
 
 # set compile flags prior to other tests
-if test -z "$OLDCFLAGS" && test "$GCC" = "yes"; then
+if test -z "$ORIGCFLAGS" && test "$GCC" = "yes"; then
 	AC_MSG_NOTICE(No \$CFLAGS set... using "-Os -W -Wall" for GCC)
 	CFLAGS="-Os -W -Wall"
 fi
