@@ -61,7 +61,7 @@ CONVERTOBJS=dropbearconvert.o keyimport.o
 SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
 
 ifeq (@DROPBEAR_FUZZ@, 1)
-	allobjs = $(COMMONOBJS) fuzz-common.o  fuzz-wrapfd.o $(CLISVROBJS) $(CLIOBJS) $(SVROBJS)
+	allobjs = $(COMMONOBJS) fuzz-common.o  fuzz-wrapfd.o $(CLISVROBJS) $(CLIOBJS) $(SVROBJS) @CRYPTLIB@
 	allobjs:=$(subst svr-main.o, ,$(allobjs))
 	allobjs:=$(subst cli-main.o, ,$(allobjs))
 	allobjs:=$(sort $(allobjs))
