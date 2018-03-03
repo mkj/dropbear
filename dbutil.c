@@ -687,6 +687,6 @@ void fsync_parent_dir(const char* fn) {
 		TRACE(("error opening directory %s for fsync: %s", dir, strerror(errno)))
 	}
 
-	free(fn_dir);
+	m_free(fn_dir);
 #endif
 }
