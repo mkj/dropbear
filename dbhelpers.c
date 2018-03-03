@@ -9,8 +9,9 @@ void m_burn(void *data, unsigned int len) {
 #elif defined(HAVE_EXPLICIT_BZERO)
 	explicit_bzero(data, len);
 #else
-	void *p = data;
-	memset(p, 0x0, len);
+	/* This must be volatile to avoid compiler optimisation */
+	volatile void *p = data;
+	memset((void*)p, 0x0, len);
 #endif
 }
 
