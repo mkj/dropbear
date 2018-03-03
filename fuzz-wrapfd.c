@@ -26,7 +26,7 @@ static int wrap_used[IOWRAP_MAXFD+1];
 static unsigned int nused;
 static unsigned short rand_state[3];
 
-void wrapfd_setup() {
+void wrapfd_setup(void) {
 	TRACE(("wrapfd_setup"))
 	nused = 0;
 	memset(wrap_fds, 0x0, sizeof(wrap_fds));
