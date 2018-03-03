@@ -682,7 +682,7 @@ void fsync_parent_dir(const char* fn) {
 		if (fsync(dirfd) != 0) {
 			TRACE(("fsync of directory %s failed: %s", dir, strerror(errno)))
 		}
-		close(dirfd);
+		m_close(dirfd);
 	} else {
 		TRACE(("error opening directory %s for fsync: %s", dir, strerror(errno)))
 	}
