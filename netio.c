@@ -245,6 +245,7 @@ void set_connect_fds(fd_set *writefd) {
 		}
 		iter = next_iter;
 	}
+	TRACE(("leave set_connect_fds"))
 }
 
 void handle_connect_fds(const fd_set *writefd) {
@@ -305,10 +306,10 @@ void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigne
 	for (l = queue->head, i = 0; i < *iov_count; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, writebuf->data[writebuf->len-1],
-				len, writebuf->len-1))
+		TRACE2(("write_packet writev #%d len %d/%d", i,
+				len, writebuf->len))
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
@@ -319,7 +320,7 @@ void packet_queue_consume(struct Queue *queue, ssize_t written) {
 	int len;
 	while (written > 0) {
 		writebuf = (buffer*)examine(queue);
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		if (len > written) {
 			/* partial buffer write */
 			buf_incrpos(writebuf, written);
@@ -360,6 +361,12 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	int so_prio_val = 0;
 #endif
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		TRACE(("fuzzing skips set_sock_prio"))
+		return;
+	}
+#endif
 
 	/* Don't log ENOTSOCK errors so that this can harmlessly be called
 	 * on a client '-J' proxy pipe */
@@ -584,6 +591,13 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 {
 	struct sockaddr_storage addr;
 	socklen_t addrlen;
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		fuzz_get_socket_address(fd, local_host, local_port, remote_host, remote_port, host_lookup);
+		return;
+	}
+#endif
 	
 	if (local_host || local_port) {
 		addrlen = sizeof(addr);

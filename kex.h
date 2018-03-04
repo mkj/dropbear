@@ -34,6 +34,7 @@ void recv_msg_kexinit(void);
 void send_msg_newkeys(void);
 void recv_msg_newkeys(void);
 void kexfirstinitialise(void);
+void finish_kexhashbuf(void);
 
 struct kex_dh_param *gen_kexdh_param(void);
 void free_kexdh_param(struct kex_dh_param *param);

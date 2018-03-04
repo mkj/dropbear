@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2017.75"
+#define DROPBEAR_VERSION "2018.76"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -315,5 +315,7 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_SERVER_TCP_FAST_OPEN 0
 #define DROPBEAR_CLIENT_TCP_FAST_OPEN 0
 #endif
+
+#define DROPBEAR_TRACKING_MALLOC (DROPBEAR_FUZZ)
 
 /* no include guard for this file */

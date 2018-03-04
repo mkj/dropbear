@@ -27,7 +27,7 @@
 #include "dbutil.h"
 #include "bignum.h"
 #include "dbrandom.h"
-
+#include "runopts.h"
 
 /* this is used to generate unique output from the same hashpool */
 static uint32_t counter = 0;
@@ -145,6 +145,12 @@ void addrandom(const unsigned char * buf, unsigned int len)
 {
 	hash_state hs;
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return;
+	}
+#endif
+
 	/* hash in the new seed data */
 	sha1_init(&hs);
 	/* existing state (zeroes on startup) */
@@ -157,6 +163,11 @@ void addrandom(const unsigned char * buf, unsigned int len)
 
 static void write_urandom()
 {
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return;
+	}
+#endif
 #if !DROPBEAR_USE_PRNGD
 	/* This is opportunistic, don't worry about failure */
 	unsigned char buf[INIT_SEED_SIZE];
@@ -170,6 +181,18 @@ static void write_urandom()
 #endif
 }
 
+#if DROPBEAR_FUZZ
+void fuzz_seed(void) {
+	hash_state hs;
+	sha1_init(&hs);
+	sha1_process(&hs, "fuzzfuzzfuzz", strlen("fuzzfuzzfuzz"));
+	sha1_done(&hs, hashpool);
+
+	counter = 0;
+	donerandinit = 1;
+}
+#endif
+
 /* Initialise the prng from /dev/urandom or prngd. This function can
  * be called multiple times */
 void seedrandom() {
@@ -180,8 +203,15 @@ void seedrandom() {
 	struct timeval tv;
 	clock_t clockval;
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return;
+	}
+#endif
+
 	/* hash in the new seed data */
 	sha1_init(&hs);
+
 	/* existing state */
 	sha1_process(&hs, (void*)hashpool, sizeof(hashpool));
 
