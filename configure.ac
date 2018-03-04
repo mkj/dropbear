@@ -329,6 +329,8 @@ AC_ARG_ENABLE(fuzz,
 		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
 		AC_MSG_NOTICE(Enabling fuzzing)
 		DROPBEAR_FUZZ=1
+		# libfuzzer needs linking with c++ libraries
+		AC_PROG_CXX
 	],
 	[
 		AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
@@ -337,6 +339,7 @@ AC_ARG_ENABLE(fuzz,
 
 )
 AC_SUBST(DROPBEAR_FUZZ)
+AC_SUBST(CXX)
 
 # Checks for header files.
 AC_HEADER_STDC

@@ -70,6 +70,8 @@ ifeq (@DROPBEAR_FUZZ@, 1)
 	dbclientobjs=$(allobjs) cli-main.o
 	dropbearkeyobjs=$(allobjs) $(KEYOBJS)
 	dropbearconvertobjs=$(allobjs) $(CONVERTOBJS)
+	# CXX only set when fuzzing
+	CXX=@CXX@
 else
 	dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS)
 	dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
