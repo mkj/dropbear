@@ -306,10 +306,10 @@ void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigne
 	for (l = queue->head, i = 0; i < *iov_count; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, writebuf->data[writebuf->len-1],
-				len, writebuf->len-1))
+		TRACE2(("write_packet writev #%d len %d/%d", i,
+				len, writebuf->len))
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
@@ -320,7 +320,7 @@ void packet_queue_consume(struct Queue *queue, ssize_t written) {
 	int len;
 	while (written > 0) {
 		writebuf = (buffer*)examine(queue);
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		if (len > written) {
 			/* partial buffer write */
 			buf_incrpos(writebuf, written);

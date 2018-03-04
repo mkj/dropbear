@@ -65,7 +65,6 @@ void write_packet() {
 #else
 	int len;
 	buffer* writebuf;
-	int packet_type;
 #endif
 	
 	TRACE2(("enter write_packet"))
@@ -113,10 +112,7 @@ void write_packet() {
 
 	/* The last byte of the buffer is not to be transmitted, but is 
 	 * a cleartext packet_type indicator */
-	packet_type = writebuf->data[writebuf->len-1];
-	len = writebuf->len - 1 - writebuf->pos;
-	TRACE2(("write_packet type %d len %d/%d", packet_type,
-			len, writebuf->len-1))
+	len = writebuf->len - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock_out, buf_getptr(writebuf, len), len);
@@ -604,7 +600,7 @@ void encrypt_packet() {
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;
 
-	writebuf_enqueue(writebuf, packet_type);
+	writebuf_enqueue(writebuf);
 
 	/* Update counts */
 	ses.transseq++;
@@ -624,14 +620,11 @@ void encrypt_packet() {
 	TRACE2(("leave encrypt_packet()"))
 }
 
-void writebuf_enqueue(buffer * writebuf, unsigned char packet_type) {
-	/* The last byte of the buffer stores the cleartext packet_type. It is not
-	 * transmitted but is used for transmit timeout purposes */
-	buf_putbyte(writebuf, packet_type);
+void writebuf_enqueue(buffer * writebuf) {
 	/* enqueue the packet for sending. It will get freed after transmission. */
 	buf_setpos(writebuf, 0);
 	enqueue(&ses.writequeue, (void*)writebuf);
-	ses.writequeue_len += writebuf->len-1;
+	ses.writequeue_len += writebuf->len;
 }
 
 
