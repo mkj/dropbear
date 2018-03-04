@@ -25,9 +25,9 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		buffer *keyblob = buf_getstringbuf(fuzz.input);
 
 		unsigned int algolen;
-		const char* algoname = buf_getstring(keyblob, &algolen);
+		char* algoname = buf_getstring(keyblob, &algolen);
 
-		if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
+		if (have_algo(algoname, algolen, sshhostkey) == DROPBEAR_FAILURE) {
 			dropbear_exit("fuzzer imagined a bogus algorithm");
 		}
 		fuzz_checkpubkey_line(line, 5, "/home/me/authorized_keys",
@@ -36,6 +36,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
 		buf_free(line);
 		buf_free(keyblob);
+		m_free(algoname);
 		m_malloc_free_epoch(1, 0);
 	} else {
 		m_malloc_free_epoch(1, 1);
