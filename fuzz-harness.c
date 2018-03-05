@@ -9,6 +9,7 @@ int main(int argc, char ** argv) {
     buffer *input = buf_new(100000);
 
     for (i = 1; i < argc; i++) {
+        printf("arg %s\n", argv[i]);
 #if DEBUG_TRACE
         if (strcmp(argv[i], "-v") == 0) {
             debug_trace = 1;

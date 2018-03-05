@@ -22,6 +22,7 @@ void fuzz_common_setup(void) {
     fuzz.input = m_malloc(sizeof(buffer));
     _dropbear_log = fuzz_dropbear_log;
     crypto_init();
+    fuzz_seed();
     /* let any messages get flushed */
     setlinebuf(stdout);
 }
@@ -187,4 +188,14 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     }
 
     return 0;
+}
+
+const void* fuzz_get_algo(const algo_type *algos, const char* name) {
+    const algo_type *t;
+    for (t = algos; t->name; t++) {
+        if (strcmp(t->name, name) == 0) {
+            return t->data;
+        }
+    }
+    assert(0);
 }
