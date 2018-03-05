@@ -45,28 +45,30 @@ When running in fuzzing mode Dropbear uses a [fixed seed](dbrandom.c#L185)
 every time so that failures can be reproduced. 
 
 Since the fuzzer cannot generate valid encrypted input the packet decryption and
-message authentication calls are disabled, see (packet.c)[packet.c]. 
+message authentication calls are disabled, see [packet.c](packet.c). 
 MAC failures are set to occur with a low probability to test that error path.
 
 ## Fuzzers
 
 Current fuzzers are
 
-- fuzzer-preauth - the fuzzer input is treated as a stream of session input. This will
+- [fuzzer-preauth](fuzzer-preauth.c) - the fuzzer input is treated as a stream of session input. This will
   test key exchange, packet ordering, authentication attempts etc.
 
-- fuzzer-preauth_nomaths - the same as fuzzer-preauth but with asymmetric crypto
+- [fuzzer-preauth_nomaths](fuzzer-preauth_nomaths.c) - the same as fuzzer-preauth but with asymmetric crypto
   routines replaced with dummies for faster runtime. corpora are shared 
   between fuzzers by [oss-fuzz](https://github.com/google/oss-fuzz) so this 
   will help fuzzer-preauth too.
 
-- fuzzer-verify - read a key and signature from fuzzer input and verify that signature. 
+- [fuzzer-verify](fuzzer-verify.c) - read a key and signature from fuzzer input and verify that signature. 
   It would not be expected to pass, though some keys with bad parameters are 
   able to validate with a trivial signature - extra checks are added for that.
 
-- fuzzer-pubkey - test parsing of an `authorized_keys` line.
+- [fuzzer-pubkey](fuzzer-pubkey.c) - test parsing of an `authorized_keys` line.
 
-- fuzzer-kexdh - test Diffie-Hellman key exchange where the fuzz input is the 
-  public key that would be received over the network.
+- [fuzzer-kexdh](fuzzer-kexdh.c) - test Diffie-Hellman key exchange where the fuzz input is the 
+  ephemeral public key that would be received over the network. This is testing `mp_expt_mod()`
+  and and other libtommath routines.
 
-- fuzzer-kexecdh - test Elliptic Curve Diffie-Hellman key exchange like fuzzer-kexdh
+- [fuzzer-kexecdh](fuzzer-kexecdh.c) - test Elliptic Curve Diffie-Hellman key exchange like fuzzer-kexdh.
+  This is testing libtommath ECC routines.

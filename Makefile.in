@@ -270,7 +270,7 @@ fuzzstandalone: fuzz-harness.o fuzz-targets
 svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 
 # build all the fuzzers. This will require fail to link unless built with
-# make fuzz-targetsk FUZZLIB=-lFuzzer.a 
+# make fuzz-targets FUZZLIB=-lFuzzer.a 
 # or similar - the library provides main().
 fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 
