@@ -167,6 +167,10 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
+	/* Retain pubkey options only if auth succeeded */
+	if (!ses.authstate.authdone) {
+		svr_pubkey_options_cleanup();
+	}
 	TRACE(("leave pubkeyauth"))
 }
 

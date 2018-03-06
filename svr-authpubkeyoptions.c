@@ -113,7 +113,6 @@ void svr_pubkey_options_cleanup() {
 			m_free(ses.authstate.pubkey_options->forced_command);
 		}
 		m_free(ses.authstate.pubkey_options);
-		ses.authstate.pubkey_options = NULL;
 	}
 }
 

@@ -30,9 +30,15 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		if (have_algo(algoname, algolen, sshhostkey) == DROPBEAR_FAILURE) {
 			dropbear_exit("fuzzer imagined a bogus algorithm");
 		}
-		fuzz_checkpubkey_line(line, 5, "/home/me/authorized_keys",
+
+		int ret = fuzz_checkpubkey_line(line, 5, "/home/me/authorized_keys",
 			algoname, algolen,
 			keyblob->data, keyblob->len);
+
+		if (ret == DROPBEAR_SUCCESS) {
+			/* fuzz_checkpubkey_line() should have cleaned up for failure */
+			svr_pubkey_options_cleanup();
+		}
 
 		buf_free(line);
 		buf_free(keyblob);
