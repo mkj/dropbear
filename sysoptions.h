@@ -318,4 +318,15 @@ If you test it please contact the Dropbear author */
 
 #define DROPBEAR_TRACKING_MALLOC (DROPBEAR_FUZZ)
 
+/* Used to work around Memory Sanitizer false positives */
+#if defined(__has_feature)
+#  if __has_feature(memory_sanitizer)
+#    define DROPBEAR_MSAN 1
+#  endif
+#endif
+#ifndef DROPBEAR_MSAN 
+#define DROPBEAR_MSAN 0
+#endif
+
+
 /* no include guard for this file */

@@ -2,6 +2,8 @@
 #include "includes.h"
 #include "fuzz-wrapfd.h"
 
+#include "dbutil.h"
+
 #include "fuzz.h"
 
 #define IOWRAP_MAXFD (FD_SETSIZE-1)
@@ -195,7 +197,7 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 				nset++;
 			}
 		}
-		FD_ZERO(readfds);
+		DROPBEAR_FD_ZERO(readfds);
 
 		if (nset > 0) {
 			/* set one */
@@ -222,7 +224,7 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 				nset++;
 			}
 		}
-		FD_ZERO(writefds);
+		DROPBEAR_FD_ZERO(writefds);
 
 		/* set one */
 		if (nset > 0) {
