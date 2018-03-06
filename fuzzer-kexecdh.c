@@ -11,7 +11,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	static const struct dropbear_kex *ecdh[3]; /* 256, 384, 521 */
 	static struct key_context* keep_newkeys = NULL;
 	/* number of generated parameters is limited by the timeout for the first run */
-	#define NUM_PARAMS 300
+	#define NUM_PARAMS 80
 	static struct kex_ecdh_param *ecdh_params[NUM_PARAMS];
 
 	if (!once) {
