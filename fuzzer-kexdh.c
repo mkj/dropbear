@@ -9,8 +9,10 @@
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	static int once = 0;
 	static struct key_context* keep_newkeys = NULL;
-	/* number of generated parameters is limited by the timeout for the first run */
-	#define NUM_PARAMS 80
+	/* number of generated parameters is limited by the timeout for the first run.
+	   TODO move this to the libfuzzer initialiser function instead if the timeout
+	   doesn't apply there */
+	#define NUM_PARAMS 20
 	static struct kex_dh_param *dh_params[NUM_PARAMS];
 
 	if (!once) {
