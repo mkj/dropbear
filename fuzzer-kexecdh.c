@@ -60,8 +60,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
 		buffer * ecdh_qs = buf_getstringbuf(fuzz.input);
 
-		ses.kexhashbuf = buf_new(4);
-		buf_putint(ses.kexhashbuf, 12345);
+		ses.kexhashbuf = buf_new(KEXHASHBUF_MAX_INTS);
 		kexecdh_comb_key(ecdh_param, ecdh_qs, svr_opts.hostkey);
 
 		/* kexhashbuf is freed in kexdh_comb_key */

@@ -54,8 +54,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 			dropbear_exit("Bad kex value");
 		}
 
-		ses.kexhashbuf = buf_new(4);
-		buf_putint(ses.kexhashbuf, 12345);
+		ses.kexhashbuf = buf_new(KEXHASHBUF_MAX_INTS);
 		kexdh_comb_key(dh_param, &dh_e, svr_opts.hostkey);
 
 		/* kexhashbuf is freed in kexdh_comb_key */
