@@ -694,6 +694,9 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
 	/* K, the shared secret */
 	buf_putmpint(ses.kexhashbuf, ses.dh_K);
 
+	ecc_free(Q_them);
+	m_free(Q_them);
+
 	/* calculate the hash H to sign */
 	finish_kexhashbuf();
 }
