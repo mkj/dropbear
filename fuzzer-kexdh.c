@@ -57,9 +57,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		ses.kexhashbuf = buf_new(KEXHASHBUF_MAX_INTS);
 		kexdh_comb_key(dh_param, &dh_e, svr_opts.hostkey);
 
-		/* kexhashbuf is freed in kexdh_comb_key */
+		mp_clear(ses.dh_K);
 		m_free(ses.dh_K);
 		mp_clear(&dh_e);
+
+		buf_free(ses.hash);
+		buf_free(ses.session_id);
+		/* kexhashbuf is freed in kexdh_comb_key */
 
 		m_malloc_free_epoch(1, 0);
 	} else {
