@@ -167,6 +167,10 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
+	/* Retain pubkey options only if auth succeeded */
+	if (!ses.authstate.authdone) {
+		svr_pubkey_options_cleanup();
+	}
 	TRACE(("leave pubkeyauth"))
 }
 
@@ -197,7 +201,12 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
 		TRACE(("checkpubkey_line: bad line length %d", line->len))
-		return DROPBEAR_FAILURE;
+		goto out;
+	}
+
+	if (memchr(line->data, 0x0, line->len) != NULL) {
+		TRACE(("checkpubkey_line: bad line has null char"))
+		goto out;
 	}
 
 	/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */

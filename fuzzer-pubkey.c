@@ -20,19 +20,29 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
 	m_malloc_set_epoch(1);
 
-	/* choose a keytype based on input */
-	uint8_t b = 0;
-	size_t i;
-	for (i = 0; i < Size; i++) {
-		b ^= Data[i];
-	}
-	const char* algoname = fuzz_signkey_names[b%DROPBEAR_SIGNKEY_NUM_NAMED];
-	const char* keyblob = "blob"; /* keep short */
-
 	if (setjmp(fuzz.jmp) == 0) {
-		fuzz_checkpubkey_line(fuzz.input, 5, "/home/me/authorized_keys", 
-			algoname, strlen(algoname),
-			(unsigned char*)keyblob, strlen(keyblob));
+		buffer *line = buf_getstringbuf(fuzz.input);
+		buffer *keyblob = buf_getstringbuf(fuzz.input);
+
+		unsigned int algolen;
+		char* algoname = buf_getstring(keyblob, &algolen);
+
+		if (have_algo(algoname, algolen, sshhostkey) == DROPBEAR_FAILURE) {
+			dropbear_exit("fuzzer imagined a bogus algorithm");
+		}
+
+		int ret = fuzz_checkpubkey_line(line, 5, "/home/me/authorized_keys",
+			algoname, algolen,
+			keyblob->data, keyblob->len);
+
+		if (ret == DROPBEAR_SUCCESS) {
+			/* fuzz_checkpubkey_line() should have cleaned up for failure */
+			svr_pubkey_options_cleanup();
+		}
+
+		buf_free(line);
+		buf_free(keyblob);
+		m_free(algoname);
 		m_malloc_free_epoch(1, 0);
 	} else {
 		m_malloc_free_epoch(1, 1);

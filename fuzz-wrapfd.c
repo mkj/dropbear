@@ -2,16 +2,18 @@
 #include "includes.h"
 #include "fuzz-wrapfd.h"
 
+#include "dbutil.h"
+
 #include "fuzz.h"
 
 #define IOWRAP_MAXFD (FD_SETSIZE-1)
 static const int MAX_RANDOM_IN = 50000;
-static const double CHANCE_CLOSE = 1.0 / 300;
-static const double CHANCE_INTR = 1.0 / 200;
-static const double CHANCE_READ1 = 0.6;
-static const double CHANCE_READ2 = 0.3;
-static const double CHANCE_WRITE1 = 0.8;
-static const double CHANCE_WRITE2 = 0.3;
+static const double CHANCE_CLOSE = 1.0 / 600;
+static const double CHANCE_INTR = 1.0 / 900;
+static const double CHANCE_READ1 = 0.96;
+static const double CHANCE_READ2 = 0.5;
+static const double CHANCE_WRITE1 = 0.96;
+static const double CHANCE_WRITE2 = 0.5;
 
 struct fdwrap {
 	enum wrapfd_mode mode;
@@ -195,7 +197,7 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 				nset++;
 			}
 		}
-		FD_ZERO(readfds);
+		DROPBEAR_FD_ZERO(readfds);
 
 		if (nset > 0) {
 			/* set one */
@@ -222,7 +224,7 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 				nset++;
 			}
 		}
-		FD_ZERO(writefds);
+		DROPBEAR_FD_ZERO(writefds);
 
 		/* set one */
 		if (nset > 0) {
