@@ -354,7 +354,7 @@ void set_listen_fast_open(int sock) {
 void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 	int rc;
-#ifdef IPTOS_LOWDELAY
+#ifdef IPTOS_DSCP_AF21
 	int iptos_val = 0;
 #endif
 #ifdef HAVE_LINUX_PKT_SCHED_H
@@ -372,11 +372,15 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	 * on a client '-J' proxy pipe */
 
 	/* set the TOS bit for either ipv4 or ipv6 */
-#ifdef IPTOS_LOWDELAY
+#ifdef IPTOS_DSCP_AF21
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
-		iptos_val = IPTOS_LOWDELAY;
-	} else if (prio == DROPBEAR_PRIO_BULK) {
-		iptos_val = IPTOS_THROUGHPUT;
+		iptos_val = IPTOS_DSCP_AF21;
+	}else if (prio == DROPBEAR_PRIO_BULK) {
+		#ifdef IPTOS_CLASS_CS1
+		iptos_val = IPTOS_CLASS_CS1;
+		#else
+		iptos_val = IPTOS_DSCP_CS1;
+		#endif
 	}
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
 	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&iptos_val, sizeof(iptos_val));
