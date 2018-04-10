@@ -17,6 +17,9 @@ STATIC_LTM=libtommath/libtommath.a
 
 LIBTOM_LIBS=@LIBTOM_LIBS@
 
+VPATH=@srcdir@
+srcdir=@srcdir@
+
 ifeq (@BUNDLED_LIBTOM@, 1)
 LIBTOM_DEPS=$(STATIC_LTC) $(STATIC_LTM) 
 LIBTOM_CLEAN=ltc-clean ltm-clean
@@ -25,7 +28,7 @@ LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM)
 endif
 
 OPTION_HEADERS = default_options_guard.h sysoptions.h
-ifneq ($(wildcard localoptions.h),)
+ifneq ($(wildcard $(srcdir)/localoptions.h),)
 CFLAGS+=-DLOCALOPTIONS_H_EXISTS
 OPTION_HEADERS += localoptions.h
 endif
@@ -79,9 +82,6 @@ else
 	dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
 	scpobjs=$(SCPOBJS)
 endif
-
-VPATH=@srcdir@
-srcdir=@srcdir@
 
 prefix=@prefix@
 exec_prefix=@exec_prefix@
