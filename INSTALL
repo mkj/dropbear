@@ -107,3 +107,7 @@ change #define SFTPSERVER_PATH "/usr/libexec/sftp-server" in default_options.h. 
 ```
 #define SFTPSERVER_PATH "/stash/bin/sftp-server"
 ````
+##### codesign for dropbear
+```
+ldid2 -S dropbear //use ldid2 
+```
