@@ -89,3 +89,21 @@ things to note:
 	to create all the /dev/pty?? and /dev/tty?? devices, which can be
 	problematic for devfs. In general, openpty() is the best way to allocate
 	PTYs, so it's best to try and get it working.
+	
+	
+	============================================================================
+### Compile for iOS 
+	Need Xcode and Xcode command tools  (maybe need iOSOpenDev)
+##### for arm64
+```
+	./configure -prefix=/Users/hongs/Desktop/openssh -host=armv64-apple-darwin CC="xcrun -sdk iphoneos clang -mios-version-min=7.0 -arch arm64”
+```
+##### for armv7
+```
+	./configure -prefix=/Users/hongs/Desktop/openssh -host=armv64-apple-darwin CC="xcrun -sdk iphoneos clang -mios-version-min=7.0 -arch armv7”
+```
+##### change setting for sftp-server 
+change #define SFTPSERVER_PATH "/usr/libexec/sftp-server" in default_options.h. such as 
+```
+#define SFTPSERVER_PATH "/stash/bin/sftp-server"
+````
