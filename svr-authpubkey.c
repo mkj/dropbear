@@ -167,10 +167,6 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
-	/* Retain pubkey options only if auth succeeded */
-	if (!ses.authstate.authdone) {
-		svr_pubkey_options_cleanup();
-	}
 	TRACE(("leave pubkeyauth"))
 }
 
@@ -201,12 +197,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
 		TRACE(("checkpubkey_line: bad line length %d", line->len))
-		goto out;
-	}
-
-	if (memchr(line->data, 0x0, line->len) != NULL) {
-		TRACE(("checkpubkey_line: bad line has null char"))
-		goto out;
+		return DROPBEAR_FAILURE;
 	}
 
 	/* compare the algorithm. +3 so we have enough bytes to read a space and some base64 characters too. */
@@ -481,13 +472,5 @@ static int checkfileperm(char * filename) {
 	TRACE(("leave checkfileperm: success"))
 	return DROPBEAR_SUCCESS;
 }
-
-#if DROPBEAR_FUZZ
-int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
-		const char* algo, unsigned int algolen,
-		const unsigned char* keyblob, unsigned int keybloblen) {
-	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
-}
-#endif
 
 #endif

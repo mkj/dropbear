@@ -75,18 +75,14 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.last_packet_time_any_sent = 0;
 	ses.last_packet_time_keepalive_sent = 0;
 	
-#if DROPBEAR_FUZZ
-	if (!fuzz.fuzzing)
-#endif
-	{
 	if (pipe(ses.signal_pipe) < 0) {
 		dropbear_exit("Signal pipe failed");
 	}
 	setnonblocking(ses.signal_pipe[0]);
 	setnonblocking(ses.signal_pipe[1]);
+
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[0]);
 	ses.maxfd = MAX(ses.maxfd, ses.signal_pipe[1]);
-	}
 	
 	ses.writepayload = buf_new(TRANS_MAX_PAYLOAD_LEN);
 	ses.transseq = 0;
@@ -152,19 +148,13 @@ void session_loop(void(*loophandler)(void)) {
 
 		timeout.tv_sec = select_timeout();
 		timeout.tv_usec = 0;
-		DROPBEAR_FD_ZERO(&writefd);
-		DROPBEAR_FD_ZERO(&readfd);
-
+		FD_ZERO(&writefd);
+		FD_ZERO(&readfd);
 		dropbear_assert(ses.payload == NULL);
 
 		/* We get woken up when signal handlers write to this pipe.
 		   SIGCHLD in svr-chansession is the only one currently. */
-#if DROPBEAR_FUZZ
-		if (!fuzz.fuzzing) 
-#endif
-		{
 		FD_SET(ses.signal_pipe[0], &readfd);
-		}
 
 		/* set up for channels which can be read/written */
 		setchannelfds(&readfd, &writefd, writequeue_has_space);
@@ -205,8 +195,8 @@ void session_loop(void(*loophandler)(void)) {
 			 * want to iterate over channels etc for reading, to handle
 			 * server processes exiting etc. 
 			 * We don't want to read/write FDs. */
-			DROPBEAR_FD_ZERO(&writefd);
-			DROPBEAR_FD_ZERO(&readfd);
+			FD_ZERO(&writefd);
+			FD_ZERO(&readfd);
 		}
 		
 		/* We'll just empty out the pipe if required. We don't do
@@ -308,16 +298,6 @@ void session_cleanup() {
 		buf_free(dequeue(&ses.writequeue));
 	}
 
-	m_free(ses.newkeys);
-#ifndef DISABLE_ZLIB
-	if (ses.keys->recv.zstream != NULL) {
-		if (inflateEnd(ses.keys->recv.zstream) == Z_STREAM_ERROR) {
-			dropbear_exit("Crypto error");
-		}
-		m_free(ses.keys->recv.zstream);
-	}
-#endif
-
 	m_free(ses.remoteident);
 	m_free(ses.authstate.pw_dir);
 	m_free(ses.authstate.pw_name);
@@ -347,7 +327,7 @@ void session_cleanup() {
 void send_session_identification() {
 	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
 	buf_putbytes(writebuf, (const unsigned char *) LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
-	writebuf_enqueue(writebuf);
+	writebuf_enqueue(writebuf, 0);
 }
 
 static void read_session_identification() {
@@ -407,7 +387,7 @@ static int ident_readln(int fd, char* buf, int count) {
 		return -1;
 	}
 
-	DROPBEAR_FD_ZERO(&fds);
+	FD_ZERO(&fds);
 
 	/* select since it's a non-blocking fd */
 	

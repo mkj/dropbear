@@ -16,7 +16,7 @@
 #elif DROPBEAR_ECC_521
 #define ECDSA_DEFAULT_SIZE 521
 #else
-#error ECDSA cannot be enabled without enabling at least one size (256, 384, 521)
+#define ECDSA_DEFAULT_SIZE 0
 #endif
 
 ecc_key *gen_ecdsa_priv_key(unsigned int bit_size);

@@ -209,7 +209,6 @@ char* buf_getstring(buffer* buf, unsigned int *retlen) {
 
 	unsigned int len;
 	char* ret;
-	void* src = NULL;
 	len = buf_getint(buf);
 	if (len > MAX_STRING_LEN) {
 		dropbear_exit("String too long");
@@ -218,9 +217,8 @@ char* buf_getstring(buffer* buf, unsigned int *retlen) {
 	if (retlen != NULL) {
 		*retlen = len;
 	}
-	src = buf_getptr(buf, len);
 	ret = m_malloc(len+1);
-	memcpy(ret, src, len);
+	memcpy(ret, buf_getptr(buf, len), len);
 	buf_incrpos(buf, len);
 	ret[len] = '\0';
 

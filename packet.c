@@ -35,7 +35,6 @@
 #include "auth.h"
 #include "channel.h"
 #include "netio.h"
-#include "runopts.h"
 
 static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
@@ -65,6 +64,7 @@ void write_packet() {
 #else
 	int len;
 	buffer* writebuf;
+	int packet_type;
 #endif
 	
 	TRACE2(("enter write_packet"))
@@ -76,15 +76,6 @@ void write_packet() {
 	/* This may return EAGAIN. The main loop sometimes
 	calls write_packet() without bothering to test with select() since
 	it's likely to be necessary */
-#if DROPBEAR_FUZZ
-	if (fuzz.fuzzing) {
-		/* pretend to write one packet at a time */
-		/* TODO(fuzz): randomise amount written based on the fuzz input */
-		written = iov[0].iov_len;
-	}
-	else
-#endif
-	{
 	written = writev(ses.sock_out, iov, iov_count);
 	if (written < 0) {
 		if (errno == EINTR || errno == EAGAIN) {
@@ -93,7 +84,6 @@ void write_packet() {
 		} else {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
-	}
 	}
 
 	packet_queue_consume(&ses.writequeue, written);
@@ -104,15 +94,15 @@ void write_packet() {
 	}
 
 #else /* No writev () */
-#if DROPBEAR_FUZZ
-	_Static_assert(0, "No fuzzing code for no-writev writes");
-#endif
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
 	/* The last byte of the buffer is not to be transmitted, but is 
 	 * a cleartext packet_type indicator */
-	len = writebuf->len - writebuf->pos;
+	packet_type = writebuf->data[writebuf->len-1];
+	len = writebuf->len - 1 - writebuf->pos;
+	TRACE2(("write_packet type %d len %d/%d", packet_type,
+			len, writebuf->len-1))
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
 	written = write(ses.sock_out, buf_getptr(writebuf, len), len);
@@ -362,20 +352,6 @@ static int checkmac() {
 	buf_setpos(ses.readbuf, 0);
 	make_mac(ses.recvseq, &ses.keys->recv, ses.readbuf, contents_len, mac_bytes);
 
-#if DROPBEAR_FUZZ
-	if (fuzz.fuzzing) {
-	 	/* fail 1 in 2000 times to test error path. */
-		unsigned int value = 0;
-		if (mac_size > sizeof(value)) {
-			memcpy(&value, mac_bytes, sizeof(value));
-		}
-		if (value % 2000 == 99) {
-			return DROPBEAR_FAILURE;
-		}
-		return DROPBEAR_SUCCESS;
-	}
-#endif
-
 	/* compare the hash */
 	buf_setpos(ses.readbuf, contents_len);
 	if (constant_time_memcmp(mac_bytes, buf_getptr(ses.readbuf, mac_size), mac_size) != 0) {
@@ -602,7 +578,7 @@ void encrypt_packet() {
 	/* Update counts */
 	ses.kexstate.datatrans += writebuf->len;
 
-	writebuf_enqueue(writebuf);
+	writebuf_enqueue(writebuf, packet_type);
 
 	/* Update counts */
 	ses.transseq++;
@@ -622,11 +598,14 @@ void encrypt_packet() {
 	TRACE2(("leave encrypt_packet()"))
 }
 
-void writebuf_enqueue(buffer * writebuf) {
+void writebuf_enqueue(buffer * writebuf, unsigned char packet_type) {
+	/* The last byte of the buffer stores the cleartext packet_type. It is not
+	 * transmitted but is used for transmit timeout purposes */
+	buf_putbyte(writebuf, packet_type);
 	/* enqueue the packet for sending. It will get freed after transmission. */
 	buf_setpos(writebuf, 0);
 	enqueue(&ses.writequeue, (void*)writebuf);
-	ses.writequeue_len += writebuf->len;
+	ses.writequeue_len += writebuf->len-1;
 }
 
 

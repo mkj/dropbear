@@ -6,8 +6,8 @@
 default_options.h  documents compile-time options, and provides default values.
 
 Local customisation should be added to localoptions.h which is
-used if it exists in the build directory. Options defined there will override 
-any options in this file.
+used if it exists. Options defined there will override any options in this
+file.
 
 Options can also be defined with -DDROPBEAR_XXX=[0,1] in Makefile CFLAGS
 

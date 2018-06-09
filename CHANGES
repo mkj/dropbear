@@ -2,12 +2,12 @@
 
 > > > Configuration/compatibility changes
   IMPORTANT
-  Custom configuration is now specified in localoptions.h rather than options.h
+  Custom configuration is now specified in local_options.h rather than options.h
   Available options and defaults can be seen in default_options.h
 
   To migrate your configuration, compare your customised options.h against the
   upstream options.h from your relevant version. Any customised options should
-  be put in localoptions.h in the build directory.
+  be put in localoptions.h
 
 - "configure --enable-static" should now be used instead of "make STATIC=1"
   This will avoid 'hardened build' flags that conflict with static binaries

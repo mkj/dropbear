@@ -120,13 +120,6 @@ static void generic_dropbear_exit(int exitcode, const char* format,
 
 	_dropbear_log(LOG_INFO, fmtbuf, param);
 
-#if DROPBEAR_FUZZ
-	/* longjmp before cleaning up svr_opts */
-    if (fuzz.do_jmp) {
-        longjmp(fuzz.jmp, 1);
-    }
-#endif
-
 	exit(exitcode);
 }
 
@@ -399,7 +392,6 @@ void printhex(const char * label, const unsigned char * buf, int len) {
 void printmpint(const char *label, mp_int *mp) {
 	buffer *buf = buf_new(1000);
 	buf_putmpint(buf, mp);
-	fprintf(stderr, "%d bits ", mp_count_bits(mp));
 	printhex(label, buf->data, buf->len);
 	buf_free(buf);
 
@@ -528,15 +520,48 @@ void m_close(int fd) {
 	}
 }
 	
+void * m_malloc(size_t size) {
+
+	void* ret;
+
+	if (size == 0) {
+		dropbear_exit("m_malloc failed");
+	}
+	ret = calloc(1, size);
+	if (ret == NULL) {
+		dropbear_exit("m_malloc failed");
+	}
+	return ret;
+
+}
+
+void * m_strdup(const char * str) {
+	char* ret;
+
+	ret = strdup(str);
+	if (ret == NULL) {
+		dropbear_exit("m_strdup failed");
+	}
+	return ret;
+}
+
+void * m_realloc(void* ptr, size_t size) {
+
+	void *ret;
+
+	if (size == 0) {
+		dropbear_exit("m_realloc failed");
+	}
+	ret = realloc(ptr, size);
+	if (ret == NULL) {
+		dropbear_exit("m_realloc failed");
+	}
+	return ret;
+}
+
 void setnonblocking(int fd) {
 
 	TRACE(("setnonblocking: %d", fd))
-
-#if DROPBEAR_FUZZ
-	if (fuzz.fuzzing) {
-		return;
-	}
-#endif
 
 	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
 		if (errno == ENODEV) {
@@ -544,9 +569,7 @@ void setnonblocking(int fd) {
 			 * can't be set to non-blocking */
 			TRACE(("ignoring ENODEV for setnonblocking"))
 		} else {
-		{
 			dropbear_exit("Couldn't set nonblocking");
-		}
 		}
 	}
 	TRACE(("leave setnonblocking"))
@@ -629,14 +652,7 @@ static clockid_t get_linux_clock_source() {
 #endif 
 
 time_t monotonic_now() {
-#if DROPBEAR_FUZZ
-	if (fuzz.fuzzing) {
-		/* time stands still when fuzzing */
-		return 5;
-	}
-#endif
 #if defined(__linux__) && defined(SYS_clock_gettime)
-	{
 	static clockid_t clock_source = -2;
 
 	if (clock_source == -2) {
@@ -653,11 +669,9 @@ time_t monotonic_now() {
 		}
 		return ts.tv_sec;
 	}
-	}
 #endif /* linux clock_gettime */
 
 #if defined(HAVE_MACH_ABSOLUTE_TIME)
-	{
 	/* OS X, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
 	static mach_timebase_info_data_t timebase_info;
 	if (timebase_info.denom == 0) {
@@ -665,7 +679,6 @@ time_t monotonic_now() {
 	}
 	return mach_absolute_time() * timebase_info.numer / timebase_info.denom
 		/ 1e9;
-	}
 #endif /* osx mach_absolute_time */
 
 	/* Fallback for everything else - this will sometimes go backwards */
@@ -687,6 +700,6 @@ void fsync_parent_dir(const char* fn) {
 		TRACE(("error opening directory %s for fsync: %s", dir, strerror(errno)))
 	}
 
-	m_free(fn_dir);
+	free(fn_dir);
 #endif
 }
