@@ -225,7 +225,7 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_ZLIB_MEM_LEVEL 8
 
 #if (DROPBEAR_SVR_PASSWORD_AUTH) && (DROPBEAR_SVR_PAM_AUTH)
-#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
+#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in localoptions.h"
 #endif
 
 /* PAM requires ./configure --enable-pam */
