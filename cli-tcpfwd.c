@@ -135,7 +135,7 @@ static int cli_localtcp(const char* listenaddr,
 	tcpinfo->chantype = &cli_chan_tcplocal;
 	tcpinfo->tcp_type = direct;
 
-	ret = listen_tcpfwd(tcpinfo);
+	ret = listen_tcpfwd(tcpinfo, NULL);
 
 	if (ret == DROPBEAR_FAILURE) {
 		m_free(tcpinfo);
