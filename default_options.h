@@ -91,7 +91,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 
 /* Enable CBC mode for ciphers. This has security issues though
  * is the most compatible with older SSH implementations */
-#define DROPBEAR_ENABLE_CBC_MODE 1
+#define DROPBEAR_ENABLE_CBC_MODE 0
 
 /* Enable "Counter Mode" for ciphers. This is more secure than
  * CBC mode against certain attacks. It is recommended for security
@@ -100,8 +100,8 @@ IMPORTANT: Some options will require "make clean" after changes */
 
 /* Message integrity. sha2-256 is recommended as a default, 
    sha1 for compatibility */
-#define DROPBEAR_SHA1_HMAC 1
-#define DROPBEAR_SHA1_96_HMAC 1
+#define DROPBEAR_SHA1_HMAC 0
+#define DROPBEAR_SHA1_96_HMAC 0
 #define DROPBEAR_SHA2_256_HMAC 1
 
 /* Hostkey/public key algorithms - at least one required, these are used
