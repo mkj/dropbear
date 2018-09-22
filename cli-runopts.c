@@ -891,6 +891,7 @@ static void add_extendedopt(const char* origstr) {
 #ifndef DISABLE_SYSLOG
 			"\tUseSyslog\n"
 #endif
+			"\tPort\n"
 		);
 		exit(EXIT_SUCCESS);
 	}
@@ -908,6 +909,11 @@ static void add_extendedopt(const char* origstr) {
 		return;
 	}
 #endif
+
+	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
+		cli_opts.remoteport = optstr;
+		return;
+	}
 
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
