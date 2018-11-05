@@ -29,11 +29,6 @@
 #include "options.h"
 #include "debug.h"
 
-#if __linux__
-/* For clock_gettime */
-#define _POSIX_C_SOURCE 199309L
-#endif
-
 #include <sys/types.h>
 #include <sys/ioctl.h>
 #include <sys/param.h> /* required for BSD4_4 define */
