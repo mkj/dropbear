@@ -497,6 +497,12 @@ AC_CHECK_FUNCS(endutxent getutxent getutxid getutxline pututxline )
 AC_CHECK_FUNCS(setutxent utmpxname)
 AC_CHECK_FUNCS(logout updwtmp logwtmp)
 
+# POSIX monotonic time
+OLDCFLAGS="$CFLAGS"
+CFLAGS="$CFLAGS -D_POSIX_C_SOURCE=199309L"
+AC_CHECK_FUNCS(clock_gettime)
+CFLAGS="$OLDCFLAGS"
+
 # OS X monotonic time
 AC_CHECK_HEADERS([mach/mach_time.h])
 AC_CHECK_FUNCS(mach_absolute_time)

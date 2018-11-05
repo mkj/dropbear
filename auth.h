@@ -108,11 +108,14 @@ struct AuthState {
 	unsigned int authdone; /* 0 if we haven't authed, 1 if we have. Applies for
 							  client and server (though has differing 
 							  meanings). */
+
 	unsigned int perm_warn; /* Server only, set if bad permissions on 
 							   ~/.ssh/authorized_keys have already been
 							   logged. */
 	unsigned int checkusername_failed;  /* Server only, set if checkusername
 	                                has already failed */
+	struct timespec auth_starttime; /* Server only, time of receiving current 
+									SSH_MSG_USERAUTH_REQUEST */
 
 	/* These are only used for the server */
 	uid_t pw_uid;
