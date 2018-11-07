@@ -38,6 +38,10 @@
 #include "runopts.h"
 #include "auth.h"
 
+#ifdef DROPBEAR_ENABLE_SELINUX
+#  include <selinux/selinux.h>
+#endif
+
 /* Handles sessions (either shells or programs) requested by the client */
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
@@ -573,6 +577,53 @@ static void get_termmodes(const struct ChanSess *chansess) {
 	TRACE(("leave get_termmodes"))
 }
 
+static void relabelpty(const char *tty)
+{
+#ifdef DROPBEAR_ENABLE_SELINUX
+	char *old_sid = NULL;
+	char *new_sid = NULL;
+	security_class_t class;
+	int rc;
+
+	if (!is_selinux_enabled())
+		return;
+
+	rc = getfilecon(tty, &old_sid);
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "failed to get context of tty '%s'", tty);
+		goto out;
+	}
+
+	class = string_to_security_class("chr_file");
+	if (!class) {
+		rc = -1;
+		dropbear_log(LOG_ERR, "SELinux: failed to map 'chr_file'");
+		goto out;
+	}
+
+	rc = security_compute_relabel(ses.authstate.user_sid, old_sid, class, &new_sid);
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "failed to compute tty relabel");
+		goto out;
+	}
+
+	rc = setfilecon(tty, new_sid);
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "failed to set file context for '%s'", tty);
+		goto out;
+	}
+
+	rc = 0;
+
+out:
+	freecon(new_sid);
+	freecon(old_sid);
+
+	if (rc < 0 && security_getenforce() > 0)
+		dropbear_exit("SELinux: failed to relabel PTY");
+#endif
+}
+
 /* Set up a session pty which will be used to execute the shell or program.
  * The pty is allocated now, and kept for when the shell/program executes.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
@@ -620,6 +671,8 @@ static int sessionpty(struct ChanSess * chansess) {
 
 	/* Read the terminal modes */
 	get_termmodes(chansess);
+
+	relabelpty(chansess->tty);
 
 	TRACE(("leave sessionpty"))
 	return DROPBEAR_SUCCESS;
@@ -741,6 +794,29 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		m_free(chansess->cmd);
 	}
 	return ret;
+}
+
+static void init_selinux_session(void)
+{
+#ifdef DROPBEAR_ENABLE_SELINUX
+	char *ctx = ses.authstate.user_sid;
+	int rc;
+
+	if (!is_selinux_enabled())
+		return;
+
+	rc = setexeccon(ctx);
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "setexeccon() failed");
+		goto out;
+	}
+
+	rc = 0;
+
+out:
+	if (rc < 0 && security_getenforce() > 0)
+		dropbear_exit("SELinux: failed to initialize session");
+#endif
 }
 
 /* Execute a command and set up redirection of stdin/stdout/stderr without a
@@ -948,6 +1024,8 @@ static void execchild(const void *user_data) {
 	}
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_VALGRIND */
+
+	init_selinux_session();
 
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {

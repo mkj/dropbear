@@ -611,6 +611,18 @@ AC_ARG_WITH(lastlog,
 	]
 )
 
+AC_MSG_CHECKING([whether to enable SELinux])
+AC_ARG_ENABLE([selinux],
+        [  --enable-selinux        Enable SELinux support]
+)
+AC_MSG_RESULT([$enable_selinux])
+
+AC_ARG_VAR([LIBSELINUX_LIBS],[SELinux libraries])
+if test x"$enable_selinux" = xyes; then
+	AC_DEFINE([DROPBEAR_ENABLE_SELINUX],[1],[Enable SELinux support])
+	AC_SUBST([LIBSELINUX_LIBS],[${LIBSELINUX_LIBS:--lselinux}])
+fi
+
 if test -z "$no_loginfunc_check"; then
 	dnl    Checks for libutil functions (login(), logout() etc, not openpty() )
 	AC_SEARCH_LIBS(login, util bsd, [AC_DEFINE(HAVE_LOGIN,1,[Have login() function])])

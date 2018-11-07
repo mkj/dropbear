@@ -127,6 +127,10 @@ struct AuthState {
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	struct PubKeyOptions* pubkey_options;
 #endif
+
+#ifdef DROPBEAR_ENABLE_SELINUX
+	char *user_sid;
+#endif
 };
 
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT

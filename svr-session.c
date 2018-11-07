@@ -42,6 +42,10 @@
 #include "crypto_desc.h"
 #include "fuzz.h"
 
+#ifdef DROPBEAR_ENABLE_SELINUX
+# include <selinux/selinux.h>
+#endif
+
 static void svr_remoteclosed(void);
 static void svr_algos_initialise(void);
 
@@ -83,6 +87,10 @@ static void
 svr_session_cleanup(void) {
 	/* free potential public key options */
 	svr_pubkey_options_cleanup();
+
+#ifdef DROPBEAR_ENABLE_SELINUX
+	freecon(ses.authstate.user_sid);
+#endif
 
 	m_free(svr_ses.addrstring);
 	m_free(svr_ses.remotehost);
