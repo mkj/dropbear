@@ -40,6 +40,7 @@ const struct ChanType cli_chan_tcpremote = {
 	newtcpforwarded,
 	NULL,
 	NULL,
+	NULL,
 	NULL
 };
 #endif
@@ -53,6 +54,7 @@ static const struct ChanType cli_chan_tcplocal = {
 	1, /* sepfds */
 	"direct-tcpip",
 	tcp_prio_inithandler,
+	NULL,
 	NULL,
 	NULL,
 	NULL

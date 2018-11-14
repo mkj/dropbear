@@ -187,6 +187,7 @@ static const struct ChanType chan_svr_agent = {
 	NULL,
 	NULL,
 	NULL,
+	NULL,
 	NULL
 };
 

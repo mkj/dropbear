@@ -238,7 +238,8 @@ const struct ChanType svr_chan_tcpdirect = {
 	newtcpdirect, /* init */
 	NULL, /* checkclose */
 	NULL, /* reqhandler */
-	NULL /* closehandler */
+	NULL, /* closehandler */
+	NULL /* cleanup */
 };
 
 /* Called upon creating a new direct tcp channel (ie we connect out to an

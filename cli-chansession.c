@@ -35,7 +35,7 @@
 #include "chansession.h"
 #include "agentfwd.h"
 
-static void cli_closechansess(const struct Channel *channel);
+static void cli_cleanupchansess(const struct Channel *channel);
 static int cli_initchansess(struct Channel *channel);
 static void cli_chansessreq(struct Channel *channel);
 static void send_chansess_pty_req(const struct Channel *channel);
@@ -51,7 +51,8 @@ const struct ChanType clichansess = {
 	cli_initchansess, /* inithandler */
 	NULL, /* checkclosehandler */
 	cli_chansessreq, /* reqhandler */
-	cli_closechansess, /* closehandler */
+	NULL, /* closehandler */
+	cli_cleanupchansess, /* cleanup */
 };
 
 static void cli_chansessreq(struct Channel *channel) {
@@ -83,7 +84,7 @@ out:
 	
 
 /* If the main session goes, we close it up */
-static void cli_closechansess(const struct Channel *UNUSED(channel)) {
+static void cli_cleanupchansess(const struct Channel *UNUSED(channel)) {
 	cli_tty_cleanup(); /* Restore tty modes etc */
 
 	/* This channel hasn't gone yet, so we have > 1 */
@@ -387,7 +388,8 @@ static const struct ChanType cli_chan_netcat = {
 	cli_init_netcat, /* inithandler */
 	NULL,
 	NULL,
-	cli_closechansess
+	NULL,
+	cli_cleanupchansess
 };
 
 void cli_send_netcat_request() {
