@@ -57,6 +57,7 @@ static const struct ChanType svr_chan_tcpremote = {
 	tcp_prio_inithandler,
 	NULL,
 	NULL,
+	NULL,
 	NULL
 };
 
