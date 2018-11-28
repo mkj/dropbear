@@ -38,6 +38,9 @@
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#include "pubkeyapi.h"
+#endif
 
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)(void)) ATTRIB_NORETURN;
@@ -216,6 +219,10 @@ struct sshsession {
 	volatile int exitflag;
 	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
 	int init_done;
+
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        void * pubkey_plugin_session;
+#endif
 };
 
 struct serversession {
@@ -239,6 +246,17 @@ struct serversession {
 
 #if DROPBEAR_VFORK
 	pid_t server_pid;
+#endif
+
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        void *pubkey_plugin_handle;
+        void *pubkey_plugin_handle_instance;
+        /* Resolved when plugin is loaded */
+        PubkeyExtPlugin_newFn           pubkey_plugin_new;
+        PubkeyExtPlugin_checkPubKeyFn   pubkey_plugin_checkPubKey;
+        PubkeyExtPlugin_authSuccessFn   pubkey_plugin_authSuccess;
+        PubkeyExtPlugin_sessionDeleteFn pubkey_plugin_sessionDelete;
+        PubkeyExtPlugin_deleteFn        pubkey_plugin_delete;
 #endif
 
 };

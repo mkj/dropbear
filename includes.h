@@ -164,6 +164,10 @@ typedef u_int32_t uint32_t;
 #include <linux/pkt_sched.h>
 #endif
 
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#include <dlfcn.h>
+#endif
+
 #include "fake-rfc2553.h"
 
 #include "fuzz.h"

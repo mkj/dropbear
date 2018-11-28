@@ -100,6 +100,10 @@ static void printhelp(const char * progname) {
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
 					"-V    Version\n"
+#if DROPBEAR_ENABLE_PUBKEY_EXTPLUGIN
+                                        "-A <authplugin>[,<options>]\n"
+                                        "               Enable external public key auth through <authplugin>\n"
+#endif
 #if DEBUG_TRACE
 					"-v		verbose (compiled with DEBUG_TRACE)\n"
 #endif
@@ -129,6 +133,9 @@ void svr_getopts(int argc, char ** argv) {
 	char* maxauthtries_arg = NULL;
 	char* keyfile = NULL;
 	char c;
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        char* pubkey_plugin = NULL;
+#endif
 
 
 	/* see printhelp() for options */
@@ -155,6 +162,10 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #if DROPBEAR_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
+#endif
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        svr_opts.pubkey_plugin = NULL;
+        svr_opts.pubkey_plugin_options = NULL;
 #endif
 
 #ifndef DISABLE_ZLIB
@@ -274,6 +285,11 @@ void svr_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+                                case 'A':
+                                        next = &pubkey_plugin;
+                                        break;
+#endif
 #if DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -394,6 +410,15 @@ void svr_getopts(int argc, char ** argv) {
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
 	}
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        if (pubkey_plugin) {
+            char *args = strchr(pubkey_plugin, ',');
+            if (args) *args='\0';
+            ++args;
+            svr_opts.pubkey_plugin = pubkey_plugin;
+            svr_opts.pubkey_plugin_options = args;
+        }
+#endif
 }
 
 static void addportandaddress(const char* spec) {

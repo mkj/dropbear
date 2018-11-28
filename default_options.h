@@ -192,6 +192,13 @@ group1 in Dropbear server too */
 /* ~/.ssh/authorized_keys authentication */
 #define DROPBEAR_SVR_PUBKEY_AUTH 1
 
+/* Enable external plug-in loading for public key authentication.
+ * Requires DROPBEAR_SVR_PUBKEY_AUTH to be set
+ * server only.
+ */
+#define DROPBEAR_SVR_PUBKEY_EXTPLUGIN    1
+
+
 /* Whether to take public key options in 
  * authorized_keys file into account */
 #define DROPBEAR_SVR_PUBKEY_OPTIONS 1

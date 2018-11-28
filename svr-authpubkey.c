@@ -91,6 +91,7 @@ void svr_auth_pubkey(int valid_user) {
 	sign_key * key = NULL;
 	char* fp = NULL;
 	enum signkey_type type = -1;
+        int auth_failure = 1;
 
 	TRACE(("enter pubkeyauth"))
 
@@ -110,9 +111,23 @@ void svr_auth_pubkey(int valid_user) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
-
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+        if ((svr_ses.pubkey_plugin_handle != NULL) && (svr_ses.pubkey_plugin_handle_instance != NULL)) {
+            ses.pubkey_plugin_session = svr_ses.pubkey_plugin_checkPubKey(
+                        svr_ses.pubkey_plugin_handle_instance,
+                        algo, algolen, keyblob, keybloblen);
+            if (ses.pubkey_plugin_session != NULL) {
+                /* Success */
+                auth_failure = 0;
+            }
+        }
+#endif
 	/* check if the key is valid */
-	if (checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE) {
+        if (auth_failure) {
+            auth_failure = checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
+        }
+
+        if (auth_failure) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -156,6 +171,13 @@ void svr_auth_pubkey(int valid_user) {
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
 		send_msg_userauth_success();
+#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+                if ((svr_ses.pubkey_plugin_handle != NULL) && (ses.pubkey_plugin_session != NULL)) {
+                    /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
+                    svr_ses.pubkey_plugin_authSuccess(svr_ses.pubkey_plugin_handle, ses.pubkey_plugin_session);
+                }
+#endif
+                
 	} else {
 		dropbear_log(LOG_WARNING,
 				"Pubkey auth bad signature for '%s' with key %s from %s",
