@@ -38,7 +38,7 @@
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
 #include "pubkeyapi.h"
 #endif
 
@@ -220,7 +220,7 @@ struct sshsession {
 	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
 	int init_done;
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         void * pubkey_plugin_session;
 #endif
 };
@@ -248,7 +248,7 @@ struct serversession {
 	pid_t server_pid;
 #endif
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         void *pubkey_plugin_handle;
         void *pubkey_plugin_handle_instance;
         /* Resolved when plugin is loaded */

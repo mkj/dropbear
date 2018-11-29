@@ -241,8 +241,8 @@ If you test it please contact the Dropbear author */
 	#error "At least one server authentication type must be enabled. DROPBEAR_SVR_PUBKEY_AUTH and DROPBEAR_SVR_PASSWORD_AUTH are recommended."
 #endif
 
-#if (DROPBEAR_SVR_PUBKEY_EXTPLUGIN && !DROPBEAR_SVR_PUBKEY_AUTH)
-	#error "You must define DROPBEAR_SVR_PUBKEY_AUTH in order to use DROPBEAR_SVR_PUBKEY_EXTPLUGIN"
+#if (DROPBEAR_EPKA && !DROPBEAR_SVR_PUBKEY_AUTH)
+	#error "You must define DROPBEAR_SVR_PUBKEY_AUTH in order to use External Public Key Authentication (EPKA)"
 #endif
 
 #if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_BLOWFISH \

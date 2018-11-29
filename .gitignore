@@ -5,6 +5,7 @@
 *.bb
 *.bbg
 *.prof
+.*.swp
 /autom4te.cache
 /config.log
 /config.status

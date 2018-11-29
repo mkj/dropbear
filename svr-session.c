@@ -89,7 +89,7 @@ svr_session_cleanup(void) {
 	m_free(svr_ses.childpids);
 	svr_ses.childpidsize = 0;
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         if (svr_ses.pubkey_plugin_handle != NULL) {
             if (svr_ses.pubkey_plugin_handle_instance) {
                 svr_ses.pubkey_plugin_delete(svr_ses.pubkey_plugin_handle_instance);
@@ -120,7 +120,7 @@ void svr_session(int sock, int childpipe) {
 	svr_ses.server_pid = getpid();
 #endif
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         svr_ses.pubkey_plugin_handle = NULL;
         svr_ses.pubkey_plugin_handle_instance = NULL;
         if (svr_opts.pubkey_plugin) {
@@ -216,7 +216,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	char fullmsg[300];
 	int i;
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         if ((svr_ses.pubkey_plugin_handle != NULL) && (ses.pubkey_plugin_session != NULL)) {
             svr_ses.pubkey_plugin_sessionDelete(svr_ses.pubkey_plugin_handle, ses.pubkey_plugin_session);
         }

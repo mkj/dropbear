@@ -111,7 +111,7 @@ void svr_auth_pubkey(int valid_user) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
         if ((svr_ses.pubkey_plugin_handle != NULL) && (svr_ses.pubkey_plugin_handle_instance != NULL)) {
             ses.pubkey_plugin_session = svr_ses.pubkey_plugin_checkPubKey(
                         svr_ses.pubkey_plugin_handle_instance,
@@ -171,7 +171,7 @@ void svr_auth_pubkey(int valid_user) {
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
 		send_msg_userauth_success();
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
                 if ((svr_ses.pubkey_plugin_handle != NULL) && (ses.pubkey_plugin_session != NULL)) {
                     /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
                     svr_ses.pubkey_plugin_authSuccess(svr_ses.pubkey_plugin_handle, ses.pubkey_plugin_session);

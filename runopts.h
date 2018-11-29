@@ -125,7 +125,7 @@ typedef struct svr_runopts {
 
 	char * forced_command;
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN 
+#if DROPBEAR_EPKA 
         char *pubkey_plugin;
         char *pubkey_plugin_options;
 #endif

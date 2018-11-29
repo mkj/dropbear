@@ -164,7 +164,7 @@ typedef u_int32_t uint32_t;
 #include <linux/pkt_sched.h>
 #endif
 
-#if DROPBEAR_SVR_PUBKEY_EXTPLUGIN
+#if DROPBEAR_EPKA
 #include <dlfcn.h>
 #endif
 

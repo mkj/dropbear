@@ -80,6 +80,12 @@ else
 	scpobjs=$(SCPOBJS)
 endif
 
+ifeq (@DROPBEAR_EPKA@, 1)
+    EPKA_LIBS=-ldl
+else
+    EPKA_LIBS=
+endif
+
 VPATH=@srcdir@
 srcdir=@srcdir@
 
@@ -189,7 +195,7 @@ dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
 dropbear: $(HEADERS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@ $(EPKA_LIBS)
 
 dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
