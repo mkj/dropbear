@@ -27,11 +27,29 @@
 
 /* Function API */
 
-/* Creates an instance
+struct EPKAInstance;
+struct EPKASession;
+
+#define DROPBEAR_EPKA_VERSION_MAJOR     1
+#define DROPBEAR_EPKA_VERSION_MINOR     0
+
+/* Creates an instance of the plugin.
+ *
+ * This is the main entry point of the plug-in and should be IMMUTABLE across
+ * different API versions. Dropbear will check the version number
+ * returned in the api_version to match the version it understands and reject
+ * any plugin for which API major version does not match.
+ *
+ * If the version MINOR is different, dropbear will allow the plugin to run 
+ * only if: plugin_MINOR > dropbear_MINOR
+ *
+ * If plugin_MINOR < dropbeart_MINOR or if the MAJOR version is different
+ * dropbear will reject the plugin and terminate the execution.
+ *
  * Returns NULL in case of failure, otherwise a void * of the instance that need
  * to be passed to all the subsequent call to the plugin
  */
-typedef void *(* PubkeyExtPlugin_newFn)(int verbose, 
+typedef struct EPKAInstance *(* PubkeyExtPlugin_newFn)(int verbose, 
         const char *options);
 #define DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW               "plugin_new"
 
@@ -39,30 +57,41 @@ typedef void *(* PubkeyExtPlugin_newFn)(int verbose,
 /* Validate a client through public key authentication
  * Returns a new session (opaque pointer to be destroyed when session ends)
  * or NULL in case of authentication failure.
- *
- * TODO: Have a way to pass options to the caller
  */
-typedef void * (* PubkeyExtPlugin_checkPubKeyFn)(void *pluginInstance, 
+typedef struct EPKASession * (* PubkeyExtPlugin_checkPubKeyFn)(struct EPKAInstance *pluginInstance,
         const char* algo, 
         unsigned int algolen,
         const unsigned char* keyblob, 
-        unsigned int keybloblen);
-#define DROPBEAR_PUBKEY_PLUGIN_FNNAME_CHECKPUBKEY       "plugin_checkpubkey"
+        unsigned int keybloblen,
+        const char *username);
 
 /* Notify the plugin that auth completed (after signature verification)
  */
-typedef void (* PubkeyExtPlugin_authSuccessFn)(void *pluginInstance, void *sessionInstance);
-#define DROPBEAR_PUBKEY_PLUGIN_FNNAME_AUTHSUCCESS       "plugin_auth_success"
+typedef void (* PubkeyExtPlugin_authSuccessFn)(struct EPKASession *session);
 
 /* Deletes a session
  * TODO: Add a reason why the session is terminated. See svr_dropbear_exit (in svr-session.c)
  */
-typedef void (* PubkeyExtPlugin_sessionDeleteFn)(void *pluginInstance,
-        void *pluginSession);
-#define DROPBEAR_PUBKEY_PLUGIN_FNNAME_SESSIONDELETE     "plugin_session_delete"
+typedef void (* PubkeyExtPlugin_sessionDeleteFn)(struct EPKASession *session);
 
 /* Deletes the plugin instance */
-typedef void (* PubkeyExtPlugin_deleteFn)(void *pluginInstance);
-#define DROPBEAR_PUBKEY_PLUGIN_FNNAME_DELETE            "plugin_delete"
+typedef void (* PubkeyExtPlugin_deleteFn)(struct EPKAInstance *pluginInstance);
+
+
+struct EPKAInstance {
+    int                             api_version[2];         /* 0=Major, 1=Minor */
+
+    PubkeyExtPlugin_checkPubKeyFn   checkpubkey;            /* mandatory */
+    PubkeyExtPlugin_authSuccessFn   auth_success;           /* optional */
+    PubkeyExtPlugin_sessionDeleteFn delete_session;         /* mandatory */
+    PubkeyExtPlugin_deleteFn        delete_plugin;          /* mandatory */
+};
+
+struct EPKASession {
+    struct EPKAInstance *  plugin_instance;
+
+    unsigned char * auth_options;                           /* Set to NULL if no options are provided */
+    unsigned int    auth_options_length;
+};
 
 #endif

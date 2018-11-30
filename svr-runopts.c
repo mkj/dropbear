@@ -413,8 +413,10 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_EPKA
         if (pubkey_plugin) {
             char *args = strchr(pubkey_plugin, ',');
-            if (args) *args='\0';
-            ++args;
+            if (args) {
+                *args='\0';
+                ++args;
+            }
             svr_opts.pubkey_plugin = pubkey_plugin;
             svr_opts.pubkey_plugin_options = args;
         }

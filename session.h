@@ -221,7 +221,7 @@ struct sshsession {
 	int init_done;
 
 #if DROPBEAR_EPKA
-        void * pubkey_plugin_session;
+        struct EPKASession * epka_session;
 #endif
 };
 
@@ -249,14 +249,11 @@ struct serversession {
 #endif
 
 #if DROPBEAR_EPKA
-        void *pubkey_plugin_handle;
-        void *pubkey_plugin_handle_instance;
-        /* Resolved when plugin is loaded */
-        PubkeyExtPlugin_newFn           pubkey_plugin_new;
-        PubkeyExtPlugin_checkPubKeyFn   pubkey_plugin_checkPubKey;
-        PubkeyExtPlugin_authSuccessFn   pubkey_plugin_authSuccess;
-        PubkeyExtPlugin_sessionDeleteFn pubkey_plugin_sessionDelete;
-        PubkeyExtPlugin_deleteFn        pubkey_plugin_delete;
+        /* The shared library handle */
+        void *epka_plugin_handle;
+
+        /* The instance created by the plugin_new function */
+        struct EPKAInstance *epka_instance;
 #endif
 
 };

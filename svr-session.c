@@ -90,20 +90,14 @@ svr_session_cleanup(void) {
 	svr_ses.childpidsize = 0;
 
 #if DROPBEAR_EPKA
-        if (svr_ses.pubkey_plugin_handle != NULL) {
-            if (svr_ses.pubkey_plugin_handle_instance) {
-                svr_ses.pubkey_plugin_delete(svr_ses.pubkey_plugin_handle_instance);
-                svr_ses.pubkey_plugin_handle_instance = NULL;
+        if (svr_ses.epka_plugin_handle != NULL) {
+            if (svr_ses.epka_instance) {
+                svr_ses.epka_instance->delete_plugin(svr_ses.epka_instance);
+                svr_ses.epka_instance = NULL;
             }
 
-            svr_ses.pubkey_plugin_new = NULL;
-            svr_ses.pubkey_plugin_checkPubKey = NULL;
-            svr_ses.pubkey_plugin_authSuccess = NULL;
-            svr_ses.pubkey_plugin_sessionDelete = NULL;
-            svr_ses.pubkey_plugin_delete = NULL;
-
-            dlclose(svr_ses.pubkey_plugin_handle);
-            svr_ses.pubkey_plugin_handle = NULL;
+            dlclose(svr_ses.epka_plugin_handle);
+            svr_ses.epka_plugin_handle = NULL;
         }
 #endif
 }
@@ -121,46 +115,45 @@ void svr_session(int sock, int childpipe) {
 #endif
 
 #if DROPBEAR_EPKA
-        svr_ses.pubkey_plugin_handle = NULL;
-        svr_ses.pubkey_plugin_handle_instance = NULL;
+        /* Initializes the EPKA Plugin */
+        svr_ses.epka_plugin_handle = NULL;
+        svr_ses.epka_instance = NULL;
         if (svr_opts.pubkey_plugin) {
 #if DEBUG_TRACE
             const int verbose = debug_trace;
 #else
             const int verbose = 0;
 #endif
+            PubkeyExtPlugin_newFn  pluginConstructor;
 
             /* RTLD_NOW: fails if not all the symbols are resolved now. Better fail now than at run-time */
-            svr_ses.pubkey_plugin_handle = dlopen(svr_opts.pubkey_plugin, RTLD_NOW);
-            if (svr_ses.pubkey_plugin_handle == NULL) {
+            svr_ses.epka_plugin_handle = dlopen(svr_opts.pubkey_plugin, RTLD_NOW);
+            if (svr_ses.epka_plugin_handle == NULL) {
                 dropbear_exit("failed to load external pubkey plugin");
             }
-            /* Initializes ALL the function pointers of the API */
-            svr_ses.pubkey_plugin_new = (PubkeyExtPlugin_newFn)dlsym(svr_ses.pubkey_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW);
-            if (!svr_ses.pubkey_plugin_new) {
-                dropbear_exit("init method not found in external pubkey plugin");
-            }
-            svr_ses.pubkey_plugin_checkPubKey = (PubkeyExtPlugin_checkPubKeyFn)dlsym(svr_ses.pubkey_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_CHECKPUBKEY);
-            if (!svr_ses.pubkey_plugin_checkPubKey) {
-                dropbear_exit("checkPubKey method not found in external pubkey plugin");
-            }
-            svr_ses.pubkey_plugin_authSuccess = (PubkeyExtPlugin_authSuccessFn)dlsym(svr_ses.pubkey_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_AUTHSUCCESS);
-            if (!svr_ses.pubkey_plugin_authSuccess) {
-                dropbear_exit("authSuccess method not found in external pubkey plugin");
-            }
-            svr_ses.pubkey_plugin_sessionDelete = (PubkeyExtPlugin_sessionDeleteFn)dlsym(svr_ses.pubkey_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_SESSIONDELETE);
-            if (!svr_ses.pubkey_plugin_sessionDelete) {
-                dropbear_exit("sessionDelete method not found in external pubkey plugin");
-            }
-            svr_ses.pubkey_plugin_delete = (PubkeyExtPlugin_deleteFn)dlsym(svr_ses.pubkey_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_DELETE);
-            if (!svr_ses.pubkey_plugin_delete) {
-                dropbear_exit("delete method not found in external pubkey plugin");
+            pluginConstructor = (PubkeyExtPlugin_newFn)dlsym(svr_ses.epka_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW);
+            if (!pluginConstructor) {
+                dropbear_exit("plugin constructor method not found in external pubkey plugin");
             }
 
             /* Create an instance of the plugin */
-            svr_ses.pubkey_plugin_handle_instance = svr_ses.pubkey_plugin_new(verbose, svr_opts.pubkey_plugin_options);
-            if (svr_ses.pubkey_plugin_handle_instance == NULL) {
+            svr_ses.epka_instance = pluginConstructor(verbose, svr_opts.pubkey_plugin_options);
+            if (svr_ses.epka_instance == NULL) {
                 dropbear_exit("external plugin initialization failed");
+            }
+            /* Check if the plugin is compatible */
+            if ( (svr_ses.epka_instance->api_version[0] != DROPBEAR_EPKA_VERSION_MAJOR) ||
+                 (svr_ses.epka_instance->api_version[1] < DROPBEAR_EPKA_VERSION_MINOR) ) {
+                dropbear_exit("plugin version check failed: "
+                              "Dropbear=%d.%d, plugin=%d.%d",
+                        DROPBEAR_EPKA_VERSION_MAJOR, DROPBEAR_EPKA_VERSION_MINOR,
+                        svr_ses.epka_instance->api_version[0], svr_ses.epka_instance->api_version[1]);
+            }
+            if (svr_ses.epka_instance->api_version[1] > DROPBEAR_EPKA_VERSION_MINOR) {
+                dropbear_log(LOG_WARNING, "plugin API newer than dropbear API: "
+                              "Dropbear=%d.%d, plugin=%d.%d",
+                        DROPBEAR_EPKA_VERSION_MAJOR, DROPBEAR_EPKA_VERSION_MINOR,
+                        svr_ses.epka_instance->api_version[0], svr_ses.epka_instance->api_version[1]);
             }
             dropbear_log(LOG_INFO, "successfully loaded and initialized pubkey plugin '%s'", svr_opts.pubkey_plugin);
         }
@@ -217,10 +210,10 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	int i;
 
 #if DROPBEAR_EPKA
-        if ((svr_ses.pubkey_plugin_handle != NULL) && (ses.pubkey_plugin_session != NULL)) {
-            svr_ses.pubkey_plugin_sessionDelete(svr_ses.pubkey_plugin_handle, ses.pubkey_plugin_session);
+        if ((ses.epka_session != NULL)) {
+            svr_ses.epka_instance->delete_session(ses.epka_session);
         }
-        ses.pubkey_plugin_session = NULL;
+        ses.epka_session = NULL;
 #endif
 
 	/* Render the formatted exit message */
