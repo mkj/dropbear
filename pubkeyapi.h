@@ -55,10 +55,16 @@ typedef struct EPKAInstance *(* PubkeyExtPlugin_newFn)(int verbose,
 
 
 /* Validate a client through public key authentication
- * Returns a new session (opaque pointer to be destroyed when session ends)
- * or NULL in case of authentication failure.
+ *
+ * If session has not been already created, creates it and store it 
+ * in *sessionInOut.
+ * If session is a non-NULL, it will reuse it.
+ *
+ * Returns DROPBEAR_SUCCESS (0) if success or DROPBEAR_FAILURE (-1) if
+ * authentication fails
  */
-typedef struct EPKASession * (* PubkeyExtPlugin_checkPubKeyFn)(struct EPKAInstance *pluginInstance,
+typedef int (* PubkeyExtPlugin_checkPubKeyFn)(struct EPKAInstance *pluginInstance,
+        struct EPKASession **sessionInOut,
         const char* algo, 
         unsigned int algolen,
         const unsigned char* keyblob, 

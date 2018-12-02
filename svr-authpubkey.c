@@ -113,14 +113,14 @@ void svr_auth_pubkey(int valid_user) {
 	}
 #if DROPBEAR_EPKA
         if (svr_ses.epka_instance != NULL) {
-            ses.epka_session = svr_ses.epka_instance->checkpubkey(
+            if (svr_ses.epka_instance->checkpubkey(
                         svr_ses.epka_instance,
+                        &ses.epka_session,
                         algo, 
                         algolen, 
                         keyblob, 
                         keybloblen,
-                        ses.authstate.username);
-            if (ses.epka_session != NULL) {
+                        ses.authstate.username) == DROPBEAR_SUCCESS) {
                 /* Success */
                 auth_failure = 0;
 

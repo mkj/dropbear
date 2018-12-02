@@ -129,7 +129,7 @@ void svr_session(int sock, int childpipe) {
             /* RTLD_NOW: fails if not all the symbols are resolved now. Better fail now than at run-time */
             svr_ses.epka_plugin_handle = dlopen(svr_opts.pubkey_plugin, RTLD_NOW);
             if (svr_ses.epka_plugin_handle == NULL) {
-                dropbear_exit("failed to load external pubkey plugin");
+                dropbear_exit("failed to load external pubkey plugin '%s': %s", svr_opts.pubkey_plugin, dlerror());
             }
             pluginConstructor = (PubkeyExtPlugin_newFn)dlsym(svr_ses.epka_plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW);
             if (!pluginConstructor) {
