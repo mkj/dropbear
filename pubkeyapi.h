@@ -25,13 +25,30 @@
 #define DROPBEAR_PUBKEY_H
 
 
-/* Function API */
+/* External Public Key API (EPKA) Plug-in Interface
+ *
+ * See:
+ *      https://github.com/fabriziobertocci/dropbear-epka
+ * for additional information and examples about this API
+ *
+ */
 
 struct EPKAInstance;
 struct EPKASession;
 
+/* API VERSION INFORMATION - 
+ * Dropbear will:
+ * - Reject any plugin with a major version mismatch
+ * - Load and print a warning if the plugin's minor version is HIGHER than
+ *   dropbear's minor version (assumes properties are added at the end of
+ *   EPKAInstance or EPKASession). This is a case of plugin newer than dropbear. 
+ * - Reject if the plugin minor version is SMALLER than dropbear one (case
+ *   of plugin older than dropbear).
+ * - Load (with no warnings) if version match.
+ */
 #define DROPBEAR_EPKA_VERSION_MAJOR     1
 #define DROPBEAR_EPKA_VERSION_MINOR     0
+
 
 /* Creates an instance of the plugin.
  *
@@ -84,6 +101,15 @@ typedef void (* PubkeyExtPlugin_sessionDeleteFn)(struct EPKASession *session);
 typedef void (* PubkeyExtPlugin_deleteFn)(struct EPKAInstance *pluginInstance);
 
 
+/* The EPKAInstance object - A simple container of the pointer to the functions used
+ * by Dropbear.
+ *
+ * A plug-in can extend it to add its own properties
+ *
+ * The instance is created from the call to the plugin_new() function of the 
+ * shared library.
+ * The delete_plugin function should delete the object.
+ */
 struct EPKAInstance {
     int                             api_version[2];         /* 0=Major, 1=Minor */
 
@@ -93,6 +119,16 @@ struct EPKAInstance {
     PubkeyExtPlugin_deleteFn        delete_plugin;          /* mandatory */
 };
 
+/* An SSH Session. Created during pre-auth and reused during the authentication.
+ * The plug-in should delete this object (or any object extending it) from 
+ * the delete_session() function.
+ *
+ * Extend it to cache user and authentication information that can be
+ * reused between pre-auth and auth (and to store whatever session-specific
+ * variable you need to keep).
+ *
+ * Store any optional auth options in the auth_options property of the session.
+ */
 struct EPKASession {
     struct EPKAInstance *  plugin_instance;
 
