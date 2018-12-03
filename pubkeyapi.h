@@ -63,11 +63,14 @@ struct EPKASession;
  * If plugin_MINOR < dropbeart_MINOR or if the MAJOR version is different
  * dropbear will reject the plugin and terminate the execution.
  *
+ * addrstring is the IP address of the client.
+ *
  * Returns NULL in case of failure, otherwise a void * of the instance that need
  * to be passed to all the subsequent call to the plugin
  */
 typedef struct EPKAInstance *(* PubkeyExtPlugin_newFn)(int verbose, 
-        const char *options);
+        const char *options,
+        const char *addrstring);
 #define DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW               "plugin_new"
 
 

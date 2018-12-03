@@ -114,6 +114,14 @@ void svr_session(int sock, int childpipe) {
 	svr_ses.server_pid = getpid();
 #endif
 
+	/* for logging the remote address */
+	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
+	len = strlen(host) + strlen(port) + 2;
+	svr_ses.addrstring = m_malloc(len);
+	snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
+	m_free(host);
+	m_free(port);
+
 #if DROPBEAR_EPKA
         /* Initializes the EPKA Plugin */
         svr_ses.epka_plugin_handle = NULL;
@@ -137,7 +145,7 @@ void svr_session(int sock, int childpipe) {
             }
 
             /* Create an instance of the plugin */
-            svr_ses.epka_instance = pluginConstructor(verbose, svr_opts.pubkey_plugin_options);
+            svr_ses.epka_instance = pluginConstructor(verbose, svr_opts.pubkey_plugin_options, svr_ses.addrstring);
             if (svr_ses.epka_instance == NULL) {
                 dropbear_exit("external plugin initialization failed");
             }
@@ -163,14 +171,6 @@ void svr_session(int sock, int childpipe) {
 	chaninitialise(svr_chantypes);
 	svr_chansessinitialise();
 	svr_algos_initialise();
-
-	/* for logging the remote address */
-	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
-	len = strlen(host) + strlen(port) + 2;
-	svr_ses.addrstring = m_malloc(len);
-	snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
-	m_free(host);
-	m_free(port);
 
 	get_socket_address(ses.sock_in, NULL, NULL, 
 			&svr_ses.remotehost, NULL, 1);
