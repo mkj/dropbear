@@ -129,7 +129,7 @@ struct EPKAInstance {
  * The returned buffer will be destroyed when the session is deleted.
  * Option buffer string NULL-terminated
  */
-typedef unsigned char * (* PubkeyExtPlugin_getOptionsFn)(struct EPKASession *session);
+typedef char * (* PubkeyExtPlugin_getOptionsFn)(struct EPKASession *session);
 
 
 /* An SSH Session. Created during pre-auth and reused during the authentication.

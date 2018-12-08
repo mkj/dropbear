@@ -113,7 +113,7 @@ void svr_auth_pubkey(int valid_user) {
 	}
 #if DROPBEAR_EPKA
         if (svr_ses.epka_instance != NULL) {
-            unsigned char *options_buf;
+            char *options_buf;
             if (svr_ses.epka_instance->checkpubkey(
                         svr_ses.epka_instance,
                         &ses.epka_session,
@@ -129,7 +129,7 @@ void svr_auth_pubkey(int valid_user) {
                 options_buf = ses.epka_session->get_options(ses.epka_session);
                 if (options_buf) {
                     struct buf temp_buf = { 
-                        .data = options_buf,
+                        .data = (unsigned char *)options_buf,
                         .len = strlen(options_buf),
                         .pos = 0,
                         .size = 0
