@@ -122,6 +122,16 @@ struct EPKAInstance {
     PubkeyExtPlugin_deleteFn        delete_plugin;          /* mandatory */
 };
 
+/*****************************************************************************
+ * SESSION
+ ****************************************************************************/
+/* Returns the options from the session. 
+ * The returned buffer will be destroyed when the session is deleted.
+ * Option buffer string NULL-terminated
+ */
+typedef unsigned char * (* PubkeyExtPlugin_getOptionsFn)(struct EPKASession *session);
+
+
 /* An SSH Session. Created during pre-auth and reused during the authentication.
  * The plug-in should delete this object (or any object extending it) from 
  * the delete_session() function.
@@ -135,8 +145,7 @@ struct EPKAInstance {
 struct EPKASession {
     struct EPKAInstance *  plugin_instance;
 
-    unsigned char * auth_options;                           /* Set to NULL if no options are provided */
-    unsigned int    auth_options_length;
+    PubkeyExtPlugin_getOptionsFn   get_options;
 };
 
 #endif
