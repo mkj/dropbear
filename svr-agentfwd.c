@@ -209,7 +209,7 @@ static int bindagent(int fd, struct ChanSess * chansess) {
 
 	struct sockaddr_un addr;
 	unsigned int prefix;
-	char path[sizeof(addr.sun_path)], sockfile[sizeof(addr.sun_path)];
+	char path[(sizeof(addr.sun_path)-1)/2], sockfile[(sizeof(addr.sun_path)-1)/2];
 	mode_t mode;
 	int i;
 	uid_t uid;
