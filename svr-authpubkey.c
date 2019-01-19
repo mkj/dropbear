@@ -424,8 +424,9 @@ static int checkpubkeyperms() {
 
 	/* allocate max required pathname storage,
 	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len + 22);
-	strncpy(filename, ses.authstate.pw_dir, len+1);
+	len += 22;
+	filename = m_malloc(len);
+	strlcpy(filename, ses.authstate.pw_dir, len);
 
 	/* check ~ */
 	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
@@ -433,13 +434,13 @@ static int checkpubkeyperms() {
 	}
 
 	/* check ~/.ssh */
-	strncat(filename, "/.ssh", 5); /* strlen("/.ssh") == 5 */
+	strlcat(filename, "/.ssh", len);
 	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
 
 	/* now check ~/.ssh/authorized_keys */
-	strncat(filename, "/authorized_keys", 16);
+	strlcat(filename, "/authorized_keys", len);
 	if (checkfileperm(filename) != DROPBEAR_SUCCESS) {
 		goto out;
 	}
