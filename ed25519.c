@@ -105,7 +105,7 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 	unsigned data_size;
 	if (buf_getint(buf) != 64 ||
 	    buf->len - buf->pos != 64 ||
-	    (data_size = data_buf->len) > 512 - 64) {
+	    (data_size = data_buf->len) > sizeof(sm) - 64) {
 		return DROPBEAR_FAILURE;
 	}
 	memcpy(sm, buf->data + buf->pos, 64);
@@ -118,10 +118,10 @@ int buf_ed25519_verify(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf)
 /* Sign the data presented with key, writing the signature contents
  * to buf */
 void buf_put_ed25519_sign(buffer* buf, dropbear_ed25519_key *key, buffer *data_buf) {
-	char sm[128];
+	char sm[512];
 	/* Typical data_size is 32 bytes for ssh. */
 	unsigned data_size = data_buf->len;
-	if (data_size > 64) dropbear_exit("ed25519 message to sign too long");
+	if (data_size > sizeof(sm) - 64) dropbear_exit("ed25519 message to sign too long");
 	ed25519_crypto_sign(sm, data_buf->data, data_size, key->spk);
 	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
 	buf_putstring(buf, sm, 64);
