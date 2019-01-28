@@ -247,7 +247,7 @@ If you test it please contact the Dropbear author */
 	#error "At least one encryption algorithm must be enabled. AES128 is recommended."
 #endif
 
-#if !(DROPBEAR_RSA || DROPBEAR_DSS || DROPBEAR_ECDSA)
+#if !(DROPBEAR_RSA || DROPBEAR_DSS || DROPBEAR_ECDSA || DROPBEAR_ED25519)
 	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
 #endif
 
