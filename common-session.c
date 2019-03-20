@@ -68,6 +68,16 @@ void common_session_init(int sock_in, int sock_out) {
 	/* Sets it to lowdelay */
 	update_channel_prio();
 
+#if !DROPBEAR_SVR_MULTIUSER
+	/* A sanity check to prevent an accidental configuration option
+	   leaving multiuser systems exposed */
+	errno = 0;
+	getuid();
+	if (errno != ENOSYS) {
+		dropbear_exit("Non-multiuser Dropbear requires a non-multiuser kernel");
+	}
+#endif
+
 	now = monotonic_now();
 	ses.connect_time = now;
 	ses.last_packet_time_keepalive_recv = now;

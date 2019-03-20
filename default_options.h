@@ -196,7 +196,9 @@ group1 in Dropbear server too */
  * authorized_keys file into account */
 #define DROPBEAR_SVR_PUBKEY_OPTIONS 1
 
-/* Disable if your kernel does not have multiple user support */
+/* Set this to 0 if your system does not have multiple user support.
+   (Linux kernel CONFIG_MULTIUSER option)
+   The resulting binary will not run on a normal system. */
 #define DROPBEAR_SVR_MULTIUSER 1
 
 /* Client authentication options */
