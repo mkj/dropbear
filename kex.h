@@ -106,7 +106,4 @@ struct kex_curve25519_param {
 int curve25519_donna(unsigned char *out, const unsigned char *secret, const unsigned char *other);
 #endif
 
-
-#define MAX_KEXHASHBUF 2000
-
 #endif /* DROPBEAR_KEX_H_ */
