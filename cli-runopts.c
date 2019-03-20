@@ -214,7 +214,7 @@ void cli_getopts(int argc, char ** argv) {
 					cli_opts.always_accept_key = 1;
 					break;
 				case 'p': /* remoteport */
-					next = &cli_opts.remoteport;
+					next = (char**)&cli_opts.remoteport;
 					break;
 #if DROPBEAR_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
