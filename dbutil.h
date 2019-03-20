@@ -83,6 +83,8 @@ int constant_time_memcmp(const void* a, const void *b, size_t n);
 /* Returns a time in seconds that doesn't go backwards - does not correspond to
 a real-world clock */
 time_t monotonic_now(void);
+/* Higher resolution clock_gettime(CLOCK_MONOTONIC) wrapper */
+void gettime_wrapper(struct timespec *now);
 
 char * expand_homedir_path(const char *inpath);
 

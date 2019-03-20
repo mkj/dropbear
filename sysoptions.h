@@ -86,6 +86,8 @@
 /* Required for pubkey auth */
 #define DROPBEAR_SIGNKEY_VERIFY ((DROPBEAR_SVR_PUBKEY_AUTH) || (DROPBEAR_CLIENT))
 
+#define DROPBEAR_MAX_PASSWORD_LEN 100
+
 #define SHA1_HASH_SIZE 20
 #define MD5_HASH_SIZE 16
 #define MAX_HASH_SIZE 64 /* sha512 */
@@ -225,7 +227,7 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_ZLIB_MEM_LEVEL 8
 
 #if (DROPBEAR_SVR_PASSWORD_AUTH) && (DROPBEAR_SVR_PAM_AUTH)
-#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in options.h"
+#error "You can't turn on PASSWORD and PAM auth both at once. Fix it in localoptions.h"
 #endif
 
 /* PAM requires ./configure --enable-pam */

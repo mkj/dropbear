@@ -196,6 +196,11 @@ group1 in Dropbear server too */
  * authorized_keys file into account */
 #define DROPBEAR_SVR_PUBKEY_OPTIONS 1
 
+/* Set this to 0 if your system does not have multiple user support.
+   (Linux kernel CONFIG_MULTIUSER option)
+   The resulting binary will not run on a normal system. */
+#define DROPBEAR_SVR_MULTIUSER 1
+
 /* Client authentication options */
 #define DROPBEAR_CLI_PASSWORD_AUTH 1
 #define DROPBEAR_CLI_PUBKEY_AUTH 1

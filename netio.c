@@ -224,7 +224,6 @@ void remove_connect_pending() {
 
 void set_connect_fds(fd_set *writefd) {
 	m_list_elem *iter;
-	TRACE(("enter set_connect_fds"))
 	iter = ses.conn_pending.first;
 	while (iter) {
 		m_list_elem *next_iter = iter->next;
@@ -245,12 +244,10 @@ void set_connect_fds(fd_set *writefd) {
 		}
 		iter = next_iter;
 	}
-	TRACE(("leave set_connect_fds"))
 }
 
 void handle_connect_fds(const fd_set *writefd) {
 	m_list_elem *iter;
-	TRACE(("enter handle_connect_fds"))
 	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
 		int val;
 		socklen_t vallen = sizeof(val);
@@ -284,7 +281,6 @@ void handle_connect_fds(const fd_set *writefd) {
 			return; 
 		}
 	}
-	TRACE(("leave handle_connect_fds - end iter"))
 }
 
 void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue) {
@@ -298,7 +294,11 @@ void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigne
 	buffer *writebuf;
 
 	#ifndef IOV_MAX
-	#define IOV_MAX UIO_MAXIOV
+		#if defined(__CYGWIN__) && !defined(UIO_MAXIOV)
+		#define IOV_MAX 1024
+		#else
+		#define IOV_MAX UIO_MAXIOV
+		#endif
 	#endif
 
 	*iov_count = MIN(MIN(queue->count, IOV_MAX), *iov_count);

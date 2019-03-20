@@ -58,7 +58,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len);
 void write_packet() {
 
 	ssize_t written;
-#ifdef HAVE_WRITEV
+#if defined(HAVE_WRITEV) && (defined(IOV_MAX) || defined(UIO_MAXIOV))
 	/* 50 is somewhat arbitrary */
 	unsigned int iov_count = 50;
 	struct iovec iov[50];
@@ -110,8 +110,6 @@ void write_packet() {
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
-	/* The last byte of the buffer is not to be transmitted, but is 
-	 * a cleartext packet_type indicator */
 	len = writebuf->len - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */
