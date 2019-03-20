@@ -196,6 +196,9 @@ group1 in Dropbear server too */
  * authorized_keys file into account */
 #define DROPBEAR_SVR_PUBKEY_OPTIONS 1
 
+/* Disable if your kernel does not have multiple user support */
+#define DROPBEAR_SVR_MULTIUSER 1
+
 /* Client authentication options */
 #define DROPBEAR_CLI_PASSWORD_AUTH 1
 #define DROPBEAR_CLI_PUBKEY_AUTH 1

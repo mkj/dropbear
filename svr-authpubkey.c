@@ -347,6 +347,7 @@ static int checkpubkey(const char* algo, unsigned int algolen,
 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
 				ses.authstate.pw_dir);
 
+#if DROPBEAR_SVR_MULTIUSER
 	/* open the file as the authenticating user. */
 	origuid = getuid();
 	origgid = getgid();
@@ -354,13 +355,16 @@ static int checkpubkey(const char* algo, unsigned int algolen,
 		(seteuid(ses.authstate.pw_uid)) < 0) {
 		dropbear_exit("Failed to set euid");
 	}
+#endif
 
 	authfile = fopen(filename, "r");
 
+#if DROPBEAR_SVR_MULTIUSER
 	if ((seteuid(origuid)) < 0 ||
 		(setegid(origgid)) < 0) {
 		dropbear_exit("Failed to revert euid");
 	}
+#endif
 
 	if (authfile == NULL) {
 		goto out;
