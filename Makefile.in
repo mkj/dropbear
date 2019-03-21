@@ -306,3 +306,7 @@ fuzz-hostkeys:
 	/usr/bin/xxd -i -a keyr >> hostkeys.c
 	/usr/bin/xxd -i -a keye >> hostkeys.c
 	/usr/bin/xxd -i -a keyd >> hostkeys.c
+
+# to make coverity happy?
+test:
+	true
