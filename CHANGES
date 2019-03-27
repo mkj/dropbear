@@ -1,3 +1,8 @@
+2019.78 - 27 March 2019
+
+- Fix dbclient regression in 2019.77. After exiting the terminal would be left
+  in a bad state. Reported by Ryan Woodsmall
+  
 2019.77 - 23 March 2019
 
 - Fix server -R option with ECDSA - only advertise one key size which will be accepted.
