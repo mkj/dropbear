@@ -1027,6 +1027,7 @@ static void execchild(const void *user_data) {
 
 	init_selinux_session();
 
+#if DROPBEAR_SVR_MULTIUSER
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
@@ -1050,6 +1051,7 @@ static void execchild(const void *user_data) {
 			dropbear_exit("Couldn't	change user as non-root");
 		}
 	}
+#endif
 
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);

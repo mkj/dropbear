@@ -110,8 +110,6 @@ void write_packet() {
 	/* Get the next buffer in the queue of encrypted packets to write*/
 	writebuf = (buffer*)examine(&ses.writequeue);
 
-	/* The last byte of the buffer is not to be transmitted, but is 
-	 * a cleartext packet_type indicator */
 	len = writebuf->len - writebuf->pos;
 	dropbear_assert(len > 0);
 	/* Try to write as much as possible */

@@ -78,7 +78,7 @@ char* getpass_or_cancel(const char* prompt);
 void cli_auth_pubkey_cleanup(void);
 
 
-#define MAX_USERNAME_LEN 25 /* arbitrary for the moment */
+#define MAX_USERNAME_LEN 100 /* arbitrary for the moment */
 
 #define AUTH_TYPE_NONE      1
 #define AUTH_TYPE_PUBKEY    (1 << 1)

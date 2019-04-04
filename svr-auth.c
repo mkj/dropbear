@@ -322,7 +322,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 
 	/* check if we are running as non-root, and login user is different from the server */
 	uid = geteuid();
-	if (uid != 0 && uid != ses.authstate.pw_uid) {
+	if (!(DROPBEAR_SVR_MULTIUSER && uid == 0) && uid != ses.authstate.pw_uid) {
 		TRACE(("running as nonroot, only server uid is allowed"))
 		dropbear_log(LOG_WARNING,
 				"Login attempt with wrong user %s from %s",

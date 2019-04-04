@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2018.76"
+#define DROPBEAR_VERSION "2019.78"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
@@ -85,6 +85,8 @@
 
 /* Required for pubkey auth */
 #define DROPBEAR_SIGNKEY_VERIFY ((DROPBEAR_SVR_PUBKEY_AUTH) || (DROPBEAR_CLIENT))
+
+#define DROPBEAR_MAX_PASSWORD_LEN 100
 
 #define SHA1_HASH_SIZE 20
 #define MD5_HASH_SIZE 16
