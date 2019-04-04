@@ -24,6 +24,8 @@ CFLAGS+=-I$(srcdir)/libtomcrypt/src/headers/
 LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM)
 endif
 
+LIBSELINUX_LIBS=@LIBSELINUX_LIBS@
+
 OPTION_HEADERS = default_options_guard.h sysoptions.h
 ifneq ($(wildcard localoptions.h),)
 CFLAGS+=-DLOCALOPTIONS_H_EXISTS
@@ -189,7 +191,7 @@ dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
 dropbear: $(HEADERS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBSELINUX_LIBS) $(LIBS) @CRYPTLIB@
 
 dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
@@ -210,7 +212,7 @@ ifeq ($(MULTI),1)
 endif
 
 dropbearmulti$(EXEEXT): $(HEADERS) $(MULTIOBJS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
+	$(CC) $(LDFLAGS) -o $@ $(MULTIOBJS) $(LIBTOM_LIBS) $(LIBSELINUX_LIBS) $(LIBS) @CRYPTLIB@
 
 multibinary: dropbearmulti$(EXEEXT)
 

@@ -37,7 +37,13 @@
 #include "runopts.h"
 #include "dbrandom.h"
 
+#ifdef DROPBEAR_ENABLE_SELINUX
+# include <selinux/selinux.h>
+# include <selinux/get_context_list.h>
+#endif
+
 static int checkusername(const char *username, unsigned int userlen);
+static void initselinux(const char *username);
 
 /* initialise the first time for a session, resetting all parameters */
 void svr_authinitialise() {
@@ -118,6 +124,8 @@ void recv_msg_userauth_request() {
 	if (checkusername(username, userlen) == DROPBEAR_SUCCESS) {
 		valid_user = 1;
 	}
+
+	initselinux(ses.authstate.pw_name);
 
 	/* user wants to know what methods are supported */
 	if (methodlen == AUTH_METHOD_NONE_LEN &&
@@ -226,6 +234,44 @@ static int check_group_membership(gid_t check_gid, const char* username, gid_t u
 	return match;
 }
 #endif
+
+static void initselinux(const char *username)
+{
+#ifdef DROPBEAR_ENABLE_SELINUX
+	char *seuser;
+	char *level;
+	int rc;
+
+	if (!is_selinux_enabled())
+		return;
+
+	freecon(ses.authstate.user_sid);
+	ses.authstate.user_sid = NULL;
+
+	rc = getseuserbyname(username, &seuser, &level);
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "getseuserbyname(%s) failed", username);
+		goto out;
+	}
+
+	rc = get_default_context_with_level(seuser, level, NULL,
+					    &ses.authstate.user_sid);
+	free(seuser);
+	free(level);
+
+	if (rc < 0) {
+		dropbear_log(LOG_ERR, "get_default_context(%s) failed", username);
+		ses.authstate.user_sid = NULL;
+		goto out;
+	}
+
+	rc = 0;
+
+out:
+	if (rc < 0 && security_getenforce() > 0)
+		dropbear_exit("SELinux: failed to initialie");
+#endif
+}
 
 /* Check that the username exists and isn't disallowed (root), and has a valid shell.
  * returns DROPBEAR_SUCCESS on valid username, DROPBEAR_FAILURE on failure */

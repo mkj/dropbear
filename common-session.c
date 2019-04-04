@@ -136,6 +136,10 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.keys->trans.zstream = NULL;
 #endif
 
+#ifdef DROPBEAR_ENABLE_SELINUX
+	ses.authstate.user_sid = NULL;
+#endif
+
 	/* key exchange buffers */
 	ses.session_id = NULL;
 	ses.kexhashbuf = NULL;
