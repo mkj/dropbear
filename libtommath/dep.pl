@@ -1,4 +1,4 @@
-#!/usr/bin/perl 
+#!/usr/bin/perl
 #
 # Walk through source, add labels and make classes
 #
@@ -7,9 +7,31 @@ use warnings;
 
 my %deplist;
 
-#open class file and write preamble 
+#open class file and write preamble
 open(my $class, '>', 'tommath_class.h') or die "Couldn't open tommath_class.h for writing\n";
-print {$class} "#if !(defined(LTM1) && defined(LTM2) && defined(LTM3))\n#if defined(LTM2)\n#define LTM3\n#endif\n#if defined(LTM1)\n#define LTM2\n#endif\n#define LTM1\n\n#if defined(LTM_ALL)\n";
+print {$class} << 'EOS';
+/* LibTomMath, multiple-precision integer library -- Tom St Denis
+ *
+ * LibTomMath is a library that provides multiple-precision
+ * integer arithmetic as well as number theoretic functionality.
+ *
+ * The library was designed directly after the MPI library by
+ * Michael Fromberger but has been written from scratch with
+ * additional optimizations in place.
+ *
+ * SPDX-License-Identifier: Unlicense
+ */
+
+#if !(defined(LTM1) && defined(LTM2) && defined(LTM3))
+#if defined(LTM2)
+#   define LTM3
+#endif
+#if defined(LTM1)
+#   define LTM2
+#endif
+#define LTM1
+#if defined(LTM_ALL)
+EOS
 
 foreach my $filename (glob 'bn*.c') {
    my $define = $filename;
@@ -19,9 +41,11 @@ foreach my $filename (glob 'bn*.c') {
    # convert filename to upper case so we can use it as a define
    $define =~ tr/[a-z]/[A-Z]/;
    $define =~ tr/\./_/;
-   print {$class} "#define $define\n";
+   print {$class} << "EOS";
+#   define $define
+EOS
 
-   # now copy text and apply #ifdef as required 
+   # now copy text and apply #ifdef as required
    my $apply = 0;
    open(my $src, '<', $filename);
    open(my $out, '>', 'tmp');
@@ -31,7 +55,22 @@ foreach my $filename (glob 'bn*.c') {
    if ($line =~ /include/) {
       print {$out} $line;
    } else {
-      print {$out} "#include <tommath.h>\n#ifdef $define\n$line";
+      print {$out} << "EOS";
+#include "tommath_private.h"
+#ifdef $define
+/* LibTomMath, multiple-precision integer library -- Tom St Denis
+ *
+ * LibTomMath is a library that provides multiple-precision
+ * integer arithmetic as well as number theoretic functionality.
+ *
+ * The library was designed directly after the MPI library by
+ * Michael Fromberger but has been written from scratch with
+ * additional optimizations in place.
+ *
+ * SPDX-License-Identifier: Unlicense
+ */
+$line
+EOS
       $apply = 1;
    }
    while (<$src>) {
@@ -40,7 +79,12 @@ foreach my $filename (glob 'bn*.c') {
       }
    }
    if ($apply == 1) {
-      print {$out} "#endif\n";
+      print {$out} << 'EOS';
+#endif
+/* ref:         \\HEAD -> master, tag: v1.1.0 */
+/* git commit:  \\08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: \\2019-01-28 20:32:32 +0100 */
+EOS
    }
    close $src;
    close $out;
@@ -48,18 +92,22 @@ foreach my $filename (glob 'bn*.c') {
    unlink $filename;
    rename 'tmp', $filename;
 }
-print {$class} "#endif\n\n";
+print {$class} << 'EOS';
+#endif
+EOS
 
-# now do classes 
+# now do classes
 
 foreach my $filename (glob 'bn*.c') {
    open(my $src, '<', $filename) or die "Can't open source file!\n";
 
-   # convert filename to upper case so we can use it as a define 
+   # convert filename to upper case so we can use it as a define
    $filename =~ tr/[a-z]/[A-Z]/;
    $filename =~ tr/\./_/;
 
-   print {$class} "#if defined($filename)\n";
+   print {$class} << "EOS";
+#if defined($filename)
+EOS
    my $list = $filename;
 
    # scan for mp_* and make classes
@@ -74,7 +122,9 @@ foreach my $filename (glob 'bn*.c') {
              $a =~ tr/[a-z]/[A-Z]/;
              $a = 'BN_' . $a . '_C';
              if (!($list =~ /$a/)) {
-                print {$class} "   #define $a\n";
+                print {$class} << "EOS";
+#   define $a
+EOS
              }
              $list = $list . ',' . $a;
           }
@@ -82,14 +132,31 @@ foreach my $filename (glob 'bn*.c') {
    }
    $deplist{$filename} = $list;
 
-   print {$class} "#endif\n\n";
+   print {$class} << 'EOS';
+#endif
+
+EOS
    close $src;
 }
 
-print {$class} "#ifdef LTM3\n#define LTM_LAST\n#endif\n#include <tommath_superclass.h>\n#include <tommath_class.h>\n#else\n#define LTM_LAST\n#endif\n";
+print {$class} << 'EOS';
+#ifdef LTM3
+#   define LTM_LAST
+#endif
+
+#include <tommath_superclass.h>
+#include <tommath_class.h>
+#else
+#   define LTM_LAST
+#endif
+
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */
+EOS
 close $class;
 
-#now let's make a cool call graph... 
+#now let's make a cool call graph...
 
 open(my $out, '>', 'callgraph.txt');
 my $indent = 0;

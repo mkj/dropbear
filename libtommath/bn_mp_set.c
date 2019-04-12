@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_SET_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,21 +9,18 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* set to a digit */
-void mp_set (mp_int * a, mp_digit b)
+void mp_set(mp_int *a, mp_digit b)
 {
-  mp_zero (a);
-  a->dp[0] = b & MP_MASK;
-  a->used  = (a->dp[0] != 0) ? 1 : 0;
+   mp_zero(a);
+   a->dp[0] = b & MP_MASK;
+   a->used  = (a->dp[0] != 0u) ? 1 : 0;
 }
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

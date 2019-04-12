@@ -1,5 +1,4 @@
-#include <tommath_private.h>
-#include "dbhelpers.h"
+#include "tommath_private.h"
 #ifdef BN_MP_CLEAR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -10,32 +9,32 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* clear one (frees)  */
-void
-mp_clear (mp_int * a)
+void mp_clear(mp_int *a)
 {
-  /* only do anything if a hasn't been freed previously */
-  if (a->dp != NULL) {
-    /* first zero the digits */
-	m_burn(a->dp, a->alloc * sizeof(*a->dp));
+   int i;
 
-    /* free ram */
-    XFREE(a->dp);
+   /* only do anything if a hasn't been freed previously */
+   if (a->dp != NULL) {
+      /* first zero the digits */
+      for (i = 0; i < a->used; i++) {
+         a->dp[i] = 0;
+      }
 
-    /* reset members to make debugging easier */
-    a->dp    = NULL;
-    a->alloc = a->used = 0;
-    a->sign  = MP_ZPOS;
-  }
+      /* free ram */
+      XFREE(a->dp);
+
+      /* reset members to make debugging easier */
+      a->dp    = NULL;
+      a->alloc = a->used = 0;
+      a->sign  = MP_ZPOS;
+   }
 }
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

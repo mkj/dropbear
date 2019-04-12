@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_EXPTMOD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,10 +9,7 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 
@@ -21,92 +18,92 @@
  * embedded in the normal function but that wasted alot of stack space
  * for nothing (since 99% of the time the Montgomery code would be called)
  */
-int mp_exptmod (mp_int * G, mp_int * X, mp_int * P, mp_int * Y)
+int mp_exptmod(const mp_int *G, const mp_int *X, const mp_int *P, mp_int *Y)
 {
-  int dr;
+   int dr;
 
-  /* modulus P must be positive */
-  if (P->sign == MP_NEG) {
-     return MP_VAL;
-  }
+   /* modulus P must be positive */
+   if (P->sign == MP_NEG) {
+      return MP_VAL;
+   }
 
-  /* if exponent X is negative we have to recurse */
-  if (X->sign == MP_NEG) {
+   /* if exponent X is negative we have to recurse */
+   if (X->sign == MP_NEG) {
 #ifdef BN_MP_INVMOD_C
-     mp_int tmpG, tmpX;
-     int err;
+      mp_int tmpG, tmpX;
+      int err;
 
-     /* first compute 1/G mod P */
-     if ((err = mp_init(&tmpG)) != MP_OKAY) {
-        return err;
-     }
-     if ((err = mp_invmod(G, P, &tmpG)) != MP_OKAY) {
-        mp_clear(&tmpG);
-        return err;
-     }
+      /* first compute 1/G mod P */
+      if ((err = mp_init(&tmpG)) != MP_OKAY) {
+         return err;
+      }
+      if ((err = mp_invmod(G, P, &tmpG)) != MP_OKAY) {
+         mp_clear(&tmpG);
+         return err;
+      }
 
-     /* now get |X| */
-     if ((err = mp_init(&tmpX)) != MP_OKAY) {
-        mp_clear(&tmpG);
-        return err;
-     }
-     if ((err = mp_abs(X, &tmpX)) != MP_OKAY) {
-        mp_clear_multi(&tmpG, &tmpX, NULL);
-        return err;
-     }
+      /* now get |X| */
+      if ((err = mp_init(&tmpX)) != MP_OKAY) {
+         mp_clear(&tmpG);
+         return err;
+      }
+      if ((err = mp_abs(X, &tmpX)) != MP_OKAY) {
+         mp_clear_multi(&tmpG, &tmpX, NULL);
+         return err;
+      }
 
-     /* and now compute (1/G)**|X| instead of G**X [X < 0] */
-     err = mp_exptmod(&tmpG, &tmpX, P, Y);
-     mp_clear_multi(&tmpG, &tmpX, NULL);
-     return err;
-#else 
-     /* no invmod */
-     return MP_VAL;
+      /* and now compute (1/G)**|X| instead of G**X [X < 0] */
+      err = mp_exptmod(&tmpG, &tmpX, P, Y);
+      mp_clear_multi(&tmpG, &tmpX, NULL);
+      return err;
+#else
+      /* no invmod */
+      return MP_VAL;
 #endif
-  }
+   }
 
-/* modified diminished radix reduction */
+   /* modified diminished radix reduction */
 #if defined(BN_MP_REDUCE_IS_2K_L_C) && defined(BN_MP_REDUCE_2K_L_C) && defined(BN_S_MP_EXPTMOD_C)
-  if (mp_reduce_is_2k_l(P) == MP_YES) {
-     return s_mp_exptmod(G, X, P, Y, 1);
-  }
+   if (mp_reduce_is_2k_l(P) == MP_YES) {
+      return s_mp_exptmod(G, X, P, Y, 1);
+   }
 #endif
 
 #ifdef BN_MP_DR_IS_MODULUS_C
-  /* is it a DR modulus? */
-  dr = mp_dr_is_modulus(P);
+   /* is it a DR modulus? */
+   dr = mp_dr_is_modulus(P);
 #else
-  /* default to no */
-  dr = 0;
+   /* default to no */
+   dr = 0;
 #endif
 
 #ifdef BN_MP_REDUCE_IS_2K_C
-  /* if not, is it a unrestricted DR modulus? */
-  if (dr == 0) {
-     dr = mp_reduce_is_2k(P) << 1;
-  }
+   /* if not, is it a unrestricted DR modulus? */
+   if (dr == 0) {
+      dr = mp_reduce_is_2k(P) << 1;
+   }
 #endif
-    
-  /* if the modulus is odd or dr != 0 use the montgomery method */
+
+   /* if the modulus is odd or dr != 0 use the montgomery method */
 #ifdef BN_MP_EXPTMOD_FAST_C
-  if ((mp_isodd (P) == MP_YES) || (dr !=  0)) {
-    return mp_exptmod_fast (G, X, P, Y, dr);
-  } else {
+   if ((mp_isodd(P) == MP_YES) || (dr !=  0)) {
+      return mp_exptmod_fast(G, X, P, Y, dr);
+   } else {
 #endif
 #ifdef BN_S_MP_EXPTMOD_C
-    /* otherwise use the generic Barrett reduction technique */
-    return s_mp_exptmod (G, X, P, Y, 0);
+      /* otherwise use the generic Barrett reduction technique */
+      return s_mp_exptmod(G, X, P, Y, 0);
 #else
-    /* no exptmod for evens */
-    return MP_VAL;
+      /* no exptmod for evens */
+      return MP_VAL;
 #endif
 #ifdef BN_MP_EXPTMOD_FAST_C
-  }
+   }
 #endif
 }
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

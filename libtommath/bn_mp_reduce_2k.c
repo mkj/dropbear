@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_REDUCE_2K_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,14 +9,11 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* reduces a modulo n where n is of the form 2**p - d */
-int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit d)
+int mp_reduce_2k(mp_int *a, const mp_int *n, mp_digit d)
 {
    mp_int q;
    int    p, res;
@@ -29,35 +26,35 @@ int mp_reduce_2k(mp_int *a, mp_int *n, mp_digit d)
 top:
    /* q = a/2**p, a = a mod 2**p */
    if ((res = mp_div_2d(a, p, &q, a)) != MP_OKAY) {
-      goto ERR;
+      goto LBL_ERR;
    }
 
-   if (d != 1) {
+   if (d != 1u) {
       /* q = q * d */
       if ((res = mp_mul_d(&q, d, &q)) != MP_OKAY) {
-         goto ERR;
+         goto LBL_ERR;
       }
    }
 
    /* a = a + q */
    if ((res = s_mp_add(a, &q, a)) != MP_OKAY) {
-      goto ERR;
+      goto LBL_ERR;
    }
 
    if (mp_cmp_mag(a, n) != MP_LT) {
       if ((res = s_mp_sub(a, n, a)) != MP_OKAY) {
-         goto ERR;
+         goto LBL_ERR;
       }
       goto top;
    }
 
-ERR:
+LBL_ERR:
    mp_clear(&q);
    return res;
 }
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

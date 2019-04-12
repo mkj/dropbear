@@ -27,6 +27,9 @@ _help()
   echo "    --with-cc=*             The compiler(s) to use for the tests"
   echo "        This is an option that will be iterated."
   echo
+  echo "    --test-vs-mtest=*       Run test vs. mtest for '*' operations."
+  echo "        Only the first of each options will be taken into account."
+  echo
   echo "To be able to specify options a compiler has to be given."
   echo "All options will be tested with all MP_xBIT configurations."
   echo
@@ -45,6 +48,8 @@ _help()
   echo
   echo "    --with-low-mp           Also build&run tests with -DMP_{8,16,32}BIT."
   echo
+  echo "    --mtest-real-rand       Use real random data when running mtest."
+  echo
   echo "Godmode:"
   echo
   echo "    --all                   Choose all architectures and gcc and clang as compilers"
@@ -61,26 +66,35 @@ _die()
     exit 128
   else
     echo "assuming timeout while running test - continue"
+    local _tail=""
+    which tail >/dev/null && _tail="tail -n 1 test_${suffix}.log" && \
+    echo "last line of test_"${suffix}".log was:" && $_tail && echo ""
     ret=$(( $ret + 1 ))
   fi
 }
 
-_runtest()
+_make()
 {
   echo -ne " Compile $1 $2"
-  make clean > /dev/null
   suffix=$(echo ${1}${2}  | tr ' ' '_')
-  CC="$1" CFLAGS="$2 $TEST_CFLAGS" make -j$MAKE_JOBS test_standalone $MAKE_OPTIONS > /dev/null 2>gcc_errors_${suffix}.txt
-  errcnt=$(wc -l < gcc_errors_${suffix}.txt)
+  CC="$1" CFLAGS="$2 $TEST_CFLAGS" make -j$MAKE_JOBS $3 $MAKE_OPTIONS > /dev/null 2>gcc_errors_${suffix}.log
+  errcnt=$(wc -l < gcc_errors_${suffix}.log)
   if [[ ${errcnt} -gt 1 ]]; then
     echo " failed"
-    cat gcc_errors_${suffix}.txt
+    cat gcc_errors_${suffix}.log
     exit 128
   fi
-  echo -e "\rRun test $1 $2"
+}
+
+
+_runtest()
+{
+  make clean > /dev/null
+  _make "$1" "$2" "test_standalone"
   local _timeout=""
   which timeout >/dev/null && _timeout="timeout --foreground 90"
-  $_timeout ./test > test_${suffix}.txt || _die "running tests" $?
+  echo -e "\rRun test $1 $2"
+  $_timeout ./test > test_${suffix}.log || _die "running tests" $?
 }
 
 _banner()
@@ -105,6 +119,8 @@ ARCHFLAGS=""
 COMPILERS=""
 CFLAGS=""
 WITH_LOW_MP=""
+TEST_VS_MTEST=""
+MTEST_RAND=""
 
 while [ $# -gt 0 ];
 do
@@ -123,6 +139,17 @@ do
     ;;
     --with-low-mp)
       WITH_LOW_MP="1"
+    ;;
+    --test-vs-mtest=*)
+      TEST_VS_MTEST="${1#*=}"
+      if ! [ "$TEST_VS_MTEST" -eq "$TEST_VS_MTEST" ] 2> /dev/null
+      then
+         echo "--test-vs-mtest Parameter has to be int"
+         exit -1
+      fi
+    ;;
+    --mtest-real-rand)
+      MTEST_RAND="-DLTM_MTEST_REAL_RAND"
     ;;
     --all)
       COMPILERS="gcc clang"
@@ -160,6 +187,26 @@ then
 fi
 
 _banner
+
+if [[ "$TEST_VS_MTEST" != "" ]]
+then
+   make clean > /dev/null
+   _make "${compilers[0]} ${archflags[0]}" "$CFLAGS" "test"
+   echo
+   _make "gcc" "$MTEST_RAND" "mtest"
+   echo
+   echo "Run test vs. mtest for $TEST_VS_MTEST iterations"
+   for i in `seq 1 10` ; do sleep 500 && echo alive; done &
+   alive_pid=$!
+   _timeout=""
+   which timeout >/dev/null && _timeout="timeout --foreground 900"
+   $_TIMEOUT ./mtest/mtest $TEST_VS_MTEST | ./test > test.log
+   disown $alive_pid
+   kill $alive_pid 2>/dev/null
+   head -n 5 test.log
+   tail -n 2 test.log
+   exit 0
+fi
 
 for i in "${compilers[@]}"
 do

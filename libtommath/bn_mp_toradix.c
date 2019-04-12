@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_TORADIX_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,67 +9,64 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* stores a bignum as a ASCII string in a given radix (2..64) */
-int mp_toradix (mp_int * a, char *str, int radix)
+int mp_toradix(const mp_int *a, char *str, int radix)
 {
-  int     res, digs;
-  mp_int  t;
-  mp_digit d;
-  char   *_s = str;
+   int     res, digs;
+   mp_int  t;
+   mp_digit d;
+   char   *_s = str;
 
-  /* check range of the radix */
-  if ((radix < 2) || (radix > 64)) {
-    return MP_VAL;
-  }
+   /* check range of the radix */
+   if ((radix < 2) || (radix > 64)) {
+      return MP_VAL;
+   }
 
-  /* quick out if its zero */
-  if (mp_iszero(a) == MP_YES) {
-     *str++ = '0';
-     *str = '\0';
-     return MP_OKAY;
-  }
+   /* quick out if its zero */
+   if (mp_iszero(a) == MP_YES) {
+      *str++ = '0';
+      *str = '\0';
+      return MP_OKAY;
+   }
 
-  if ((res = mp_init_copy (&t, a)) != MP_OKAY) {
-    return res;
-  }
-
-  /* if it is negative output a - */
-  if (t.sign == MP_NEG) {
-    ++_s;
-    *str++ = '-';
-    t.sign = MP_ZPOS;
-  }
-
-  digs = 0;
-  while (mp_iszero (&t) == MP_NO) {
-    if ((res = mp_div_d (&t, (mp_digit) radix, &t, &d)) != MP_OKAY) {
-      mp_clear (&t);
+   if ((res = mp_init_copy(&t, a)) != MP_OKAY) {
       return res;
-    }
-    *str++ = mp_s_rmap[d];
-    ++digs;
-  }
+   }
 
-  /* reverse the digits of the string.  In this case _s points
-   * to the first digit [exluding the sign] of the number]
-   */
-  bn_reverse ((unsigned char *)_s, digs);
+   /* if it is negative output a - */
+   if (t.sign == MP_NEG) {
+      ++_s;
+      *str++ = '-';
+      t.sign = MP_ZPOS;
+   }
 
-  /* append a NULL so the string is properly terminated */
-  *str = '\0';
+   digs = 0;
+   while (mp_iszero(&t) == MP_NO) {
+      if ((res = mp_div_d(&t, (mp_digit)radix, &t, &d)) != MP_OKAY) {
+         mp_clear(&t);
+         return res;
+      }
+      *str++ = mp_s_rmap[d];
+      ++digs;
+   }
 
-  mp_clear (&t);
-  return MP_OKAY;
+   /* reverse the digits of the string.  In this case _s points
+    * to the first digit [exluding the sign] of the number]
+    */
+   bn_reverse((unsigned char *)_s, digs);
+
+   /* append a NULL so the string is properly terminated */
+   *str = '\0';
+
+   mp_clear(&t);
+   return MP_OKAY;
 }
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

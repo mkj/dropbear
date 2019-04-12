@@ -3,9 +3,9 @@
 #
 
 #version of library
-VERSION=1.0.1
-VERSION_PC=1.0.1
-VERSION_SO=1:1
+VERSION=1.1.0
+VERSION_PC=1.1.0
+VERSION_SO=2:0:1
 
 PLATFORM := $(shell uname | sed -e 's/_.*//')
 
@@ -17,16 +17,34 @@ ifndef CROSS_COMPILE
   CROSS_COMPILE=
 endif
 
-# Dropbear passes these down
-#ifeq ($(CC),cc)
-#  CC = $(CROSS_COMPILE)gcc
-#endif
-#LD=$(CROSS_COMPILE)ld
-#AR=$(CROSS_COMPILE)ar
-#RANLIB=$(CROSS_COMPILE)ranlib
+# We only need to go through this dance of determining the right compiler if we're using
+# cross compilation, otherwise $(CC) is fine as-is.
+ifneq (,$(CROSS_COMPILE))
+ifeq ($(origin CC),default)
+CSTR := "\#ifdef __clang__\nCLANG\n\#endif\n"
+ifeq ($(PLATFORM),FreeBSD)
+  # XXX: FreeBSD needs extra escaping for some reason
+  CSTR := $$$(CSTR)
+endif
+ifneq (,$(shell echo $(CSTR) | $(CC) -E - | grep CLANG))
+  CC := $(CROSS_COMPILE)clang
+else
+  CC := $(CROSS_COMPILE)gcc
+endif # Clang
+endif # cc is Make's default
+endif # CROSS_COMPILE non-empty
+
+LD=$(CROSS_COMPILE)ld
+AR=$(CROSS_COMPILE)ar
+RANLIB=$(CROSS_COMPILE)ranlib
 
 ifndef MAKE
-   MAKE=make
+# BSDs refer to GNU Make as gmake
+ifneq (,$(findstring $(PLATFORM),FreeBSD OpenBSD DragonFly NetBSD))
+  MAKE=gmake
+else
+  MAKE=make
+endif
 endif
 
 CFLAGS += -I./ -Wall -Wsign-compare -Wextra -Wshadow
@@ -61,14 +79,26 @@ endif # COMPILE_DEBUG
 ifneq ($(findstring clang,$(CC)),)
 CFLAGS += -Wno-typedef-redefinition -Wno-tautological-compare -Wno-builtin-requires-header
 endif
+ifneq ($(findstring mingw,$(CC)),)
+CFLAGS += -Wno-shadow
+endif
 ifeq ($(PLATFORM), Darwin)
 CFLAGS += -Wno-nullability-completeness
 endif
+ifeq ($(PLATFORM), CYGWIN)
+LIBTOOLFLAGS += -no-undefined
+endif
+
+ifeq ($(PLATFORM),FreeBSD)
+  _ARCH := $(shell sysctl -b hw.machine_arch)
+else
+  _ARCH := $(shell arch)
+endif
 
 # adjust coverage set
-ifneq ($(filter $(shell arch), i386 i686 x86_64 amd64 ia64),)
+ifneq ($(filter $(_ARCH), i386 i686 x86_64 amd64 ia64),)
    COVERAGE = test_standalone timing
-   COVERAGE_APP = ./test && ./ltmtest
+   COVERAGE_APP = ./test && ./timing
 else
    COVERAGE = test_standalone
    COVERAGE_APP = ./test
@@ -111,8 +141,8 @@ cleancov-clean:
 cleancov: cleancov-clean clean
 
 clean:
-	rm -f *.gcda *.gcno *.gcov *.bat *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test ltmtest mpitest mtest/mtest mtest/mtest.exe \
+	rm -f *.gcda *.gcno *.gcov *.bat *.o *.a *.obj *.lib *.exe *.dll etclib/*.o demo/demo.o test timing mpitest mtest/mtest mtest/mtest.exe \
         *.idx *.toc *.log *.aux *.dvi *.lof *.ind *.ilg *.ps *.log *.s mpi.c *.da *.dyn *.dpi tommath.tex `find . -type f | grep [~] | xargs` *.lo *.la
 	rm -rf .libs/
-	#${MAKE} -C etc/ clean MAKE=${MAKE}
-	#${MAKE} -C doc/ clean MAKE=${MAKE}
+	${MAKE} -C etc/ clean MAKE=${MAKE}
+	${MAKE} -C doc/ clean MAKE=${MAKE}

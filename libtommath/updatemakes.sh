@@ -1,33 +1,16 @@
 #!/bin/bash
 
-bash genlist.sh > tmplist
+./helper.pl --update-makefiles || exit 1
 
-perl filter.pl makefile tmplist
-sed -e 's/ *$//' < tmp.delme > makefile
-rm -f tmp.delme
+makefiles=(makefile makefile.shared makefile_include.mk makefile.msvc makefile.unix makefile.mingw)
+vcproj=(libtommath_VS2008.vcproj)
 
-perl filter.pl makefile.icc tmplist
-sed -e 's/ *$//' < tmp.delme > makefile.icc
-rm -f tmp.delme
+if [ $# -eq 1 ] && [ "$1" == "-c" ]; then
+  git add ${makefiles[@]} ${vcproj[@]} && git commit -m 'Update makefiles'
+fi
 
-perl filter.pl makefile.shared tmplist
-sed -e 's/ *$//' < tmp.delme > makefile.shared
-rm -f tmp.delme
+exit 0
 
-perl filter.pl makefile.cygwin_dll tmplist
-sed -e 's/ *$//' < tmp.delme > makefile.cygwin_dll
-rm -f tmp.delme
-
-perl filter.pl makefile.bcc tmplist
-sed -e 's/\.o /.obj /g' -e 's/ *$//' < tmp.delme > makefile.bcc
-rm -f tmp.delme
-
-perl filter.pl makefile.msvc tmplist
-sed -e 's/\.o /.obj /g' -e 's/ *$//' < tmp.delme > makefile.msvc
-rm -f tmp.delme
-
-rm -f tmplist
-
-# ref:         $Format:%D$
-# git commit:  $Format:%H$
-# commit time: $Format:%ai$
+# ref:         HEAD -> master, tag: v1.1.0
+# git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55
+# commit time: 2019-01-28 20:32:32 +0100

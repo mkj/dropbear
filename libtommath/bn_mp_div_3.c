@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_DIV_3_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,71 +9,67 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* divide by three (based on routine from MPI and the GMP manual) */
-int
-mp_div_3 (mp_int * a, mp_int *c, mp_digit * d)
+int mp_div_3(const mp_int *a, mp_int *c, mp_digit *d)
 {
-  mp_int   q;
-  mp_word  w, t;
-  mp_digit b;
-  int      res, ix;
-  
-  /* b = 2**DIGIT_BIT / 3 */
-  b = (((mp_word)1) << ((mp_word)DIGIT_BIT)) / ((mp_word)3);
+   mp_int   q;
+   mp_word  w, t;
+   mp_digit b;
+   int      res, ix;
 
-  if ((res = mp_init_size(&q, a->used)) != MP_OKAY) {
-     return res;
-  }
-  
-  q.used = a->used;
-  q.sign = a->sign;
-  w = 0;
-  for (ix = a->used - 1; ix >= 0; ix--) {
-     w = (w << ((mp_word)DIGIT_BIT)) | ((mp_word)a->dp[ix]);
+   /* b = 2**DIGIT_BIT / 3 */
+   b = ((mp_word)1 << (mp_word)DIGIT_BIT) / (mp_word)3;
 
-     if (w >= 3) {
-        /* multiply w by [1/3] */
-        t = (w * ((mp_word)b)) >> ((mp_word)DIGIT_BIT);
+   if ((res = mp_init_size(&q, a->used)) != MP_OKAY) {
+      return res;
+   }
 
-        /* now subtract 3 * [w/3] from w, to get the remainder */
-        w -= t+t+t;
+   q.used = a->used;
+   q.sign = a->sign;
+   w = 0;
+   for (ix = a->used - 1; ix >= 0; ix--) {
+      w = (w << (mp_word)DIGIT_BIT) | (mp_word)a->dp[ix];
 
-        /* fixup the remainder as required since
-         * the optimization is not exact.
-         */
-        while (w >= 3) {
-           t += 1;
-           w -= 3;
-        }
+      if (w >= 3u) {
+         /* multiply w by [1/3] */
+         t = (w * (mp_word)b) >> (mp_word)DIGIT_BIT;
+
+         /* now subtract 3 * [w/3] from w, to get the remainder */
+         w -= t+t+t;
+
+         /* fixup the remainder as required since
+          * the optimization is not exact.
+          */
+         while (w >= 3u) {
+            t += 1u;
+            w -= 3u;
+         }
       } else {
-        t = 0;
+         t = 0;
       }
       q.dp[ix] = (mp_digit)t;
-  }
+   }
 
-  /* [optional] store the remainder */
-  if (d != NULL) {
-     *d = (mp_digit)w;
-  }
+   /* [optional] store the remainder */
+   if (d != NULL) {
+      *d = (mp_digit)w;
+   }
 
-  /* [optional] store the quotient */
-  if (c != NULL) {
-     mp_clamp(&q);
-     mp_exch(&q, c);
-  }
-  mp_clear(&q);
-  
-  return res;
+   /* [optional] store the quotient */
+   if (c != NULL) {
+      mp_clamp(&q);
+      mp_exch(&q, c);
+   }
+   mp_clear(&q);
+
+   return res;
 }
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */
