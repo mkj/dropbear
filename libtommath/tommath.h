@@ -201,9 +201,6 @@ void mp_zero(mp_int *a);
 /* set to a digit */
 void mp_set(mp_int *a, mp_digit b);
 
-/* set a double */
-int mp_set_double(mp_int *a, double b);
-
 /* set a 32-bit const */
 int mp_set_int(mp_int *a, unsigned long b);
 
@@ -212,9 +209,6 @@ int mp_set_long(mp_int *a, unsigned long b);
 
 /* set a platform dependent unsigned long long value */
 int mp_set_long_long(mp_int *a, unsigned long long b);
-
-/* get a double */
-double mp_get_double(const mp_int *a);
 
 /* get a 32-bit value */
 unsigned long mp_get_int(const mp_int *a);

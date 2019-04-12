@@ -228,21 +228,8 @@ sub process_makefiles {
   my $var_o = prepare_variable("OBJECTS", @o);
   (my $var_obj = $var_o) =~ s/\.o\b/.obj/sg;
 
-  # update MSVC project files
-  my $msvc_files = prepare_msvc_files_xml(\@all, qr/NOT_USED_HERE/, ['Debug|Win32', 'Release|Win32', 'Debug|x64', 'Release|x64']);
-  for my $m (qw/libtommath_VS2008.vcproj/) {
-    my $old = read_file($m);
-    my $new = $old;
-    $new =~ s|<Files>.*</Files>|$msvc_files|s;
-    if ($old ne $new) {
-      write_file($m, $new) if $write;
-      warn "changed: $m\n";
-      $changed_count++;
-    }
-  }
-
   # update OBJECTS + HEADERS in makefile*
-  for my $m (qw/ makefile makefile.shared makefile_include.mk makefile.msvc makefile.unix makefile.mingw /) {
+  for my $m (qw/ Makefile.in /) {
     my $old = read_file($m);
     my $new = $m eq 'makefile.msvc' ? patch_file($old, $var_obj)
                                     : patch_file($old, $var_o);
