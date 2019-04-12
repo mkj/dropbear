@@ -1218,6 +1218,18 @@
 #   define LTM_LAST
 #endif
 
+/* Dropbear doesn't need these. */
+#undef BN_MP_KARATSUBA_MUL_C
+#undef BN_MP_KARATSUBA_SQR_C
+#undef BN_MP_TOOM_MUL_C
+#undef BN_MP_TOOM_SQR_C
+
+#include "dbmalloc.h"
+#define XMALLOC m_malloc
+#define XFREE m_free_direct
+#define XREALLOC m_realloc
+#define XCALLOC m_calloc
+
 /* ref:         HEAD -> master, tag: v1.1.0 */
 /* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
 /* commit time: 2019-01-28 20:32:32 +0100 */

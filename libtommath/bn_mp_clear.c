@@ -1,4 +1,5 @@
 #include "tommath_private.h"
+#include "dbhelpers.h"
 #ifdef BN_MP_CLEAR_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -15,14 +16,10 @@
 /* clear one (frees)  */
 void mp_clear(mp_int *a)
 {
-   int i;
-
    /* only do anything if a hasn't been freed previously */
    if (a->dp != NULL) {
       /* first zero the digits */
-      for (i = 0; i < a->used; i++) {
-         a->dp[i] = 0;
-      }
+      m_burn(a->dp, (size_t)a->alloc * sizeof(*a->dp));
 
       /* free ram */
       XFREE(a->dp);
