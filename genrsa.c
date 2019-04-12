@@ -95,6 +95,7 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		mp_int* rsa_e, unsigned int size_bytes) {
 
 	unsigned char *buf;
+	int trials;
 	DEF_MP_INT(temp_gcd);
 
 	buf = (unsigned char*)m_malloc(size_bytes);
@@ -108,8 +109,9 @@ static void getrsaprime(mp_int* prime, mp_int *primeminus,
 
 		bytes_to_mp(prime, buf, size_bytes);
 
-		/* find the next integer which is prime, 8 round of miller-rabin */
-		if (mp_prime_next_prime(prime, 8, 0) != MP_OKAY) {
+		/* find the next integer which is prime */
+		trials = mp_prime_rabin_miller_trials(mp_count_bits(prime));
+		if (mp_prime_next_prime(prime, trials, 0) != MP_OKAY) {
 			fprintf(stderr, "RSA generation failed\n");
 			exit(1);
 		}
