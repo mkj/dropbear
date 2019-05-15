@@ -33,21 +33,21 @@
  *
  */
 
-struct EPKAInstance;
-struct EPKASession;
+struct PluginInstance;
+struct PluginSession;
 
 /* API VERSION INFORMATION - 
  * Dropbear will:
  * - Reject any plugin with a major version mismatch
  * - Load and print a warning if the plugin's minor version is HIGHER than
  *   dropbear's minor version (assumes properties are added at the end of
- *   EPKAInstance or EPKASession). This is a case of plugin newer than dropbear. 
+ *   PluginInstance or PluginSession). This is a case of plugin newer than dropbear. 
  * - Reject if the plugin minor version is SMALLER than dropbear one (case
  *   of plugin older than dropbear).
  * - Load (with no warnings) if version match.
  */
-#define DROPBEAR_EPKA_VERSION_MAJOR     1
-#define DROPBEAR_EPKA_VERSION_MINOR     0
+#define DROPBEAR_PLUGIN_VERSION_MAJOR     1
+#define DROPBEAR_PLUGIN_VERSION_MINOR     0
 
 
 /* Creates an instance of the plugin.
@@ -60,7 +60,7 @@ struct EPKASession;
  * If the version MINOR is different, dropbear will allow the plugin to run 
  * only if: plugin_MINOR > dropbear_MINOR
  *
- * If plugin_MINOR < dropbeart_MINOR or if the MAJOR version is different
+ * If plugin_MINOR < dropbear_MINOR or if the MAJOR version is different
  * dropbear will reject the plugin and terminate the execution.
  *
  * addrstring is the IP address of the client.
@@ -68,7 +68,7 @@ struct EPKASession;
  * Returns NULL in case of failure, otherwise a void * of the instance that need
  * to be passed to all the subsequent call to the plugin
  */
-typedef struct EPKAInstance *(* PubkeyExtPlugin_newFn)(int verbose, 
+typedef struct PluginInstance *(* PubkeyExtPlugin_newFn)(int verbose, 
         const char *options,
         const char *addrstring);
 #define DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW               "plugin_new"
@@ -83,8 +83,8 @@ typedef struct EPKAInstance *(* PubkeyExtPlugin_newFn)(int verbose,
  * Returns DROPBEAR_SUCCESS (0) if success or DROPBEAR_FAILURE (-1) if
  * authentication fails
  */
-typedef int (* PubkeyExtPlugin_checkPubKeyFn)(struct EPKAInstance *pluginInstance,
-        struct EPKASession **sessionInOut,
+typedef int (* PubkeyExtPlugin_checkPubKeyFn)(struct PluginInstance *PluginInstance,
+        struct PluginSession **sessionInOut,
         const char* algo, 
         unsigned int algolen,
         const unsigned char* keyblob, 
@@ -93,18 +93,18 @@ typedef int (* PubkeyExtPlugin_checkPubKeyFn)(struct EPKAInstance *pluginInstanc
 
 /* Notify the plugin that auth completed (after signature verification)
  */
-typedef void (* PubkeyExtPlugin_authSuccessFn)(struct EPKASession *session);
+typedef void (* PubkeyExtPlugin_authSuccessFn)(struct PluginSession *session);
 
 /* Deletes a session
  * TODO: Add a reason why the session is terminated. See svr_dropbear_exit (in svr-session.c)
  */
-typedef void (* PubkeyExtPlugin_sessionDeleteFn)(struct EPKASession *session);
+typedef void (* PubkeyExtPlugin_sessionDeleteFn)(struct PluginSession *session);
 
 /* Deletes the plugin instance */
-typedef void (* PubkeyExtPlugin_deleteFn)(struct EPKAInstance *pluginInstance);
+typedef void (* PubkeyExtPlugin_deleteFn)(struct PluginInstance *PluginInstance);
 
 
-/* The EPKAInstance object - A simple container of the pointer to the functions used
+/* The PluginInstance object - A simple container of the pointer to the functions used
  * by Dropbear.
  *
  * A plug-in can extend it to add its own properties
@@ -113,7 +113,7 @@ typedef void (* PubkeyExtPlugin_deleteFn)(struct EPKAInstance *pluginInstance);
  * shared library.
  * The delete_plugin function should delete the object.
  */
-struct EPKAInstance {
+struct PluginInstance {
     int                             api_version[2];         /* 0=Major, 1=Minor */
 
     PubkeyExtPlugin_checkPubKeyFn   checkpubkey;            /* mandatory */
@@ -129,7 +129,7 @@ struct EPKAInstance {
  * The returned buffer will be destroyed when the session is deleted.
  * Option buffer string NULL-terminated
  */
-typedef char * (* PubkeyExtPlugin_getOptionsFn)(struct EPKASession *session);
+typedef char * (* PubkeyExtPlugin_getOptionsFn)(struct PluginSession *session);
 
 
 /* An SSH Session. Created during pre-auth and reused during the authentication.
@@ -142,8 +142,8 @@ typedef char * (* PubkeyExtPlugin_getOptionsFn)(struct EPKASession *session);
  *
  * Store any optional auth options in the auth_options property of the session.
  */
-struct EPKASession {
-    struct EPKAInstance *  plugin_instance;
+struct PluginSession {
+    struct PluginInstance *  plugin_instance;
 
     PubkeyExtPlugin_getOptionsFn   get_options;
 };

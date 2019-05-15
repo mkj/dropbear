@@ -38,7 +38,7 @@
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
 #include "pubkeyapi.h"
 #endif
 
@@ -220,8 +220,8 @@ struct sshsession {
 	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
 	int init_done;
 
-#if DROPBEAR_EPKA
-        struct EPKASession * epka_session;
+#if DROPBEAR_PLUGIN
+        struct PluginSession * plugin_session;
 #endif
 };
 
@@ -248,12 +248,12 @@ struct serversession {
 	pid_t server_pid;
 #endif
 
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
         /* The shared library handle */
-        void *epka_plugin_handle;
+        void *plugin_handle;
 
         /* The instance created by the plugin_new function */
-        struct EPKAInstance *epka_instance;
+        struct PluginInstance *plugin_instance;
 #endif
 
 };

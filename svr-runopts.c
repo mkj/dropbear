@@ -99,7 +99,7 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
                                         "-A <authplugin>[,<options>]\n"
                                         "               Enable external public key auth through <authplugin>\n"
 #endif
@@ -133,7 +133,7 @@ void svr_getopts(int argc, char ** argv) {
 	char* maxauthtries_arg = NULL;
 	char* keyfile = NULL;
 	char c;
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
         char* pubkey_plugin = NULL;
 #endif
 
@@ -163,7 +163,7 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
 #endif
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
         svr_opts.pubkey_plugin = NULL;
         svr_opts.pubkey_plugin_options = NULL;
 #endif
@@ -285,7 +285,7 @@ void svr_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
                                 case 'A':
                                         next = &pubkey_plugin;
                                         break;
@@ -410,7 +410,7 @@ void svr_getopts(int argc, char ** argv) {
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
 	}
-#if DROPBEAR_EPKA
+#if DROPBEAR_PLUGIN
         if (pubkey_plugin) {
             char *args = strchr(pubkey_plugin, ',');
             if (args) {

@@ -323,20 +323,20 @@ AC_ARG_ENABLE(shadow,
 	]
 )
 
-AC_ARG_ENABLE(epka,
-	[  --enable-epka           Enable support for External Public Key Authentication plug-in],
+AC_ARG_ENABLE(plugin,
+	[  --enable-plugin           Enable support for External Public Key Authentication plug-in],
 	[
-		AC_DEFINE(DROPBEAR_EPKA, 1, External Public Key Authentication)
+		AC_DEFINE(DROPBEAR_PLUGIN, 1, External Public Key Authentication)
 		AC_MSG_NOTICE(Enabling support for External Public Key Authentication)
-		DROPBEAR_EPKA=1
+		DROPBEAR_PLUGIN=1
 	],
 	[
-		AC_DEFINE(DROPBEAR_EPKA, 0, External Public Key Authentication)
-		DROPBEAR_EPKA=0
+		AC_DEFINE(DROPBEAR_PLUGIN, 0, External Public Key Authentication)
+		DROPBEAR_PLUGIN=0
 	]
 
 )
-AC_SUBST(DROPBEAR_EPKA)
+AC_SUBST(DROPBEAR_PLUGIN)
 
 AC_ARG_ENABLE(fuzz,
 	[  --enable-fuzz           Build fuzzing. Not recommended for deployment.],

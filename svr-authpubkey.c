@@ -111,12 +111,12 @@ void svr_auth_pubkey(int valid_user) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
-#if DROPBEAR_EPKA
-        if (svr_ses.epka_instance != NULL) {
+#if DROPBEAR_PLUGIN
+        if (svr_ses.plugin_instance != NULL) {
             char *options_buf;
-            if (svr_ses.epka_instance->checkpubkey(
-                        svr_ses.epka_instance,
-                        &ses.epka_session,
+            if (svr_ses.plugin_instance->checkpubkey(
+                        svr_ses.plugin_instance,
+                        &ses.plugin_session,
                         algo, 
                         algolen, 
                         keyblob, 
@@ -126,7 +126,7 @@ void svr_auth_pubkey(int valid_user) {
                 auth_failure = 0;
 
                 /* Options provided? */
-                options_buf = ses.epka_session->get_options(ses.epka_session);
+                options_buf = ses.plugin_session->get_options(ses.plugin_session);
                 if (options_buf) {
                     struct buf temp_buf = { 
                         .data = (unsigned char *)options_buf,
@@ -193,10 +193,10 @@ void svr_auth_pubkey(int valid_user) {
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
 		send_msg_userauth_success();
-#if DROPBEAR_EPKA
-                if ((ses.epka_session != NULL) && (svr_ses.epka_instance->auth_success != NULL)) {
+#if DROPBEAR_PLUGIN
+                if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
                     /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
-                    svr_ses.epka_instance->auth_success(ses.epka_session);
+                    svr_ses.plugin_instance->auth_success(ses.plugin_session);
                 }
 #endif
                 
