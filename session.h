@@ -38,6 +38,9 @@
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"
+#if DROPBEAR_EPKA
+#include "pubkeyapi.h"
+#endif
 
 void common_session_init(int sock_in, int sock_out);
 void session_loop(void(*loophandler)(void)) ATTRIB_NORETURN;
@@ -216,6 +219,10 @@ struct sshsession {
 	volatile int exitflag;
 	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
 	int init_done;
+
+#if DROPBEAR_EPKA
+        struct EPKASession * epka_session;
+#endif
 };
 
 struct serversession {
@@ -239,6 +246,14 @@ struct serversession {
 
 #if DROPBEAR_VFORK
 	pid_t server_pid;
+#endif
+
+#if DROPBEAR_EPKA
+        /* The shared library handle */
+        void *epka_plugin_handle;
+
+        /* The instance created by the plugin_new function */
+        struct EPKAInstance *epka_instance;
 #endif
 
 };

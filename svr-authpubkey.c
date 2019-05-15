@@ -91,6 +91,7 @@ void svr_auth_pubkey(int valid_user) {
 	sign_key * key = NULL;
 	char* fp = NULL;
 	enum signkey_type type = -1;
+        int auth_failure = 1;
 
 	TRACE(("enter pubkeyauth"))
 
@@ -110,9 +111,45 @@ void svr_auth_pubkey(int valid_user) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
+#if DROPBEAR_EPKA
+        if (svr_ses.epka_instance != NULL) {
+            char *options_buf;
+            if (svr_ses.epka_instance->checkpubkey(
+                        svr_ses.epka_instance,
+                        &ses.epka_session,
+                        algo, 
+                        algolen, 
+                        keyblob, 
+                        keybloblen,
+                        ses.authstate.username) == DROPBEAR_SUCCESS) {
+                /* Success */
+                auth_failure = 0;
 
+                /* Options provided? */
+                options_buf = ses.epka_session->get_options(ses.epka_session);
+                if (options_buf) {
+                    struct buf temp_buf = { 
+                        .data = (unsigned char *)options_buf,
+                        .len = strlen(options_buf),
+                        .pos = 0,
+                        .size = 0
+                    };
+                    int ret = svr_add_pubkey_options(&temp_buf, 0, "N/A");
+                    if (ret == DROPBEAR_FAILURE) {
+                        /* Fail immediately as the plugin provided wrong options */
+                        send_msg_userauth_failure(0, 0);
+                        goto out;
+                    }
+                }
+            }
+        }
+#endif
 	/* check if the key is valid */
-	if (checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE) {
+        if (auth_failure) {
+            auth_failure = checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
+        }
+
+        if (auth_failure) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -156,6 +193,13 @@ void svr_auth_pubkey(int valid_user) {
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
 		send_msg_userauth_success();
+#if DROPBEAR_EPKA
+                if ((ses.epka_session != NULL) && (svr_ses.epka_instance->auth_success != NULL)) {
+                    /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
+                    svr_ses.epka_instance->auth_success(ses.epka_session);
+                }
+#endif
+                
 	} else {
 		dropbear_log(LOG_WARNING,
 				"Pubkey auth bad signature for '%s' with key %s from %s",

@@ -46,16 +46,16 @@ static void printhelp(const char * progname) {
 					"-b bannerfile	Display the contents of bannerfile"
 					" before user login\n"
 					"		(default: none)\n"
-					"-r keyfile  Specify hostkeys (repeatable)\n"
+					"-r keyfile      Specify hostkeys (repeatable)\n"
 					"		defaults: \n"
 #if DROPBEAR_DSS
-					"		dss %s\n"
+					"		- dss %s\n"
 #endif
 #if DROPBEAR_RSA
-					"		rsa %s\n"
+					"		- rsa %s\n"
 #endif
 #if DROPBEAR_ECDSA
-					"		ecdsa %s\n"
+					"		- ecdsa %s\n"
 #endif
 #if DROPBEAR_DELAY_HOSTKEY
 					"-R		Create hostkeys as required\n" 
@@ -99,6 +99,10 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
+#if DROPBEAR_EPKA
+                                        "-A <authplugin>[,<options>]\n"
+                                        "               Enable external public key auth through <authplugin>\n"
+#endif
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v		verbose (compiled with DEBUG_TRACE)\n"
@@ -129,6 +133,9 @@ void svr_getopts(int argc, char ** argv) {
 	char* maxauthtries_arg = NULL;
 	char* keyfile = NULL;
 	char c;
+#if DROPBEAR_EPKA
+        char* pubkey_plugin = NULL;
+#endif
 
 
 	/* see printhelp() for options */
@@ -155,6 +162,10 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #if DROPBEAR_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
+#endif
+#if DROPBEAR_EPKA
+        svr_opts.pubkey_plugin = NULL;
+        svr_opts.pubkey_plugin_options = NULL;
 #endif
 
 #ifndef DISABLE_ZLIB
@@ -274,6 +285,11 @@ void svr_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
+#if DROPBEAR_EPKA
+                                case 'A':
+                                        next = &pubkey_plugin;
+                                        break;
+#endif
 #if DEBUG_TRACE
 				case 'v':
 					debug_trace = 1;
@@ -394,6 +410,17 @@ void svr_getopts(int argc, char ** argv) {
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
 	}
+#if DROPBEAR_EPKA
+        if (pubkey_plugin) {
+            char *args = strchr(pubkey_plugin, ',');
+            if (args) {
+                *args='\0';
+                ++args;
+            }
+            svr_opts.pubkey_plugin = pubkey_plugin;
+            svr_opts.pubkey_plugin_options = args;
+        }
+#endif
 }
 
 static void addportandaddress(const char* spec) {
