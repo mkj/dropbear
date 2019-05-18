@@ -29,8 +29,7 @@ static const struct {
    {   768,     5 },
    {   896,     4 },
    {  1024,     4 },
-   {  2048,     2 },
-   {  4096,     1 },
+   {  2048,     2 }  /* For bigger keysizes use always at least 2 Rounds */
 };
 
 /* returns # of RM trials required for a given bit size and max. error of 2^(-96)*/
@@ -45,7 +44,7 @@ int mp_prime_rabin_miller_trials(int size)
          return (x == 0) ? sizes[0].t : sizes[x - 1].t;
       }
    }
-   return sizes[x-1].t + 1;
+   return sizes[x-1].t;
 }
 
 
