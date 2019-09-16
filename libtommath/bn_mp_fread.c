@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_FREAD_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,10 +9,7 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 #ifndef LTM_NO_FILE
@@ -20,50 +17,52 @@
 int mp_fread(mp_int *a, int radix, FILE *stream)
 {
    int err, ch, neg, y;
-   
+   unsigned pos;
+
    /* clear a */
    mp_zero(a);
-   
+
    /* if first digit is - then set negative */
    ch = fgetc(stream);
-   if (ch == '-') {
+   if (ch == (int)'-') {
       neg = MP_NEG;
       ch = fgetc(stream);
    } else {
       neg = MP_ZPOS;
    }
-   
+
    for (;;) {
-      /* find y in the radix map */
-      for (y = 0; y < radix; y++) {
-          if (mp_s_rmap[y] == ch) {
-             break;
-          }
-      }
-      if (y == radix) {
+      pos = (unsigned)(ch - (int)'(');
+      if (mp_s_rmap_reverse_sz < pos) {
          break;
       }
-      
+
+      y = (int)mp_s_rmap_reverse[pos];
+
+      if ((y == 0xff) || (y >= radix)) {
+         break;
+      }
+
       /* shift up and add */
-      if ((err = mp_mul_d(a, radix, a)) != MP_OKAY) {
+      if ((err = mp_mul_d(a, (mp_digit)radix, a)) != MP_OKAY) {
          return err;
       }
-      if ((err = mp_add_d(a, y, a)) != MP_OKAY) {
+      if ((err = mp_add_d(a, (mp_digit)y, a)) != MP_OKAY) {
          return err;
       }
-      
+
       ch = fgetc(stream);
    }
-   if (mp_cmp_d(a, 0) != MP_EQ) {
+   if (mp_cmp_d(a, 0uL) != MP_EQ) {
       a->sign = neg;
    }
-   
+
    return MP_OKAY;
 }
 #endif
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_S_MP_MUL_DIGS_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,82 +9,79 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* multiplies |a| * |b| and only computes upto digs digits of result
- * HAC pp. 595, Algorithm 14.12  Modified so you can control how 
+ * HAC pp. 595, Algorithm 14.12  Modified so you can control how
  * many digits of output are created.
  */
-int s_mp_mul_digs (mp_int * a, mp_int * b, mp_int * c, int digs)
+int s_mp_mul_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs)
 {
-  mp_int  t;
-  int     res, pa, pb, ix, iy;
-  mp_digit u;
-  mp_word r;
-  mp_digit tmpx, *tmpt, *tmpy;
+   mp_int  t;
+   int     res, pa, pb, ix, iy;
+   mp_digit u;
+   mp_word r;
+   mp_digit tmpx, *tmpt, *tmpy;
 
-  /* can we use the fast multiplier? */
-  if (((digs) < MP_WARRAY) &&
-      (MIN (a->used, b->used) < 
-          (1 << ((CHAR_BIT * sizeof(mp_word)) - (2 * DIGIT_BIT))))) {
-    return fast_s_mp_mul_digs (a, b, c, digs);
-  }
+   /* can we use the fast multiplier? */
+   if ((digs < (int)MP_WARRAY) &&
+       (MIN(a->used, b->used) <
+        (int)(1u << (((size_t)CHAR_BIT * sizeof(mp_word)) - (2u * (size_t)DIGIT_BIT))))) {
+      return fast_s_mp_mul_digs(a, b, c, digs);
+   }
 
-  if ((res = mp_init_size (&t, digs)) != MP_OKAY) {
-    return res;
-  }
-  t.used = digs;
+   if ((res = mp_init_size(&t, digs)) != MP_OKAY) {
+      return res;
+   }
+   t.used = digs;
 
-  /* compute the digits of the product directly */
-  pa = a->used;
-  for (ix = 0; ix < pa; ix++) {
-    /* set the carry to zero */
-    u = 0;
+   /* compute the digits of the product directly */
+   pa = a->used;
+   for (ix = 0; ix < pa; ix++) {
+      /* set the carry to zero */
+      u = 0;
 
-    /* limit ourselves to making digs digits of output */
-    pb = MIN (b->used, digs - ix);
+      /* limit ourselves to making digs digits of output */
+      pb = MIN(b->used, digs - ix);
 
-    /* setup some aliases */
-    /* copy of the digit from a used within the nested loop */
-    tmpx = a->dp[ix];
-    
-    /* an alias for the destination shifted ix places */
-    tmpt = t.dp + ix;
-    
-    /* an alias for the digits of b */
-    tmpy = b->dp;
+      /* setup some aliases */
+      /* copy of the digit from a used within the nested loop */
+      tmpx = a->dp[ix];
 
-    /* compute the columns of the output and propagate the carry */
-    for (iy = 0; iy < pb; iy++) {
-      /* compute the column as a mp_word */
-      r       = (mp_word)*tmpt +
-                ((mp_word)tmpx * (mp_word)*tmpy++) +
-                (mp_word)u;
+      /* an alias for the destination shifted ix places */
+      tmpt = t.dp + ix;
 
-      /* the new column is the lower part of the result */
-      *tmpt++ = (mp_digit) (r & ((mp_word) MP_MASK));
+      /* an alias for the digits of b */
+      tmpy = b->dp;
 
-      /* get the carry word from the result */
-      u       = (mp_digit) (r >> ((mp_word) DIGIT_BIT));
-    }
-    /* set carry if it is placed below digs */
-    if ((ix + iy) < digs) {
-      *tmpt = u;
-    }
-  }
+      /* compute the columns of the output and propagate the carry */
+      for (iy = 0; iy < pb; iy++) {
+         /* compute the column as a mp_word */
+         r       = (mp_word)*tmpt +
+                   ((mp_word)tmpx * (mp_word)*tmpy++) +
+                   (mp_word)u;
 
-  mp_clamp (&t);
-  mp_exch (&t, c);
+         /* the new column is the lower part of the result */
+         *tmpt++ = (mp_digit)(r & (mp_word)MP_MASK);
 
-  mp_clear (&t);
-  return MP_OKAY;
+         /* get the carry word from the result */
+         u       = (mp_digit)(r >> (mp_word)DIGIT_BIT);
+      }
+      /* set carry if it is placed below digs */
+      if ((ix + iy) < digs) {
+         *tmpt = u;
+      }
+   }
+
+   mp_clamp(&t);
+   mp_exch(&t, c);
+
+   mp_clear(&t);
+   return MP_OKAY;
 }
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

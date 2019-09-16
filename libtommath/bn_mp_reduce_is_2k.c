@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_REDUCE_IS_2K_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,18 +9,15 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 /* determines if mp_reduce_2k can be used */
-int mp_reduce_is_2k(mp_int *a)
+int mp_reduce_is_2k(const mp_int *a)
 {
    int ix, iy, iw;
    mp_digit iz;
-   
+
    if (a->used == 0) {
       return MP_NO;
    } else if (a->used == 1) {
@@ -29,17 +26,17 @@ int mp_reduce_is_2k(mp_int *a)
       iy = mp_count_bits(a);
       iz = 1;
       iw = 1;
-    
+
       /* Test every bit from the second digit up, must be 1 */
       for (ix = DIGIT_BIT; ix < iy; ix++) {
-          if ((a->dp[iw] & iz) == 0) {
-             return MP_NO;
-          }
-          iz <<= 1;
-          if (iz > (mp_digit)MP_MASK) {
-             ++iw;
-             iz = 1;
-          }
+         if ((a->dp[iw] & iz) == 0u) {
+            return MP_NO;
+         }
+         iz <<= 1;
+         if (iz > (mp_digit)MP_MASK) {
+            ++iw;
+            iz = 1;
+         }
       }
    }
    return MP_YES;
@@ -47,6 +44,6 @@ int mp_reduce_is_2k(mp_int *a)
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

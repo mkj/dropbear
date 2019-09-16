@@ -1,4 +1,4 @@
-#include <tommath_private.h>
+#include "tommath_private.h"
 #ifdef BN_MP_FWRITE_C
 /* LibTomMath, multiple-precision integer library -- Tom St Denis
  *
@@ -9,46 +9,43 @@
  * Michael Fromberger but has been written from scratch with
  * additional optimizations in place.
  *
- * The library is free for all purposes without any express
- * guarantee it works.
- *
- * Tom St Denis, tstdenis82@gmail.com, http://libtom.org
+ * SPDX-License-Identifier: Unlicense
  */
 
 #ifndef LTM_NO_FILE
-int mp_fwrite(mp_int *a, int radix, FILE *stream)
+int mp_fwrite(const mp_int *a, int radix, FILE *stream)
 {
    char *buf;
    int err, len, x;
-   
+
    if ((err = mp_radix_size(a, radix, &len)) != MP_OKAY) {
       return err;
    }
 
-   buf = OPT_CAST(char) XMALLOC (len);
+   buf = OPT_CAST(char) XMALLOC((size_t)len);
    if (buf == NULL) {
       return MP_MEM;
    }
-   
+
    if ((err = mp_toradix(a, buf, radix)) != MP_OKAY) {
-      XFREE (buf);
+      XFREE(buf);
       return err;
    }
-   
+
    for (x = 0; x < len; x++) {
-       if (fputc(buf[x], stream) == EOF) {
-          XFREE (buf);
-          return MP_VAL;
-       }
+      if (fputc((int)buf[x], stream) == EOF) {
+         XFREE(buf);
+         return MP_VAL;
+      }
    }
-   
-   XFREE (buf);
+
+   XFREE(buf);
    return MP_OKAY;
 }
 #endif
 
 #endif
 
-/* ref:         $Format:%D$ */
-/* git commit:  $Format:%H$ */
-/* commit time: $Format:%ai$ */
+/* ref:         HEAD -> master, tag: v1.1.0 */
+/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
+/* commit time: 2019-01-28 20:32:32 +0100 */

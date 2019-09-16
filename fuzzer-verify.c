@@ -37,11 +37,13 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
 				if (type == DROPBEAR_SIGNKEY_DSS) {
 					/* So far have seen dss keys with bad p/q/g domain parameters */
-					int pprime, qprime;
-				    assert(mp_prime_is_prime(key->dsskey->p, 5, &pprime) == MP_OKAY);
-				    assert(mp_prime_is_prime(key->dsskey->q, 18, &qprime) == MP_OKAY);
-				    boguskey = !(pprime && qprime);
-				    /* Could also check g**q mod p == 1 */
+					int pprime, qprime, trials;
+					trials = mp_prime_rabin_miller_trials(mp_count_bits(key->dsskey->p));
+					assert(mp_prime_is_prime(key->dsskey->p, trials, &pprime) == MP_OKAY);
+					trials = mp_prime_rabin_miller_trials(mp_count_bits(key->dsskey->q));
+					assert(mp_prime_is_prime(key->dsskey->q, trials, &qprime) == MP_OKAY);
+					boguskey = !(pprime && qprime);
+					/* Could also check g**q mod p == 1 */
 				}
 
 				if (!boguskey) {

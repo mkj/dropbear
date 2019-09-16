@@ -278,27 +278,29 @@ fuzzstandalone: fuzz-harness.o fuzz-targets
 # exclude svr-main.o to avoid duplicate main
 svrfuzzobjs=$(subst svr-main.o, ,$(dropbearobjs))
 
+fuzz-harness.o: $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs) fuzz-common.o
+
 # build all the fuzzers. This will require fail to link unless built with
 # make fuzz-targets FUZZLIB=-lFuzzer.a 
 # or similar - the library provides main().
 fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 
-fuzzer-preauth: fuzzer-preauth.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-preauth: fuzzer-preauth.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-preauth_nomaths: fuzzer-preauth_nomaths.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-preauth_nomaths: fuzzer-preauth_nomaths.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-pubkey: fuzzer-pubkey.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-pubkey: fuzzer-pubkey.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-verify: fuzzer-verify.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-verify: fuzzer-verify.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-kexdh: fuzzer-kexdh.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-kexdh: fuzzer-kexdh.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
-fuzzer-kexecdh: fuzzer-kexecdh.o $(HEADERS) $(LIBTOM_DEPS) Makefile $(svrfuzzobjs)
+fuzzer-kexecdh: fuzzer-kexecdh.o fuzz-harness.o
 	$(CXX) $(CXXFLAGS) $@.o $(LDFLAGS) $(svrfuzzobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 fuzzer-%.options: Makefile
