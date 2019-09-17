@@ -332,16 +332,15 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
          }
          /*
           * That number might got too big and the witness has to be
-          * smaller than or equal to "a"
+          * smaller than "a"
           */
          len = mp_count_bits(&b);
-         if (len > size_a) {
-            len = len - size_a;
+         if (len >= size_a) {
+            len = (len - size_a) + 1;
             if ((err = mp_div_2d(&b, len, &b, NULL)) != MP_OKAY) {
                goto LBL_B;
             }
          }
-
          /* Although the chance for b <= 3 is miniscule, try again. */
          if (mp_cmp_d(&b, 3uL) != MP_GT) {
             ix--;
