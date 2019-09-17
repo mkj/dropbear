@@ -34,9 +34,10 @@ endif # Clang
 endif # cc is Make's default
 endif # CROSS_COMPILE non-empty
 
-LD=$(CROSS_COMPILE)ld
-AR=$(CROSS_COMPILE)ar
-RANLIB=$(CROSS_COMPILE)ranlib
+# Dropbear passes these down
+#LD=$(CROSS_COMPILE)ld
+#AR=$(CROSS_COMPILE)ar
+#RANLIB=$(CROSS_COMPILE)ranlib
 
 ifndef MAKE
 # BSDs refer to GNU Make as gmake
