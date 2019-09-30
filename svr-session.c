@@ -222,7 +222,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	/* Add the prefix depending on session/auth state */
 	if (!ses.init_done) {
 		/* before session init */
-		snprintf(fullmsg, sizeof(fullmsg), "Early exit: %s", exitmsg);
+		snprintf(fullmsg, sizeof(fullmsg), "Early exit from <%s> %s", svr_ses.addrstring, exitmsg);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fullmsg, sizeof(fullmsg),
@@ -231,11 +231,11 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fullmsg, sizeof(fullmsg), 
-				"Exit before auth (user '%s', %u fails): %s",
-				ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
+				"Exit before auth from <%s> (user '%s', %u fails): %s",
+				svr_ses.addrstring, ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
 	} else {
 		/* before userauth */
-		snprintf(fullmsg, sizeof(fullmsg), "Exit before auth: %s", exitmsg);
+		snprintf(fullmsg, sizeof(fullmsg), "Exit before auth from <%s> %s", svr_ses.addrstring, exitmsg);
 	}
 
 	dropbear_log(LOG_INFO, "%s", fullmsg);
