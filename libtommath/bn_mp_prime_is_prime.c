@@ -114,10 +114,10 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
 
    /*
     * Both, the Frobenius-Underwood test and the the Lucas-Selfridge test are quite
-    * slow so if speed is an issue, define LTM_USE_FIPS_ONLY to use M-R tests with
+    * slow so if speed is an issue, define LTM_USE_ONLY_MR to use M-R tests with
     * bases 2, 3 and t random bases.
     */
-#ifndef LTM_USE_FIPS_ONLY
+#ifndef LTM_USE_ONLY_MR
    if (t >= 0) {
       /*
        * Use a Frobenius-Underwood test instead of the Lucas-Selfridge test for

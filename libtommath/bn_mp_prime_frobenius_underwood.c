@@ -16,7 +16,7 @@
 /*
  *  See file bn_mp_prime_is_prime.c or the documentation in doc/bn.tex for the details
  */
-#ifndef LTM_USE_FIPS_ONLY
+#ifndef LTM_USE_ONLY_MR
 
 #ifdef MP_8BIT
 /*
