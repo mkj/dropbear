@@ -152,6 +152,10 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 		}
 	}
 
+	/* ensure directory update is flushed to disk, otherwise we can end up
+	with zero-byte hostkey files if the power goes off */
+	fsync_parent_dir(filename);
+
 out:
 	if (buf) {
 		buf_burn(buf);
