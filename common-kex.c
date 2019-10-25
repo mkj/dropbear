@@ -570,9 +570,7 @@ struct kex_dh_param *gen_kexdh_param() {
 	/* read the prime and generator*/
 	load_dh_p(&dh_p);
 	
-	if (mp_set_int(&dh_g, DH_G_VAL) != MP_OKAY) {
-		dropbear_exit("Diffie-Hellman error");
-	}
+	mp_set_ul(&dh_g, DH_G_VAL);
 
 	/* calculate q = (p-1)/2 */
 	/* dh_priv is just a temp var here */

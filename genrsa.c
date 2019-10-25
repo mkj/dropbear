@@ -53,10 +53,7 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 	m_mp_alloc_init_multi(&key->e, &key->n, &key->d, &key->p, &key->q, NULL);
 	m_mp_init_multi(&pminus, &lcm, &qminus, NULL);
 
-	if (mp_set_int(key->e, RSA_E) != MP_OKAY) {
-		fprintf(stderr, "RSA generation failed\n");
-		exit(1);
-	}
+	mp_set_ul(key->e, RSA_E);
 
 	while (1) {
 		getrsaprime(key->p, &pminus, key->e, size/16);
