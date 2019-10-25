@@ -48,7 +48,6 @@
 #   define BN_MP_FROM_UBIN_C
 #   define BN_MP_FWRITE_C
 #   define BN_MP_GCD_C
-#   define BN_MP_GET_DOUBLE_C
 #   define BN_MP_GET_I32_C
 #   define BN_MP_GET_I64_C
 #   define BN_MP_GET_L_C
@@ -119,7 +118,6 @@
 #   define BN_MP_RSHD_C
 #   define BN_MP_SBIN_SIZE_C
 #   define BN_MP_SET_C
-#   define BN_MP_SET_DOUBLE_C
 #   define BN_MP_SET_I32_C
 #   define BN_MP_SET_I64_C
 #   define BN_MP_SET_L_C
@@ -469,9 +467,6 @@
 #   define BN_MP_INIT_COPY_C
 #   define BN_MP_MUL_2D_C
 #   define BN_S_MP_SUB_C
-#endif
-
-#if defined(BN_MP_GET_DOUBLE_C)
 #endif
 
 #if defined(BN_MP_GET_I32_C)
@@ -956,12 +951,6 @@
 #endif
 
 #if defined(BN_MP_SET_C)
-#endif
-
-#if defined(BN_MP_SET_DOUBLE_C)
-#   define BN_MP_DIV_2D_C
-#   define BN_MP_MUL_2D_C
-#   define BN_MP_SET_U64_C
 #endif
 
 #if defined(BN_MP_SET_I32_C)
