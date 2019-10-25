@@ -1,45 +1,36 @@
 #include "tommath_private.h"
 #ifdef BN_MP_MUL_2D_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* shift left by a certain bit count */
-int mp_mul_2d(const mp_int *a, int b, mp_int *c)
+mp_err mp_mul_2d(const mp_int *a, int b, mp_int *c)
 {
    mp_digit d;
-   int      res;
+   mp_err   err;
 
    /* copy */
    if (a != c) {
-      if ((res = mp_copy(a, c)) != MP_OKAY) {
-         return res;
+      if ((err = mp_copy(a, c)) != MP_OKAY) {
+         return err;
       }
    }
 
-   if (c->alloc < (c->used + (b / DIGIT_BIT) + 1)) {
-      if ((res = mp_grow(c, c->used + (b / DIGIT_BIT) + 1)) != MP_OKAY) {
-         return res;
+   if (c->alloc < (c->used + (b / MP_DIGIT_BIT) + 1)) {
+      if ((err = mp_grow(c, c->used + (b / MP_DIGIT_BIT) + 1)) != MP_OKAY) {
+         return err;
       }
    }
 
    /* shift by as many digits in the bit count */
-   if (b >= DIGIT_BIT) {
-      if ((res = mp_lshd(c, b / DIGIT_BIT)) != MP_OKAY) {
-         return res;
+   if (b >= MP_DIGIT_BIT) {
+      if ((err = mp_lshd(c, b / MP_DIGIT_BIT)) != MP_OKAY) {
+         return err;
       }
    }
 
-   /* shift any bit count < DIGIT_BIT */
-   d = (mp_digit)(b % DIGIT_BIT);
+   /* shift any bit count < MP_DIGIT_BIT */
+   d = (mp_digit)(b % MP_DIGIT_BIT);
    if (d != 0u) {
       mp_digit *tmpc, shift, mask, r, rr;
       int x;
@@ -48,7 +39,7 @@ int mp_mul_2d(const mp_int *a, int b, mp_int *c)
       mask = ((mp_digit)1 << d) - (mp_digit)1;
 
       /* shift for msbs */
-      shift = (mp_digit)DIGIT_BIT - d;
+      shift = (mp_digit)MP_DIGIT_BIT - d;
 
       /* alias */
       tmpc = c->dp;
@@ -76,7 +67,3 @@ int mp_mul_2d(const mp_int *a, int b, mp_int *c)
    return MP_OKAY;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

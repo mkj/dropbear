@@ -1,29 +1,17 @@
 #include "tommath_private.h"
 #ifdef BN_MP_FREAD_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
-#ifndef LTM_NO_FILE
+#ifndef MP_NO_FILE
 /* read a bigint from a file stream in ASCII */
-int mp_fread(mp_int *a, int radix, FILE *stream)
+mp_err mp_fread(mp_int *a, int radix, FILE *stream)
 {
-   int err, ch, neg, y;
-   unsigned pos;
-
-   /* clear a */
-   mp_zero(a);
+   mp_err err;
+   mp_sign neg;
 
    /* if first digit is - then set negative */
-   ch = fgetc(stream);
+   int ch = fgetc(stream);
    if (ch == (int)'-') {
       neg = MP_NEG;
       ch = fgetc(stream);
@@ -31,8 +19,17 @@ int mp_fread(mp_int *a, int radix, FILE *stream)
       neg = MP_ZPOS;
    }
 
-   for (;;) {
-      pos = (unsigned)(ch - (int)'(');
+   /* no digits, return error */
+   if (ch == EOF) {
+      return MP_ERR;
+   }
+
+   /* clear a */
+   mp_zero(a);
+
+   do {
+      int y;
+      unsigned pos = (unsigned)(ch - (int)'(');
       if (mp_s_rmap_reverse_sz < pos) {
          break;
       }
@@ -50,10 +47,9 @@ int mp_fread(mp_int *a, int radix, FILE *stream)
       if ((err = mp_add_d(a, (mp_digit)y, a)) != MP_OKAY) {
          return err;
       }
+   } while ((ch = fgetc(stream)) != EOF);
 
-      ch = fgetc(stream);
-   }
-   if (mp_cmp_d(a, 0uL) != MP_EQ) {
+   if (a->used != 0) {
       a->sign = neg;
    }
 
@@ -62,7 +58,3 @@ int mp_fread(mp_int *a, int radix, FILE *stream)
 #endif
 
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

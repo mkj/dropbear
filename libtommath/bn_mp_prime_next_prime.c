@@ -1,45 +1,39 @@
 #include "tommath_private.h"
 #ifdef BN_MP_PRIME_NEXT_PRIME_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* finds the next prime after the number "a" using "t" trials
  * of Miller-Rabin.
  *
  * bbs_style = 1 means the prime must be congruent to 3 mod 4
  */
-int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
+mp_err mp_prime_next_prime(mp_int *a, int t, int bbs_style)
 {
-   int      err, res = MP_NO, x, y, cmp;
-   mp_digit res_tab[PRIME_SIZE], step, kstep;
+   int      x, y;
+   mp_ord   cmp;
+   mp_err   err;
+   mp_bool  res = MP_NO;
+   mp_digit res_tab[PRIVATE_MP_PRIME_TAB_SIZE], step, kstep;
    mp_int   b;
 
    /* force positive */
    a->sign = MP_ZPOS;
 
    /* simple algo if a is less than the largest prime in the table */
-   if (mp_cmp_d(a, ltm_prime_tab[PRIME_SIZE-1]) == MP_LT) {
+   if (mp_cmp_d(a, s_mp_prime_tab[PRIVATE_MP_PRIME_TAB_SIZE-1]) == MP_LT) {
       /* find which prime it is bigger than "a" */
-      for (x = 0; x < PRIME_SIZE; x++) {
-         cmp = mp_cmp_d(a, ltm_prime_tab[x]);
+      for (x = 0; x < PRIVATE_MP_PRIME_TAB_SIZE; x++) {
+         cmp = mp_cmp_d(a, s_mp_prime_tab[x]);
          if (cmp == MP_EQ) {
             continue;
          }
          if (cmp != MP_GT) {
-            if ((bbs_style == 1) && ((ltm_prime_tab[x] & 3u) != 3u)) {
+            if ((bbs_style == 1) && ((s_mp_prime_tab[x] & 3u) != 3u)) {
                /* try again until we get a prime congruent to 3 mod 4 */
                continue;
             } else {
-               mp_set(a, ltm_prime_tab[x]);
+               mp_set(a, s_mp_prime_tab[x]);
                return MP_OKAY;
             }
          }
@@ -64,7 +58,7 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
          }
       }
    } else {
-      if (mp_iseven(a) == MP_YES) {
+      if (MP_IS_EVEN(a)) {
          /* force odd */
          if ((err = mp_sub_d(a, 1uL, a)) != MP_OKAY) {
             return err;
@@ -73,8 +67,8 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
    }
 
    /* generate the restable */
-   for (x = 1; x < PRIME_SIZE; x++) {
-      if ((err = mp_mod_d(a, ltm_prime_tab[x], res_tab + x)) != MP_OKAY) {
+   for (x = 1; x < PRIVATE_MP_PRIME_TAB_SIZE; x++) {
+      if ((err = mp_mod_d(a, s_mp_prime_tab[x], res_tab + x)) != MP_OKAY) {
          return err;
       }
    }
@@ -95,13 +89,13 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
          step += kstep;
 
          /* compute the new residue without using division */
-         for (x = 1; x < PRIME_SIZE; x++) {
+         for (x = 1; x < PRIVATE_MP_PRIME_TAB_SIZE; x++) {
             /* add the step to each residue */
             res_tab[x] += kstep;
 
             /* subtract the modulus [instead of using division] */
-            if (res_tab[x] >= ltm_prime_tab[x]) {
-               res_tab[x]  -= ltm_prime_tab[x];
+            if (res_tab[x] >= s_mp_prime_tab[x]) {
+               res_tab[x]  -= s_mp_prime_tab[x];
             }
 
             /* set flag if zero */
@@ -109,15 +103,15 @@ int mp_prime_next_prime(mp_int *a, int t, int bbs_style)
                y = 1;
             }
          }
-      } while ((y == 1) && (step < (((mp_digit)1 << DIGIT_BIT) - kstep)));
+      } while ((y == 1) && (step < (((mp_digit)1 << MP_DIGIT_BIT) - kstep)));
 
       /* add the step */
       if ((err = mp_add_d(a, step, a)) != MP_OKAY) {
          goto LBL_ERR;
       }
 
-      /* if didn't pass sieve and step == MAX then skip test */
-      if ((y == 1) && (step >= (((mp_digit)1 << DIGIT_BIT) - kstep))) {
+      /* if didn't pass sieve and step == MP_MAX then skip test */
+      if ((y == 1) && (step >= (((mp_digit)1 << MP_DIGIT_BIT) - kstep))) {
          continue;
       }
 
@@ -136,7 +130,3 @@ LBL_ERR:
 }
 
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

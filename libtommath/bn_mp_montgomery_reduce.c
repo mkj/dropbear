@@ -1,21 +1,13 @@
 #include "tommath_private.h"
 #ifdef BN_MP_MONTGOMERY_REDUCE_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* computes xR**-1 == x (mod N) via Montgomery Reduction */
-int mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
+mp_err mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
 {
-   int     ix, res, digs;
+   int      ix, digs;
+   mp_err   err;
    mp_digit mu;
 
    /* can the fast reduction [comba] method be used?
@@ -25,17 +17,16 @@ int mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
     * are fixed up in the inner loop.
     */
    digs = (n->used * 2) + 1;
-   if ((digs < (int)MP_WARRAY) &&
-       (x->used <= (int)MP_WARRAY) &&
-       (n->used <
-        (int)(1u << (((size_t)CHAR_BIT * sizeof(mp_word)) - (2u * (size_t)DIGIT_BIT))))) {
-      return fast_mp_montgomery_reduce(x, n, rho);
+   if ((digs < MP_WARRAY) &&
+       (x->used <= MP_WARRAY) &&
+       (n->used < MP_MAXFAST)) {
+      return s_mp_montgomery_reduce_fast(x, n, rho);
    }
 
    /* grow the input as required */
    if (x->alloc < digs) {
-      if ((res = mp_grow(x, digs)) != MP_OKAY) {
-         return res;
+      if ((err = mp_grow(x, digs)) != MP_OKAY) {
+         return err;
       }
    }
    x->used = digs;
@@ -73,7 +64,7 @@ int mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
                       (mp_word)u + (mp_word)*tmpx;
 
             /* get carry */
-            u       = (mp_digit)(r >> (mp_word)DIGIT_BIT);
+            u       = (mp_digit)(r >> (mp_word)MP_DIGIT_BIT);
 
             /* fix digit */
             *tmpx++ = (mp_digit)(r & (mp_word)MP_MASK);
@@ -84,7 +75,7 @@ int mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
          /* propagate carries upwards as required*/
          while (u != 0u) {
             *tmpx   += u;
-            u        = *tmpx >> DIGIT_BIT;
+            u        = *tmpx >> MP_DIGIT_BIT;
             *tmpx++ &= MP_MASK;
          }
       }
@@ -109,7 +100,3 @@ int mp_montgomery_reduce(mp_int *x, const mp_int *n, mp_digit rho)
    return MP_OKAY;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

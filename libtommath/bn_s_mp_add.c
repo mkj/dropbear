@@ -1,22 +1,14 @@
 #include "tommath_private.h"
 #ifdef BN_S_MP_ADD_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* low level addition, based on HAC pp.594, Algorithm 14.7 */
-int s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
+mp_err s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
 {
    const mp_int *x;
-   int     olduse, res, min, max;
+   mp_err err;
+   int     olduse, min, max;
 
    /* find sizes, we let |a| <= |b| which means we have to sort
     * them.  "x" will point to the input with the most digits
@@ -33,8 +25,8 @@ int s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
 
    /* init result */
    if (c->alloc < (max + 1)) {
-      if ((res = mp_grow(c, max + 1)) != MP_OKAY) {
-         return res;
+      if ((err = mp_grow(c, max + 1)) != MP_OKAY) {
+         return err;
       }
    }
 
@@ -64,7 +56,7 @@ int s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
          *tmpc = *tmpa++ + *tmpb++ + u;
 
          /* U = carry bit of T[i] */
-         u = *tmpc >> (mp_digit)DIGIT_BIT;
+         u = *tmpc >> (mp_digit)MP_DIGIT_BIT;
 
          /* take away carry bit from T[i] */
          *tmpc++ &= MP_MASK;
@@ -79,7 +71,7 @@ int s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
             *tmpc = x->dp[i] + u;
 
             /* U = carry bit of T[i] */
-            u = *tmpc >> (mp_digit)DIGIT_BIT;
+            u = *tmpc >> (mp_digit)MP_DIGIT_BIT;
 
             /* take away carry bit from T[i] */
             *tmpc++ &= MP_MASK;
@@ -90,16 +82,10 @@ int s_mp_add(const mp_int *a, const mp_int *b, mp_int *c)
       *tmpc++ = u;
 
       /* clear digits above oldused */
-      for (i = c->used; i < olduse; i++) {
-         *tmpc++ = 0;
-      }
+      MP_ZERO_DIGITS(tmpc, olduse - c->used);
    }
 
    mp_clamp(c);
    return MP_OKAY;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

@@ -1,46 +1,37 @@
 #include "tommath_private.h"
 #ifdef BN_MP_LCM_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* computes least common multiple as |a*b|/(a, b) */
-int mp_lcm(const mp_int *a, const mp_int *b, mp_int *c)
+mp_err mp_lcm(const mp_int *a, const mp_int *b, mp_int *c)
 {
-   int     res;
+   mp_err  err;
    mp_int  t1, t2;
 
 
-   if ((res = mp_init_multi(&t1, &t2, NULL)) != MP_OKAY) {
-      return res;
+   if ((err = mp_init_multi(&t1, &t2, NULL)) != MP_OKAY) {
+      return err;
    }
 
    /* t1 = get the GCD of the two inputs */
-   if ((res = mp_gcd(a, b, &t1)) != MP_OKAY) {
+   if ((err = mp_gcd(a, b, &t1)) != MP_OKAY) {
       goto LBL_T;
    }
 
    /* divide the smallest by the GCD */
    if (mp_cmp_mag(a, b) == MP_LT) {
       /* store quotient in t2 such that t2 * b is the LCM */
-      if ((res = mp_div(a, &t1, &t2, NULL)) != MP_OKAY) {
+      if ((err = mp_div(a, &t1, &t2, NULL)) != MP_OKAY) {
          goto LBL_T;
       }
-      res = mp_mul(b, &t2, c);
+      err = mp_mul(b, &t2, c);
    } else {
       /* store quotient in t2 such that t2 * a is the LCM */
-      if ((res = mp_div(b, &t1, &t2, NULL)) != MP_OKAY) {
+      if ((err = mp_div(b, &t1, &t2, NULL)) != MP_OKAY) {
          goto LBL_T;
       }
-      res = mp_mul(a, &t2, c);
+      err = mp_mul(a, &t2, c);
    }
 
    /* fix the sign to positive */
@@ -48,10 +39,6 @@ int mp_lcm(const mp_int *a, const mp_int *b, mp_int *c)
 
 LBL_T:
    mp_clear_multi(&t1, &t2, NULL);
-   return res;
+   return err;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
