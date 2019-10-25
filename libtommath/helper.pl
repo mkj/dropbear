@@ -25,9 +25,15 @@ sub write_file {
   return;
 }
 
+sub sanitize_comments {
+  my($content) = @_;
+  $content =~ s{/\*(.*?)\*/}{my $x=$1; $x =~ s/\w/x/g; "/*$x*/";}egs;
+  return $content;
+}
+
 sub check_source {
   my @all_files = (
-        bsd_glob("makefile*"),
+        bsd_glob("Makefile*"),
         bsd_glob("*.{h,c,sh,pl}"),
         bsd_glob("*/*.{h,c,sh,pl}"),
   );
@@ -37,6 +43,7 @@ sub check_source {
     my $troubles = {};
     my $lineno = 1;
     my $content = read_file($file);
+    $content = sanitize_comments $content;
     push @{$troubles->{crlf_line_end}}, '?' if $content =~ /\r/;
     for my $l (split /\n/, $content) {
       push @{$troubles->{merge_conflict}},     $lineno if $l =~ /^(<<<<<<<|=======|>>>>>>>)([^<=>]|$)/;
@@ -81,22 +88,8 @@ sub check_source {
 sub check_comments {
   my $fails = 0;
   my $first_comment = <<'MARKER';
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
-MARKER
-  my $last_comment = <<'MARKER';
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 MARKER
   #my @all_files = (bsd_glob("*.{h,c}"), bsd_glob("*/*.{h,c}"));
   my @all_files = (bsd_glob("*.{h,c}"));
@@ -106,12 +99,32 @@ MARKER
       warn "[first_comment] $f\n";
       $fails++;
     }
-    if ($txt !~ /\Q$last_comment\E\s*$/s) {
-      warn "[last_comment] $f\n";
-      $fails++;
-    }
   }
   warn( $fails > 0 ? "check-comments:  FAIL $fails\n" : "check-comments:  PASS\n" );
+  return $fails;
+}
+
+sub check_doc {
+  my $fails = 0;
+  my $tex = read_file('doc/bn.tex');
+  my $tmh = read_file('tommath.h');
+  my @functions = $tmh =~ /\n\s*[a-zA-Z0-9_* ]+?(mp_[a-z0-9_]+)\s*\([^\)]+\)\s*;/sg;
+  my @macros    = $tmh =~ /\n\s*#define\s+([a-z0-9_]+)\s*\([^\)]+\)/sg;
+  for my $n (sort @functions) {
+    (my $nn = $n) =~ s/_/\\_/g; # mp_sub_d >> mp\_sub\_d
+    if ($tex !~ /index\Q{$nn}\E/) {
+      warn "[missing_doc_for_function] $n\n";
+      $fails++
+    }
+  }
+  for my $n (sort @macros) {
+    (my $nn = $n) =~ s/_/\\_/g; # mp_iszero >> mp\_iszero
+    if ($tex !~ /index\Q{$nn}\E/) {
+      warn "[missing_doc_for_macro] $n\n";
+      $fails++
+    }
+  }
+  warn( $fails > 0 ? "check_doc:       FAIL $fails\n" : "check-doc:       PASS\n" );
   return $fails;
 }
 
@@ -209,16 +222,6 @@ sub patch_file {
   return $content;
 }
 
-sub version_from_tomcrypt_h {
-  my $h = read_file(shift);
-  if ($h =~ /\n#define\s*SCRYPT\s*"([0-9]+)\.([0-9]+)\.([0-9]+)(.*)"/s) {
-    return "VERSION_PC=$1.$2.$3", "VERSION_LT=1:1", "VERSION=$1.$2.$3$4", "PROJECT_NUMBER=$1.$2.$3$4";
-  }
-  else {
-    die "#define SCRYPT not found in tomcrypt.h";
-  }
-}
-
 sub process_makefiles {
   my $write = shift;
   my $changed_count = 0;
@@ -249,33 +252,218 @@ sub process_makefiles {
   }
 }
 
+sub draw_func
+{
+   my ($deplist, $depmap, $out, $indent, $funcslist) = @_;
+   my @funcs = split ',', $funcslist;
+   # try this if you want to have a look at a minimized version of the callgraph without all the trivial functions
+   #if ($deplist =~ /$funcs[0]/ || $funcs[0] =~ /BN_MP_(ADD|SUB|CLEAR|CLEAR_\S+|DIV|MUL|COPY|ZERO|GROW|CLAMP|INIT|INIT_\S+|SET|ABS|CMP|CMP_D|EXCH)_C/) {
+   if ($deplist =~ /$funcs[0]/) {
+      return $deplist;
+   } else {
+      $deplist = $deplist . $funcs[0];
+   }
+   if ($indent == 0) {
+   } elsif ($indent >= 1) {
+      print {$out} '|   ' x ($indent - 1) . '+--->';
+   }
+   print {$out} $funcs[0] . "\n";
+   shift @funcs;
+   my $olddeplist = $deplist;
+   foreach my $i (@funcs) {
+      $deplist = draw_func($deplist, $depmap, $out, $indent + 1, ${$depmap}{$i}) if exists ${$depmap}{$i};
+   }
+   return $olddeplist;
+}
+
+sub update_dep
+{
+    #open class file and write preamble
+    open(my $class, '>', 'tommath_class.h') or die "Couldn't open tommath_class.h for writing\n";
+    print {$class} << 'EOS';
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
+
+#if !(defined(LTM1) && defined(LTM2) && defined(LTM3))
+#define LTM_INSIDE
+#if defined(LTM2)
+#   define LTM3
+#endif
+#if defined(LTM1)
+#   define LTM2
+#endif
+#define LTM1
+#if defined(LTM_ALL)
+EOS
+
+    foreach my $filename (glob 'bn*.c') {
+        my $define = $filename;
+
+        print "Processing $filename\n";
+
+        # convert filename to upper case so we can use it as a define
+        $define =~ tr/[a-z]/[A-Z]/;
+        $define =~ tr/\./_/;
+        print {$class} "#   define $define\n";
+
+        # now copy text and apply #ifdef as required
+        my $apply = 0;
+        open(my $src, '<', $filename);
+        open(my $out, '>', 'tmp');
+
+        # first line will be the #ifdef
+        my $line = <$src>;
+        if ($line =~ /include/) {
+            print {$out} $line;
+        } else {
+            print {$out} << "EOS";
+#include "tommath_private.h"
+#ifdef $define
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
+$line
+EOS
+            $apply = 1;
+        }
+        while (<$src>) {
+            if ($_ !~ /tommath\.h/) {
+                print {$out} $_;
+            }
+        }
+        if ($apply == 1) {
+            print {$out} "#endif\n";
+        }
+        close $src;
+        close $out;
+
+        unlink $filename;
+        rename 'tmp', $filename;
+    }
+    print {$class} "#endif\n#endif\n";
+
+    # now do classes
+    my %depmap;
+    foreach my $filename (glob 'bn*.c') {
+        my $content;
+        if ($filename =~ "bn_deprecated.c") {
+            open(my $src, '<', $filename) or die "Can't open source file!\n";
+            read $src, $content, -s $src;
+            close $src;
+        } else {
+            my $cc = $ENV{'CC'} || 'gcc';
+            $content = `$cc -E -x c -DLTM_ALL $filename`;
+            $content =~ s/^# 1 "$filename".*?^# 2 "$filename"//ms;
+        }
+
+        # convert filename to upper case so we can use it as a define
+        $filename =~ tr/[a-z]/[A-Z]/;
+        $filename =~ tr/\./_/;
+
+        print {$class} "#if defined($filename)\n";
+        my $list = $filename;
+
+        # strip comments
+        $content =~ s{/\*.*?\*/}{}gs;
+
+        # scan for mp_* and make classes
+        my @deps = ();
+        foreach my $line (split /\n/, $content) {
+            while ($line =~ /(fast_)?(s_)?mp\_[a-z_0-9]*((?=\;)|(?=\())|(?<=\()mp\_[a-z_0-9]*(?=\()/g) {
+                my $a = $&;
+                next if $a eq "mp_err";
+                $a =~ tr/[a-z]/[A-Z]/;
+                $a = 'BN_' . $a . '_C';
+                push @deps, $a;
+            }
+        }
+        @deps = sort(@deps);
+        foreach my $a (@deps) {
+            if ($list !~ /$a/) {
+                print {$class} "#   define $a\n";
+            }
+            $list = $list . ',' . $a;
+        }
+        $depmap{$filename} = $list;
+
+        print {$class} "#endif\n\n";
+    }
+
+    print {$class} << 'EOS';
+#ifdef LTM_INSIDE
+#undef LTM_INSIDE
+#ifdef LTM3
+#   define LTM_LAST
+#endif
+
+#include "tommath_superclass.h"
+#include "tommath_class.h"
+#else
+#   define LTM_LAST
+#endif
+EOS
+    close $class;
+
+    #now let's make a cool call graph...
+
+    open(my $out, '>', 'callgraph.txt');
+    foreach (sort keys %depmap) {
+        draw_func("", \%depmap, $out, 0, $depmap{$_});
+        print {$out} "\n\n";
+    }
+    close $out;
+
+    return 0;
+}
+
+sub generate_def {
+    my @files = split /\n/, `git ls-files`;
+    @files = grep(/\.c/, @files);
+    @files = map { my $x = $_; $x =~ s/^bn_|\.c$//g; $x; } @files;
+    @files = grep(!/mp_radix_smap/, @files);
+
+    push(@files, qw(mp_set_int mp_set_long mp_set_long_long mp_get_int mp_get_long mp_get_long_long mp_init_set_int));
+
+    my $files = join("\n    ", sort(grep(/^mp_/, @files)));
+    write_file "tommath.def", "; libtommath
+;
+; Use this command to produce a 32-bit .lib file, for use in any MSVC version
+;   lib -machine:X86 -name:libtommath.dll -def:tommath.def -out:tommath.lib
+; Use this command to produce a 64-bit .lib file, for use in any MSVC version
+;   lib -machine:X64 -name:libtommath.dll -def:tommath.def -out:tommath.lib
+;
+EXPORTS
+    $files
+";
+    return 0;
+}
+
 sub die_usage {
   die <<"MARKER";
 usage: $0 -s   OR   $0 --check-source
        $0 -o   OR   $0 --check-comments
        $0 -m   OR   $0 --check-makefiles
        $0 -a   OR   $0 --check-all
-       $0 -u   OR   $0 --update-makefiles
+       $0 -u   OR   $0 --update-files
 MARKER
 }
 
 GetOptions( "s|check-source"        => \my $check_source,
             "o|check-comments"      => \my $check_comments,
             "m|check-makefiles"     => \my $check_makefiles,
+            "d|check-doc"           => \my $check_doc,
             "a|check-all"           => \my $check_all,
-            "u|update-makefiles"    => \my $update_makefiles,
+            "u|update-files"        => \my $update_files,
             "h|help"                => \my $help
           ) or die_usage;
 
 my $failure;
 $failure ||= check_source()       if $check_all || $check_source;
 $failure ||= check_comments()     if $check_all || $check_comments;
+$failure ||= check_doc()          if $check_doc; # temporarily excluded from --check-all
 $failure ||= process_makefiles(0) if $check_all || $check_makefiles;
-$failure ||= process_makefiles(1) if $update_makefiles;
+$failure ||= process_makefiles(1) if $update_files;
+$failure ||= update_dep()         if $update_files;
+$failure ||= generate_def()       if $update_files;
 
 die_usage unless defined $failure;
 exit $failure ? 1 : 0;
-
-# ref:         HEAD -> master, tag: v1.1.0
-# git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55
-# commit time: 2019-01-28 20:32:32 +0100
