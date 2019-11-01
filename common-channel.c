@@ -45,7 +45,8 @@ static int writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 	const unsigned char *moredata, unsigned int *morelen);
 static void send_msg_channel_window_adjust(const struct Channel *channel,
 		unsigned int incr);
-static void send_msg_channel_data(struct Channel *channel, int isextended);
+static int send_msg_channel_data(struct Channel *channel, int isextended);
+static void flush_msg_channel_data(struct Channel *channel, int isextended);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
 static void remove_channel(struct Channel *channel);
@@ -311,12 +312,6 @@ static void check_close(struct Channel *channel) {
 		return;
 	}
 
-	if ((channel->recv_eof && !write_pending(channel))
-		/* have a server "session" and child has exited */
-		|| (channel->type->check_close && close_allowed)) {
-		close_chan_fd(channel, channel->writefd, SHUT_WR);
-	}
-
 	/* Special handling for flushing read data after an exit. We
 	   read regardless of whether the select FD was set,
 	   and if there isn't data available, the channel will get closed. */
@@ -324,13 +319,19 @@ static void check_close(struct Channel *channel) {
 		TRACE(("might send data, flushing"))
 		if (channel->readfd >= 0 && channel->transwindow > 0) {
 			TRACE(("send data readfd"))
-			send_msg_channel_data(channel, 0);
+			flush_msg_channel_data(channel, 0);
 		}
 		if (ERRFD_IS_READ(channel) && channel->errfd >= 0 
 			&& channel->transwindow > 0) {
 			TRACE(("send data errfd"))
-			send_msg_channel_data(channel, 1);
+			flush_msg_channel_data(channel, 1);
 		}
+	}
+
+	if ((channel->recv_eof && !write_pending(channel))
+		/* have a server "session" and child has exited */
+		|| (channel->type->check_close && close_allowed)) {
+		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
 
 	/* If we're not going to send any more data, send EOF */
@@ -705,7 +706,7 @@ void recv_msg_channel_request() {
  * chan is the remote channel, isextended is 0 if it is normal data, 1
  * if it is extended data. if it is extended, then the type is in
  * exttype */
-static void send_msg_channel_data(struct Channel *channel, int isextended) {
+static int send_msg_channel_data(struct Channel *channel, int isextended) {
 
 	int len;
 	size_t maxlen, size_pos;
@@ -732,7 +733,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	TRACE(("maxlen %zd", maxlen))
 	if (maxlen == 0) {
 		TRACE(("leave send_msg_channel_data: no window"))
-		return;
+		return 0;
 	}
 
 	buf_putbyte(ses.writepayload, 
@@ -759,7 +760,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 		buf_setlen(ses.writepayload, 0);
 		TRACE(("leave send_msg_channel_data: len %d read err %d or EOF for fd %d", 
 					len, errno, fd))
-		return;
+		return len;
 	}
 
 	if (channel->read_mangler) {
@@ -767,7 +768,7 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 		if (len == 0) {
 			buf_setpos(ses.writepayload, 0);
 			buf_setlen(ses.writepayload, 0);
-			return;
+			return 0;
 		}
 	}
 
@@ -781,14 +782,12 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 
 	encrypt_packet();
 	
-	/* If we receive less data than we requested when flushing, we've
-	   reached the equivalent of EOF */
-	if (channel->flushing && len < (ssize_t)maxlen)
-	{
-		TRACE(("closing from channel, flushing out."))
-		close_chan_fd(channel, fd, SHUT_RD);
-	}
 	TRACE(("leave send_msg_channel_data"))
+	return len;
+}
+
+static void flush_msg_channel_data(struct Channel *channel, int isextended) {
+	while (send_msg_channel_data(channel, isextended) > 0) { }
 }
 
 /* We receive channel data */
