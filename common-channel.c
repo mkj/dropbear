@@ -46,7 +46,7 @@ static int writechannel(struct Channel* channel, int fd, circbuffer *cbuf,
 static void send_msg_channel_window_adjust(const struct Channel *channel,
 		unsigned int incr);
 static int send_msg_channel_data(struct Channel *channel, int isextended);
-static void flush_msg_channel_data(struct Channel *channel, int isextended);
+static int flush_msg_channel_data(struct Channel *channel, int isextended);
 static void send_msg_channel_eof(struct Channel *channel);
 static void send_msg_channel_close(struct Channel *channel);
 static void remove_channel(struct Channel *channel);
@@ -277,6 +277,7 @@ static unsigned int write_pending(const struct Channel * channel) {
 /* EOF/close handling */
 static void check_close(struct Channel *channel) {
 	int close_allowed = 0;
+	int flush_done = 0;
 
 	TRACE2(("check_close: writefd %d, readfd %d, errfd %d, sent_close %d, recv_close %d",
 				channel->writefd, channel->readfd,
@@ -316,21 +317,27 @@ static void check_close(struct Channel *channel) {
 	   read regardless of whether the select FD was set,
 	   and if there isn't data available, the channel will get closed. */
 	if (channel->flushing) {
+		flush_done = 1;
 		TRACE(("might send data, flushing"))
-		if (channel->readfd >= 0 && channel->transwindow > 0) {
+		if (channel->readfd >= 0) {
 			TRACE(("send data readfd"))
-			flush_msg_channel_data(channel, 0);
+			if (!flush_msg_channel_data(channel, 0)) {
+				flush_done = 0;
+			}
 		}
-		if (ERRFD_IS_READ(channel) && channel->errfd >= 0 
-			&& channel->transwindow > 0) {
+		if (ERRFD_IS_READ(channel) && channel->errfd >= 0) {
 			TRACE(("send data errfd"))
-			flush_msg_channel_data(channel, 1);
+			if (!flush_msg_channel_data(channel, 1)) {
+				flush_done = 0;
+			}
 		}
 	}
 
 	if ((channel->recv_eof && !write_pending(channel))
 		/* have a server "session" and child has exited */
-		|| (channel->type->check_close && close_allowed)) {
+		|| (channel->type->check_close && close_allowed &&
+		    (channel->readfd == channel->writefd &&
+		     (!channel->flushing || flush_done)))) {
 		close_chan_fd(channel, channel->writefd, SHUT_WR);
 	}
 
@@ -786,8 +793,14 @@ static int send_msg_channel_data(struct Channel *channel, int isextended) {
 	return len;
 }
 
-static void flush_msg_channel_data(struct Channel *channel, int isextended) {
-	while (send_msg_channel_data(channel, isextended) > 0) { }
+static int flush_msg_channel_data(struct Channel *channel, int isextended) {
+	do {
+		if (channel->transwindow <= 0) {
+			// window full
+			return 0;
+		}
+	} while(send_msg_channel_data(channel, isextended) > 0);
+	return 1;
 }
 
 /* We receive channel data */
