@@ -174,7 +174,7 @@ group1 in Dropbear server too */
 #define DO_HOST_LOOKUP 0
 
 /* Whether to print the message of the day (MOTD). */
-#define DO_MOTD 0
+#define DO_MOTD 1
 #define MOTD_FILENAME "/etc/motd"
 
 /* Authentication Types - at least one required.
