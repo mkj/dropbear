@@ -401,6 +401,8 @@ static void commonsetup() {
 
 	crypto_init();
 
+	crypto_configure("/etc/dropbear/crypto_config");
+
 	/* Now we can setup the hostkeys - needs to be after logging is on,
 	 * otherwise we might end up blatting error messages to the socket */
 	load_all_hostkeys();

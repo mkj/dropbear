@@ -37,7 +37,8 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o crypto_desc.o \
 		dbmalloc.o \
-		gensignkey.o gendss.o genrsa.o
+		gensignkey.o gendss.o genrsa.o \
+		dbconfigure.o
 
 SVROBJS=svr-kex.o svr-auth.o sshpty.o \
 		svr-authpasswd.o svr-authpubkey.o svr-authpubkeyoptions.o svr-session.o svr-service.o \
@@ -75,8 +76,8 @@ ifeq (@DROPBEAR_FUZZ@, 1)
 else
 	dropbearobjs=$(COMMONOBJS) $(CLISVROBJS) $(SVROBJS)
 	dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
-	dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
-	dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
+	dropbearkeyobjs=$(COMMONOBJS) $(CLISVROBJS) $(KEYOBJS)
+	dropbearconvertobjs=$(COMMONOBJS) $(CLISVROBJS) $(CONVERTOBJS)
 	scpobjs=$(SCPOBJS)
 endif
 
