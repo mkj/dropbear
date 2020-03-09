@@ -981,6 +981,7 @@ static void execchild(const void *user_data) {
 	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", get_user_shell());
 	addnewvar("PATH", DEFAULT_PATH);
+        addnewvar("LD_LIBRARY_PATH", DEFAULT_LD_LIBRARY_PATH);
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}

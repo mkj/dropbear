@@ -297,4 +297,7 @@ be overridden at runtime with -I. 0 disables idle timeouts */
 /* The default path. This will often get replaced by the shell */
 #define DEFAULT_PATH "/usr/bin:/bin"
 
+/* The default ld library path. This will often get replaced by the shell */
+#define DEFAULT_LD_LIBRARY_PATH "/usr/lib:/lib"
+
 #endif /* DROPBEAR_DEFAULT_OPTIONS_H_ */
