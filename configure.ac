@@ -873,4 +873,4 @@ AC_MSG_NOTICE([crypt() not available, dropbear server will not have password aut
 fi
 
 AC_MSG_NOTICE()
-AC_MSG_NOTICE([Now edit options.h to choose features.])
+AC_MSG_NOTICE([Now edit localoptions.h to choose features.])
