@@ -57,6 +57,9 @@ static void printhelp(const char * progname) {
 #if DROPBEAR_ECDSA
 					"		- ecdsa %s\n"
 #endif
+#if DROPBEAR_ED25519
+					"		- ed25519 %s\n"
+#endif
 #if DROPBEAR_DELAY_HOSTKEY
 					"-R		Create hostkeys as required\n" 
 #endif
@@ -116,6 +119,9 @@ static void printhelp(const char * progname) {
 #endif
 #if DROPBEAR_ECDSA
 					ECDSA_PRIV_FILENAME,
+#endif
+#if DROPBEAR_ED25519
+					ED25519_PRIV_FILENAME,
 #endif
 					MAX_AUTH_TRIES,
 					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE,
@@ -538,6 +544,13 @@ static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 	}
 #endif
 #endif /* DROPBEAR_ECDSA */
+
+#if DROPBEAR_ED25519
+	if (type == DROPBEAR_SIGNKEY_ED25519) {
+		loadhostkey_helper("ed25519", (void**)&read_key->ed25519key, (void**)&svr_opts.hostkey->ed25519key, fatal_duplicate);
+	}
+#endif
+
 	sign_key_free(read_key);
 	TRACE(("leave loadhostkey"))
 }
@@ -578,6 +591,9 @@ void load_all_hostkeys() {
 
 #if DROPBEAR_ECDSA
 		loadhostkey(ECDSA_PRIV_FILENAME, 0);
+#endif
+#if DROPBEAR_ED25519
+		loadhostkey(ED25519_PRIV_FILENAME, 0);
 #endif
 	}
 
@@ -641,6 +657,14 @@ void load_all_hostkeys() {
 	}
 #endif
 #endif /* DROPBEAR_ECDSA */
+
+#if DROPBEAR_ED25519
+	if (!svr_opts.delay_hostkey && !svr_opts.hostkey->ed25519key) {
+		disablekey(DROPBEAR_SIGNKEY_ED25519);
+	} else {
+		any_keys = 1;
+	}
+#endif
 
 	if (!any_keys) {
 		dropbear_exit("No hostkeys available. 'dropbear -R' may be useful or run dropbearkey.");
