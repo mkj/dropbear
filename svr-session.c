@@ -207,6 +207,7 @@ void svr_session(int sock, int childpipe) {
 void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	char exitmsg[150];
 	char fullmsg[300];
+	char fromaddr[60];
 	int i;
 
 #if DROPBEAR_PLUGIN
@@ -219,23 +220,30 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	/* Render the formatted exit message */
 	vsnprintf(exitmsg, sizeof(exitmsg), format, param);
 
+	/* svr_ses.addrstring may not be set for some early exits, or for
+	the listener process */
+	fromaddr[0] = '\0';
+	if (svr_ses.addrstring) {
+	    snprintf(fromaddr, sizeof(fromaddr), " from <%s>", svr_ses.addrstring);
+    }
+
 	/* Add the prefix depending on session/auth state */
 	if (!ses.init_done) {
 		/* before session init */
-		snprintf(fullmsg, sizeof(fullmsg), "Early exit from <%s> %s", svr_ses.addrstring, exitmsg);
+		snprintf(fullmsg, sizeof(fullmsg), "Early exit%s: %s", fromaddr, exitmsg);
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fullmsg, sizeof(fullmsg),
-				"Exit (%s): %s", 
-				ses.authstate.pw_name, exitmsg);
+				"Exit (%s)%s: %s", 
+				ses.authstate.pw_name, fromaddr, exitmsg);
 	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
 		snprintf(fullmsg, sizeof(fullmsg), 
-				"Exit before auth from <%s> (user '%s', %u fails): %s",
-				svr_ses.addrstring, ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
+				"Exit before auth%s: (user '%s', %u fails): %s",
+				fromaddr, ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
 	} else {
 		/* before userauth */
-		snprintf(fullmsg, sizeof(fullmsg), "Exit before auth from <%s> %s", svr_ses.addrstring, exitmsg);
+		snprintf(fullmsg, sizeof(fullmsg), "Exit before auth%s: %s", fromaddr, exitmsg);
 	}
 
 	dropbear_log(LOG_INFO, "%s", fullmsg);
