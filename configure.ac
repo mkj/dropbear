@@ -341,14 +341,21 @@ AC_SUBST(DROPBEAR_PLUGIN)
 AC_ARG_ENABLE(fuzz,
 	[  --enable-fuzz           Build fuzzing. Not recommended for deployment.],
 	[
-		AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
-		AC_MSG_NOTICE(Enabling fuzzing)
-		DROPBEAR_FUZZ=1
-		# libfuzzer needs linking with c++ libraries
-		AC_PROG_CXX
+		if test "x$enableval" = "xyes"; then
+            AC_DEFINE(DROPBEAR_FUZZ, 1, Fuzzing)
+            AC_MSG_NOTICE(Enabling fuzzing)
+            DROPBEAR_FUZZ=1
+            # libfuzzer needs linking with c++ libraries
+            AC_PROG_CXX
+        else
+            AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
+            AC_MSG_NOTICE(Disabling fuzzing)
+            DROPBEAR_FUZZ=0
+        fi
 	],
 	[
 		AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
+		AC_MSG_NOTICE(Disabling fuzzing)
 		DROPBEAR_FUZZ=0
 	]
 
