@@ -111,7 +111,8 @@ void send_msg_kexinit() {
 
 	if (ses.send_kex_first_guess) {
 		ses.newkeys->algo_kex = sshkex[0].data;
-		ses.newkeys->algo_hostkey = sshhostkey[0].val;
+		ses.newkeys->algo_signature = sshhostkey[0].val;
+		ses.newkeys->algo_hostkey = signkey_type_from_signature(ses.newkeys->algo_signature);
 		ses.send_kex_first_guess();
 	}
 
@@ -152,6 +153,7 @@ static void switch_keys() {
 		TRACE(("switch_keys done"))
 		ses.keys->algo_kex = ses.newkeys->algo_kex;
 		ses.keys->algo_hostkey = ses.newkeys->algo_hostkey;
+		ses.keys->algo_signature = ses.newkeys->algo_signature;
 		ses.keys->allow_compress = 0;
 		m_free(ses.newkeys);
 		ses.newkeys = NULL;
@@ -847,8 +849,9 @@ static void read_kex_algos() {
 		erralgo = "hostkey";
 		goto error;
 	}
-	TRACE(("hostkey algo %s", algo->name))
-	ses.newkeys->algo_hostkey = algo->val;
+	TRACE(("signature algo %s", algo->name))
+	ses.newkeys->algo_signature = algo->val;
+	ses.newkeys->algo_hostkey = signkey_type_from_signature(ses.newkeys->algo_signature);
 
 	/* encryption_algorithms_client_to_server */
 	c2s_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);

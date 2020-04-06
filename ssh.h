@@ -100,13 +100,15 @@
 #define SSH_SERVICE_CONNECTION "ssh-connection"
 #define SSH_SERVICE_CONNECTION_LEN 14
 
-/* public key types */
+/* public/signature key types */
 #define SSH_SIGNKEY_DSS "ssh-dss"
 #define SSH_SIGNKEY_DSS_LEN 7
 #define SSH_SIGNKEY_RSA "ssh-rsa"
 #define SSH_SIGNKEY_RSA_LEN 7
 #define SSH_SIGNKEY_ED25519 "ssh-ed25519"
 #define SSH_SIGNKEY_ED25519_LEN 11
+/* signature type */
+#define SSH_SIGNKEY_RSA_SHA256 "rsa-sha2-256"
 
 /* Agent commands. These aren't part of the spec, and are defined
  * only on the openssh implementation. */

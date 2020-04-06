@@ -112,7 +112,6 @@ struct dropbear_kex {
 	const struct ltc_hash_descriptor *hash_desc;
 };
 
-int have_algo(const char* algo, size_t algolen, const algo_type algos[]);
 void buf_put_algolist(buffer * buf, const algo_type localalgos[]);
 
 enum kexguess2_used {

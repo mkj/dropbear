@@ -237,7 +237,12 @@ algo_type sshhostkey[] = {
 #endif
 #endif
 #if DROPBEAR_RSA
+#if DROPBEAR_RSA_SHA256
+	{"rsa-sha2-256", DROPBEAR_SIGNKEY_RSA_SHA256, NULL, 1, NULL},
+#endif
+#if DROPBEAR_RSA_SHA1
 	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1, NULL},
+#endif
 #endif
 #if DROPBEAR_DSS
 	{"ssh-dss", DROPBEAR_SIGNKEY_DSS, NULL, 1, NULL},
@@ -310,24 +315,6 @@ algo_type sshkex[] = {
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };
-
-/* algolen specifies the length of algo, algos is our local list to match
- * against.
- * Returns DROPBEAR_SUCCESS if we have a match for algo, DROPBEAR_FAILURE
- * otherwise */
-int have_algo(const char* algo, size_t algolen, const algo_type algos[]) {
-
-	int i;
-
-	for (i = 0; algos[i].name != NULL; i++) {
-		if (strlen(algos[i].name) == algolen
-				&& (strncmp(algos[i].name, algo, algolen) == 0)) {
-			return DROPBEAR_SUCCESS;
-		}
-	}
-
-	return DROPBEAR_FAILURE;
-}
 
 /* Output a comma separated list of algorithms to a buffer */
 void buf_put_algolist(buffer * buf, const algo_type localalgos[]) {

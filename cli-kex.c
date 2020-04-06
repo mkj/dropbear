@@ -94,7 +94,7 @@ void send_msg_kexdh_init() {
 void recv_msg_kexdh_reply() {
 
 	sign_key *hostkey = NULL;
-	unsigned int type, keybloblen;
+	unsigned int keytype, keybloblen;
 	unsigned char* keyblob = NULL;
 
 	TRACE(("enter recv_msg_kexdh_reply"))
@@ -102,8 +102,8 @@ void recv_msg_kexdh_reply() {
 	if (cli_ses.kex_state != KEXDH_INIT_SENT) {
 		dropbear_exit("Received out-of-order kexdhreply");
 	}
-	type = ses.newkeys->algo_hostkey;
-	TRACE(("type is %d", type))
+	keytype = ses.newkeys->algo_hostkey;
+	TRACE(("keytype is %d", keytype))
 
 	hostkey = new_sign_key();
 	keybloblen = buf_getint(ses.payload);
@@ -114,7 +114,7 @@ void recv_msg_kexdh_reply() {
 		checkhostkey(keyblob, keybloblen);
 	}
 
-	if (buf_get_pub_key(ses.payload, hostkey, &type) != DROPBEAR_SUCCESS) {
+	if (buf_get_pub_key(ses.payload, hostkey, &keytype) != DROPBEAR_SUCCESS) {
 		TRACE(("failed getting pubkey"))
 		dropbear_exit("Bad KEX packet");
 	}
@@ -173,7 +173,8 @@ void recv_msg_kexdh_reply() {
 #endif
 
 	cli_ses.param_kex_algo = NULL;
-	if (buf_verify(ses.payload, hostkey, ses.hash) != DROPBEAR_SUCCESS) {
+	if (buf_verify(ses.payload, hostkey, ses.newkeys->algo_signature, 
+			ses.hash) != DROPBEAR_SUCCESS) {
 		dropbear_exit("Bad hostkey signature");
 	}
 

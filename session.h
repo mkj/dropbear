@@ -92,7 +92,8 @@ struct key_context {
 	struct key_context_directional trans;
 
 	const struct dropbear_kex *algo_kex;
-	int algo_hostkey;
+	int algo_hostkey; /* server key type */
+	int algo_signature; /* server signature type */
 
 	int allow_compress; /* whether compression has started (useful in 
 							zlib@openssh.com delayed compression case) */

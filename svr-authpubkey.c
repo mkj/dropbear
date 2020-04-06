@@ -70,10 +70,10 @@
 #define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
 #define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
 
-static int checkpubkey(const char* algo, unsigned int algolen,
+static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen);
 static int checkpubkeyperms(void);
-static void send_msg_userauth_pk_ok(const char* algo, unsigned int algolen,
+static void send_msg_userauth_pk_ok(const char* sigalgo, unsigned int sigalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen);
 static int checkfileperm(char * filename);
 
@@ -82,16 +82,18 @@ static int checkfileperm(char * filename);
 void svr_auth_pubkey(int valid_user) {
 
 	unsigned char testkey; /* whether we're just checking if a key is usable */
-	char* algo = NULL; /* pubkey algo */
-	unsigned int algolen;
+	char* sigalgo = NULL;
+	unsigned int sigalgolen;
+	const char* keyalgo;
+	unsigned int keyalgolen;
 	unsigned char* keyblob = NULL;
 	unsigned int keybloblen;
 	unsigned int sign_payload_length;
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;
 	char* fp = NULL;
-	enum signkey_type type = -1;
-        int auth_failure = 1;
+	enum signkey_type sigtype, keytype;
+    int auth_failure = 1;
 
 	TRACE(("enter pubkeyauth"))
 
@@ -99,7 +101,11 @@ void svr_auth_pubkey(int valid_user) {
 	 * actual attempt*/
 	testkey = (buf_getbool(ses.payload) == 0);
 
-	algo = buf_getstring(ses.payload, &algolen);
+	sigalgo = buf_getstring(ses.payload, &sigalgolen);
+	sigtype = signature_type_from_name(sigalgo, sigalgolen);
+	keytype = signkey_type_from_signature(sigtype);
+	keyalgo = signkey_name_from_type(keytype, &keyalgolen);
+
 	keybloblen = buf_getint(ses.payload);
 	keyblob = buf_getptr(ses.payload, keybloblen);
 
@@ -117,8 +123,8 @@ void svr_auth_pubkey(int valid_user) {
             if (svr_ses.plugin_instance->checkpubkey(
                         svr_ses.plugin_instance,
                         &ses.plugin_session,
-                        algo, 
-                        algolen, 
+                        keyalgo, 
+                        keyalgolen, 
                         keyblob, 
                         keybloblen,
                         ses.authstate.username) == DROPBEAR_SUCCESS) {
@@ -146,7 +152,7 @@ void svr_auth_pubkey(int valid_user) {
 #endif
 	/* check if the key is valid */
         if (auth_failure) {
-            auth_failure = checkpubkey(algo, algolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
+            auth_failure = checkpubkey(keyalgo, keyalgolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
         }
 
         if (auth_failure) {
@@ -156,7 +162,7 @@ void svr_auth_pubkey(int valid_user) {
 
 	/* let them know that the key is ok to use */
 	if (testkey) {
-		send_msg_userauth_pk_ok(algo, algolen, keyblob, keybloblen);
+		send_msg_userauth_pk_ok(sigalgo, sigalgolen, keyblob, keybloblen);
 		goto out;
 	}
 
@@ -164,8 +170,7 @@ void svr_auth_pubkey(int valid_user) {
 	
 	/* get the key */
 	key = new_sign_key();
-	type = DROPBEAR_SIGNKEY_ANY;
-	if (buf_get_pub_key(ses.payload, key, &type) == DROPBEAR_FAILURE) {
+	if (buf_get_pub_key(ses.payload, key, &keytype) == DROPBEAR_FAILURE) {
 		send_msg_userauth_failure(0, 1);
 		goto out;
 	}
@@ -188,7 +193,7 @@ void svr_auth_pubkey(int valid_user) {
 
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(keyblob, keybloblen);
-	if (buf_verify(ses.payload, key, signbuf) == DROPBEAR_SUCCESS) {
+	if (buf_verify(ses.payload, key, sigtype, signbuf) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
@@ -213,8 +218,8 @@ out:
 	if (signbuf) {
 		buf_free(signbuf);
 	}
-	if (algo) {
-		m_free(algo);
+	if (sigalgo) {
+		m_free(sigalgo);
 	}
 	if (key) {
 		sign_key_free(key);
@@ -230,14 +235,14 @@ out:
 /* Reply that the key is valid for auth, this is sent when the user sends
  * a straight copy of their pubkey to test, to avoid having to perform
  * expensive signing operations with a worthless key */
-static void send_msg_userauth_pk_ok(const char* algo, unsigned int algolen,
+static void send_msg_userauth_pk_ok(const char* sigalgo, unsigned int sigalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
 
 	TRACE(("enter send_msg_userauth_pk_ok"))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_PK_OK);
-	buf_putstring(ses.writepayload, algo, algolen);
+	buf_putstring(ses.writepayload, sigalgo, sigalgolen);
 	buf_putstring(ses.writepayload, (const char*)keyblob, keybloblen);
 
 	encrypt_packet();
@@ -354,7 +359,7 @@ out:
 /* Checks whether a specified publickey (and associated algorithm) is an
  * acceptable key for authentication */
 /* Returns DROPBEAR_SUCCESS if key is ok for auth, DROPBEAR_FAILURE otherwise */
-static int checkpubkey(const char* algo, unsigned int algolen,
+static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
 
 	FILE * authfile = NULL;
@@ -367,14 +372,6 @@ static int checkpubkey(const char* algo, unsigned int algolen,
 	gid_t origgid;
 
 	TRACE(("enter checkpubkey"))
-
-	/* check that we can use the algo */
-	if (have_algo(algo, algolen, sshhostkey) == DROPBEAR_FAILURE) {
-		dropbear_log(LOG_WARNING,
-				"Pubkey auth attempt with unknown algo for '%s' from %s",
-				ses.authstate.pw_name, svr_ses.addrstring);
-		goto out;
-	}
 
 	/* check file permissions, also whether file exists */
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
@@ -427,7 +424,7 @@ static int checkpubkey(const char* algo, unsigned int algolen,
 		}
 		line_num++;
 
-		ret = checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
+		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen, keyblob, keybloblen);
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}

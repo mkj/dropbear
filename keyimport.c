@@ -36,6 +36,9 @@
 #include "dbutil.h"
 #include "ecc.h"
 #include "ssh.h"
+#include "rsa.h"
+#include "dss.h"
+#include "ed25519.h"
 
 static const unsigned char OSSH_PKEY_BLOB[] =
 	"openssh-key-v1\0"			/* AUTH_MAGIC */

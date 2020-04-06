@@ -234,7 +234,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 
 	/* calc the signature */
 	buf_put_sign(ses.writepayload, svr_opts.hostkey, 
-			ses.newkeys->algo_hostkey, ses.hash);
+			ses.newkeys->algo_signature, ses.hash);
 
 	/* the SSH_MSG_KEXDH_REPLY is done */
 	encrypt_packet();
