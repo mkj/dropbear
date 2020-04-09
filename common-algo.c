@@ -30,6 +30,7 @@
 #include "dh_groups.h"
 #include "ltc_prng.h"
 #include "ecc.h"
+#include "gcm.h"
 #include "chachapoly.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
@@ -141,6 +142,15 @@ algo_type sshciphers[] = {
 #if DROPBEAR_CHACHA20POLY1305
 	{"chacha20-poly1305@openssh.com", 0, &dropbear_chachapoly, 1, &dropbear_mode_chachapoly},
 #endif
+
+#if DROPBEAR_ENABLE_GCM_MODE
+#if DROPBEAR_AES128
+	{"aes128-gcm@openssh.com", 0, &dropbear_aes128, 1, &dropbear_mode_gcm},
+#endif
+#if DROPBEAR_AES256
+	{"aes256-gcm@openssh.com", 0, &dropbear_aes256, 1, &dropbear_mode_gcm},
+#endif
+#endif /* DROPBEAR_ENABLE_GCM_MODE */
 
 #if DROPBEAR_ENABLE_CTR_MODE
 #if DROPBEAR_AES128
