@@ -169,12 +169,18 @@ algo_type sshciphers[] = {
 #if DROPBEAR_TWOFISH128
 	{"twofish128-cbc", 0, &dropbear_twofish128, 1, &dropbear_mode_cbc},
 #endif
+#endif /* DROPBEAR_ENABLE_CBC_MODE */
+
 #if DROPBEAR_3DES
+#if DROPBEAR_ENABLE_CTR_MODE
 	{"3des-ctr", 0, &dropbear_3des, 1, &dropbear_mode_ctr},
 #endif
-#if DROPBEAR_3DES
+#if DROPBEAR_ENABLE_CBC_MODE
 	{"3des-cbc", 0, &dropbear_3des, 1, &dropbear_mode_cbc},
 #endif
+#endif /* DROPBEAR_3DES */
+
+#if DROPBEAR_ENABLE_CBC_MODE
 #if DROPBEAR_BLOWFISH
 	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
 #endif
