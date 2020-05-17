@@ -44,7 +44,7 @@
 #endif
 
 static void rsa_pad_em(const dropbear_rsa_key * key,
-	const buffer *data_buf, mp_int * rsa_em, enum signkey_type sigtype);
+	const buffer *data_buf, mp_int * rsa_em, enum signature_type sigtype);
 
 /* Load a public rsa key from a buffer, initialising the values.
  * The key will have the same format as buf_put_rsa_key.
@@ -197,7 +197,7 @@ void buf_put_rsa_priv_key(buffer* buf, const dropbear_rsa_key *key) {
 /* Verify a signature in buf, made on data by the key given.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_rsa_verify(buffer * buf, const dropbear_rsa_key *key, 
-		enum signkey_type sigtype, const buffer *data_buf) {
+		enum signature_type sigtype, const buffer *data_buf) {
 	unsigned int slen;
 	DEF_MP_INT(rsa_s);
 	DEF_MP_INT(rsa_mdash);
@@ -253,7 +253,7 @@ out:
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
 void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key, 
-		enum signkey_type sigtype, const buffer *data_buf) {
+		enum signature_type sigtype, const buffer *data_buf) {
 	const char *name = NULL;
 	unsigned int nsize, ssize, namelen = 0;
 	unsigned int i;
@@ -352,7 +352,7 @@ void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key,
 /* Creates the message value as expected by PKCS, 
    see rfc8017 section 9.2 */
 static void rsa_pad_em(const dropbear_rsa_key * key,
-	const buffer *data_buf, mp_int * rsa_em, enum signkey_type sigtype) {
+	const buffer *data_buf, mp_int * rsa_em, enum signature_type sigtype) {
     /* EM = 0x00 || 0x01 || PS || 0x00 || T 
 	   PS is padding of 0xff to make EM the size of key->n
 
@@ -380,14 +380,14 @@ static void rsa_pad_em(const dropbear_rsa_key * key,
 
 	switch (sigtype) {
 #if DROPBEAR_RSA_SHA1
-		case DROPBEAR_SIGNKEY_RSA:
+		case DROPBEAR_SIGNATURE_RSA_SHA1:
 			Tlen = sizeof(T_sha1);
 			T = T_sha1;
 			hash_desc = &sha1_desc;
 			break;
 #endif
 #if DROPBEAR_RSA_SHA256
-		case DROPBEAR_SIGNKEY_RSA_SHA256:
+		case DROPBEAR_SIGNATURE_RSA_SHA256:
 			Tlen = sizeof(T_sha256);
 			T = T_sha256;
 			hash_desc = &sha256_desc;

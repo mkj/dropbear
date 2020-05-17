@@ -43,10 +43,10 @@ typedef struct dropbear_RSA_Key {
 } dropbear_rsa_key;
 
 void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key, 
-        enum signkey_type sigtype, const buffer *data_buf);
+        enum signature_type sigtype, const buffer *data_buf);
 #if DROPBEAR_SIGNKEY_VERIFY
 int buf_rsa_verify(buffer * buf, const dropbear_rsa_key *key, 
-        enum signkey_type sigtype, const buffer *data_buf);
+        enum signature_type sigtype, const buffer *data_buf);
 #endif
 int buf_get_rsa_pub_key(buffer* buf, dropbear_rsa_key *key);
 int buf_get_rsa_priv_key(buffer* buf, dropbear_rsa_key *key);

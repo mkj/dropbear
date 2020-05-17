@@ -223,29 +223,29 @@ algo_type ssh_nocompress[] = {
 
 algo_type sshhostkey[] = {
 #if DROPBEAR_ED25519
-	{"ssh-ed25519", DROPBEAR_SIGNKEY_ED25519, NULL, 1, NULL},
+	{"ssh-ed25519", DROPBEAR_SIGNATURE_ED25519, NULL, 1, NULL},
 #endif
 #if DROPBEAR_ECDSA
 #if DROPBEAR_ECC_256
-	{"ecdsa-sha2-nistp256", DROPBEAR_SIGNKEY_ECDSA_NISTP256, NULL, 1, NULL},
+	{"ecdsa-sha2-nistp256", DROPBEAR_SIGNATURE_ECDSA_NISTP256, NULL, 1, NULL},
 #endif
 #if DROPBEAR_ECC_384
-	{"ecdsa-sha2-nistp384", DROPBEAR_SIGNKEY_ECDSA_NISTP384, NULL, 1, NULL},
+	{"ecdsa-sha2-nistp384", DROPBEAR_SIGNATURE_ECDSA_NISTP384, NULL, 1, NULL},
 #endif
 #if DROPBEAR_ECC_521
-	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNKEY_ECDSA_NISTP521, NULL, 1, NULL},
+	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNATURE_ECDSA_NISTP521, NULL, 1, NULL},
 #endif
 #endif
 #if DROPBEAR_RSA
 #if DROPBEAR_RSA_SHA256
-	{"rsa-sha2-256", DROPBEAR_SIGNKEY_RSA_SHA256, NULL, 1, NULL},
+	{"rsa-sha2-256", DROPBEAR_SIGNATURE_RSA_SHA256, NULL, 1, NULL},
 #endif
 #if DROPBEAR_RSA_SHA1
-	{"ssh-rsa", DROPBEAR_SIGNKEY_RSA, NULL, 1, NULL},
+	{"ssh-rsa", DROPBEAR_SIGNATURE_RSA_SHA1, NULL, 1, NULL},
 #endif
 #endif
 #if DROPBEAR_DSS
-	{"ssh-dss", DROPBEAR_SIGNKEY_DSS, NULL, 1, NULL},
+	{"ssh-dss", DROPBEAR_SIGNATURE_DSS, NULL, 1, NULL},
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };
@@ -263,8 +263,6 @@ static const struct dropbear_kex kex_dh_group14_sha256 = {DROPBEAR_KEX_NORMAL_DH
 static const struct dropbear_kex kex_dh_group16_sha512 = {DROPBEAR_KEX_NORMAL_DH, dh_p_16, DH_P_16_LEN, NULL, &sha512_desc };
 #endif
 
-/* These can't be const since dropbear_ecc_fill_dp() fills out
- ecc_curve at runtime */
 #if DROPBEAR_ECDH
 #if DROPBEAR_ECC_256
 static const struct dropbear_kex kex_ecdh_nistp256 = {DROPBEAR_KEX_ECDH, NULL, 0, &ecc_curve_nistp256, &sha256_desc };

@@ -92,8 +92,8 @@ struct key_context {
 	struct key_context_directional trans;
 
 	const struct dropbear_kex *algo_kex;
-	int algo_hostkey; /* server key type */
-	int algo_signature; /* server signature type */
+	enum signkey_type algo_hostkey; /* server key type */
+	enum signature_type algo_signature; /* server signature type */
 
 	int allow_compress; /* whether compression has started (useful in 
 							zlib@openssh.com delayed compression case) */
@@ -312,6 +312,14 @@ struct clientsession {
 									  interactive auth.*/
 #endif
 	sign_key *lastprivkey;
+
+	enum signature_type server_sig_algs[DROPBEAR_SIGNKEY_NUM_NAMED+1];
+	int server_sig_algs_count;
+#if DROPBEAR_RSA
+	/* Set to DROPBEAR_SIGNATURE_RSA_SHA256 or DROPBEAR_SIGNATURE_RSA_SHA1
+	if depending which the server accepts */
+	enum signature_type preferred_rsa_sigtype; 
+#endif
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0

@@ -111,34 +111,52 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 
 /* Special case for rsa-sha2-256. This could be generalised if more 
    signature names are added that aren't 1-1 with public key names */
-const char* signature_name_from_type(enum signkey_type type, unsigned int *namelen) {
+const char* signature_name_from_type(enum signature_type type, unsigned int *namelen) {
 #if DROPBEAR_RSA_SHA256
-	if (type == DROPBEAR_SIGNKEY_RSA_SHA256) {
-		*namelen = strlen(SSH_SIGNKEY_RSA_SHA256);
-		return SSH_SIGNKEY_RSA_SHA256;
+	if (type == DROPBEAR_SIGNATURE_RSA_SHA256) {
+		*namelen = strlen(SSH_SIGNATURE_RSA_SHA256);
+		return SSH_SIGNATURE_RSA_SHA256;
 	}
 #endif
-	return signkey_name_from_type(type, namelen);
-}
-
-enum signkey_type signature_type_from_name(const char* name, unsigned int namelen) {
-#if DROPBEAR_RSA_SHA256
-	if (namelen == strlen(SSH_SIGNKEY_RSA_SHA256) 
-		&& memcmp(name, SSH_SIGNKEY_RSA_SHA256, namelen) == 0) {
-		return DROPBEAR_SIGNKEY_RSA_SHA256;
+#if DROPBEAR_RSA_SHA1
+	if (type == DROPBEAR_SIGNATURE_RSA_SHA1) {
+		*namelen = strlen(SSH_SIGNKEY_RSA);
+		return SSH_SIGNKEY_RSA;
 	}
 #endif
-	return signkey_type_from_name(name, namelen);
+	return signkey_name_from_type((enum signkey_type)type, namelen);
 }
 
-enum signkey_type signkey_type_from_signature(enum signkey_type sigtype) {
+/* Returns DROPBEAR_SIGNATURE_NONE if none match */
+enum signature_type signature_type_from_name(const char* name, unsigned int namelen) {
 #if DROPBEAR_RSA_SHA256
-	if (sigtype == DROPBEAR_SIGNKEY_RSA_SHA256) {
+	if (namelen == strlen(SSH_SIGNATURE_RSA_SHA256) 
+		&& memcmp(name, SSH_SIGNATURE_RSA_SHA256, namelen) == 0) {
+		return DROPBEAR_SIGNATURE_RSA_SHA256;
+	}
+#endif
+#if DROPBEAR_RSA_SHA256
+	if (namelen == strlen(SSH_SIGNKEY_RSA) 
+		&& memcmp(name, SSH_SIGNKEY_RSA, namelen) == 0) {
+		return DROPBEAR_SIGNATURE_RSA_SHA1;
+	}
+#endif
+	return (enum signature_type)signkey_type_from_name(name, namelen);
+}
+
+enum signkey_type signkey_type_from_signature(enum signature_type sigtype) {
+#if DROPBEAR_RSA_SHA256
+	if (sigtype == DROPBEAR_SIGNATURE_RSA_SHA256) {
+		return DROPBEAR_SIGNKEY_RSA;
+	}
+#endif
+#if DROPBEAR_RSA_SHA1
+	if (sigtype == DROPBEAR_SIGNATURE_RSA_SHA1) {
 		return DROPBEAR_SIGNKEY_RSA;
 	}
 #endif
 	assert(sigtype < DROPBEAR_SIGNKEY_NUM_NAMED);
-	return sigtype;
+	return (enum signkey_type)sigtype;
 }
 
 /* Returns a pointer to the key part specific to "type".
@@ -562,10 +580,19 @@ char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloble
 #endif
 }
 
-void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type sigtype, 
+void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype, 
 	const buffer *data_buf) {
 	buffer *sigblob = buf_new(MAX_PUBKEY_SIZE);
 	enum signkey_type keytype = signkey_type_from_signature(sigtype);
+
+#if DEBUG_TRACE
+	{
+		int namelen;
+		const char* signame = signature_name_from_type(sigtype, &namelen);
+		TRACE(("buf_put_sign type %d %s", sigtype, signame));
+	}
+#endif
+
 
 #if DROPBEAR_DSS
 	if (keytype == DROPBEAR_SIGNKEY_DSS) {
@@ -603,11 +630,12 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signkey_type sigtype,
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the
  * signature blob */
-int buf_verify(buffer * buf, sign_key *key, enum signkey_type expect_sigtype, const buffer *data_buf) {
+int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf) {
 	
 	char *type_name = NULL;
 	unsigned int type_name_len = 0;
-	enum signkey_type sigtype, keytype;
+	enum signature_type sigtype;
+	enum signkey_type keytype;
 
 	TRACE(("enter buf_verify"))
 
@@ -616,8 +644,7 @@ int buf_verify(buffer * buf, sign_key *key, enum signkey_type expect_sigtype, co
 	sigtype = signature_type_from_name(type_name, type_name_len);
 	m_free(type_name);
 
-	if (expect_sigtype != DROPBEAR_SIGNKEY_ANY
-		&& expect_sigtype != sigtype) {
+	if (expect_sigtype != sigtype) {
 			dropbear_exit("Non-matching signing type");
 	}
 

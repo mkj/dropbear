@@ -92,7 +92,8 @@ void svr_auth_pubkey(int valid_user) {
 	buffer * signbuf = NULL;
 	sign_key * key = NULL;
 	char* fp = NULL;
-	enum signkey_type sigtype, keytype;
+	enum signature_type sigtype;
+	enum signkey_type keytype;
     int auth_failure = 1;
 
 	TRACE(("enter pubkeyauth"))
@@ -102,10 +103,6 @@ void svr_auth_pubkey(int valid_user) {
 	testkey = (buf_getbool(ses.payload) == 0);
 
 	sigalgo = buf_getstring(ses.payload, &sigalgolen);
-	sigtype = signature_type_from_name(sigalgo, sigalgolen);
-	keytype = signkey_type_from_signature(sigtype);
-	keyalgo = signkey_name_from_type(keytype, &keyalgolen);
-
 	keybloblen = buf_getint(ses.payload);
 	keyblob = buf_getptr(ses.payload, keybloblen);
 
@@ -117,6 +114,16 @@ void svr_auth_pubkey(int valid_user) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
+
+	sigtype = signature_type_from_name(sigalgo, sigalgolen);
+	if (sigtype == DROPBEAR_SIGNATURE_NONE) {
+		send_msg_userauth_failure(0, 0);
+		goto out;
+	}
+
+	keytype = signkey_type_from_signature(sigtype);
+	keyalgo = signkey_name_from_type(keytype, &keyalgolen);
+
 #if DROPBEAR_PLUGIN
         if (svr_ses.plugin_instance != NULL) {
             char *options_buf;

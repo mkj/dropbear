@@ -33,7 +33,7 @@
 #include "agentfwd.h"
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
-static void send_msg_userauth_pubkey(sign_key *key, enum signkey_type sigtype, int realsign);
+static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype, int realsign);
 
 /* Called when we receive a SSH_MSG_USERAUTH_FAILURE for a pubkey request.
  * We use it to remove the key we tried from the list */
@@ -58,7 +58,8 @@ void recv_msg_userauth_pk_ok() {
 	buffer* keybuf = NULL;
 	char* algotype = NULL;
 	unsigned int algolen;
-	enum signkey_type sigtype, keytype;
+	enum signkey_type keytype;
+	enum signature_type sigtype;
 	unsigned int remotelen;
 
 	TRACE(("enter recv_msg_userauth_pk_ok"))
@@ -113,7 +114,7 @@ void recv_msg_userauth_pk_ok() {
 		TRACE(("matching key"))
 		/* XXX TODO: if it's an encrypted key, here we ask for their
 		 * password */
-		send_msg_userauth_pubkey((sign_key*)iter->item, keytype, 1);
+		send_msg_userauth_pubkey((sign_key*)iter->item, sigtype, 1);
 	} else {
 		TRACE(("That was whacky. We got told that a key was valid, but it didn't match our list. Sounds like dodgy code on Dropbear's part"))
 	}
@@ -121,7 +122,7 @@ void recv_msg_userauth_pk_ok() {
 	TRACE(("leave recv_msg_userauth_pk_ok"))
 }
 
-static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signkey_type sigtype,
+static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 			const buffer *data_buf) {
 #if DROPBEAR_CLI_AGENTFWD
 	// TODO: rsa-sha256 agent
@@ -139,14 +140,14 @@ static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signkey_type sigty
 	}
 }
 
-static void send_msg_userauth_pubkey(sign_key *key, enum signkey_type sigtype, int realsign) {
+static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype, int realsign) {
 
 	const char *algoname = NULL;
 	unsigned int algolen;
 	buffer* sigbuf = NULL;
 	enum signkey_type keytype = signkey_type_from_signature(sigtype);
 
-	TRACE(("enter send_msg_userauth_pubkey"))
+	TRACE(("enter send_msg_userauth_pubkey sigtype %d", sigtype))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
@@ -183,7 +184,6 @@ static void send_msg_userauth_pubkey(sign_key *key, enum signkey_type sigtype, i
 
 /* Returns 1 if a key was tried */
 int cli_auth_pubkey() {
-
 	TRACE(("enter cli_auth_pubkey"))
 
 #if DROPBEAR_CLI_AGENTFWD
@@ -194,16 +194,26 @@ int cli_auth_pubkey() {
 	}
 #endif
 
+	/* TODO iterate through privkeys to skip ones not in server-sig-algs */
+
+	/* TODO: testing */
+#if DROPBEAR_RSA_SHA256
+	cli_ses.preferred_rsa_sigtype = DROPBEAR_SIGNATURE_RSA_SHA256;
+#elif DROPBEAR_RSA_SHA1
+	cli_ses.preferred_rsa_sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
+#endif
+
 	if (cli_opts.privkeys->first) {
 		sign_key * key = (sign_key*)cli_opts.privkeys->first->item;
-		enum signkey_type sigtype = key->type;
-		/* Send a trial request */
-#if DROPBEAR_RSA && DROPBEAR_RSA_SHA256
-		// TODO: use ext-info to choose rsa kind
-		if (sigtype == DROPBEAR_SIGNKEY_RSA) {
-			sigtype = DROPBEAR_SIGNKEY_RSA_SHA256;
+		/* Determine the signature type to use */
+		enum signature_type sigtype = (enum signature_type)key->type;
+#if DROPBEAR_RSA 
+		if (key->type == DROPBEAR_SIGNKEY_RSA) {
+			sigtype = cli_ses.preferred_rsa_sigtype;
 		}
 #endif
+
+		/* Send a trial request */
 		send_msg_userauth_pubkey(key, sigtype, 0);
 		cli_ses.lastprivkey = key;
 		TRACE(("leave cli_auth_pubkey-success"))
