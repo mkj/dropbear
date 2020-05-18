@@ -29,7 +29,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 		sign_key *key = new_sign_key();
 		enum signkey_type keytype = DROPBEAR_SIGNKEY_ANY;
 		if (buf_get_pub_key(fuzz.input, key, &keytype) == DROPBEAR_SUCCESS) {
-			enum signature_type sigtype = (enum signature_type)keytype;
+			enum signature_type sigtype;
 			if (keytype == DROPBEAR_SIGNKEY_RSA) {
 				/* Flip a coin to decide rsa signature type */
 				int flag = buf_getbyte(fuzz_input);
@@ -38,6 +38,8 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 				} else {
 					sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
 				}
+			} else {
+				sigtype = signature_type_from_signkey(keytype);
 			}
 			if (buf_verify(fuzz.input, key, sigtype, verifydata) == DROPBEAR_SUCCESS) {
 				/* The fuzzer is capable of generating keys with a signature to match.

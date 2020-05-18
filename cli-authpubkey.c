@@ -184,6 +184,7 @@ static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype,
 
 /* Returns 1 if a key was tried */
 int cli_auth_pubkey() {
+	enum signature_type sigtype;
 	TRACE(("enter cli_auth_pubkey"))
 
 #if DROPBEAR_CLI_AGENTFWD
@@ -191,28 +192,77 @@ int cli_auth_pubkey() {
 		/* get the list of available keys from the agent */
 		cli_load_agent_keys(cli_opts.privkeys);
 		cli_opts.agent_keys_loaded = 1;
+		TRACE(("cli_auth_pubkey: agent keys loaded"))
 	}
 #endif
 
-	/* TODO iterate through privkeys to skip ones not in server-sig-algs */
-
-	/* TODO: testing */
+	/* iterate through privkeys to remove ones not allowed in server-sig-algs */
+ 	while (cli_opts.privkeys->first) {
+		sign_key * key = (sign_key*)cli_opts.privkeys->first->item;
+		if (cli_ses.server_sig_algs) {
+#ifdef DROPBEAR_RSA
+			if (key->type == DROPBEAR_SIGNKEY_RSA) {
 #if DROPBEAR_RSA_SHA256
-	cli_ses.preferred_rsa_sigtype = DROPBEAR_SIGNATURE_RSA_SHA256;
-#elif DROPBEAR_RSA_SHA1
-	cli_ses.preferred_rsa_sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
+				if (buf_has_algo(cli_ses.server_sig_algs, SSH_SIGNATURE_RSA_SHA256) 
+						== DROPBEAR_SUCCESS) {
+					sigtype = DROPBEAR_SIGNATURE_RSA_SHA256;
+					TRACE(("server-sig-algs allows rsa sha256"))
+					break;
+				}
+#endif /* DROPBEAR_RSA_SHA256 */
+#if DROPBEAR_RSA_SHA1
+				if (buf_has_algo(cli_ses.server_sig_algs, SSH_SIGNKEY_RSA)
+						== DROPBEAR_SUCCESS) {
+					sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
+					TRACE(("server-sig-algs allows rsa sha1"))
+					break;
+				}
+#endif /* DROPBEAR_RSA_SHA256 */
+			} else
+#endif /* DROPBEAR_RSA */
+			{
+				/* Not RSA */
+				const char *name = NULL;
+				sigtype = signature_type_from_signkey(key->type);
+				name = signature_name_from_type(sigtype, NULL);
+				if (buf_has_algo(cli_ses.server_sig_algs, name)
+						== DROPBEAR_SUCCESS) {
+					TRACE(("server-sig-algs allows %s", name))
+					break;
+				}
+			}
+
+			/* No match, skip this key */
+			TRACE(("server-sig-algs no match keytype %d, skipping", key->type))
+			key = list_remove(cli_opts.privkeys->first);
+			sign_key_free(key); 
+			continue;
+		} else {
+			/* Server didn't provide a server-sig-algs list, we'll 
+			   assume all except rsa-sha256 are OK. */
+#if DROPBEAR_RSA
+			if (key->type == DROPBEAR_SIGNKEY_RSA) {
+#ifdef DROPBEAR_RSA_SHA1
+				sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
+				TRACE(("no server-sig-algs, using rsa sha1"))
+				break;
+#else
+				/* only support rsa-sha256, skip this key */
+				TRACE(("no server-sig-algs, skipping rsa sha256"))
+				key = list_remove(cli_opts.privkeys->first);
+				sign_key_free(key); 
+				continue;
 #endif
+			} /* key->type == DROPBEAR_SIGNKEY_RSA */
+#endif /* DROPBEAR_RSA */
+			sigtype = signature_type_from_signkey(key->type);
+			TRACE(("no server-sig-algs, using key"))
+			break;
+		}
+	}
 
 	if (cli_opts.privkeys->first) {
 		sign_key * key = (sign_key*)cli_opts.privkeys->first->item;
-		/* Determine the signature type to use */
-		enum signature_type sigtype = (enum signature_type)key->type;
-#if DROPBEAR_RSA 
-		if (key->type == DROPBEAR_SIGNKEY_RSA) {
-			sigtype = cli_ses.preferred_rsa_sigtype;
-		}
-#endif
-
 		/* Send a trial request */
 		send_msg_userauth_pubkey(key, sigtype, 0);
 		cli_ses.lastprivkey = key;

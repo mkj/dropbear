@@ -114,13 +114,17 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 const char* signature_name_from_type(enum signature_type type, unsigned int *namelen) {
 #if DROPBEAR_RSA_SHA256
 	if (type == DROPBEAR_SIGNATURE_RSA_SHA256) {
-		*namelen = strlen(SSH_SIGNATURE_RSA_SHA256);
+		if (namelen) {
+			*namelen = strlen(SSH_SIGNATURE_RSA_SHA256);
+		}
 		return SSH_SIGNATURE_RSA_SHA256;
 	}
 #endif
 #if DROPBEAR_RSA_SHA1
 	if (type == DROPBEAR_SIGNATURE_RSA_SHA1) {
-		*namelen = strlen(SSH_SIGNKEY_RSA);
+		if (namelen) {
+			*namelen = strlen(SSH_SIGNKEY_RSA);
+		}
 		return SSH_SIGNKEY_RSA;
 	}
 #endif
@@ -142,6 +146,16 @@ enum signature_type signature_type_from_name(const char* name, unsigned int name
 	}
 #endif
 	return (enum signature_type)signkey_type_from_name(name, namelen);
+}
+
+/* Returns the signature type from a key type. Must not be called 
+   with RSA keytype */
+enum signature_type signature_type_from_signkey(enum signkey_type keytype) {
+#if DROPBEAR_RSA
+	assert(keytype != DROPBEAR_SIGNKEY_RSA);
+#endif
+	assert(keytype < DROPBEAR_SIGNKEY_NUM_NAMED);
+	return (enum signature_type)keytype;
 }
 
 enum signkey_type signkey_type_from_signature(enum signature_type sigtype) {
@@ -587,8 +601,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 
 #if DEBUG_TRACE
 	{
-		int namelen;
-		const char* signame = signature_name_from_type(sigtype, &namelen);
+		const char* signame = signature_name_from_type(sigtype, NULL);
 		TRACE(("buf_put_sign type %d %s", sigtype, signame));
 	}
 #endif

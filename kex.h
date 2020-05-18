@@ -65,6 +65,8 @@ void recv_msg_kexdh_init(void); /* server */
 void send_msg_kexdh_init(void); /* client */
 void recv_msg_kexdh_reply(void); /* client */
 
+void recv_msg_ext_info(void);
+
 struct KEXState {
 
 	unsigned sentkexinit : 1; /*set when we've sent/recv kexinit packet */

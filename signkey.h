@@ -120,6 +120,8 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 const char* signature_name_from_type(enum signature_type type, unsigned int *namelen);
 enum signature_type signature_type_from_name(const char* name, unsigned int namelen);
 enum signkey_type signkey_type_from_signature(enum signature_type sigtype);
+enum signature_type signature_type_from_signkey(enum signkey_type keytype);
+
 int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type);
 int buf_get_priv_key(buffer* buf, sign_key *key, enum signkey_type *type);
 void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type);

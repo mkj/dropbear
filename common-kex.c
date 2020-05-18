@@ -820,21 +820,33 @@ static void read_kex_algos() {
 	int goodguess = 0;
 	int allgood = 1; /* we AND this with each goodguess and see if its still
 						true after */
-
-#if DROPBEAR_KEXGUESS2
-	enum kexguess2_used kexguess2 = KEXGUESS2_LOOK;
-#else
-	enum kexguess2_used kexguess2 = KEXGUESS2_NO;
-#endif
+	int kexguess2 = 0;
 
 	buf_incrpos(ses.payload, 16); /* start after the cookie */
 
 	memset(ses.newkeys, 0x0, sizeof(*ses.newkeys));
 
 	/* kex_algorithms */
-	algo = buf_match_algo(ses.payload, sshkex, &kexguess2, &goodguess);
+#if DROPBEAR_KEXGUESS2
+	if (buf_has_algo(ses.payload, KEXGUESS2_ALGO_NAME) == DROPBEAR_SUCCESS) {
+		kexguess2 = 1;
+	}
+#endif
+
+	/* Determine if SSH_MSG_EXT_INFO messages should be sent.
+	Should be done for the first key exchange. */
+	if (!ses.kexstate.donefirstkex) {
+		if (IS_DROPBEAR_SERVER) {
+			if (buf_has_algo(ses.payload, SSH_EXT_INFO_C) == DROPBEAR_SUCCESS) {
+				ses.allow_ext_info = 1;
+			}
+		}
+	}
+
+	algo = buf_match_algo(ses.payload, sshkex, kexguess2, &goodguess);
 	allgood &= goodguess;
-	if (algo == NULL || algo->val == KEXGUESS2_ALGO_ID) {
+	if (algo == NULL || algo->data == NULL) {
+		/* kexguess2, ext-info-c, ext-info-s should not match negotiation */
 		erralgo = "kex";
 		goto error;
 	}
@@ -843,7 +855,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_kex = algo->data;
 
 	/* server_host_key_algorithms */
-	algo = buf_match_algo(ses.payload, sshhostkey, &kexguess2, &goodguess);
+	algo = buf_match_algo(ses.payload, sshhostkey, kexguess2, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";

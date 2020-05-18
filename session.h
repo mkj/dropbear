@@ -185,6 +185,9 @@ struct sshsession {
 
 	/* Enables/disables compression */
 	algo_type *compress_algos;
+
+	/* Other side allows SSH_MSG_EXT_INFO */
+	int allow_ext_info;
 							
 	/* a list of queued replies that should be sent after a KEX has
 	   concluded (ie, while dataallowed was unset)*/
@@ -313,13 +316,7 @@ struct clientsession {
 #endif
 	sign_key *lastprivkey;
 
-	enum signature_type server_sig_algs[DROPBEAR_SIGNKEY_NUM_NAMED+1];
-	int server_sig_algs_count;
-#if DROPBEAR_RSA
-	/* Set to DROPBEAR_SIGNATURE_RSA_SHA256 or DROPBEAR_SIGNATURE_RSA_SHA1
-	if depending which the server accepts */
-	enum signature_type preferred_rsa_sigtype; 
-#endif
+	buffer *server_sig_algs;
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0

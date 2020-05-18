@@ -30,6 +30,7 @@
 #include "dh_groups.h"
 #include "ltc_prng.h"
 #include "ecc.h"
+#include "ssh.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
@@ -280,6 +281,7 @@ static const struct dropbear_kex kex_ecdh_nistp521 = {DROPBEAR_KEX_ECDH, NULL, 0
 static const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL, 0, NULL, &sha256_desc };
 #endif
 
+/* data == NULL for non-kex algorithm identifiers */
 algo_type sshkex[] = {
 #if DROPBEAR_CURVE25519
 	{"curve25519-sha256", 0, &kex_curve25519, 1, NULL},
@@ -309,7 +311,11 @@ algo_type sshkex[] = {
 	{"diffie-hellman-group16-sha512", 0, &kex_dh_group16_sha512, 1, NULL},
 #endif
 #if DROPBEAR_KEXGUESS2
-	{KEXGUESS2_ALGO_NAME, KEXGUESS2_ALGO_ID, NULL, 1, NULL},
+	{KEXGUESS2_ALGO_NAME, 0, NULL, 1, NULL},
+#endif
+#if DROPBEAR_CLIENT
+	/* Set unusable by svr_algos_initialise() */
+	{SSH_EXT_INFO_C, 0, NULL, 1, NULL},
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };
@@ -336,15 +342,79 @@ void buf_put_algolist(buffer * buf, const algo_type localalgos[]) {
 	buf_free(algolist);
 }
 
+/* returns a list of pointers into algolist, of null-terminated names.
+   ret_list should be passed in with space for *ret_count elements,
+   on return *ret_count has the number of names filled.
+   algolist is modified. */
+static void get_algolist(char* algolist, unsigned int algolist_len,
+				const char* *ret_list, unsigned int *ret_count) {
+	unsigned int max_count = *ret_count;
+	unsigned int i;
+
+	if (*ret_count == 0) {
+		return;
+	}
+	if (algolist_len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
+		*ret_count = 0;
+	}
+
+	/* ret_list will contain a list of the strings parsed out.
+	   We will have at least one string (even if it's just "") */
+	ret_list[0] = algolist;
+	*ret_count = 1;
+	for (i = 0; i < algolist_len; i++) {
+		if (algolist[i] == '\0') {
+			/* someone is trying something strange */
+			*ret_count = 0;
+			return;
+		}
+
+		if (algolist[i] == ',') {
+			if (*ret_count >= max_count) {
+				/* Too many */
+				*ret_count = 0;
+				return;
+			}
+			algolist[i] = '\0';
+			ret_list[*ret_count] = &algolist[i+1];
+			(*ret_count)++;
+		}
+	}
+}
+
+/* Return DROPBEAR_SUCCESS if the namelist contains algo,
+DROPBEAR_FAILURE otherwise. buf position is not incremented. */
+int buf_has_algo(buffer *buf, const char *algo) {
+	unsigned char* algolist = NULL;
+	unsigned int orig_pos = buf->pos;
+	unsigned int len, remotecount, i;
+	const char *remotenames[MAX_PROPOSED_ALGO];
+	int ret = DROPBEAR_FAILURE;
+
+	algolist = buf_getstring(buf, &len);
+	remotecount = MAX_PROPOSED_ALGO;
+	get_algolist(algolist, len, remotenames, &remotecount);
+	for (i = 0; i < remotecount; i++)
+	{
+		if (strcmp(remotenames[i], algo) == 0) {
+			ret = DROPBEAR_SUCCESS;
+			break;
+		}
+	}
+	if (algolist) {
+		m_free(algolist);
+	}
+	buf_setpos(buf, orig_pos);
+	return ret;
+}
+
 /* match the first algorithm in the comma-separated list in buf which is
  * also in localalgos[], or return NULL on failure.
  * (*goodguess) is set to 1 if the preferred client/server algos match,
  * 0 otherwise. This is used for checking if the kexalgo/hostkeyalgos are
  * guessed correctly */
 algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
-		enum kexguess2_used *kexguess2, int *goodguess)
-{
-
+		int kexguess2, int *goodguess) {
 	char * algolist = NULL;
 	const char *remotenames[MAX_PROPOSED_ALGO], *localnames[MAX_PROPOSED_ALGO];
 	unsigned int len;
@@ -359,40 +429,8 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
 	TRACE(("buf_match_algo: %s", algolist))
-	if (len > MAX_PROPOSED_ALGO*(MAX_NAME_LEN+1)) {
-		goto out;
-	}
-
-	/* remotenames will contain a list of the strings parsed out */
-	/* We will have at least one string (even if it's just "") */
-	remotenames[0] = algolist;
-	remotecount = 1;
-	for (i = 0; i < len; i++) {
-		if (algolist[i] == '\0') {
-			/* someone is trying something strange */
-			goto out;
-		}
-		if (algolist[i] == ',') {
-			algolist[i] = '\0';
-			remotenames[remotecount] = &algolist[i+1];
-			remotecount++;
-		}
-		if (remotecount >= MAX_PROPOSED_ALGO) {
-			break;
-		}
-	}
-	if (kexguess2 && *kexguess2 == KEXGUESS2_LOOK) {
-		for (i = 0; i < remotecount; i++)
-		{
-			if (strcmp(remotenames[i], KEXGUESS2_ALGO_NAME) == 0) {
-				*kexguess2 = KEXGUESS2_YES;
-				break;
-			}
-		}
-		if (*kexguess2 == KEXGUESS2_LOOK) {
-			*kexguess2 = KEXGUESS2_NO;
-		}
-	}
+	remotecount = MAX_PROPOSED_ALGO;
+	get_algolist(algolist, len, remotenames, &remotecount);
 
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable) {
@@ -424,12 +462,11 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 			}
 			if (strcmp(servnames[j], clinames[i]) == 0) {
 				/* set if it was a good guess */
-				if (goodguess && kexguess2) {
-					if (*kexguess2 == KEXGUESS2_YES) {
+				if (goodguess != NULL) {
+					if (kexguess2) {
 						if (i == 0) {
 							*goodguess = 1;
 						}
-
 					} else {
 						if (i == 0 && j == 0) {
 							*goodguess = 1;

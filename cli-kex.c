@@ -411,3 +411,28 @@ out:
 	}
 	m_free(fingerprint);
 }
+
+void recv_msg_ext_info(void) {
+	/* This message is not client-specific in the protocol but Dropbear only handles
+	a server-sent message at present. */
+	unsigned int num_ext;
+	unsigned int i;
+
+	num_ext = buf_getint(ses.payload);
+	TRACE(("received SSH_MSG_EXT_INFO with %d items", num_ext))
+
+	for (i = 0; i < num_ext; i++) {
+		unsigned int name_len;
+		char *ext_name = buf_getstring(ses.payload, &name_len);
+		TRACE(("extension %d name '%s'", i, ext_name))
+		if (cli_ses.server_sig_algs == NULL
+				&& name_len == strlen(SSH_SERVER_SIG_ALGS)
+				&& strcmp(ext_name, SSH_SERVER_SIG_ALGS) == 0) {
+			cli_ses.server_sig_algs = buf_getbuf(ses.payload);
+		} else {
+			/* valid extension values could be >MAX_STRING_LEN */
+			buf_eatstring(ses.payload);
+		}
+		m_free(ext_name);
+	}
+}
