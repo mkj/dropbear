@@ -61,6 +61,7 @@ int is_compress_recv(void);
 #endif
 
 void recv_msg_kexdh_init(void); /* server */
+void send_msg_ext_info(void); /* server */
 
 void send_msg_kexdh_init(void); /* client */
 void recv_msg_kexdh_reply(void); /* client */

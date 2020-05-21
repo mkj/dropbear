@@ -65,7 +65,7 @@ void send_msg_kexinit() {
 	buf_put_algolist(ses.writepayload, sshkex);
 
 	/* server_host_key_algorithms */
-	buf_put_algolist(ses.writepayload, sshhostkey);
+	buf_put_algolist(ses.writepayload, sigalgs);
 
 	/* encryption_algorithms_client_to_server */
 	buf_put_algolist(ses.writepayload, sshciphers);
@@ -110,8 +110,8 @@ void send_msg_kexinit() {
 	ses.newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
 
 	if (ses.send_kex_first_guess) {
-		ses.newkeys->algo_kex = sshkex[0].data;
-		ses.newkeys->algo_signature = sshhostkey[0].val;
+		ses.newkeys->algo_kex = first_usable_algo(sshkex)->data;
+		ses.newkeys->algo_signature = first_usable_algo(sigalgs)->val;
 		ses.newkeys->algo_hostkey = signkey_type_from_signature(ses.newkeys->algo_signature);
 		ses.send_kex_first_guess();
 	}
@@ -834,9 +834,10 @@ static void read_kex_algos() {
 #endif
 
 	/* Determine if SSH_MSG_EXT_INFO messages should be sent.
-	Should be done for the first key exchange. */
-	if (!ses.kexstate.donefirstkex) {
-		if (IS_DROPBEAR_SERVER) {
+	Should be done for the first key exchange. Only required on server side
+    for server-sig-algs */
+	if (IS_DROPBEAR_SERVER) {
+		if (!ses.kexstate.donefirstkex) {
 			if (buf_has_algo(ses.payload, SSH_EXT_INFO_C) == DROPBEAR_SUCCESS) {
 				ses.allow_ext_info = 1;
 			}
@@ -855,7 +856,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_kex = algo->data;
 
 	/* server_host_key_algorithms */
-	algo = buf_match_algo(ses.payload, sshhostkey, kexguess2, &goodguess);
+	algo = buf_match_algo(ses.payload, sigalgs, kexguess2, &goodguess);
 	allgood &= goodguess;
 	if (algo == NULL) {
 		erralgo = "hostkey";
@@ -866,7 +867,7 @@ static void read_kex_algos() {
 	ses.newkeys->algo_hostkey = signkey_type_from_signature(ses.newkeys->algo_signature);
 
 	/* encryption_algorithms_client_to_server */
-	c2s_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
+	c2s_cipher_algo = buf_match_algo(ses.payload, sshciphers, 0, NULL);
 	if (c2s_cipher_algo == NULL) {
 		erralgo = "enc c->s";
 		goto error;
@@ -874,7 +875,7 @@ static void read_kex_algos() {
 	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
-	s2c_cipher_algo = buf_match_algo(ses.payload, sshciphers, NULL, NULL);
+	s2c_cipher_algo = buf_match_algo(ses.payload, sshciphers, 0, NULL);
 	if (s2c_cipher_algo == NULL) {
 		erralgo = "enc s->c";
 		goto error;
@@ -882,7 +883,7 @@ static void read_kex_algos() {
 	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
-	c2s_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
+	c2s_hash_algo = buf_match_algo(ses.payload, sshhashes, 0, NULL);
 	if (c2s_hash_algo == NULL) {
 		erralgo = "mac c->s";
 		goto error;
@@ -890,7 +891,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_hash_algo->name))
 
 	/* mac_algorithms_server_to_client */
-	s2c_hash_algo = buf_match_algo(ses.payload, sshhashes, NULL, NULL);
+	s2c_hash_algo = buf_match_algo(ses.payload, sshhashes, 0, NULL);
 	if (s2c_hash_algo == NULL) {
 		erralgo = "mac s->c";
 		goto error;
@@ -898,7 +899,7 @@ static void read_kex_algos() {
 	TRACE(("hash s2c is  %s", s2c_hash_algo->name))
 
 	/* compression_algorithms_client_to_server */
-	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
+	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
 	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -906,7 +907,7 @@ static void read_kex_algos() {
 	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
-	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, NULL, NULL);
+	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
 	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;

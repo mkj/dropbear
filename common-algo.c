@@ -222,7 +222,7 @@ algo_type ssh_nocompress[] = {
 	{NULL, 0, NULL, 0, NULL}
 };
 
-algo_type sshhostkey[] = {
+algo_type sigalgs[] = {
 #if DROPBEAR_ED25519
 	{"ssh-ed25519", DROPBEAR_SIGNATURE_ED25519, NULL, 1, NULL},
 #endif
@@ -321,25 +321,34 @@ algo_type sshkex[] = {
 };
 
 /* Output a comma separated list of algorithms to a buffer */
-void buf_put_algolist(buffer * buf, const algo_type localalgos[]) {
-
+void buf_put_algolist_all(buffer * buf, const algo_type localalgos[], int useall) {
 	unsigned int i, len;
 	unsigned int donefirst = 0;
-	buffer *algolist = NULL;
+	unsigned int startpos;
 
-	algolist = buf_new(300);
+	startpos = buf->pos;
+	/* Placeholder for length */
+	buf_putint(buf, 0); 
 	for (i = 0; localalgos[i].name != NULL; i++) {
-		if (localalgos[i].usable) {
-			if (donefirst)
-				buf_putbyte(algolist, ',');
+		if (localalgos[i].usable || useall) {
+			if (donefirst) {
+				buf_putbyte(buf, ',');
+			}
 			donefirst = 1;
 			len = strlen(localalgos[i].name);
-			buf_putbytes(algolist, (const unsigned char *) localalgos[i].name, len);
+			buf_putbytes(buf, (const unsigned char *) localalgos[i].name, len);
 		}
 	}
-	buf_putstring(buf, (const char*)algolist->data, algolist->len);
-	TRACE(("algolist add '%*s'", algolist->len, algolist->data))
-	buf_free(algolist);
+	/* Fill out the length */
+	len = buf->pos - startpos - 4;
+	buf_setpos(buf, startpos);
+	buf_putint(buf, len);
+	TRACE(("algolist add %d '%*s'", len, len, buf_getptr(buf, len)))
+	buf_incrwritepos(buf, len);
+}
+
+void buf_put_algolist(buffer * buf, const algo_type localalgos[]) {
+	buf_put_algolist_all(buf, localalgos, 0);
 }
 
 /* returns a list of pointers into algolist, of null-terminated names.
@@ -406,6 +415,16 @@ int buf_has_algo(buffer *buf, const char *algo) {
 	}
 	buf_setpos(buf, orig_pos);
 	return ret;
+}
+
+algo_type * first_usable_algo(algo_type algos[]) {
+	int i;
+	for (i = 0; algos[i].name != NULL; i++) {
+		if (algos[i].usable) {
+			return &algos[i];
+		}
+	}
+	return NULL;
 }
 
 /* match the first algorithm in the comma-separated list in buf which is

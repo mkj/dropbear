@@ -86,6 +86,11 @@ void recv_msg_kexdh_init() {
 	}
 
 	send_msg_newkeys();
+
+	if (ses.allow_ext_info) {
+		send_msg_ext_info();
+	}
+
 	ses.requirenext = SSH_MSG_NEWKEYS;
 	TRACE(("leave recv_msg_kexdh_init"))
 }
@@ -242,3 +247,19 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 	TRACE(("leave send_msg_kexdh_reply"))
 }
 
+/* Only used for server-sig-algs on the server side */
+void send_msg_ext_info(void) {
+	TRACE(("enter send_msg_ext_info"))
+
+	buf_putbyte(ses.writepayload, SSH_MSG_EXT_INFO);
+	/* nr-extensions */
+	buf_putint(ses.writepayload, 1);
+
+	buf_putstring(ses.writepayload, SSH_SERVER_SIG_ALGS, strlen(SSH_SERVER_SIG_ALGS));
+	buf_put_algolist_all(ses.writepayload, sigalgs, 1);
+	
+	encrypt_packet();
+
+	TRACE(("leave send_msg_ext_info"))
+
+}
