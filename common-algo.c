@@ -313,9 +313,11 @@ algo_type sshkex[] = {
 #if DROPBEAR_KEXGUESS2
 	{KEXGUESS2_ALGO_NAME, 0, NULL, 1, NULL},
 #endif
+#if DROPBEAR_EXT_INFO
 #if DROPBEAR_CLIENT
 	/* Set unusable by svr_algos_initialise() */
 	{SSH_EXT_INFO_C, 0, NULL, 1, NULL},
+#endif
 #endif
 	{NULL, 0, NULL, 0, NULL}
 };

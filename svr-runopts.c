@@ -567,7 +567,7 @@ static void addhostkey(const char *keyfile) {
 void load_all_hostkeys() {
 	int i;
 	int any_keys = 0;
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	int loaded_any_ecdsa = 0;
 #endif
 

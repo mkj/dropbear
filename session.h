@@ -186,7 +186,7 @@ struct sshsession {
 	/* Enables/disables compression */
 	algo_type *compress_algos;
 
-	/* Other side allows SSH_MSG_EXT_INFO */
+	/* Other side allows SSH_MSG_EXT_INFO. Currently only set for server */
 	int allow_ext_info;
 							
 	/* a list of queued replies that should be sent after a KEX has
@@ -253,13 +253,12 @@ struct serversession {
 #endif
 
 #if DROPBEAR_PLUGIN
-        /* The shared library handle */
-        void *plugin_handle;
+	/* The shared library handle */
+	void *plugin_handle;
 
-        /* The instance created by the plugin_new function */
-        struct PluginInstance *plugin_instance;
+	/* The instance created by the plugin_new function */
+	struct PluginInstance *plugin_instance;
 #endif
-
 };
 
 typedef enum {
@@ -288,7 +287,6 @@ struct clientsession {
 
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
-	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
 	struct termios saved_tio;

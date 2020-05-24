@@ -418,6 +418,15 @@ void recv_msg_ext_info(void) {
 	unsigned int num_ext;
 	unsigned int i;
 
+	TRACE(("enter recv_msg_ext_info"))
+
+	/* Must be after the first SSH_MSG_NEWKEYS */
+	TRACE(("last %d, donefirst %d, donescond %d", ses.lastpacket, ses.kexstate.donefirstkex, ses.kexstate.donesecondkex))
+	if (!(ses.lastpacket == SSH_MSG_NEWKEYS && !ses.kexstate.donesecondkex)) {
+		TRACE(("leave recv_msg_ext_info: ignoring packet received at the wrong time"))
+		return;
+	}
+
 	num_ext = buf_getint(ses.payload);
 	TRACE(("received SSH_MSG_EXT_INFO with %d items", num_ext))
 
@@ -435,4 +444,5 @@ void recv_msg_ext_info(void) {
 		}
 		m_free(ext_name);
 	}
+	TRACE(("leave recv_msg_ext_info"))
 }

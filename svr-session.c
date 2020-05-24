@@ -337,9 +337,11 @@ static void svr_algos_initialise(void) {
 			algo->usable = 0;
 		}
 #endif
+#if DROPBEAR_EXT_INFO
 		if (strcmp(algo->name, SSH_EXT_INFO_C) == 0) {
 			algo->usable = 0;
 		}
+#endif
 	}
 }
 

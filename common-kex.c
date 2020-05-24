@@ -175,6 +175,9 @@ void send_msg_newkeys() {
 	
 	/* set up our state */
 	ses.kexstate.sentnewkeys = 1;
+	if (ses.kexstate.donefirstkex) {
+		ses.kexstate.donesecondkex = 1;
+	}
 	ses.kexstate.donefirstkex = 1;
 	ses.dataallowed = 1; /* we can send other packets again now */
 	gen_new_keys();
@@ -197,8 +200,6 @@ void recv_msg_newkeys() {
 
 /* Set up the kex for the first time */
 void kexfirstinitialise() {
-	ses.kexstate.donefirstkex = 0;
-
 #ifdef DISABLE_ZLIB
 	ses.compress_algos = ssh_nocompress;
 #else
@@ -833,6 +834,7 @@ static void read_kex_algos() {
 	}
 #endif
 
+#if DROPBEAR_EXT_INFO
 	/* Determine if SSH_MSG_EXT_INFO messages should be sent.
 	Should be done for the first key exchange. Only required on server side
     for server-sig-algs */
@@ -843,6 +845,7 @@ static void read_kex_algos() {
 			}
 		}
 	}
+#endif
 
 	algo = buf_match_algo(ses.payload, sshkex, kexguess2, &goodguess);
 	allgood &= goodguess;

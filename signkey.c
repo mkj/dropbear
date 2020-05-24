@@ -139,7 +139,7 @@ enum signature_type signature_type_from_name(const char* name, unsigned int name
 		return DROPBEAR_SIGNATURE_RSA_SHA256;
 	}
 #endif
-#if DROPBEAR_RSA_SHA256
+#if DROPBEAR_RSA_SHA1
 	if (namelen == strlen(SSH_SIGNKEY_RSA) 
 		&& memcmp(name, SSH_SIGNKEY_RSA, namelen) == 0) {
 		return DROPBEAR_SIGNATURE_RSA_SHA1;

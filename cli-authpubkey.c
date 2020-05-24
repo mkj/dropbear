@@ -200,7 +200,7 @@ int cli_auth_pubkey() {
  	while (cli_opts.privkeys->first) {
 		sign_key * key = (sign_key*)cli_opts.privkeys->first->item;
 		if (cli_ses.server_sig_algs) {
-#ifdef DROPBEAR_RSA
+#if DROPBEAR_RSA
 			if (key->type == DROPBEAR_SIGNKEY_RSA) {
 #if DROPBEAR_RSA_SHA256
 				if (buf_has_algo(cli_ses.server_sig_algs, SSH_SIGNATURE_RSA_SHA256) 
@@ -242,7 +242,7 @@ int cli_auth_pubkey() {
 			   assume all except rsa-sha256 are OK. */
 #if DROPBEAR_RSA
 			if (key->type == DROPBEAR_SIGNKEY_RSA) {
-#ifdef DROPBEAR_RSA_SHA1
+#if DROPBEAR_RSA_SHA1
 				sigtype = DROPBEAR_SIGNATURE_RSA_SHA1;
 				TRACE(("no server-sig-algs, using rsa sha1"))
 				break;

@@ -61,7 +61,6 @@ int is_compress_recv(void);
 #endif
 
 void recv_msg_kexdh_init(void); /* server */
-void send_msg_ext_info(void); /* server */
 
 void send_msg_kexdh_init(void); /* client */
 void recv_msg_kexdh_reply(void); /* client */
@@ -76,8 +75,9 @@ struct KEXState {
 	unsigned sentnewkeys : 1; /* set once we've send MSG_NEWKEYS (will be cleared once we have also received */
 	unsigned recvnewkeys : 1; /* set once we've received MSG_NEWKEYS (cleared once we have also sent */
 
-	unsigned donefirstkex : 1; /* Set to 1 after the first kex has completed,
+	unsigned int donefirstkex; /* Set to 1 after the first kex has completed,
 								  ie the transport layer has been set up */
+	unsigned int donesecondkex; /* Set to 1 after the second kex has completed */
 
 	unsigned our_first_follows_matches : 1;
 

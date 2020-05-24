@@ -161,6 +161,10 @@ If you test it please contact the Dropbear author */
 
 #define DROPBEAR_NORMAL_DH ((DROPBEAR_DH_GROUP1) || (DROPBEAR_DH_GROUP14) || (DROPBEAR_DH_GROUP16))
 
+/* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
+#define DROPBEAR_EXT_INFO ((DROPBEAR_RSA_SHA256) \
+		&& ((DROPBEAR_CLI_PUBKEY_AUTH) || (DROPBEAR_SVR_PUBKEY_AUTH)))
+
 /* roughly 2x 521 bits */
 #define MAX_ECC_SIZE 140
 
