@@ -46,6 +46,7 @@ install:
   - autoheader 
   - ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
   - if [ "$NOWRITEV" = "1" ]; then sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
+  - make lint
   - make -j3 
   - test -z $DO_FUZZ || make fuzzstandalone
   # avoid concurrent install, osx/freebsd is racey (https://bugs.freebsd.org/bugzilla/show_bug.cgi?id=208093)
