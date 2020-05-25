@@ -99,6 +99,19 @@ IMPORTANT: Some options will require "make clean" after changes */
  * and forwards compatibility */
 #define DROPBEAR_ENABLE_CTR_MODE 1
 
+/* Enable "Galois/Counter Mode" for ciphers. This authenticated
+ * encryption mode is combination of CTR mode and GHASH. Recommended
+ * for security and forwards compatibility, but slower than CTR on
+ * CPU w/o dedicated AES/GHASH instructions.
+ * Compiling in will add ~6kB to binary size on x86-64 */
+#define DROPBEAR_ENABLE_GCM_MODE 0
+
+/* Enable Chacha20-Poly1305 authenticated encryption mode. This is
+ * generally faster than AES256 on CPU w/o dedicated AES instructions,
+ * having the same key size.
+ * Compiling in will add ~5,5kB to binary size on x86-64 */
+#define DROPBEAR_CHACHA20POLY1305 1
+
 /* Message integrity. sha2-256 is recommended as a default, 
    sha1 for compatibility */
 #define DROPBEAR_SHA1_HMAC 1
