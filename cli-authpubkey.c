@@ -130,7 +130,7 @@ static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signature_type sig
 		/* Format the agent signature ourselves, as buf_put_sign would. */
 		buffer *sigblob;
 		sigblob = buf_new(MAX_PUBKEY_SIZE);
-		agent_buf_sign(sigblob, key, data_buf);
+		agent_buf_sign(sigblob, key, data_buf, sigtype);
 		buf_putbufstring(buf, sigblob);
 		buf_free(sigblob);
 	} else 
