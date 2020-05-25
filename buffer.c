@@ -228,17 +228,35 @@ char* buf_getstring(buffer* buf, unsigned int *retlen) {
 }
 
 /* Return a string as a newly allocated buffer */
-buffer * buf_getstringbuf(buffer *buf) {
+static buffer * buf_getstringbuf_int(buffer *buf, int incllen) {
 	buffer *ret = NULL;
 	unsigned int len = buf_getint(buf);
+	int extra = 0;
 	if (len > MAX_STRING_LEN) {
 		dropbear_exit("String too long");
 	}
-	ret = buf_new(len);
+	if (incllen) {
+		extra = 4;
+	}
+	ret = buf_new(len+extra);
+	if (incllen) {
+		buf_putint(ret, len);
+	}
 	memcpy(buf_getwriteptr(ret, len), buf_getptr(buf, len), len);
 	buf_incrpos(buf, len);
 	buf_incrlen(ret, len);
+	buf_setpos(ret, 0);
 	return ret;
+}
+
+/* Return a string as a newly allocated buffer */
+buffer * buf_getstringbuf(buffer *buf) {
+	return buf_getstringbuf_int(buf, 0);
+}
+
+/* Returns a string in a new buffer, including the length */
+buffer * buf_getbuf(buffer *buf) {
+	return buf_getstringbuf_int(buf, 1);
 }
 
 /* Just increment the buffer position the same as if we'd used buf_getstring,

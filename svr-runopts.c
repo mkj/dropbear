@@ -485,9 +485,9 @@ static void addportandaddress(const char* spec) {
 static void disablekey(int type) {
 	int i;
 	TRACE(("Disabling key type %d", type))
-	for (i = 0; sshhostkey[i].name != NULL; i++) {
-		if (sshhostkey[i].val == type) {
-			sshhostkey[i].usable = 0;
+	for (i = 0; sigalgs[i].name != NULL; i++) {
+		if (sigalgs[i].val == type) {
+			sigalgs[i].usable = 0;
 			break;
 		}
 	}
@@ -567,7 +567,7 @@ static void addhostkey(const char *keyfile) {
 void load_all_hostkeys() {
 	int i;
 	int any_keys = 0;
-#ifdef DROPBEAR_ECDSA
+#if DROPBEAR_ECDSA
 	int loaded_any_ecdsa = 0;
 #endif
 

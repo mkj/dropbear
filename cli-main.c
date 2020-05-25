@@ -106,6 +106,7 @@ static void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
 
 	/* Render the formatted exit message */
 	vsnprintf(exitmsg, sizeof(exitmsg), format, param);
+	TRACE(("Exited, cleaning up: %s", exitmsg))
 
 	/* Add the prefix depending on session/auth state */
 	if (!ses.init_done) {

@@ -330,13 +330,18 @@ static void svr_remoteclosed() {
 }
 
 static void svr_algos_initialise(void) {
-#if DROPBEAR_DH_GROUP1 && DROPBEAR_DH_GROUP1_CLIENTONLY
 	algo_type *algo;
 	for (algo = sshkex; algo->name; algo++) {
+#if DROPBEAR_DH_GROUP1 && DROPBEAR_DH_GROUP1_CLIENTONLY
 		if (strcmp(algo->name, "diffie-hellman-group1-sha1") == 0) {
 			algo->usable = 0;
 		}
-	}
 #endif
+#if DROPBEAR_EXT_INFO
+		if (strcmp(algo->name, SSH_EXT_INFO_C) == 0) {
+			algo->usable = 0;
+		}
+#endif
+	}
 }
 

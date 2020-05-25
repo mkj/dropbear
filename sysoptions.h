@@ -143,9 +143,17 @@ If you test it please contact the Dropbear author */
  * signing operations slightly slower. */
 #define DROPBEAR_RSA_BLINDING 1
 
+#ifndef DROPBEAR_RSA_SHA1
+#define DROPBEAR_RSA_SHA1 DROPBEAR_RSA
+#endif
+#ifndef DROPBEAR_RSA_SHA256
+#define DROPBEAR_RSA_SHA256 DROPBEAR_RSA
+#endif
+
 /* hashes which will be linked and registered */
-#define DROPBEAR_SHA256 ((DROPBEAR_SHA2_256_HMAC) || (DROPBEAR_ECC_256)  \
- 			|| (DROPBEAR_CURVE25519) || (DROPBEAR_DH_GROUP14_SHA256))
+#define DROPBEAR_SHA256 ((DROPBEAR_SHA2_256_HMAC) || (DROPBEAR_ECC_256) \
+ 			|| (DROPBEAR_CURVE25519) || (DROPBEAR_DH_GROUP14_SHA256) \
+			|| (DROPBEAR_RSA_SHA256))
 #define DROPBEAR_SHA384 (DROPBEAR_ECC_384)
 /* LTC SHA384 depends on SHA512 */
 #define DROPBEAR_SHA512 ((DROPBEAR_SHA2_512_HMAC) || (DROPBEAR_ECC_521) \
@@ -156,6 +164,10 @@ If you test it please contact the Dropbear author */
 #define DROPBEAR_DH_GROUP14 ((DROPBEAR_DH_GROUP14_SHA256) || (DROPBEAR_DH_GROUP14_SHA1))
 
 #define DROPBEAR_NORMAL_DH ((DROPBEAR_DH_GROUP1) || (DROPBEAR_DH_GROUP14) || (DROPBEAR_DH_GROUP16))
+
+/* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
+#define DROPBEAR_EXT_INFO ((DROPBEAR_RSA_SHA256) \
+		&& ((DROPBEAR_CLI_PUBKEY_AUTH) || (DROPBEAR_SVR_PUBKEY_AUTH)))
 
 /* roughly 2x 521 bits */
 #define MAX_ECC_SIZE 140

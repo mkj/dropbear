@@ -273,7 +273,7 @@ static void main_noinetd() {
 				goto out;
 			}
 
-#ifdef DEBUG_NOFORK
+#if DEBUG_NOFORK
 			fork_ret = 0;
 #else
 			fork_ret = fork();

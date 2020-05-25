@@ -51,8 +51,6 @@ void process_packet() {
 	type = buf_getbyte(ses.payload);
 	TRACE(("process_packet: packet type = %d,  len %d", type, ses.payload->len))
 
-	ses.lastpacket = type;
-
 	now = monotonic_now();
 	ses.last_packet_time_keepalive_recv = now;
 
@@ -156,6 +154,7 @@ void process_packet() {
 	recv_unimplemented();
 
 out:
+	ses.lastpacket = type;
 	buf_free(ses.payload);
 	ses.payload = NULL;
 

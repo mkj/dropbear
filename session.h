@@ -102,7 +102,8 @@ struct key_context {
 	struct key_context_directional trans;
 
 	const struct dropbear_kex *algo_kex;
-	int algo_hostkey;
+	enum signkey_type algo_hostkey; /* server key type */
+	enum signature_type algo_signature; /* server signature type */
 
 	int allow_compress; /* whether compression has started (useful in 
 							zlib@openssh.com delayed compression case) */
@@ -194,6 +195,9 @@ struct sshsession {
 
 	/* Enables/disables compression */
 	algo_type *compress_algos;
+
+	/* Other side allows SSH_MSG_EXT_INFO. Currently only set for server */
+	int allow_ext_info;
 							
 	/* a list of queued replies that should be sent after a KEX has
 	   concluded (ie, while dataallowed was unset)*/
@@ -259,13 +263,12 @@ struct serversession {
 #endif
 
 #if DROPBEAR_PLUGIN
-        /* The shared library handle */
-        void *plugin_handle;
+	/* The shared library handle */
+	void *plugin_handle;
 
-        /* The instance created by the plugin_new function */
-        struct PluginInstance *plugin_instance;
+	/* The instance created by the plugin_new function */
+	struct PluginInstance *plugin_instance;
 #endif
-
 };
 
 typedef enum {
@@ -294,7 +297,6 @@ struct clientsession {
 
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */
-	unsigned donefirstkex : 1; /* Set when we set sentnewkeys, never reset */
 
 	int tty_raw_mode; /* Whether we're in raw mode (and have to clean up) */
 	struct termios saved_tio;
@@ -321,6 +323,8 @@ struct clientsession {
 									  interactive auth.*/
 #endif
 	sign_key *lastprivkey;
+
+	buffer *server_sig_algs;
 
 	int retval; /* What the command exit status was - we emulate it */
 #if 0
