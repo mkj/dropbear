@@ -78,7 +78,9 @@ void process_packet() {
 	idle detection. This is slightly incorrect since a tcp forwarded
 	global request with failure won't trigger the idle timeout,
 	but that's probably acceptable */
-	if (!(type == SSH_MSG_GLOBAL_REQUEST || type == SSH_MSG_REQUEST_FAILURE)) {
+	if (!(type == SSH_MSG_GLOBAL_REQUEST 
+		|| type == SSH_MSG_REQUEST_FAILURE
+		|| type == SSH_MSG_CHANNEL_FAILURE)) {
 		ses.last_packet_time_idle = now;
 	}
 
