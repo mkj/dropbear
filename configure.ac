@@ -324,7 +324,7 @@ AC_ARG_ENABLE(shadow,
 )
 
 AC_ARG_ENABLE(plugin,
-	[  --enable-plugin           Enable support for External Public Key Authentication plug-in],
+	[  --enable-plugin         Enable support for External Public Key Authentication plug-in],
 	[
 		AC_DEFINE(DROPBEAR_PLUGIN, 1, External Public Key Authentication)
 		AC_MSG_NOTICE(Enabling support for External Public Key Authentication)
@@ -531,7 +531,8 @@ AC_CHECK_FUNCS(explicit_bzero memset_s)
 AC_ARG_ENABLE(bundled-libtom,
 [  --enable-bundled-libtom       Force using bundled libtomcrypt/libtommath even if a system version exists.
   --disable-bundled-libtom      Force using system libtomcrypt/libtommath, fail if it does not exist.
-                                Default is to use system if available, otherwise bundled.],
+                                Default is to use system if available, otherwise bundled.
+                                Dropbear requires system libtommath >= 1.2.0 and libtomcrypt >= 1.18.0],
 	[
 		if test "x$enableval" = "xyes"; then
 			BUNDLED_LIBTOM=1
@@ -539,9 +540,9 @@ AC_ARG_ENABLE(bundled-libtom,
 		else
 			BUNDLED_LIBTOM=0
 			AC_CHECK_LIB(tommath, mp_to_ubin, LIBTOM_LIBS="-ltommath $LIBTOM_LIBS",
-				[AC_MSG_ERROR([Missing system libtommath and --disable-bundled-libtom was specified])] )
-			AC_CHECK_LIB(tomcrypt, register_cipher, LIBTOM_LIBS="-ltomcrypt $LIBTOM_LIBS",
-				[AC_MSG_ERROR([Missing system libtomcrypt and --disable-bundled-libtom was specified])] )
+				[AC_MSG_ERROR([Missing/old system libtommath and --disable-bundled-libtom was specified])] )
+			AC_CHECK_LIB(tomcrypt, poly1305_init, LIBTOM_LIBS="-ltomcrypt $LIBTOM_LIBS",
+				[AC_MSG_ERROR([Missing/old system libtomcrypt and --disable-bundled-libtom was specified])] )
 		fi
 	],
 	[
