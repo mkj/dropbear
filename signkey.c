@@ -169,7 +169,7 @@ enum signkey_type signkey_type_from_signature(enum signature_type sigtype) {
 		return DROPBEAR_SIGNKEY_RSA;
 	}
 #endif
-	assert(sigtype < DROPBEAR_SIGNKEY_NUM_NAMED);
+	assert((int)sigtype < (int)DROPBEAR_SIGNKEY_NUM_NAMED);
 	return (enum signkey_type)sigtype;
 }
 
