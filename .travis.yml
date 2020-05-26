@@ -8,25 +8,29 @@ dist: focal
 
 matrix:
   include:
-    - compiler: gcc
+    - name: "plain linux"
+      compiler: gcc
       env: WEXTRAFLAGS=-Werror
-    - env: MULTI=1 WEXTRAFLAGS=-Werror
-    # libtom has some warnings, so no WEXTRAFLAGS
-    - env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=""
+    - name: "multi binary"
+      env: MULTI=1 WEXTRAFLAGS=-Werror
+    - name: "bundled libtom, xenial, no writev()"
+      # NOWRITEV is unrelated to libtom/xenial, test here to save a job
+      env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=-Werror NOWRITEV=1 
       # can use an older distro with bundled libtom
       dist: xenial
-    - env: NOWRITEV=1 
-    - os: linux
+    - name: "linux clang"
+      os: linux
       compiler: clang
-    - os: osx
+      env: WEXTRAFLAGS=-Werror
+    - name: "osx"
+      os: osx
       compiler: clang
-      env: WEXTRAFLAGS=""
-
+      # OS X says daemon() and utmp are deprecated
+      env: WEXTRAFLAGS="-Wno-deprecated-declarations -Werror"
     # Note: the fuzzing malloc wrapper doesn't replace free() in system libtomcrypt, so need bundled.
-    - env: DO_FUZZ=1 CONFIGURE_FLAGS="--enable-fuzz --disable-harden --enable-bundled-libtom" WEXTRAFLAGS="" LDFLAGS=-fsanitize=address EXTRACFLAGS=-fsanitize=address CXX=clang++
+    - name: "fuzzing"
+      env: DO_FUZZ=1 CONFIGURE_FLAGS="--enable-fuzz --disable-harden --enable-bundled-libtom" WEXTRAFLAGS=-Werror LDFLAGS=-fsanitize=address EXTRACFLAGS=-fsanitize=address CXX=clang++
       compiler: clang
-      # sanitizers need ptrace which is privileged https://github.com/travis-ci/travis-ci/issues/9033
-      sudo: required
 
 # container-based builds
 addons:
