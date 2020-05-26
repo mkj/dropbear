@@ -3,15 +3,13 @@ language: c
 git:
   depth: 3
 
+# use focal which provides libtommath 1.20
+dist: focal
+
 matrix:
   include:
-    # subsequent matrix options use these first settings
-    - os: linux
-      compiler: gcc
+    - compiler: gcc
       env: WEXTRAFLAGS=-Werror
-      sudo: false
-      # use focal which provides libtommath 1.20
-      dist: focal
     - env: MULTI=1 WEXTRAFLAGS=-Werror
     # libtom has some warnings, so no WEXTRAFLAGS
     - env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=""
