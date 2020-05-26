@@ -2,6 +2,7 @@
 #include "session.h"
 #include "fuzz-wrapfd.h"
 #include "debug.h"
+#include "dss.h"
 
 static void setup_fuzzer(void) {
 	fuzz_common_setup();
@@ -32,7 +33,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 			enum signature_type sigtype;
 			if (keytype == DROPBEAR_SIGNKEY_RSA) {
 				/* Flip a coin to decide rsa signature type */
-				int flag = buf_getbyte(fuzz_input);
+				int flag = buf_getbyte(fuzz.input);
 				if (flag & 0x01) {
 					sigtype = DROPBEAR_SIGNATURE_RSA_SHA256;
 				} else {
