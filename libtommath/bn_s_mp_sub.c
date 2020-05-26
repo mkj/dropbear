@@ -1,21 +1,13 @@
 #include "tommath_private.h"
 #ifdef BN_S_MP_SUB_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* low level subtraction (assumes |a| > |b|), HAC pp.595 Algorithm 14.9 */
-int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
+mp_err s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 {
-   int     olduse, res, min, max;
+   int    olduse, min, max;
+   mp_err err;
 
    /* find sizes */
    min = b->used;
@@ -23,8 +15,8 @@ int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 
    /* init result */
    if (c->alloc < max) {
-      if ((res = mp_grow(c, max)) != MP_OKAY) {
-         return res;
+      if ((err = mp_grow(c, max)) != MP_OKAY) {
+         return err;
       }
    }
    olduse = c->used;
@@ -50,7 +42,7 @@ int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
           * if a carry does occur it will propagate all the way to the
           * MSB.  As a result a single shift is enough to get the carry
           */
-         u = *tmpc >> (((size_t)CHAR_BIT * sizeof(mp_digit)) - 1u);
+         u = *tmpc >> (MP_SIZEOF_BITS(mp_digit) - 1u);
 
          /* Clear carry from T[i] */
          *tmpc++ &= MP_MASK;
@@ -62,16 +54,14 @@ int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
          *tmpc = *tmpa++ - u;
 
          /* U = carry bit of T[i] */
-         u = *tmpc >> (((size_t)CHAR_BIT * sizeof(mp_digit)) - 1u);
+         u = *tmpc >> (MP_SIZEOF_BITS(mp_digit) - 1u);
 
          /* Clear carry from T[i] */
          *tmpc++ &= MP_MASK;
       }
 
       /* clear digits above used (since we may not have grown result above) */
-      for (i = c->used; i < olduse; i++) {
-         *tmpc++ = 0;
-      }
+      MP_ZERO_DIGITS(tmpc, olduse - c->used);
    }
 
    mp_clamp(c);
@@ -79,7 +69,3 @@ int s_mp_sub(const mp_int *a, const mp_int *b, mp_int *c)
 }
 
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

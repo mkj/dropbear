@@ -307,18 +307,18 @@ void buf_putbytes(buffer *buf, const unsigned char *bytes, unsigned int len) {
 /* for our purposes we only need positive (or 0) numbers, so will
  * fail if we get negative numbers */
 void buf_putmpint(buffer* buf, mp_int * mp) {
-
+	size_t written;
 	unsigned int len, pad = 0;
 	TRACE2(("enter buf_putmpint"))
 
 	dropbear_assert(mp != NULL);
 
-	if (SIGN(mp) == MP_NEG) {
+	if (mp_isneg(mp)) {
 		dropbear_exit("negative bignum");
 	}
 
 	/* zero check */
-	if (USED(mp) == 1 && DIGIT(mp, 0) == 0) {
+	if (mp_iszero(mp)) {
 		len = 0;
 	} else {
 		/* SSH spec requires padding for mpints with the MSB set, this code
@@ -339,10 +339,10 @@ void buf_putmpint(buffer* buf, mp_int * mp) {
 		if (pad) {
 			buf_putbyte(buf, 0x00);
 		}
-		if (mp_to_unsigned_bin(mp, buf_getwriteptr(buf, len-pad)) != MP_OKAY) {
+		if (mp_to_ubin(mp, buf_getwriteptr(buf, len-pad), len-pad, &written) != MP_OKAY) {
 			dropbear_exit("mpint error");
 		}
-		buf_incrwritepos(buf, len-pad);
+		buf_incrwritepos(buf, written);
 	}
 
 	TRACE2(("leave buf_putmpint"))
@@ -370,7 +370,7 @@ int buf_getmpint(buffer* buf, mp_int* mp) {
 		return DROPBEAR_FAILURE;
 	}
 
-	if (mp_read_unsigned_bin(mp, buf_getptr(buf, len), len) != MP_OKAY) {
+	if (mp_from_ubin(mp, buf_getptr(buf, len), len) != MP_OKAY) {
 		return DROPBEAR_FAILURE;
 	}
 

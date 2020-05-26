@@ -1,16 +1,7 @@
 #include "tommath_private.h"
 #ifdef BN_MP_PRIME_FERMAT_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* performs one Fermat test.
  *
@@ -20,10 +11,10 @@
  *
  * Sets result to 1 if the congruence holds, or zero otherwise.
  */
-int mp_prime_fermat(const mp_int *a, const mp_int *b, int *result)
+mp_err mp_prime_fermat(const mp_int *a, const mp_int *b, mp_bool *result)
 {
    mp_int  t;
-   int     err;
+   mp_err  err;
 
    /* default to composite  */
    *result = MP_NO;
@@ -54,7 +45,3 @@ LBL_T:
    return err;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

@@ -1,38 +1,29 @@
 #include "tommath_private.h"
 #ifdef BN_S_MP_MUL_HIGH_DIGS_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* multiplies |a| * |b| and does not compute the lower digs digits
  * [meant to get the higher part of the product]
  */
-int s_mp_mul_high_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs)
+mp_err s_mp_mul_high_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs)
 {
-   mp_int  t;
-   int     res, pa, pb, ix, iy;
+   mp_int   t;
+   int      pa, pb, ix, iy;
+   mp_err   err;
    mp_digit u;
-   mp_word r;
+   mp_word  r;
    mp_digit tmpx, *tmpt, *tmpy;
 
    /* can we use the fast multiplier? */
-#ifdef BN_FAST_S_MP_MUL_HIGH_DIGS_C
-   if (((a->used + b->used + 1) < (int)MP_WARRAY)
-       && (MIN(a->used, b->used) < (int)(1u << (((size_t)CHAR_BIT * sizeof(mp_word)) - (2u * (size_t)DIGIT_BIT))))) {
-      return fast_s_mp_mul_high_digs(a, b, c, digs);
+   if (MP_HAS(S_MP_MUL_HIGH_DIGS_FAST)
+       && ((a->used + b->used + 1) < MP_WARRAY)
+       && (MP_MIN(a->used, b->used) < MP_MAXFAST)) {
+      return s_mp_mul_high_digs_fast(a, b, c, digs);
    }
-#endif
 
-   if ((res = mp_init_size(&t, a->used + b->used + 1)) != MP_OKAY) {
-      return res;
+   if ((err = mp_init_size(&t, a->used + b->used + 1)) != MP_OKAY) {
+      return err;
    }
    t.used = a->used + b->used + 1;
 
@@ -61,7 +52,7 @@ int s_mp_mul_high_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs)
          *tmpt++ = (mp_digit)(r & (mp_word)MP_MASK);
 
          /* carry the carry */
-         u       = (mp_digit)(r >> (mp_word)DIGIT_BIT);
+         u       = (mp_digit)(r >> (mp_word)MP_DIGIT_BIT);
       }
       *tmpt = u;
    }
@@ -71,7 +62,3 @@ int s_mp_mul_high_digs(const mp_int *a, const mp_int *b, mp_int *c, int digs)
    return MP_OKAY;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

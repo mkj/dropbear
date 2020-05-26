@@ -1,16 +1,7 @@
 #include "tommath_private.h"
 #ifdef BN_MP_PRIME_IS_PRIME_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* portable integer log of two with small footprint */
 static unsigned int s_floor_ilog2(int value)
@@ -23,61 +14,58 @@ static unsigned int s_floor_ilog2(int value)
 }
 
 
-int mp_prime_is_prime(const mp_int *a, int t, int *result)
+mp_err mp_prime_is_prime(const mp_int *a, int t, mp_bool *result)
 {
    mp_int  b;
-   int     ix, err, res, p_max = 0, size_a, len;
+   int     ix, p_max = 0, size_a, len;
+   mp_bool res;
+   mp_err  err;
    unsigned int fips_rand, mask;
 
    /* default to no */
    *result = MP_NO;
 
-   /* valid value of t? */
-   if (t > PRIME_SIZE) {
-      return MP_VAL;
-   }
-
    /* Some shortcuts */
    /* N > 3 */
    if (a->used == 1) {
       if ((a->dp[0] == 0u) || (a->dp[0] == 1u)) {
-         *result = 0;
+         *result = MP_NO;
          return MP_OKAY;
       }
       if (a->dp[0] == 2u) {
-         *result = 1;
+         *result = MP_YES;
          return MP_OKAY;
       }
    }
 
    /* N must be odd */
-   if (mp_iseven(a) == MP_YES) {
+   if (MP_IS_EVEN(a)) {
       return MP_OKAY;
    }
    /* N is not a perfect square: floor(sqrt(N))^2 != N */
    if ((err = mp_is_square(a, &res)) != MP_OKAY) {
       return err;
    }
-   if (res != 0) {
+   if (res != MP_NO) {
       return MP_OKAY;
    }
 
    /* is the input equal to one of the primes in the table? */
-   for (ix = 0; ix < PRIME_SIZE; ix++) {
-      if (mp_cmp_d(a, ltm_prime_tab[ix]) == MP_EQ) {
+   for (ix = 0; ix < PRIVATE_MP_PRIME_TAB_SIZE; ix++) {
+      if (mp_cmp_d(a, s_mp_prime_tab[ix]) == MP_EQ) {
          *result = MP_YES;
          return MP_OKAY;
       }
    }
 #ifdef MP_8BIT
    /* The search in the loop above was exhaustive in this case */
-   if ((a->used == 1) && (PRIME_SIZE >= 31)) {
+   if ((a->used == 1) && (PRIVATE_MP_PRIME_TAB_SIZE >= 31)) {
       return MP_OKAY;
    }
 #endif
 
    /* first perform trial division */
-   if ((err = mp_prime_is_divisible(a, &res)) != MP_OKAY) {
+   if ((err = s_mp_prime_is_divisible(a, &res)) != MP_OKAY) {
       return err;
    }
 
@@ -114,10 +102,10 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
 
    /*
     * Both, the Frobenius-Underwood test and the the Lucas-Selfridge test are quite
-    * slow so if speed is an issue, define LTM_USE_FIPS_ONLY to use M-R tests with
+    * slow so if speed is an issue, define LTM_USE_ONLY_MR to use M-R tests with
     * bases 2, 3 and t random bases.
     */
-#ifndef LTM_USE_FIPS_ONLY
+#ifndef LTM_USE_ONLY_MR
    if (t >= 0) {
       /*
        * Use a Frobenius-Underwood test instead of the Lucas-Selfridge test for
@@ -149,44 +137,14 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
    }
 
    /*
-      abs(t) extra rounds of M-R to extend the range of primes it can find if t < 0.
       Only recommended if the input range is known to be < 3317044064679887385961981
 
-      It uses the bases for a deterministic M-R test if input < 3317044064679887385961981
+      It uses the bases necessary for a deterministic M-R test if the input is
+      smaller than  3317044064679887385961981
       The caller has to check the size.
-
-      Not for cryptographic use because with known bases strong M-R pseudoprimes can
-      be constructed. Use at least one M-R test with a random base (t >= 1).
-
-      The 1119 bit large number
-
-      80383745745363949125707961434194210813883768828755814583748891752229742737653\
-      33652186502336163960045457915042023603208766569966760987284043965408232928738\
-      79185086916685732826776177102938969773947016708230428687109997439976544144845\
-      34115587245063340927902227529622941498423068816854043264575340183297861112989\
-      60644845216191652872597534901
-
-      has been constructed by F. Arnault (F. Arnault, "Rabin-Miller primality test:
-      composite numbers which pass it.",  Mathematics of Computation, 1995, 64. Jg.,
-      Nr. 209, S. 355-361), is a semiprime with the two factors
-
-      40095821663949960541830645208454685300518816604113250877450620473800321707011\
-      96242716223191597219733582163165085358166969145233813917169287527980445796800\
-      452592031836601
-
-      20047910831974980270915322604227342650259408302056625438725310236900160853505\
-      98121358111595798609866791081582542679083484572616906958584643763990222898400\
-      226296015918301
-
-      and it is a strong pseudoprime to all forty-six prime M-R bases up to 200
-
-      It does not fail the strong Bailley-PSP test as implemented here, it is just
-      given as an example, if not the reason to use the BPSW-test instead of M-R-tests
-      with a sequence of primes 2...n.
-
+      TODO: can be made a bit finer grained but comparing is not free.
    */
    if (t < 0) {
-      t = -t;
       /*
           Sorenson, Jonathan; Webster, Jonathan (2015).
            "Strong Pseudoprimes to Twelve Prime Bases".
@@ -212,18 +170,9 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
          }
       }
 
-      /* for compatibility with the current API (well, compatible within a sign's width) */
-      if (p_max < t) {
-         p_max = t;
-      }
-
-      if (p_max > PRIME_SIZE) {
-         err = MP_VAL;
-         goto LBL_B;
-      }
       /* we did bases 2 and 3  already, skip them */
       for (ix = 2; ix < p_max; ix++) {
-         mp_set(&b, ltm_prime_tab[ix]);
+         mp_set(&b, s_mp_prime_tab[ix]);
          if ((err = mp_prime_miller_rabin(a, &b, &res)) != MP_OKAY) {
             goto LBL_B;
          }
@@ -296,19 +245,19 @@ int mp_prime_is_prime(const mp_int *a, int t, int *result)
           * One 8-bit digit is too small, so concatenate two if the size of
           * unsigned int allows for it.
           */
-         if (((sizeof(unsigned int) * CHAR_BIT)/2) >= (sizeof(mp_digit) * CHAR_BIT)) {
+         if ((MP_SIZEOF_BITS(unsigned int)/2) >= MP_SIZEOF_BITS(mp_digit)) {
             if ((err = mp_rand(&b, 1)) != MP_OKAY) {
                goto LBL_B;
             }
-            fips_rand <<= sizeof(mp_digit) * CHAR_BIT;
+            fips_rand <<= MP_SIZEOF_BITS(mp_digit);
             fips_rand |= (unsigned int) b.dp[0];
             fips_rand &= mask;
          }
 #endif
-         if (fips_rand > (unsigned int)(INT_MAX - DIGIT_BIT)) {
-            len = INT_MAX / DIGIT_BIT;
+         if (fips_rand > (unsigned int)(INT_MAX - MP_DIGIT_BIT)) {
+            len = INT_MAX / MP_DIGIT_BIT;
          } else {
-            len = (((int)fips_rand + DIGIT_BIT) / DIGIT_BIT);
+            len = (((int)fips_rand + MP_DIGIT_BIT) / MP_DIGIT_BIT);
          }
          /*  Unlikely. */
          if (len < 0) {
@@ -363,7 +312,3 @@ LBL_B:
 }
 
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */

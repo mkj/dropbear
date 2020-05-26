@@ -1,16 +1,7 @@
 #include "tommath_private.h"
 #ifdef BN_MP_DR_REDUCE_C
-/* LibTomMath, multiple-precision integer library -- Tom St Denis
- *
- * LibTomMath is a library that provides multiple-precision
- * integer arithmetic as well as number theoretic functionality.
- *
- * The library was designed directly after the MPI library by
- * Michael Fromberger but has been written from scratch with
- * additional optimizations in place.
- *
- * SPDX-License-Identifier: Unlicense
- */
+/* LibTomMath, multiple-precision integer library -- Tom St Denis */
+/* SPDX-License-Identifier: Unlicense */
 
 /* reduce "x" in place modulo "n" using the Diminished Radix algorithm.
  *
@@ -26,9 +17,10 @@
  *
  * Input x must be in the range 0 <= x <= (n-1)**2
  */
-int mp_dr_reduce(mp_int *x, const mp_int *n, mp_digit k)
+mp_err mp_dr_reduce(mp_int *x, const mp_int *n, mp_digit k)
 {
-   int      err, i, m;
+   mp_err      err;
+   int i, m;
    mp_word  r;
    mp_digit mu, *tmpx1, *tmpx2;
 
@@ -60,16 +52,14 @@ top:
    for (i = 0; i < m; i++) {
       r         = ((mp_word)*tmpx2++ * (mp_word)k) + *tmpx1 + mu;
       *tmpx1++  = (mp_digit)(r & MP_MASK);
-      mu        = (mp_digit)(r >> ((mp_word)DIGIT_BIT));
+      mu        = (mp_digit)(r >> ((mp_word)MP_DIGIT_BIT));
    }
 
    /* set final carry */
    *tmpx1++ = mu;
 
    /* zero words above m */
-   for (i = m + 1; i < x->used; i++) {
-      *tmpx1++ = 0;
-   }
+   MP_ZERO_DIGITS(tmpx1, (x->used - m) - 1);
 
    /* clamp, sub and return */
    mp_clamp(x);
@@ -86,7 +76,3 @@ top:
    return MP_OKAY;
 }
 #endif
-
-/* ref:         HEAD -> master, tag: v1.1.0 */
-/* git commit:  08549ad6bc8b0cede0b357a9c341c5c6473a9c55 */
-/* commit time: 2019-01-28 20:32:32 +0100 */
