@@ -10,14 +10,16 @@ matrix:
       compiler: gcc
       env: WEXTRAFLAGS=-Werror
       sudo: false
+	  # use focal which provides libtommath 1.20
+	  dist: focal
     - env: MULTI=1 WEXTRAFLAGS=-Werror
     # libtom has some warnings, so no WEXTRAFLAGS
     - env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=""
-    - env: NOWRITEV=1 WEXTRAFLAGS=-Werror
-    # libtomcrypt 1.18.1 fixes clang problems, distro doesn't have that yet
+	  # can use an older distro with bundled libtom
+	  dist: xenial
+    - env: NOWRITEV=1 
     - os: linux
       compiler: clang
-      env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=""
     - os: osx
       compiler: clang
       env: WEXTRAFLAGS=""
