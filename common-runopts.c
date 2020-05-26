@@ -76,12 +76,6 @@ parse_ciphers_macs()
 			dropbear_exit(".");
 		}
 
-		if (strcmp(opts.cipher_list, "none") == 0)
-		{
-			/* Encryption is required during authentication */
-			opts.cipher_list = "none,aes128-ctr";
-		}
-
 		if (check_user_algos(opts.cipher_list, sshciphers, "cipher") == 0)
 		{
 			dropbear_exit("No valid ciphers specified for '-c'");
