@@ -10,13 +10,13 @@ matrix:
       compiler: gcc
       env: WEXTRAFLAGS=-Werror
       sudo: false
-	  # use focal which provides libtommath 1.20
-	  dist: focal
+      # use focal which provides libtommath 1.20
+      dist: focal
     - env: MULTI=1 WEXTRAFLAGS=-Werror
     # libtom has some warnings, so no WEXTRAFLAGS
     - env: CONFIGURE_FLAGS=--enable-bundled-libtom WEXTRAFLAGS=""
-	  # can use an older distro with bundled libtom
-	  dist: xenial
+      # can use an older distro with bundled libtom
+      dist: xenial
     - env: NOWRITEV=1 
     - os: linux
       compiler: clang
