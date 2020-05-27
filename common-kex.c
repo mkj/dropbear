@@ -335,8 +335,8 @@ static void gen_new_keys() {
 		int recv_cipher = -1;
 		if (ses.newkeys->recv.algo_crypt->cipherdesc->name != NULL) {
 			recv_cipher = find_cipher(ses.newkeys->recv.algo_crypt->cipherdesc->name);
-		if (recv_cipher < 0)
-			dropbear_exit("Crypto error");
+			if (recv_cipher < 0)
+				dropbear_exit("Crypto error");
 		}
 		if (ses.newkeys->recv.crypt_mode->start(recv_cipher, 
 				recv_IV, recv_key, 
@@ -350,8 +350,8 @@ static void gen_new_keys() {
 		int trans_cipher = -1;
 		if (ses.newkeys->trans.algo_crypt->cipherdesc->name != NULL) {
 			trans_cipher = find_cipher(ses.newkeys->trans.algo_crypt->cipherdesc->name);
-		if (trans_cipher < 0)
-			dropbear_exit("Crypto error");
+			if (trans_cipher < 0)
+				dropbear_exit("Crypto error");
 		}
 		if (ses.newkeys->trans.crypt_mode->start(trans_cipher, 
 				trans_IV, trans_key, 
