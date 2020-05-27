@@ -36,10 +36,12 @@ void recv_msg_newkeys(void);
 void kexfirstinitialise(void);
 void finish_kexhashbuf(void);
 
+#if DROPBEAR_NORMAL_DH
 struct kex_dh_param *gen_kexdh_param(void);
 void free_kexdh_param(struct kex_dh_param *param);
 void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 		sign_key *hostkey);
+#endif
 
 #if DROPBEAR_ECDH
 struct kex_ecdh_param *gen_kexecdh_param(void);
@@ -87,10 +89,12 @@ struct KEXState {
 
 };
 
+#if DROPBEAR_NORMAL_DH
 struct kex_dh_param {
 	mp_int pub; /* e */
 	mp_int priv; /* x */
 };
+#endif
 
 #if DROPBEAR_ECDH
 struct kex_ecdh_param {
@@ -104,9 +108,6 @@ struct kex_curve25519_param {
 	unsigned char priv[CURVE25519_LEN];
 	unsigned char pub[CURVE25519_LEN];
 };
-
-/* No header file for curve25519_donna */
-int curve25519_donna(unsigned char *out, const unsigned char *secret, const unsigned char *other);
 #endif
 
 #endif /* DROPBEAR_KEX_H_ */
