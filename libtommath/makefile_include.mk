@@ -50,7 +50,8 @@ endif
 
 LTM_CFLAGS += -I./ -Wall -Wsign-compare -Wextra -Wshadow
 
-ifdef SANITIZER
+# renamed for Dropbear to avoid clash with oss-fuzz $SANITIZER var
+ifdef LTM_SANITIZER
 LTM_CFLAGS += -fsanitize=undefined -fno-sanitize-recover=all -fno-sanitize=float-divide-by-zero
 endif
 
