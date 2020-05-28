@@ -184,7 +184,7 @@ static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype,
 
 /* Returns 1 if a key was tried */
 int cli_auth_pubkey() {
-	enum signature_type sigtype;
+	enum signature_type sigtype = DROPBEAR_SIGNATURE_NONE;
 	TRACE(("enter cli_auth_pubkey"))
 
 #if DROPBEAR_CLI_AGENTFWD
