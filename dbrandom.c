@@ -53,7 +53,7 @@ static int donerandinit = 0;
 static int
 process_file(hash_state *hs, const char *filename,
 		unsigned int wantlen, int prngd) {
-	int readfd;
+	int readfd = -1;
 	unsigned int readcount;
 	int ret = DROPBEAR_FAILURE;
 
