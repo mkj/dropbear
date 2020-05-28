@@ -370,7 +370,8 @@ AC_CHECK_HEADERS([netinet/in.h netinet/tcp.h \
 	crypt.h \
 	pty.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
 	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
-	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h])
+	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h \
+	sys/random.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -526,7 +527,7 @@ AC_CHECK_FUNCS(clock_gettime)
 AC_CHECK_HEADERS([mach/mach_time.h])
 AC_CHECK_FUNCS(mach_absolute_time)
 
-AC_CHECK_FUNCS(explicit_bzero memset_s)
+AC_CHECK_FUNCS(explicit_bzero memset_s getrandom)
 
 AC_ARG_ENABLE(bundled-libtom,
 [  --enable-bundled-libtom       Force using bundled libtomcrypt/libtommath even if a system version exists.
