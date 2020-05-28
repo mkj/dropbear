@@ -124,6 +124,10 @@
 #include <sys/uio.h>
 #endif
 
+#ifdef HAVE_SYS_RANDOM_H
+#include <sys/random.h>
+#endif
+
 #ifdef BUNDLED_LIBTOM
 #include "libtomcrypt/src/headers/tomcrypt.h"
 #include "libtommath/tommath.h"
