@@ -155,10 +155,12 @@ void recv_msg_kexdh_reply() {
 #endif
 	}
 
+#if DROPBEAR_NORMAL_DH
 	if (cli_ses.dh_param) {
 		free_kexdh_param(cli_ses.dh_param);
 		cli_ses.dh_param = NULL;
 	}
+#endif
 #if DROPBEAR_ECDH
 	if (cli_ses.ecdh_param) {
 		free_kexecdh_param(cli_ses.ecdh_param);

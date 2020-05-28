@@ -548,6 +548,7 @@ void recv_msg_kexinit() {
 	TRACE(("leave recv_msg_kexinit"))
 }
 
+#if DROPBEAR_NORMAL_DH
 static void load_dh_p(mp_int * dh_p)
 {
 	bytes_to_mp(dh_p, ses.newkeys->algo_kex->dh_p_bytes, 
@@ -656,6 +657,7 @@ void kexdh_comb_key(struct kex_dh_param *param, mp_int *dh_pub_them,
 	/* calculate the hash H to sign */
 	finish_kexhashbuf();
 }
+#endif
 
 #if DROPBEAR_ECDH
 struct kex_ecdh_param *gen_kexecdh_param() {
