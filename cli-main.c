@@ -131,6 +131,12 @@ static void cli_dropbear_log(int priority,
 		const char* format, va_list param) {
 
 	char printbuf[1024];
+	const char *name;
+
+	name = cli_opts.progname;
+	if (!name) {
+		name = "dbclient";
+	}
 
 	vsnprintf(printbuf, sizeof(printbuf), format, param);
 
@@ -140,7 +146,7 @@ static void cli_dropbear_log(int priority,
 	}
 #endif
 
-	fprintf(stderr, "%s: %s\n", cli_opts.progname, printbuf);
+	fprintf(stderr, "%s: %s\n", name, printbuf);
 	fflush(stderr);
 }
 
