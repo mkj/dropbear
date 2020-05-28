@@ -100,7 +100,7 @@ static int dropbear_gcm_crypt(unsigned int UNUSED(seq),
 static int dropbear_gcm_getlength(unsigned int UNUSED(seq),
 			const unsigned char *in, unsigned int *outlen,
 			unsigned long len, dropbear_gcm_state* UNUSED(state)) {
-	TRACE2(("enter dropbear_gcm_parse"))
+	TRACE2(("enter dropbear_gcm_getlength"))
 
 	if (len < 4) {
 		return CRYPT_ERROR;
@@ -108,7 +108,7 @@ static int dropbear_gcm_getlength(unsigned int UNUSED(seq),
 
 	LOAD32H(*outlen, in);
 
-	TRACE2(("leave dropbear_gcm_parse"))
+	TRACE2(("leave dropbear_gcm_getlength"))
 	return CRYPT_OK;
 }
 
