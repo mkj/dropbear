@@ -68,7 +68,13 @@ int buf_getline(buffer * line, FILE * authfile);
 
 void m_close(int fd);
 void setnonblocking(int fd);
-void disallow_core(void);
+
+#if ALLOW_COREDUMPS
+# define disallow_core()
+#else
+  void disallow_core(void);
+#endif
+
 int m_str_to_uint(const char* str, unsigned int *val);
 
 /* Used to force mp_ints to be initialised */

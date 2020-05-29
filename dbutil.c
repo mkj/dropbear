@@ -552,11 +552,13 @@ void setnonblocking(int fd) {
 	TRACE(("leave setnonblocking"))
 }
 
+#if !ALLOW_COREDUMPS
 void disallow_core() {
 	struct rlimit lim;
 	lim.rlim_cur = lim.rlim_max = 0;
 	setrlimit(RLIMIT_CORE, &lim);
 }
+#endif
 
 /* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
 int m_str_to_uint(const char* str, unsigned int *val) {
