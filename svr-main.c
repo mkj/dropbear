@@ -296,11 +296,6 @@ static void main_noinetd() {
 			} else {
 
 				/* child */
-#ifdef DEBUG_FORKGPROF
-				extern void _start(void), etext(void);
-				monstartup((u_long)&_start, (u_long)&etext);
-#endif /* DEBUG_FORKGPROF */
-
 				getaddrstring(&remoteaddr, NULL, &remote_port, 0);
 				dropbear_log(LOG_INFO, "Child connection from %s:%s", remote_host, remote_port);
 				m_free(remote_host);

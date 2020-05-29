@@ -43,12 +43,6 @@
 #define CHECKCLEARTOWRITE()
 #endif
 
-/* Define this, compile with -pg and set GMON_OUT_PREFIX=gmon to get gmon
- * output when Dropbear forks. This will allow it gprof to be used.
- * It's useful to run dropbear -F, so you don't fork as much */
-/* (This is Linux specific) */
-/*#define DEBUG_FORKGPROF*/
-
 /* A couple of flags, not usually useful, and mightn't do anything */
 
 /*#define DEBUG_KEXHASH*/
