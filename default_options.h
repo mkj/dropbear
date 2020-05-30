@@ -308,6 +308,12 @@ other side, exit. Not run-time configurable - if you have a need
 for runtime configuration please mail the Dropbear list */
 #define DEFAULT_KEEPALIVE_LIMIT 3
 
+/* Enable TCP socket level keep alive probes after this many seconds.  This can
+be overridden at runtime with -k.  0 disables TCP keepalives.
+A negative value starts them ony after a the system defined default time elapsed
+ OR, if SSH KEEPALIVE != 0,  SSH KEEPALIVE * KEEPALIVE_LIMIT seconds */
+#define DEFAULT_TCP_ALIVE 0
+
 /* Ensure that data is received within IDLE_TIMEOUT seconds. This can
 be overridden at runtime with -I. 0 disables idle timeouts */
 #define DEFAULT_IDLE_TIMEOUT 0
