@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -61,64 +61,68 @@ static void printhelp(const char * progname) {
 					"		- ed25519 %s\n"
 #endif
 #if DROPBEAR_DELAY_HOSTKEY
-					"-R		Create hostkeys as required\n" 
+	"-R	Create hostkeys as required\n"
 #endif
-					"-F		Don't fork into background\n"
+	"-F	Don't fork into background\n"
+#ifndef DISABLE_ZLIB
+	"-n	No compression\n"
+#endif
 #ifdef DISABLE_SYSLOG
-					"(Syslog support not compiled in, using stderr)\n"
+	"(Syslog support not compiled in, using stderr)\n"
 #else
-					"-E		Log to stderr rather than syslog\n"
+	"-E	Log to stderr rather than syslog\n"
 #endif
 #if DO_MOTD
-					"-m		Don't display the motd on login\n"
+	"-m	Don't display the motd on login\n"
 #endif
-					"-w		Disallow root logins\n"
+	"-w	Disallow root logins\n"
 #ifdef HAVE_GETGROUPLIST
-					"-G		Restrict logins to members of specified group\n"
+	"-G	Restrict logins to members of specified group\n"
 #endif
 #if DROPBEAR_SVR_PASSWORD_AUTH || DROPBEAR_SVR_PAM_AUTH
-					"-s		Disable password logins\n"
-					"-g		Disable password logins for root\n"
-					"-B		Allow blank password logins\n"
+	"-s	Disable password logins\n"
+	"-g	Disable password logins for root\n"
+	"-B	Allow blank password logins\n"
 #endif
-					"-T		Maximum authentication tries (default %d)\n"
+	"-T<max>	Maximum authentication tries (default %d)\n"
 #if DROPBEAR_SVR_LOCALTCPFWD
-					"-j		Disable local port forwarding\n"
+	"-j	Disable local port forwarding\n"
 #endif
 #if DROPBEAR_SVR_REMOTETCPFWD
-					"-k		Disable remote port forwarding\n"
-					"-a		Allow connections to forwarded ports from any host\n"
-					"-c command	Force executed command\n"
+	"-k	Disable remote port forwarding\n"
+	"-a	Allow connections to forwarded ports from any host\n"
+	"-c command	Force executed command\n"
 #endif
-					"-p [address:]port\n"
-					"		Listen on specified tcp port (and optionally address),\n"
-					"		up to %d can be specified\n"
-					"		(default port is %s if none specified)\n"
-					"-P PidFile	Create pid file PidFile\n"
-					"		(default %s)\n"
+	"-p [address:]port\n"
+	"	Listen on specified tcp port (and optionally address),\n"
+	"	up to %d can be specified\n"
+	"	(default port is %s if none specified)\n"
+	"-P PidFile	Create pid file PidFile\n"
+	"	(default %s)\n"
 #if INETD_MODE
-					"-i		Start for inetd\n"
+	"-i	Start for inetd\n"
 #endif
-					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
-					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
-					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
+	"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+	"-S{idletime}   TCP Socket keepalive {optional TCP_KEEPIDLE must follow directly}\n"
+	"-K <keepalive>  (0 is never, default %d, in seconds)\n"
+	"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
 #if DROPBEAR_PLUGIN
                                         "-A <authplugin>[,<options>]\n"
                                         "               Enable external public key auth through <authplugin>\n"
 #endif
 					"-V    Version\n"
 #if DEBUG_TRACE
-					"-v		verbose (compiled with DEBUG_TRACE)\n"
+	"-v	verbose (compiled with DEBUG_TRACE)\n"
 #endif
-					,DROPBEAR_VERSION, progname,
+	,DROPBEAR_VERSION, progname,
 #if DROPBEAR_DSS
-					DSS_PRIV_FILENAME,
+	DSS_PRIV_FILENAME,
 #endif
 #if DROPBEAR_RSA
-					RSA_PRIV_FILENAME,
+	RSA_PRIV_FILENAME,
 #endif
 #if DROPBEAR_ECDSA
-					ECDSA_PRIV_FILENAME,
+	ECDSA_PRIV_FILENAME,
 #endif
 #if DROPBEAR_ED25519
 					ED25519_PRIV_FILENAME,
@@ -130,7 +134,7 @@ static void printhelp(const char * progname) {
 
 void svr_getopts(int argc, char ** argv) {
 
-	unsigned int i, j;
+	unsigned i;
 	char ** next = NULL;
 	int nextisport = 0;
 	char* recv_window_arg = NULL;
@@ -176,7 +180,7 @@ void svr_getopts(int argc, char ** argv) {
 
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_DELAYED;
-#endif 
+#endif
 
 	/* not yet
 	opts.ipv4 = 1;
@@ -191,16 +195,19 @@ void svr_getopts(int argc, char ** argv) {
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	opts.keepalive_secs = DEFAULT_KEEPALIVE;
 	opts.idle_timeout_secs = DEFAULT_IDLE_TIMEOUT;
-	
+	opts.tcp_keepalive = DEFAULT_TCP_ALIVE;
+
 #if DROPBEAR_SVR_REMOTETCPFWD
 	opts.listen_fwd_all = 0;
 #endif
 
 	for (i = 1; i < (unsigned int)argc; i++) {
-		if (argv[i][0] != '-' || argv[i][1] == '\0')
+		char *cursor = argv[i];
+		if (*cursor != '-' || !*++cursor)
 			dropbear_exit("Invalid argument: %s", argv[i]);
 
-		for (j = 1; (c = argv[i][j]) != '\0' && !next && !nextisport; j++) {
+		while ((c = *cursor) && !next && !nextisport) {
+			cursor++;
 			switch (c) {
 				case 'b':
 					next = &svr_opts.bannerfile;
@@ -241,6 +248,11 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.inetdmode = 1;
 					break;
 #endif
+#ifndef DISABLE_ZLIB
+				case 'n': /* disable stream compression */
+					opts.compress_mode = DROPBEAR_COMPRESS_OFF;
+					break;
+#endif
 				case 'p':
 				  nextisport = 1;
 				  break;
@@ -266,6 +278,21 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'K':
 					next = &keepalive_arg;
+					break;
+				case 'S': //require optional idletime follow directly!
+					opts.tcp_keepalive = -1;
+					{
+						char *end;
+						long idletime = strtol(cursor, &end, 10);
+						if (cursor != end) {
+							if (idletime < 1 || idletime >= (long)LONG_MAX) {
+								*end=0;
+								dropbear_exit("Bad TCP_KEEPIDLE '%s'", cursor);
+							}
+							opts.tcp_keepalive = idletime;
+							cursor = end;
+						}
+					}
 					break;
 				case 'I':
 					next = &idle_timeout_arg;
@@ -316,22 +343,15 @@ void svr_getopts(int argc, char ** argv) {
 		if (!next && !nextisport)
 			continue;
 
-		if (c == '\0') {
-			i++;
-			j = 0;
-			if (!argv[i]) {
-				dropbear_exit("Missing argument");
-			}
-		}
+		if (!c && !(cursor = argv[++i]))
+			dropbear_exit("Missing argument");
 
 		if (nextisport) {
-			addportandaddress(&argv[i][j]);
+			addportandaddress(cursor);
 			nextisport = 0;
 		} else if (next) {
-			*next = &argv[i][j];
-			if (*next == NULL) {
+			if (!(*next = cursor))
 				dropbear_exit("Invalid null argument");
-			}
 			next = NULL;
 
 			if (keyfile) {
@@ -354,7 +374,7 @@ void svr_getopts(int argc, char ** argv) {
 			dropbear_exit("Error opening banner file '%s'",
 					svr_opts.bannerfile);
 		}
-		
+
 		if (buf.st_size > MAX_BANNER_SIZE) {
 			dropbear_exit("Banner file too large, max is %d bytes",
 					MAX_BANNER_SIZE);
@@ -379,7 +399,7 @@ void svr_getopts(int argc, char ** argv) {
 		}
 	}
 #endif
-	
+
 	if (recv_window_arg) {
 		opts.recv_window = atol(recv_window_arg);
 		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
@@ -389,14 +409,14 @@ void svr_getopts(int argc, char ** argv) {
 
 	if (maxauthtries_arg) {
 		unsigned int val = 0;
-		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE 
+		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE
 			|| val == 0) {
 			dropbear_exit("Bad maxauthtries '%s'", maxauthtries_arg);
 		}
 		svr_opts.maxauthtries = val;
 	}
 
-	
+
 	if (keepalive_arg) {
 		unsigned int val;
 		if (m_str_to_uint(keepalive_arg, &val) == DROPBEAR_FAILURE) {
@@ -461,7 +481,7 @@ static void addportandaddress(const char* spec) {
 			port = myspec;
 		} else {
 			/* Split the address/port */
-			port[0] = '\0'; 
+			port[0] = '\0';
 			port++;
 			address = myspec;
 		}
@@ -620,7 +640,7 @@ void load_all_hostkeys() {
 	- Otherwise no ecdsa keys will be advertised */
 
 	/* check if any keys were loaded at startup */
-	loaded_any_ecdsa = 
+	loaded_any_ecdsa =
 		0
 #if DROPBEAR_ECC_256
 		|| svr_opts.hostkey->ecckey256
