@@ -2,9 +2,12 @@
 #define DROPBEAR_LOCALOPTIONS_H_
 /*
   Local options override those in default_options.h for ESP Linux
-  revised 9/3/19 by Brent Roman, brent@mbari.org
+  revised 5/29/20 by Brent Roman, brent@mbari.org
 */
-#define DROPBEAR_VERSION "2019.78-mbari2"
+#define DROPBEAR_VERSION "2019.78-mbari3"
+
+//verbose debugging
+#define DEBUG_TRACE 1
 
 //do not disallow core dumps!
 #define ALLOW_COREDUMPS 1
@@ -26,8 +29,8 @@
 #define DROPBEAR_NONE_CIPHER 1
 
 /* Save a network roundtrip by sending a real auth request immediately after
- * sending a query for the available methods. This is not yet enabled by default 
- since it could cause problems with non-compliant servers */ 
+ * sending a query for the available methods. This is not yet enabled by default
+ since it could cause problems with non-compliant servers */
 #define DROPBEAR_CLI_IMMEDIATE_AUTH 1
 
 #endif /* DROPBEAR_LOCALOPTIONS_H_ */
