@@ -62,7 +62,9 @@ static void printhelp() {
 	"-T    Don't allocate a pty\n"
 	"-N    Don't run a remote command\n"
 	"-f    Run in background after auth\n"
+#ifndef DISABLE_ZLIB
 	"-n    No compression\n"
+#endif
 	"-y    Always accept remote host key if unknown\n"
 	"-y -y Don't perform any remote host key checking (caution)\n"
 	"-s    Request a subsystem (use by external sftp)\n"
@@ -107,7 +109,7 @@ static void printhelp() {
 }
 
 void cli_getopts(int argc, char ** argv) {
-	unsigned int i, j;
+	unsigned i;
 	char ** next = NULL;
 	enum {
 		OPT_EXTENDED_OPTIONS,
@@ -221,9 +223,11 @@ void cli_getopts(int argc, char ** argv) {
 				case 'p': /* remoteport */
 					next = (char**)&cli_opts.remoteport;
 					break;
+#ifndef DISABLE_ZLIB
 				case 'n': /* disable stream compression */
 					opts.compress_mode = DROPBEAR_COMPRESS_OFF;
 					break;
+#endif
 #if DROPBEAR_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
 					opt = OPT_AUTHKEY;
@@ -286,7 +290,7 @@ void cli_getopts(int argc, char ** argv) {
 				case 'K':
 					next = &keepalive_arg;
 					break;
-				case 'S': //require that optional idletime to follow directly!
+				case 'S': //require optional idletime follow directly!
 					opts.tcp_keepalive = -1;
 					{
 						char *end;
@@ -390,8 +394,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 		if (next) {
 			/* The previous flag set a value to assign */
-			*next = cursor;
-			if (*next == NULL)
+			if (!(*next = cursor))
 				dropbear_exit("Invalid null argument");
 			next = NULL;
 		}
@@ -408,6 +411,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	if (i < (unsigned int)argc) {
 		/* Build the command to send */
+		unsigned j;
 		cmdlen = 0;
 		for (j = i; j < (unsigned int)argc; j++)
 			cmdlen += strlen(argv[j]) + 1; /* +1 for spaces */
