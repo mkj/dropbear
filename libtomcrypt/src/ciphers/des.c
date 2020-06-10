@@ -38,7 +38,7 @@ const struct ltc_cipher_descriptor des3_desc =
 {
     "3des",
     14,
-    24, 24, 8, 16,
+    16, 24, 8, 16,
     &des3_setup,
     &des3_ecb_encrypt,
     &des3_ecb_decrypt,
@@ -2080,8 +2080,11 @@ int des_keysize(int *keysize)
 int des3_keysize(int *keysize)
 {
     LTC_ARGCHK(keysize != NULL);
-    if(*keysize < 24) {
-        return CRYPT_INVALID_KEYSIZE;
+    if (*keysize < 16)
+       return CRYPT_INVALID_KEYSIZE;
+    if (*keysize < 24) {
+       *keysize = 16;
+       return CRYPT_OK;
     }
     *keysize = 24;
     return CRYPT_OK;

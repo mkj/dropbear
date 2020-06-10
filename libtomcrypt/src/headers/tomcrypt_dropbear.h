@@ -10,6 +10,9 @@
 #define LTC_SMALL_CODE
 #endif
 
+/* Fewer entries needed */
+#define TAB_SIZE      5
+
 #if DROPBEAR_BLOWFISH
 #define LTC_BLOWFISH
 #endif

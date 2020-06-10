@@ -480,6 +480,13 @@
 #endif
 #endif
 
+#if defined(LTC_DER)
+   #ifndef LTC_DER_MAX_RECURSION
+      /* Maximum recursion limit when processing nested ASN.1 types. */
+      #define LTC_DER_MAX_RECURSION 30
+   #endif
+#endif
+
 #if defined(LTC_MECC) || defined(LTC_MRSA) || defined(LTC_MDSA) || defined(LTC_MKAT)
    /* Include the MPI functionality?  (required by the PK algorithms) */
    #define LTC_MPI
