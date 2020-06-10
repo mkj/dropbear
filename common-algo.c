@@ -64,10 +64,6 @@ static const struct dropbear_cipher dropbear_aes256 =
 static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
 #endif
-#if DROPBEAR_BLOWFISH
-static const struct dropbear_cipher dropbear_blowfish = 
-	{&blowfish_desc, 16, 8};
-#endif
 #if DROPBEAR_TWOFISH256
 static const struct dropbear_cipher dropbear_twofish256 = 
 	{&twofish_desc, 32, 16};
@@ -197,9 +193,6 @@ algo_type sshciphers[] = {
 #endif /* DROPBEAR_3DES */
 
 #if DROPBEAR_ENABLE_CBC_MODE
-#if DROPBEAR_BLOWFISH
-	{"blowfish-cbc", 0, &dropbear_blowfish, 1, &dropbear_mode_cbc},
-#endif
 #endif /* DROPBEAR_ENABLE_CBC_MODE */
 	{NULL, 0, NULL, 0, NULL}
 };

@@ -87,8 +87,6 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_AES256 1
 #define DROPBEAR_TWOFISH256 0
 #define DROPBEAR_TWOFISH128 0
-/* Compiling in Blowfish will add ~6kB to runtime heap memory usage */
-#define DROPBEAR_BLOWFISH 0
 
 /* Enable CBC mode for ciphers. This has security issues though
  * is the most compatible with older SSH implementations */
