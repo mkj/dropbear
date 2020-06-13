@@ -370,8 +370,11 @@ static void read_session_identification() {
 	int len = 0;
 	char done = 0;
 	int i;
-	/* If they send more than 50 lines, something is wrong */
-	for (i = 0; i < 50; i++) {
+
+	/* Servers may send other lines of data before sending the
+	 * version string, client must be able to process such lines.
+	 * If they send more than 50 lines, something is wrong */
+	for (i = IS_DROPBEAR_CLIENT ? 50 : 1; i > 0; i--) {
 		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));
 
 		if (len < 0 && errno != EINTR) {
