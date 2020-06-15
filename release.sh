@@ -30,7 +30,6 @@ fi
 hg archive "$RELDIR"  || exit 2
 
 (cd "$RELDIR" && autoconf && autoheader) || exit 2
-(cd "$RELDIR" && make lint) || exit 2
 
 rm -r "$RELDIR/autom4te.cache" || exit 2
 
