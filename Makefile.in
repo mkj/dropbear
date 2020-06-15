@@ -175,7 +175,7 @@ insmulti%: dropbearmulti$(EXEEXT)
 	-rm -f $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 	-ln -s $(bindir)/dropbearmulti$(EXEEXT) $(DESTDIR)$(bindir)/$*$(EXEEXT) 
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
-	if test -e $*.1; then $(INSTALL) -m 644 $*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
+	if test -e $(srcdir)/$*.1; then $(INSTALL) -m 644 $(srcdir)/$*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
 
 # dropbear should go in sbin, so it needs a separate rule
 inst_dropbear: dropbear
@@ -188,7 +188,7 @@ inst_%: %
 	$(INSTALL) -d $(DESTDIR)$(bindir)
 	$(INSTALL) $*$(EXEEXT) $(DESTDIR)$(bindir)
 	$(INSTALL) -d $(DESTDIR)$(mandir)/man1
-	if test -e $*.1; then $(INSTALL) -m 644 $*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
+	if test -e $(srcdir)/$*.1; then $(INSTALL) -m 644 $(srcdir)/$*.1 $(DESTDIR)$(mandir)/man1/$*.1; fi
 
 inst_dropbearmulti: $(addprefix insmulti, $(PROGRAMS)) 
 
