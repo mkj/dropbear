@@ -80,8 +80,10 @@ int main(int argc, char ** argv)
 static void main_inetd() {
 	char *host, *port = NULL;
 
-	/* Set up handlers, syslog, seed random */
+	/* Set up handlers, syslog */
 	commonsetup();
+
+	seedrandom();
 
 #if DEBUG_TRACE
 	if (debug_trace) {
@@ -399,8 +401,6 @@ static void commonsetup() {
 	/* Now we can setup the hostkeys - needs to be after logging is on,
 	 * otherwise we might end up blatting error messages to the socket */
 	load_all_hostkeys();
-
-	seedrandom();
 }
 
 /* Set up listening sockets for all the requested ports */
