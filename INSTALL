@@ -28,6 +28,8 @@ Basic Dropbear build instructions:
 recompile after changing the PROGRAMS list, you *MUST* "make clean" before
 recompiling - bad things will happen otherwise)
 
+DEVELOPING.md has some notes on other developer topics, including debugging.
+
 See MULTI for instructions on making all-in-one binaries.
 
 If you want to compile statically use ./configure --enable-static
