@@ -125,6 +125,8 @@
 #endif
 
 #ifdef HAVE_SYS_RANDOM_H
+/* uclibc needs _GNU_SOURCE */
+#define _GNU_SOURCE
 #include <sys/random.h>
 #endif
 
