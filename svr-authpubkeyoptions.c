@@ -92,6 +92,7 @@ int svr_pubkey_allows_pty() {
  * by any 'command' public key option. */
 void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
 	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->forced_command) {
+		TRACE(("Forced command '%s'", ses.authstate.pubkey_options->forced_command))
 		if (chansess->cmd) {
 			/* original_command takes ownership */
 			chansess->original_command = chansess->cmd;
@@ -146,20 +147,20 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 			ses.authstate.pubkey_options->no_port_forwarding_flag = 1;
 			goto next_option;
 		}
-#if DROPBEAR_SVR_AGENTFWD
 		if (match_option(options_buf, "no-agent-forwarding") == DROPBEAR_SUCCESS) {
+#if DROPBEAR_SVR_AGENTFWD
 			dropbear_log(LOG_WARNING, "Agent forwarding disabled.");
 			ses.authstate.pubkey_options->no_agent_forwarding_flag = 1;
+#endif
 			goto next_option;
 		}
-#endif
-#if DROPBEAR_X11FWD
 		if (match_option(options_buf, "no-X11-forwarding") == DROPBEAR_SUCCESS) {
+#if DROPBEAR_X11FWD
 			dropbear_log(LOG_WARNING, "X11 forwarding disabled.");
 			ses.authstate.pubkey_options->no_x11_forwarding_flag = 1;
+#endif
 			goto next_option;
 		}
-#endif
 		if (match_option(options_buf, "no-pty") == DROPBEAR_SUCCESS) {
 			dropbear_log(LOG_WARNING, "Pty allocation disabled.");
 			ses.authstate.pubkey_options->no_pty_flag = 1;
@@ -182,8 +183,6 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 					memcpy(ses.authstate.pubkey_options->forced_command,
 							command_start, command_len-1);
 					ses.authstate.pubkey_options->forced_command[command_len-1] = '\0';
-					dropbear_log(LOG_WARNING, "Forced command '%s'", 
-						ses.authstate.pubkey_options->forced_command);
 					goto next_option;
 				}
 				escaped = (!escaped && c == '\\');

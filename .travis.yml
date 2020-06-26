@@ -1,13 +1,8 @@
 language: c
 
-os:
-  - linux
+git:
+  depth: 3
 
-compiler:
-  - gcc
-
-# container-based builds
-sudo: false
 addons:
   apt:
     packages:
