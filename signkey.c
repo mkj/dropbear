@@ -657,8 +657,12 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 	sigtype = signature_type_from_name(type_name, type_name_len);
 	m_free(type_name);
 
-	if (expect_sigtype != sigtype) {
-			dropbear_exit("Non-matching signing type");
+	if (sigtype == DROPBEAR_SIGNATURE_NONE) {
+		dropbear_exit("No signature type");
+	}
+
+	if ((expect_sigtype != DROPBEAR_SIGNATURE_RSA_SHA256) && (expect_sigtype != sigtype)) {
+		dropbear_exit("Non-matching signing type");
 	}
 
 	keytype = signkey_type_from_signature(sigtype);
