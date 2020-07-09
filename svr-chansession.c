@@ -873,9 +873,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			snprintf(hushpath, len, "%s/.hushlogin", ses.authstate.pw_dir);
 
 			if (stat(hushpath, &sb) < 0) {
+				char *expand_path = NULL;
 				/* more than a screenful is stupid IMHO */
 				motdbuf = buf_new(80 * 25);
-				if (buf_readfile(motdbuf, MOTD_FILENAME) == DROPBEAR_SUCCESS) {
+				expand_path = expand_homedir_path(MOTD_FILENAME);
+				if (buf_readfile(motdbuf, expand_path) == DROPBEAR_SUCCESS) {
 					buf_setpos(motdbuf, 0);
 					while (motdbuf->pos != motdbuf->len) {
 						len = motdbuf->len - motdbuf->pos;
@@ -884,7 +886,9 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 						buf_incrpos(motdbuf, len);
 					}
 				}
+				m_free(expand_path);
 				buf_free(motdbuf);
+
 			}
 			m_free(hushpath);
 		}
