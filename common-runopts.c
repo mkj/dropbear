@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -35,14 +35,14 @@ runopts opts; /* GLOBAL */
 
 /* returns success or failure, and the keytype in *type. If we want
  * to restrict the type, type can contain a type to return */
-int readhostkey(const char * filename, sign_key * hostkey, 
+int readhostkey(const char * filename, sign_key * hostkey,
 	enum signkey_type *type) {
 
 	int ret = DROPBEAR_FAILURE;
 	buffer *buf;
   char *expand_path = expand_homedir_path(filename);
 
-	buf = buf_new(MAX_PRIVKEY_SIZE);
+  buf = buf_new(MAX_PRIVKEY_SIZE);
 
 	if (buf_readfile(buf, expand_path) == DROPBEAR_FAILURE) {
 		goto out;
@@ -102,5 +102,3 @@ parse_ciphers_macs() {
 void print_version() {
 	fprintf(stderr, "Dropbear v%s\n", DROPBEAR_VERSION);
 }
-
-

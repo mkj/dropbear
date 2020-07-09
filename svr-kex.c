@@ -135,7 +135,7 @@ static void svr_ensure_hostkey() {
 #endif
 #if DROPBEAR_ED25519
 		case DROPBEAR_SIGNKEY_ED25519:
-			fn = ED25519_PRIV_FILENAME;
+      fn = ED25519_PRIV_FILENAME;
 			break;
 #endif
 		default:

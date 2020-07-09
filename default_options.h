@@ -6,7 +6,7 @@
 default_options.h  documents compile-time options, and provides default values.
 
 Local customisation should be added to localoptions.h which is
-used if it exists in the build directory. Options defined there will override 
+used if it exists in the build directory. Options defined there will override
 any options in this file.
 
 Options can also be defined with -DDROPBEAR_XXX=[0,1] in Makefile CFLAGS
@@ -39,7 +39,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define NON_INETD_MODE 1
 #define INETD_MODE 1
 
-/* Include verbose debug output, enabled with -v at runtime. 
+/* Include verbose debug output, enabled with -v at runtime.
  * This will add a reasonable amount to your executable size. */
 #define DEBUG_TRACE 0
 
@@ -68,7 +68,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 /* Note: Both DROPBEAR_CLI_PROXYCMD and DROPBEAR_CLI_NETCAT must be set to
  * allow multihop dbclient connections */
 
-/* Allow using -J <proxycommand> to run the connection through a 
+/* Allow using -J <proxycommand> to run the connection through a
    pipe to a program, rather the normal TCP connection */
 #define DROPBEAR_CLI_PROXYCMD 1
 
@@ -82,7 +82,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 /* Encryption - at least one required.
  * AES128 should be enabled, some very old implementations might only
  * support 3DES.
- * Including both AES keysize variants (128 and 256) will result in 
+ * Including both AES keysize variants (128 and 256) will result in
  * a minimal size increase */
 #define DROPBEAR_AES128 1
 #define DROPBEAR_AES256 1
@@ -119,17 +119,20 @@ IMPORTANT: Some options will require "make clean" after changes */
 /* Hostkey/public key algorithms - at least one required, these are used
  * for hostkey as well as for verifying signatures with pubkey auth.
  * Removing either of these won't save very much space.
- * RSA is recommended
+ * RSA is recommended.
  * DSS may be necessary to connect to some systems though
-   is not recommended for new keys */
+ * is not recommended for new keys.
+ * See: RSA_PRIV_FILENAME and DSS_PRIV_FILENAME */
 #define DROPBEAR_RSA 1
 #define DROPBEAR_DSS 1
 /* ECDSA is significantly faster than RSA or DSS. Compiling in ECC
  * code (either ECDSA or ECDH) increases binary size - around 30kB
- * on x86-64 */
+ * on x86-64.
+ * See: ECDSA_PRIV_FILENAME  */
 #define DROPBEAR_ECDSA 1
 /* Ed25519 is faster than ECDSA. Compiling in Ed25519 code increases
-   binary size - around 7,5kB on x86-64 */
+ * binary size - around 7,5kB on x86-64.
+ * See: ED25519_PRIV_FILENAME  */
 #define DROPBEAR_ED25519 1
 
 /* RSA must be >=1024 */
@@ -205,7 +208,8 @@ group1 in Dropbear server too */
  * You can't enable both PASSWORD and PAM. */
 #define DROPBEAR_SVR_PAM_AUTH 0
 
-/* ~/.ssh/authorized_keys authentication */
+/* ~/.ssh/authorized_keys authentication.
+ * You must define DROPBEAR_SVR_PUBKEY_AUTH in order to use plugins. */
 #define DROPBEAR_SVR_PUBKEY_AUTH 1
 
 /* Whether to take public key options in 
@@ -221,7 +225,7 @@ group1 in Dropbear server too */
 #define DROPBEAR_CLI_PASSWORD_AUTH 1
 #define DROPBEAR_CLI_PUBKEY_AUTH 1
 
-/* A default argument for dbclient -i <privatekey>. 
+/* A default argument for dbclient -i <privatekey>.
  * Homedir is prepended unless path begins with / .
  * The ~/ notation is not recognized. */
 #define DROPBEAR_DEFAULT_CLI_AUTHKEY ".ssh/id_dropbear"
@@ -271,7 +275,7 @@ group1 in Dropbear server too */
 
 
 /* If you want to enable running an sftp server (such as the one included with
- * OpenSSH), set the path below and set DROPBEAR_SFTPSERVER. 
+ * OpenSSH), set the path below and set DROPBEAR_SFTPSERVER.
  * The sftp-server program is not provided by Dropbear itself.
  * Homedir is prepended unless path begins with /.
  * The ~/ notation is not recognized. */
