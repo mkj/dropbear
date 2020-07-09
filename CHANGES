@@ -1,3 +1,10 @@
+- The following config paths are now relative to a home directory if
+  starting with "~". Thanks to Begley Brothers Inc
+  *_PRIV_FILENAME
+  DROPBEAR_PIDFILE
+  SFTPSERVER_PATH
+  MOTD_FILENAME
+
 2020.81 - 29 October 2020
 
 - Fix regression in 2020.79 which prevented connecting with some SSH 

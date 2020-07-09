@@ -18,7 +18,9 @@ IMPORTANT: Some options will require "make clean" after changes */
 /* Listen on all interfaces */
 #define DROPBEAR_DEFADDRESS ""
 
-/* Default hostkey paths - these can be specified on the command line */
+/* Default hostkey paths - these can be specified on the command line.
+ * Homedir is prepended if path begins with ~
+ */
 #define DSS_PRIV_FILENAME "/etc/dropbear/dropbear_dss_host_key"
 #define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
 #define ECDSA_PRIV_FILENAME "/etc/dropbear/dropbear_ecdsa_host_key"
@@ -231,9 +233,10 @@ group1 in Dropbear server too */
 #define DROPBEAR_CLI_PASSWORD_AUTH 1
 #define DROPBEAR_CLI_PUBKEY_AUTH 1
 
-/* A default argument for dbclient -i <privatekey>. 
-Homedir is prepended unless path begins with / */
-#define DROPBEAR_DEFAULT_CLI_AUTHKEY ".ssh/id_dropbear"
+/* A default argument for dbclient -i <privatekey>.
+ * Homedir is prepended if path begins with ~
+ */
+#define DROPBEAR_DEFAULT_CLI_AUTHKEY "~/.ssh/id_dropbear"
 
 /* Allow specifying the password for dbclient via the DROPBEAR_PASSWORD
  * environment variable. */
@@ -275,7 +278,9 @@ Homedir is prepended unless path begins with / */
 #define UNAUTH_CLOSE_DELAY 0
 
 /* The default file to store the daemon's process ID, for shutdown
-   scripts etc. This can be overridden with the -P flag */
+ * scripts etc. This can be overridden with the -P flag.
+ * Homedir is prepended if path begins with ~
+ */
 #define DROPBEAR_PIDFILE "/var/run/dropbear.pid"
 
 /* The command to invoke for xauth when using X11 forwarding.
@@ -283,9 +288,11 @@ Homedir is prepended unless path begins with / */
 #define XAUTH_COMMAND "/usr/bin/xauth -q"
 
 
-/* if you want to enable running an sftp server (such as the one included with
+/* If you want to enable running an sftp server (such as the one included with
  * OpenSSH), set the path below and set DROPBEAR_SFTPSERVER. 
- * The sftp-server program is not provided by Dropbear itself */
+ * The sftp-server program is not provided by Dropbear itself.
+ * Homedir is prepended if path begins with ~
+ */
 #define DROPBEAR_SFTPSERVER 1
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 

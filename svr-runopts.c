@@ -163,7 +163,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
 	svr_opts.delay_hostkey = 0;
-	svr_opts.pidfile = DROPBEAR_PIDFILE;
+	svr_opts.pidfile = expand_homedir_path(DROPBEAR_PIDFILE);
 #if DROPBEAR_SVR_LOCALTCPFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -530,12 +530,14 @@ static void loadhostkey_helper(const char *name, void** src, void** dst, int fat
 /* Must be called after syslog/etc is working */
 static void loadhostkey(const char *keyfile, int fatal_duplicate) {
 	sign_key * read_key = new_sign_key();
+	char *expand_path = expand_homedir_path(keyfile);
 	enum signkey_type type = DROPBEAR_SIGNKEY_ANY;
-	if (readhostkey(keyfile, read_key, &type) == DROPBEAR_FAILURE) {
+	if (readhostkey(expand_path, read_key, &type) == DROPBEAR_FAILURE) {
 		if (!svr_opts.delay_hostkey) {
-			dropbear_log(LOG_WARNING, "Failed loading %s", keyfile);
+			dropbear_log(LOG_WARNING, "Failed loading %s", expand_path);
 		}
 	}
+	m_free(expand_path);
 
 #if DROPBEAR_RSA
 	if (type == DROPBEAR_SIGNKEY_RSA) {
