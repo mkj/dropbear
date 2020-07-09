@@ -192,7 +192,11 @@ group1 in Dropbear server too */
 /* Whether to do reverse DNS lookups. */
 #define DO_HOST_LOOKUP 0
 
-/* Whether to print the message of the day (MOTD). */
+/* Whether to print the message of the day (MOTD). 
+ * The MOTD is not shown when
+ * DROPBEAR_SVR_PASSWORD_AUTH 0
+ * DROPBEAR_SVR_PAM_AUTH 0
+ * DROPBEAR_SVR_PUBKEY_AUTH 1. */
 #define DO_MOTD 1
 #define MOTD_FILENAME "/etc/motd"
 
