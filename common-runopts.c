@@ -40,12 +40,14 @@ int readhostkey(const char * filename, sign_key * hostkey,
 
 	int ret = DROPBEAR_FAILURE;
 	buffer *buf;
+  char *expand_path = expand_homedir_path(filename);
 
 	buf = buf_new(MAX_PRIVKEY_SIZE);
 
-	if (buf_readfile(buf, filename) == DROPBEAR_FAILURE) {
+	if (buf_readfile(buf, expand_path) == DROPBEAR_FAILURE) {
 		goto out;
 	}
+  m_free(expand_path);
 	buf_setpos(buf, 0);
 
 	addrandom(buf_getptr(buf, buf->len), buf->len);

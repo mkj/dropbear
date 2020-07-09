@@ -160,8 +160,7 @@ static void svr_ensure_hostkey() {
 		buf_setpos(key_buf, 4);
 		len = key_buf->len - key_buf->pos;
 		fp = sign_key_fingerprint(buf_getptr(key_buf, len), len);
-		dropbear_log(LOG_INFO, "Generated hostkey %s, fingerprint is %s",
-			fn, fp);
+		dropbear_log(LOG_INFO, "Generated hostkey fingerprint is %s", fp);
 		m_free(fp);
 		buf_free(key_buf);
 	}
