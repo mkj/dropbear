@@ -500,6 +500,7 @@ void sign_key_free(sign_key *key) {
 	TRACE2(("leave sign_key_free"))
 }
 
+#ifndef DROPBEAR_SHA256
 static char hexdig(unsigned char x) {
 	if (x > 0xf)
 		return 'X';
@@ -509,10 +510,45 @@ static char hexdig(unsigned char x) {
 	else
 		return 'a' + x - 10;
 }
+#endif
 
-/* Since we're not sure if we'll have md5 or sha1, we present both.
- * MD5 is used in preference, but sha1 could still be useful */
-#if DROPBEAR_MD5_HMAC
+/* Since we're not sure if we'll have md5, sha1 or sha256, we present all.
+ * SHA256 is used in preference, since it is more secure.
+ * */
+#if DROPBEAR_SHA256
+static char * sign_key_sha256_fingerprint(const unsigned char* keyblob,
+		unsigned int keybloblen) {
+
+	char * ret;
+	char * b64buf;
+	hash_state hs;
+	unsigned char hash[SHA256_HASH_SIZE];
+	unsigned int retlen;
+	unsigned int b64len;
+	unsigned long b64outlen;
+
+	sha256_init(&hs);
+
+	/* skip the size int of the string - this is a bit messy */
+	sha256_process(&hs, keyblob, keybloblen);
+
+	sha256_done(&hs, hash);
+
+	/* 32 bytes encode to 44 chars in base64 but we strip the "=" at the end */
+	b64len = 44;
+	b64buf = (char *)m_malloc(b64len);
+	base64_encode((unsigned char *) hash, SHA256_HASH_SIZE, b64buf, &b64outlen);
+
+	/* "SHA256:base64fingerprint\0", with the padding char removed */
+	retlen = 7 + 44;
+	ret = (char*)m_malloc(retlen);
+	snprintf(ret, retlen, "SHA256:%s", b64buf);
+	ret[retlen-1] = 0x0;
+
+	return ret;
+}
+
+#elif DROPBEAR_MD5_HMAC
 static char * sign_key_md5_fingerprint(const unsigned char* keyblob,
 		unsigned int keybloblen) {
 
@@ -547,7 +583,7 @@ static char * sign_key_md5_fingerprint(const unsigned char* keyblob,
 	return ret;
 }
 
-#else /* use SHA1 rather than MD5 for fingerprint */
+#else /* use SHA1 if no SHA256 or MD5 is available */
 static char * sign_key_sha1_fingerprint(const unsigned char* keyblob,
 		unsigned int keybloblen) {
 
@@ -581,13 +617,15 @@ static char * sign_key_sha1_fingerprint(const unsigned char* keyblob,
 	return ret;
 }
 
-#endif /* MD5/SHA1 switch */
+#endif /* SHA256/MD5/SHA1 switch */
 
 /* This will return a freshly malloced string, containing a fingerprint
  * in either sha1 or md5 */
 char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloblen) {
 
-#if DROPBEAR_MD5_HMAC
+#if DROPBEAR_SHA256
+	return sign_key_sha256_fingerprint(keyblob, keybloblen);
+#elif DROPBEAR_MD5_HMAC
 	return sign_key_md5_fingerprint(keyblob, keybloblen);
 #else
 	return sign_key_sha1_fingerprint(keyblob, keybloblen);
