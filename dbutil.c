@@ -605,71 +605,67 @@ int constant_time_memcmp(const void* a, const void *b, size_t n)
 	return c;
 }
 
-#if defined(__linux__) && defined(SYS_clock_gettime)
-/* CLOCK_MONOTONIC_COARSE was added in Linux 2.6.32 but took a while to
-reach userspace include headers */
-#ifndef CLOCK_MONOTONIC_COARSE
-#define CLOCK_MONOTONIC_COARSE 6
-#endif
-/* Some old toolchains know SYS_clock_gettime but not CLOCK_MONOTONIC */
-#ifndef CLOCK_MONOTONIC
-#define CLOCK_MONOTONIC 1
-#endif
-static clockid_t get_linux_clock_source() {
-	struct timespec ts;
-	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC_COARSE, &ts) == 0) {
-		return CLOCK_MONOTONIC_COARSE;
-	}
-
-	if (syscall(SYS_clock_gettime, CLOCK_MONOTONIC, &ts) == 0) {
-		return CLOCK_MONOTONIC;
-	}
-	return -1;
-}
-#endif 
-
-time_t monotonic_now() {
+/* higher-resolution monotonic timestamp, falls back to gettimeofday */
+void gettime_wrapper(struct timespec *now) {
+	struct timeval tv;
 #if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
 		/* time stands still when fuzzing */
-		return 5;
+		now->tv_sec = 5;
+		now->tv_nsec = 0;
 	}
 #endif
+
+#if defined(HAVE_CLOCK_GETTIME) && defined(CLOCK_MONOTONIC)
+	/* POSIX monotonic clock. Newer Linux, BSD, MacOSX >10.12 */
+	if (clock_gettime(CLOCK_MONOTONIC, now) == 0) {
+		return;
+	}
+#endif
+
 #if defined(__linux__) && defined(SYS_clock_gettime)
 	{
-	static clockid_t clock_source = -2;
-
-	if (clock_source == -2) {
-		/* First run, find out which one works. 
-		-1 will fall back to time() */
-		clock_source = get_linux_clock_source();
-	}
-
-	if (clock_source >= 0) {
-		struct timespec ts;
-		if (syscall(SYS_clock_gettime, clock_source, &ts) != 0) {
-			/* Intermittent clock failures should not happen */
-			dropbear_exit("Clock broke");
+	/* Old linux toolchain - kernel might support it but not the build headers */
+	/* Also glibc <2.17 requires -lrt which we neglect to add */
+	static int linux_monotonic_failed = 0;
+	if (!linux_monotonic_failed) {
+		/* CLOCK_MONOTONIC isn't in some headers */
+		int clock_source_monotonic = 1; 
+		if (syscall(SYS_clock_gettime, clock_source_monotonic, now) == 0) {
+			return;
+		} else {
+			/* Don't try again */
+			linux_monotonic_failed = 1;
 		}
-		return ts.tv_sec;
 	}
 	}
-#endif /* linux clock_gettime */
+#endif /* linux fallback clock_gettime */
 
 #if defined(HAVE_MACH_ABSOLUTE_TIME)
 	{
-	/* OS X, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
+	/* OS X pre 10.12, see https://developer.apple.com/library/mac/qa/qa1398/_index.html */
 	static mach_timebase_info_data_t timebase_info;
+	uint64_t scaled_time;
 	if (timebase_info.denom == 0) {
 		mach_timebase_info(&timebase_info);
 	}
-	return mach_absolute_time() * timebase_info.numer / timebase_info.denom
-		/ 1e9;
+	scaled_time = mach_absolute_time() * timebase_info.numer / timebase_info.denom;
+	now->tv_sec = scaled_time / 1000000000;
+	now->tv_nsec = scaled_time % 1000000000;
 	}
 #endif /* osx mach_absolute_time */
 
 	/* Fallback for everything else - this will sometimes go backwards */
-	return time(NULL);
+	gettimeofday(&tv, NULL);
+	now->tv_sec = tv.tv_sec;
+	now->tv_nsec = 1000*tv.tv_usec;
+}
+
+/* second-resolution monotonic timestamp */
+time_t monotonic_now() {
+	struct timespec ts;
+	gettime_wrapper(&ts);
+	return ts.tv_sec;
 }
 
 void fsync_parent_dir(const char* fn) {
@@ -687,6 +683,6 @@ void fsync_parent_dir(const char* fn) {
 		TRACE(("error opening directory %s for fsync: %s", dir, strerror(errno)))
 	}
 
-	free(fn_dir);
+	m_free(fn_dir);
 #endif
 }

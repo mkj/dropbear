@@ -79,6 +79,9 @@ void recv_msg_userauth_request() {
 
 	TRACE(("enter recv_msg_userauth_request"))
 
+	/* for compensating failure delay */
+	gettime_wrapper(&ses.authstate.auth_starttime);
+
 	/* ignore packets if auth is already done */
 	if (ses.authstate.authdone == 1) {
 		TRACE(("leave recv_msg_userauth_request: authdone already"))
@@ -149,10 +152,8 @@ void recv_msg_userauth_request() {
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
-			if (valid_user) {
-				svr_auth_password();
-				goto out;
-			}
+			svr_auth_password(valid_user);
+			goto out;
 		}
 	}
 #endif
@@ -164,10 +165,8 @@ void recv_msg_userauth_request() {
 		if (methodlen == AUTH_METHOD_PASSWORD_LEN &&
 				strncmp(methodname, AUTH_METHOD_PASSWORD,
 					AUTH_METHOD_PASSWORD_LEN) == 0) {
-			if (valid_user) {
-				svr_auth_pam();
-				goto out;
-			}
+			svr_auth_pam(valid_user);
+			goto out;
 		}
 	}
 #endif
@@ -177,12 +176,7 @@ void recv_msg_userauth_request() {
 	if (methodlen == AUTH_METHOD_PUBKEY_LEN &&
 			strncmp(methodname, AUTH_METHOD_PUBKEY,
 				AUTH_METHOD_PUBKEY_LEN) == 0) {
-		if (valid_user) {
-			svr_auth_pubkey();
-		} else {
-			/* pubkey has no failure delay */
-			send_msg_userauth_failure(0, 0);
-		}
+		svr_auth_pubkey(valid_user);
 		goto out;
 	}
 #endif
@@ -247,8 +241,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 	}
 
 	if (strlen(username) != userlen) {
-		dropbear_exit("Attempted username with a null byte from %s",
-			svr_ses.addrstring);
+		dropbear_exit("Attempted username with a null byte");
 	}
 
 	if (ses.authstate.username == NULL) {
@@ -258,8 +251,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 	} else {
 		/* check username hasn't changed */
 		if (strcmp(username, ses.authstate.username) != 0) {
-			dropbear_exit("Client trying multiple usernames from %s",
-				svr_ses.addrstring);
+			dropbear_exit("Client trying multiple usernames");
 		}
 	}
 
@@ -274,20 +266,18 @@ static int checkusername(const char *username, unsigned int userlen) {
 	if (!ses.authstate.pw_name) {
 		TRACE(("leave checkusername: user '%s' doesn't exist", username))
 		dropbear_log(LOG_WARNING,
-				"Login attempt for nonexistent user from %s",
-				svr_ses.addrstring);
+				"Login attempt for nonexistent user");
 		ses.authstate.checkusername_failed = 1;
 		return DROPBEAR_FAILURE;
 	}
 
 	/* check if we are running as non-root, and login user is different from the server */
 	uid = geteuid();
-	if (uid != 0 && uid != ses.authstate.pw_uid) {
+	if (!(DROPBEAR_SVR_MULTIUSER && uid == 0) && uid != ses.authstate.pw_uid) {
 		TRACE(("running as nonroot, only server uid is allowed"))
 		dropbear_log(LOG_WARNING,
-				"Login attempt with wrong user %s from %s",
-				ses.authstate.pw_name,
-				svr_ses.addrstring);
+				"Login attempt with wrong user %s",
+				ses.authstate.pw_name);
 		ses.authstate.checkusername_failed = 1;
 		return DROPBEAR_FAILURE;
 	}
@@ -391,16 +381,48 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	encrypt_packet();
 
 	if (incrfail) {
-		unsigned int delay;
-		genrandom((unsigned char*)&delay, sizeof(delay));
-		/* We delay for 300ms +- 50ms */
-		delay = 250000 + (delay % 100000);
+		/* The SSH_MSG_AUTH_FAILURE response is delayed to attempt to
+		avoid user enumeration and slow brute force attempts.
+		The delay is adjusted by the time already spent in processing
+		authentication (ses.authstate.auth_starttime timestamp). */
+
+		/* Desired total delay 300ms +-50ms (in nanoseconds).
+		Beware of integer overflow if increasing these values */
+		const unsigned int mindelay = 250000000;
+		const unsigned int vardelay = 100000000;
+		unsigned int rand_delay;
+		struct timespec delay;
+
+		gettime_wrapper(&delay);
+		delay.tv_sec -= ses.authstate.auth_starttime.tv_sec;
+		delay.tv_nsec -= ses.authstate.auth_starttime.tv_nsec;
+
+		/* carry */
+		if (delay.tv_nsec < 0) {
+			delay.tv_nsec += 1000000000;
+			delay.tv_sec -= 1;
+		}
+
+		genrandom((unsigned char*)&rand_delay, sizeof(rand_delay));
+		rand_delay = mindelay + (rand_delay % vardelay);
+
+		if (delay.tv_sec == 0 && delay.tv_nsec <= mindelay) {
+			/* Compensate for elapsed time */
+			delay.tv_nsec = rand_delay - delay.tv_nsec;
+		} else {
+			/* No time left or time went backwards, just delay anyway */
+			delay.tv_sec = 0;
+			delay.tv_nsec = rand_delay;
+		}
+
+
 #if DROPBEAR_FUZZ
 		if (!fuzz.fuzzing)
 #endif
 		{
-		usleep(delay);
+			while (nanosleep(&delay, &delay) == -1 && errno == EINTR) { /* Go back to sleep */ }
 		}
+
 		ses.authstate.failcount++;
 	}
 
@@ -414,8 +436,8 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		} else {
 			userstr = ses.authstate.pw_name;
 		}
-		dropbear_exit("Max auth tries reached - user '%s' from %s",
-				userstr, svr_ses.addrstring);
+		dropbear_exit("Max auth tries reached - user '%s'",
+				userstr);
 	}
 	
 	TRACE(("leave send_msg_userauth_failure"))

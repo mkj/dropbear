@@ -68,6 +68,16 @@ void common_session_init(int sock_in, int sock_out) {
 	/* Sets it to lowdelay */
 	update_channel_prio();
 
+#if !DROPBEAR_SVR_MULTIUSER
+	/* A sanity check to prevent an accidental configuration option
+	   leaving multiuser systems exposed */
+	errno = 0;
+	getuid();
+	if (errno != ENOSYS) {
+		dropbear_exit("Non-multiuser Dropbear requires a non-multiuser kernel");
+	}
+#endif
+
 	now = monotonic_now();
 	ses.connect_time = now;
 	ses.last_packet_time_keepalive_recv = now;
@@ -137,6 +147,10 @@ void common_session_init(int sock_in, int sock_out) {
 
 	ses.allowprivport = 0;
 
+#if DROPBEAR_PLUGIN
+        ses.plugin_session = NULL;
+#endif
+
 	TRACE(("leave session_init"))
 }
 
@@ -152,8 +166,9 @@ void session_loop(void(*loophandler)(void)) {
 
 		timeout.tv_sec = select_timeout();
 		timeout.tv_usec = 0;
-		FD_ZERO(&writefd);
-		FD_ZERO(&readfd);
+		DROPBEAR_FD_ZERO(&writefd);
+		DROPBEAR_FD_ZERO(&readfd);
+
 		dropbear_assert(ses.payload == NULL);
 
 		/* We get woken up when signal handlers write to this pipe.
@@ -204,8 +219,8 @@ void session_loop(void(*loophandler)(void)) {
 			 * want to iterate over channels etc for reading, to handle
 			 * server processes exiting etc. 
 			 * We don't want to read/write FDs. */
-			FD_ZERO(&writefd);
-			FD_ZERO(&readfd);
+			DROPBEAR_FD_ZERO(&writefd);
+			DROPBEAR_FD_ZERO(&readfd);
 		}
 		
 		/* We'll just empty out the pipe if required. We don't do
@@ -346,7 +361,7 @@ void session_cleanup() {
 void send_session_identification() {
 	buffer *writebuf = buf_new(strlen(LOCAL_IDENT "\r\n") + 1);
 	buf_putbytes(writebuf, (const unsigned char *) LOCAL_IDENT "\r\n", strlen(LOCAL_IDENT "\r\n"));
-	writebuf_enqueue(writebuf, 0);
+	writebuf_enqueue(writebuf);
 }
 
 static void read_session_identification() {
@@ -355,8 +370,11 @@ static void read_session_identification() {
 	int len = 0;
 	char done = 0;
 	int i;
-	/* If they send more than 50 lines, something is wrong */
-	for (i = 0; i < 50; i++) {
+
+	/* Servers may send other lines of data before sending the
+	 * version string, client must be able to process such lines.
+	 * If they send more than 50 lines, something is wrong */
+	for (i = IS_DROPBEAR_CLIENT ? 50 : 1; i > 0; i--) {
 		len = ident_readln(ses.sock_in, linebuf, sizeof(linebuf));
 
 		if (len < 0 && errno != EINTR) {
@@ -406,7 +424,7 @@ static int ident_readln(int fd, char* buf, int count) {
 		return -1;
 	}
 
-	FD_ZERO(&fds);
+	DROPBEAR_FD_ZERO(&fds);
 
 	/* select since it's a non-blocking fd */
 	

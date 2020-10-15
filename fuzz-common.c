@@ -22,6 +22,7 @@ void fuzz_common_setup(void) {
     fuzz.input = m_malloc(sizeof(buffer));
     _dropbear_log = fuzz_dropbear_log;
     crypto_init();
+    fuzz_seed();
     /* let any messages get flushed */
     setlinebuf(stdout);
 }
@@ -111,6 +112,14 @@ static void load_fixed_hostkeys(void) {
         dropbear_exit("failed fixed ecdsa hostkey");
     }
 
+    buf_setlen(b, 0);
+    buf_putbytes(b, keyed25519, keyed25519_len);
+    buf_setpos(b, 0);
+    type = DROPBEAR_SIGNKEY_ED25519;
+    if (buf_get_priv_key(b, svr_opts.hostkey, &type) == DROPBEAR_FAILURE) {
+        dropbear_exit("failed fixed ed25519 hostkey");
+    }
+
     buf_free(b);
 }
 
@@ -138,7 +147,7 @@ void fuzz_get_socket_address(int UNUSED(fd), char **local_host, char **local_por
 void fuzz_fake_send_kexdh_reply(void) {
     assert(!ses.dh_K);
     m_mp_alloc_init_multi(&ses.dh_K, NULL);
-    mp_set_int(ses.dh_K, 12345678);
+    mp_set_ul(ses.dh_K, 12345678uL);
     finish_kexhashbuf();
 }
 
@@ -187,4 +196,14 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     }
 
     return 0;
+}
+
+const void* fuzz_get_algo(const algo_type *algos, const char* name) {
+    const algo_type *t;
+    for (t = algos; t->name; t++) {
+        if (strcmp(t->name, name) == 0) {
+            return t->data;
+        }
+    }
+    assert(0);
 }

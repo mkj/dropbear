@@ -12,12 +12,7 @@
 
 #include "tomcrypt_dropbear.h"
 
-void * m_malloc(size_t size);
-/* m_calloc is limited in size, enough for libtomcrypt */
-void * m_calloc(size_t nmemb, size_t size);
-void * m_realloc(void* ptr, size_t size);
-void m_free_direct(void* ptr);
-
+#include "dbmalloc.h"
 #define XMALLOC m_malloc
 #define XFREE m_free_direct
 #define XREALLOC m_realloc
@@ -79,8 +74,8 @@ void m_free_direct(void* ptr);
   #define LTC_NO_MODES
   #define LTC_NO_HASHES
   #define LTC_NO_MACS
-   #define LTC_NO_PRNGS
-   #define LTC_NO_PK
+  #define LTC_NO_PRNGS
+  #define LTC_NO_PK
   #define LTC_NO_PKCS
   #define LTC_NO_MISC
 #endif /* LTC_NOTHING */
@@ -483,6 +478,13 @@ void m_free_direct(void* ptr);
    #define LTC_ECC384
    #define LTC_ECC521
 #endif
+#endif
+
+#if defined(LTC_DER)
+   #ifndef LTC_DER_MAX_RECURSION
+      /* Maximum recursion limit when processing nested ASN.1 types. */
+      #define LTC_DER_MAX_RECURSION 30
+   #endif
 #endif
 
 #if defined(LTC_MECC) || defined(LTC_MRSA) || defined(LTC_MDSA) || defined(LTC_MKAT)

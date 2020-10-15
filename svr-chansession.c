@@ -51,6 +51,7 @@ static void execchild(const void *user_data_chansess);
 static void addchildpid(struct ChanSess *chansess, pid_t pid);
 static void sesssigchild_handler(int val);
 static void closechansess(const struct Channel *channel);
+static void cleanupchansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
 static int sesscheckclose(const struct Channel *channel);
@@ -69,6 +70,7 @@ const struct ChanType svrchansess = {
 	sesscheckclose, /* checkclosehandler */
 	chansessionrequest, /* reqhandler */
 	closechansess, /* closehandler */
+	cleanupchansess /* cleanup */
 };
 
 /* required to clear environment */
@@ -91,7 +93,7 @@ void svr_chansess_checksignal(void) {
 	while ((pid = waitpid(-1, &status, WNOHANG)) > 0) {
 		unsigned int i;
 		struct exitinfo *ex = NULL;
-		TRACE(("sigchld handler: pid %d", pid))
+		TRACE(("svr_chansess_checksignal : pid %d", pid))
 
 		ex = NULL;
 		/* find the corresponding chansess */
@@ -285,8 +287,25 @@ chansess_login_alloc(const struct ChanSess *chansess) {
 	return li;
 }
 
-/* clean a session channel */
+/* send exit status message before the channel is closed */
 static void closechansess(const struct Channel *channel) {
+	struct ChanSess *chansess;
+
+	TRACE(("enter closechansess"))
+
+	chansess = (struct ChanSess*)channel->typedata;
+
+	if (chansess == NULL) {
+		TRACE(("leave closechansess: chansess == NULL"))
+		return;
+	}
+
+	send_exitsignalstatus(channel);
+	TRACE(("leave closechansess"))
+}
+
+/* clean a session channel */
+static void cleanupchansess(const struct Channel *channel) {
 
 	struct ChanSess *chansess;
 	unsigned int i;
@@ -301,14 +320,9 @@ static void closechansess(const struct Channel *channel) {
 		return;
 	}
 
-	send_exitsignalstatus(channel);
-
 	m_free(chansess->cmd);
 	m_free(chansess->term);
-
-#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	m_free(chansess->original_command);
-#endif
 
 	if (chansess->tty) {
 		/* write the utmp/wtmp login record */
@@ -679,7 +693,11 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 	/* take global command into account */
 	if (svr_opts.forced_command) {
-		chansess->original_command = chansess->cmd ? : m_strdup("");
+		if (chansess->cmd) {
+			chansess->original_command = chansess->cmd;
+		} else {
+			chansess->original_command = m_strdup("");
+		}
 		chansess->cmd = m_strdup(svr_opts.forced_command);
 	} else {
 		/* take public key option 'command' into account */
@@ -816,7 +834,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
 			TRACE(("leave ptycommand: error redirecting filedesc"))
 			return DROPBEAR_FAILURE;
-		}
+			}
 
 		close(chansess->slave);
 
@@ -932,6 +950,7 @@ static void execchild(const void *user_data) {
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_VALGRIND */
 
+#if DROPBEAR_SVR_MULTIUSER
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
@@ -955,6 +974,7 @@ static void execchild(const void *user_data) {
 			dropbear_exit("Couldn't	change user as non-root");
 		}
 	}
+#endif
 
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
@@ -978,11 +998,9 @@ static void execchild(const void *user_data) {
 		addnewvar("SSH_CLIENT", chansess->client_string);
 	}
 	
-#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	if (chansess->original_command) {
 		addnewvar("SSH_ORIGINAL_COMMAND", chansess->original_command);
 	}
-#endif
 
 	/* change directory */
 	if (chdir(ses.authstate.pw_dir) < 0) {

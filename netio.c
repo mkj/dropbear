@@ -224,7 +224,6 @@ void remove_connect_pending() {
 
 void set_connect_fds(fd_set *writefd) {
 	m_list_elem *iter;
-	TRACE(("enter set_connect_fds"))
 	iter = ses.conn_pending.first;
 	while (iter) {
 		m_list_elem *next_iter = iter->next;
@@ -245,12 +244,10 @@ void set_connect_fds(fd_set *writefd) {
 		}
 		iter = next_iter;
 	}
-	TRACE(("leave set_connect_fds"))
 }
 
 void handle_connect_fds(const fd_set *writefd) {
 	m_list_elem *iter;
-	TRACE(("enter handle_connect_fds"))
 	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
 		int val;
 		socklen_t vallen = sizeof(val);
@@ -284,7 +281,6 @@ void handle_connect_fds(const fd_set *writefd) {
 			return; 
 		}
 	}
-	TRACE(("leave handle_connect_fds - end iter"))
 }
 
 void connect_set_writequeue(struct dropbear_progress_connection *c, struct Queue *writequeue) {
@@ -297,19 +293,25 @@ void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigne
 	int len;
 	buffer *writebuf;
 
-	#ifndef IOV_MAX
-	#define IOV_MAX UIO_MAXIOV
+#ifndef IOV_MAX
+	#if defined(__CYGWIN__) && !defined(UIO_MAXIOV)
+		#define IOV_MAX 1024
+	#elif defined(__sgi)
+		#define IOV_MAX 512 
+	#else 
+		#define IOV_MAX UIO_MAXIOV
 	#endif
+#endif
 
 	*iov_count = MIN(MIN(queue->count, IOV_MAX), *iov_count);
 
 	for (l = queue->head, i = 0; i < *iov_count; l = l->link, i++)
 	{
 		writebuf = (buffer*)l->item;
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		dropbear_assert(len > 0);
-		TRACE2(("write_packet writev #%d  type %d len %d/%d", i, writebuf->data[writebuf->len-1],
-				len, writebuf->len-1))
+		TRACE2(("write_packet writev #%d len %d/%d", i,
+				len, writebuf->len))
 		iov[i].iov_base = buf_getptr(writebuf, len);
 		iov[i].iov_len = len;
 	}
@@ -320,7 +322,7 @@ void packet_queue_consume(struct Queue *queue, ssize_t written) {
 	int len;
 	while (written > 0) {
 		writebuf = (buffer*)examine(queue);
-		len = writebuf->len - 1 - writebuf->pos;
+		len = writebuf->len - writebuf->pos;
 		if (len > written) {
 			/* partial buffer write */
 			buf_incrpos(writebuf, written);
@@ -398,9 +400,9 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	}
 	/* linux specific, sets QoS class. see tc-prio(8) */
 	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &so_prio_val, sizeof(so_prio_val));
-	if (rc < 0 && errno != ENOTSOCK)
-		dropbear_log(LOG_WARNING, "Couldn't set SO_PRIORITY (%s)",
-				strerror(errno));
+	if (rc < 0 && errno != ENOTSOCK) {
+		TRACE(("Couldn't set SO_PRIORITY (%s)", strerror(errno)))
+    }
 #endif
 
 }
