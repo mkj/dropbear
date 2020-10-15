@@ -36,7 +36,7 @@ int fuzz_set_input(const uint8_t *Data, size_t Size) {
 
     memset(&ses, 0x0, sizeof(ses));
     memset(&svr_ses, 0x0, sizeof(svr_ses));
-    wrapfd_setup();
+    wrapfd_setup(fuzz.input);
 
     fuzz_seed();
 
@@ -77,6 +77,29 @@ void fuzz_svr_setup(void) {
 
     load_fixed_hostkeys();
 }
+
+#if 0
+void fuzz_cli_setup(void) {
+    fuzz_common_setup();
+    
+    _dropbear_exit = cli_dropbear_exit;
+
+    char *argv[] = { 
+        "-E", 
+    };
+
+    int argc = sizeof(argv) / sizeof(*argv);
+    cli_getopts(argc, argv);
+
+    /* user lookups might be slow, cache it */
+    fuzz.pw_name = m_strdup("person");
+    fuzz.pw_dir = m_strdup("/tmp");
+    fuzz.pw_shell = m_strdup("/bin/zsh");
+    fuzz.pw_passwd = m_strdup("!!zzznope");
+
+    load_fixed_hostkeys();
+}
+#endif
 
 static void load_fixed_hostkeys(void) {
 #include "fuzz-hostkeys.c"   
@@ -151,6 +174,17 @@ void fuzz_fake_send_kexdh_reply(void) {
     finish_kexhashbuf();
 }
 
+/* fake version of spawn_command() */
+int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
+    *ret_writefd = wrapfd_new();
+    *ret_readfd = wrapfd_new();
+    if (ret_errfd) {
+        *ret_errfd = wrapfd_new();
+    }
+    ret_pid = 999;
+    return DROPBEAR_SUCCESS;
+}
+
 int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     static int once = 0;
     if (!once) {
@@ -182,8 +216,7 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     uint32_t wrapseed = buf_getint(fuzz.input);
     wrapfd_setseed(wrapseed);
 
-    int fakesock = 20;
-    wrapfd_add(fakesock, fuzz.input, PLAIN);
+    int fakesock = wrapfd_new();
 
     m_malloc_set_epoch(1);
     if (setjmp(fuzz.jmp) == 0) {
