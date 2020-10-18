@@ -103,6 +103,7 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 	int ret = DROPBEAR_FAILURE;
 	bits = signkey_generate_get_bits(keytype, bits);
 
+  char *expand_path = expand_homedir_path(filename);
 	/* now we can generate the key */
 	key = new_sign_key();
 
@@ -149,24 +150,24 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 	key = NULL;
 	buf_setpos(buf, 0);
 
-	fn_temp = m_malloc(strlen(filename) + 30);
-	snprintf(fn_temp, strlen(filename)+30, "%s.tmp%d", filename, getpid());
+	fn_temp = m_malloc(strlen(expand_path) + 30);
+	snprintf(fn_temp, strlen(expand_path)+30, "%s.tmp%d", expand_path, getpid());
 	ret = buf_writefile(buf, fn_temp, 0);
 
 	if (ret == DROPBEAR_FAILURE) {
 		goto out;
 	}
 
-	if (link(fn_temp, filename) < 0) {
+	if (link(fn_temp, expand_path) < 0) {
 		/* If generating keys on connection (skipexist) it's OK to get EEXIST 
 		- we probably just lost a race with another connection to generate the key */
 		if (!(skip_exist && errno == EEXIST)) {
 			if (errno == EPERM || errno == EACCES) {
 				/* Non-atomic fallback when hard-links not allowed or unsupported */
 				buf_setpos(buf, 0);
-				ret = buf_writefile(buf, filename, skip_exist);
+				ret = buf_writefile(buf, expand_path, skip_exist);
 			} else {
-				dropbear_log(LOG_ERR, "Failed moving key file to %s: %s", filename,
+				dropbear_log(LOG_ERR, "Failed moving key file to %s: %s", expand_path,
 					strerror(errno));
 				ret = DROPBEAR_FAILURE;
 			}
@@ -177,7 +178,7 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 
 	/* ensure directory update is flushed to disk, otherwise we can end up
 	with zero-byte hostkey files if the power goes off */
-	fsync_parent_dir(filename);
+	fsync_parent_dir(expand_path);
 
 out:
 	if (buf) {
@@ -189,6 +190,7 @@ out:
 		unlink(fn_temp);
 		m_free(fn_temp);
 	}
-
+  dropbear_log(LOG_INFO, "Generated hostkey path is %s", expand_path);
+  m_free(expand_path);
 	return ret;
 }
