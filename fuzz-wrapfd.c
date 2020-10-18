@@ -21,7 +21,7 @@ struct fdwrap {
 	int closeout;
 };
 
-static struct fdwrap wrap_fds[IOWRAP_MAXFD+1] = {0};
+static struct fdwrap wrap_fds[IOWRAP_MAXFD+1] = {{UNUSED, 0, 0}};
 static int wrapfd_maxfd = -1;
 static unsigned short rand_state[3];
 static buffer *input_buf;
@@ -88,7 +88,6 @@ int wrapfd_close(int fd) {
 
 int wrapfd_read(int fd, void *out, size_t count) {
 	size_t maxread;
-	buffer *buf;
 
 	if (!fuzz.wrapfds) {
 		return read(fd, out, count);

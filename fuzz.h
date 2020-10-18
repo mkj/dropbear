@@ -20,6 +20,7 @@ void fuzz_cli_setup(void);
 int fuzz_set_input(const uint8_t *Data, size_t Size);
 
 int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths);
+int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths);
 const void* fuzz_get_algo(const algo_type *algos, const char* name);
 
 // fuzzer functions that intrude into general code
