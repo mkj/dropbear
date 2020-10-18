@@ -7,8 +7,6 @@
 #include "fuzz.h"
 
 #define IOWRAP_MAXFD (FD_SETSIZE-1)
-// hopefully above any real fd...
-static const int WRAPFD_STARTFD = 400;
 static const int MAX_RANDOM_IN = 50000;
 static const double CHANCE_CLOSE = 1.0 / 600;
 static const double CHANCE_INTR = 1.0 / 900;
@@ -23,13 +21,25 @@ struct fdwrap {
 	int closeout;
 };
 
-static struct fdwrap wrap_fds[IOWRAP_MAXFD+1];
+static struct fdwrap wrap_fds[IOWRAP_MAXFD+1] = {0};
+static int wrapfd_maxfd = -1;
 static unsigned short rand_state[3];
 static buffer *input_buf;
+static int devnull_fd = -1;
+
+static void wrapfd_remove(int fd);
 
 void wrapfd_setup(buffer *buf) {
 	TRACE(("wrapfd_setup"))
-	memset(wrap_fds, 0x0, sizeof(wrap_fds));
+
+	// clean old ones
+	int i;
+	for (i = 0; i <= wrapfd_maxfd; i++) {
+		if (wrap_fds[i].mode == COMMONBUF) {
+			wrapfd_remove(i);
+		}
+	}
+	wrapfd_maxfd = -1;
 
 	memset(rand_state, 0x0, sizeof(rand_state));
 	wrapfd_setseed(50);
@@ -42,28 +52,29 @@ void wrapfd_setseed(uint32_t seed) {
 }
 
 int wrapfd_new() {
-	int fd;
-	// Find a spare file descriptor to use
-	for (fd = WRAPFD_STARTFD; fd < IOWRAP_MAXFD; fd++) {
-		if (wrap_fds[fd].mode == UNUSED) {
-			// check real file descriptors haven't got as far as WRAPFD_STARTFD
-			assert(close(fd) == -1 && errno == EBADF);
-			wrap_fds[fd].mode = COMMONBUF;
-			wrap_fds[fd].closein = 0;
-			wrap_fds[fd].closeout = 0;
-			return fd;
-		}
+	if (devnull_fd == -1) {
+		devnull_fd = open("/dev/null", O_RDONLY);
+		assert(devnull_fd != -1);
 	}
-	errno = EMFILE;
-	return -1;
+
+	int fd = dup(devnull_fd);
+	assert(fd != -1);
+	assert(wrap_fds[fd].mode == UNUSED);
+	wrap_fds[fd].mode = COMMONBUF;
+	wrap_fds[fd].closein = 0;
+	wrap_fds[fd].closeout = 0;
+	wrapfd_maxfd = MAX(fd, wrapfd_maxfd);
+
+	return fd;
 }
 
-void wrapfd_remove(int fd) {
+static void wrapfd_remove(int fd) {
 	TRACE(("wrapfd_remove %d", fd))
 	assert(fd >= 0);
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode != UNUSED);
 	wrap_fds[fd].mode = UNUSED;
+	m_close(fd);
 }
 
 int wrapfd_close(int fd) {
@@ -161,8 +172,6 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	int i, nset, sel;
 	int ret = 0;
 	int fdlist[IOWRAP_MAXFD+1];
-
-	memset(fdlist, 0x0, sizeof(fdlist));
 
 	if (!fuzz.wrapfds) {
 		return select(nfds, readfds, writefds, exceptfds, timeout);
