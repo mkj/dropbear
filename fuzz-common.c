@@ -37,6 +37,7 @@ int fuzz_set_input(const uint8_t *Data, size_t Size) {
 
     memset(&ses, 0x0, sizeof(ses));
     memset(&svr_ses, 0x0, sizeof(svr_ses));
+    memset(&cli_ses, 0x0, sizeof(cli_ses));
     wrapfd_setup(fuzz.input);
 
     fuzz_seed();
@@ -64,6 +65,7 @@ void fuzz_svr_setup(void) {
     _dropbear_exit = svr_dropbear_exit;
 
     char *argv[] = { 
+		"dropbear",
         "-E", 
     };
 
@@ -80,6 +82,7 @@ void fuzz_cli_setup(void) {
 	_dropbear_log = cli_dropbear_log;
 
     char *argv[] = { 
+		"dbclient",
 		"-y",
         "localhost",
     };
@@ -168,7 +171,7 @@ int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t 
     if (ret_errfd) {
         *ret_errfd = wrapfd_new();
     }
-    ret_pid = 999;
+    *ret_pid = 999;
     return DROPBEAR_SUCCESS;
 }
 
