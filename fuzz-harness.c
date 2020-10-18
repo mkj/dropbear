@@ -29,6 +29,7 @@ int main(int argc, char ** argv) {
         buf_readfile(input, fn);
         buf_setpos(input, 0);
 
+		/* Run twice to catch problems with statefulness */
         fuzz.wrapfds = old_fuzz_wrapfds;
         printf("Running %s once \n", fn);
         LLVMFuzzerTestOneInput(input->data, input->len);

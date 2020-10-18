@@ -16,6 +16,7 @@ static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list 
 static void load_fixed_hostkeys(void);
 
 void fuzz_common_setup(void) {
+	disallow_core();
     fuzz.fuzzing = 1;
     fuzz.wrapfds = 1;
     fuzz.do_jmp = 1;
@@ -69,37 +70,23 @@ void fuzz_svr_setup(void) {
     int argc = sizeof(argv) / sizeof(*argv);
     svr_getopts(argc, argv);
 
-    /* user lookups might be slow, cache it */
-    fuzz.pw_name = m_strdup("person");
-    fuzz.pw_dir = m_strdup("/tmp");
-    fuzz.pw_shell = m_strdup("/bin/zsh");
-    fuzz.pw_passwd = m_strdup("!!zzznope");
-
     load_fixed_hostkeys();
 }
 
-#if 0
 void fuzz_cli_setup(void) {
     fuzz_common_setup();
     
-    _dropbear_exit = cli_dropbear_exit;
+	_dropbear_exit = cli_dropbear_exit;
+	_dropbear_log = cli_dropbear_log;
 
     char *argv[] = { 
-        "-E", 
+		"-y",
+        "localhost",
     };
 
     int argc = sizeof(argv) / sizeof(*argv);
     cli_getopts(argc, argv);
-
-    /* user lookups might be slow, cache it */
-    fuzz.pw_name = m_strdup("person");
-    fuzz.pw_dir = m_strdup("/tmp");
-    fuzz.pw_shell = m_strdup("/bin/zsh");
-    fuzz.pw_passwd = m_strdup("!!zzznope");
-
-    load_fixed_hostkeys();
 }
-#endif
 
 static void load_fixed_hostkeys(void) {
 #include "fuzz-hostkeys.c"   
@@ -198,7 +185,7 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     }
 
     /*
-      get prefix. input format is
+      get prefix, allowing for future extensibility. input format is
       string prefix
           uint32 wrapfd seed
           ... to be extended later
@@ -221,6 +208,52 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     m_malloc_set_epoch(1);
     if (setjmp(fuzz.jmp) == 0) {
         svr_session(fakesock, fakesock);
+        m_malloc_free_epoch(1, 0);
+    } else {
+        m_malloc_free_epoch(1, 1);
+        TRACE(("dropbear_exit longjmped"))
+        /* dropbear_exit jumped here */
+    }
+
+    return 0;
+}
+
+int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
+    static int once = 0;
+    if (!once) {
+        fuzz_cli_setup();
+        fuzz.skip_kexmaths = skip_kexmaths;
+        once = 1;
+    }
+
+    if (fuzz_set_input(Data, Size) == DROPBEAR_FAILURE) {
+        return 0;
+    }
+
+    /*
+      get prefix, allowing for future extensibility. input format is
+      string prefix
+          uint32 wrapfd seed
+          ... to be extended later
+      [bytes] ssh input stream
+    */
+
+    /* be careful to avoid triggering buffer.c assertions */
+    if (fuzz.input->len < 8) {
+        return 0;
+    }
+    size_t prefix_size = buf_getint(fuzz.input);
+    if (prefix_size != 4) {
+        return 0;
+    }
+    uint32_t wrapseed = buf_getint(fuzz.input);
+    wrapfd_setseed(wrapseed);
+
+    int fakesock = wrapfd_new();
+
+    m_malloc_set_epoch(1);
+    if (setjmp(fuzz.jmp) == 0) {
+        cli_session(fakesock, fakesock, NULL, 0);
         m_malloc_free_epoch(1, 0);
     } else {
         m_malloc_free_epoch(1, 1);
