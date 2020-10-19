@@ -39,44 +39,30 @@
 
 /* Create (malloc) a new buffer of size */
 buffer* buf_new(unsigned int size) {
-
 	buffer* buf;
-	
 	if (size > BUF_MAX_SIZE) {
 		dropbear_exit("buf->size too big");
 	}
 
 	buf = (buffer*)m_malloc(sizeof(buffer)+size);
-
-	if (size > 0) {
-		buf->data = (unsigned char*)buf + sizeof(buffer);
-	} else {
-		buf->data = NULL;
-	}
-
+	buf->data = (unsigned char*)buf + sizeof(buffer);
 	buf->size = size;
-
 	return buf;
-
 }
 
 /* free the buffer's data and the buffer itself */
 void buf_free(buffer* buf) {
-
 	m_free(buf);
 }
 
 /* overwrite the contents of the buffer to clear it */
 void buf_burn(const buffer* buf) {
-	
 	m_burn(buf->data, buf->size);
-
 }
 
 /* resize a buffer, pos and len will be repositioned if required when
  * downsizing */
 buffer* buf_resize(buffer *buf, unsigned int newsize) {
-
 	if (newsize > BUF_MAX_SIZE) {
 		dropbear_exit("buf->size too big");
 	}
