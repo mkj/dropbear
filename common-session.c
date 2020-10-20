@@ -465,6 +465,11 @@ static int ident_readln(int fd, char* buf, int count) {
 				TRACE(("leave ident_readln: EOF"))
 				return -1;
 			}
+
+#ifdef DROPBEAR_FUZZ
+			fuzz_dump(&in, 1);
+#endif
+
 			if (in == '\n') {
 				/* end of ident string */
 				break;

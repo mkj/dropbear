@@ -8,12 +8,14 @@
 #include "session.h"
 #include "dbrandom.h"
 #include "bignum.h"
+#include "atomicio.h"
 #include "fuzz-wrapfd.h"
 
 struct dropbear_fuzz_options fuzz;
 
 static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param);
 static void load_fixed_hostkeys(void);
+static void load_fixed_client_key(void);
 
 void fuzz_common_setup(void) {
 	disallow_core();
@@ -85,14 +87,38 @@ void fuzz_cli_setup(void) {
 		"dbclient",
 		"-y",
         "localhost",
+        "uptime"
     };
 
     int argc = sizeof(argv) / sizeof(*argv);
     cli_getopts(argc, argv);
+
+    load_fixed_client_key();
+    /* Avoid password prompt */
+    setenv(DROPBEAR_PASSWORD_ENV, "password", 1);
+}
+
+#include "fuzz-hostkeys.c"   
+
+static void load_fixed_client_key(void) {
+
+    buffer *b = buf_new(3000);
+    sign_key *key;
+    enum signkey_type keytype;
+
+    key = new_sign_key();
+    keytype = DROPBEAR_SIGNKEY_ANY;
+    buf_putbytes(b, keyed25519, keyed25519_len);
+    buf_setpos(b, 0);
+    if (buf_get_priv_key(b, key, &keytype) == DROPBEAR_FAILURE) {
+        dropbear_exit("failed fixed ed25519 hostkey");
+    }
+    list_append(cli_opts.privkeys, key);
+
+    buf_free(b);
 }
 
 static void load_fixed_hostkeys(void) {
-#include "fuzz-hostkeys.c"   
 
     buffer *b = buf_new(3000);
     enum signkey_type type;
@@ -275,4 +301,11 @@ const void* fuzz_get_algo(const algo_type *algos, const char* name) {
         }
     }
     assert(0);
+}
+
+void fuzz_dump(const unsigned char* data, size_t len) {
+    TRACE(("dump %zu", len))
+    if (fuzz.dumping) {
+        assert(atomicio(vwrite, fuzz.recv_dumpfd, (void*)data, len) == len);
+    }
 }
