@@ -65,7 +65,6 @@ ifeq (@DROPBEAR_FUZZ@, 1)
 	allobjs = $(COMMONOBJS) fuzz-common.o  fuzz-wrapfd.o $(CLISVROBJS) $(CLIOBJS) $(SVROBJS) @CRYPTLIB@
 	allobjs:=$(subst svr-main.o, ,$(allobjs))
 	allobjs:=$(subst cli-main.o, ,$(allobjs))
-	allobjs:=$(sort $(allobjs))
 
 	dropbearobjs=$(allobjs) svr-main.o
 	dbclientobjs=$(allobjs) cli-main.o
