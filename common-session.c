@@ -466,7 +466,7 @@ static int ident_readln(int fd, char* buf, int count) {
 				return -1;
 			}
 
-#ifdef DROPBEAR_FUZZ
+#if DROPBEAR_FUZZ
 			fuzz_dump(&in, 1);
 #endif
 
