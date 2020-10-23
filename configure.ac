@@ -347,6 +347,7 @@ AC_ARG_ENABLE(fuzz,
             DROPBEAR_FUZZ=1
             # libfuzzer needs linking with c++ libraries
             AC_PROG_CXX
+			mkdir -pv fuzz
         else
             AC_DEFINE(DROPBEAR_FUZZ, 0, Fuzzing)
             AC_MSG_NOTICE(Disabling fuzzing)
