@@ -176,7 +176,7 @@ If you test it please contact the Dropbear author */
 						   explicitly specified for all protocols (just
 						   for algos) but seems valid */
 
-#define MAX_PROPOSED_ALGO 20
+#define MAX_PROPOSED_ALGO 50
 
 /* size/count limits */
 /* From transport rfc */
