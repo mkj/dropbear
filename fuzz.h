@@ -29,7 +29,7 @@ int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
         const char* algo, unsigned int algolen,
         const unsigned char* keyblob, unsigned int keybloblen);
 extern const char * const * fuzz_signkey_names;
-void fuzz_seed(void);
+void fuzz_seed(const unsigned char* dat, unsigned int len);
 
 // helpers
 void fuzz_get_socket_address(int fd, char **local_host, char **local_port,

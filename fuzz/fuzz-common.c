@@ -25,7 +25,7 @@ void fuzz_common_setup(void) {
     fuzz.input = m_malloc(sizeof(buffer));
     _dropbear_log = fuzz_dropbear_log;
     crypto_init();
-    fuzz_seed();
+    fuzz_seed("start", 5);
     /* let any messages get flushed */
     setlinebuf(stdout);
 }
@@ -42,7 +42,7 @@ int fuzz_set_input(const uint8_t *Data, size_t Size) {
     memset(&cli_ses, 0x0, sizeof(cli_ses));
     wrapfd_setup(fuzz.input);
 
-    fuzz_seed();
+    fuzz_seed(fuzz.input->data, MIN(fuzz.input->len, 16));
 
     return DROPBEAR_SUCCESS;
 }
