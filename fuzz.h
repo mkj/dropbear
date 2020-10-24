@@ -15,6 +15,10 @@ void fuzz_common_setup(void);
 void fuzz_svr_setup(void);
 void fuzz_cli_setup(void);
 
+// constructor attribute so it runs before main(), including
+// in non-fuzzing mode.
+void fuzz_early_setup(void) __attribute__((constructor));
+
 // must be called once per fuzz iteration. 
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzz_set_input(const uint8_t *Data, size_t Size);
@@ -68,9 +72,20 @@ struct dropbear_fuzz_options {
     int dumping;
     // the file descriptor
     int recv_dumpfd;
+
+    // avoid filling fuzzing logs, this points to /dev/null
+    FILE *stderr;
 };
 
 extern struct dropbear_fuzz_options fuzz;
+
+/* This is a bodge but seems to work.
+ glibc stdio.h has the comment 
+ "C89/C99 say they're macros.  Make them happy." */
+#ifdef stderr
+#undef stderr
+#endif
+#define stderr (fuzz.stderr)
 
 #endif // DROPBEAR_FUZZ
 

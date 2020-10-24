@@ -11,11 +11,20 @@
 #include "atomicio.h"
 #include "fuzz-wrapfd.h"
 
+/* fuzz.h redefines stderr, we don't want that here */
+#undef stderr
+
 struct dropbear_fuzz_options fuzz;
 
 static void fuzz_dropbear_log(int UNUSED(priority), const char* format, va_list param);
 static void load_fixed_hostkeys(void);
 static void load_fixed_client_key(void);
+
+// This runs automatically before main, due to contructor attribute in fuzz.h
+void fuzz_early_setup(void) {
+    /* Set stderr to point to normal stderr by default */
+    fuzz.stderr = stderr;
+}
 
 void fuzz_common_setup(void) {
 	disallow_core();
@@ -28,6 +37,18 @@ void fuzz_common_setup(void) {
     fuzz_seed("start", 5);
     /* let any messages get flushed */
     setlinebuf(stdout);
+#if DEBUG_TRACE
+    if (debug_trace)
+    {
+        fprintf(stderr, "Dropbear fuzzer: -v specified, not disabling stderr output\n");
+    }
+    else
+#endif
+    {
+        fprintf(stderr, "Dropbear fuzzer: Disabling stderr output\n");
+        fuzz.stderr = fopen("/dev/null", "w");
+        assert(fuzz.stderr);
+    }
 }
 
 int fuzz_set_input(const uint8_t *Data, size_t Size) {
