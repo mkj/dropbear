@@ -396,7 +396,7 @@ static void get_algolist(char* algolist, unsigned int algolist_len,
 
 		if (algolist[i] == ',') {
 			if (*ret_count >= max_count) {
-				dropbear_log(LOG_WARNING, "Too many remote algorithms");
+				dropbear_exit("Too many remote algorithms");
 				*ret_count = 0;
 				return;
 			}
