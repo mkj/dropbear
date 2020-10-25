@@ -125,16 +125,21 @@ void buf_incrwritepos(buffer* buf, unsigned int incr) {
 	}
 }
 
-/* increment the position by incr, negative values are allowed, to
- * decrement the pos*/
-void buf_incrpos(buffer* buf,  int incr) {
+/* increment the position by incr */
+void buf_incrpos(buffer* buf, unsigned int incr) {
 	if (incr > BUF_MAX_INCR 
-		|| incr < -BUF_MAX_INCR 
-		|| (unsigned int)((int)buf->pos + incr) > buf->len
-		|| ((int)buf->pos + incr) < 0) {
+		|| (buf->pos + incr) > buf->len) {
 		dropbear_exit("Bad buf_incrpos");
 	}
 	buf->pos += incr;
+}
+
+/* decrement the position by decr */
+void buf_decrpos(buffer* buf, unsigned int decr) {
+	if (decr > buf->pos) {
+		dropbear_exit("Bad buf_decrpos");
+	}
+	buf->pos -= decr;
 }
 
 /* Get a byte from the buffer and increment the pos */
