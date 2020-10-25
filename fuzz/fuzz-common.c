@@ -256,10 +256,12 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     int fakesock = wrapfd_new();
 
     m_malloc_set_epoch(1);
+    fuzz.do_jmp = 1;
     if (setjmp(fuzz.jmp) == 0) {
         svr_session(fakesock, fakesock);
         m_malloc_free_epoch(1, 0);
     } else {
+        fuzz.do_jmp = 0;
         m_malloc_free_epoch(1, 1);
         TRACE(("dropbear_exit longjmped"))
         /* dropbear_exit jumped here */
@@ -302,10 +304,12 @@ int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     int fakesock = wrapfd_new();
 
     m_malloc_set_epoch(1);
+    fuzz.do_jmp = 1;
     if (setjmp(fuzz.jmp) == 0) {
         cli_session(fakesock, fakesock, NULL, 0);
         m_malloc_free_epoch(1, 0);
     } else {
+        fuzz.do_jmp = 0;
         m_malloc_free_epoch(1, 1);
         TRACE(("dropbear_exit longjmped"))
         /* dropbear_exit jumped here */
