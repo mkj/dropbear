@@ -74,18 +74,24 @@ struct dropbear_fuzz_options {
     int recv_dumpfd;
 
     // avoid filling fuzzing logs, this points to /dev/null
-    FILE *stderr;
+    FILE *fake_stderr;
 };
 
 extern struct dropbear_fuzz_options fuzz;
 
+/* guard for when fuzz.h is included by fuzz-common.c */
+#ifndef FUZZ_NO_REPLACE_STDERR
+
 /* This is a bodge but seems to work.
  glibc stdio.h has the comment 
  "C89/C99 say they're macros.  Make them happy." */
+/* OS X has it as a macro */
 #ifdef stderr
 #undef stderr
 #endif
-#define stderr (fuzz.stderr)
+#define stderr (fuzz.fake_stderr)
+
+#endif /* FUZZ_NO_REPLACE_STDERR */
 
 #endif // DROPBEAR_FUZZ
 

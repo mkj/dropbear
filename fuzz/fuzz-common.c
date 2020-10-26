@@ -1,7 +1,6 @@
 #include "includes.h"
 
 #include "includes.h"
-#include "fuzz.h"
 #include "dbutil.h"
 #include "runopts.h"
 #include "crypto_desc.h"
@@ -11,8 +10,14 @@
 #include "atomicio.h"
 #include "fuzz-wrapfd.h"
 
+#define FUZZ_NO_REPLACE_STDERR
+#include "fuzz.h"
+
 /* fuzz.h redefines stderr, we don't want that here */
+#ifdef origstderr
 #undef stderr
+#define stderr origstderr
+#endif // origstderr
 
 struct dropbear_fuzz_options fuzz;
 
@@ -23,7 +28,7 @@ static void load_fixed_client_key(void);
 // This runs automatically before main, due to contructor attribute in fuzz.h
 void fuzz_early_setup(void) {
     /* Set stderr to point to normal stderr by default */
-    fuzz.stderr = stderr;
+    fuzz.fake_stderr = stderr;
 }
 
 void fuzz_common_setup(void) {
@@ -50,8 +55,8 @@ void fuzz_common_setup(void) {
     else 
     {
         fprintf(stderr, "Dropbear fuzzer: Disabling stderr output\n");
-        fuzz.stderr = fopen("/dev/null", "w");
-        assert(fuzz.stderr);
+        fuzz.fake_stderr = fopen("/dev/null", "w");
+        assert(fuzz.fake_stderr);
     }
 }
 
