@@ -270,7 +270,7 @@ lint:
 # list of fuzz targets
 FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey fuzzer-verify fuzzer-preauth_nomaths \
 	fuzzer-kexdh fuzzer-kexecdh fuzzer-kexcurve25519 fuzzer-client fuzzer-client_nomaths \
-	fuzzer-client_mutator
+	fuzzer-client_mutator fuzzer-client_mutator_nomaths
 
 FUZZER_OPTIONS = $(addsuffix .options, $(FUZZ_TARGETS))
 FUZZ_OBJS = $(addprefix fuzz/,$(addsuffix .o,$(FUZZ_TARGETS))) \
@@ -293,7 +293,8 @@ fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 $(FUZZ_TARGETS): $(FUZZ_OBJS) $(allobjs) $(LIBTOM_DEPS) 
 	$(CXX) $(CXXFLAGS) fuzz/$@.o $(LDFLAGS) $(allobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) -lcrypt
 
-fuzzer-client_mutator: allobjs += fuzz/fuzz-sshpacketmutator.o
+# fuzzers that use the custom mutator
+fuzzer-client_mutator fuzzer-client_mutator_nomaths: allobjs += fuzz/fuzz-sshpacketmutator.o
 
 fuzzer-%.options: Makefile
 	echo "[libfuzzer]"               > $@

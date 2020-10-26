@@ -3,6 +3,7 @@
 
 size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
 
+/* out_packets an array of num_out_packets*buffer, each of size RECV_MAX_PACKET_LEN */
 static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *num_out_packets) {
     /* Skip any existing banner. Format is
           SSH-protoversion-softwareversion SP comments CR LF
@@ -33,10 +34,7 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
         }
 
         /* Read packet */
-        //printf("at %d\n", inp->pos);
-        //printhex("lenget", buf_getptr(inp, 48), 48);
         unsigned int packet_len = buf_getint(inp);
-        // printf("len %u\n", packet_len);
         if (packet_len > RECV_MAX_PACKET_LEN-4) {
             /* Bad length, try skipping a single byte */
             buf_decrpos(inp, 3);
@@ -44,15 +42,13 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
         }
         packet_len = MIN(packet_len, inp->len - inp->pos);
 
-        /* Copy to output buffer */
-        buffer* new_packet = buf_new(RECV_MAX_PACKET_LEN);
+        /* Copy to output buffer. We're reusing buffers */
+        buffer* new_packet = out_packets[*num_out_packets];
+        (*num_out_packets)++;
+        buf_setlen(new_packet, 0);
         buf_putint(new_packet, packet_len);
         buf_putbytes(new_packet, buf_getptr(inp, packet_len), packet_len);
         buf_incrpos(inp, packet_len);
-        // printf("incr pos %d to %d\n", packet_len, inp->pos);
-
-        out_packets[*num_out_packets] = new_packet;
-        (*num_out_packets)++;
     }
 }
 
@@ -78,32 +74,37 @@ static const size_t MAX_FUZZ_PACKETS = 500;
 /* XXX This might need tuning */
 static const size_t MAX_OUT_SIZE = 50000;
 
+/* Persistent buffers to avoid constant allocations */
+static buffer *oup;
+static buffer *alloc_packetA;
+static buffer *alloc_packetB;
+buffer* packets1[MAX_FUZZ_PACKETS];
+buffer* packets2[MAX_FUZZ_PACKETS];
+
+/* Allocate buffers once at startup.
+   'constructor' here so it runs before dbmalloc's interceptor */
+static void alloc_static_buffers() __attribute__((constructor));
+static void alloc_static_buffers() {
+
+    int i;
+    oup = buf_new(MAX_OUT_SIZE);
+    alloc_packetA = buf_new(RECV_MAX_PACKET_LEN);
+    alloc_packetB = buf_new(RECV_MAX_PACKET_LEN);
+
+    for (i = 0; i < MAX_FUZZ_PACKETS; i++) {
+        packets1[i] = buf_new(RECV_MAX_PACKET_LEN);
+    }
+    for (i = 0; i < MAX_FUZZ_PACKETS; i++) {
+        packets2[i] = buf_new(RECV_MAX_PACKET_LEN);
+    }
+}
+
 size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
               size_t MaxSize, unsigned int Seed) {
 
-    /* Avoid some allocations */
-    /* XXX perhaps this complication isn't worthwhile */
-    static buffer buf_oup, buf_alloc_packetA, buf_alloc_packetB;
-    static buffer *oup = &buf_oup; 
-    static buffer *alloc_packetA = &buf_alloc_packetA;
-    static buffer *alloc_packetB = &buf_alloc_packetB;
-    static int once = 1;
-    if (once) {
-        once = 0;
-        // malloc doesn't get intercepted by epoch deallocator
-        oup->size = MAX_OUT_SIZE;
-        alloc_packetA->size = RECV_MAX_PACKET_LEN;
-        alloc_packetB->size = RECV_MAX_PACKET_LEN;
-        oup->data = malloc(oup->size);
-        alloc_packetA->data = malloc(alloc_packetA->size);
-        alloc_packetB->data = malloc(alloc_packetB->size);
-    } 
-    alloc_packetA->pos = 0;
-    alloc_packetA->len = 0;
-    alloc_packetB->pos = 0;
-    alloc_packetB->len = 0;
-    oup->pos = 0;
-    oup->len = 0;
+    buf_setlen(alloc_packetA, 0);
+    buf_setlen(alloc_packetB, 0);
+    buf_setlen(oup, 0);
 
     unsigned int i;
     unsigned short randstate[3] = {0,0,0};
@@ -121,10 +122,9 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     buffer *inp = &inp_buf;
 
     /* Parse packets */
-    buffer* packets[MAX_FUZZ_PACKETS];
     unsigned int num_packets = MAX_FUZZ_PACKETS;
+    buffer **packets = packets1;
     fuzz_get_packets(inp, packets, &num_packets);
-    // printf("%d packets\n", num_packets);
 
     if (num_packets == 0) {
         // gotta do something
@@ -140,10 +140,8 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     for (i = 0; i < num_packets+1; i++) {
         // These are pointers to output
         buffer *out_packetA = NULL, *out_packetB = NULL;
-        alloc_packetA->pos = 0;
-        alloc_packetA->len = 0;
-        alloc_packetB->pos = 0;
-        alloc_packetB->len = 0;
+        buf_setlen(alloc_packetA, 0);
+        buf_setlen(alloc_packetB, 0);
 
         /* 5% chance each */
         const int optA = nrand48(randstate) % 20;
@@ -151,7 +149,6 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
             /* Copy another */
             unsigned int other = nrand48(randstate) % num_packets;
             out_packetA = packets[other];
-            // printf("%d copy another %d\n", i, other);
         }
         if (optA == 1) {
             /* Mutate another */
@@ -160,7 +157,6 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
             buf_putbytes(alloc_packetA, from->data, from->len);
             out_packetA = alloc_packetA;
             buf_llvm_mutate(out_packetA);
-            // printf("%d mutate another %d\n", i, other);
         }
 
         if (i < num_packets) {
@@ -191,10 +187,6 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
         }
     }
 
-    for (i = 0; i < num_packets; i++) {
-        buf_free(packets[i]);
-    }
-
     size_t ret_len = MIN(MaxSize, oup->len);
     memcpy(Data, oup->data, ret_len);
     // printhex("mutator done", Data, ret_len);
@@ -214,14 +206,12 @@ size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
     buffer inp_buf2 = {.data = (void*)Data2, .size = Size2, .len = Size2, .pos = 0};
     buffer *inp2 = &inp_buf2;
 
-    buffer* packets1[MAX_FUZZ_PACKETS];
     unsigned int num_packets1 = MAX_FUZZ_PACKETS;
     fuzz_get_packets(inp1, packets1, &num_packets1);
-    buffer* packets2[MAX_FUZZ_PACKETS];
     unsigned int num_packets2 = MAX_FUZZ_PACKETS;
     fuzz_get_packets(inp2, packets2, &num_packets2);
 
-    buffer *oup = buf_new(MAX_OUT_SIZE);
+    buf_setlen(oup, 0);
     /* Put a new banner to output */
     buf_putbytes(oup, FIXED_VERSION, strlen(FIXED_VERSION));
 
@@ -229,6 +219,7 @@ size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
         if (num_packets2 > 0 && nrand48(randstate) % 10 == 0) {
             /* 10% chance of taking another packet at each position */
             int other = nrand48(randstate) % num_packets2;
+            // printf("inserted other packet %d at %d\n", other, i);
             buffer *otherp = packets2[other];
             if (oup->len + otherp->len <= oup->size) {
                 buf_putbytes(oup, otherp->data, otherp->len);
@@ -242,16 +233,8 @@ size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
         }
     }
 
-    for (i = 0; i < num_packets1; i++) {
-        buf_free(packets1[i]);
-    }
-    for (i = 0; i < num_packets2; i++) {
-        buf_free(packets2[i]);
-    }
-
     size_t ret_len = MIN(MaxOutSize, oup->len);
     memcpy(Out, oup->data, ret_len);
-    buf_free(oup);
     return ret_len;
 }
 
