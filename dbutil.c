@@ -385,20 +385,37 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 
 #if DEBUG_TRACE
 void printhex(const char * label, const unsigned char * buf, int len) {
-
-	int i;
+	int i, j;
 
 	fprintf(stderr, "%s\n", label);
-	for (i = 0; i < len; i++) {
-		fprintf(stderr, "%02x", buf[i]);
-		if (i % 16 == 15) {
-			fprintf(stderr, "\n");
+	/* for each 16 byte line */
+	for (j = 0; j < len; j += 16) {
+		const int linelen = MIN(16, len - j);
+
+		/* print hex digits */
+		for (i = 0; i < 16; i++) {
+			if (i < linelen) {
+				fprintf(stderr, "%02x", buf[j+i]);
+			} else {
+				fprintf(stderr, "  ");
+			}
+			// separator between pairs
+			if (i % 2 ==1) {
+				fprintf(stderr, " ");
+			}
 		}
-		else if (i % 2 == 1) {
-			fprintf(stderr, " ");
+
+		/* print characters */
+		fprintf(stderr, "  ");
+		for (i = 0; i < linelen; i++) {
+			char c = buf[j+i];
+			if (!isprint(c)) {
+				c = '.';
+			}
+			fputc(c, stderr);
 		}
+		fprintf(stderr, "\n");
 	}
-	fprintf(stderr, "\n");
 }
 
 void printmpint(const char *label, mp_int *mp) {
