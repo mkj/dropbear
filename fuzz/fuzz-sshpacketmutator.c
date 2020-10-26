@@ -1,4 +1,5 @@
 #include "fuzz.h"
+#include "dbutil.h"
 
 size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
 
@@ -11,7 +12,7 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
         buf_incrpos(inp, version - inp->data);
         unsigned char* newline = memchr(&inp->data[inp->pos], '\n', inp->len - inp->pos);
         if (newline) {
-            buf_incrpos(inp, newline - &inp->data[inp->pos]);
+            buf_incrpos(inp, newline - &inp->data[inp->pos]+1);
         } else {
             /* Give up on any version string */
             buf_setpos(inp, 0);
@@ -32,8 +33,11 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
         }
 
         /* Read packet */
+        //printf("at %d\n", inp->pos);
+        //printhex("lenget", buf_getptr(inp, 48), 48);
         unsigned int packet_len = buf_getint(inp);
-        if (packet_len <= RECV_MAX_PACKET_LEN) {
+        // printf("len %u\n", packet_len);
+        if (packet_len > RECV_MAX_PACKET_LEN-4) {
             /* Bad length, try skipping a single byte */
             buf_decrpos(inp, 3);
             continue;
@@ -45,11 +49,11 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
         buf_putint(new_packet, packet_len);
         buf_putbytes(new_packet, buf_getptr(inp, packet_len), packet_len);
         buf_incrpos(inp, packet_len);
+        // printf("incr pos %d to %d\n", packet_len, inp->pos);
 
         out_packets[*num_out_packets] = new_packet;
         (*num_out_packets)++;
     }
-
 }
 
 /* Mutate in-place */
@@ -76,22 +80,51 @@ static const size_t MAX_OUT_SIZE = 50000;
 
 size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
               size_t MaxSize, unsigned int Seed) {
-    int i;
+
+    /* Avoid some allocations */
+    /* XXX perhaps this complication isn't worthwhile */
+    static buffer buf_oup, buf_alloc_packetA, buf_alloc_packetB;
+    static buffer *oup = &buf_oup; 
+    static buffer *alloc_packetA = &buf_alloc_packetA;
+    static buffer *alloc_packetB = &buf_alloc_packetB;
+    static int once = 1;
+    if (once) {
+        once = 0;
+        // malloc doesn't get intercepted by epoch deallocator
+        oup->size = MAX_OUT_SIZE;
+        alloc_packetA->size = RECV_MAX_PACKET_LEN;
+        alloc_packetB->size = RECV_MAX_PACKET_LEN;
+        oup->data = malloc(oup->size);
+        alloc_packetA->data = malloc(alloc_packetA->size);
+        alloc_packetB->data = malloc(alloc_packetB->size);
+    } 
+    alloc_packetA->pos = 0;
+    alloc_packetA->len = 0;
+    alloc_packetB->pos = 0;
+    alloc_packetB->len = 0;
+    oup->pos = 0;
+    oup->len = 0;
+
+    unsigned int i;
     unsigned short randstate[3] = {0,0,0};
     memcpy(randstate, &Seed, sizeof(Seed));
 
+    // printhex("mutator input", Data, Size);
+    #if 0
     /* 1% chance straight llvm mutate */
     if (nrand48(randstate) % 100 == 0) {
         return LLVMFuzzerMutate(Data, Size, MaxSize);
     }
+    #endif
 
     buffer inp_buf = {.data = Data, .size = Size, .len = Size, .pos = 0};
     buffer *inp = &inp_buf;
 
     /* Parse packets */
-    buffer* packets[MAX_FUZZ_PACKETS] = {0};
+    buffer* packets[MAX_FUZZ_PACKETS];
     unsigned int num_packets = MAX_FUZZ_PACKETS;
     fuzz_get_packets(inp, packets, &num_packets);
+    // printf("%d packets\n", num_packets);
 
     if (num_packets == 0) {
         // gotta do something
@@ -100,7 +133,6 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     }
 
     /* Start output */
-    buffer *oup = buf_new(MAX_OUT_SIZE);
     /* Put a new banner to output */
     buf_putbytes(oup, FIXED_VERSION, strlen(FIXED_VERSION));
 
@@ -108,42 +140,46 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     for (i = 0; i < num_packets+1; i++) {
         // These are pointers to output
         buffer *out_packetA = NULL, *out_packetB = NULL;
-        // These need to be freed
-        buffer *alloc_packetA = NULL, *alloc_packetB = NULL;
+        alloc_packetA->pos = 0;
+        alloc_packetA->len = 0;
+        alloc_packetB->pos = 0;
+        alloc_packetB->len = 0;
 
         /* 5% chance each */
         const int optA = nrand48(randstate) % 20;
-        const int other = nrand48(randstate) % num_packets;
         if (optA == 0) {
             /* Copy another */
-            out_packetA = packets[nrand48(randstate) % num_packets];
+            unsigned int other = nrand48(randstate) % num_packets;
+            out_packetA = packets[other];
+            // printf("%d copy another %d\n", i, other);
         }
         if (optA == 1) {
             /* Mutate another */
-            alloc_packetA = buf_new(RECV_MAX_PACKET_LEN);
-            buffer *from = packets[nrand48(randstate) % num_packets];
+            unsigned int other = nrand48(randstate) % num_packets;
+            buffer *from = packets[other];
             buf_putbytes(alloc_packetA, from->data, from->len);
             out_packetA = alloc_packetA;
             buf_llvm_mutate(out_packetA);
+            // printf("%d mutate another %d\n", i, other);
         }
 
-        /* 10% chance each of mutate or drop */
         if (i < num_packets) {
             int optB = nrand48(randstate) % 10;
-            if (optB == 0) {
-                /* Copy as-is */
-                out_packetB = packets[i];
-            } 
             if (optB == 1) {
+                /* 10% chance of drop */
                 /* Drop it */
-            } 
-            if (optB == 2) {
-                /* Mutate it */
-                alloc_packetB = buf_new(RECV_MAX_PACKET_LEN);
+                // printf("%d drop\n", i);
+            } else if (optB <= 6) {
+                /* Mutate it, 50% chance */
+                // printf("%d mutate\n", i);
                 buffer *from = packets[nrand48(randstate) % num_packets];
                 buf_putbytes(alloc_packetB, from->data, from->len);
                 out_packetB = alloc_packetB;
                 buf_llvm_mutate(out_packetB);
+            } else {
+                /* Copy as-is */
+                out_packetB = packets[i];
+                // printf("%d as-is\n", i);
             } 
         }
 
@@ -153,14 +189,6 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
         if (out_packetB && oup->len + out_packetB->len <= oup->size) {
             buf_putbytes(oup, out_packetB->data, out_packetB->len);
         }
-        if (alloc_packetA) {
-            buf_free(alloc_packetA);
-            alloc_packetA = NULL;
-        }
-        if (alloc_packetB) {
-            buf_free(alloc_packetB);
-            alloc_packetB = NULL;
-        }
     }
 
     for (i = 0; i < num_packets; i++) {
@@ -169,7 +197,8 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
 
     size_t ret_len = MIN(MaxSize, oup->len);
     memcpy(Data, oup->data, ret_len);
-    buf_free(oup);
+    // printhex("mutator done", Data, ret_len);
     return ret_len;
 }
+
 

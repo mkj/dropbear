@@ -45,9 +45,9 @@ void fuzz_common_setup(void) {
     else
 #endif
     {
-        fprintf(stderr, "Dropbear fuzzer: Disabling stderr output\n");
-        fuzz.stderr = fopen("/dev/null", "w");
-        assert(fuzz.stderr);
+        // fprintf(stderr, "Dropbear fuzzer: Disabling stderr output\n");
+        // fuzz.stderr = fopen("/dev/null", "w");
+        // assert(fuzz.stderr);
     }
 }
 

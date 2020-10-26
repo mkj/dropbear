@@ -188,6 +188,7 @@ unsigned char* buf_getptr(const buffer* buf, unsigned int len) {
 unsigned char* buf_getwriteptr(const buffer* buf, unsigned int len) {
 
 	if (len > BUF_MAX_INCR || buf->pos + len > buf->size) {
+		abort();
 		dropbear_exit("Bad buf_getwriteptr");
 	}
 	return &buf->data[buf->pos];
