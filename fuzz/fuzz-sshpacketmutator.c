@@ -201,4 +201,57 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     return ret_len;
 }
 
+size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
+                                            const uint8_t *Data2, size_t Size2,
+                                            uint8_t *Out, size_t MaxOutSize,
+                                            unsigned int Seed) {
+    unsigned short randstate[3] = {0,0,0};
+    memcpy(randstate, &Seed, sizeof(Seed));
+
+    unsigned int i;
+    buffer inp_buf1 = {.data = (void*)Data1, .size = Size1, .len = Size1, .pos = 0};
+    buffer *inp1 = &inp_buf1;
+    buffer inp_buf2 = {.data = (void*)Data2, .size = Size2, .len = Size2, .pos = 0};
+    buffer *inp2 = &inp_buf2;
+
+    buffer* packets1[MAX_FUZZ_PACKETS];
+    unsigned int num_packets1 = MAX_FUZZ_PACKETS;
+    fuzz_get_packets(inp1, packets1, &num_packets1);
+    buffer* packets2[MAX_FUZZ_PACKETS];
+    unsigned int num_packets2 = MAX_FUZZ_PACKETS;
+    fuzz_get_packets(inp2, packets2, &num_packets2);
+
+    buffer *oup = buf_new(MAX_OUT_SIZE);
+    /* Put a new banner to output */
+    buf_putbytes(oup, FIXED_VERSION, strlen(FIXED_VERSION));
+
+    for (i = 0; i < num_packets1+1; i++) {
+        if (num_packets2 > 0 && nrand48(randstate) % 10 == 0) {
+            /* 10% chance of taking another packet at each position */
+            int other = nrand48(randstate) % num_packets2;
+            buffer *otherp = packets2[other];
+            if (oup->len + otherp->len <= oup->size) {
+                buf_putbytes(oup, otherp->data, otherp->len);
+            }
+        }
+        if (i < num_packets1) {
+            buffer *thisp = packets1[i];
+            if (oup->len + thisp->len <= oup->size) {
+                buf_putbytes(oup, thisp->data, thisp->len);
+            }
+        }
+    }
+
+    for (i = 0; i < num_packets1; i++) {
+        buf_free(packets1[i]);
+    }
+    for (i = 0; i < num_packets2; i++) {
+        buf_free(packets2[i]);
+    }
+
+    size_t ret_len = MIN(MaxOutSize, oup->len);
+    memcpy(Out, oup->data, ret_len);
+    buf_free(oup);
+    return ret_len;
+}
 
