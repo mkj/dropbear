@@ -1,3 +1,4 @@
+#define FUZZ_NO_REPLACE_STDERR
 #include "includes.h"
 
 #include "includes.h"
@@ -9,15 +10,7 @@
 #include "bignum.h"
 #include "atomicio.h"
 #include "fuzz-wrapfd.h"
-
-#define FUZZ_NO_REPLACE_STDERR
 #include "fuzz.h"
-
-/* fuzz.h redefines stderr, we don't want that here */
-#ifdef origstderr
-#undef stderr
-#define stderr origstderr
-#endif // origstderr
 
 struct dropbear_fuzz_options fuzz;
 
