@@ -1,7 +1,27 @@
+/* A mutator/crossover for SSH protocol streams.
+   Attempts to mutate each SSH packet individually, keeping
+   lengths intact.
+   It will prepend a SSH-2.0-dbfuzz\r\n version string.
+
+   Linking this file to a binary will make libfuzzer pick up the custom mutator.
+
+   Care is taken to avoid memory allocation which would otherwise
+   slow exec/s substantially */
+
 #include "fuzz.h"
 #include "dbutil.h"
 
 size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
+
+static const char* FIXED_VERSION = "SSH-2.0-dbfuzz\r\n";
+static const size_t MAX_FUZZ_PACKETS = 500;
+/* XXX This might need tuning */
+static const size_t MAX_OUT_SIZE = 50000;
+
+/* Splits packets from an input stream buffer "inp".
+The initial SSH version identifier is discarded.
+If packets are not recognised it will increment until an uint32 of valid
+packet length is found. */
 
 /* out_packets an array of num_out_packets*buffer, each of size RECV_MAX_PACKET_LEN */
 static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *num_out_packets) {
@@ -52,8 +72,8 @@ static void fuzz_get_packets(buffer *inp, buffer **out_packets, unsigned int *nu
     }
 }
 
-/* Mutate in-place */
-void buf_llvm_mutate(buffer *buf) {
+/* Mutate a packet buffer in-place */
+static void buf_llvm_mutate(buffer *buf) {
     /* Position it after packet_length and padding_length */
     const unsigned int offset = 5;
     if (buf->len < offset) {
@@ -68,11 +88,6 @@ void buf_llvm_mutate(buffer *buf) {
     buf_setlen(buf, offset + new_size);
 }
 
-
-static const char* FIXED_VERSION = "SSH-2.0-dbfuzz\r\n";
-static const size_t MAX_FUZZ_PACKETS = 500;
-/* XXX This might need tuning */
-static const size_t MAX_OUT_SIZE = 50000;
 
 /* Persistent buffers to avoid constant allocations */
 static buffer *oup;
@@ -111,12 +126,11 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
     memcpy(randstate, &Seed, sizeof(Seed));
 
     // printhex("mutator input", Data, Size);
-    #if 0
-    /* 1% chance straight llvm mutate */
-    if (nrand48(randstate) % 100 == 0) {
+
+    /* 0.1% chance straight llvm mutate */
+    if (nrand48(randstate) % 1000 == 0) {
         return LLVMFuzzerMutate(Data, Size, MaxSize);
     }
-    #endif
 
     buffer inp_buf = {.data = Data, .size = Size, .len = Size, .pos = 0};
     buffer *inp = &inp_buf;
