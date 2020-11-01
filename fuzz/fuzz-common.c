@@ -64,6 +64,7 @@ int fuzz_set_input(const uint8_t *Data, size_t Size) {
     memset(&svr_ses, 0x0, sizeof(svr_ses));
     memset(&cli_ses, 0x0, sizeof(cli_ses));
     wrapfd_setup(fuzz.input);
+    // printhex("input", fuzz.input->data, fuzz.input->len);
 
     fuzz_seed(fuzz.input->data, MIN(fuzz.input->len, 16));
 
@@ -187,6 +188,7 @@ static void load_fixed_hostkeys(void) {
 
 void fuzz_kex_fakealgos(void) {
     ses.newkeys->recv.crypt_mode = &dropbear_mode_none;
+    ses.newkeys->recv.algo_mac = &dropbear_nohash;
 }
 
 void fuzz_get_socket_address(int UNUSED(fd), char **local_host, char **local_port,
@@ -236,23 +238,8 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
         return 0;
     }
 
-    /*
-      get prefix, allowing for future extensibility. input format is
-      string prefix
-          uint32 wrapfd seed
-          ... to be extended later
-      [bytes] ssh input stream
-    */
-
-    /* be careful to avoid triggering buffer.c assertions */
-    if (fuzz.input->len < 8) {
-        return 0;
-    }
-    size_t prefix_size = buf_getint(fuzz.input);
-    if (prefix_size != 4) {
-        return 0;
-    }
-    uint32_t wrapseed = buf_getint(fuzz.input);
+    uint32_t wrapseed;
+    genrandom(&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
     int fakesock = wrapfd_new();
@@ -284,23 +271,11 @@ int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
         return 0;
     }
 
-    /*
-      get prefix, allowing for future extensibility. input format is
-      string prefix
-          uint32 wrapfd seed
-          ... to be extended later
-      [bytes] ssh input stream
-    */
+    // Allow to proceed sooner
+    ses.kexstate.donefirstkex = 1;
 
-    /* be careful to avoid triggering buffer.c assertions */
-    if (fuzz.input->len < 8) {
-        return 0;
-    }
-    size_t prefix_size = buf_getint(fuzz.input);
-    if (prefix_size != 4) {
-        return 0;
-    }
-    uint32_t wrapseed = buf_getint(fuzz.input);
+    uint32_t wrapseed;
+    genrandom(&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
     int fakesock = wrapfd_new();
