@@ -47,7 +47,8 @@ int main(int argc, char ** argv) {
     return 0;
 }
 
-size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize) {
+// Just to let it link
+size_t LLVMFuzzerMutate(uint8_t *UNUSED(Data), size_t UNUSED(Size), size_t UNUSED(MaxSize)) {
     printf("standalone fuzzer harness shouldn't call LLVMFuzzerMutate");
     abort();
     return 0;

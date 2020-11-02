@@ -285,7 +285,7 @@ size_t LLVMFuzzerCustomCrossOver(const uint8_t *Data1, size_t Size1,
         unsigned int num_out = min_out + nrand48(randstate) % (max_out-min_out+1);
 
         for (i = 0; i < num_out; i++) {
-            int choose = nrand48(randstate) % (num_packets1 + num_packets2);
+            unsigned int choose = nrand48(randstate) % (num_packets1 + num_packets2);
             buffer *p = NULL;
             if (choose < num_packets1) {
                 p = packets1[choose];

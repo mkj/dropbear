@@ -239,7 +239,7 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     }
 
     uint32_t wrapseed;
-    genrandom(&wrapseed, sizeof(wrapseed));
+    genrandom((void*)&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
     int fakesock = wrapfd_new();
@@ -275,7 +275,7 @@ int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     ses.kexstate.donefirstkex = 1;
 
     uint32_t wrapseed;
-    genrandom(&wrapseed, sizeof(wrapseed));
+    genrandom((void*)&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
     int fakesock = wrapfd_new();
