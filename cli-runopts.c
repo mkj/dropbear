@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -52,61 +52,64 @@ static void printhelp() {
 
 	fprintf(stderr, "Dropbear SSH client v%s https://matt.ucc.asn.au/dropbear/dropbear.html\n"
 #if DROPBEAR_CLI_MULTIHOP
-					"Usage: %s [options] [user@]host[/port][,[user@]host/port],...] [command]\n"
+	"Usage: %s [options] [user@]host[/port][,[user@]host/port],...] [command]\n"
 #else
-					"Usage: %s [options] [user@]host[/port] [command]\n"
+	"Usage: %s [options] [user@]host[/port] [command]\n"
 #endif
-					"-p <remoteport>\n"
-					"-l <username>\n"
-					"-t    Allocate a pty\n"
-					"-T    Don't allocate a pty\n"
-					"-N    Don't run a remote command\n"
-					"-f    Run in background after auth\n"
-					"-y    Always accept remote host key if unknown\n"
-					"-y -y Don't perform any remote host key checking (caution)\n"
-					"-s    Request a subsystem (use by external sftp)\n"
-					"-o option     Set option in OpenSSH-like format ('-o help' to list options)\n"
+	"-p <remoteport>\n"
+	"-l <username>\n"
+	"-t    Allocate a pty\n"
+	"-T    Don't allocate a pty\n"
+	"-N    Don't run a remote command\n"
+	"-f    Run in background after auth\n"
+#ifndef DISABLE_ZLIB
+	"-n    No compression\n"
+#endif
+	"-y    Always accept remote host key if unknown\n"
+	"-y -y Don't perform any remote host key checking (caution)\n"
+	"-s    Request a subsystem (use by external sftp)\n"
+	"-o option     Set option in OpenSSH-like format ('-o help' to list options)\n"
 #if DROPBEAR_CLI_PUBKEY_AUTH
-					"-i <identityfile>   (multiple allowed, default %s)\n"
+	"-i <identityfile>   (multiple allowed, default %s)\n"
 #endif
 #if DROPBEAR_CLI_AGENTFWD
-					"-A    Enable agent auth forwarding\n"
+	"-A    Enable agent auth forwarding\n"
 #endif
 #if DROPBEAR_CLI_LOCALTCPFWD
-					"-L <[listenaddress:]listenport:remotehost:remoteport> Local port forwarding\n"
-					"-g    Allow remote hosts to connect to forwarded ports\n"
+	"-L <[listenaddress:]listenport:remotehost:remoteport> Local port forwarding\n"
+	"-g    Allow remote hosts to connect to forwarded ports\n"
 #endif
 #if DROPBEAR_CLI_REMOTETCPFWD
-					"-R <[listenaddress:]listenport:remotehost:remoteport> Remote port forwarding\n"
+	"-R <[listenaddress:]listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
-					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
-					"-K <keepalive>  (0 is never, default %d)\n"
-					"-I <idle_timeout>  (0 is never, default %d)\n"
+	"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+	"-S{idletime}   TCP Socket keepalive {optional TCP_KEEPIDLE must follow directly}\n"
+	"-K <keepalive> SSH channel keepalives (0 is never, default %d)\n"
+	"-I <idle_timeout>  (0 is never, default %d)\n"
 #if DROPBEAR_CLI_NETCAT
-					"-B <endhost:endport> Netcat-alike forwarding\n"
-#endif				
+	"-B <endhost:endport> Netcat-alike forwarding\n"
+#endif
 #if DROPBEAR_CLI_PROXYCMD
-					"-J <proxy_program> Use program pipe rather than TCP connection\n"
+	"-J <proxy_program> Use program pipe rather than TCP connection\n"
 #endif
 #if DROPBEAR_USER_ALGO_LIST
-					"-c <cipher list> Specify preferred ciphers ('-c help' to list options)\n"
-					"-m <MAC list> Specify preferred MACs for packet verification (or '-m help')\n"
+	"-c <cipher list> Specify preferred ciphers ('-c help' to list options)\n"
+	"-m <MAC list> Specify preferred MACs for packet verification (or '-m help')\n"
 #endif
-					"-b    [bind_address][:bind_port]\n"
-					"-V    Version\n"
+	"-b    [bind_address][:bind_port]\n"
+	"-V    Version\n"
 #if DEBUG_TRACE
-					"-v    verbose (compiled with DEBUG_TRACE)\n"
+	"-v    verbose (compiled with DEBUG_TRACE)\n"
 #endif
-					,DROPBEAR_VERSION, cli_opts.progname,
+	,DROPBEAR_VERSION, cli_opts.progname,
 #if DROPBEAR_CLI_PUBKEY_AUTH
-					DROPBEAR_DEFAULT_CLI_AUTHKEY,
+	DROPBEAR_DEFAULT_CLI_AUTHKEY,
 #endif
-					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
-					
+	DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
 }
 
 void cli_getopts(int argc, char ** argv) {
-	unsigned int i, j;
+	unsigned i;
 	char ** next = NULL;
 	enum {
 		OPT_EXTENDED_OPTIONS,
@@ -186,15 +189,17 @@ void cli_getopts(int argc, char ** argv) {
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	opts.keepalive_secs = DEFAULT_KEEPALIVE;
 	opts.idle_timeout_secs = DEFAULT_IDLE_TIMEOUT;
+	opts.tcp_keepalive = DEFAULT_TCP_ALIVE;
 
 	fill_own_user();
 
 	for (i = 1; i < (unsigned int)argc; i++) {
 		/* Handle non-flag arguments such as hostname or commands for the remote host */
-		if (argv[i][0] != '-')
+		char *cursor = argv[i];
+		if (*cursor != '-')
 		{
 			if (host_arg == NULL) {
-				host_arg = argv[i];
+				host_arg = cursor;
 				continue;
 			}
 			/* Commands to pass to the remote host. No more flag handling,
@@ -204,7 +209,9 @@ void cli_getopts(int argc, char ** argv) {
 
 		/* Begins with '-' */
 		opt = OPT_OTHER;
-		for (j = 1; (c = argv[i][j]) != '\0' && !next && opt == OPT_OTHER; j++) {
+		cursor++;
+		while ((c = *cursor) && !next && opt == OPT_OTHER) {
+			cursor++;
 			switch (c) {
 				case 'y': /* always accept the remote hostkey */
 					if (cli_opts.always_accept_key) {
@@ -216,6 +223,11 @@ void cli_getopts(int argc, char ** argv) {
 				case 'p': /* remoteport */
 					next = (char**)&cli_opts.remoteport;
 					break;
+#ifndef DISABLE_ZLIB
+				case 'n': /* disable stream compression */
+					opts.compress_mode = DROPBEAR_COMPRESS_OFF;
+					break;
+#endif
 #if DROPBEAR_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
 					opt = OPT_AUTHKEY;
@@ -278,6 +290,21 @@ void cli_getopts(int argc, char ** argv) {
 				case 'K':
 					next = &keepalive_arg;
 					break;
+				case 'S': //require optional idletime follow directly!
+					opts.tcp_keepalive = -1;
+					{
+						char *end;
+						long idletime = strtol(cursor, &end, 10);
+						if (cursor != end) {
+							if (idletime < 1 || idletime >= (long)LONG_MAX) {
+								*end=0;
+								dropbear_exit("Bad TCP_KEEPIDLE '%s'", cursor);
+							}
+							opts.tcp_keepalive = idletime;
+							cursor = end;
+						}
+					}
+					break;
 				case 'I':
 					next = &idle_timeout_arg;
 					break;
@@ -329,50 +356,45 @@ void cli_getopts(int argc, char ** argv) {
 		if (!next && opt == OPT_OTHER) /* got a flag */
 			continue;
 
-		if (c == '\0') {
-			i++;
-			j = 0;
-			if (!argv[i])
-				dropbear_exit("Missing argument");
-		}
+		if (!c && !(cursor = argv[++i]))
+			dropbear_exit("Missing argument");
 
 		if (opt == OPT_EXTENDED_OPTIONS) {
 			TRACE(("opt extended"))
-			add_extendedopt(&argv[i][j]);
+			add_extendedopt(cursor);
 		}
 		else
 #if DROPBEAR_CLI_PUBKEY_AUTH
 		if (opt == OPT_AUTHKEY) {
 			TRACE(("opt authkey"))
-			loadidentityfile(&argv[i][j], 1);
+			loadidentityfile(cursor, 1);
 		}
 		else
 #endif
 #if DROPBEAR_CLI_REMOTETCPFWD
 		if (opt == OPT_REMOTETCPFWD) {
 			TRACE(("opt remotetcpfwd"))
-			addforward(&argv[i][j], cli_opts.remotefwds);
+			addforward(cursor, cli_opts.remotefwds);
 		}
 		else
 #endif
 #if DROPBEAR_CLI_LOCALTCPFWD
 		if (opt == OPT_LOCALTCPFWD) {
 			TRACE(("opt localtcpfwd"))
-			addforward(&argv[i][j], cli_opts.localfwds);
+			addforward(cursor, cli_opts.localfwds);
 		}
 		else
 #endif
 #if DROPBEAR_CLI_NETCAT
 		if (opt == OPT_NETCAT) {
 			TRACE(("opt netcat"))
-			add_netcat(&argv[i][j]);
+			add_netcat(cursor);
 		}
 		else
 #endif
 		if (next) {
 			/* The previous flag set a value to assign */
-			*next = &argv[i][j];
-			if (*next == NULL)
+			if (!(*next = cursor))
 				dropbear_exit("Invalid null argument");
 			next = NULL;
 		}
@@ -394,6 +416,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	if (i < (unsigned int)argc) {
 		/* Build the command to send */
+		unsigned j;
 		cmdlen = 0;
 		for (j = i; j < (unsigned int)argc; j++)
 			cmdlen += strlen(argv[j]) + 1; /* +1 for spaces */
@@ -450,7 +473,7 @@ void cli_getopts(int argc, char ** argv) {
 			&& cli_opts.no_cmd == 0) {
 		dropbear_exit("Command required for -f");
 	}
-	
+
 	if (recv_window_arg) {
 		opts.recv_window = atol(recv_window_arg);
 		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
@@ -571,7 +594,7 @@ multihop_passthrough_args() {
 #endif /* DROPBEAR_CLI_PUBKEY_AUTH */
 
 	/* if args were passed, total will be not zero, and it will have a space at the end, so remove that */
-	if (total > 0) 
+	if (total > 0)
 	{
 		total--;
 	}
@@ -602,8 +625,8 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 	 * for our multihop syntax, so we suture it back together.
 	 * This will break usernames that have both '@' and ',' in them,
 	 * though that should be fairly uncommon. */
-	if (cli_opts.username 
-			&& strchr(cli_opts.username, ',') 
+	if (cli_opts.username
+			&& strchr(cli_opts.username, ',')
 			&& strchr(cli_opts.username, '@')) {
 		unsigned int len = strlen(orighostarg) + strlen(cli_opts.username) + 2;
 		hostbuf = m_malloc(len);
@@ -636,13 +659,13 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 		if (cli_opts.remoteport == NULL) {
 			cli_opts.remoteport = "22";
 		}
-		cmd_len = strlen(argv0) + strlen(remainder) 
+		cmd_len = strlen(argv0) + strlen(remainder)
 			+ strlen(cli_opts.remotehost) + strlen(cli_opts.remoteport)
 			+ strlen(passthrough_args)
 			+ 30;
 		cli_opts.proxycmd = m_malloc(cmd_len);
-		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s %s", 
-				argv0, cli_opts.remotehost, cli_opts.remoteport, 
+		snprintf(cli_opts.proxycmd, cmd_len, "%s -B %s:%s %s %s",
+				argv0, cli_opts.remotehost, cli_opts.remoteport,
 				passthrough_args, remainder);
 #ifndef DISABLE_ZLIB
 		/* The stream will be incompressible since it's encrypted. */
@@ -694,9 +717,9 @@ static void parse_hostname(const char* orighostarg) {
 #if DROPBEAR_CLI_NETCAT
 static void add_netcat(const char* origstr) {
 	char *portstr = NULL;
-	
+
 	char * str = m_strdup(origstr);
-	
+
 	portstr = strchr(str, ':');
 	if (portstr == NULL) {
 		TRACE(("No netcat port"))
@@ -704,25 +727,25 @@ static void add_netcat(const char* origstr) {
 	}
 	*portstr = '\0';
 	portstr++;
-	
+
 	if (strchr(portstr, ':')) {
 		TRACE(("Multiple netcat colons"))
 		goto fail;
 	}
-	
+
 	if (m_str_to_uint(portstr, &cli_opts.netcat_port) == DROPBEAR_FAILURE) {
 		TRACE(("bad netcat port"))
 		goto fail;
 	}
-	
+
 	if (cli_opts.netcat_port > 65535) {
 		TRACE(("too large netcat port"))
 		goto fail;
 	}
-	
+
 	cli_opts.netcat_host = str;
 	return;
-	
+
 fail:
 	dropbear_exit("Bad netcat endpoint '%s'", origstr);
 }
@@ -730,7 +753,7 @@ fail:
 
 static void fill_own_user() {
 	uid_t uid;
-	struct passwd *pw = NULL; 
+	struct passwd *pw = NULL;
 
 	uid = getuid();
 
@@ -760,7 +783,7 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 	TRACE(("enter addforward"))
 
 	/* We need to split the original argument up. This var
-	   is never free()d. */ 
+	   is never free()d. */
 	str = m_strdup(origstr);
 
 	part1 = str;
@@ -820,7 +843,7 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 		TRACE(("listenport > 65535"))
 		goto badport;
 	}
-		
+
 	if (newfwd->connectport > 65535) {
 		TRACE(("connectport > 65535"))
 		goto badport;

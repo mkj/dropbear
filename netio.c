@@ -4,6 +4,11 @@
 #include "session.h"
 #include "debug.h"
 
+#include "runopts.h"
+
+extern runopts opts; /* GLOBAL */
+
+
 struct dropbear_progress_connection {
 	struct addrinfo *res;
 	struct addrinfo *res_iter;
@@ -84,7 +89,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				int len = 100 + strlen(gai_strerror(err));
 				m_free(c->errstring);
 				c->errstring = (char*)m_malloc(len);
-				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s", 
+				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s",
 						c->bind_address, c->bind_port, gai_strerror(err));
 				TRACE(("Error resolving bind: %s", gai_strerror(err)))
 				close(c->sock);
@@ -100,7 +105,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				int len = 300;
 				m_free(c->errstring);
 				c->errstring = m_malloc(len);
-				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s", 
+				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s",
 						c->bind_address, c->bind_port, strerror(keep_errno));
 				close(c->sock);
 				c->sock = -1;
@@ -131,7 +136,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				if (errno != EINPROGRESS) {
 					m_free(c->errstring);
 					c->errstring = m_strdup(strerror(errno));
-					/* Not entirely sure which kind of errors are normal - 2.6.32 seems to 
+					/* Not entirely sure which kind of errors are normal - 2.6.32 seems to
 					return EPIPE for any (nonblocking?) sendmsg(). just fall back */
 					TRACE(("sendmsg tcp_fastopen failed, falling back. %s", strerror(errno)));
 					/* No kernel MSG_FASTOPEN support. Fall back below */
@@ -172,7 +177,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
-	connect_callback cb, void* cb_data, 
+	connect_callback cb, void* cb_data,
 	const char* bind_address, const char* bind_port)
 {
 	struct dropbear_progress_connection *c = NULL;
@@ -197,13 +202,13 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		int len;
 		len = 100 + strlen(gai_strerror(err));
 		c->errstring = (char*)m_malloc(len);
-		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s", 
+		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s",
 				remotehost, remoteport, gai_strerror(err));
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 	} else {
 		c->res_iter = c->res;
 	}
-	
+
 	if (bind_address) {
 		c->bind_address = m_strdup(bind_address);
 	}
@@ -278,7 +283,7 @@ void handle_connect_fds(const fd_set *writefd) {
 			remove_connect(c, iter);
 			TRACE(("leave handle_connect_fds - success"))
 			/* Must return here - remove_connect() invalidates iter */
-			return; 
+			return;
 		}
 	}
 }
@@ -336,11 +341,25 @@ void packet_queue_consume(struct Queue *queue, ssize_t written) {
 }
 
 void set_sock_nodelay(int sock) {
-	int val;
+	time_t keepidle = opts.tcp_keepalive;
 
-	/* disable nagle */
-	val = 1;
-	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, (void*)&val, sizeof(val));
+	int val = 1;	/* disable nagle and optionally enable tcp keepalive probes */
+	setsockopt(sock, IPPROTO_TCP, TCP_NODELAY, &val, sizeof(val));
+
+	if (keepidle) {
+		if (keepidle < 0 && opts.keepalive_secs) {
+		 //start probing only after ssh keep alives should have terminated session
+			keepidle = opts.keepalive_secs * DEFAULT_KEEPALIVE_LIMIT;
+		}
+		if (keepidle > 0 &&
+			 setsockopt(sock, IPPROTO_TCP, TCP_KEEPIDLE,
+							&keepidle, sizeof(keepidle))) {
+			TRACE(("TCP_KEEPIDLE failed for socket %d: %s",sock, strerror(errno)));
+		}
+		if (setsockopt(sock, SOL_SOCKET, SO_KEEPALIVE, &val, sizeof(val))) {
+			TRACE(("TCP KeepAlive failed for socket %d: %s",sock,strerror(errno)));
+		}
+	}
 }
 
 #if DROPBEAR_SERVER_TCP_FAST_OPEN
@@ -350,7 +369,6 @@ void set_listen_fast_open(int sock) {
 		TRACE(("set_listen_fast_open failed for socket %d: %s", sock, strerror(errno)))
 	}
 }
-
 #endif
 
 void set_sock_priority(int sock, enum dropbear_prio prio) {
@@ -438,7 +456,7 @@ int get_sock_port(int sock) {
 	return atoi(strport);
 }
 
-/* Listen on address:port. 
+/* Listen on address:port.
  * Special cases are address of "" listening on everything,
  * and address of NULL listening on localhost only.
  * Returns the number of sockets bound on success, or -1 on failure. On
@@ -455,7 +473,7 @@ int dropbear_listen(const char* address, const char* port,
 	int sock;
 
 	TRACE(("enter dropbear_listen"))
-	
+
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
 	hints.ai_socktype = SOCK_STREAM;
@@ -536,7 +554,7 @@ int dropbear_listen(const char* address, const char* port,
 #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
 		if (res->ai_family == AF_INET6) {
 			int on = 1;
-			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY,
 						&on, sizeof(on)) == -1) {
 				dropbear_log(LOG_WARNING, "Couldn't set IPV6_V6ONLY");
 			}
@@ -600,39 +618,39 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 		return;
 	}
 #endif
-	
+
 	if (local_host || local_port) {
 		addrlen = sizeof(addr);
 		if (getsockname(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
 			dropbear_exit("Failed socket address: %s", strerror(errno));
 		}
-		getaddrstring(&addr, local_host, local_port, host_lookup);		
+		getaddrstring(&addr, local_host, local_port, host_lookup);
 	}
 	if (remote_host || remote_port) {
 		addrlen = sizeof(addr);
 		if (getpeername(fd, (struct sockaddr*)&addr, &addrlen) < 0) {
 			dropbear_exit("Failed socket address: %s", strerror(errno));
 		}
-		getaddrstring(&addr, remote_host, remote_port, host_lookup);		
+		getaddrstring(&addr, remote_host, remote_port, host_lookup);
 	}
 }
 
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
-void getaddrstring(struct sockaddr_storage* addr, 
+void getaddrstring(struct sockaddr_storage* addr,
 			char **ret_host, char **ret_port,
 			int host_lookup) {
 
 	char host[NI_MAXHOST+1], serv[NI_MAXSERV+1];
 	unsigned int len;
 	int ret;
-	
+
 	int flags = NI_NUMERICSERV | NI_NUMERICHOST;
 
 #if !DO_HOST_LOOKUP
 	host_lookup = 0;
 #endif
-	
+
 	if (host_lookup) {
 		flags = NI_NUMERICSERV;
 	}
@@ -653,7 +671,7 @@ void getaddrstring(struct sockaddr_storage* addr,
 #endif
 #endif
 
-	ret = getnameinfo((struct sockaddr*)addr, len, host, sizeof(host)-1, 
+	ret = getnameinfo((struct sockaddr*)addr, len, host, sizeof(host)-1,
 			serv, sizeof(serv)-1, flags);
 
 	if (ret != 0) {
