@@ -269,7 +269,8 @@ lint:
 
 # list of fuzz targets
 FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey fuzzer-verify fuzzer-preauth_nomaths \
-	fuzzer-kexdh fuzzer-kexecdh fuzzer-kexcurve25519 fuzzer-client fuzzer-client_nomaths
+	fuzzer-kexdh fuzzer-kexecdh fuzzer-kexcurve25519 fuzzer-client fuzzer-client_nomaths \
+	fuzzer-postauth_nomaths
 
 FUZZER_OPTIONS = $(addsuffix .options, $(FUZZ_TARGETS))
 FUZZ_OBJS = $(addprefix fuzz/,$(addsuffix .o,$(FUZZ_TARGETS))) \
@@ -294,7 +295,7 @@ $(FUZZ_TARGETS): $(FUZZ_OBJS) $(allobjs) $(LIBTOM_DEPS)
 
 # fuzzers that use the custom mutator - these expect a SSH network stream
 MUTATOR_FUZZERS=fuzzer-client fuzzer-client_nomaths \
-	fuzzer-preauth fuzzer-preauth_nomaths
+	fuzzer-preauth fuzzer-preauth_nomaths fuzzer-postauth_nomaths
 $(MUTATOR_FUZZERS): allobjs += fuzz/fuzz-sshpacketmutator.o
 
 fuzzer-%.options: Makefile

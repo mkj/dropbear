@@ -179,6 +179,12 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	int err;
 	struct addrinfo hints;
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return fuzz_connect_remote(remotehost, remoteport, cb, cb_data, bind_address, bind_port);
+	}
+#endif
+
 	c = m_malloc(sizeof(*c));
 	c->remotehost = m_strdup(remotehost);
 	c->remoteport = m_strdup(remoteport);

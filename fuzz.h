@@ -23,7 +23,7 @@ void fuzz_early_setup(void) __attribute__((constructor));
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzz_set_input(const uint8_t *Data, size_t Size);
 
-int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths);
+int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int authdone);
 int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths);
 const void* fuzz_get_algo(const algo_type *algos, const char* name);
 

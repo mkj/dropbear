@@ -35,7 +35,7 @@ void wrapfd_setup(buffer *buf) {
 	// clean old ones
 	int i;
 	for (i = 0; i <= wrapfd_maxfd; i++) {
-		if (wrap_fds[i].mode == COMMONBUF) {
+		if (wrap_fds[i].mode != UNUSED) {
 			wrapfd_remove(i);
 		}
 	}
@@ -51,7 +51,7 @@ void wrapfd_setseed(uint32_t seed) {
 	nrand48(rand_state);
 }
 
-int wrapfd_new() {
+int wrapfd_new_fuzzinput() {
 	if (devnull_fd == -1) {
 		devnull_fd = open("/dev/null", O_RDONLY);
 		assert(devnull_fd != -1);
@@ -67,6 +67,24 @@ int wrapfd_new() {
 
 	return fd;
 }
+
+int wrapfd_new_dummy() {
+	if (devnull_fd == -1) {
+		devnull_fd = open("/dev/null", O_RDONLY);
+		assert(devnull_fd != -1);
+	}
+
+	int fd = dup(devnull_fd);
+	assert(fd != -1);
+	assert(wrap_fds[fd].mode == UNUSED);
+	wrap_fds[fd].mode = DUMMY;
+	wrap_fds[fd].closein = 0;
+	wrap_fds[fd].closeout = 0;
+	wrapfd_maxfd = MAX(fd, wrapfd_maxfd);
+
+	return fd;
+}
+
 
 static void wrapfd_remove(int fd) {
 	TRACE(("wrapfd_remove %d", fd))
@@ -113,7 +131,7 @@ int wrapfd_read(int fd, void *out, size_t count) {
 		return -1;
 	}
 
-	if (input_buf) {
+	if (input_buf && wrap_fds[fd].mode == COMMONBUF) {
 		maxread = MIN(input_buf->len - input_buf->pos, count);
 		/* returns 0 if buf is EOF, as intended */
 		if (maxread > 0) {
@@ -124,6 +142,7 @@ int wrapfd_read(int fd, void *out, size_t count) {
 		return maxread;
 	}
 
+	// return fixed output, of random length
 	maxread = MIN(MAX_RANDOM_IN, count);
 	maxread = nrand48(rand_state) % maxread + 1;
 	memset(out, 0xef, maxread);

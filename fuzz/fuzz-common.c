@@ -217,16 +217,31 @@ void fuzz_fake_send_kexdh_reply(void) {
 
 /* fake version of spawn_command() */
 int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t *ret_pid) {
-    *ret_writefd = wrapfd_new();
-    *ret_readfd = wrapfd_new();
+    *ret_writefd = wrapfd_new_dummy();
+    *ret_readfd = wrapfd_new_dummy();
     if (ret_errfd) {
-        *ret_errfd = wrapfd_new();
+        *ret_errfd = wrapfd_new_dummy();
     }
     *ret_pid = 999;
     return DROPBEAR_SUCCESS;
 }
 
-int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
+
+struct dropbear_progress_connection *fuzz_connect_remote(const char* UNUSED(remotehost), const char* UNUSED(remoteport),
+    connect_callback cb, void* cb_data, 
+    const char* UNUSED(bind_address), const char* UNUSED(bind_port)) {
+    char r;
+    genrandom((void*)&r, 1);
+    if (r & 1) {
+        int sock = wrapfd_new_dummy();
+        cb(DROPBEAR_SUCCESS, sock, cb_data, NULL);
+    } else {
+        cb(DROPBEAR_FAILURE, -1, cb_data, "errorstring");
+    }
+    return NULL;
+}
+
+int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int authdone) {
     static int once = 0;
     if (!once) {
         fuzz_svr_setup();
@@ -242,7 +257,13 @@ int fuzz_run_preauth(const uint8_t *Data, size_t Size, int skip_kexmaths) {
     genrandom((void*)&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
-    int fakesock = wrapfd_new();
+    int fakesock = wrapfd_new_fuzzinput();
+
+    if (authdone) {
+        ses.authstate.authdone = 1;
+        char *me = getpwuid(getuid())->pw_name;
+        fill_passwd(me);
+    }
 
     m_malloc_set_epoch(1);
     fuzz.do_jmp = 1;
@@ -273,12 +294,13 @@ int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
 
     // Allow to proceed sooner
     ses.kexstate.donefirstkex = 1;
+    ses.kexstate.authdone = 1;
 
     uint32_t wrapseed;
     genrandom((void*)&wrapseed, sizeof(wrapseed));
     wrapfd_setseed(wrapseed);
 
-    int fakesock = wrapfd_new();
+    int fakesock = wrapfd_new_fuzzinput();
 
     m_malloc_set_epoch(1);
     fuzz.do_jmp = 1;
