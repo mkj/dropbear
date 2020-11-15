@@ -294,7 +294,6 @@ int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths) {
 
     // Allow to proceed sooner
     ses.kexstate.donefirstkex = 1;
-    ses.kexstate.authdone = 1;
 
     uint32_t wrapseed;
     genrandom((void*)&wrapseed, sizeof(wrapseed));

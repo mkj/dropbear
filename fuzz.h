@@ -8,6 +8,7 @@
 #include "includes.h"
 #include "buffer.h"
 #include "algo.h"
+#include "netio.h"
 #include "fuzz-wrapfd.h"
 
 // once per process
@@ -34,6 +35,11 @@ int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
         const unsigned char* keyblob, unsigned int keybloblen);
 extern const char * const * fuzz_signkey_names;
 void fuzz_seed(const unsigned char* dat, unsigned int len);
+
+typedef void(*connect_callback)(int result, int sock, void* data, const char* errstring);
+struct dropbear_progress_connection *fuzz_connect_remote(const char* remotehost, const char* remoteport,
+    connect_callback cb, void* cb_data,
+    const char* bind_address, const char* bind_port);
 
 // helpers
 void fuzz_get_socket_address(int fd, char **local_host, char **local_port,
