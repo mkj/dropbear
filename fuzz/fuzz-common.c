@@ -1,4 +1,5 @@
 #define FUZZ_NO_REPLACE_STDERR
+#define FUZZ_NO_REPLACE_GETPW
 #include "includes.h"
 
 #include "includes.h"
@@ -261,7 +262,7 @@ int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int aut
 
     if (authdone) {
         ses.authstate.authdone = 1;
-        char *me = getpwuid(getuid())->pw_name;
+        char *me = fuzz_getpwuid(getuid())->pw_name;
         fill_passwd(me);
     }
 
@@ -332,3 +333,51 @@ void fuzz_dump(const unsigned char* data, size_t len) {
         assert(atomicio(vwrite, fuzz.recv_dumpfd, (void*)data, len) == len);
     }
 }
+
+static struct passwd pwd_root = {
+    .pw_name = "root",
+    .pw_passwd = "!",
+    .pw_uid = 0,
+    .pw_gid = 0,
+    .pw_dir = "/root",
+    .pw_shell = "/bin/sh",
+};
+
+static struct passwd pwd_other = {
+    .pw_name = "other",
+    .pw_passwd = "!",
+    .pw_uid = 100,
+    .pw_gid = 100,
+    .pw_dir = "/home/other",
+    .pw_shell = "/bin/sh",
+};
+
+
+/* oss-fuzz runs fuzzers under minijail, without /etc/passwd.
+We provide sufficient values for the fuzzers to run */
+struct passwd* fuzz_getpwnam(const char *login) {
+    if (!fuzz.fuzzing) {
+        return getpwnam(login);
+    }
+    if (strcmp(login, pwd_other.pw_name) == 0) {
+        return &pwd_other;
+    }
+    if (strcmp(login, pwd_root.pw_name) == 0) {
+        return &pwd_root;
+    }
+    return NULL;
+}
+
+struct passwd* fuzz_getpwuid(uid_t uid) {
+    if (!fuzz.fuzzing) {
+        return getpwuid(uid);
+    }
+    if (uid == pwd_other.pw_uid) {
+        return &pwd_other;
+    }
+    if (uid == pwd_root.pw_uid) {
+        return &pwd_root;
+    }
+    return NULL;
+}
+

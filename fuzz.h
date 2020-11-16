@@ -99,6 +99,14 @@ extern struct dropbear_fuzz_options fuzz;
 
 #endif /* FUZZ_NO_REPLACE_STDERR */
 
+struct passwd* fuzz_getpwuid(uid_t uid);
+struct passwd* fuzz_getpwnam(const char *login);
+/* guard for when fuzz.h is included by fuzz-common.c */
+#ifndef FUZZ_NO_REPLACE_GETPW
+#define getpwnam(x) fuzz_getpwnam(x)
+#define getpwuid(x) fuzz_getpwuid(x)
+#endif // FUZZ_NO_REPLACE_GETPW
+
 #endif // DROPBEAR_FUZZ
 
 #endif /* DROPBEAR_FUZZ_H */
