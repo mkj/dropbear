@@ -262,8 +262,7 @@ int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int aut
 
     if (authdone) {
         ses.authstate.authdone = 1;
-        char *me = fuzz_getpwuid(getuid())->pw_name;
-        fill_passwd(me);
+        fill_passwd("root");
     }
 
     m_malloc_set_epoch(1);
