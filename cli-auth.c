@@ -32,12 +32,6 @@
 #include "packet.h"
 #include "runopts.h"
 
-void cli_authinitialise() {
-
-	memset(&ses.authstate, 0, sizeof(ses.authstate));
-}
-
-
 /* Send a "none" auth request to get available methods */
 void cli_auth_getmethods() {
 	TRACE(("enter cli_auth_getmethods"))

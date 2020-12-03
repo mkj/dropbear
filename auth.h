@@ -30,7 +30,6 @@
 #include "chansession.h"
 
 void svr_authinitialise(void);
-void cli_authinitialise(void);
 
 /* Server functions */
 void recv_msg_userauth_request(void);
