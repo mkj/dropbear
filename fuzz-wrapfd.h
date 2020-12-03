@@ -12,8 +12,8 @@ enum wrapfd_mode {
 // buf is a common buffer read by all wrapped FDs. doesn't take ownership of buf
 void wrapfd_setup(buffer *buf);
 void wrapfd_setseed(uint32_t seed);
-int wrapfd_new_fuzzinput();
-int wrapfd_new_dummy();
+int wrapfd_new_fuzzinput(void);
+int wrapfd_new_dummy(void);
 
 // called via #defines for read/write/select
 int wrapfd_read(int fd, void *out, size_t count);

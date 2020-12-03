@@ -24,7 +24,7 @@ void fuzz_early_setup(void) __attribute__((constructor));
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzz_set_input(const uint8_t *Data, size_t Size);
 
-int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int authdone);
+int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int postauth);
 int fuzz_run_client(const uint8_t *Data, size_t Size, int skip_kexmaths);
 const void* fuzz_get_algo(const algo_type *algos, const char* name);
 
@@ -35,6 +35,7 @@ int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
         const unsigned char* keyblob, unsigned int keybloblen);
 extern const char * const * fuzz_signkey_names;
 void fuzz_seed(const unsigned char* dat, unsigned int len);
+void fuzz_svr_hook_preloop(void);
 
 typedef void(*connect_callback)(int result, int sock, void* data, const char* errstring);
 struct dropbear_progress_connection *fuzz_connect_remote(const char* remotehost, const char* remoteport,
@@ -68,6 +69,8 @@ struct dropbear_fuzz_options {
 
     // whether to skip slow bignum maths
     int skip_kexmaths;
+    // whether is svr_postauth mode
+    int svr_postauth;
 
     // dropbear_exit() jumps back
     int do_jmp;

@@ -195,6 +195,12 @@ void svr_session(int sock, int childpipe) {
 	/* start off with key exchange */
 	send_msg_kexinit();
 
+#if DROPBEAR_FUZZ
+    if (fuzz.fuzzing) {
+        fuzz_svr_hook_preloop();
+    }
+#endif
+
 	/* Run the main for loop. NULL is for the dispatcher - only the client
 	 * code makes use of it */
 	session_loop(svr_chansess_checksignal);

@@ -102,6 +102,13 @@ void fuzz_svr_setup(void) {
     load_fixed_hostkeys();
 }
 
+void fuzz_svr_hook_preloop() {
+    if (fuzz.svr_postauth) {
+        ses.authstate.authdone = 1;
+        fill_passwd("root");
+    }
+}
+
 void fuzz_cli_setup(void) {
     fuzz_common_setup();
     
@@ -242,13 +249,15 @@ struct dropbear_progress_connection *fuzz_connect_remote(const char* UNUSED(remo
     return NULL;
 }
 
-int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int authdone) {
+int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int postauth) {
     static int once = 0;
     if (!once) {
         fuzz_svr_setup();
         fuzz.skip_kexmaths = skip_kexmaths;
         once = 1;
     }
+
+    fuzz.svr_postauth = postauth;
 
     if (fuzz_set_input(Data, Size) == DROPBEAR_FAILURE) {
         return 0;
@@ -259,11 +268,6 @@ int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int aut
     wrapfd_setseed(wrapseed);
 
     int fakesock = wrapfd_new_fuzzinput();
-
-    if (authdone) {
-        ses.authstate.authdone = 1;
-        fill_passwd("root");
-    }
 
     m_malloc_set_epoch(1);
     fuzz.do_jmp = 1;
