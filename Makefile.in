@@ -296,7 +296,12 @@ $(FUZZ_TARGETS): $(FUZZ_OBJS) $(allobjs) $(LIBTOM_DEPS)
 # fuzzers that use the custom mutator - these expect a SSH network stream
 MUTATOR_FUZZERS=fuzzer-client fuzzer-client_nomaths \
 	fuzzer-preauth fuzzer-preauth_nomaths fuzzer-postauth_nomaths
+
+# Skip custom mutators for -fsanitize-memory since libfuzzer doesn't initialise memory
+# Pending fix for it https://github.com/google/oss-fuzz/issues/4605
+ifeq (,$(findstring fsanitize=memory, $(CFLAGS)))
 $(MUTATOR_FUZZERS): allobjs += fuzz/fuzz-sshpacketmutator.o
+endif
 
 fuzzer-%.options: Makefile
 	echo "[libfuzzer]"               > $@
