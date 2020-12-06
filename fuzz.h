@@ -42,6 +42,9 @@ struct dropbear_progress_connection *fuzz_connect_remote(const char* remotehost,
     connect_callback cb, void* cb_data,
     const char* bind_address, const char* bind_port);
 
+int fuzz_dropbear_listen(const char* address, const char* port,
+        int *socks, unsigned int sockcount, char **errstring, int *maxfd);
+
 // helpers
 void fuzz_get_socket_address(int fd, char **local_host, char **local_port,
                         char **remote_host, char **remote_port, int host_lookup);

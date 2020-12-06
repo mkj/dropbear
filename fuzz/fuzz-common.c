@@ -255,6 +255,23 @@ struct dropbear_progress_connection *fuzz_connect_remote(const char* UNUSED(remo
     return NULL;
 }
 
+/* Fake dropbear_listen, always returns failure for now.
+TODO make it sometimes return success with wrapfd_new_dummy() sockets.
+Making the listeners fake a new incoming connection will be harder. */
+/* Listen on address:port. 
+ * Special cases are address of "" listening on everything,
+ * and address of NULL listening on localhost only.
+ * Returns the number of sockets bound on success, or -1 on failure. On
+ * failure, if errstring wasn't NULL, it'll be a newly malloced error
+ * string.*/
+int fuzz_dropbear_listen(const char* UNUSED(address), const char* UNUSED(port),
+        int *UNUSED(socks), unsigned int UNUSED(sockcount), char **errstring, int *UNUSED(maxfd)) {
+    if (errstring) {
+        *errstring = m_strdup("fuzzing can't listen (yet)");
+    }
+    return -1;
+}
+
 int fuzz_run_server(const uint8_t *Data, size_t Size, int skip_kexmaths, int postauth) {
     static int once = 0;
     if (!once) {

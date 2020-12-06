@@ -461,6 +461,12 @@ int dropbear_listen(const char* address, const char* port,
 	int sock;
 
 	TRACE(("enter dropbear_listen"))
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		return fuzz_dropbear_listen(address, port, socks, sockcount, errstring, maxfd);
+	}
+#endif
 	
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_family = AF_UNSPEC; /* TODO: let them flag v4 only etc */
