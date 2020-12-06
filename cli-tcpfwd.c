@@ -273,11 +273,11 @@ static int newtcpforwarded(struct Channel * channel) {
                 origaddr, origport);
 		goto out;
 	}
+
+	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
 	
 	snprintf(portstring, sizeof(portstring), "%u", fwd->connectport);
 	channel->conn_pending = connect_remote(fwd->connectaddr, portstring, channel_connect_done, channel, NULL, NULL);
-
-	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
 	
 	err = SSH_OPEN_IN_PROGRESS;
 
