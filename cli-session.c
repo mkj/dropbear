@@ -408,9 +408,19 @@ void cleantext(char* dirtytext) {
 }
 
 static void recv_msg_global_request_cli(void) {
-	TRACE(("recv_msg_global_request_cli"))
-	/* Send a proper rejection */
-	send_msg_request_failure();
+	unsigned int len = 0;
+	unsigned int wantreply = 0;
+
+	len = buf_getint(ses.payload);
+	buf_incrpos(ses.payload, len);
+	wantreply = buf_getbool(ses.payload);
+
+	TRACE(("recv_msg_global_request_cli: want_reply: %u", wantreply));
+
+	if (wantreply) {
+		/* Send a proper rejection */
+		send_msg_request_failure();
+	}
 }
 
 void cli_dropbear_exit(int exitcode, const char* format, va_list param) {
