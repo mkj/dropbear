@@ -39,13 +39,11 @@
 
 /* This is better than SSH_MSG_UNIMPLEMENTED */
 void recv_msg_global_request_remotetcp() {
-	unsigned int len = 0;
 	unsigned int wantreply = 0;
 
 	TRACE(("recv_msg_global_request_remotetcp: remote tcp forwarding not compiled in"))
 
-	len = buf_getint(ses.payload);
-	buf_incrpos(ses.payload, len);
+	buf_eatstring(ses.payload);
 	wantreply = buf_getbool(ses.payload);
 	if (wantreply) {
 		send_msg_request_failure();

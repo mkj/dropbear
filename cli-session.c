@@ -408,11 +408,9 @@ void cleantext(char* dirtytext) {
 }
 
 static void recv_msg_global_request_cli(void) {
-	unsigned int len = 0;
 	unsigned int wantreply = 0;
 
-	len = buf_getint(ses.payload);
-	buf_incrpos(ses.payload, len);
+	buf_eatstring(ses.payload);
 	wantreply = buf_getbool(ses.payload);
 
 	TRACE(("recv_msg_global_request_cli: want_reply: %u", wantreply));
