@@ -423,12 +423,14 @@ out:
 
 /* Send a signal to a session's process as requested by the client*/
 static int sessionsignal(const struct ChanSess *chansess) {
+	TRACE(("sessionsignal"))
 
 	int sig = 0;
 	char* signame = NULL;
 	int i;
 
 	if (chansess->pid == 0) {
+		TRACE(("sessionsignal: done no pid"))
 		/* haven't got a process pid yet */
 		return DROPBEAR_FAILURE;
 	}
@@ -446,12 +448,14 @@ static int sessionsignal(const struct ChanSess *chansess) {
 
 	m_free(signame);
 
+	TRACE(("sessionsignal: pid %d signal %d", (int)chansess->pid, sig))
 	if (sig == 0) {
 		/* failed */
 		return DROPBEAR_FAILURE;
 	}
 			
 	if (kill(chansess->pid, sig) < 0) {
+		TRACE(("sessionsignal: kill() errored"))
 		return DROPBEAR_FAILURE;
 	} 
 

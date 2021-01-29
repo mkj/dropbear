@@ -59,6 +59,7 @@ void fuzz_dump(const unsigned char* data, size_t len);
 #define write(fd, buf, count) wrapfd_write(fd, buf, count)
 #define read(fd, buf, count) wrapfd_read(fd, buf, count)
 #define close(fd) wrapfd_close(fd)
+#define kill(pid, sig) fuzz_kill(pid, sig)
 #endif // FUZZ_SKIP_WRAP
 
 struct dropbear_fuzz_options {

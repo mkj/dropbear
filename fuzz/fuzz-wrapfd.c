@@ -258,3 +258,15 @@ int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	return ret;
 }
 
+int fuzz_kill(pid_t pid, int sig) {
+	if (fuzz.fuzzing) {
+		TRACE(("fuzz_kill ignoring pid %d signal %d", (pid), sig))
+		if (sig >= 0) {
+			return 0;
+		} else {
+			errno = EINVAL;
+			return -1;
+		}
+	}
+	return kill(pid, sig);
+}
