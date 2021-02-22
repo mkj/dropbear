@@ -940,19 +940,21 @@ static void execchild(const void *user_data) {
 	seedrandom();
 #endif
 
-	/* clear environment */
+	/* clear environment if -e was not set */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
 	 * etc. This is hazardous, so should only be used for debugging. */
+	if ( !svr_opts.pass_on_env) {
 #ifndef DEBUG_VALGRIND
 #ifdef HAVE_CLEARENV
-	clearenv();
+		clearenv();
 #else /* don't HAVE_CLEARENV */
-	/* Yay for posix. */
-	if (environ) {
-		environ[0] = NULL;
-	}
+		/* Yay for posix. */
+		if (environ) {
+			environ[0] = NULL;
+		}
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_VALGRIND */
+	}
 
 #if DROPBEAR_SVR_MULTIUSER
 	/* We can only change uid/gid as root ... */
