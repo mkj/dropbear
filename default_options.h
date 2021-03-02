@@ -256,8 +256,11 @@ Homedir is prepended unless path begins with / */
 /* -T server option overrides */
 #define MAX_AUTH_TRIES 10
 
-/* Delay introduced before closing an unauthenticated session (seconds) */
-#define UNAUTH_CLOSE_DELAY 30
+/* Delay introduced before closing an unauthenticated session (seconds).
+   Disabled by default, can be set to say 30 seconds to reduce the speed
+   of password brute forcing. Note that there is a risk of denial of 
+   service by setting this */
+#define UNAUTH_CLOSE_DELAY 0
 
 /* The default file to store the daemon's process ID, for shutdown
    scripts etc. This can be overridden with the -P flag */
