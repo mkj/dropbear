@@ -354,8 +354,8 @@ const void* fuzz_get_algo(const algo_type *algos, const char* name) {
 }
 
 void fuzz_dump(const unsigned char* data, size_t len) {
-    TRACE(("dump %zu", len))
     if (fuzz.dumping) {
+        TRACE(("dump %zu", len))
         assert(atomicio(vwrite, fuzz.recv_dumpfd, (void*)data, len) == len);
     }
 }
