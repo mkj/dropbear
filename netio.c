@@ -459,7 +459,7 @@ int dropbear_listen(const char* address, const char* port,
 	struct linger linger;
 	int val;
 	int sock;
-	u_int16_t *allocated_lport_p = NULL;
+	uint16_t *allocated_lport_p = NULL;
 	int allocated_lport = 0;
 	
 	TRACE(("enter dropbear_listen"))
@@ -504,18 +504,15 @@ int dropbear_listen(const char* address, const char* port,
 		return -1;
 	}
 
-	/*
-	 * when listening on server-assigned-port 0
+	/* When listening on server-assigned-port 0
 	 * the assigned ports may differ for address families (v4/v6)
-	 * causing problems for tcpip-forward
-	 * caller can do a get_socket_address to discover assigned-port
-	 * hence, use same port for all address families
-	 */
-
+	 * causing problems for tcpip-forward.
+	 * Caller can do a get_socket_address to discover assigned-port
+	 * hence, use same port for all address families */
+	allocated_lport = 0;
 	nsock = 0;
 	for (res = res0; res != NULL && nsock < sockcount;
 			res = res->ai_next) {
-
 		if (allocated_lport > 0) {
 			if (AF_INET == res->ai_family) {
 				allocated_lport_p = &((struct sockaddr_in *)res->ai_addr)->sin_port;
@@ -526,11 +523,8 @@ int dropbear_listen(const char* address, const char* port,
 		}
 
 		/* Get a socket */
-		socks[nsock] = socket(res->ai_family, res->ai_socktype,
-				res->ai_protocol);
-
+		socks[nsock] = socket(res->ai_family, res->ai_socktype, res->ai_protocol);
 		sock = socks[nsock]; /* For clarity */
-
 		if (sock < 0) {
 			err = errno;
 			TRACE(("socket() failed"))
@@ -554,7 +548,6 @@ int dropbear_listen(const char* address, const char* port,
 			}
 		}
 #endif
-
 		set_sock_nodelay(sock);
 
 		if (bind(sock, res->ai_addr, res->ai_addrlen) < 0) {
@@ -576,7 +569,6 @@ int dropbear_listen(const char* address, const char* port,
 		}
 
 		*maxfd = MAX(*maxfd, sock);
-
 		nsock++;
 	}
 
