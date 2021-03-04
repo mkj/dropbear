@@ -47,6 +47,7 @@ int main(int argc, char ** argv) {
 
 	int sock_in, sock_out;
 	struct dropbear_progress_connection *progress = NULL;
+	pid_t proxy_cmd_pid = 0;
 
 	_dropbear_exit = cli_dropbear_exit;
 	_dropbear_log = cli_dropbear_log;
@@ -71,7 +72,6 @@ int main(int argc, char ** argv) {
 		dropbear_exit("signal() error");
 	}
 
-	pid_t proxy_cmd_pid = 0;
 #if DROPBEAR_CLI_PROXYCMD
 	if (cli_opts.proxycmd) {
 		cli_proxy_cmd(&sock_in, &sock_out, &proxy_cmd_pid);
