@@ -125,7 +125,7 @@ void recv_msg_userauth_pk_ok() {
 static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 			const buffer *data_buf) {
 #if DROPBEAR_CLI_AGENTFWD
-	// TODO: rsa-sha256 agent
+	/* TODO: rsa-sha256 agent */
 	if (key->source == SIGNKEY_SOURCE_AGENT) {
 		/* Format the agent signature ourselves, as buf_put_sign would. */
 		buffer *sigblob;

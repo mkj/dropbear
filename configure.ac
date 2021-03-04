@@ -47,6 +47,9 @@ DB_TRYADDCFLAGS([-Wno-pointer-sign])
 AC_MSG_NOTICE([Checking if compiler '$CC' supports -fno-strict-overflow])
 DB_TRYADDCFLAGS([-fno-strict-overflow])
 
+# needed for various extensions. define early before autoconf tests
+AC_DEFINE([_GNU_SOURCE], [], [Use GNU extensions if glibc])
+
 STATIC=0
 AC_ARG_ENABLE(static,
 	[  --enable-static         Build static binaries],

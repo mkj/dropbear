@@ -80,7 +80,7 @@ struct dropbear_fuzz_options {
     int do_jmp;
     sigjmp_buf jmp;
 
-    // write out decrypted session data to this FD if it's set
+    // write out decrypted session data to this FD if it is set
     // flag - this needs to be set manually in cli-main.c etc
     int dumping;
     // the file descriptor
@@ -114,6 +114,6 @@ struct passwd* fuzz_getpwnam(const char *login);
 #define getpwuid(x) fuzz_getpwuid(x)
 #endif // FUZZ_NO_REPLACE_GETPW
 
-#endif // DROPBEAR_FUZZ
+#endif /* DROPBEAR_FUZZ */
 
 #endif /* DROPBEAR_FUZZ_H */
