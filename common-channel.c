@@ -356,8 +356,7 @@ static void check_close(struct Channel *channel) {
  * if so, set up the channel properly. Otherwise, the channel is cleaned up, so
  * it is important that the channel reference isn't used after a call to this
  * function */
-void channel_connect_done(int result, int sock, void* user_data, const char* UNUSED(errstring)) {
-
+void channel_connect_done(int result, int sock, void* user_data, const char* errstring) {
 	struct Channel *channel = user_data;
 
 	TRACE(("enter channel_connect_done"))
@@ -373,9 +372,9 @@ void channel_connect_done(int result, int sock, void* user_data, const char* UNU
 	else
 	{
 		send_msg_channel_open_failure(channel->remotechan,
-				SSH_OPEN_CONNECT_FAILED, "", "");
+				SSH_OPEN_CONNECT_FAILED, errstring, "");
 		remove_channel(channel);
-		TRACE(("leave check_in_progress: fail"))
+		TRACE(("leave check_in_progress: fail. internal errstring: %s", errstring))
 	}
 }
 
