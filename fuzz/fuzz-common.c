@@ -235,26 +235,6 @@ int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t 
 }
 
 
-struct dropbear_progress_connection *fuzz_connect_remote(const char* UNUSED(remotehost), const char* UNUSED(remoteport),
-    connect_callback cb, void* cb_data, 
-    const char* UNUSED(bind_address), const char* UNUSED(bind_port)) {
-    /* This replacement for connect_remote() has slightly different semantics
-    to the real thing. It should probably be replaced with something more sophisticated.
-    It calls the callback cb() immediately rather than
-    in a future session loop iteration with set_connect_fds()/handle_connect_fds().
-    This could cause problems depending on how connect_remote() is used. In particular
-    the callback can close a channel - that can cause use-after-free. */
-    char r;
-    genrandom((void*)&r, 1);
-    if (r & 1) {
-        int sock = wrapfd_new_dummy();
-        cb(DROPBEAR_SUCCESS, sock, cb_data, NULL);
-    } else {
-        cb(DROPBEAR_FAILURE, -1, cb_data, "errorstring");
-    }
-    return NULL;
-}
-
 /* Fake dropbear_listen, always returns failure for now.
 TODO make it sometimes return success with wrapfd_new_dummy() sockets.
 Making the listeners fake a new incoming connection will be harder. */

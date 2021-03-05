@@ -37,11 +37,6 @@ extern const char * const * fuzz_signkey_names;
 void fuzz_seed(const unsigned char* dat, unsigned int len);
 void fuzz_svr_hook_preloop(void);
 
-typedef void(*connect_callback)(int result, int sock, void* data, const char* errstring);
-struct dropbear_progress_connection *fuzz_connect_remote(const char* remotehost, const char* remoteport,
-    connect_callback cb, void* cb_data,
-    const char* bind_address, const char* bind_port);
-
 int fuzz_dropbear_listen(const char* address, const char* port,
         int *socks, unsigned int sockcount, char **errstring, int *maxfd);
 

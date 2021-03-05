@@ -179,12 +179,6 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	int err;
 	struct addrinfo hints;
 
-#if DROPBEAR_FUZZ
-	if (fuzz.fuzzing) {
-		return fuzz_connect_remote(remotehost, remoteport, cb, cb_data, bind_address, bind_port);
-	}
-#endif
-
 	c = m_malloc(sizeof(*c));
 	c->remotehost = m_strdup(remotehost);
 	c->remoteport = m_strdup(remoteport);
@@ -193,6 +187,13 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->cb_data = cb_data;
 
 	list_append(&ses.conn_pending, c);
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		c->errstring = m_strdup("fuzzing connect_remote always fails");
+		return c;
+	}
+#endif
 
 	memset(&hints, 0, sizeof(hints));
 	hints.ai_socktype = SOCK_STREAM;
