@@ -6,7 +6,8 @@
 
 #include "fuzz.h"
 
-#define IOWRAP_MAXFD (FD_SETSIZE-1)
+// +100 might catch some limits...
+#define IOWRAP_MAXFD (FD_SETSIZE-1 + 100)
 static const int MAX_RANDOM_IN = 50000;
 static const double CHANCE_CLOSE = 1.0 / 600;
 static const double CHANCE_INTR = 1.0 / 900;
@@ -75,7 +76,14 @@ int wrapfd_new_dummy() {
 	}
 
 	int fd = dup(devnull_fd);
-	assert(fd != -1);
+	if (fd == -1) {
+		return -1;
+	}
+	if (fd > IOWRAP_MAXFD) {
+		close(fd);
+		errno = EMFILE;
+		return -1;
+	}
 	assert(wrap_fds[fd].mode == UNUSED);
 	wrap_fds[fd].mode = DUMMY;
 	wrap_fds[fd].closein = 0;
@@ -92,7 +100,7 @@ static void wrapfd_remove(int fd) {
 	assert(fd <= IOWRAP_MAXFD);
 	assert(wrap_fds[fd].mode != UNUSED);
 	wrap_fds[fd].mode = UNUSED;
-	m_close(fd);
+	close(fd);
 }
 
 int wrapfd_close(int fd) {

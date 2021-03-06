@@ -230,10 +230,19 @@ int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t 
     if (ret_errfd) {
         *ret_errfd = wrapfd_new_dummy();
     }
-    *ret_pid = 999;
-    return DROPBEAR_SUCCESS;
-}
+    if (*ret_writefd == -1 || *ret_readfd == -1 || (ret_errfd && *ret_errfd == -1)) {
+        m_close(*ret_writefd);
+        m_close(*ret_readfd);
+        if (ret_errfd) {
+            m_close(*ret_errfd);
+        }
+        return DROPBEAR_FAILURE;
+    } else {
+        *ret_pid = 999;
+        return DROPBEAR_SUCCESS;
 
+    }
+}
 
 /* Fake dropbear_listen, always returns failure for now.
 TODO make it sometimes return success with wrapfd_new_dummy() sockets.
