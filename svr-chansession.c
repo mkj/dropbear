@@ -658,12 +658,13 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	unsigned int cmdlen = 0;
 	int ret;
 
-	TRACE(("enter sessioncommand"))
+	TRACE(("enter sessioncommand %d", channel->index))
 
-	if (chansess->cmd != NULL) {
+	if (chansess->pid != 0) {
 		/* Note that only one command can _succeed_. The client might try
 		 * one command (which fails), then try another. Ie fallback
 		 * from sftp to scp */
+		TRACE(("leave sessioncommand, already have a command"))
 		return DROPBEAR_FAILURE;
 	}
 
@@ -675,6 +676,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 			if (cmdlen > MAX_CMD_LEN) {
 				m_free(chansess->cmd);
 				/* TODO - send error - too long ? */
+				TRACE(("leave sessioncommand, command too long %d", cmdlen))
 				return DROPBEAR_FAILURE;
 			}
 		}
@@ -687,6 +689,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 #endif
 			{
 				m_free(chansess->cmd);
+				TRACE(("leave sessioncommand, unknown subsystem"))
 				return DROPBEAR_FAILURE;
 			}
 		}
@@ -743,6 +746,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 	if (ret == DROPBEAR_FAILURE) {
 		m_free(chansess->cmd);
 	}
+	TRACE(("leave sessioncommand, ret %d", ret))
 	return ret;
 }
 
@@ -916,6 +920,7 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 		svr_ses.childpidsize++;
 	}
 	
+	TRACE(("addchildpid %d pid %d for chansess %p", i, pid, chansess))
 	svr_ses.childpids[i].pid = pid;
 	svr_ses.childpids[i].chansess = chansess;
 
