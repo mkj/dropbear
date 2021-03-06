@@ -437,13 +437,11 @@ static int sessionsignal(const struct ChanSess *chansess) {
 
 	signame = buf_getstring(ses.payload, NULL);
 
-	i = 0;
-	while (signames[i].name != 0) {
+	for (i = 0; signames[i].name != NULL; i++) {
 		if (strcmp(signames[i].name, signame) == 0) {
 			sig = signames[i].signal;
 			break;
 		}
-		i++;
 	}
 
 	m_free(signame);
