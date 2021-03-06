@@ -1,7 +1,7 @@
 # Runs fuzzers for a little while on pull requests.
 # From https://google.github.io/oss-fuzz/getting-started/continuous-integration/
 name: CIFuzz
-on: [pull_request]
+on:
   pull_request:
   push:
     branches:
