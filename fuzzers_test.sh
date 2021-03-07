@@ -6,7 +6,8 @@ result=0
 
 test -d fuzzcorpus && hg --repository fuzzcorpus/ pull || hg clone https://hg.ucc.asn.au/dropbear-fuzzcorpus fuzzcorpus || exit 1
 for f in `make list-fuzz-targets`; do
-    ./$f fuzzcorpus/$f/* || result=1
+    # use xargs to split the too-long argument list
+    echo fuzzcorpus/$f/* | xargs -n 1000 ./$f || result=1
 done
 
 exit $result
