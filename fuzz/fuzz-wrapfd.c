@@ -6,8 +6,7 @@
 
 #include "fuzz.h"
 
-// +100 might catch some limits...
-#define IOWRAP_MAXFD (FD_SETSIZE-1 + 100)
+#define IOWRAP_MAXFD (FD_SETSIZE-1)
 static const int MAX_RANDOM_IN = 50000;
 static const double CHANCE_CLOSE = 1.0 / 600;
 static const double CHANCE_INTR = 1.0 / 900;
