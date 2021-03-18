@@ -146,7 +146,7 @@ static int svr_cancelremotetcp() {
 	TRACE(("enter cancelremotetcp"))
 
 	bindaddr = buf_getstring(ses.payload, &addrlen);
-	if (addrlen > MAX_IP_LEN) {
+	if (addrlen > MAX_HOST_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
 	}
@@ -181,7 +181,7 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 	TRACE(("enter remotetcpreq"))
 
 	request_addr = buf_getstring(ses.payload, &addrlen);
-	if (addrlen > MAX_IP_LEN) {
+	if (addrlen > MAX_HOST_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
 	}
