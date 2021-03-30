@@ -5,7 +5,7 @@
 # of the platform checks have been taken straight from OpenSSH's configure.ac
 # Huge thanks to them for dealing with the horrible platform-specifics :)
 
-AC_PREREQ(2.59)
+AC_PREREQ([2.59])
 AC_INIT
 AC_CONFIG_SRCDIR(buffer.c)
 
@@ -368,7 +368,6 @@ AC_SUBST(DROPBEAR_FUZZ)
 AC_SUBST(CXX)
 
 # Checks for header files.
-AC_HEADER_STDC
 AC_HEADER_SYS_WAIT
 AC_CHECK_HEADERS([netinet/in.h netinet/tcp.h \
 	crypt.h \
@@ -383,7 +382,6 @@ AC_TYPE_UID_T
 AC_TYPE_MODE_T
 AC_TYPE_PID_T
 AC_TYPE_SIZE_T
-AC_HEADER_TIME
 
 AC_CHECK_TYPES([uint8_t, u_int8_t, uint16_t, u_int16_t, uint32_t, u_int32_t])
 AC_CHECK_TYPES([struct sockaddr_storage])
@@ -863,7 +861,7 @@ if test $BUNDLED_LIBTOM = 1 ; then
 LIBTOM_FILES="libtomcrypt/Makefile libtommath/Makefile"
 fi
 
-AC_CONFIG_HEADER(config.h)
+AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES(Makefile $LIBTOM_FILES)
 AC_OUTPUT
 
