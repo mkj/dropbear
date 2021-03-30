@@ -1,4 +1,7 @@
 #!/bin/sh
+
+set -e
+
 VERSION=$(echo '#include "sysoptions.h"\necho DROPBEAR_VERSION' | cpp - | sh)
 echo Releasing version "$VERSION" ...
 if ! head -n1 CHANGES | grep -q $VERSION ; then
@@ -13,7 +16,11 @@ fi
 
 head -n1 CHANGES
 
-#sleep 3
+if tar --version | grep -q 'GNU tar'; then
+	TAR=tar
+else
+	TAR=gtar
+fi
 
 RELDIR=$PWD/../dropbear-$VERSION
 ARCHIVE=${RELDIR}.tar.bz2
@@ -35,7 +42,11 @@ rm -r "$RELDIR/autom4te.cache" || exit 2
 
 rm "$RELDIR/.hgtags"
 
-(cd "$RELDIR/.." && tar cjf $ARCHIVE `basename "$RELDIR"`) || exit 2
+RELDATE=$(head -n1 CHANGES | cut -d - -f 2)
+
+# from https://reproducible-builds.org/docs/archives/
+TAROPTS="--sort=name --owner=0 --group=0 --numeric-owner"
+(cd "$RELDIR/.." && $TAR cjf $ARCHIVE $TAROPTS --mtime="$RELDATE" `basename "$RELDIR"`) || exit 2
 
 ls -l $ARCHIVE
 openssl sha256 $ARCHIVE
