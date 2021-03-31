@@ -36,17 +36,15 @@ fi
 
 hg archive "$RELDIR"  || exit 2
 
-(cd "$RELDIR" && autoconf && autoheader) || exit 2
-
-rm -r "$RELDIR/autom4te.cache" || exit 2
-
 rm "$RELDIR/.hgtags"
 
 RELDATE=$(head -n1 CHANGES | cut -d - -f 2)
+# timezone keeps it consistent, choose a plausible release time
+RELTIME="22:30:00 +0800"
 
 # from https://reproducible-builds.org/docs/archives/
 TAROPTS="--sort=name --owner=0 --group=0 --numeric-owner"
-(cd "$RELDIR/.." && $TAR cjf $ARCHIVE $TAROPTS --mtime="$RELDATE" `basename "$RELDIR"`) || exit 2
+(cd "$RELDIR/.." && $TAR cjf $ARCHIVE $TAROPTS --mtime="$RELDATE $RELTIME" `basename "$RELDIR"`) || exit 2
 
 ls -l $ARCHIVE
 openssl sha256 $ARCHIVE

@@ -21,7 +21,5 @@
 /scp-progress
 Makefile
 config.h
-config.h.in
-configure
 default_options_guard.h
 tags

@@ -52,8 +52,6 @@ before_install:
   - if [ "$CC" = "clang" ]; then WEXTRAFLAGS="$WEXTRAFLAGS -Wno-error=incompatible-library-redeclaration" ; fi  # workaround
 
 install:
-  - autoconf 
-  - autoheader 
   - ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
   - if [ "$NOWRITEV" = "1" ]; then sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h ; fi
   - make lint
