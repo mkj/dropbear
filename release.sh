@@ -37,6 +37,8 @@ fi
 hg archive "$RELDIR"  || exit 2
 
 rm "$RELDIR/.hgtags"
+# .hg_archival.txt seems to differ between hg versions, isn't good for reproducibility
+rm "$RELDIR/.hg_archival.txt"
 
 RELDATE=$(head -n1 CHANGES | cut -d - -f 2)
 # timezone keeps it consistent, choose a plausible release time
