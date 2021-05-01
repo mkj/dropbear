@@ -166,6 +166,18 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 			ses.authstate.pubkey_options->no_pty_flag = 1;
 			goto next_option;
 		}
+		if (match_option(options_buf, "restrict") == DROPBEAR_SUCCESS) {
+			dropbear_log(LOG_WARNING, "Restrict option set");
+			ses.authstate.pubkey_options->no_port_forwarding_flag = 1;
+#if DROPBEAR_SVR_AGENTFWD
+			ses.authstate.pubkey_options->no_agent_forwarding_flag = 1;
+#endif
+#if DROPBEAR_X11FWD
+			ses.authstate.pubkey_options->no_x11_forwarding_flag = 1;
+#endif
+			ses.authstate.pubkey_options->no_pty_flag = 1;
+			goto next_option;
+		}
 		if (match_option(options_buf, "command=\"") == DROPBEAR_SUCCESS) {
 			int escaped = 0;
 			const unsigned char* command_start = buf_getptr(options_buf, 0);
