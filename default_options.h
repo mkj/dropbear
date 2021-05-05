@@ -82,7 +82,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * support 3DES.
  * Including both AES keysize variants (128 and 256) will result in 
  * a minimal size increase */
-#define DROPBEAR_AES128 1
+#define DROPBEAR_AES128 0
 #define DROPBEAR_AES256 1
 #define DROPBEAR_3DES 0
 #define DROPBEAR_TWOFISH256 0
@@ -106,11 +106,13 @@ IMPORTANT: Some options will require "make clean" after changes */
  * for security and forwards compatibility, but slower than CTR on
  * CPU w/o dedicated AES/GHASH instructions.
  * Compiling in will add ~6kB to binary size on x86-64 */
-#define DROPBEAR_ENABLE_GCM_MODE 0
+#define DROPBEAR_ENABLE_GCM_MODE 1
 
 /* Message integrity. sha2-256 is recommended as a default, 
    sha1 for compatibility */
-#define DROPBEAR_SHA1_HMAC 1
+
+#define DROPBEAR_MD5_HMAC 0 
+#define DROPBEAR_SHA1_HMAC 0
 #define DROPBEAR_SHA2_256_HMAC 1
 #define DROPBEAR_SHA1_96_HMAC 0
 
@@ -121,7 +123,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * DSS may be necessary to connect to some systems though
    is not recommended for new keys */
 #define DROPBEAR_RSA 1
-#define DROPBEAR_DSS 1
+#define DROPBEAR_DSS 0
 /* ECDSA is significantly faster than RSA or DSS. Compiling in ECC
  * code (either ECDSA or ECDH) increases binary size - around 30kB
  * on x86-64 */
@@ -131,7 +133,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_ED25519 1
 
 /* RSA must be >=1024 */
-#define DROPBEAR_DEFAULT_RSA_SIZE 2048
+#define DROPBEAR_DEFAULT_RSA_SIZE 4096
 /* DSS is always 1024 */
 /* ECDSA defaults to largest size configured, usually 521 */
 /* Ed25519 is always 256 */
@@ -163,12 +165,12 @@ IMPORTANT: Some options will require "make clean" after changes */
  * Small systems should generally include either curve25519 or ecdh for performance.
  * curve25519 is less widely supported but is faster
  */ 
-#define DROPBEAR_DH_GROUP14_SHA1 1
+#define DROPBEAR_DH_GROUP14_SHA1 0
 #define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
 #define DROPBEAR_CURVE25519 1
-#define DROPBEAR_ECDH 1
-#define DROPBEAR_DH_GROUP1 1
+#define DROPBEAR_ECDH 0
+#define DROPBEAR_DH_GROUP1 0
 
 /* When group1 is enabled it will only be allowed by Dropbear client
 not as a server, due to concerns over its strength. Set to 0 to allow
