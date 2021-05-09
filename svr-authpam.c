@@ -282,6 +282,8 @@ void svr_auth_pam(int valid_user) {
 	dropbear_log(LOG_NOTICE, "PAM password auth succeeded for '%s' from %s",
 			ses.authstate.pw_name,
 			svr_ses.addrstring);
+	/* reset the pam counter on a successful attempt */
+	pam_setcred(pamHandlep, PAM_ESTABLISH_CRED);
 	send_msg_userauth_success();
 
 cleanup:
