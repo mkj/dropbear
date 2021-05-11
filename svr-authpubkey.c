@@ -380,9 +380,25 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 
 	TRACE(("enter checkpubkey"))
 
+#if DROPBEAR_SVR_MULTIUSER
+	/* open the file as the authenticating user. */
+	origuid = getuid();
+	origgid = getgid();
+	if ((setegid(ses.authstate.pw_gid)) < 0 ||
+		(seteuid(ses.authstate.pw_uid)) < 0) {
+		dropbear_exit("Failed to set euid");
+	}
+#endif
+
 	/* check file permissions, also whether file exists */
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
 		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
+#if DROPBEAR_SVR_MULTIUSER
+		if ((seteuid(origuid)) < 0 ||
+			(setegid(origgid)) < 0) {
+			dropbear_exit("Failed to revert euid");
+		}
+#endif
 		goto out;
 	}
 
@@ -394,16 +410,6 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 	filename = m_malloc(len + 22);
 	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
 				ses.authstate.pw_dir);
-
-#if DROPBEAR_SVR_MULTIUSER
-	/* open the file as the authenticating user. */
-	origuid = getuid();
-	origgid = getgid();
-	if ((setegid(ses.authstate.pw_gid)) < 0 ||
-		(seteuid(ses.authstate.pw_uid)) < 0) {
-		dropbear_exit("Failed to set euid");
-	}
-#endif
 
 	authfile = fopen(filename, "r");
 
