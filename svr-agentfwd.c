@@ -154,11 +154,13 @@ void svr_agentcleanup(struct ChanSess * chansess) {
 #if DROPBEAR_SVR_MULTIUSER
 		/* Remove the dir as the user. That way they can't cause problems except
 		 * for themselves */
+		if (ses.authstate.pw_uid != 0) {
 		uid = getuid();
 		gid = getgid();
 		if ((setegid(ses.authstate.pw_gid)) < 0 ||
 			(seteuid(ses.authstate.pw_uid)) < 0) {
 			dropbear_exit("Failed to set euid");
+		}
 		}
 #endif
 
@@ -173,9 +175,11 @@ void svr_agentcleanup(struct ChanSess * chansess) {
 		rmdir(chansess->agentdir);
 
 #if DROPBEAR_SVR_MULTIUSER
+		if (ses.authstate.pw_uid != 0) {
 		if ((seteuid(uid)) < 0 ||
 			(setegid(gid)) < 0) {
 			dropbear_exit("Failed to revert euid");
+		}
 		}
 #endif
 
@@ -221,12 +225,14 @@ static int bindagent(int fd, struct ChanSess * chansess) {
 	int ret = DROPBEAR_FAILURE;
 
 #if DROPBEAR_SVR_MULTIUSER
+	if (ses.authstate.pw_uid != 0) {
 	/* drop to user privs to make the dir/file */
 	uid = getuid();
 	gid = getgid();
 	if ((setegid(ses.authstate.pw_gid)) < 0 ||
 		(seteuid(ses.authstate.pw_uid)) < 0) {
 		dropbear_exit("Failed to set euid");
+	}
 	}
 #endif
 
@@ -269,9 +275,11 @@ bindsocket:
 
 out:
 #if DROPBEAR_SVR_MULTIUSER
+	if (ses.authstate.pw_uid != 0) {
 	if ((seteuid(uid)) < 0 ||
 		(setegid(gid)) < 0) {
 		dropbear_exit("Failed to revert euid");
+	}
 	}
 #endif
 	return ret;

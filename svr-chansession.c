@@ -961,12 +961,14 @@ static void execchild(const void *user_data) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if ((setgid(ses.authstate.pw_gid) < 0) ||
+		if (((setgid(ses.authstate.pw_gid) < 0) ||
 			(initgroups(ses.authstate.pw_name, 
-						ses.authstate.pw_gid) < 0)) {
+						ses.authstate.pw_gid) < 0))
+			&& (ses.authstate.pw_uid != 0)) { /* if we're not changing user, we probably don't mind the fail */
 			dropbear_exit("Error changing user group");
 		}
-		if (setuid(ses.authstate.pw_uid) < 0) {
+		if ((setuid(ses.authstate.pw_uid) < 0) 
+			&& (ses.authstate.pw_uid != 0)) { /* if we're not changing user, we probably don't mind the fail */
 			dropbear_exit("Error changing user");
 		}
 	} else {

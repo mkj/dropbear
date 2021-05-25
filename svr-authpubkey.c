@@ -396,6 +396,7 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 				ses.authstate.pw_dir);
 
 #if DROPBEAR_SVR_MULTIUSER
+	if (ses.authstate.pw_uid != 0) {
 	/* open the file as the authenticating user. */
 	origuid = getuid();
 	origgid = getgid();
@@ -403,14 +404,17 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		(seteuid(ses.authstate.pw_uid)) < 0) {
 		dropbear_exit("Failed to set euid");
 	}
+	}
 #endif
 
 	authfile = fopen(filename, "r");
 
 #if DROPBEAR_SVR_MULTIUSER
+	if (ses.authstate.pw_uid != 0) {
 	if ((seteuid(origuid)) < 0 ||
 		(setegid(origgid)) < 0) {
 		dropbear_exit("Failed to revert euid");
+	}
 	}
 #endif
 
