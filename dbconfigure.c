@@ -45,9 +45,9 @@ static config_file_content *init_config_file_content(void)
 config_file_content *read_config_file(const char *config_file)
 {
 	char content[CONFIG_FILE_CONTENT_SIZE] = {'\0'};
-	char *buf[512];
+	char buf[512];
 	config_file_content *cfc = NULL;
-	int fd, ret;
+	int fd, ret, len;
 	unsigned int i, j, count = 0;
 	
 	if ((fd = open(config_file, O_RDONLY)) == -1)
@@ -109,6 +109,14 @@ config_file_content *read_config_file(const char *config_file)
 			cfc->lines[cfc->lines_count - 1][i + 1] = '\0';
 			break;
 		}
+
+		if (lines_cnt > 1) {
+			len = strlen(lines[lines_cnt - 1]);
+
+			if (len >= 1 && lines[lines_cnt - 1][len - 1] == '\r') {
+				lines[lines_cnt - 1][len - 1] = '\0';
+			}
+		}		
 	}
 	
 	if (cfc->lines_count == 0) {
