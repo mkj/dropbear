@@ -35,6 +35,11 @@ Don't fork into background.
 .B \-E
 Log to standard error rather than syslog.
 .TP
+.B \-e
+Pass on the server environment to all child processes. This is required, for example,
+if dropbear is launched on the fly from a SLURM workload manager. The enviroment is not
+passed by default. Note that this can be a potential security risk.
+.TP
 .B \-m
 Don't display the message of the day on login.
 .TP
