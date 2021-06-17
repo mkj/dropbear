@@ -159,6 +159,7 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_ANYTCPFWD
 	int exit_on_fwd_failure;
 #endif
+	int exit_on_trivial_auth;
 #if DROPBEAR_CLI_REMOTETCPFWD
 	m_list * remotefwds;
 #endif
