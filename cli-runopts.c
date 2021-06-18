@@ -152,7 +152,7 @@ void cli_getopts(int argc, char ** argv) {
 #if DROPBEAR_CLI_ANYTCPFWD
 	cli_opts.exit_on_fwd_failure = 0;
 #endif
-	cli_opts.exit_on_trivial_auth = 0;
+	cli_opts.disable_trivial_auth = 0;
 #if DROPBEAR_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -890,7 +890,7 @@ static void add_extendedopt(const char* origstr) {
 #if DROPBEAR_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
-			"\tExitOnTrivialAuth\n"
+			"\tDisableTrivialAuth\n"
 #ifndef DISABLE_SYSLOG
 			"\tUseSyslog\n"
 #endif
@@ -918,8 +918,8 @@ static void add_extendedopt(const char* origstr) {
 		return;
 	}
 
-	if (match_extendedopt(&optstr, "ExitOnTrivialAuth") == DROPBEAR_SUCCESS) {
-		cli_opts.exit_on_trivial_auth = parse_flag_value(optstr);
+	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
+		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
 		return;
 	}
 
