@@ -399,7 +399,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		goto error;
 	}
 	if (!fgets(buffer, sizeof(buffer), fp) ||
-		0 != strncmp(buffer, "-----BEGIN ", 11) ||
+		0 != strncmp(buffer, "-----BEGIN ", 10) ||
 		0 != strcmp(buffer+strlen(buffer)-17, "PRIVATE KEY-----\n")) {
 		errmsg = "File does not begin with OpenSSH key header";
 		goto error;
