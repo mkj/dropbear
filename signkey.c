@@ -568,7 +568,7 @@ static char * sign_key_sha1_fingerprint(const unsigned char* keyblob,
 	buflen = 7 + 3*SHA1_HASH_SIZE;
 	ret = (char*)m_malloc(buflen);
 
-	strcpy(ret, "sha1!! ");
+	strcpy(ret, "sha1 ");
 
 	for (i = 0; i < SHA1_HASH_SIZE; i++) {
 		unsigned int pos = 7 + 3*i;
