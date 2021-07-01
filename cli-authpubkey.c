@@ -176,6 +176,7 @@ static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype,
 		buf_putbytes(sigbuf, ses.writepayload->data, ses.writepayload->len);
 		cli_buf_put_sign(ses.writepayload, key, sigtype, sigbuf);
 		buf_free(sigbuf); /* Nothing confidential in the buffer */
+		cli_ses.is_trivial_auth = 0;
 	}
 
 	encrypt_packet();
@@ -266,7 +267,6 @@ int cli_auth_pubkey() {
 		/* Send a trial request */
 		send_msg_userauth_pubkey(key, sigtype, 0);
 		cli_ses.lastprivkey = key;
-		cli_ses.is_trivial_auth = 0;
 		TRACE(("leave cli_auth_pubkey-success"))
 		return 1;
 	} else {
