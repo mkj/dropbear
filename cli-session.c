@@ -165,6 +165,7 @@ static void cli_session_init(pid_t proxy_cmd_pid) {
 	/* Auth */
 	cli_ses.lastprivkey = NULL;
 	cli_ses.lastauthtype = 0;
+	cli_ses.is_trivial_auth = 1;
 
 	/* For printing "remote host closed" for the user */
 	ses.remoteclosed = cli_remoteclosed;
