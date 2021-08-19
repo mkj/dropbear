@@ -64,6 +64,7 @@ static void printhelp(const char * progname) {
 					"-R		Create hostkeys as required\n" 
 #endif
 					"-F		Don't fork into background\n"
+					"-e		Pass on server process environment to child process\n"
 #ifdef DISABLE_SYSLOG
 					"(Syslog support not compiled in, using stderr)\n"
 #else
@@ -173,6 +174,7 @@ void svr_getopts(int argc, char ** argv) {
         svr_opts.pubkey_plugin = NULL;
         svr_opts.pubkey_plugin_options = NULL;
 #endif
+	svr_opts.pass_on_env = 0;
 
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_DELAYED;
@@ -223,6 +225,10 @@ void svr_getopts(int argc, char ** argv) {
 					opts.usingsyslog = 0;
 					break;
 #endif
+				case 'e':
+					svr_opts.pass_on_env = 1;
+					break;
+
 #if DROPBEAR_SVR_LOCALTCPFWD
 				case 'j':
 					svr_opts.nolocaltcp = 1;
