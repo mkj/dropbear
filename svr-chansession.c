@@ -931,6 +931,11 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(const void *user_data) {
 	const struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
+	char *cp = NULL;
+	char *envcp = getenv("LANG");
+	if (envcp != NULL) {
+		cp = m_strdup(envcp);
+	}
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
 	 * hostkey. can't think of a workaround to clear it */
@@ -991,6 +996,10 @@ static void execchild(const void *user_data) {
 	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", get_user_shell());
 	addnewvar("PATH", DEFAULT_PATH);
+	if (cp != NULL) {
+		addnewvar("LANG", cp);
+		m_free(cp);
+	}	
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
