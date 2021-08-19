@@ -155,7 +155,7 @@ void cli_auth_password() {
 
 	encrypt_packet();
 	m_burn(password, strlen(password));
-
+	cli_ses.is_trivial_auth = 0;
 	TRACE(("leave cli_auth_password"))
 }
 #endif	/* DROPBEAR_CLI_PASSWORD_AUTH */
