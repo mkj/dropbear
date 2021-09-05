@@ -602,11 +602,19 @@ otherwise home directory is prepended */
 char * expand_homedir_path(const char *inpath) {
 	struct passwd *pw = NULL;
 	if (inpath[0] != '/') {
-		pw = getpwuid(getuid());
-		if (pw && pw->pw_dir) {
-			int len = strlen(inpath) + strlen(pw->pw_dir) + 2;
+		char *homedir = getenv("HOME");
+
+		if (!homedir) {
+			pw = getpwuid(getuid());
+			if (pw) {
+				homedir = pw->pw_dir;
+			}
+		}
+
+		if (homedir) {
+			int len = strlen(inpath) + strlen(homedir) + 2;
 			char *buf = m_malloc(len);
-			snprintf(buf, len, "%s/%s", pw->pw_dir, inpath);
+			snprintf(buf, len, "%s/%s", homedir, inpath);
 			return buf;
 		}
 	}
