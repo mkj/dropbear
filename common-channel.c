@@ -154,7 +154,6 @@ static struct Channel* newchannel(unsigned int remotechan,
 	newchan->readfd = FD_UNINIT;
 	newchan->errfd = FD_CLOSED; /* this isn't always set to start with */
 	newchan->await_open = 0;
-	newchan->flushing = 0;
 
 	newchan->writebuf = cbuf_new(opts.recv_window);
 	newchan->recvwindow = opts.recv_window;
@@ -284,14 +283,6 @@ static void check_close(struct Channel *channel) {
 				channel->writebuf ? cbuf_getused(channel->writebuf) : 0,
 				channel->extrabuf ? cbuf_getused(channel->extrabuf) : 0))
 
-	if (!channel->flushing 
-		&& !channel->sent_close
-		&& channel->type->check_close
-		&& channel->type->check_close(channel))
-	{
-		channel->flushing = 1;
-	}
-	
 	/* if a type-specific check_close is defined we will only exit
 	   once that has been triggered. this is only used for a server "session"
 	   channel, to ensure that the shell has exited (and the exit status 
@@ -315,22 +306,6 @@ static void check_close(struct Channel *channel) {
 		/* have a server "session" and child has exited */
 		|| (channel->type->check_close && close_allowed)) {
 		close_chan_fd(channel, channel->writefd, SHUT_WR);
-	}
-
-	/* Special handling for flushing read data after an exit. We
-	   read regardless of whether the select FD was set,
-	   and if there isn't data available, the channel will get closed. */
-	if (channel->flushing) {
-		TRACE(("might send data, flushing"))
-		if (channel->readfd >= 0 && channel->transwindow > 0) {
-			TRACE(("send data readfd"))
-			send_msg_channel_data(channel, 0);
-		}
-		if (ERRFD_IS_READ(channel) && channel->errfd >= 0 
-			&& channel->transwindow > 0) {
-			TRACE(("send data errfd"))
-			send_msg_channel_data(channel, 1);
-		}
 	}
 
 	/* If we're not going to send any more data, send EOF */
@@ -779,14 +754,6 @@ static void send_msg_channel_data(struct Channel *channel, int isextended) {
 	channel->transwindow -= len;
 
 	encrypt_packet();
-	
-	/* If we receive less data than we requested when flushing, we've
-	   reached the equivalent of EOF */
-	if (channel->flushing && len < (ssize_t)maxlen)
-	{
-		TRACE(("closing from channel, flushing out."))
-		close_chan_fd(channel, fd, SHUT_RD);
-	}
 	TRACE(("leave send_msg_channel_data"))
 }
 

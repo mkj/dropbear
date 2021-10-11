@@ -76,10 +76,12 @@ const struct ChanType svrchansess = {
 /* required to clear environment */
 extern char** environ;
 
+/* Returns whether the channel is ready to close. The child process
+   must not be running (has never started, or has exited) */
 static int sesscheckclose(const struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
-	TRACE(("sesscheckclose, pid is %d", chansess->exit.exitpid))
-	return chansess->exit.exitpid != -1;
+	TRACE(("sesscheckclose, pid %d, exitpid %d", chansess->pid, chansess->exit.exitpid))
+	return chansess->pid == 0 || chansess->exit.exitpid != -1;
 }
 
 /* Handler for childs exiting, store the state for return to the client */

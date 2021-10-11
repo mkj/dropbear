@@ -77,8 +77,6 @@ struct Channel {
 					   for this channel (and are awaiting a confirmation
 					   or failure). */
 
-	int flushing;
-
 	/* Used by client chansession to handle ~ escaping, NULL ignored otherwise */
 	void (*read_mangler)(const struct Channel*, const unsigned char* bytes, int *len);
 
