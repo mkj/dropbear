@@ -59,7 +59,6 @@ static int newtcpdirect(struct Channel * channel);
 
 #if DROPBEAR_SVR_REMOTETCPFWD
 static const struct ChanType svr_chan_tcpremote = {
-	1, /* sepfds */
 	"forwarded-tcpip",
 	tcp_prio_inithandler,
 	NULL,
@@ -241,7 +240,6 @@ out:
 #if DROPBEAR_SVR_LOCALTCPFWD
 
 const struct ChanType svr_chan_tcpdirect = {
-	1, /* sepfds */
 	"direct-tcpip",
 	newtcpdirect, /* init */
 	NULL, /* checkclose */

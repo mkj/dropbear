@@ -60,6 +60,9 @@ struct Channel {
 	int readfd; /* read from insecure side, written to wire */
 	int errfd; /* used like writefd or readfd, depending if it's client or server.
 				  Doesn't exactly belong here, but is cleaner here */
+	int bidir_fd; /* a boolean indicating that writefd/readfd are the same
+			file descriptor (bidirectional), such as a network socket or PTY.
+			That is handled differently when closing FDs */
 	circbuffer *writebuf; /* data from the wire, for local consumption. Can be
 							 initially NULL */
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf
@@ -87,7 +90,6 @@ struct Channel {
 
 struct ChanType {
 
-	int sepfds; /* Whether this channel has separate pipes for in/out or not */
 	const char *name;
 	/* Sets up the channel */
 	int (*inithandler)(struct Channel*);

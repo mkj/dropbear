@@ -339,6 +339,7 @@ void channel_connect_done(int result, int sock, void* user_data, const char* err
 	if (result == DROPBEAR_SUCCESS)
 	{
 		channel->readfd = channel->writefd = sock;
+		channel->bidir_fd = 1;
 		channel->conn_pending = NULL;
 		send_msg_channel_open_confirmation(channel, channel->recvwindow,
 				channel->recvmaxpacket);
@@ -1039,7 +1040,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 
 	int closein = 0, closeout = 0;
 
-	if (channel->type->sepfds) {
+	if (channel->bidir_fd) {
 		TRACE(("SHUTDOWN(%d, %d)", fd, how))
 		shutdown(fd, how);
 		if (how == 0) {
@@ -1069,7 +1070,7 @@ static void close_chan_fd(struct Channel *channel, int fd, int how) {
 
 	/* if we called shutdown on it and all references are gone, then we 
 	 * need to close() it to stop it lingering */
-	if (channel->type->sepfds && channel->readfd == FD_CLOSED 
+	if (channel->bidir_fd && channel->readfd == FD_CLOSED 
 		&& channel->writefd == FD_CLOSED && channel->errfd == FD_CLOSED) {
 		TRACE(("CLOSE (finally) of %d", fd))
 		m_close(fd);
@@ -1102,6 +1103,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 
 	chan->writefd = chan->readfd = fd;
 	ses.maxfd = MAX(ses.maxfd, fd);
+	chan->bidir_fd = 1;
 
 	chan->await_open = 1;
 

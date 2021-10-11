@@ -64,7 +64,6 @@ static void send_msg_chansess_exitsignal(const struct Channel * channel,
 static void get_termmodes(const struct ChanSess *chansess);
 
 const struct ChanType svrchansess = {
-	0, /* sepfds */
 	"session", /* name */
 	newchansess, /* inithandler */
 	sesscheckclose, /* checkclosehandler */
@@ -769,6 +768,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	ses.maxfd = MAX(ses.maxfd, channel->writefd);
 	ses.maxfd = MAX(ses.maxfd, channel->readfd);
 	ses.maxfd = MAX(ses.maxfd, channel->errfd);
+	channel->bidir_fd = 0;
 
 	addchildpid(chansess, chansess->pid);
 
@@ -895,6 +895,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->readfd = chansess->master;
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
+		channel->bidir_fd = 1;
 
 		setnonblocking(chansess->master);
 
