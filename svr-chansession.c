@@ -933,6 +933,11 @@ static void addchildpid(struct ChanSess *chansess, pid_t pid) {
 static void execchild(const void *user_data) {
 	const struct ChanSess *chansess = user_data;
 	char *usershell = NULL;
+	char *cp = NULL;
+	char *envcp = getenv("LANG");
+	if (envcp != NULL) {
+		cp = m_strdup(envcp);
+	}
 
 	/* with uClinux we'll have vfork()ed, so don't want to overwrite the
 	 * hostkey. can't think of a workaround to clear it */
@@ -945,19 +950,21 @@ static void execchild(const void *user_data) {
 	seedrandom();
 #endif
 
-	/* clear environment */
+	/* clear environment if -e was not set */
 	/* if we're debugging using valgrind etc, we need to keep the LD_PRELOAD
 	 * etc. This is hazardous, so should only be used for debugging. */
+	if ( !svr_opts.pass_on_env) {
 #ifndef DEBUG_VALGRIND
 #ifdef HAVE_CLEARENV
-	clearenv();
+		clearenv();
 #else /* don't HAVE_CLEARENV */
-	/* Yay for posix. */
-	if (environ) {
-		environ[0] = NULL;
-	}
+		/* Yay for posix. */
+		if (environ) {
+			environ[0] = NULL;
+		}
 #endif /* HAVE_CLEARENV */
 #endif /* DEBUG_VALGRIND */
+	}
 
 #if DROPBEAR_SVR_MULTIUSER
 	/* We can only change uid/gid as root ... */
@@ -991,6 +998,10 @@ static void execchild(const void *user_data) {
 	addnewvar("HOME", ses.authstate.pw_dir);
 	addnewvar("SHELL", get_user_shell());
 	addnewvar("PATH", DEFAULT_PATH);
+	if (cp != NULL) {
+		addnewvar("LANG", cp);
+		m_free(cp);
+	}	
 	if (chansess->term != NULL) {
 		addnewvar("TERM", chansess->term);
 	}
