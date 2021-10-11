@@ -82,6 +82,14 @@ static int sesscheckclose(const struct Channel *channel) {
 	return chansess->exit.exitpid != -1;
 }
 
+/* Handler for childs exiting, store the state for return to the client */
+
+/* There's a particular race we have to watch out for: if the forked child
+ * executes, exits, and this signal-handler is called, all before the parent
+ * gets to run, then the childpids[] array won't have the pid in it. Hence we
+ * use the svr_ses.lastexit struct to hold the exit, which is then compared by
+ * the parent when it runs. This work correctly at least in the case of a
+ * single shell spawned (ie the usual case) */
 void svr_chansess_checksignal(void) {
 	int status;
 	pid_t pid;
@@ -127,18 +135,9 @@ void svr_chansess_checksignal(void) {
 			/* we use this to determine how pid exited */
 			ex->exitsignal = -1;
 		}
-		
 	}
 }
 
-/* Handler for childs exiting, store the state for return to the client */
-
-/* There's a particular race we have to watch out for: if the forked child
- * executes, exits, and this signal-handler is called, all before the parent
- * gets to run, then the childpids[] array won't have the pid in it. Hence we
- * use the svr_ses.lastexit struct to hold the exit, which is then compared by
- * the parent when it runs. This work correctly at least in the case of a
- * single shell spawned (ie the usual case) */
 static void sesssigchild_handler(int UNUSED(dummy)) {
 	struct sigaction sa_chld;
 
