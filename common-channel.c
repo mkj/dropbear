@@ -1151,7 +1151,7 @@ int send_msg_channel_open_init(int fd, const struct ChanType *type) {
 	return DROPBEAR_SUCCESS;
 }
 
-/* Confirmation that our channel open request (for forwardings) was 
+/* Confirmation that our channel open request was 
  * successful*/
 void recv_msg_channel_open_confirmation() {
 

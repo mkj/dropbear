@@ -201,8 +201,7 @@ void svr_session(int sock, int childpipe) {
     }
 #endif
 
-	/* Run the main for loop. NULL is for the dispatcher - only the client
-	 * code makes use of it */
+	/* Run the main for-loop. */
 	session_loop(svr_chansess_checksignal);
 
 	/* Not reached */
