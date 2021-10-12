@@ -100,7 +100,7 @@ static void printhelp(const char * progname) {
 #if INETD_MODE
 					"-i		Start for inetd\n"
 #endif
-					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
 #if DROPBEAR_PLUGIN
@@ -385,12 +385,9 @@ void svr_getopts(int argc, char ** argv) {
 		}
 	}
 #endif
-	
+
 	if (recv_window_arg) {
-		opts.recv_window = atol(recv_window_arg);
-		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
-			dropbear_exit("Bad recv window '%s'", recv_window_arg);
-		}
+		parse_recv_window(recv_window_arg);
 	}
 
 	if (maxauthtries_arg) {
@@ -402,7 +399,7 @@ void svr_getopts(int argc, char ** argv) {
 		svr_opts.maxauthtries = val;
 	}
 
-	
+
 	if (keepalive_arg) {
 		unsigned int val;
 		if (m_str_to_uint(keepalive_arg, &val) == DROPBEAR_FAILURE) {

@@ -195,5 +195,6 @@ void parse_ciphers_macs(void);
 #endif
 
 void print_version(void);
+void parse_recv_window(const char* recv_window_arg);
 
 #endif /* DROPBEAR_RUNOPTS_H_ */

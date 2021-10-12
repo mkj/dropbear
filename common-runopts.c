@@ -101,4 +101,20 @@ void print_version() {
 	fprintf(stderr, "Dropbear v%s\n", DROPBEAR_VERSION);
 }
 
+void parse_recv_window(const char* recv_window_arg) {
+	int ret;
+	unsigned int rw;
+
+	ret = m_str_to_uint(recv_window_arg, &rw);
+	if (ret == DROPBEAR_FAILURE || rw == 0 || rw > MAX_RECV_WINDOW) {
+		if (rw > MAX_RECV_WINDOW) {
+			opts.recv_window = MAX_RECV_WINDOW;
+		}
+		dropbear_log(LOG_WARNING, "Bad recv window '%s', using %d",
+			recv_window_arg, opts.recv_window);
+	} else {
+		opts.recv_window = rw;
+	}
+
+}
 

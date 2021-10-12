@@ -79,7 +79,7 @@ static void printhelp() {
 #if DROPBEAR_CLI_REMOTETCPFWD
 					"-R <[listenaddress:]listenport:remotehost:remoteport> Remote port forwarding\n"
 #endif
-					"-W <receive_window_buffer> (default %d, larger may be faster, max 1MB)\n"
+					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 					"-I <idle_timeout>  (0 is never, default %d)\n"
 #if DROPBEAR_CLI_NETCAT
@@ -451,12 +451,9 @@ void cli_getopts(int argc, char ** argv) {
 			&& cli_opts.no_cmd == 0) {
 		dropbear_exit("Command required for -f");
 	}
-	
+
 	if (recv_window_arg) {
-		opts.recv_window = atol(recv_window_arg);
-		if (opts.recv_window == 0 || opts.recv_window > MAX_RECV_WINDOW) {
-			dropbear_exit("Bad recv window '%s'", recv_window_arg);
-		}
+		parse_recv_window(recv_window_arg);
 	}
 	if (keepalive_arg) {
 		unsigned int val;
