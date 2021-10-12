@@ -86,6 +86,12 @@
 /* Required for pubkey auth */
 #define DROPBEAR_SIGNKEY_VERIFY ((DROPBEAR_SVR_PUBKEY_AUTH) || (DROPBEAR_CLIENT))
 
+/* crypt(password) must take less time than the auth failure delay
+   (250ms set in svr-auth.c). On Linux the delay depends on
+   password length, 100 characters here was empirically derived.
+
+   If a longer password is allowed Dropbear cannot compensate
+   for the crypt time which will expose which usernames exist */
 #define DROPBEAR_MAX_PASSWORD_LEN 100
 
 #define SHA1_HASH_SIZE 20
