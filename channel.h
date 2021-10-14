@@ -71,6 +71,9 @@ struct Channel {
 	/* whether close/eof messages have been exchanged */
 	int sent_close, recv_close;
 	int recv_eof, sent_eof;
+	/* once flushing is set, readfd will close once no more data is available
+	(not waiting for EOF) */
+	int flushing;
 
 	struct dropbear_progress_connection *conn_pending;
 	int initconn; /* used for TCP forwarding, whether the channel has been
@@ -93,9 +96,9 @@ struct ChanType {
 	const char *name;
 	/* Sets up the channel */
 	int (*inithandler)(struct Channel*);
-	/* Called to check whether a channel should close, separately from the FD being closed.
+	/* Called to check whether a channel should close, separately from the FD being EOF.
 	Used for noticing process exiting */
-	int (*check_close)(const struct Channel*);
+	int (*check_close)(struct Channel*);
 	/* Handler for ssh_msg_channel_request */
 	void (*reqhandler)(struct Channel*);
 	/* Called prior to sending ssh_msg_channel_close, used for sending exit status */

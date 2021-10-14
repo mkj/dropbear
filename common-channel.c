@@ -285,12 +285,25 @@ static void check_close(struct Channel *channel) {
 
 	/* if a type-specific check_close is defined we will only exit
 	   once that has been triggered. this is only used for a server "session"
-	   channel, to ensure that the shell has exited (and the exit status 
+	   channel, to ensure that the shell has exited (and the exit status
 	   retrieved) before we close things up. */
-	if (!channel->type->check_close	
+	if (!channel->type->check_close
 		|| channel->sent_close
 		|| channel->type->check_close(channel)) {
 		close_allowed = 1;
+	}
+
+	/* In flushing mode we close FDs as soon as pipes are empty.
+	This is used to drain out FDs when the process exits, in the case
+	where the FD doesn't have EOF - "sleep 10&echo hello" case */
+	if (channel->flushing) {
+		if (channel->readfd >= 0 && !fd_read_pending(channel->readfd)) {
+			close_chan_fd(channel, channel->readfd, SHUT_RD);
+		}
+		if (ERRFD_IS_READ(channel)
+			&& channel->errfd >= 0 && !fd_read_pending(channel->errfd)) {
+			close_chan_fd(channel, channel->errfd, SHUT_RD);
+		}
 	}
 
 	if (channel->recv_close && !write_pending(channel) && close_allowed) {

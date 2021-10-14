@@ -715,3 +715,22 @@ void fsync_parent_dir(const char* fn) {
 	m_free(fn_dir);
 #endif
 }
+
+int fd_read_pending(int fd) {
+	fd_set fds;
+	struct timeval timeout;
+
+	DROPBEAR_FD_ZERO(&fds);
+	FD_SET(fd, &fds);
+	while (1) {
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+		if (select(fd+1, &fds, NULL, NULL, &timeout) < 0) {
+			if (errno == EINTR) {
+				continue;
+			}
+			return 0;
+		}
+		return FD_ISSET(fd, &fds);
+	}
+}

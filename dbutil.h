@@ -90,6 +90,8 @@ char * expand_homedir_path(const char *inpath);
 
 void fsync_parent_dir(const char* fn);
 
+int fd_read_pending(int fd);
+
 #if DROPBEAR_MSAN
 /* FD_ZERO seems to leave some memory uninitialized. clear it to avoid false positives */
 #define DROPBEAR_FD_ZERO(fds) do { memset((fds), 0x0, sizeof(fd_set)); FD_ZERO(fds); } while(0)

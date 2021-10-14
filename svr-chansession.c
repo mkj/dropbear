@@ -54,7 +54,7 @@ static void closechansess(const struct Channel *channel);
 static void cleanupchansess(const struct Channel *channel);
 static int newchansess(struct Channel *channel);
 static void chansessionrequest(struct Channel *channel);
-static int sesscheckclose(const struct Channel *channel);
+static int sesscheckclose(struct Channel *channel);
 
 static void send_exitsignalstatus(const struct Channel *channel);
 static void send_msg_chansess_exitstatus(const struct Channel * channel,
@@ -77,9 +77,13 @@ extern char** environ;
 
 /* Returns whether the channel is ready to close. The child process
    must not be running (has never started, or has exited) */
-static int sesscheckclose(const struct Channel *channel) {
+static int sesscheckclose(struct Channel *channel) {
 	struct ChanSess *chansess = (struct ChanSess*)channel->typedata;
 	TRACE(("sesscheckclose, pid %d, exitpid %d", chansess->pid, chansess->exit.exitpid))
+
+	if (chansess->exit.exitpid != -1) {
+		channel->flushing = 1;
+	}
 	return chansess->pid == 0 || chansess->exit.exitpid != -1;
 }
 
