@@ -236,7 +236,7 @@ $(STATIC_LTC): $(OPTION_HEADERS)
 $(STATIC_LTM): $(OPTION_HEADERS)
 	$(MAKE) -C libtommath
 
-.PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean lint test
+.PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean lint check
 
 ltc-clean:
 	$(MAKE) -C libtomcrypt clean
@@ -265,7 +265,7 @@ tidy:
 lint:
 	cd $(srcdir); ./dropbear_lint.sh
 
-test:
+check: lint
 	make -C test
 
 ## Fuzzing targets
