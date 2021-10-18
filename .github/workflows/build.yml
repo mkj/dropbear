@@ -34,12 +34,16 @@ jobs:
             cc: clang
             # OS X says daemon() and utmp are deprecated
             wextraflags: -Wno-deprecated-declarations -Werror
+            skipcheck: True
+            exoticos: True
 
           - name: macos 11
             os: macos-11
             cc: clang
             # OS X says daemon() and utmp are deprecated
             wextraflags: -Wno-deprecated-declarations -Werror
+            skipcheck: True
+            exoticos: True
 
           # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # good to run the whole corpus to keep it working.
@@ -71,6 +75,7 @@ jobs:
 
     steps:
       - name: deps
+        if: ${{ !exoticos }}
         run: |
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
