@@ -36,14 +36,17 @@ jobs:
             wextraflags: -Wno-deprecated-declarations -Werror
             skipcheck: True
             exoticos: True
+            # fails with:
+            # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
+            ranlib: ranlib -no_warning_for_no_symbols
 
           - name: macos 11
             os: macos-11
             cc: clang
-            # OS X says daemon() and utmp are deprecated
             wextraflags: -Wno-deprecated-declarations -Werror
             skipcheck: True
             exoticos: True
+            ranlib: ranlib -no_warning_for_no_symbols
 
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
@@ -72,6 +75,7 @@ jobs:
       CONFIGURE_FLAGS: ${{ matrix.configure_flags }}
       # for fuzzing
       CXX: clang++
+      RANLIB: ${{ matrix.ranlib || 'ranlib' }}
 
     steps:
       - name: deps
