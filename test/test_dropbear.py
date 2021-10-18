@@ -49,6 +49,7 @@ def dbclient(request, *args, **kwargs):
 	if bg:
 		return subprocess.Popen(full_args, **kwargs)
 	else:
+		kwargs.setdefault("timeout", 10)
 		# wait for response
 		return subprocess.run(full_args, **kwargs)
 
