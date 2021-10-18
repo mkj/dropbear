@@ -45,23 +45,23 @@ jobs:
             skipcheck: True
             exoticos: True
 
-          # Fuzzers run standalone. A bit superfluous with cifuzz, but
-          # good to run the whole corpus to keep it working.
-          - name: fuzzing with address sanitizer
-            configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
-            ldflags: -fsanitize=address
-            extracflags: -fsanitize=address
-            fuzz: True
-            cc: clang
+          # # Fuzzers run standalone. A bit superfluous with cifuzz, but
+          # # good to run the whole corpus to keep it working.
+          # - name: fuzzing with address sanitizer
+          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
+          #   ldflags: -fsanitize=address
+          #   extracflags: -fsanitize=address
+          #   fuzz: True
+          #   cc: clang
 
-          # Undefined Behaviour sanitizer
-          - name: fuzzing with undefined behaviour sanitizer
-            configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
-            ldflags: -fsanitize=undefined
-            # don't fail with alignment due to https://github.com/libtom/libtomcrypt/issues/549
-            extracflags: -fsanitize=undefined -fno-sanitize-recover=undefined -fsanitize-recover=alignment
-            fuzz: True
-            cc: clang
+          # # Undefined Behaviour sanitizer
+          # - name: fuzzing with undefined behaviour sanitizer
+          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
+          #   ldflags: -fsanitize=undefined
+          #   # don't fail with alignment due to https://github.com/libtom/libtomcrypt/issues/549
+          #   extracflags: -fsanitize=undefined -fno-sanitize-recover=undefined -fsanitize-recover=alignment
+          #   fuzz: True
+          #   cc: clang
 
     env:
       MULTI: ${{ matrix.multi }}
