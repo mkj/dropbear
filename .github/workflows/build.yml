@@ -72,8 +72,8 @@ jobs:
     steps:
       - name: deps
         run: |
-          apt-get -y update
-          apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
+          sudo apt-get -y update
+          sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
 
       - uses: actions/checkout@v2
 
