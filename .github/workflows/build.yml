@@ -75,7 +75,7 @@ jobs:
 
     steps:
       - name: deps
-        if: ${{ !exoticos }}
+        if: ${{ !matrix.exoticos }}
         run: |
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
