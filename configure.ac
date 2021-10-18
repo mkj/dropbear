@@ -862,7 +862,7 @@ LIBTOM_FILES="libtomcrypt/Makefile libtommath/Makefile"
 fi
 
 AC_CONFIG_HEADERS([config.h])
-AC_CONFIG_FILES(Makefile $LIBTOM_FILES)
+AC_CONFIG_FILES(Makefile $LIBTOM_FILES test/Makefile)
 AC_OUTPUT
 
 AC_MSG_NOTICE()
