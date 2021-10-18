@@ -841,19 +841,27 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		pty_make_controlling_tty(&chansess->slave, chansess->tty);
 		
 		if ((dup2(chansess->slave, STDIN_FILENO) < 0) ||
-			(dup2(chansess->slave, STDERR_FILENO) < 0) ||
 			(dup2(chansess->slave, STDOUT_FILENO) < 0)) {
 			TRACE(("leave ptycommand: error redirecting filedesc"))
 			return DROPBEAR_FAILURE;
 			}
 
-		close(chansess->slave);
-
 		/* write the utmp/wtmp login record - must be after changing the
-		 * terminal used for stdout with the dup2 above */
+		 * terminal used for stdout with the dup2 above, otherwise
+		 * the wtmp login will not be recorded */
 		li = chansess_login_alloc(chansess);
 		login_login(li);
+		dropbear_log(LOG_WARNING, "bad thing happened");
 		login_free_entry(li);
+
+		/* Can now dup2 stderr. Messages from login_login() have gone
+		to the parent stderr */
+		if (dup2(chansess->slave, STDERR_FILENO) < 0) {
+			TRACE(("leave ptycommand: error redirecting filedesc"))
+			return DROPBEAR_FAILURE;
+		}
+
+		close(chansess->slave);
 
 #if DO_MOTD
 		if (svr_opts.domotd && !chansess->cmd) {
