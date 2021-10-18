@@ -23,3 +23,6 @@ Makefile
 config.h
 default_options_guard.h
 tags
+.pytest*
+*.pyc
+/test/venv
