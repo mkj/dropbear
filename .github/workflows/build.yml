@@ -87,24 +87,9 @@ jobs:
         if: ${{ matrix.apt != 'no' }}
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
+          sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv $CC
 
       - uses: actions/checkout@v2
-
-      - name: cache pip
-        if: ${{ !env.ACT }}
-        uses: actions/cache@v2
-        with:
-          path: test/venv
-          key: ${{ runner.os }}-pip-${{ hashFiles('test/requirements.txt') }}
-          restore-keys: ${{ runner.os }}-pip-
-
-      - name: cache fuzzcorpus
-        if: ${{ !env.ACT }}
-        uses: actions/cache@v2
-        with:
-          path: fuzzcorpus
-          key: "hg.ucc/fuzzcorpus"
 
       - name: configure
         run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
@@ -143,8 +128,7 @@ jobs:
 
       - name: check
         if: ${{ matrix.runcheck != 'no' }}
-      # run in a TTY for some tests
-        run: socat - EXEC:"make check",pty
+        run: make check
 
       # Sanity check that the binary runs
       - name: genrsa
