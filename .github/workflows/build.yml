@@ -11,6 +11,10 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-20.04' }}
     strategy:
       matrix:
+        # Rather than a boolean False we use eg
+        #   runcheck: 'no'
+        # Otherwise GH expressions will make a None var
+        # compare with False. We want an undefined default of True.
         include:
           - name: plain linux
 
@@ -24,7 +28,7 @@ jobs:
             # NOWRITEV is unrelated, test here to save a job
             nowritev: 1
             # pytest relies on python3.7
-            skipcheck: True
+            runcheck: 'no'
 
           - name: linux clang
             cc: clang
@@ -34,8 +38,8 @@ jobs:
             cc: clang
             # OS X says daemon() and utmp are deprecated
             wextraflags: -Wno-deprecated-declarations -Werror
-            skipcheck: True
-            exoticos: True
+            runcheck: 'no'
+            apt: 'no'
             # fails with:
             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
             ranlib: ranlib -no_warning_for_no_symbols
@@ -44,8 +48,8 @@ jobs:
             os: macos-11
             cc: clang
             wextraflags: -Wno-deprecated-declarations -Werror
-            skipcheck: True
-            exoticos: True
+            runcheck: 'no'
+            apt: 'no'
             ranlib: ranlib -no_warning_for_no_symbols
 
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
@@ -79,7 +83,7 @@ jobs:
 
     steps:
       - name: deps
-        if: ${{ !matrix.exoticos }}
+        if: ${{ matrix.apt != 'no' }}
         run: |
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv socat $CC
@@ -87,6 +91,7 @@ jobs:
       - uses: actions/checkout@v2
 
       - name: cache pip
+        if: ${{ !env.ACT }}
         uses: actions/cache@v2
         with:
           path: test/venv
@@ -94,6 +99,7 @@ jobs:
           restore-keys: ${{ runner.os }}-pip-
 
       - name: cache fuzzcorpus
+        if: ${{ !env.ACT }}
         uses: actions/cache@v2
         with:
           path: fuzzcorpus
@@ -126,8 +132,16 @@ jobs:
           mkdir -p ~/.ssh
           ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
 
+        # upload config.log if something has failed
+      - name: config.log
+        if: ${{ !env.ACT && (failure() || cancelled()) }}
+        uses: actions/upload-artifact@v2
+        with:
+          name: config.log
+          path: config.log
+
       - name: check
-        if: ${{ !matrix.skipcheck }}
+        if: ${{ matrix.runcheck != 'no' }}
       # run in a TTY for some tests
         run: socat - EXEC:"make check",pty
 
