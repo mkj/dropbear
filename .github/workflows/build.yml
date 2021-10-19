@@ -117,6 +117,7 @@ jobs:
         run: |
           mkdir -p ~/.ssh
           ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
+          find ~/.ssh/authorized_keys -ls
 
         # upload config.log if something has failed
       - name: config.log

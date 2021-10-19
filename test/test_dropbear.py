@@ -35,6 +35,10 @@ def dropbear(request):
 	# Ready
 	yield p
 	p.terminate()
+	print("Terminated dropbear. Flushing output:")
+	for l in p.stderr:
+		print(l.rstrip())
+	print("Done")
 
 def dbclient(request, *args, **kwargs):
 	opt = request.config.option
