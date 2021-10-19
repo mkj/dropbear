@@ -16,6 +16,7 @@ if test -s "`which hg`" && test -d "$srcdir/.hg"; then
 fi
 
 ORIGCFLAGS="$CFLAGS"
+LATE_CFLAGS=""
 # Checks for programs.
 AC_PROG_CC
 
@@ -126,6 +127,17 @@ if test "$hardenbuild" -eq 1; then
 	DB_TRYADDCFLAGS([-mindirect-branch=thunk])
 
 fi
+
+AC_ARG_ENABLE(werror,
+	[  --enable-werror         Set -Werror when building],
+	[
+		if test "x$enableval" = "xyes"; then
+			# -Werror shouldn't be set when configure runs tests.
+			# We add it to the Makefile's CFLAGS
+			LATE_CFLAGS+="$LATE_CFLAGS -Werror"
+			AC_MSG_NOTICE(Enabling -Werror)
+		fi
+	], [])
 
 # large file support is useful for scp
 AC_SYS_LARGEFILE
@@ -860,6 +872,9 @@ if test $BUNDLED_LIBTOM = 1 ; then
 (cd $srcdir; find libtomcrypt -type d) | xargs mkdir -pv 
 LIBTOM_FILES="libtomcrypt/Makefile libtommath/Makefile"
 fi
+
+# flags that should be set in Makefile but not for configure tests
+CFLAGS="$CFLAGS $LATE_CFLAGS"
 
 AC_CONFIG_HEADERS([config.h])
 AC_CONFIG_FILES(Makefile $LIBTOM_FILES test/Makefile)

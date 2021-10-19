@@ -15,6 +15,8 @@ jobs:
         #   runcheck: 'no'
         # Otherwise GH expressions will make a None var
         # compare with False. We want an undefined default of True.
+
+        # MULTI and NOWRITEV are passed as integers to the build
         include:
           - name: plain linux
 
@@ -24,10 +26,10 @@ jobs:
           - name: bundled libtom, bionic , no writev()
             # test can use an older distro with bundled libtommath
             os: ubuntu-18.04
-            configure_flags: --enable-bundled-libtom
+            configure_flags: --enable-bundled-libtom --enable-werror
             # NOWRITEV is unrelated, test here to save a job
             nowritev: 1
-            # pytest relies on python3.7
+            # our tests expect >= python3.7
             runcheck: 'no'
 
           - name: linux clang
@@ -37,7 +39,7 @@ jobs:
             os: macos-10.15
             cc: clang
             # OS X says daemon() and utmp are deprecated
-            wextraflags: -Wno-deprecated-declarations -Werror
+            extracflags: -Wno-deprecated-declarations
             runcheck: 'no'
             apt: 'no'
             # fails with:
@@ -47,7 +49,7 @@ jobs:
           - name: macos 11
             os: macos-11
             cc: clang
-            wextraflags: -Wno-deprecated-declarations -Werror
+            extracflags: -Wno-deprecated-declarations
             runcheck: 'no'
             apt: 'no'
             ranlib: ranlib -no_warning_for_no_symbols
@@ -55,7 +57,7 @@ jobs:
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
           # - name: fuzzing with address sanitizer
-          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
+          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom --enable-werror
           #   ldflags: -fsanitize=address
           #   extracflags: -fsanitize=address
           #   fuzz: True
@@ -63,7 +65,7 @@ jobs:
 
           # # Undefined Behaviour sanitizer
           # - name: fuzzing with undefined behaviour sanitizer
-          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom
+          #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom --enable-werror
           #   ldflags: -fsanitize=undefined
           #   # don't fail with alignment due to https://github.com/libtom/libtomcrypt/issues/549
           #   extracflags: -fsanitize=undefined -fno-sanitize-recover=undefined -fsanitize-recover=alignment
@@ -72,11 +74,10 @@ jobs:
 
     env:
       MULTI: ${{ matrix.multi }}
-      WEXTRAFLAGS: ${{ matrix.wextraflags || '-Werror' }}
       CC: ${{ matrix.cc || 'gcc' }}
       LDFLAGS: ${{ matrix.ldflags }}
       EXTRACFLAGS: ${{ matrix.extracflags }}
-      CONFIGURE_FLAGS: ${{ matrix.configure_flags }}
+      CONFIGURE_FLAGS: ${{ matrix.configure_flags || '--enable-werror' }}
       # for fuzzing
       CXX: clang++
       RANLIB: ${{ matrix.ranlib || 'ranlib' }}
@@ -106,7 +107,7 @@ jobs:
           key: "hg.ucc/fuzzcorpus"
 
       - name: configure
-        run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $WEXTRAFLAGS $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
+        run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
 
       - name: nowritev
         if: ${{ matrix.nowritev }}

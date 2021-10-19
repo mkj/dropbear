@@ -697,6 +697,7 @@ ac_user_opts='
 enable_option_checking
 enable_static
 enable_harden
+enable_werror
 enable_largefile
 with_zlib
 enable_zlib
@@ -1354,6 +1355,7 @@ Optional Features:
   --enable-FEATURE[=ARG]  include FEATURE [ARG=yes]
   --enable-static         Build static binaries
   --disable-harden        Don't set hardened build flags
+  --enable-werror         Set -Werror when building
   --disable-largefile     omit support for large files
   --disable-zlib          Don't include zlib support
   --enable-pam            Try to include PAM support
@@ -2378,6 +2380,7 @@ $as_echo "$as_me: Source directory Mercurial base revision $hgrev" >&6;}
 fi
 
 ORIGCFLAGS="$CFLAGS"
+LATE_CFLAGS=""
 # Checks for programs.
 ac_ext=c
 ac_cpp='$CPP $CPPFLAGS'
@@ -3505,6 +3508,20 @@ rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
 }
 
 fi
+
+# Check whether --enable-werror was given.
+if test "${enable_werror+set}" = set; then :
+  enableval=$enable_werror;
+		if test "x$enableval" = "xyes"; then
+			# -Werror shouldn't be set when configure runs tests.
+			# We add it to the Makefile's CFLAGS
+			LATE_CFLAGS+="$LATE_CFLAGS -Werror"
+			{ $as_echo "$as_me:${as_lineno-$LINENO}: Enabling -Werror" >&5
+$as_echo "$as_me: Enabling -Werror" >&6;}
+		fi
+
+fi
+
 
 # large file support is useful for scp
 # Check whether --enable-largefile was given.
@@ -7439,6 +7456,9 @@ if test $BUNDLED_LIBTOM = 1 ; then
 (cd $srcdir; find libtomcrypt -type d) | xargs mkdir -pv
 LIBTOM_FILES="libtomcrypt/Makefile libtommath/Makefile"
 fi
+
+# flags that should be set in Makefile but not for configure tests
+CFLAGS="$CFLAGS $LATE_CFLAGS"
 
 ac_config_headers="$ac_config_headers config.h"
 
