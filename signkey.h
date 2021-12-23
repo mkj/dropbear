@@ -44,6 +44,7 @@ enum signkey_type {
 	DROPBEAR_SIGNKEY_ECDSA_NISTP256,
 	DROPBEAR_SIGNKEY_ECDSA_NISTP384,
 	DROPBEAR_SIGNKEY_ECDSA_NISTP521,
+	DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256,
 #endif /* DROPBEAR_ECDSA */
 #if DROPBEAR_ED25519
 	DROPBEAR_SIGNKEY_ED25519,
@@ -63,6 +64,7 @@ enum signature_type {
 	DROPBEAR_SIGNATURE_ECDSA_NISTP256 = DROPBEAR_SIGNKEY_ECDSA_NISTP256,
 	DROPBEAR_SIGNATURE_ECDSA_NISTP384 = DROPBEAR_SIGNKEY_ECDSA_NISTP384,
 	DROPBEAR_SIGNATURE_ECDSA_NISTP521 = DROPBEAR_SIGNKEY_ECDSA_NISTP521,
+	DROPBEAR_SIGNATURE_SK_ECDSA_NISTP256 = DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256,
 #endif /* DROPBEAR_ECDSA */
 #if DROPBEAR_ED25519
 	DROPBEAR_SIGNATURE_ED25519 = DROPBEAR_SIGNKEY_ED25519,
@@ -130,6 +132,7 @@ void sign_key_free(sign_key *key);
 void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype, const buffer *data_buf);
 #if DROPBEAR_SIGNKEY_VERIFY
 int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf);
+int sk_buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf, char* app, unsigned int applen);
 char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloblen);
 #endif
 int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 

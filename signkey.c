@@ -28,6 +28,7 @@
 #include "buffer.h"
 #include "ssh.h"
 #include "ecdsa.h"
+#include "sk-ecdsa.h"
 #include "rsa.h"
 #include "dss.h"
 #include "ed25519.h"
@@ -43,6 +44,7 @@ static const char * const signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 	"ecdsa-sha2-nistp256",
 	"ecdsa-sha2-nistp384",
 	"ecdsa-sha2-nistp521",
+	"sk-ecdsa-sha2-nistp256@openssh.com",
 #endif /* DROPBEAR_ECDSA */
 #if DROPBEAR_ED25519
 	"ssh-ed25519",
@@ -185,6 +187,7 @@ signkey_key_ptr(sign_key *key, enum signkey_type type) {
 #if DROPBEAR_ECDSA
 #if DROPBEAR_ECC_256
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
+		case DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256:
 			return (void**)&key->ecckey256;
 #endif
 #if DROPBEAR_ECC_384
@@ -260,7 +263,11 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	}
 #endif
 #if DROPBEAR_ECDSA
-	if (signkey_is_ecdsa(keytype)) {
+	if (signkey_is_ecdsa(keytype)
+#if DROPBEAR_SK_ECDSA
+		|| signkey_is_sk_ecdsa(keytype)
+#endif
+	) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
@@ -639,6 +646,41 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 }
 
 #if DROPBEAR_SIGNKEY_VERIFY
+
+#if DROPBEAR_SK_ECDSA
+
+int sk_buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf, char* app, unsigned int applen) {
+
+	char *type_name = NULL;
+	unsigned int type_name_len = 0;
+	enum signature_type sigtype;
+	enum signkey_type keytype;
+
+	TRACE(("enter sk_buf_verify"))
+
+	buf_getint(buf); /* blob length */
+	type_name = buf_getstring(buf, &type_name_len);
+	sigtype = signature_type_from_name(type_name, type_name_len);
+	m_free(type_name);
+
+	if (expect_sigtype != sigtype) {
+		dropbear_exit("Non-matching signing type");
+	}
+
+	keytype = signkey_type_from_signature(sigtype);
+
+	if (signkey_is_sk_ecdsa(keytype)) {
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
+		if (eck && *eck) {
+			return buf_sk_ecdsa_verify(buf, *eck, data_buf, app, applen);
+		}
+	}
+	dropbear_exit("Non-matching signing type");
+	return DROPBEAR_FAILURE;
+}
+
+#endif
+
 /* Return DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the

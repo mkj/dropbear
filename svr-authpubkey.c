@@ -64,6 +64,7 @@
 #include "ssh.h"
 #include "packet.h"
 #include "algo.h"
+#include "sk-ecdsa.h"
 
 #if DROPBEAR_SVR_PUBKEY_AUTH
 
@@ -95,6 +96,11 @@ void svr_auth_pubkey(int valid_user) {
 	enum signature_type sigtype;
 	enum signkey_type keytype;
     int auth_failure = 1;
+	int verify_ret = DROPBEAR_FAILURE;
+#if DROPBEAR_SK_ECDSA
+	char* app = NULL;
+	unsigned int applen;
+#endif
 
 	TRACE(("enter pubkeyauth"))
 
@@ -182,11 +188,17 @@ void svr_auth_pubkey(int valid_user) {
 		goto out;
 	}
 
+#if DROPBEAR_SK_ECDSA
+	if (signkey_is_sk_ecdsa(keytype)) {
+		app = buf_getstring (ses.payload, &applen);
+	}
+#endif
+
 	/* create the data which has been signed - this a string containing
 	 * session_id, concatenated with the payload packet up to the signature */
 	assert(ses.payload_beginning <= ses.payload->pos);
 	sign_payload_length = ses.payload->pos - ses.payload_beginning;
-	signbuf = buf_new(ses.payload->pos + 4 + ses.session_id->len);
+	signbuf = buf_new(ses.payload->pos + 12 + ses.session_id->len);
 	buf_putbufstring(signbuf, ses.session_id);
 
 	/* The entire contents of the payload prior. */
@@ -200,7 +212,16 @@ void svr_auth_pubkey(int valid_user) {
 
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(keyblob, keybloblen);
-	if (buf_verify(ses.payload, key, sigtype, signbuf) == DROPBEAR_SUCCESS) {
+#if DROPBEAR_SK_ECDSA
+	if (signkey_is_sk_ecdsa(keytype)) {
+		verify_ret = sk_buf_verify(ses.payload, key, sigtype, signbuf, app, applen);
+	} else {
+		verify_ret = buf_verify(ses.payload, key, sigtype, signbuf);
+	}
+#else
+	verify_ret = buf_verify(ses.payload, key, sigtype, signbuf);
+#endif
+	if (verify_ret == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
 				"Pubkey auth succeeded for '%s' with key %s from %s",
 				ses.authstate.pw_name, fp, svr_ses.addrstring);
@@ -232,6 +253,11 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
+#if DROPBEAR_SK_ECDSA
+	if (app) {
+		m_free(app);
+	}
+#endif
 	/* Retain pubkey options only if auth succeeded */
 	if (!ses.authstate.authdone) {
 		svr_pubkey_options_cleanup();

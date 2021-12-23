@@ -250,6 +250,9 @@ algo_type sigalgs[] = {
 #if DROPBEAR_ECC_521
 	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNATURE_ECDSA_NISTP521, NULL, 1, NULL},
 #endif
+#if DROPBEAR_SK_ECDSA
+	{"sk-ecdsa-sha2-nistp256@openssh.com", DROPBEAR_SIGNATURE_SK_ECDSA_NISTP256, NULL, 1, NULL},
+#endif
 #endif
 #if DROPBEAR_RSA
 #if DROPBEAR_RSA_SHA256

@@ -95,6 +95,7 @@
 #define DROPBEAR_MAX_PASSWORD_LEN 100
 
 #define SHA1_HASH_SIZE 20
+#define SHA256_HASH_SIZE 32
 #define MD5_HASH_SIZE 16
 #define MAX_HASH_SIZE 64 /* sha512 */
 

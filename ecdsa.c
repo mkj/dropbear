@@ -86,11 +86,13 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 	/* string   "[identifier]" */
 	identifier = (unsigned char*)buf_getstring(buf, &identifier_len);
 
-	if (key_ident_len != identifier_len + strlen("ecdsa-sha2-")) {
+	if (key_ident_len != identifier_len + strlen ("sk-") + strlen ("@openssh.com") + strlen("ecdsa-sha2-") &&
+		key_ident_len != identifier_len + strlen("ecdsa-sha2-")) {
 		TRACE(("Bad identifier lengths"))
 		goto out;
 	}
-	if (memcmp(&key_ident[strlen("ecdsa-sha2-")], identifier, identifier_len) != 0) {
+	if (memcmp(&key_ident[strlen("sk-ecdsa-sha2-")], identifier, identifier_len) != 0 &&
+		memcmp(&key_ident[strlen("ecdsa-sha2-")], identifier, identifier_len) != 0) {
 		TRACE(("mismatching identifiers"))
 		goto out;
 	}
@@ -247,7 +249,7 @@ out:
 
 /* returns values in s and r
    returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-static int buf_get_ecdsa_verify_params(buffer *buf,
+int buf_get_ecdsa_verify_params(buffer *buf,
 			void *r, void* s) {
 	int ret = DROPBEAR_FAILURE;
 	unsigned int sig_len;
