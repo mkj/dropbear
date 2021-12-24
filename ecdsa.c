@@ -90,7 +90,7 @@ ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 	rest_len = prefix_len;
 
 #if DROPBEAR_SK_ECDSA
-	if (memcmp (key_ident, "sk-", 3) == 0) {
+	if (strncmp (key_ident, "sk-", 3) == 0) {
 		prefix_len = strlen ("sk-ecdsa-sha2-");
 		rest_len = prefix_len + strlen ("@openssh.com");
 	}
