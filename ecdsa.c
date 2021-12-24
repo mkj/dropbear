@@ -76,23 +76,31 @@ ecc_key *gen_ecdsa_priv_key(unsigned int bit_size) {
 
 ecc_key *buf_get_ecdsa_pub_key(buffer* buf) {
 	unsigned char *key_ident = NULL, *identifier = NULL;
-	unsigned int key_ident_len, identifier_len;
+	unsigned int key_ident_len, identifier_len, prefix_len, rest_len;
 	buffer *q_buf = NULL;
 	struct dropbear_ecc_curve **curve;
 	ecc_key *new_key = NULL;
 
-	/* string   "ecdsa-sha2-[identifier]" */
+	/* string   "ecdsa-sha2-[identifier]" or "sk-ecdsa-sha2-[identifier]@openssh.com" */
 	key_ident = (unsigned char*)buf_getstring(buf, &key_ident_len);
 	/* string   "[identifier]" */
 	identifier = (unsigned char*)buf_getstring(buf, &identifier_len);
 
-	if (key_ident_len != identifier_len + strlen ("sk-") + strlen ("@openssh.com") + strlen("ecdsa-sha2-") &&
-		key_ident_len != identifier_len + strlen("ecdsa-sha2-")) {
+	prefix_len = strlen ("ecdsa-sha2-");
+	rest_len = prefix_len;
+
+#if DROPBEAR_SK_ECDSA
+	if (memcmp (key_ident, "sk-", 3) == 0) {
+		prefix_len = strlen ("sk-ecdsa-sha2-");
+		rest_len = prefix_len + strlen ("@openssh.com");
+	}
+#endif
+
+	if (key_ident_len != identifier_len + rest_len) {
 		TRACE(("Bad identifier lengths"))
 		goto out;
 	}
-	if (memcmp(&key_ident[strlen("sk-ecdsa-sha2-")], identifier, identifier_len) != 0 &&
-		memcmp(&key_ident[strlen("ecdsa-sha2-")], identifier, identifier_len) != 0) {
+	if (memcmp(&key_ident[prefix_len], identifier, identifier_len) != 0) {
 		TRACE(("mismatching identifiers"))
 		goto out;
 	}
