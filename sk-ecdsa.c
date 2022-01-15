@@ -1,15 +1,11 @@
 #include "includes.h"
+
+#if DROPBEAR_SK_ECDSA
+
 #include "dbutil.h"
 #include "ecc.h"
 #include "ecdsa.h"
 #include "sk-ecdsa.h"
-
-#if DROPBEAR_SK_ECDSA
-
-int signkey_is_sk_ecdsa(enum signkey_type type)
-{
-	return type == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256;
-}
 
 int buf_sk_ecdsa_verify(buffer *buf, const ecc_key *key, const buffer *data_buf, const char* app, unsigned int applen) {
 	/* Based on libtomcrypt's ecc_verify_hash but without the asn1 */
@@ -175,7 +171,5 @@ out:
 	}
 	return ret;
 }
-
-
 
 #endif /* DROPBEAR_SK_ECDSA */

@@ -64,7 +64,6 @@
 #include "ssh.h"
 #include "packet.h"
 #include "algo.h"
-#include "sk-ecdsa.h"
 
 #if DROPBEAR_SVR_PUBKEY_AUTH
 
@@ -97,9 +96,10 @@ void svr_auth_pubkey(int valid_user) {
 	enum signkey_type keytype;
     int auth_failure = 1;
 	int verify_ret = DROPBEAR_FAILURE;
-#if DROPBEAR_SK_ECDSA
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
 	char* app = NULL;
 	unsigned int applen;
+	int is_sk = 0;
 #endif
 
 	TRACE(("enter pubkeyauth"))
@@ -188,8 +188,18 @@ void svr_auth_pubkey(int valid_user) {
 		goto out;
 	}
 
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
 #if DROPBEAR_SK_ECDSA
-	if (signkey_is_sk_ecdsa(keytype)) {
+	if (keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256) {
+		is_sk = 1;
+	}
+#endif
+#if DROPBEAR_SK_ED25519
+	if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
+		is_sk = 1;
+	}
+#endif
+	if (is_sk) {
 		app = buf_getstring (ses.payload, &applen);
 	}
 #endif
@@ -212,8 +222,8 @@ void svr_auth_pubkey(int valid_user) {
 
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(keyblob, keybloblen);
-#if DROPBEAR_SK_ECDSA
-	if (signkey_is_sk_ecdsa(keytype)) {
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	if (is_sk) {
 		verify_ret = sk_buf_verify(ses.payload, key, sigtype, signbuf, app, applen);
 	} else {
 		verify_ret = buf_verify(ses.payload, key, sigtype, signbuf);
@@ -253,7 +263,7 @@ out:
 		sign_key_free(key);
 		key = NULL;
 	}
-#if DROPBEAR_SK_ECDSA
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
 	if (app) {
 		m_free(app);
 	}

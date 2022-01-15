@@ -38,14 +38,18 @@
  * The key will have the same format as buf_put_ed25519_key.
  * These should be freed with ed25519_key_free.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_get_ed25519_pub_key(buffer *buf, dropbear_ed25519_key *key) {
+int buf_get_ed25519_pub_key(buffer *buf, dropbear_ed25519_key *key, int sk) {
 
 	unsigned int len;
 
 	TRACE(("enter buf_get_ed25519_pub_key"))
 	dropbear_assert(key != NULL);
 
-	buf_incrpos(buf, 4+SSH_SIGNKEY_ED25519_LEN); /* int + "ssh-ed25519" */
+	if (sk) {
+		buf_incrpos(buf, 30); /* int + "sk-ssh-ed25519@openssh.com" */
+	} else {
+		buf_incrpos(buf, 4+SSH_SIGNKEY_ED25519_LEN); /* int + "ssh-ed25519" */
+	}
 
 	len = buf_getint(buf);
 	if (len != CURVE25519_LEN || buf->len - buf->pos < len) {

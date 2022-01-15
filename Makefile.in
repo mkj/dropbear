@@ -36,7 +36,7 @@ COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		queue.o \
 		atomicio.o compat.o fake-rfc2553.o \
 		ltc_prng.o ecc.o ecdsa.o sk-ecdsa.o crypto_desc.o \
-		curve25519.o ed25519.o \
+		curve25519.o ed25519.o sk-ed25519.o \
 		dbmalloc.o \
 		gensignkey.o gendss.o genrsa.o gened25519.o
 
