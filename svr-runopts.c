@@ -669,7 +669,7 @@ void load_all_hostkeys() {
 	}
 #endif
 #if DROPBEAR_SK_ECDSA
-	disablekey(DROPBEAR_SIGNKEY_SK_ECDSA);
+	disablekey(DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256);
 #endif 
 #if DROPBEAR_SK_ED25519
 	disablekey(DROPBEAR_SIGNKEY_SK_ED25519);
