@@ -239,6 +239,9 @@ algo_type ssh_nocompress[] = {
 algo_type sigalgs[] = {
 #if DROPBEAR_ED25519
 	{"ssh-ed25519", DROPBEAR_SIGNATURE_ED25519, NULL, 1, NULL},
+#if DROPBEAR_SK_ED25519
+	{"sk-ssh-ed25519@openssh.com", DROPBEAR_SIGNATURE_SK_ED25519, NULL, 1, NULL},
+#endif
 #endif
 #if DROPBEAR_ECDSA
 #if DROPBEAR_ECC_256
@@ -249,6 +252,9 @@ algo_type sigalgs[] = {
 #endif
 #if DROPBEAR_ECC_521
 	{"ecdsa-sha2-nistp521", DROPBEAR_SIGNATURE_ECDSA_NISTP521, NULL, 1, NULL},
+#endif
+#if DROPBEAR_SK_ECDSA
+	{"sk-ecdsa-sha2-nistp256@openssh.com", DROPBEAR_SIGNATURE_SK_ECDSA_NISTP256, NULL, 1, NULL},
 #endif
 #endif
 #if DROPBEAR_RSA
