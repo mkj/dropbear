@@ -254,7 +254,7 @@ out:
 
 /* returns values in s and r
    returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_get_ecdsa_verify_params(buffer *buf,
+static int buf_get_ecdsa_verify_params(buffer *buf,
 			void *r, void* s) {
 	int ret = DROPBEAR_FAILURE;
 	unsigned int sig_len;

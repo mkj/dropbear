@@ -26,8 +26,6 @@ void buf_put_ecdsa_pub_key(buffer *buf, ecc_key *key);
 void buf_put_ecdsa_priv_key(buffer *buf, ecc_key *key);
 enum signkey_type ecdsa_signkey_type(const ecc_key * key);
 
-int buf_get_ecdsa_verify_params(buffer *buf, void *r, void* s);
-
 void buf_put_ecdsa_sign(buffer *buf, const ecc_key *key, const buffer *data_buf);
 int buf_ecdsa_verify(buffer *buf, const ecc_key *key, const buffer *data_buf);
 /* Returns 1 on success */
