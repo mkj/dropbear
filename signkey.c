@@ -693,9 +693,6 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 
 	TRACE(("enter buf_verify"))
 
-	printhex("buf", buf->data, buf->pos);
-	printhex("remw", &buf->data[buf->pos], buf->len-buf->pos);
-
 	buf_getint(buf); /* blob length */
 	type_name = buf_getstring(buf, &type_name_len);
 	sigtype = signature_type_from_name(type_name, type_name_len);
