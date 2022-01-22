@@ -28,6 +28,8 @@
 #include "buffer.h"
 #include "ssh.h"
 #include "ecdsa.h"
+#include "sk-ecdsa.h"
+#include "sk-ed25519.h"
 #include "rsa.h"
 #include "dss.h"
 #include "ed25519.h"
@@ -43,9 +45,15 @@ static const char * const signkey_names[DROPBEAR_SIGNKEY_NUM_NAMED] = {
 	"ecdsa-sha2-nistp256",
 	"ecdsa-sha2-nistp384",
 	"ecdsa-sha2-nistp521",
+#if DROPBEAR_SK_ECDSA
+	"sk-ecdsa-sha2-nistp256@openssh.com",
+#endif /* DROPBEAR_SK_ECDSA */
 #endif /* DROPBEAR_ECDSA */
 #if DROPBEAR_ED25519
 	"ssh-ed25519",
+#if DROPBEAR_SK_ED25519
+	"sk-ssh-ed25519@openssh.com",
+#endif /* DROPBEAR_SK_ED25519 */
 #endif /* DROPBEAR_ED25519 */
 	/* "rsa-sha2-256" is special-cased below since it is only a signature name, not key type */
 };
@@ -180,11 +188,17 @@ signkey_key_ptr(sign_key *key, enum signkey_type type) {
 	switch (type) {
 #if DROPBEAR_ED25519
 		case DROPBEAR_SIGNKEY_ED25519:
+#if DROPBEAR_SK_ED25519
+		case DROPBEAR_SIGNKEY_SK_ED25519:
+#endif
 			return (void**)&key->ed25519key;
 #endif
 #if DROPBEAR_ECDSA
 #if DROPBEAR_ECC_256
 		case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
+#if DROPBEAR_SK_ECDSA
+		case DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256:
+#endif
 			return (void**)&key->ecckey256;
 #endif
 #if DROPBEAR_ECC_384
@@ -260,7 +274,11 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	}
 #endif
 #if DROPBEAR_ECDSA
-	if (signkey_is_ecdsa(keytype)) {
+	if (signkey_is_ecdsa(keytype)
+#if DROPBEAR_SK_ECDSA
+		|| keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256
+#endif
+	) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck) {
 			if (*eck) {
@@ -276,14 +294,31 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	}
 #endif
 #if DROPBEAR_ED25519
-	if (keytype == DROPBEAR_SIGNKEY_ED25519) {
+	if (keytype == DROPBEAR_SIGNKEY_ED25519
+#if DROPBEAR_SK_ED25519
+		|| keytype == DROPBEAR_SIGNKEY_SK_ED25519
+#endif
+    ) {
 		ed25519_key_free(key->ed25519key);
 		key->ed25519key = m_malloc(sizeof(*key->ed25519key));
-		ret = buf_get_ed25519_pub_key(buf, key->ed25519key);
+		ret = buf_get_ed25519_pub_key(buf, key->ed25519key, keytype);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->ed25519key);
 			key->ed25519key = NULL;
 		}
+	}
+#endif
+
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	if (0
+#if DROPBEAR_SK_ED25519
+		|| keytype == DROPBEAR_SIGNKEY_SK_ED25519
+#endif
+#if DROPBEAR_SK_ECDSA
+		|| keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256
+#endif
+	) {
+		key->sk_app = buf_getstring(buf, &key->sk_applen);
 	}
 #endif
 
@@ -401,7 +436,11 @@ void buf_put_pub_key(buffer* buf, sign_key *key, enum signkey_type type) {
 	}
 #endif
 #if DROPBEAR_ED25519
-	if (type == DROPBEAR_SIGNKEY_ED25519) {
+	if (type == DROPBEAR_SIGNKEY_ED25519
+#if DROPBEAR_SK_ED25519
+		|| type == DROPBEAR_SIGNKEY_SK_ED25519
+#endif
+	) {
 		buf_put_ed25519_pub_key(pubkeys, key->ed25519key);
 	}
 #endif
@@ -495,6 +534,11 @@ void sign_key_free(sign_key *key) {
 #endif
 
 	m_free(key->filename);
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	if (key->sk_app) {
+		m_free(key->sk_app);
+	}
+#endif
 
 	m_free(key);
 	TRACE2(("leave sign_key_free"))
@@ -639,6 +683,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 }
 
 #if DROPBEAR_SIGNKEY_VERIFY
+
 /* Return DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the
@@ -693,6 +738,22 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 			dropbear_exit("No Ed25519 key to verify signature");
 		}
 		return buf_ed25519_verify(buf, key->ed25519key, data_buf);
+	}
+#endif
+#if DROPBEAR_SK_ECDSA
+	if (keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256) {
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
+		if (eck && *eck) {
+			return buf_sk_ecdsa_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+		}
+	}
+#endif
+#if DROPBEAR_SK_ED25519
+	if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
+		dropbear_ed25519_key **eck = (dropbear_ed25519_key**)signkey_key_ptr(key, keytype);
+		if (eck && *eck) {
+			return buf_sk_ed25519_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+		}
 	}
 #endif
 
