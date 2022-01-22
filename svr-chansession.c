@@ -851,7 +851,6 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		 * the wtmp login will not be recorded */
 		li = chansess_login_alloc(chansess);
 		login_login(li);
-		dropbear_log(LOG_WARNING, "bad thing happened");
 		login_free_entry(li);
 
 		/* Can now dup2 stderr. Messages from login_login() have gone
