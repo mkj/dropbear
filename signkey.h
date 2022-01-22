@@ -122,6 +122,12 @@ struct SIGN_key {
 #if DROPBEAR_ED25519
 	struct dropbear_ED25519_Key * ed25519key;
 #endif
+
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	/* application ID for U2F/FIDO key types, a malloced string */
+	char * sk_app;
+	unsigned int sk_applen;
+#endif
 };
 
 typedef struct SIGN_key sign_key;

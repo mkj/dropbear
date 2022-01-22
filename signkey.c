@@ -232,7 +232,6 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 	unsigned int len;
 	enum signkey_type keytype;
 	int ret = DROPBEAR_FAILURE;
-	int is_sk = 0;
 
 	TRACE2(("enter buf_get_pub_key"))
 
@@ -300,18 +299,26 @@ int buf_get_pub_key(buffer *buf, sign_key *key, enum signkey_type *type) {
 		|| keytype == DROPBEAR_SIGNKEY_SK_ED25519
 #endif
     ) {
-#if DROPBEAR_SK_ED25519
-		if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
-			is_sk = 1;
-		}
-#endif
 		ed25519_key_free(key->ed25519key);
 		key->ed25519key = m_malloc(sizeof(*key->ed25519key));
-		ret = buf_get_ed25519_pub_key(buf, key->ed25519key, is_sk);
+		ret = buf_get_ed25519_pub_key(buf, key->ed25519key, keytype);
 		if (ret == DROPBEAR_FAILURE) {
 			m_free(key->ed25519key);
 			key->ed25519key = NULL;
 		}
+	}
+#endif
+
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	if (0
+#if DROPBEAR_SK_ED25519
+		|| keytype == DROPBEAR_SIGNKEY_SK_ED25519
+#endif
+#if DROPBEAR_SK_ECDSA
+		|| keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256
+#endif
+	) {
+		key->sk_app = buf_getstring(buf, &key->sk_applen);
 	}
 #endif
 
@@ -527,6 +534,7 @@ void sign_key_free(sign_key *key) {
 #endif
 
 	m_free(key->filename);
+	m_free(key->sk_app);
 
 	m_free(key);
 	TRACE2(("leave sign_key_free"))
@@ -672,50 +680,6 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 
 #if DROPBEAR_SIGNKEY_VERIFY
 
-#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
-
-int sk_buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf, char* app, unsigned int applen) {
-
-	char *type_name = NULL;
-	unsigned int type_name_len = 0;
-	enum signature_type sigtype;
-	enum signkey_type keytype;
-
-	TRACE(("enter sk_buf_verify"))
-
-	buf_getint(buf); /* blob length */
-	type_name = buf_getstring(buf, &type_name_len);
-	sigtype = signature_type_from_name(type_name, type_name_len);
-	m_free(type_name);
-
-	if (expect_sigtype != sigtype) {
-		dropbear_exit("Non-matching signing type");
-	}
-
-	keytype = signkey_type_from_signature(sigtype);
-
-#if DROPBEAR_SK_ECDSA
-	if (keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256) {
-		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
-		if (eck && *eck) {
-			return buf_sk_ecdsa_verify(buf, *eck, data_buf, app, applen);
-		}
-	}
-#endif
-#if DROPBEAR_SK_ED25519
-	if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
-		dropbear_ed25519_key **eck = (dropbear_ed25519_key**)signkey_key_ptr(key, keytype);
-		if (eck && *eck) {
-			return buf_sk_ed25519_verify(buf, *eck, data_buf, app, applen);
-		}
-	}
-#endif
-	dropbear_exit("Non-matching signing type");
-	return DROPBEAR_FAILURE;
-}
-
-#endif
-
 /* Return DROPBEAR_SUCCESS or DROPBEAR_FAILURE.
  * If FAILURE is returned, the position of
  * buf is undefined. If SUCCESS is returned, buf will be positioned after the
@@ -728,6 +692,9 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 	enum signkey_type keytype;
 
 	TRACE(("enter buf_verify"))
+
+	printhex("buf", buf->data, buf->pos);
+	printhex("remw", &buf->data[buf->pos], buf->len-buf->pos);
 
 	buf_getint(buf); /* blob length */
 	type_name = buf_getstring(buf, &type_name_len);
@@ -770,6 +737,22 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 			dropbear_exit("No Ed25519 key to verify signature");
 		}
 		return buf_ed25519_verify(buf, key->ed25519key, data_buf);
+	}
+#endif
+#if DROPBEAR_SK_ECDSA
+	if (keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256) {
+		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
+		if (eck && *eck) {
+			return buf_sk_ecdsa_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+		}
+	}
+#endif
+#if DROPBEAR_SK_ED25519
+	if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
+		dropbear_ed25519_key **eck = (dropbear_ed25519_key**)signkey_key_ptr(key, keytype);
+		if (eck && *eck) {
+			return buf_sk_ed25519_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+		}
 	}
 #endif
 
