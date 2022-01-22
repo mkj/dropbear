@@ -534,7 +534,11 @@ void sign_key_free(sign_key *key) {
 #endif
 
 	m_free(key->filename);
-	m_free(key->sk_app);
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	if (key->sk_app) {
+		m_free(key->sk_app);
+	}
+#endif
 
 	m_free(key);
 	TRACE2(("leave sign_key_free"))
