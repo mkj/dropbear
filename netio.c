@@ -363,12 +363,7 @@ void set_listen_fast_open(int sock) {
 void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 	int rc;
-#ifdef IPTOS_LOWDELAY
-	int iptos_val = 0;
-#endif
-#ifdef HAVE_LINUX_PKT_SCHED_H
-	int so_prio_val = 0;
-#endif
+	int val;
 
 #if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
@@ -376,37 +371,54 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 		return;
 	}
 #endif
-
 	/* Don't log ENOTSOCK errors so that this can harmlessly be called
 	 * on a client '-J' proxy pipe */
 
-	/* set the TOS bit for either ipv4 or ipv6 */
-#ifdef IPTOS_LOWDELAY
+#ifdef IPTOS_DSCP_AF21
+	/* Set the DSCP field for outbound IP packet priority.
+	rfc4594 has some guidance to meanings.
+
+	We set AF21 as "Low-Latency" class for interactive (tty session).
+	Set AF11 "High-Throughput" for bulk data (which includes things
+	such as git over ssh). We usually want higher priority than
+	CS1/LE least effort.
+
+	OpenSSH at present uses AF21/CS1, rationale
+	https://cvsweb.openbsd.org/src/usr.bin/ssh/readconf.c#rev1.284
+
+	Old Dropbear/OpenSSH and Debian/Ubuntu OpenSSH (at Jan 2022) use
+	IPTOS_LOWDELAY/IPTOS_THROUGHPUT
+	*/
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
-		iptos_val = IPTOS_LOWDELAY;
+		val = IPTOS_DSCP_AF21;
 	} else if (prio == DROPBEAR_PRIO_BULK) {
-		iptos_val = IPTOS_THROUGHPUT;
+		val = IPTOS_DSCP_AF11;
+	} else {
+		val = 0; /* default */
 	}
 #if defined(IPPROTO_IPV6) && defined(IPV6_TCLASS)
-	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&iptos_val, sizeof(iptos_val));
+	rc = setsockopt(sock, IPPROTO_IPV6, IPV6_TCLASS, (void*)&val, sizeof(val));
 	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set IPV6_TCLASS (%s)", strerror(errno)));
 	}
 #endif
-	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&iptos_val, sizeof(iptos_val));
+	rc = setsockopt(sock, IPPROTO_IP, IP_TOS, (void*)&val, sizeof(val));
 	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set IP_TOS (%s)", strerror(errno)));
 	}
 #endif
 
 #ifdef HAVE_LINUX_PKT_SCHED_H
+	/* Set scheduling priority within the local Linux network stack */
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
-		so_prio_val = TC_PRIO_INTERACTIVE;
+		val = TC_PRIO_INTERACTIVE;
 	} else if (prio == DROPBEAR_PRIO_BULK) {
-		so_prio_val = TC_PRIO_BULK;
+		val = TC_PRIO_BULK;
+	} else {
+		val = 0;
 	}
 	/* linux specific, sets QoS class. see tc-prio(8) */
-	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &so_prio_val, sizeof(so_prio_val));
+	rc = setsockopt(sock, SOL_SOCKET, SO_PRIORITY, (void*) &val, sizeof(val));
 	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set SO_PRIORITY (%s)", strerror(errno)))
     }
