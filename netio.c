@@ -377,7 +377,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	/* Don't log ENOTSOCK errors so that this can harmlessly be called
 	 * on a client '-J' proxy pipe */
 
-#ifdef IPTOS_DSCP_AF21
+#ifdef IP_TOS
 	/* Set the DSCP field for outbound IP packet priority.
 	rfc4594 has some guidance to meanings.
 
@@ -389,9 +389,12 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 
 	Old Dropbear/OpenSSH and Debian/Ubuntu OpenSSH (at Jan 2022) use
 	IPTOS_LOWDELAY/IPTOS_THROUGHPUT
+
+	DSCP constants are from Linux headers, applicable to other platforms
+	such as macos.
 	*/
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
-		val = IPTOS_DSCP_AF21;
+		val = 0x48; /* IPTOS_DSCP_AF21 */
 	} else {
 		val = 0; /* default */
 	}
@@ -405,7 +408,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	if (rc < 0 && errno != ENOTSOCK) {
 		TRACE(("Couldn't set IP_TOS (%s)", strerror(errno)));
 	}
-#endif
+#endif /* IP_TOS */
 
 #ifdef HAVE_LINUX_PKT_SCHED_H
 	/* Set scheduling priority within the local Linux network stack */
