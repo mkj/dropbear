@@ -162,7 +162,7 @@ static struct Channel* newchannel(unsigned int remotechan,
 	newchan->recvdonelen = 0;
 	newchan->recvmaxpacket = RECV_MAX_CHANNEL_DATA_LEN;
 
-	newchan->prio = DROPBEAR_CHANNEL_PRIO_EARLY; /* inithandler sets it */
+	newchan->prio = DROPBEAR_PRIO_NORMAL;
 
 	ses.channels[i] = newchan;
 	ses.chancount++;
@@ -955,9 +955,7 @@ void recv_msg_channel_open() {
 		}
 	}
 
-	if (channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
-		channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
-	}
+	update_channel_prio();
 
 	/* success */
 	send_msg_channel_open_confirmation(channel, channel->recvwindow,
@@ -970,8 +968,6 @@ failure:
 
 cleanup:
 	m_free(type);
-	
-	update_channel_prio();
 
 	TRACE(("leave recv_msg_channel_open"))
 }
@@ -1166,11 +1162,8 @@ void recv_msg_channel_open_confirmation() {
 		}
 	}
 
-	if (channel->prio == DROPBEAR_CHANNEL_PRIO_EARLY) {
-		channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
-	}
 	update_channel_prio();
-	
+
 	TRACE(("leave recv_msg_channel_open_confirmation"))
 }
 

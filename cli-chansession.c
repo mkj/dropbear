@@ -348,7 +348,6 @@ static int cli_init_stdpipe_sess(struct Channel *channel) {
 }
 
 static int cli_init_netcat(struct Channel *channel) {
-	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
 	return cli_init_stdpipe_sess(channel);
 }
 
@@ -361,12 +360,9 @@ static int cli_initchansess(struct Channel *channel) {
 		cli_setup_agent(channel);
 	}
 #endif
-
 	if (cli_opts.wantpty) {
 		send_chansess_pty_req(channel);
-		channel->prio = DROPBEAR_CHANNEL_PRIO_INTERACTIVE;
-	} else {
-		channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
+		channel->prio = DROPBEAR_PRIO_LOWDELAY;
 	}
 
 	send_chansess_shell_req(channel);
@@ -375,7 +371,7 @@ static int cli_initchansess(struct Channel *channel) {
 		cli_tty_setup();
 		channel->read_mangler = cli_escape_handler;
 		cli_ses.last_char = '\r';
-	}	
+	}
 
 	return 0; /* Success */
 }

@@ -28,6 +28,7 @@
 #include "includes.h"
 #include "buffer.h"
 #include "circbuffer.h"
+#include "netio.h"
 
 #define SSH_OPEN_ADMINISTRATIVELY_PROHIBITED    1
 #define SSH_OPEN_CONNECT_FAILED                 2
@@ -40,13 +41,6 @@
 #define CHAN_EXTEND_SIZE 3 /* how many extra slots to add when we need more */
 
 struct ChanType;
-
-enum dropbear_channel_prio {
-	DROPBEAR_CHANNEL_PRIO_INTERACTIVE, /* pty shell, x11 */
-	DROPBEAR_CHANNEL_PRIO_UNKNOWABLE, /* tcp - can't know what's being forwarded */
-	DROPBEAR_CHANNEL_PRIO_BULK, /* the rest - probably scp, rsync, git, or something */
-	DROPBEAR_CHANNEL_PRIO_EARLY, /* channel is still being set up */
-};
 
 struct Channel {
 
@@ -88,7 +82,7 @@ struct Channel {
 
 	const struct ChanType* type;
 
-	enum dropbear_channel_prio prio;
+	enum dropbear_prio prio;
 };
 
 struct ChanType {

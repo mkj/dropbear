@@ -51,7 +51,7 @@ static int cli_localtcp(const char* listenaddr,
 		unsigned int remoteport);
 static const struct ChanType cli_chan_tcplocal = {
 	"direct-tcpip",
-	tcp_prio_inithandler,
+	NULL,
 	NULL,
 	NULL,
 	NULL,
@@ -272,10 +272,9 @@ static int newtcpforwarded(struct Channel * channel) {
 		goto out;
 	}
 
-	channel->prio = DROPBEAR_CHANNEL_PRIO_UNKNOWABLE;
-
 	snprintf(portstring, sizeof(portstring), "%u", fwd->connectport);
-	channel->conn_pending = connect_remote(fwd->connectaddr, portstring, channel_connect_done, channel, NULL, NULL);
+	channel->conn_pending = connect_remote(fwd->connectaddr, portstring, channel_connect_done,
+		channel, NULL, NULL, DROPBEAR_PRIO_NORMAL);
 
 	err = SSH_OPEN_IN_PROGRESS;
 

@@ -20,6 +20,7 @@ struct dropbear_progress_connection {
 
 	char* errstring;
 	char *bind_address, *bind_port;
+	enum dropbear_prio prio;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -110,6 +111,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 		ses.maxfd = MAX(ses.maxfd, c->sock);
 		set_sock_nodelay(c->sock);
+		set_sock_priority(c->sock, c->prio);
 		setnonblocking(c->sock);
 
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
@@ -172,8 +174,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
-	connect_callback cb, void* cb_data, 
-	const char* bind_address, const char* bind_port)
+	connect_callback cb, void* cb_data,
+	const char* bind_address, const char* bind_port, enum dropbear_prio prio)
 {
 	struct dropbear_progress_connection *c = NULL;
 	int err;
@@ -185,6 +187,7 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->sock = -1;
 	c->cb = cb;
 	c->cb_data = cb_data;
+	c->prio = prio;
 
 	list_append(&ses.conn_pending, c);
 
@@ -378,10 +381,8 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	/* Set the DSCP field for outbound IP packet priority.
 	rfc4594 has some guidance to meanings.
 
-	We set AF21 as "Low-Latency" class for interactive (tty session).
-	Set AF11 "High-Throughput" for bulk data (which includes things
-	such as git over ssh). We usually want higher priority than
-	CS1/LE least effort.
+	We set AF21 as "Low-Latency" class for interactive (tty session,
+	also handshake/setup packets). Other traffic is left at the default.
 
 	OpenSSH at present uses AF21/CS1, rationale
 	https://cvsweb.openbsd.org/src/usr.bin/ssh/readconf.c#rev1.284
@@ -391,8 +392,6 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	*/
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
 		val = IPTOS_DSCP_AF21;
-	} else if (prio == DROPBEAR_PRIO_BULK) {
-		val = IPTOS_DSCP_AF11;
 	} else {
 		val = 0; /* default */
 	}
@@ -412,8 +411,6 @@ void set_sock_priority(int sock, enum dropbear_prio prio) {
 	/* Set scheduling priority within the local Linux network stack */
 	if (prio == DROPBEAR_PRIO_LOWDELAY) {
 		val = TC_PRIO_INTERACTIVE;
-	} else if (prio == DROPBEAR_PRIO_BULK) {
-		val = TC_PRIO_BULK;
 	} else {
 		val = 0;
 	}

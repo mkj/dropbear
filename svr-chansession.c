@@ -277,7 +277,8 @@ static int newchansess(struct Channel *channel) {
 	chansess->agentdir = NULL;
 #endif
 
-	channel->prio = DROPBEAR_CHANNEL_PRIO_INTERACTIVE;
+	/* Will drop to DROPBEAR_PRIO_NORMAL if a non-tty command starts */
+	channel->prio = DROPBEAR_PRIO_LOWDELAY;
 
 	return 0;
 
@@ -734,7 +735,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		/* no pty */
 		ret = noptycommand(channel, chansess);
 		if (ret == DROPBEAR_SUCCESS) {
-			channel->prio = DROPBEAR_CHANNEL_PRIO_BULK;
+			channel->prio = DROPBEAR_PRIO_NORMAL;
 			update_channel_prio();
 		}
 	} else {
