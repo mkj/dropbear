@@ -62,9 +62,7 @@ def own_venv_command():
 	as the current running Python. Returns '' on not a virtualenv
 	"""
 	try:
-		print(os.environ)
 		venv = os.environ['VIRTUAL_ENV']
-		print(venv)
 	except KeyError:
 		return ""
 
