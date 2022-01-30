@@ -37,7 +37,14 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define NON_INETD_MODE 1
 #define INETD_MODE 1
 
-/* Include verbose debug output, enabled with -v at runtime. 
+/* By default Dropbear will re-execute itself for each incoming connection so
+   that memory layout may be re-randomised (ASLR) - exploiting
+   vulnerabilities becomes harder. Re-exec causes slightly more memory use
+   per connection.
+   This option is ignored on non-Linux platforms at present */
+#define DROPBEAR_REEXEC 1
+
+/* Include verbose debug output, enabled with -v at runtime.
  * This will add a reasonable amount to your executable size. */
 #define DEBUG_TRACE 0
 

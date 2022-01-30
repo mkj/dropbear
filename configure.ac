@@ -386,7 +386,7 @@ AC_CHECK_HEADERS([netinet/in.h netinet/tcp.h \
 	pty.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
 	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
 	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h \
-	sys/random.h])
+	sys/random.h sys/prctl.h])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
@@ -841,7 +841,7 @@ AC_FUNC_MEMCMP
 AC_FUNC_SELECT_ARGTYPES
 AC_CHECK_FUNCS([getpass getspnam getusershell putenv])
 AC_CHECK_FUNCS([clearenv strlcpy strlcat daemon basename _getpty getaddrinfo ])
-AC_CHECK_FUNCS([freeaddrinfo getnameinfo fork writev getgrouplist])
+AC_CHECK_FUNCS([freeaddrinfo getnameinfo fork writev getgrouplist fexecve])
 
 AC_SEARCH_LIBS(basename, gen, AC_DEFINE(HAVE_BASENAME))
 

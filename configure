@@ -5608,7 +5608,7 @@ for ac_header in netinet/in.h netinet/tcp.h \
 	pty.h libutil.h libgen.h inttypes.h stropts.h utmp.h \
 	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
 	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h \
-	sys/random.h
+	sys/random.h sys/prctl.h
 do :
   as_ac_Header=`$as_echo "ac_cv_header_$ac_header" | $as_tr_sh`
 ac_fn_c_check_header_mongrel "$LINENO" "$ac_header" "$as_ac_Header" "$ac_includes_default"
@@ -7352,7 +7352,7 @@ _ACEOF
 fi
 done
 
-for ac_func in freeaddrinfo getnameinfo fork writev getgrouplist
+for ac_func in freeaddrinfo getnameinfo fork writev getgrouplist fexecve
 do :
   as_ac_var=`$as_echo "ac_cv_func_$ac_func" | $as_tr_sh`
 ac_fn_c_check_func "$LINENO" "$ac_func" "$as_ac_var"

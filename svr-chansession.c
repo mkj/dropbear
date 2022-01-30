@@ -72,9 +72,6 @@ const struct ChanType svrchansess = {
 	cleanupchansess /* cleanup */
 };
 
-/* required to clear environment */
-extern char** environ;
-
 /* Returns whether the channel is ready to close. The child process
    must not be running (has never started, or has exited) */
 static int sesscheckclose(struct Channel *channel) {

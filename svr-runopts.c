@@ -247,6 +247,12 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.inetdmode = 1;
 					break;
 #endif
+#if DROPBEAR_DO_REEXEC && NON_INETD_MODE
+				/* For internal use by re-exec */
+				case '2':
+					svr_opts.reexec_child = 1;
+					break;
+#endif
 				case 'p':
 				  nextisport = 1;
 				  break;
@@ -419,6 +425,19 @@ void svr_getopts(int argc, char ** argv) {
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
 	}
+
+#if INETD_MODE
+	if (svr_opts.inetdmode && (
+		opts.usingsyslog == 0
+#if DEBUG_TRACE
+		|| debug_trace
+#endif
+		)) {
+		/* log output goes to stderr which would get sent over the inetd network socket */
+		dropbear_exit("Dropbear inetd mode is incompatible with debug -v or non-syslog");
+	}
+#endif
+
 #if DROPBEAR_PLUGIN
         if (pubkey_plugin) {
             char *args = strchr(pubkey_plugin, ',');

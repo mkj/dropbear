@@ -93,6 +93,9 @@
 /* Define to 1 if you have the `explicit_bzero' function. */
 #undef HAVE_EXPLICIT_BZERO
 
+/* Define to 1 if you have the `fexecve' function. */
+#undef HAVE_FEXECVE
+
 /* Define to 1 if you have the `fork' function. */
 #undef HAVE_FORK
 
@@ -317,6 +320,9 @@
 
 /* Define to 1 if `ut_type' is a member of `struct utmp'. */
 #undef HAVE_STRUCT_UTMP_UT_TYPE
+
+/* Define to 1 if you have the <sys/prctl.h> header file. */
+#undef HAVE_SYS_PRCTL_H
 
 /* Define to 1 if you have the <sys/random.h> header file. */
 #undef HAVE_SYS_RANDOM_H

@@ -29,6 +29,9 @@
 	#error "NON_INETD_MODE or INETD_MODE (or both) must be enabled."
 #endif
 
+/* Would probably work on freebsd but hasn't been tested */
+#define DROPBEAR_DO_REEXEC (defined(HAVE_FEXECVE) && DROPBEAR_REEXEC && defined(__linux__))
+
 /* A client should try and send an initial key exchange packet guessing
  * the algorithm that will match - saves a round trip connecting, has little
  * overhead if the guess was "wrong". */
