@@ -8,7 +8,11 @@ def test_reexec(request, dropbear):
 	Tests that two consecutive connections have different address layouts.
 	This indicates that re-exec makes ASLR work
 	"""
-	cmd = (Path(request.node.fspath).parent / "parent_dropbear_map.py").resolve()
+	map_script = (Path(request.node.fspath).parent / "parent_dropbear_map.py").resolve()
+	# run within the same venv, for python deps
+	activate = own_venv_command()
+	cmd = f"{activate}; {map_script}"
+	print(cmd)
 	r = dbclient(request, cmd, capture_output=True, text=True)
 	map1 = r.stdout.rstrip()
 	print(r.stderr, file=sys.stderr)

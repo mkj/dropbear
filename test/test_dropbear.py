@@ -57,6 +57,20 @@ def dbclient(request, *args, **kwargs):
 		# wait for response
 		return subprocess.run(full_args, **kwargs)
 
+def own_venv_command():
+	""" Returns a command to run as a prefix to get the same venv
+	as the current running Python. Returns '' on not a virtualenv
+	"""
+	try:
+		print(os.environ)
+		venv = os.environ['VIRTUAL_ENV']
+		print(venv)
+	except KeyError:
+		return ""
+
+	# note: bash/zsh unix specific
+	return f"source {venv}/bin/activate"
+
 class HandleTcp(socketserver.ThreadingMixIn, socketserver.TCPServer):
 	""" Listens for a single incoming request, sends a response if given,
 	and returns the inbound data.

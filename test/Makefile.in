@@ -1,12 +1,14 @@
 srcdir=@srcdir@
 
+SHELL=bash
+
 all: test
 
 test: venv/bin/pytest fakekey
-	./venv/bin/pytest --hostkey=fakekey --dbclient=../dbclient --dropbear=../dropbear $(srcdir)
+	(source ./venv/bin/activate; pytest --hostkey=fakekey --dbclient=../dbclient --dropbear=../dropbear $(srcdir) )
 
 one: venv/bin/pytest fakekey
-	./venv/bin/pytest --hostkey=fakekey --dbclient=../dbclient --dropbear=../dropbear $(srcdir) -k exit
+	(source ./venv/bin/activate; pytest --hostkey=fakekey --dbclient=../dbclient --dropbear=../dropbear $(srcdir) -k exit)
 
 fakekey:
 	../dropbearkey -t ecdsa -f $@
