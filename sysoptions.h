@@ -30,7 +30,11 @@
 #endif
 
 /* Would probably work on freebsd but hasn't been tested */
-#define DROPBEAR_DO_REEXEC (defined(HAVE_FEXECVE) && DROPBEAR_REEXEC && defined(__linux__))
+#if defined(HAVE_FEXECVE) && DROPBEAR_REEXEC && defined(__linux__)
+#define DROPBEAR_DO_REEXEC 1
+#else
+#define DROPBEAR_DO_REEXEC 0
+#endif
 
 /* A client should try and send an initial key exchange packet guessing
  * the algorithm that will match - saves a round trip connecting, has little
