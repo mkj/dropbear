@@ -339,20 +339,25 @@ static void main_noinetd(int argc, char ** argv) {
 				if (execfd >= 0) {
 #if DROPBEAR_DO_REEXEC
 					/* Add "-2" to the args and re-execute ourself */
-					char **new_argv = m_malloc(sizeof(char*) * (argc+1));
+					char **new_argv = m_malloc(sizeof(char*) * (argc+2));
 					memcpy(new_argv, argv, sizeof(char*) * argc);
 					new_argv[argc] = "-2";
+					new_argv[argc+1] = NULL;
 
 					if ((dup2(childsock, STDIN_FILENO) < 0)) {
 						dropbear_exit("dup2 failed: %s", strerror(errno));
 					}
-					m_close(childsock);
+					if (fcntl(childsock, F_SETFD, FD_CLOEXEC) < 0) {
+						TRACE(("cloexec for childsock %d failed: %s", childsock, strerror(errno)))
+					}
 					/* Re-execute ourself */
 					fexecve(execfd, new_argv, environ);
 					/* Not reached on success */
 
-					/* Fall back on plain fork otherwise */
-					TRACE(("fexecve failed, disabling re-exec: %s", strerror(errno)))
+					/* Fall back on plain fork otherwise.
+					 * To be removed in future once re-exec has been well tested */
+					dropbear_log(LOG_WARNING, "fexecve failed, disabling re-exec: %s", strerror(errno));
+					m_close(STDIN_FILENO);
 					m_free(new_argv);
 #endif /* DROPBEAR_DO_REEXEC */
 				}
