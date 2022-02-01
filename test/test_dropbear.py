@@ -19,7 +19,8 @@ def dropbear(request):
 		yield None
 		return
 
-	args = [opt.dropbear,
+	# split so that "dropbearmulti dropbear" works
+	args = opt.dropbear.split() + [
 		"-p", LOCALADDR, # bind locally only
 		"-r", opt.hostkey,
 		"-p", opt.port,
@@ -43,9 +44,10 @@ def dropbear(request):
 def dbclient(request, *args, **kwargs):
 	opt = request.config.option
 	host = opt.remote or LOCALADDR
-	base_args = [opt.dbclient, "-y", host, "-p", opt.port]
+	# split so that "dropbearmulti dbclient" works
+	base_args = opt.dbclient.split() + ["-y", host, "-p", opt.port]
 	if opt.user:
-		full_args.extend(['-l', opt.user])
+		base_args.extend(['-l', opt.user])
 	full_args = base_args + list(args)
 	bg = kwargs.get("background")
 	if "background" in kwargs:

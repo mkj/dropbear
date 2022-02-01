@@ -1,0 +1,9 @@
+#!/bin/sh
+
+# symlink this to dropbear/dbclient/dropbearkey next to dropbearmulti
+# good enough for testing purposes.
+
+DIR=$(dirname $0)
+PROG=$(basename $0)
+exec $DIR/dropbearmulti $PROG "$@"
+

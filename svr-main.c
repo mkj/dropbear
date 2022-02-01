@@ -36,16 +36,20 @@ static void sigchld_handler(int dummy);
 static void sigsegv_handler(int);
 static void sigintterm_handler(int fish);
 static void main_inetd(void);
-static void main_noinetd(int argc, char ** argv);
+static void main_noinetd(int argc, char ** argv, const char* multipath);
 static void commonsetup(void);
 
 #if defined(DBMULTI_dropbear) || !DROPBEAR_MULTI
 #if defined(DBMULTI_dropbear) && DROPBEAR_MULTI
-int dropbear_main(int argc, char ** argv)
+int dropbear_main(int argc, char ** argv, const char* multipath)
 #else
 int main(int argc, char ** argv)
 #endif
 {
+#if !DROPBEAR_MULTI
+	const char* multipath = NULL;
+#endif
+
 	_dropbear_exit = svr_dropbear_exit;
 	_dropbear_log = svr_dropbear_log;
 
@@ -80,7 +84,7 @@ int main(int argc, char ** argv)
 #endif
 
 #if NON_INETD_MODE
-	main_noinetd(argc, argv);
+	main_noinetd(argc, argv, multipath);
 	/* notreached */
 #endif
 
@@ -121,7 +125,7 @@ static void main_inetd() {
 #endif /* INETD_MODE */
 
 #if NON_INETD_MODE
-static void main_noinetd(int argc, char ** argv) {
+static void main_noinetd(int argc, char ** argv, const char* multipath) {
 	fd_set fds;
 	unsigned int i, j;
 	int val;
@@ -163,7 +167,11 @@ static void main_noinetd(int argc, char ** argv) {
 	}
 
 #if DROPBEAR_DO_REEXEC
-	execfd = open(argv[0], O_CLOEXEC|O_RDONLY);
+	if (multipath) {
+		execfd = open(multipath, O_CLOEXEC|O_RDONLY);
+	} else {
+		execfd = open(argv[0], O_CLOEXEC|O_RDONLY);
+	}
 	if (execfd < 0) {
 		/* Just fallback to straight fork */
 		TRACE(("Couldn't open own binary %s, disabling re-exec: %s", argv[0], strerror(errno)))
@@ -338,11 +346,20 @@ static void main_noinetd(int argc, char ** argv) {
 
 				if (execfd >= 0) {
 #if DROPBEAR_DO_REEXEC
-					/* Add "-2" to the args and re-execute ourself */
-					char **new_argv = m_malloc(sizeof(char*) * (argc+2));
-					memcpy(new_argv, argv, sizeof(char*) * argc);
-					new_argv[argc] = "-2";
-					new_argv[argc+1] = NULL;
+					/* Add "-2" to the args and re-execute ourself. */
+					char **new_argv = m_malloc(sizeof(char*) * (argc+3));
+					int pos0 = 0, new_argc = argc+1;
+
+					/* We need to specially handle "dropbearmulti dropbear". */
+					if (multipath) {
+						new_argv[0] = (char*)multipath;
+						pos0 = 1;
+						new_argc++;
+					}
+
+					memcpy(&new_argv[pos0], argv, sizeof(char*) * argc);
+					new_argv[new_argc-1] = "-2";
+					new_argv[new_argc] = NULL;
 
 					if ((dup2(childsock, STDIN_FILENO) < 0)) {
 						dropbear_exit("dup2 failed: %s", strerror(errno));
