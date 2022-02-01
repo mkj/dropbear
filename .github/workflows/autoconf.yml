@@ -1,0 +1,25 @@
+# Checks that autoconf has been run if configure.ac was updated
+# Assumes that autoconf 2.69 was run, the same as ubuntu 20.04
+name: Autoconf Up To Date
+on:
+  pull_request:
+  push:
+    branches:
+      - master
+jobs:
+  autoconf:
+    runs-on: 'ubuntu-20.04'
+
+    steps:
+      - name: deps
+        run: |
+          sudo apt-get -y update
+          sudo apt-get -y install autoconf
+
+      - uses: actions/checkout@v2
+
+      - name: run autoconf
+        run: autoconf && autoheader
+
+      - name: check no difference
+        run: git diff --exit-code
