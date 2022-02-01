@@ -62,12 +62,16 @@ static int runprog(const char *multipath,
 int main(int argc, char ** argv) {
 	int i;
 	for (i = 0; i < 2; i++) {
+		const char* multipath = NULL;
+		if (i == 1) {
+			multipath = argv[0];
+		}
 		/* Try symlink first, then try as an argument eg "dropbearmulti dbclient host ..." */
 		if (argc > i) {
 			int match, res;
 			/* figure which form we're being called as */
 			const char* progname = basename(argv[i]);
-			res = runprog(argv[0], progname, argc-i, &argv[i], &match);
+			res = runprog(multipath, progname, argc-i, &argv[i], &match);
 			if (match == DROPBEAR_SUCCESS) {
 				return res;
 			}
