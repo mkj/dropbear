@@ -24,40 +24,40 @@ jobs:
             multi: 1
             multilink: 1
 
-          # - name: multi binary, dropbearmulti argv0
-          #   multi: 1
-          #   multiwrapper: 1
+          - name: multi binary, dropbearmulti argv0
+            multi: 1
+            multiwrapper: 1
 
-          # - name: bundled libtom, bionic , no writev()
-          #   # test can use an older distro with bundled libtommath
-          #   os: ubuntu-18.04
-          #   configure_flags: --enable-bundled-libtom --enable-werror
-          #   # NOWRITEV is unrelated, test here to save a job
-          #   nowritev: 1
-          #   # our tests expect >= python3.7
-          #   runcheck: 'no'
+          - name: bundled libtom, bionic , no writev()
+            # test can use an older distro with bundled libtommath
+            os: ubuntu-18.04
+            configure_flags: --enable-bundled-libtom --enable-werror
+            # NOWRITEV is unrelated, test here to save a job
+            nowritev: 1
+            # our tests expect >= python3.7
+            runcheck: 'no'
 
-          # - name: linux clang
-          #   cc: clang
+          - name: linux clang
+            cc: clang
 
-          # - name: macos 10.15
-          #   os: macos-10.15
-          #   cc: clang
-          #   # OS X says daemon() and utmp are deprecated
-          #   extracflags: -Wno-deprecated-declarations
-          #   runcheck: 'no'
-          #   apt: 'no'
-          #   # fails with:
-          #   # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
-          #   ranlib: ranlib -no_warning_for_no_symbols
+          - name: macos 10.15
+            os: macos-10.15
+            cc: clang
+            # OS X says daemon() and utmp are deprecated
+            extracflags: -Wno-deprecated-declarations
+            runcheck: 'no'
+            apt: 'no'
+            # fails with:
+            # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
+            ranlib: ranlib -no_warning_for_no_symbols
 
-          # - name: macos 11
-          #   os: macos-11
-          #   cc: clang
-          #   extracflags: -Wno-deprecated-declarations
-          #   runcheck: 'no'
-          #   apt: 'no'
-          #   ranlib: ranlib -no_warning_for_no_symbols
+          - name: macos 11
+            os: macos-11
+            cc: clang
+            extracflags: -Wno-deprecated-declarations
+            runcheck: 'no'
+            apt: 'no'
+            ranlib: ranlib -no_warning_for_no_symbols
 
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
