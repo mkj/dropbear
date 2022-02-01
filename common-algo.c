@@ -359,7 +359,7 @@ void buf_put_algolist_all(buffer * buf, const algo_type localalgos[], int useall
 	len = buf->pos - startpos - 4;
 	buf_setpos(buf, startpos);
 	buf_putint(buf, len);
-	TRACE(("algolist add %d '%*s'", len, len, buf_getptr(buf, len)))
+	TRACE(("algolist add %d '%.*s'", len, len, buf_getptr(buf, len)))
 	buf_incrwritepos(buf, len);
 }
 
