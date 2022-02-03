@@ -143,6 +143,7 @@ static void main_noinetd(int argc, char ** argv, const char* multipath) {
 
 	(void)argc;
 	(void)argv;
+	(void)multipath;
 
 	/* Note: commonsetup() must happen before we daemon()ise. Otherwise
 	   daemon() will chdir("/"), and we won't be able to find local-dir
