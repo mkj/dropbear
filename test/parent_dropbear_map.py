@@ -9,7 +9,7 @@ from pathlib import Path
 
 
 want_name = "dropbear"
-# Walks up the parent process tree, prints the first line of /proc/pid/maps when
+# Walks up the parent process tree, prints a r-xp line of /proc/pid/maps when
 # it finds the wanted name
 
 def main():
@@ -22,8 +22,10 @@ def main():
 
 			if want_name in p.name():
 				with (Path('/proc') / str(p.pid) / "maps").open() as f:
-					map0 = f.readline().rstrip()
-				print(map0)
+					for i, l in enumerate(f, 1):
+						if ' r-xp ' in l:
+							print(l.rstrip())
+							break
 				return
 
 		raise RuntimeError(f"Couldn't find parent {want_name} process")

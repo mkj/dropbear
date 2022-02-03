@@ -28,7 +28,6 @@ def test_reexec(request, dropbear):
 	# expect something like
 	# "563174d59000-563174d5d000 r--p 00000000 00:29 4242372                    /home/matt/src/dropbear/build/dropbear"
 	assert map1.endswith('/dropbear') or map1.endswith('/dropbearmulti')
-	assert ' r--p ' in map1
 	a1 = map1.split()[0]
 	a2 = map2.split()[0]
 	print(a1)
