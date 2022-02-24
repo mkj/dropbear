@@ -1033,8 +1033,13 @@ static void execchild(const void *user_data) {
 
 	/* change directory */
 	if (chdir(ses.authstate.pw_dir) < 0) {
-		dropbear_exit("Error changing directory");
+		int e = errno;
+		if (chdir("/") < 0) {
+			dropbear_exit("chdir(\"/\") failed");
+		}
+		fprintf(stderr, "Failed chdir '%s': %s\n", ses.authstate.pw_dir, strerror(e));
 	}
+
 
 #if DROPBEAR_X11FWD
 	/* set up X11 forwarding if enabled */
