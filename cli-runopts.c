@@ -96,6 +96,10 @@ static void printhelp() {
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v    verbose (compiled with DEBUG_TRACE)\n"
+#else
+#if DEBUG_LEVEL
+					"-v    verbose level (repeat to be more verbose)\n"
+#endif
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname,
 #if DROPBEAR_CLI_PUBKEY_AUTH
@@ -295,9 +299,9 @@ void cli_getopts(int argc, char ** argv) {
 					next = &opts.mac_list;
 					break;
 #endif
-#if DEBUG_TRACE
+#if DEBUG_LEVEL
 				case 'v':
-					debug_trace = 1;
+					debug_trace++;
 					break;
 #endif
 				case 'F':
