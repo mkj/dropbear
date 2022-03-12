@@ -869,7 +869,7 @@ static void read_kex_algos() {
 		goto error;
 	}
 	TRACE(("kexguess2 %d", kexguess2))
-	TRACE(("kex algo %s", algo->name))
+	TRACELEVEL((2,"kex algo %s", algo->name))
 	ses.newkeys->algo_kex = algo->data;
 
 	/* server_host_key_algorithms */
@@ -879,6 +879,8 @@ static void read_kex_algos() {
 		erralgo = "hostkey";
 		goto error;
 	}
+	TRACELEVEL((2,"hostkey algo %s", algo->name))
+	TRACE(("kex algo %s", algo->name))
 	TRACE(("signature algo %s", algo->name))
 	ses.newkeys->algo_signature = algo->val;
 	ses.newkeys->algo_hostkey = signkey_type_from_signature(ses.newkeys->algo_signature);
@@ -889,7 +891,8 @@ static void read_kex_algos() {
 		erralgo = "enc c->s";
 		goto error;
 	}
-	TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
+	//TRACE(("enc c2s is  %s", c2s_cipher_algo->name))
+	TRACELEVEL((2,"enc  c2s is %s", c2s_cipher_algo->name))
 
 	/* encryption_algorithms_server_to_client */
 	s2c_cipher_algo = buf_match_algo(ses.payload, sshciphers, 0, NULL);
@@ -897,7 +900,8 @@ static void read_kex_algos() {
 		erralgo = "enc s->c";
 		goto error;
 	}
-	TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
+	//TRACE(("enc s2c is  %s", s2c_cipher_algo->name))
+	TRACELEVEL((2,"enc  s2c is %s", s2c_cipher_algo->name))
 
 	/* mac_algorithms_client_to_server */
 	c2s_hash_algo = buf_match_algo(ses.payload, sshhashes, 0, NULL);
@@ -910,7 +914,8 @@ static void read_kex_algos() {
 		erralgo = "mac c->s";
 		goto error;
 	}
-	TRACE(("hash c2s is  %s", c2s_hash_algo ? c2s_hash_algo->name : "<implicit>"))
+	//TRACE(("hash c2s is  %s", c2s_hash_algo ? c2s_hash_algo->name : "<implicit>"))
+	TRACELEVEL((2,"hmac c2s is %s", c2s_hash_algo ? c2s_hash_algo->name : "<implicit>"))
 
 	/* mac_algorithms_server_to_client */
 	s2c_hash_algo = buf_match_algo(ses.payload, sshhashes, 0, NULL);
@@ -923,7 +928,8 @@ static void read_kex_algos() {
 		erralgo = "mac s->c";
 		goto error;
 	}
-	TRACE(("hash s2c is  %s", s2c_hash_algo ? s2c_hash_algo->name : "<implicit>"))
+	//TRACE(("hash s2c is  %s", s2c_hash_algo ? s2c_hash_algo->name : "<implicit>"))
+	TRACELEVEL((2,"hmac s2c is %s", s2c_hash_algo ? s2c_hash_algo->name : "<implicit>"))
 
 	/* compression_algorithms_client_to_server */
 	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
@@ -931,7 +937,8 @@ static void read_kex_algos() {
 		erralgo = "comp c->s";
 		goto error;
 	}
-	TRACE(("hash c2s is  %s", c2s_comp_algo->name))
+	//TRACE(("hash c2s is  %s", c2s_comp_algo->name))
+	TRACELEVEL((2,"comp c2s is %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
 	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
@@ -939,7 +946,8 @@ static void read_kex_algos() {
 		erralgo = "comp s->c";
 		goto error;
 	}
-	TRACE(("hash s2c is  %s", s2c_comp_algo->name))
+	//TRACE(("hash s2c is  %s", s2c_comp_algo->name))
+	TRACELEVEL((2,"comp s2c is %s", s2c_comp_algo->name))
 
 	/* languages_client_to_server */
 	buf_eatstring(ses.payload);
