@@ -404,7 +404,7 @@ static void read_session_identification() {
 		dropbear_exit("Incompatible remote version '%s'", ses.remoteident);
 	}
 
-	TRACE(("remoteident: %s", ses.remoteident))
+	TRACELEVEL((1,"remoteident: %s", ses.remoteident))
 
 }
 
