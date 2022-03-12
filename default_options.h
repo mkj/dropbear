@@ -48,9 +48,12 @@ IMPORTANT: Some options will require "make clean" after changes */
  * This will add a reasonable amount to your executable size. */
 #define DEBUG_TRACE 0
 
-/* Include limited verbose debug output, the number of debug messages
- * are controlled by specifying 1 or more -v at runtime.
- * This will add approx 2 kB to your executable size. */
+/* Use DEBUG_LEVEL 1 for a minimal set of debug messages to dbclient.
+ * The number of debug messages are controlled by specifying 1 or more -v at runtime.
+ *   verboselevel 1 = connect info + remoteid + auth method information
+ *   verboselevel 2 = choosen kex algos
+ *   verboselevel 3 = available algos
+ * This will add approx 4 kB to your executable size. */
 #define DEBUG_LEVEL 0
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
