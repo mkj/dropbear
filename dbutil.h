@@ -55,6 +55,12 @@ void debug_start_net(void);
 extern int debug_trace;
 #endif
 
+#if DEBUG_LEVEL
+void dropbear_tracelevel(int level,const char* format, ...) ATTRIB_PRINTF(2,3);
+void debug_start_net(void);
+extern int debug_trace;
+#endif
+
 char * stripcontrol(const char * text);
 
 int spawn_command(void(*exec_fn)(const void *user_data), const void *exec_data,

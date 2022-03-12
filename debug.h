@@ -58,6 +58,22 @@ extern int debug_trace;
 #define TRACE2(X)
 #endif /*DEBUG_TRACE*/
 
+/* Make sure DEBUG_LEVEL is defined
+ * if not take over value from DEBUG_TRACE */
+#ifndef DEBUG_LEVEL
+#if DEBUG_TRACE
+#define DEBUG_LEVEL 1
+#else
+#define DEBUG_LEVEL 0
+#endif
+#endif /*DEBUG_LEVEL*/
+
+#if DEBUG_LEVEL
+#define TRACELEVEL(X) dropbear_tracelevel X;
+#else
+#define TRACELEVEL(X)
+#endif
+
 /* To debug with GDB it is easier to run with no forking of child processes.
    You will need to pass "-F" as well. */
 #ifndef DEBUG_NOFORK

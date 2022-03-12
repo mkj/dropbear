@@ -79,7 +79,7 @@ void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_N
 void (*_dropbear_log)(int priority, const char* format, va_list param)
 						= generic_dropbear_log;
 
-#if DEBUG_TRACE
+#if DEBUG_LEVEL
 int debug_trace = 0;
 #endif
 
@@ -155,7 +155,7 @@ void dropbear_log(int priority, const char* format, ...) {
 }
 
 
-#if DEBUG_TRACE
+#if DEBUG_LEVEL
 
 static double debug_start_time = -1;
 
@@ -185,6 +185,22 @@ static double time_since_start()
 	return nowf - debug_start_time;
 }
 
+void dropbear_tracelevel(int level,const char* format, ...) {
+	va_list param;
+
+	if (level > debug_trace) {
+		return;
+	}
+
+	va_start(param, format);
+	fprintf(stderr, "TRACE  (%d) %f: ", getpid(), time_since_start());
+	vfprintf(stderr, format, param);
+	fprintf(stderr, "\n");
+	va_end(param);
+}
+#endif
+
+#if DEBUG_TRACE
 void dropbear_trace(const char* format, ...) {
 	va_list param;
 
