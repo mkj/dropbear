@@ -261,7 +261,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
 	buffer *options_buf = NULL;
-	unsigned int pos, len;
+	unsigned int pos, len, infopos, infolen;
 	int ret = DROPBEAR_FAILURE;
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
@@ -344,6 +344,11 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 	for (len = 0; line->pos < line->len; len++) {
 		if (buf_getbyte(line) == ' ') break;
 	}	
+	/* findout the length of the public key info */
+	infopos = line->pos;
+	for (infolen = 0; line->pos < line->len; infolen++) {
+		if (buf_getbyte(line) == ' ') break;
+	}
 	buf_setpos(line, pos);
 	buf_setlen(line, line->pos + len);
 
@@ -351,8 +356,20 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
-	if (ret == DROPBEAR_SUCCESS && options_buf) {
-		ret = svr_add_pubkey_options(options_buf, line_num, filename);
+	if (ret == DROPBEAR_SUCCESS) {
+		if (options_buf) {
+			ret = svr_add_pubkey_options(options_buf, line_num, filename);
+		}
+		/* save the (optional) public key information */
+		if (infolen) {
+			ses.authstate.pubkey_info = m_malloc(infolen + 1);
+			if (ses.authstate.pubkey_info) {
+				strncpy(ses.authstate.pubkey_info, &line->data[infopos], infolen);
+				ses.authstate.pubkey_info[infolen]='\0';
+			}
+		} else {
+			ses.authstate.pubkey_info = NULL;
+		}
 	}
 
 out:
