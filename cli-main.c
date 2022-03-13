@@ -66,10 +66,10 @@ int main(int argc, char ** argv) {
 #endif
 
         if (cli_opts.bind_address) {
-		TRACELEVEL((1,"connect to: user=%s host=%s:%s bind_address=%s:%s", cli_opts.username,
+		TRACELEVEL((1,"connect to: user=%s host=%s/%s bind_address=%s:%s", cli_opts.username,
 			cli_opts.remotehost, cli_opts.remoteport, cli_opts.bind_address, cli_opts.bind_port))
 	} else {
-		TRACELEVEL((1,"connect to: user=%s host=%s:%s",cli_opts.username,cli_opts.remotehost,cli_opts.remoteport))
+		TRACELEVEL((1,"connect to: user=%s host=%s/%s",cli_opts.username,cli_opts.remotehost,cli_opts.remoteport))
 	}
 
 	if (signal(SIGPIPE, SIG_IGN) == SIG_ERR) {
