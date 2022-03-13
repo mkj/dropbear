@@ -62,6 +62,7 @@ static void printhelp() {
 					"-T    Don't allocate a pty\n"
 					"-N    Don't run a remote command\n"
 					"-f    Run in background after auth\n"
+					"-q    quiet, don't show remote banner\n"
 					"-y    Always accept remote host key if unknown\n"
 					"-y -y Don't perform any remote host key checking (caution)\n"
 					"-s    Request a subsystem (use by external sftp)\n"
@@ -141,6 +142,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
 	cli_opts.no_cmd = 0;
+	cli_opts.quiet = 0;
 	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 	cli_opts.always_accept_key = 0;
@@ -213,6 +215,9 @@ void cli_getopts(int argc, char ** argv) {
 						cli_opts.no_hostkey_check = 1;
 					}
 					cli_opts.always_accept_key = 1;
+					break;
+				case 'q': /* quiet */
+					cli_opts.quiet = 1;
 					break;
 				case 'p': /* remoteport */
 					next = (char**)&cli_opts.remoteport;
@@ -539,6 +544,12 @@ multihop_passthrough_args() {
 	len += 30; /* space for -W <size>, terminator. */
 	ret = m_malloc(len);
 	total = 0;
+
+	if (cli_opts.quiet)
+	{
+		int written = snprintf(ret+total, len-total, "-q ");
+		total += written;
+	}
 
 	if (cli_opts.no_hostkey_check)
 	{
