@@ -85,31 +85,32 @@ void recv_msg_userauth_banner() {
 	banner = buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
-	if (bannerlen > MAX_BANNER_SIZE) {
-		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
-		truncated = 1;
-	} else {
-		cleantext(banner);
+	if (cli_opts.quiet == 0) {
+		if (bannerlen > MAX_BANNER_SIZE) {
+			TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
+			truncated = 1;
+		} else {
+			cleantext(banner);
 
-		/* Limit to 24 lines */
-		linecount = 1;
-		for (i = 0; i < bannerlen; i++) {
-			if (banner[i] == '\n') {
-				if (linecount >= MAX_BANNER_LINES) {
-					banner[i] = '\0';
-					truncated = 1;
-					break;
+			/* Limit to 24 lines */
+			linecount = 1;
+			for (i = 0; i < bannerlen; i++) {
+				if (banner[i] == '\n') {
+					if (linecount >= MAX_BANNER_LINES) {
+						banner[i] = '\0';
+						truncated = 1;
+						break;
+					}
+					linecount++;
 				}
-				linecount++;
 			}
+			fprintf(stderr, "%s\n", banner);
 		}
-		fprintf(stderr, "%s\n", banner);
-	}
 
-	if (truncated) {
-		fprintf(stderr, "[Banner from the server is too long]\n");
+		if (truncated) {
+			fprintf(stderr, "[Banner from the server is too long]\n");
+		}
 	}
-
 	m_free(banner);
 	TRACE(("leave recv_msg_userauth_banner"))
 }
