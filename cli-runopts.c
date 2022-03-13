@@ -301,7 +301,11 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #if DEBUG_LEVEL
 				case 'v':
+#if DEBUG_TRACE
+					debug_trace=9;
+#else
 					debug_trace++;
+#endif
 					break;
 #endif
 				case 'F':
@@ -560,6 +564,24 @@ multihop_passthrough_args() {
 		int written = snprintf(ret+total, len-total, "-W %u ", opts.recv_window);
 		total += written;
 	}
+#if DEBUG_TRACE
+	if (debug_trace)
+	{
+		int written = snprintf(ret+total, len-total, "-v ");
+		total += written;
+	}
+#else
+#if DEBUG_LEVEL
+	if (debug_trace)
+	{
+		int i;
+		for (i=0; i<debug_trace; i++) {
+			int written = snprintf(ret+total, len-total, "-v ");
+			total += written;
+		}
+	}
+#endif
+#endif
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
