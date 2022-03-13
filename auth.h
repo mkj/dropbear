@@ -125,6 +125,7 @@ struct AuthState {
 	char *pw_passwd;
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	struct PubKeyOptions* pubkey_options;
+	char *pubkey_info;
 #endif
 };
 
