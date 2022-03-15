@@ -356,6 +356,11 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
+	/* free pubkey_info if it is filled */
+	if (ses.authstate.pubkey_info) {
+		m_free(ses.authstate.pubkey_info);
+		ses.authstate.pubkey_info = NULL;
+	}
 	if (ret == DROPBEAR_SUCCESS) {
 		if (options_buf) {
 			ret = svr_add_pubkey_options(options_buf, line_num, filename);
@@ -364,11 +369,9 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		if (infolen) {
 			ses.authstate.pubkey_info = m_malloc(infolen + 1);
 			if (ses.authstate.pubkey_info) {
-				strncpy(ses.authstate.pubkey_info, &line->data[infopos], infolen);
+		                strncpy(ses.authstate.pubkey_info,(const char *) buf_getptr(line, infopos), infolen);
 				ses.authstate.pubkey_info[infolen]='\0';
 			}
-		} else {
-			ses.authstate.pubkey_info = NULL;
 		}
 	}
 
