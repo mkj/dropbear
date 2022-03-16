@@ -115,6 +115,9 @@ void svr_pubkey_options_cleanup() {
 		}
 		m_free(ses.authstate.pubkey_options);
 	}
+	if (ses.authstate.pubkey_info) {
+		m_free(ses.authstate.pubkey_info);
+	}
 }
 
 /* helper for svr_add_pubkey_options. returns DROPBEAR_SUCCESS if the option is matched,
