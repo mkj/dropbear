@@ -261,6 +261,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
 	buffer *options_buf = NULL;
+	char *info_str = NULL;
 	unsigned int pos, len, infopos, infolen;
 	int ret = DROPBEAR_FAILURE;
 
@@ -339,16 +340,36 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		goto out;
 	}
 
-	/* truncate the line at the space after the base64 data */
+	/* find the length of base64 data */
 	pos = line->pos;
 	for (len = 0; line->pos < line->len; len++) {
-		if (buf_getbyte(line) == ' ') break;
-	}	
-	/* findout the length of the public key info */
+		if (buf_getbyte(line) == ' ') {
+			break;
+		}
+	}
+
+	/* find out the length of the public key info, stop at the first space */
 	infopos = line->pos;
 	for (infolen = 0; line->pos < line->len; infolen++) {
-		if (buf_getbyte(line) == ' ') break;
+		const char c = buf_getbyte(line);
+		if (c == ' ') {
+			break;
+		}
+		/* We have an allowlist - authorized_keys lines can't be fully trusted,
+		some shell scripts may do unsafe things with env var values */
+		if (!(isalnum(c) || strchr(".,_-+@", c))) {
+			TRACE(("Not setting SSH_PUBKEYINFO, special characters"))
+			infolen = 0;
+			break;
+		}
 	}
+	if (infolen > 0) {
+		info_str = m_malloc(infolen + 1);
+		buf_setpos(line, infopos);
+        strncpy(info_str, buf_getptr(line, infolen), infolen);
+	}
+
+	/* truncate to base64 data length */
 	buf_setpos(line, pos);
 	buf_setlen(line, line->pos + len);
 
@@ -359,25 +380,23 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 	/* free pubkey_info if it is filled */
 	if (ses.authstate.pubkey_info) {
 		m_free(ses.authstate.pubkey_info);
-		ses.authstate.pubkey_info = NULL;
 	}
+
 	if (ret == DROPBEAR_SUCCESS) {
 		if (options_buf) {
 			ret = svr_add_pubkey_options(options_buf, line_num, filename);
 		}
-		/* save the (optional) public key information */
-		if (infolen) {
-			ses.authstate.pubkey_info = m_malloc(infolen + 1);
-			if (ses.authstate.pubkey_info) {
-		                strncpy(ses.authstate.pubkey_info,(const char *) buf_getptr(line, infopos), infolen);
-				ses.authstate.pubkey_info[infolen]='\0';
-			}
-		}
+		/* take the (optional) public key information */
+		ses.authstate.pubkey_info = info_str;
+		info_str = NULL;
 	}
 
 out:
 	if (options_buf) {
 		buf_free(options_buf);
+	}
+	if (info_str) {
+		m_free(info_str);
 	}
 	return ret;
 }

@@ -86,6 +86,8 @@ jobs:
       # for fuzzing
       CXX: clang++
       RANLIB: ${{ matrix.ranlib || 'ranlib' }}
+      # some pytests depend on special setup from this file. see authorized_keys below.
+      DBTEST_IN_ACTION: true
 
     steps:
       - name: deps
@@ -128,7 +130,14 @@ jobs:
       - name: keys
         run: |
           mkdir -p ~/.ssh
+          # remove old files so we can rerun in-place with "act -r" during test development
+          rm -vf ~/.ssh/id_dropbear*
           ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
+
+          # to test setting SSH_PUBKEYINFO, replace the trailing comment
+          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key2 | grep ^ecdsa | sed 's/[^ ]*$/key2 extra/' >> ~/.ssh/authorized_keys
+          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key3 | grep ^ecdsa | sed 's/[^ ]*$/key3%char/' >> ~/.ssh/authorized_keys
+          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key4 | grep ^ecdsa | sed 's/[^ ]*$/key4,char/' >> ~/.ssh/authorized_keys
           chmod 700 ~ ~/.ssh ~/.ssh/authorized_keys
           ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
 
