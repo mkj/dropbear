@@ -65,6 +65,8 @@ jobs:
           #   configure_flags: --enable-fuzz --disable-harden --enable-bundled-libtom --enable-werror
           #   ldflags: -fsanitize=address
           #   extracflags: -fsanitize=address
+          #   # -fsanitize=address prevents aslr, don't test it
+          #   pytest_addopts: -k "not aslr"
           #   fuzz: True
           #   cc: clang
 
@@ -74,6 +76,7 @@ jobs:
           #   ldflags: -fsanitize=undefined
           #   # don't fail with alignment due to https://github.com/libtom/libtomcrypt/issues/549
           #   extracflags: -fsanitize=undefined -fno-sanitize-recover=undefined -fsanitize-recover=alignment
+          #   pytest_addopts: -k "not aslr"
           #   fuzz: True
           #   cc: clang
 
@@ -86,6 +89,8 @@ jobs:
       # for fuzzing
       CXX: clang++
       RANLIB: ${{ matrix.ranlib || 'ranlib' }}
+      # pytest in "make check" recognises this for extra arguments
+      PYTEST_ADDOPTS: ${{ matrix.pytest_addopts }}
       # some pytests depend on special setup from this file. see authorized_keys below.
       DBTEST_IN_ACTION: true
 
