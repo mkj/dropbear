@@ -257,9 +257,12 @@ static void send_msg_userauth_pk_ok(const char* sigalgo, unsigned int sigalgolen
 
 }
 
+/* Content for SSH_PUBKEYINFO is optionally returned malloced in ret_info (will be
+   freed if already set */
 static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		const char* algo, unsigned int algolen,
-		const unsigned char* keyblob, unsigned int keybloblen) {
+		const unsigned char* keyblob, unsigned int keybloblen,
+		char ** ret_info) {
 	buffer *options_buf = NULL;
 	char *info_str = NULL;
 	unsigned int pos, len, infopos, infolen;
@@ -378,17 +381,20 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
 	/* free pubkey_info if it is filled */
-	if (ses.authstate.pubkey_info) {
-		m_free(ses.authstate.pubkey_info);
+	if (ret_info && *ret_info) {
+		m_free(*ret_info);
+		*ret_info = NULL;
 	}
 
 	if (ret == DROPBEAR_SUCCESS) {
 		if (options_buf) {
 			ret = svr_add_pubkey_options(options_buf, line_num, filename);
 		}
-		/* take the (optional) public key information */
-		ses.authstate.pubkey_info = info_str;
-		info_str = NULL;
+		if (ret_info) {
+			/* take the (optional) public key information */
+			*ret_info = info_str;
+			info_str = NULL;
+		}
 	}
 
 out:
@@ -470,7 +476,8 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		}
 		line_num++;
 
-		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen, keyblob, keybloblen);
+		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen,
+			keyblob, keybloblen, &ses.authstate.pubkey_info);
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}
@@ -587,7 +594,7 @@ static int checkfileperm(char * filename) {
 int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
-	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
+	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen, NULL);
 }
 #endif
 
