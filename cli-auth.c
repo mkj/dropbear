@@ -85,32 +85,31 @@ void recv_msg_userauth_banner() {
 	banner = buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
-	if (cli_opts.quiet == 0) {
-		if (bannerlen > MAX_BANNER_SIZE) {
-			TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
-			truncated = 1;
-		} else {
-			cleantext(banner);
+	if (bannerlen > MAX_BANNER_SIZE) {
+		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
+		truncated = 1;
+	} else {
+		cleantext(banner);
 
-			/* Limit to 24 lines */
-			linecount = 1;
-			for (i = 0; i < bannerlen; i++) {
-				if (banner[i] == '\n') {
-					if (linecount >= MAX_BANNER_LINES) {
-						banner[i] = '\0';
-						truncated = 1;
-						break;
-					}
-					linecount++;
+		/* Limit to 24 lines */
+		linecount = 1;
+		for (i = 0; i < bannerlen; i++) {
+			if (banner[i] == '\n') {
+				if (linecount >= MAX_BANNER_LINES) {
+					banner[i] = '\0';
+					truncated = 1;
+					break;
 				}
+				linecount++;
 			}
-			fprintf(stderr, "%s\n", banner);
 		}
-
-		if (truncated) {
-			fprintf(stderr, "[Banner from the server is too long]\n");
-		}
+		fprintf(stderr, "%s\n", banner);
 	}
+
+	if (truncated) {
+		fprintf(stderr, "[Banner from the server is too long]\n");
+	}
+
 	m_free(banner);
 	TRACE(("leave recv_msg_userauth_banner"))
 }
@@ -261,7 +260,7 @@ void recv_msg_userauth_success() {
 	/* This function can validly get called multiple times
 	if DROPBEAR_CLI_IMMEDIATE_AUTH is set */
 
-	TRACE(("received msg_userauth_success"))
+	DEBUG1(("received msg_userauth_success"))
 	if (cli_opts.disable_trivial_auth && cli_ses.is_trivial_auth) {
 		dropbear_exit("trivial authentication not allowed");
 	}

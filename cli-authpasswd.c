@@ -120,7 +120,7 @@ void cli_auth_password() {
 	char* password = NULL;
 	char prompt[80];
 
-	TRACE(("enter cli_auth_password"))
+	DEBUG1(("enter cli_auth_password"))
 	CHECKCLEARTOWRITE();
 
 	snprintf(prompt, sizeof(prompt), "%s@%s's password: ", 
