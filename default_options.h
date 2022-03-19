@@ -44,8 +44,11 @@ IMPORTANT: Some options will require "make clean" after changes */
    This option is ignored on non-Linux platforms at present */
 #define DROPBEAR_REEXEC 1
 
-/* Include verbose debug output, enabled with -v at runtime.
- * This will add a reasonable amount to your executable size. */
+/* Include verbose debug output, enabled with -v at runtime (repeat to increase).
+ * define which level of debug output you compile in
+ * TRACE1 - TRACE3 = approx 4 Kb (connection, remote identity, algos, auth type info)
+ * TRACE4 = approx 17 Kb (detailed before connection)
+ * TRACE5 = approx 8 Kb (detailed after connection) */
 #define DEBUG_TRACE 0
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
