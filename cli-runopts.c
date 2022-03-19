@@ -96,7 +96,7 @@ static void printhelp() {
 					"-b    [bind_address][:bind_port]\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
-					"-v    verbose (compiled with DEBUG_TRACE)\n"
+					"-v    verbose (repeat for more verbose)\n"
 #endif
 					,DROPBEAR_VERSION, cli_opts.progname,
 #if DROPBEAR_CLI_PUBKEY_AUTH
@@ -302,7 +302,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #if DEBUG_TRACE
 				case 'v':
-					debug_trace = 1;
+					debug_trace++;
 					break;
 #endif
 				case 'F':
