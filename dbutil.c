@@ -155,7 +155,7 @@ void dropbear_log(int priority, const char* format, ...) {
 }
 
 
-#if DEBUG_TRACE
+#if DEBUG_TRACE 
 
 static double debug_start_time = -1;
 
@@ -185,21 +185,52 @@ static double time_since_start()
 	return nowf - debug_start_time;
 }
 
-void dropbear_trace(const char* format, ...) {
-	va_list param;
-
-	if (!debug_trace) {
+static void dropbear_tracelevel(int level, const char *format, va_list param)
+{
+	if (debug_trace==0 || debug_trace < level) {
 		return;
 	}
 
-	va_start(param, format);
-	fprintf(stderr, "TRACE  (%d) %f: ", getpid(), time_since_start());
+	fprintf(stderr, "TRACE%d (%d) %f: ", level, getpid(), time_since_start());
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
+}
+void dropbear_trace1(const char* format, ...) {
+	va_list param;
+
+	va_start(param, format);
+	dropbear_tracelevel(1,format, param);
 	va_end(param);
 }
-
+#if (DEBUG_TRACE>1) 
 void dropbear_trace2(const char* format, ...) {
+	va_list param;
+
+	va_start(param, format);
+	dropbear_tracelevel(2,format,param);
+	va_end(param);
+}
+#endif
+#if (DEBUG_TRACE>2) 
+void dropbear_trace3(const char* format, ...) {
+	va_list param;
+
+	va_start(param, format);
+	dropbear_tracelevel(3,format,param);
+	va_end(param);
+}
+#endif
+#if (DEBUG_TRACE>3) 
+void dropbear_trace4(const char* format, ...) {
+	va_list param;
+
+	va_start(param, format);
+	dropbear_tracelevel(4,format,param);
+	va_end(param);
+}
+#endif
+#if (DEBUG_TRACE>4) 
+void dropbear_trace5(const char* format, ...) {
 	static int trace_env = -1;
 	va_list param;
 
@@ -207,17 +238,17 @@ void dropbear_trace2(const char* format, ...) {
 		trace_env = getenv("DROPBEAR_TRACE2") ? 1 : 0;
 	}
 
-	if (!(debug_trace && trace_env)) {
+        if (!(debug_trace && trace_env)) {
 		return;
 	}
 
 	va_start(param, format);
-	fprintf(stderr, "TRACE2 (%d) %f: ", getpid(), time_since_start());
-	vfprintf(stderr, format, param);
-	fprintf(stderr, "\n");
+	dropbear_tracelevel(5,format,param);
 	va_end(param);
 }
-#endif /* DEBUG_TRACE */
+#endif
+#endif
+
 
 /* Connect to a given unix socket. The socket is blocking */
 #if ENABLE_CONNECT_UNIX
