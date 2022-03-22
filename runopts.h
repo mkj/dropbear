@@ -92,7 +92,6 @@ typedef struct svr_runopts {
 	/* whether to print the MOTD */
 	int domotd;
 #endif
-
 	int norootlogin;
 
 #ifdef HAVE_GETGROUPLIST
@@ -155,6 +154,7 @@ typedef struct cli_runopts {
 	int always_accept_key;
 	int no_hostkey_check;
 	int no_cmd;
+	int quiet;
 	int backgrounded;
 	int is_subsystem;
 #if DROPBEAR_CLI_PUBKEY_AUTH

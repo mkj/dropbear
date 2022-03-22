@@ -257,11 +257,15 @@ static void send_msg_userauth_pk_ok(const char* sigalgo, unsigned int sigalgolen
 
 }
 
+/* Content for SSH_PUBKEYINFO is optionally returned malloced in ret_info (will be
+   freed if already set */
 static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		const char* algo, unsigned int algolen,
-		const unsigned char* keyblob, unsigned int keybloblen) {
+		const unsigned char* keyblob, unsigned int keybloblen,
+		char ** ret_info) {
 	buffer *options_buf = NULL;
-	unsigned int pos, len;
+	char *info_str = NULL;
+	unsigned int pos, len, infopos, infolen;
 	int ret = DROPBEAR_FAILURE;
 
 	if (line->len < MIN_AUTHKEYS_LINE || line->len > MAX_AUTHKEYS_LINE) {
@@ -339,11 +343,36 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		goto out;
 	}
 
-	/* truncate the line at the space after the base64 data */
+	/* find the length of base64 data */
 	pos = line->pos;
 	for (len = 0; line->pos < line->len; len++) {
-		if (buf_getbyte(line) == ' ') break;
-	}	
+		if (buf_getbyte(line) == ' ') {
+			break;
+		}
+	}
+
+	/* find out the length of the public key info, stop at the first space */
+	infopos = line->pos;
+	for (infolen = 0; line->pos < line->len; infolen++) {
+		const char c = buf_getbyte(line);
+		if (c == ' ') {
+			break;
+		}
+		/* We have an allowlist - authorized_keys lines can't be fully trusted,
+		some shell scripts may do unsafe things with env var values */
+		if (!(isalnum(c) || strchr(".,_-+@", c))) {
+			TRACE(("Not setting SSH_PUBKEYINFO, special characters"))
+			infolen = 0;
+			break;
+		}
+	}
+	if (infolen > 0) {
+		info_str = m_malloc(infolen + 1);
+		buf_setpos(line, infopos);
+        strncpy(info_str, buf_getptr(line, infolen), infolen);
+	}
+
+	/* truncate to base64 data length */
 	buf_setpos(line, pos);
 	buf_setlen(line, line->pos + len);
 
@@ -351,13 +380,29 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 
 	ret = cmp_base64_key(keyblob, keybloblen, (const unsigned char *) algo, algolen, line, NULL);
 
-	if (ret == DROPBEAR_SUCCESS && options_buf) {
-		ret = svr_add_pubkey_options(options_buf, line_num, filename);
+	/* free pubkey_info if it is filled */
+	if (ret_info && *ret_info) {
+		m_free(*ret_info);
+		*ret_info = NULL;
+	}
+
+	if (ret == DROPBEAR_SUCCESS) {
+		if (options_buf) {
+			ret = svr_add_pubkey_options(options_buf, line_num, filename);
+		}
+		if (ret_info) {
+			/* take the (optional) public key information */
+			*ret_info = info_str;
+			info_str = NULL;
+		}
 	}
 
 out:
 	if (options_buf) {
 		buf_free(options_buf);
+	}
+	if (info_str) {
+		m_free(info_str);
 	}
 	return ret;
 }
@@ -431,7 +476,8 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		}
 		line_num++;
 
-		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen, keyblob, keybloblen);
+		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen,
+			keyblob, keybloblen, &ses.authstate.pubkey_info);
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}
@@ -548,7 +594,7 @@ static int checkfileperm(char * filename) {
 int fuzz_checkpubkey_line(buffer* line, int line_num, char* filename,
 		const char* algo, unsigned int algolen,
 		const unsigned char* keyblob, unsigned int keybloblen) {
-	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen);
+	return checkpubkey_line(line, line_num, filename, algo, algolen, keyblob, keybloblen, NULL);
 }
 #endif
 

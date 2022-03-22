@@ -72,6 +72,10 @@ def own_venv_command():
 	return f"source {venv}/bin/activate"
 
 class HandleTcp(socketserver.ThreadingMixIn, socketserver.TCPServer):
+
+	# override TCPServer's default, avoids TIME_WAIT
+	allow_reuse_addr = True
+
 	""" Listens for a single incoming request, sends a response if given,
 	and returns the inbound data.
 	Reponse can be a queue object, in which case each item in the queue will
