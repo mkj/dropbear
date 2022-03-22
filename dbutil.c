@@ -187,7 +187,7 @@ static double time_since_start()
 
 static void dropbear_tracelevel(int level, const char *format, va_list param)
 {
-	if (debug_trace==0 || debug_trace < level) {
+	if (debug_trace == 0 || debug_trace < level) {
 		return;
 	}
 
@@ -195,55 +195,48 @@ static void dropbear_tracelevel(int level, const char *format, va_list param)
 	vfprintf(stderr, format, param);
 	fprintf(stderr, "\n");
 }
+#if (DEBUG_TRACE>=1)
 void dropbear_trace1(const char* format, ...) {
 	va_list param;
 
 	va_start(param, format);
-	dropbear_tracelevel(1,format, param);
+	dropbear_tracelevel(1, format, param);
 	va_end(param);
 }
-#if (DEBUG_TRACE>1) 
+#endif
+#if (DEBUG_TRACE>=2)
 void dropbear_trace2(const char* format, ...) {
 	va_list param;
 
 	va_start(param, format);
-	dropbear_tracelevel(2,format,param);
+	dropbear_tracelevel(2, format, param);
 	va_end(param);
 }
 #endif
-#if (DEBUG_TRACE>2) 
+#if (DEBUG_TRACE>=3)
 void dropbear_trace3(const char* format, ...) {
 	va_list param;
 
 	va_start(param, format);
-	dropbear_tracelevel(3,format,param);
+	dropbear_tracelevel(3, format, param);
 	va_end(param);
 }
 #endif
-#if (DEBUG_TRACE>3) 
+#if (DEBUG_TRACE>=4)
 void dropbear_trace4(const char* format, ...) {
 	va_list param;
 
 	va_start(param, format);
-	dropbear_tracelevel(4,format,param);
+	dropbear_tracelevel(4, format, param);
 	va_end(param);
 }
 #endif
-#if (DEBUG_TRACE>4) 
+#if (DEBUG_TRACE>=5)
 void dropbear_trace5(const char* format, ...) {
-	static int trace_env = -1;
 	va_list param;
 
-	if (trace_env == -1) {
-		trace_env = getenv("DROPBEAR_TRACE2") ? 1 : 0;
-	}
-
-        if (!(debug_trace && trace_env)) {
-		return;
-	}
-
 	va_start(param, format);
-	dropbear_tracelevel(5,format,param);
+	dropbear_tracelevel(5, format, param);
 	va_end(param);
 }
 #endif

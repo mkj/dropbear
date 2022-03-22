@@ -53,37 +53,34 @@
 extern int debug_trace;
 #endif
 
-/* you don't need to touch this block */
-/* enable debug trace levels */
-#if (DEBUG_TRACE==1)
-#define DEBUG1(X) dropbear_trace1 X;
+/* Enable debug trace levels.
+   We can't use __VA_ARGS_ here because Dropbear supports 
+   old ~C89 compilers */
+/* Default is to discard output ... */
+#define DEBUG1(X)
 #define DEBUG2(X)
 #define DEBUG3(X)
 #define TRACE(X)
 #define TRACE2(X)
-#elif (DEBUG_TRACE==2)
+/* ... unless DEBUG_TRACE is high enough */
+#if (DEBUG_TRACE>=1)
+#undef DEBUG1
 #define DEBUG1(X) dropbear_trace1 X;
+#endif
+#if (DEBUG_TRACE>=2)
+#undef DEBUG2
 #define DEBUG2(X) dropbear_trace2 X;
-#define DEBUG3(X)
-#define TRACE(X)
-#define TRACE2(X)
-#elif (DEBUG_TRACE==3)
-#define DEBUG1(X) dropbear_trace1 X;
-#define DEBUG2(X) dropbear_trace2 X;
+#endif
+#if (DEBUG_TRACE>=3)
+#undef DEBUG3
 #define DEBUG3(X) dropbear_trace3 X;
-#define TRACE(X)
-#define TRACE2(X)
-#elif (DEBUG_TRACE==4)
-#define DEBUG1(X) dropbear_trace1 X;
-#define DEBUG2(X) dropbear_trace2 X;
-#define DEBUG3(X) dropbear_trace3 X;
-#define TRACE(X)  dropbear_trace4 X;
-#define TRACE2(X)
-#elif (DEBUG_TRACE==5)
-#define DEBUG1(X) dropbear_trace1 X;
-#define DEBUG2(X) dropbear_trace2 X;
-#define DEBUG3(X) dropbear_trace3 X;
-#define TRACE(X)  dropbear_trace4 X;
+#endif
+#if (DEBUG_TRACE>=4)
+#undef TRACE
+#define TRACE(X) dropbear_trace4 X;
+#endif
+#if (DEBUG_TRACE>=5)
+#undef TRACE2
 #define TRACE2(X) dropbear_trace5 X;
 #endif
 
