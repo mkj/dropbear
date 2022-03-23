@@ -463,7 +463,7 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 
 	/* get the comma-separated list from the buffer ie "algo1,algo2,algo3" */
 	algolist = buf_getstring(buf, &len);
-	TRACE(("buf_match_algo: %s", algolist))
+	DEBUG3(("buf_match_algo: %s", algolist))
 	remotecount = MAX_PROPOSED_ALGO;
 	get_algolist(algolist, len, remotenames, &remotecount);
 

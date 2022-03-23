@@ -147,7 +147,7 @@ static void send_msg_userauth_pubkey(sign_key *key, enum signature_type sigtype,
 	buffer* sigbuf = NULL;
 	enum signkey_type keytype = signkey_type_from_signature(sigtype);
 
-	TRACE(("enter send_msg_userauth_pubkey sigtype %d", sigtype))
+	DEBUG1(("enter send_msg_userauth_pubkey %s", signature_name_from_type(sigtype, NULL)))
 	CHECKCLEARTOWRITE();
 
 	buf_putbyte(ses.writepayload, SSH_MSG_USERAUTH_REQUEST);
