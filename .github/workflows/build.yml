@@ -1,4 +1,5 @@
 # Can be used locally with https://github.com/nektos/act
+# Note the XXX line below.
 
 name: BuildTest
 on:
@@ -11,8 +12,8 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-20.04' }}
     strategy:
       matrix:
-        # XXX keeps act happy, https://github.com/nektos/act/issues/996
-        name: []
+        # XXX uncomment the line below to work with act, see https://github.com/nektos/act/issues/996
+        # name: []
 
         # Rather than a boolean False we use eg
         #   runcheck: 'no'
