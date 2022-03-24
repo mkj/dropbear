@@ -1,0 +1,36 @@
+name: tarball sha256sum
+on:
+  push:
+    branches:
+      - master
+jobs:
+  tarball:
+    runs-on: 'ubuntu-20.04'
+
+    steps:
+      - uses: actions/checkout@v2
+
+      - name: release.sh
+        run: ./release.sh --testrel | tee log1.txt
+
+      - name: extract output
+        run: |
+          grep ^SHA256 log1.txt > sha256sum.txt
+          sed 's/.*= *//' < sha256sum.txt > hash.txt
+          mv `tail -n1 log1.txt` rel.tar.bz2
+
+      - name: sha256sum
+        uses: actions/upload-artifact@v3
+        with:
+          name: sha256sum
+          path: |
+            sha256sum.txt
+            hash.txt
+
+      - name: tarball
+        # only keep for debugging
+        retention-days: 3
+        uses: actions/upload-artifact@v3
+        with:
+          name: tarball
+          path: rel.tar.bz2
