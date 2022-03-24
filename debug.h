@@ -48,6 +48,8 @@
 /*#define DEBUG_KEXHASH*/
 /*#define DEBUG_RSA*/
 
+/* The level of TRACE() statements */
+#define DROPBEAR_VERBOSE_LEVEL 4
 
 #if DEBUG_TRACE
 extern int debug_trace;

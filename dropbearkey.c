@@ -195,7 +195,7 @@ int main(int argc, char ** argv) {
 					break;
 #if DEBUG_TRACE
 				case 'v':
-					debug_trace = 1;
+					debug_trace = DROPBEAR_VERBOSE_LEVEL;
 					break;
 #endif
 				default:

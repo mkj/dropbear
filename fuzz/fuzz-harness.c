@@ -12,8 +12,8 @@ int main(int argc, char ** argv) {
     for (i = 1; i < argc; i++) {
 #if DEBUG_TRACE
         if (strcmp(argv[i], "-v") == 0) {
-            debug_trace = 1;
-            TRACE(("debug printing on"))
+            debug_trace++;
+            fprintf(stderr, "debug level -> %d\n", debug_trace);
         }
 #endif
         if (strcmp(argv[i], "-q") == 0) {

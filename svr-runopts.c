@@ -109,7 +109,7 @@ static void printhelp(const char * progname) {
 #endif
 					"-V    Version\n"
 #if DEBUG_TRACE
-					"-v		verbose (compiled with DEBUG_TRACE)\n"
+					"-v    verbose (repeat for more verbose)\n"
 #endif
 					,DROPBEAR_VERSION, progname,
 #if DROPBEAR_DSS
@@ -310,7 +310,7 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #if DEBUG_TRACE
 				case 'v':
-					debug_trace = 1;
+					debug_trace++;
 					break;
 #endif
 				case 'V':
