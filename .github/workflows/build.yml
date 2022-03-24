@@ -11,6 +11,9 @@ jobs:
     runs-on: ${{ matrix.os || 'ubuntu-20.04' }}
     strategy:
       matrix:
+        # XXX keeps act happy, https://github.com/nektos/act/issues/996
+        name: []
+
         # Rather than a boolean False we use eg
         #   runcheck: 'no'
         # Otherwise GH expressions will make a None var
@@ -59,6 +62,10 @@ jobs:
             apt: 'no'
             ranlib: ranlib -no_warning_for_no_symbols
 
+          - name: DEBUG_TRACE
+            localoptions: |
+              #define DEBUG_TRACE 5
+
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
           # - name: fuzzing with address sanitizer
@@ -93,6 +100,7 @@ jobs:
       PYTEST_ADDOPTS: ${{ matrix.pytest_addopts }}
       # some pytests depend on special setup from this file. see authorized_keys below.
       DBTEST_IN_ACTION: true
+      LOCALOPTIONS: ${{ matrix.localoptions }}
 
     steps:
       - name: deps
@@ -109,6 +117,11 @@ jobs:
       - name: nowritev
         if: ${{ matrix.nowritev }}
         run: sed -i -e s/HAVE_WRITEV/DONT_HAVE_WRITEV/ config.h
+
+      - name: localoptions
+        run: |
+          echo "$LOCALOPTIONS" > localoptions.h
+          cat localoptions.h
 
       - name: make
         run: make -j3
