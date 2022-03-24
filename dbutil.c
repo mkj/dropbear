@@ -599,9 +599,14 @@ void setnonblocking(int fd) {
 }
 
 void disallow_core() {
-	struct rlimit lim;
-	lim.rlim_cur = lim.rlim_max = 0;
-	setrlimit(RLIMIT_CORE, &lim);
+	struct rlimit lim = {0};
+	if (getrlimit(RLIMIT_CORE, &lim) < 0) {
+		TRACE(("getrlimit(RLIMIT_CORE) failed"));
+	}
+	lim.rlim_cur = 0;
+	if (setrlimit(RLIMIT_CORE, &lim) < 0) {
+		TRACE(("setrlimit(RLIMIT_CORE) failed"));
+	}
 }
 
 /* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE, with the result in *val */
