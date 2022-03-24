@@ -28,9 +28,9 @@ jobs:
             hash.txt
 
       - name: tarball
-        # only keep for debugging
-        retention-days: 3
         uses: actions/upload-artifact@v3
         with:
           name: tarball
+          # only keep for debugging
+          retention-days: 3
           path: rel.tar.bz2
