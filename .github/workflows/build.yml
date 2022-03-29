@@ -137,6 +137,7 @@ jobs:
           cp .github/multiwrapper dropbear
           cp .github/multiwrapper dbclient
           cp .github/multiwrapper dropbearkey
+          cp .github/multiwrapper dropbearconvert
 
       - name: makefuzz
         run: make fuzzstandalone
