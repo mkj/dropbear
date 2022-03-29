@@ -48,6 +48,9 @@ static const unsigned char OSSH_PKEY_BLOB[] =
 	"\0\0\0\1";				/* key num */
 #define OSSH_PKEY_BLOBLEN (sizeof(OSSH_PKEY_BLOB) - 1)
 
+void buf_put_ed25519_priv_ossh(buffer *buf, const sign_key *akey);
+int buf_get_ed25519_priv_ossh(buffer *buf, sign_key *akey);
+
 #if DROPBEAR_ECDSA
 static const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 static const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
@@ -369,6 +372,7 @@ struct openssh_key {
 	int type;
 	int encrypted;
 	char iv[32];
+	/* keyblob is publickey1 onwards (ref OpenSSH PROTOCOL.key) */
 	unsigned char *keyblob;
 	unsigned int keyblob_len, keyblob_size;
 };
@@ -601,7 +605,7 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 
 		memset(&md5c, 0, sizeof(md5c));
 		memset(keybuf, 0, sizeof(keybuf));
-#endif 
+#endif
 	}
 
 	/*
@@ -613,9 +617,8 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 		buf_putbytes(blobbuf, key->keyblob, key->keyblob_len);
 		buf_setpos(blobbuf, 0);
 
-		/* limit length of private key blob */
+		/* limit length of public key blob */
 		len = buf_getint(blobbuf);
-		buf_setlen(blobbuf, blobbuf->pos + len);
 
 		type = DROPBEAR_SIGNKEY_ANY;
 		if (buf_get_pub_key(blobbuf, retkey, &type)
@@ -627,19 +630,20 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 		/* restore full length */
 		buf_setlen(blobbuf, key->keyblob_len);
 
+		/* length of private key part. we can discard it */
+		buf_getint(blobbuf);
+
+		/* discard checkkey1 */
+		buf_getint(blobbuf);
+		/* discard checkkey2 */
+		buf_getint(blobbuf);
+
 		if (type != DROPBEAR_SIGNKEY_NONE) {
 			retkey->type = type;
-			/* limit length of private key blob */
-			len = buf_getint(blobbuf);
-			buf_setlen(blobbuf, blobbuf->pos + len);
 #if DROPBEAR_ED25519
 			if (type == DROPBEAR_SIGNKEY_ED25519) {
-				buf_incrpos(blobbuf, 8);
-				buf_eatstring(blobbuf);
-				buf_eatstring(blobbuf);
-				buf_decrpos(blobbuf, SSH_SIGNKEY_ED25519_LEN+4);
-				if (buf_get_ed25519_priv_key(blobbuf, retkey->ed25519key)
-						== DROPBEAR_SUCCESS) {
+				if (buf_get_ed25519_priv_ossh(blobbuf, retkey)
+					== DROPBEAR_SUCCESS) {
 					errmsg = NULL;
 					retval = retkey;
 					goto error;
@@ -912,6 +916,57 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 	}
 	return retval;
 }
+
+#if DROPBEAR_ED25519
+/* OpenSSH raw private ed25519 format is
+string       "ssh-ed25519"
+uint32       32
+byte[32]     pubkey
+uint32       64
+byte[32]     privkey
+byte[32]     pubkey
+*/
+
+void buf_put_ed25519_priv_ossh(buffer *buf, const sign_key *akey) {
+	const dropbear_ed25519_key *key = akey->ed25519key;
+	dropbear_assert(key != NULL);
+	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
+	buf_putint(buf, CURVE25519_LEN);
+	buf_putbytes(buf, key->pub, CURVE25519_LEN);
+	buf_putint(buf, CURVE25519_LEN*2);
+	buf_putbytes(buf, key->priv, CURVE25519_LEN);
+	buf_putbytes(buf, key->pub, CURVE25519_LEN);
+}
+
+int buf_get_ed25519_priv_ossh(buffer *buf, sign_key *akey) {
+	dropbear_ed25519_key *key = akey->ed25519key;
+	uint32_t len;
+
+	dropbear_assert(key != NULL);
+
+	/* Parse past the first string and pubkey */
+	if (buf_get_ed25519_pub_key(buf, key, DROPBEAR_SIGNKEY_ED25519)
+			== DROPBEAR_FAILURE) {
+		dropbear_log(LOG_ERR, "Error parsing ed25519 key, pubkey");
+		return DROPBEAR_FAILURE;
+	}
+	len = buf_getint(buf);
+	if (len != 2*CURVE25519_LEN) {
+		dropbear_log(LOG_ERR, "Error parsing ed25519 key, bad length");
+		return DROPBEAR_FAILURE;
+	}
+	memcpy(key->priv, buf_getptr(buf, CURVE25519_LEN), CURVE25519_LEN);
+	buf_incrpos(buf, CURVE25519_LEN);
+
+	/* Sanity check */
+	if (memcmp(buf_getptr(buf, CURVE25519_LEN), key->pub,
+				CURVE25519_LEN) != 0) {
+		dropbear_log(LOG_ERR, "Error parsing ed25519 key, mismatch pubkey");
+		return DROPBEAR_FAILURE;
+	}
+	return DROPBEAR_SUCCESS;
+}
+#endif
 
 static int openssh_write(const char *filename, sign_key *key,
 				  const char *passphrase)
@@ -1220,15 +1275,12 @@ static int openssh_write(const char *filename, sign_key *key,
 
 #if DROPBEAR_ED25519
 	if (key->type == DROPBEAR_SIGNKEY_ED25519) {
-		buffer *buf = buf_new(300);
-		keyblob = buf_new(100);
-		extrablob = buf_new(200);
+		buffer *buf = buf_new(1200);
+		keyblob = buf_new(1000);
+		extrablob = buf_new(1100);
 
 		/* private key blob w/o header */
-		buf_put_priv_key(keyblob, key, key->type);
-		buf_setpos(keyblob, 0);
-		buf_incrpos(keyblob, buf_getint(keyblob));
-		len = buf_getint(keyblob);
+		buf_put_ed25519_priv_ossh(keyblob, key);
 
 		/* header */
 		buf_putbytes(buf, OSSH_PKEY_BLOB, OSSH_PKEY_BLOBLEN);
@@ -1237,9 +1289,10 @@ static int openssh_write(const char *filename, sign_key *key,
 		buf_put_pub_key(buf, key, key->type);
 
 		/* private key */
-		buf_incrwritepos(extrablob, 4);
-		buf_put_pub_key(extrablob, key, key->type);
-		buf_putstring(extrablob, buf_getptr(keyblob, len), len);
+		buf_putint(extrablob, 0); /* checkint 1 */
+		buf_putint(extrablob, 0); /* checkint 2 */
+		/* raw openssh private key */
+		buf_putbytes(extrablob, keyblob->data, keyblob->len);
 		/* comment */
 		buf_putstring(extrablob, "", 0);
 		/* padding to cipher block length */
