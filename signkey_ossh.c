@@ -123,3 +123,39 @@ int buf_get_ed25519_priv_ossh(buffer *buf, sign_key *akey) {
 	return DROPBEAR_SUCCESS;
 }
 #endif /* DROPBEAR_ED255219 */
+
+#if DROPBEAR_ECDSA
+/* OpenSSH raw private ecdsa format is the same as Dropbear's.
+# First part is the same as the SSH wire pubkey format
+string   "ecdsa-sha2-[identifier]"
+string   [identifier]
+string   Q
+# With private part appended
+mpint    d
+*/
+
+void buf_put_ecdsa_priv_ossh(buffer *buf, const sign_key *key) {
+	ecc_key **eck = (ecc_key**)signkey_key_ptr((sign_key*)key, key->type);
+	if (eck && *eck) {
+		buf_put_ecdsa_priv_key(buf, *eck);
+		return;
+	}
+	dropbear_exit("ecdsa key is not set");
+}
+
+int buf_get_ecdsa_priv_ossh(buffer *buf, sign_key *key) {
+	ecc_key **eck = (ecc_key**)signkey_key_ptr(key, key->type);
+	if (eck) {
+		if (*eck) {
+			ecc_free(*eck);
+			m_free(*eck);
+			*eck = NULL;
+		}
+		*eck = buf_get_ecdsa_priv_key(buf);
+		if (*eck) {
+			return DROPBEAR_SUCCESS;
+		}
+	}
+	return DROPBEAR_FAILURE;
+}
+#endif /* DROPBEAR_ECDSA */

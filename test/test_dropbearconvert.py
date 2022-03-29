@@ -27,10 +27,7 @@ def test_from_openssh(request, tmp_path, keytype, keyformat):
 	kt, keybits = parse_keytype(keytype)
 
 	if kt == 'dss' and keyformat is None:
-		pytest.xfail("dss doesn't support openssh format")
-
-	if kt == 'ecdsa' and keyformat is None:
-		pytest.skip("ecdsa doesn't support openssh format yet")
+		pytest.skip("dss doesn't support openssh format")
 
 	os_kt = kt
 	if os_kt == 'dss':

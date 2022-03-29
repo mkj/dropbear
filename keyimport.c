@@ -39,6 +39,7 @@
 #include "rsa.h"
 #include "dss.h"
 #include "ed25519.h"
+#include "ecdsa.h"
 #include "signkey_ossh.h"
 
 static const unsigned char OSSH_PKEY_BLOB[] =
@@ -630,6 +631,19 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 				}
 			}
 #endif
+#if DROPBEAR_ECDSA
+			if (signkey_is_ecdsa(type)) {
+				if (buf_get_ecdsa_priv_ossh(blobbuf, retkey)
+						== DROPBEAR_SUCCESS) {
+					errmsg = NULL;
+					retval = retkey;
+					goto error;
+				} else {
+					errmsg = "Error parsing OpenSSH ed25519 key";
+					goto ossh_error;
+				}
+			}
+#endif
 		}
 
 		errmsg = "Unsupported OpenSSH key type";
@@ -911,12 +925,8 @@ static int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 
-	if (
 #if DROPBEAR_DSS
-			key->type == DROPBEAR_SIGNKEY_DSS ||
-#endif
-			0)
-	{
+	if (key->type == DROPBEAR_SIGNKEY_DSS) {
 		/*
 		 * Fetch the key blobs.
 		 */
@@ -1001,103 +1011,7 @@ static int openssh_write(const char *filename, sign_key *key,
 			pos += numbers[i].bytes;
 		}
 	} /* end DSS handling */
-
-#if DROPBEAR_ECDSA
-	if (key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
-		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP384
-		|| key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP521) {
-
-		/*  SEC1 V2 appendix c.4
-		ECPrivateKey ::= SEQUENCE {
-			version INTEGER { ecPrivkeyVer1(1) } (ecPrivkeyVer1),
-			privateKey OCTET STRING,
-			parameters [0] ECDomainParameters {{ SECGCurveNames }} OPTIONAL, 
-			publicKey [1] BIT STRING OPTIONAL
-		}
-		*/
-		buffer *seq_buf = buf_new(400);
-		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, key->type);
-		const long curve_size = (*eck)->dp->size;
-		int curve_oid_len = 0;
-		const void* curve_oid = NULL;
-		unsigned long pubkey_size = 2*curve_size+1;
-		int k_size;
-		int err = 0;
-		size_t written;
-
-		/* version. less than 10 bytes */
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 2, 1, 0));
-		buf_putbyte(seq_buf, 1);
-
-		/* privateKey */
-		k_size = mp_ubin_size((*eck)->k);
-		dropbear_assert(k_size <= curve_size);
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 4, k_size, 0));
-		if (mp_to_ubin((*eck)->k, buf_getwriteptr(seq_buf, k_size), k_size, &written) != MP_OKAY) {
-			dropbear_exit("ECC error");
-		}
-		buf_incrwritepos(seq_buf, written);
-
-		/* SECGCurveNames */
-		switch (key->type)
-		{
-			case DROPBEAR_SIGNKEY_ECDSA_NISTP256:
-				curve_oid_len = sizeof(OID_SEC256R1_BLOB);
-				curve_oid = OID_SEC256R1_BLOB;
-				break;
-			case DROPBEAR_SIGNKEY_ECDSA_NISTP384:
-				curve_oid_len = sizeof(OID_SEC384R1_BLOB);
-				curve_oid = OID_SEC384R1_BLOB;
-				break;
-			case DROPBEAR_SIGNKEY_ECDSA_NISTP521:
-				curve_oid_len = sizeof(OID_SEC521R1_BLOB);
-				curve_oid = OID_SEC521R1_BLOB;
-				break;
-			default:
-				dropbear_exit("Internal error");
-		}
-
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 0, 2+curve_oid_len, 0xa0));
-		/* object == 6 */
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 6, curve_oid_len, 0));
-		buf_putbytes(seq_buf, curve_oid, curve_oid_len);
-
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 1,
-			(pubkey_size +1 < 128 ? 2 : 3 ) +1 +pubkey_size, 0xa0));
-
-		buf_incrwritepos(seq_buf,
-			ber_write_id_len(buf_getwriteptr(seq_buf, 10), 3, 1+pubkey_size, 0));
-		buf_putbyte(seq_buf, 0);
-		err = ecc_ansi_x963_export(*eck, buf_getwriteptr(seq_buf, pubkey_size), &pubkey_size);
-		if (err != CRYPT_OK) {
-			dropbear_exit("ECC error");
-		}
-		buf_incrwritepos(seq_buf, pubkey_size);
-
-		buf_setpos(seq_buf, 0);
-			
-		outblob = (unsigned char*)m_malloc(1000);
-
-		pos = 0;
-		pos += ber_write_id_len(outblob+pos, 16, seq_buf->len, ASN1_CONSTRUCTED);
-		memcpy(&outblob[pos], seq_buf->data, seq_buf->len);
-		pos += seq_buf->len;
-		len = pos;
-		outlen = len;
-
-		buf_burn(seq_buf);
-		buf_free(seq_buf);
-		seq_buf = NULL;
-
-		header = "-----BEGIN EC PRIVATE KEY-----\n";
-		footer = "-----END EC PRIVATE KEY-----\n";
-	}
-#endif
+#endif /* DROPBEAR_DSS */
 
 	if (0
 #if DROPBEAR_RSA
@@ -1105,6 +1019,9 @@ static int openssh_write(const char *filename, sign_key *key,
 #endif
 #if DROPBEAR_ED25519
 		|| key->type == DROPBEAR_SIGNKEY_ED25519
+#endif
+#if DROPBEAR_ECDSA
+		|| signkey_is_ecdsa(key->type)
 #endif
 		) {
 		buffer *buf = buf_new(3200);
@@ -1120,6 +1037,11 @@ static int openssh_write(const char *filename, sign_key *key,
 #if DROPBEAR_ED25519
 		if (key->type == DROPBEAR_SIGNKEY_ED25519) {
 			buf_put_ed25519_priv_ossh(keyblob, key);
+		}
+#endif
+#if DROPBEAR_ECDSA
+		if (signkey_is_ecdsa(key->type)) {
+			buf_put_ecdsa_priv_ossh(keyblob, key);
 		}
 #endif
 
