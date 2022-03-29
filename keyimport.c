@@ -504,16 +504,14 @@ static struct openssh_key *load_openssh_key(const char *filename)
 	}
 
 	if (buf) {
-		buf_burn(buf);
-		buf_free(buf);
+		buf_burn_free(buf);
 	}
 	m_burn(buffer, sizeof(buffer));
 	return ret;
 
 error:
 	if (buf) {
-		buf_burn(buf);
-		buf_free(buf);
+		buf_burn_free(buf);
 	}
 	m_burn(buffer, sizeof(buffer));
 	if (ret) {
@@ -898,8 +896,7 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 
 	error:
 	if (blobbuf) {
-		buf_burn(blobbuf);
-		buf_free(blobbuf);
+		buf_burn_free(blobbuf);
 	}
 	m_burn(key->keyblob, key->keyblob_size);
 	m_free(key->keyblob);
@@ -1070,8 +1067,7 @@ static int openssh_write(const char *filename, sign_key *key,
 		outblob = (unsigned char*)m_malloc(outlen);
 		memcpy(outblob, buf->data, buf->len);
 
-		buf_burn(buf);
-		buf_free(buf);
+		buf_burn_free(buf);
 		buf = NULL;
 
 		header = "-----BEGIN OPENSSH PRIVATE KEY-----\n";
@@ -1133,12 +1129,10 @@ static int openssh_write(const char *filename, sign_key *key,
 		m_free(outblob);
 	}
 	if (keyblob) {
-		buf_burn(keyblob);
-		buf_free(keyblob);
+		buf_burn_free(keyblob);
 	}
 	if (extrablob) {
-		buf_burn(extrablob);
-		buf_free(extrablob);
+		buf_burn_free(extrablob);
 	}
 	return ret;
 }

@@ -306,8 +306,7 @@ static void gen_new_keys() {
 	mp_clear(ses.dh_K);
 	m_free(ses.dh_K);
 	hash_desc->process(&hs, ses.hash->data, ses.hash->len);
-	buf_burn(ses.hash);
-	buf_free(ses.hash);
+	buf_burn_free(ses.hash);
 	ses.hash = NULL;
 
 	if (IS_DROPBEAR_CLIENT) {
@@ -803,8 +802,7 @@ void finish_kexhashbuf(void) {
 	}
 #endif
 
-	buf_burn(ses.kexhashbuf);
-	buf_free(ses.kexhashbuf);
+	buf_burn_free(ses.kexhashbuf);
 	m_burn(&hs, sizeof(hash_state));
 	ses.kexhashbuf = NULL;
 	
