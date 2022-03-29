@@ -57,7 +57,7 @@ CLISVROBJS=common-session.o packet.o common-algo.o common-kex.o \
 
 KEYOBJS=dropbearkey.o
 
-CONVERTOBJS=dropbearconvert.o keyimport.o
+CONVERTOBJS=dropbearconvert.o keyimport.o signkey_ossh.o
 
 SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
 

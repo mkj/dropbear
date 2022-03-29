@@ -39,6 +39,7 @@
 #include "rsa.h"
 #include "dss.h"
 #include "ed25519.h"
+#include "signkey_ossh.h"
 
 static const unsigned char OSSH_PKEY_BLOB[] =
 	"openssh-key-v1\0"			/* AUTH_MAGIC */
@@ -47,10 +48,6 @@ static const unsigned char OSSH_PKEY_BLOB[] =
 	"\0\0\0\0"				/* kdf */
 	"\0\0\0\1";				/* key num */
 #define OSSH_PKEY_BLOBLEN (sizeof(OSSH_PKEY_BLOB) - 1)
-
-void buf_put_ed25519_priv_ossh(buffer *buf, const sign_key *akey);
-int buf_get_ed25519_priv_ossh(buffer *buf, sign_key *akey);
-
 #if DROPBEAR_ECDSA
 static const unsigned char OID_SEC256R1_BLOB[] = {0x2a, 0x86, 0x48, 0xce, 0x3d, 0x03, 0x01, 0x07};
 static const unsigned char OID_SEC384R1_BLOB[] = {0x2b, 0x81, 0x04, 0x00, 0x22};
@@ -571,41 +568,8 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 		return NULL;
 
 	if (key->encrypted) {
-		errmsg = "encrypted keys not supported currently";
+		errmsg = "Encrypted keys are not supported. Please convert with ssh-keygen first";
 		goto error;
-#if 0
-		/* matt TODO */
-		/*
-		 * Derive encryption key from passphrase and iv/salt:
-		 * 
-		 *  - let block A equal MD5(passphrase || iv)
-		 *  - let block B equal MD5(A || passphrase || iv)
-		 *  - block C would be MD5(B || passphrase || iv) and so on
-		 *  - encryption key is the first N bytes of A || B
-		 */
-		struct MD5Context md5c;
-		unsigned char keybuf[32];
-
-		MD5Init(&md5c);
-		MD5Update(&md5c, (unsigned char *)passphrase, strlen(passphrase));
-		MD5Update(&md5c, (unsigned char *)key->iv, 8);
-		MD5Final(keybuf, &md5c);
-
-		MD5Init(&md5c);
-		MD5Update(&md5c, keybuf, 16);
-		MD5Update(&md5c, (unsigned char *)passphrase, strlen(passphrase));
-		MD5Update(&md5c, (unsigned char *)key->iv, 8);
-		MD5Final(keybuf+16, &md5c);
-
-		/*
-		 * Now decrypt the key blob.
-		 */
-		des3_decrypt_pubkey_ossh(keybuf, (unsigned char *)key->iv,
-								 key->keyblob, key->keyblob_len);
-
-		memset(&md5c, 0, sizeof(md5c));
-		memset(keybuf, 0, sizeof(keybuf));
-#endif
 	}
 
 	/*
@@ -640,13 +604,29 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 
 		if (type != DROPBEAR_SIGNKEY_NONE) {
 			retkey->type = type;
-#if DROPBEAR_ED25519
-			if (type == DROPBEAR_SIGNKEY_ED25519) {
-				if (buf_get_ed25519_priv_ossh(blobbuf, retkey)
-					== DROPBEAR_SUCCESS) {
+#if DROPBEAR_RSA
+			if (type == DROPBEAR_SIGNKEY_RSA) {
+				if (buf_get_rsa_priv_ossh(blobbuf, retkey)
+						== DROPBEAR_SUCCESS) {
 					errmsg = NULL;
 					retval = retkey;
 					goto error;
+				} else {
+					errmsg = "Error parsing OpenSSH RSA key";
+					goto ossh_error;
+				}
+			}
+#endif
+#if DROPBEAR_ED25519
+			if (type == DROPBEAR_SIGNKEY_ED25519) {
+				if (buf_get_ed25519_priv_ossh(blobbuf, retkey)
+						== DROPBEAR_SUCCESS) {
+					errmsg = NULL;
+					retval = retkey;
+					goto error;
+				} else {
+					errmsg = "Error parsing OpenSSH ed25519 key";
+					goto ossh_error;
 				}
 			}
 #endif
@@ -917,57 +897,6 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 	return retval;
 }
 
-#if DROPBEAR_ED25519
-/* OpenSSH raw private ed25519 format is
-string       "ssh-ed25519"
-uint32       32
-byte[32]     pubkey
-uint32       64
-byte[32]     privkey
-byte[32]     pubkey
-*/
-
-void buf_put_ed25519_priv_ossh(buffer *buf, const sign_key *akey) {
-	const dropbear_ed25519_key *key = akey->ed25519key;
-	dropbear_assert(key != NULL);
-	buf_putstring(buf, SSH_SIGNKEY_ED25519, SSH_SIGNKEY_ED25519_LEN);
-	buf_putint(buf, CURVE25519_LEN);
-	buf_putbytes(buf, key->pub, CURVE25519_LEN);
-	buf_putint(buf, CURVE25519_LEN*2);
-	buf_putbytes(buf, key->priv, CURVE25519_LEN);
-	buf_putbytes(buf, key->pub, CURVE25519_LEN);
-}
-
-int buf_get_ed25519_priv_ossh(buffer *buf, sign_key *akey) {
-	dropbear_ed25519_key *key = akey->ed25519key;
-	uint32_t len;
-
-	dropbear_assert(key != NULL);
-
-	/* Parse past the first string and pubkey */
-	if (buf_get_ed25519_pub_key(buf, key, DROPBEAR_SIGNKEY_ED25519)
-			== DROPBEAR_FAILURE) {
-		dropbear_log(LOG_ERR, "Error parsing ed25519 key, pubkey");
-		return DROPBEAR_FAILURE;
-	}
-	len = buf_getint(buf);
-	if (len != 2*CURVE25519_LEN) {
-		dropbear_log(LOG_ERR, "Error parsing ed25519 key, bad length");
-		return DROPBEAR_FAILURE;
-	}
-	memcpy(key->priv, buf_getptr(buf, CURVE25519_LEN), CURVE25519_LEN);
-	buf_incrpos(buf, CURVE25519_LEN);
-
-	/* Sanity check */
-	if (memcmp(buf_getptr(buf, CURVE25519_LEN), key->pub,
-				CURVE25519_LEN) != 0) {
-		dropbear_log(LOG_ERR, "Error parsing ed25519 key, mismatch pubkey");
-		return DROPBEAR_FAILURE;
-	}
-	return DROPBEAR_SUCCESS;
-}
-#endif
-
 static int openssh_write(const char *filename, sign_key *key,
 				  const char *passphrase)
 {
@@ -982,14 +911,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	int ret = 0;
 	FILE *fp;
 
-#if DROPBEAR_RSA
-	mp_int dmp1, dmq1, iqmp, tmpval; /* for rsa */
-#endif
-
 	if (
-#if DROPBEAR_RSA
-			key->type == DROPBEAR_SIGNKEY_RSA ||
-#endif
 #if DROPBEAR_DSS
 			key->type == DROPBEAR_SIGNKEY_DSS ||
 #endif
@@ -1010,102 +932,6 @@ static int openssh_write(const char *filename, sign_key *key,
 		 * key blob, and also decide on the header line.
 		 */
 		numbers[0].start = zero; numbers[0].bytes = 1; zero[0] = '\0';
-
-	#if DROPBEAR_RSA
-		if (key->type == DROPBEAR_SIGNKEY_RSA) {
-
-			if (key->rsakey->p == NULL || key->rsakey->q == NULL) {
-				fprintf(stderr, "Pre-0.33 Dropbear keys cannot be converted to OpenSSH keys.\n");
-				goto error;
-			}
-
-			/* e */
-			numbers[2].bytes = buf_getint(keyblob);
-			numbers[2].start = buf_getptr(keyblob, numbers[2].bytes);
-			buf_incrpos(keyblob, numbers[2].bytes);
-			
-			/* n */
-			numbers[1].bytes = buf_getint(keyblob);
-			numbers[1].start = buf_getptr(keyblob, numbers[1].bytes);
-			buf_incrpos(keyblob, numbers[1].bytes);
-			
-			/* d */
-			numbers[3].bytes = buf_getint(keyblob);
-			numbers[3].start = buf_getptr(keyblob, numbers[3].bytes);
-			buf_incrpos(keyblob, numbers[3].bytes);
-			
-			/* p */
-			numbers[4].bytes = buf_getint(keyblob);
-			numbers[4].start = buf_getptr(keyblob, numbers[4].bytes);
-			buf_incrpos(keyblob, numbers[4].bytes);
-			
-			/* q */
-			numbers[5].bytes = buf_getint(keyblob);
-			numbers[5].start = buf_getptr(keyblob, numbers[5].bytes);
-			buf_incrpos(keyblob, numbers[5].bytes);
-
-			/* now calculate some extra parameters: */
-			m_mp_init(&tmpval);
-			m_mp_init(&dmp1);
-			m_mp_init(&dmq1);
-			m_mp_init(&iqmp);
-
-			/* dmp1 = d mod (p-1) */
-			if (mp_sub_d(key->rsakey->p, 1, &tmpval) != MP_OKAY) {
-				fprintf(stderr, "Bignum error for p-1\n");
-				goto error;
-			}
-			if (mp_mod(key->rsakey->d, &tmpval, &dmp1) != MP_OKAY) {
-				fprintf(stderr, "Bignum error for dmp1\n");
-				goto error;
-			}
-
-			/* dmq1 = d mod (q-1) */
-			if (mp_sub_d(key->rsakey->q, 1, &tmpval) != MP_OKAY) {
-				fprintf(stderr, "Bignum error for q-1\n");
-				goto error;
-			}
-			if (mp_mod(key->rsakey->d, &tmpval, &dmq1) != MP_OKAY) {
-				fprintf(stderr, "Bignum error for dmq1\n");
-				goto error;
-			}
-
-			/* iqmp = (q^-1) mod p */
-			if (mp_invmod(key->rsakey->q, key->rsakey->p, &iqmp) != MP_OKAY) {
-				fprintf(stderr, "Bignum error for iqmp\n");
-				goto error;
-			}
-
-			extrablob = buf_new(2000);
-			buf_putmpint(extrablob, &dmp1);
-			buf_putmpint(extrablob, &dmq1);
-			buf_putmpint(extrablob, &iqmp);
-			buf_setpos(extrablob, 0);
-			mp_clear(&dmp1);
-			mp_clear(&dmq1);
-			mp_clear(&iqmp);
-			mp_clear(&tmpval);
-			
-			/* dmp1 */
-			numbers[6].bytes = buf_getint(extrablob);
-			numbers[6].start = buf_getptr(extrablob, numbers[6].bytes);
-			buf_incrpos(extrablob, numbers[6].bytes);
-			
-			/* dmq1 */
-			numbers[7].bytes = buf_getint(extrablob);
-			numbers[7].start = buf_getptr(extrablob, numbers[7].bytes);
-			buf_incrpos(extrablob, numbers[7].bytes);
-			
-			/* iqmp */
-			numbers[8].bytes = buf_getint(extrablob);
-			numbers[8].start = buf_getptr(extrablob, numbers[8].bytes);
-			buf_incrpos(extrablob, numbers[8].bytes);
-
-			nnumbers = 9;
-			header = "-----BEGIN RSA PRIVATE KEY-----\n";
-			footer = "-----END RSA PRIVATE KEY-----\n";
-		}
-	#endif /* DROPBEAR_RSA */
 
 	#if DROPBEAR_DSS
 		if (key->type == DROPBEAR_SIGNKEY_DSS) {
@@ -1174,7 +1000,7 @@ static int openssh_write(const char *filename, sign_key *key,
 			memcpy(outblob+pos, numbers[i].start, numbers[i].bytes);
 			pos += numbers[i].bytes;
 		}
-	} /* end RSA and DSS handling */
+	} /* end DSS handling */
 
 #if DROPBEAR_ECDSA
 	if (key->type == DROPBEAR_SIGNKEY_ECDSA_NISTP256
@@ -1273,14 +1099,29 @@ static int openssh_write(const char *filename, sign_key *key,
 	}
 #endif
 
+	if (0
+#if DROPBEAR_RSA
+		|| key->type == DROPBEAR_SIGNKEY_RSA
+#endif
 #if DROPBEAR_ED25519
-	if (key->type == DROPBEAR_SIGNKEY_ED25519) {
-		buffer *buf = buf_new(1200);
-		keyblob = buf_new(1000);
-		extrablob = buf_new(1100);
+		|| key->type == DROPBEAR_SIGNKEY_ED25519
+#endif
+		) {
+		buffer *buf = buf_new(3200);
+		keyblob = buf_new(3000);
+		extrablob = buf_new(3100);
 
 		/* private key blob w/o header */
-		buf_put_ed25519_priv_ossh(keyblob, key);
+#if DROPBEAR_RSA
+		if (key->type == DROPBEAR_SIGNKEY_RSA) {
+			buf_put_rsa_priv_ossh(keyblob, key);
+		}
+#endif
+#if DROPBEAR_ED25519
+		if (key->type == DROPBEAR_SIGNKEY_ED25519) {
+			buf_put_ed25519_priv_ossh(keyblob, key);
+		}
+#endif
 
 		/* header */
 		buf_putbytes(buf, OSSH_PKEY_BLOB, OSSH_PKEY_BLOBLEN);
@@ -1314,7 +1155,6 @@ static int openssh_write(const char *filename, sign_key *key,
 		header = "-----BEGIN OPENSSH PRIVATE KEY-----\n";
 		footer = "-----END OPENSSH PRIVATE KEY-----\n";
 	}
-#endif
 
 	/*
 	 * Padding on OpenSSH keys is deterministic. The number of
