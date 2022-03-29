@@ -601,51 +601,35 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 		/* discard checkkey2 */
 		buf_getint(blobbuf);
 
-		if (type != DROPBEAR_SIGNKEY_NONE) {
-			retkey->type = type;
+		errmsg = "Unsupported OpenSSH key type";
+		retkey->type = type;
+		ret = DROPBEAR_FAILURE;
+		/* Parse private key part */
 #if DROPBEAR_RSA
-			if (type == DROPBEAR_SIGNKEY_RSA) {
-				if (buf_get_rsa_priv_ossh(blobbuf, retkey)
-						== DROPBEAR_SUCCESS) {
-					errmsg = NULL;
-					retval = retkey;
-					goto error;
-				} else {
-					errmsg = "Error parsing OpenSSH RSA key";
-					goto ossh_error;
-				}
-			}
+		if (type == DROPBEAR_SIGNKEY_RSA) {
+			errmsg = "Error parsing OpenSSH RSA key";
+			ret = buf_get_rsa_priv_ossh(blobbuf, retkey);
+		}
 #endif
 #if DROPBEAR_ED25519
-			if (type == DROPBEAR_SIGNKEY_ED25519) {
-				if (buf_get_ed25519_priv_ossh(blobbuf, retkey)
-						== DROPBEAR_SUCCESS) {
-					errmsg = NULL;
-					retval = retkey;
-					goto error;
-				} else {
-					errmsg = "Error parsing OpenSSH ed25519 key";
-					goto ossh_error;
-				}
-			}
+		if (type == DROPBEAR_SIGNKEY_ED25519) {
+			errmsg = "Error parsing OpenSSH ed25519 key";
+			ret = buf_get_ed25519_priv_ossh(blobbuf, retkey);
+		}
 #endif
 #if DROPBEAR_ECDSA
-			if (signkey_is_ecdsa(type)) {
-				if (buf_get_ecdsa_priv_ossh(blobbuf, retkey)
-						== DROPBEAR_SUCCESS) {
-					errmsg = NULL;
-					retval = retkey;
-					goto error;
-				} else {
-					errmsg = "Error parsing OpenSSH ed25519 key";
-					goto ossh_error;
-				}
-			}
+		if (signkey_is_ecdsa(type)) {
+			errmsg = "Error parsing OpenSSH ecdsa key";
+			ret = buf_get_ecdsa_priv_ossh(blobbuf, retkey);
+		}
 #endif
+		if (ret == DROPBEAR_SUCCESS) {
+				errmsg = NULL;
+				retval = retkey;
+				goto error;
 		}
 
-		errmsg = "Unsupported OpenSSH key type";
-		ossh_error:
+ossh_error:
 		sign_key_free(retkey);
 		retkey = NULL;
 		goto error;
