@@ -6,6 +6,7 @@
 #include "buffer.h"
 #include "curve25519.h"
 #include "ed25519.h"
+#include "ssh.h"
 
 int buf_sk_ed25519_verify(buffer *buf, const dropbear_ed25519_key *key, const buffer *data_buf, const char* app, unsigned int applen) {
 
@@ -31,6 +32,7 @@ int buf_sk_ed25519_verify(buffer *buf, const dropbear_ed25519_key *key, const bu
 
 	flags = buf_getbyte (buf);
 	counter = buf_getint (buf);
+	/* create the message to be signed */
 	sk_buffer = buf_new (2*SHA256_HASH_SIZE+5);
 	sha256_init (&hs);
 	sha256_process (&hs, app, applen);
@@ -50,10 +52,15 @@ int buf_sk_ed25519_verify(buffer *buf, const dropbear_ed25519_key *key, const bu
 		ret = DROPBEAR_SUCCESS;
 	}
 
-out:
-	if (sk_buffer) {
-		buf_free(sk_buffer);
+	/* TODO: allow "no-touch-required" or "verify-required" authorized_keys options */
+	if (!(flags & SSH_SK_USER_PRESENCE_REQD)) {
+		if (ret == DROPBEAR_SUCCESS) {
+			dropbear_log(LOG_WARNING, "Rejecting, user-presence not set");
+		}
+		ret = DROPBEAR_FAILURE;
 	}
+out:
+	buf_free(sk_buffer);
 	TRACE(("leave buf_sk_ed25519_verify: ret %d", ret))
 	return ret;
 }
