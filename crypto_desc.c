@@ -24,12 +24,6 @@ void crypto_init() {
 #if DROPBEAR_AES
 		&aes_desc,
 #endif
-#if DROPBEAR_BLOWFISH
-		&blowfish_desc,
-#endif
-#if DROPBEAR_TWOFISH
-		&twofish_desc,
-#endif
 #if DROPBEAR_3DES
 		&des3_desc,
 #endif

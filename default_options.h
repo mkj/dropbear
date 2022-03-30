@@ -95,8 +95,6 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_AES128 1
 #define DROPBEAR_AES256 1
 #define DROPBEAR_3DES 0
-#define DROPBEAR_TWOFISH256 0
-#define DROPBEAR_TWOFISH128 0
 
 /* Enable Chacha20-Poly1305 authenticated encryption mode. This is
  * generally faster than AES256 on CPU w/o dedicated AES instructions,

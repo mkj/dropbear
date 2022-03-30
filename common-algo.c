@@ -64,14 +64,6 @@ static const struct dropbear_cipher dropbear_aes256 =
 static const struct dropbear_cipher dropbear_aes128 = 
 	{&aes_desc, 16, 16};
 #endif
-#if DROPBEAR_TWOFISH256
-static const struct dropbear_cipher dropbear_twofish256 = 
-	{&twofish_desc, 32, 16};
-#endif
-#if DROPBEAR_TWOFISH128
-static const struct dropbear_cipher dropbear_twofish128 = 
-	{&twofish_desc, 16, 16};
-#endif
 #if DROPBEAR_3DES
 static const struct dropbear_cipher dropbear_3des = 
 	{&des3_desc, 24, 8};
@@ -156,15 +148,6 @@ algo_type sshciphers[] = {
 #if DROPBEAR_AES256
 	{"aes256-ctr", 0, &dropbear_aes256, 1, &dropbear_mode_ctr},
 #endif
-#if DROPBEAR_TWOFISH_CTR
-/* twofish ctr is conditional as it hasn't been tested for interoperability, see options.h */
-#if DROPBEAR_TWOFISH256
-	{"twofish256-ctr", 0, &dropbear_twofish256, 1, &dropbear_mode_ctr},
-#endif
-#if DROPBEAR_TWOFISH128
-	{"twofish128-ctr", 0, &dropbear_twofish128, 1, &dropbear_mode_ctr},
-#endif
-#endif /* DROPBEAR_TWOFISH_CTR */
 #endif /* DROPBEAR_ENABLE_CTR_MODE */
 
 #if DROPBEAR_ENABLE_CBC_MODE
@@ -173,13 +156,6 @@ algo_type sshciphers[] = {
 #endif
 #if DROPBEAR_AES256
 	{"aes256-cbc", 0, &dropbear_aes256, 1, &dropbear_mode_cbc},
-#endif
-#if DROPBEAR_TWOFISH256
-	{"twofish256-cbc", 0, &dropbear_twofish256, 1, &dropbear_mode_cbc},
-	{"twofish-cbc", 0, &dropbear_twofish256, 1, &dropbear_mode_cbc},
-#endif
-#if DROPBEAR_TWOFISH128
-	{"twofish128-cbc", 0, &dropbear_twofish128, 1, &dropbear_mode_cbc},
 #endif
 #endif /* DROPBEAR_ENABLE_CBC_MODE */
 

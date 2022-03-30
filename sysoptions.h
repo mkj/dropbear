@@ -131,14 +131,6 @@
 #define DROPBEAR_MD5_HMAC 0
 #endif
 
-/* Twofish counter mode is disabled by default because it 
-has not been tested for interoperability with other SSH implementations.
-If you test it please contact the Dropbear author */
-#ifndef DROPBEAR_TWOFISH_CTR
-#define DROPBEAR_TWOFISH_CTR 0
-#endif
-
-
 #define DROPBEAR_ECC ((DROPBEAR_ECDH) || (DROPBEAR_ECDSA))
 
 /* Debian doesn't define this in system headers */
@@ -235,8 +227,6 @@ If you test it please contact the Dropbear author */
 
 #define DROPBEAR_AES ((DROPBEAR_AES256) || (DROPBEAR_AES128))
 
-#define DROPBEAR_TWOFISH ((DROPBEAR_TWOFISH256) || (DROPBEAR_TWOFISH128))
-
 #define DROPBEAR_AEAD_MODE ((DROPBEAR_CHACHA20POLY1305) || (DROPBEAR_ENABLE_GCM_MODE))
 
 #define DROPBEAR_CLI_ANYTCPFWD ((DROPBEAR_CLI_REMOTETCPFWD) || (DROPBEAR_CLI_LOCALTCPFWD))
@@ -280,8 +270,7 @@ If you test it please contact the Dropbear author */
 	#error "You must define DROPBEAR_SVR_PUBKEY_AUTH in order to use plugins"
 #endif
 
-#if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_BLOWFISH \
-      || DROPBEAR_TWOFISH256 || DROPBEAR_TWOFISH128 || DROPBEAR_CHACHA20POLY1305)
+#if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_CHACHA20POLY1305)
 	#error "At least one encryption algorithm must be enabled. AES128 is recommended."
 #endif
 
