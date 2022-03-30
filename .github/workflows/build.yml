@@ -44,6 +44,12 @@ jobs:
           - name: linux clang
             cc: clang
 
+          # Some platforms only have old compilers, we try to keep
+          # compatibilty. For some reason -std=c89 doesn't enforce
+          # early declarations so we specify it anyway.
+          - name: c89
+            extracflags: -std=c89 -Wdeclaration-after-statement
+
           - name: macos 10.15
             os: macos-10.15
             cc: clang
@@ -63,6 +69,7 @@ jobs:
             apt: 'no'
             ranlib: ranlib -no_warning_for_no_symbols
 
+          # Check that debug code doesn't bitrot
           - name: DEBUG_TRACE
             localoptions: |
               #define DEBUG_TRACE 5
