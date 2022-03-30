@@ -617,7 +617,7 @@ int m_str_to_uint(const char* str, unsigned int *val) {
 	l = strtoul(str, &endp, 10);
 
 	if (endp == str || *endp != '\0') {
-		// parse error
+		/* parse error */
 		return DROPBEAR_FAILURE;
 	}
 
