@@ -202,8 +202,10 @@ void svr_auth_pubkey(int valid_user) {
 	fp = sign_key_fingerprint(keyblob, keybloblen);
 	if (buf_verify(ses.payload, key, sigtype, signbuf) == DROPBEAR_SUCCESS) {
 		dropbear_log(LOG_NOTICE,
-				"Pubkey auth succeeded for '%s' with key %s from %s",
-				ses.authstate.pw_name, fp, svr_ses.addrstring);
+				"Pubkey auth succeeded for '%s' with %s key %s from %s",
+				ses.authstate.pw_name,
+				signkey_name_from_type(keytype, NULL), fp,
+				svr_ses.addrstring);
 		send_msg_userauth_success();
 #if DROPBEAR_PLUGIN
                 if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
