@@ -341,7 +341,7 @@ static void printpubkey(sign_key * key, int keytype) {
 	err = base64_encode(buf_getptr(buf, len), len, base64key, &base64len);
 
 	if (err != CRYPT_OK) {
-		fprintf(stderr, "base64 failed");
+		dropbear_exit("base64 failed");
 	}
 
 	typestring = signkey_name_from_type(keytype, NULL);

@@ -249,7 +249,7 @@ static void kexinitialise() {
 /* Helper function for gen_new_keys, creates a hash. It makes a copy of the
  * already initialised hash_state hs, which should already have processed
  * the dh_K and hash, since these are common. X is the letter 'A', 'B' etc.
- * out must have at least min(SHA1_HASH_SIZE, outlen) bytes allocated.
+ * out must have at least min(hash_size, outlen) bytes allocated.
  *
  * See Section 7.2 of rfc4253 (ssh transport) for details */
 static void hashkeys(unsigned char *out, unsigned int outlen, 

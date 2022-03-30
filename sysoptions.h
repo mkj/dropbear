@@ -157,9 +157,11 @@
 #endif
 
 /* hashes which will be linked and registered */
-#define DROPBEAR_SHA256 ((DROPBEAR_SHA2_256_HMAC) || (DROPBEAR_ECC_256) \
- 			|| (DROPBEAR_CURVE25519) || (DROPBEAR_DH_GROUP14_SHA256) \
-			|| (DROPBEAR_RSA_SHA256))
+#define DROPBEAR_SHA1 (DROPBEAR_RSA_SHA1 || DROPBEAR_DSS \
+				|| DROPBEAR_SHA1_HMAC || DROPBEAR_SHA1_96_HMAC \
+				|| DROPBEAR_DH_GROUP1 || DROPBEAR_DH_GROUP14_SHA1 )
+/* sha256 is always used for fingerprints and dbrandom */
+#define DROPBEAR_SHA256 1
 #define DROPBEAR_SHA384 (DROPBEAR_ECC_384)
 /* LTC SHA384 depends on SHA512 */
 #define DROPBEAR_SHA512 ((DROPBEAR_SHA2_512_HMAC) || (DROPBEAR_ECC_521) \

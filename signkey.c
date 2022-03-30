@@ -544,98 +544,42 @@ void sign_key_free(sign_key *key) {
 	TRACE2(("leave sign_key_free"))
 }
 
-static char hexdig(unsigned char x) {
-	if (x > 0xf)
-		return 'X';
-
-	if (x < 10)
-		return '0' + x;
-	else
-		return 'a' + x - 10;
-}
-
-/* Since we're not sure if we'll have md5 or sha1, we present both.
- * MD5 is used in preference, but sha1 could still be useful */
-#if DROPBEAR_MD5_HMAC
-static char * sign_key_md5_fingerprint(const unsigned char* keyblob,
+static char * sign_key_sha256_fingerprint(const unsigned char* keyblob,
 		unsigned int keybloblen) {
 
 	char * ret;
 	hash_state hs;
-	unsigned char hash[MD5_HASH_SIZE];
-	unsigned int i;
-	unsigned int buflen;
+	unsigned char hash[SHA256_HASH_SIZE];
+	unsigned int b64chars, start;
+	unsigned long b64size;
+	const char *prefix = "SHA256:";
+	int err;
 
-	md5_init(&hs);
+	sha256_init(&hs);
+	sha256_process(&hs, keyblob, keybloblen);
+	sha256_done(&hs, hash);
 
-	/* skip the size int of the string - this is a bit messy */
-	md5_process(&hs, keyblob, keybloblen);
+	/* eg "SHA256:P9szN0L2ls6KxkVv7Bppv3asnZCn03rY7Msm/c8+ZgA"
+	 * 256/6 = 42.66 => 43 base64 chars. OpenSSH discards
+	 * base64 padding output. */
+	start = strlen(prefix);
+	b64chars = 43;
+	/* space for discarded b64 padding and null terminator */
+	b64size = b64chars + 4;
+	ret = m_malloc(start + b64size);
 
-	md5_done(&hs, hash);
-
-	/* "md5 hexfingerprinthere\0", each hex digit is "AB:" etc */
-	buflen = 4 + 3*MD5_HASH_SIZE;
-	ret = (char*)m_malloc(buflen);
-
-	memset(ret, 'Z', buflen);
-	strcpy(ret, "md5 ");
-
-	for (i = 0; i < MD5_HASH_SIZE; i++) {
-		unsigned int pos = 4 + i*3;
-		ret[pos] = hexdig(hash[i] >> 4);
-		ret[pos+1] = hexdig(hash[i] & 0x0f);
-		ret[pos+2] = ':';
+	memcpy(ret, prefix, start);
+	err = base64_encode(hash, SHA256_HASH_SIZE, &ret[start], &b64size);
+	if (err != CRYPT_OK) {
+		dropbear_exit("base64 failed");
 	}
-	ret[buflen-1] = 0x0;
-
+	ret[start + b64chars] = '\0';
 	return ret;
 }
 
-#else /* use SHA1 rather than MD5 for fingerprint */
-static char * sign_key_sha1_fingerprint(const unsigned char* keyblob,
-		unsigned int keybloblen) {
-
-	char * ret;
-	hash_state hs;
-	unsigned char hash[SHA1_HASH_SIZE];
-	unsigned int i;
-	unsigned int buflen;
-
-	sha1_init(&hs);
-
-	/* skip the size int of the string - this is a bit messy */
-	sha1_process(&hs, keyblob, keybloblen);
-
-	sha1_done(&hs, hash);
-
-	/* "sha1!! hexfingerprinthere\0", each hex digit is "AB:" etc */
-	buflen = 7 + 3*SHA1_HASH_SIZE;
-	ret = (char*)m_malloc(buflen);
-
-	strcpy(ret, "sha1 ");
-
-	for (i = 0; i < SHA1_HASH_SIZE; i++) {
-		unsigned int pos = 7 + 3*i;
-		ret[pos] = hexdig(hash[i] >> 4);
-		ret[pos+1] = hexdig(hash[i] & 0x0f);
-		ret[pos+2] = ':';
-	}
-	ret[buflen-1] = 0x0;
-
-	return ret;
-}
-
-#endif /* MD5/SHA1 switch */
-
-/* This will return a freshly malloced string, containing a fingerprint
- * in either sha1 or md5 */
+/* This will return a freshly malloced string */
 char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloblen) {
-
-#if DROPBEAR_MD5_HMAC
-	return sign_key_md5_fingerprint(keyblob, keybloblen);
-#else
-	return sign_key_sha1_fingerprint(keyblob, keybloblen);
-#endif
+	return sign_key_sha256_fingerprint(keyblob, keybloblen);
 }
 
 void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype, 

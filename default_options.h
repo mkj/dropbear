@@ -116,7 +116,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * Compiling in will add ~6kB to binary size on x86-64 */
 #define DROPBEAR_ENABLE_GCM_MODE 0
 
-/* Message integrity. sha2-256 is recommended as a default, 
+/* Message integrity. sha2-256 is recommended as a default,
    sha1 for compatibility */
 #define DROPBEAR_SHA1_HMAC 1
 #define DROPBEAR_SHA2_256_HMAC 1
@@ -172,7 +172,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 
  * Small systems should generally include either curve25519 or ecdh for performance.
  * curve25519 is less widely supported but is faster
- */ 
+ */
 #define DROPBEAR_DH_GROUP14_SHA1 1
 #define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
