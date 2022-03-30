@@ -114,8 +114,8 @@ void recv_msg_userauth_info_request() {
 	m_free(instruction);
 
 	for (i = 0; i < num_prompts; i++) {
-		cli_ses.is_trivial_auth = 0;
 		unsigned int response_len = 0;
+		cli_ses.is_trivial_auth = 0;
 		prompt = buf_getstring(ses.payload, NULL);
 		cleantext(prompt);
 
