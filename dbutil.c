@@ -633,11 +633,11 @@ int m_str_to_uint(const char* str, unsigned int *val) {
 	}
 }
 
-/* Returns malloced path. inpath beginning with '/' is returned as-is,
-otherwise home directory is prepended */
+/* Returns malloced path. inpath beginning with '~/' expanded,
+   otherwise returned as-is */
 char * expand_homedir_path(const char *inpath) {
 	struct passwd *pw = NULL;
-	if (inpath[0] != '/') {
+	if (strncmp(inpath, "~/", 2) == 0) {
 		char *homedir = getenv("HOME");
 
 		if (!homedir) {
@@ -648,9 +648,9 @@ char * expand_homedir_path(const char *inpath) {
 		}
 
 		if (homedir) {
-			int len = strlen(inpath) + strlen(homedir) + 2;
+			int len = strlen(inpath)-2 + strlen(homedir) + 2;
 			char *buf = m_malloc(len);
-			snprintf(buf, len, "%s/%s", homedir, inpath);
+			snprintf(buf, len, "%s/%s", homedir, inpath+2);
 			return buf;
 		}
 	}
