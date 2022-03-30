@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -22,11 +22,11 @@
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
  * SOFTWARE. */
 /*
- * This file incorporates work covered by the following copyright and  
+ * This file incorporates work covered by the following copyright and
  * permission notice:
  *
  * 	Copyright (c) 2000 Markus Friedl.  All rights reserved.
- * 	
+ *
  * 	Redistribution and use in source and binary forms, with or without
  * 	modification, are permitted provided that the following conditions
  * 	are met:
@@ -35,7 +35,7 @@
  * 	2. Redistributions in binary form must reproduce the above copyright
  * 	   notice, this list of conditions and the following disclaimer in the
  * 	   documentation and/or other materials provided with the distribution.
- * 	
+ *
  * 	THIS SOFTWARE IS PROVIDED BY THE AUTHOR ``AS IS'' AND ANY EXPRESS OR
  * 	IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES
  * 	OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED.
@@ -48,7 +48,7 @@
  * 	THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  * This copyright and permission notice applies to the code parsing public keys
- * options string which can also be found in OpenSSH auth2-pubkey.c file 
+ * options string which can also be found in OpenSSH auth2-pubkey.c file
  * (user_key_allowed2). It has been adapted to work with buffers.
  *
  */
@@ -108,7 +108,7 @@ void svr_auth_pubkey(int valid_user) {
 
 	if (!valid_user) {
 		/* Return failure once we have read the contents of the packet
-		required to validate a public key. 
+		required to validate a public key.
 		Avoids blind user enumeration though it isn't possible to prevent
 		testing for user existence if the public key is known */
 		send_msg_userauth_failure(0, 0);
@@ -130,9 +130,9 @@ void svr_auth_pubkey(int valid_user) {
             if (svr_ses.plugin_instance->checkpubkey(
                         svr_ses.plugin_instance,
                         &ses.plugin_session,
-                        keyalgo, 
-                        keyalgolen, 
-                        keyblob, 
+                        keyalgo,
+                        keyalgolen,
+                        keyblob,
                         keybloblen,
                         ses.authstate.username) == DROPBEAR_SUCCESS) {
                 /* Success */
@@ -141,7 +141,7 @@ void svr_auth_pubkey(int valid_user) {
                 /* Options provided? */
                 options_buf = ses.plugin_session->get_options(ses.plugin_session);
                 if (options_buf) {
-                    struct buf temp_buf = { 
+                    struct buf temp_buf = {
                         .data = (unsigned char *)options_buf,
                         .len = strlen(options_buf),
                         .pos = 0,
@@ -174,7 +174,7 @@ void svr_auth_pubkey(int valid_user) {
 	}
 
 	/* now we can actually verify the signature */
-	
+
 	/* get the key */
 	key = new_sign_key();
 	if (buf_get_pub_key(ses.payload, key, &keytype) == DROPBEAR_FAILURE) {
@@ -191,7 +191,7 @@ void svr_auth_pubkey(int valid_user) {
 
 	/* The entire contents of the payload prior. */
 	buf_setpos(ses.payload, ses.payload_beginning);
-	buf_putbytes(signbuf, 
+	buf_putbytes(signbuf,
 		buf_getptr(ses.payload, sign_payload_length),
 		sign_payload_length);
 	buf_incrpos(ses.payload, sign_payload_length);
@@ -213,7 +213,6 @@ void svr_auth_pubkey(int valid_user) {
                     svr_ses.plugin_instance->auth_success(ses.plugin_session);
                 }
 #endif
-                
 	} else {
 		dropbear_log(LOG_WARNING,
 				"Pubkey auth bad signature for '%s' with key %s from %s",
@@ -290,7 +289,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		unsigned char *options_start = NULL;
 		int options_len = 0;
 		int escape, quoted;
-		
+
 		/* skip over any comments or leading whitespace */
 		while (line->pos < line->len) {
 			const char c = buf_getbyte(line);
@@ -313,7 +312,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		quoted = 0;
 		escape = 0;
 		options_len = 0;
-		
+
 		/* figure out where the options are */
 		while (line->pos < line->len) {
 			const char c = buf_getbyte(line);
@@ -338,7 +337,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 		}
 	}
 	buf_incrpos(line, algolen);
-	
+
 	/* check for space (' ') character */
 	if (buf_getbyte(line) != ' ') {
 		TRACE(("checkpubkey_line: space character expected, isn't there"))
@@ -427,23 +426,8 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 
 	TRACE(("enter checkpubkey"))
 
-	/* check file permissions, also whether file exists */
-	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
-		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
-		goto out;
-	}
-
-	/* we don't need to check pw and pw_dir for validity, since
-	 * its been done in checkpubkeyperms. */
-	len = strlen(ses.authstate.pw_dir);
-	/* allocate max required pathname storage,
-	 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
-	filename = m_malloc(len + 22);
-	snprintf(filename, len + 22, "%s/.ssh/authorized_keys", 
-				ses.authstate.pw_dir);
-
 #if DROPBEAR_SVR_MULTIUSER
-	/* open the file as the authenticating user. */
+	/* access the file as the authenticating user. */
 	origuid = getuid();
 	origgid = getgid();
 	if ((setegid(ses.authstate.pw_gid)) < 0 ||
@@ -451,9 +435,24 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		dropbear_exit("Failed to set euid");
 	}
 #endif
+	/* check file permissions, also whether file exists */
+	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
+		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
+	} else {
+		/* we don't need to check pw and pw_dir for validity, since
+		 * its been done in checkpubkeyperms. */
+		len = strlen(ses.authstate.pw_dir);
+		/* allocate max required pathname storage,
+		 * = path + "/.ssh/authorized_keys" + '\0' = pathlen + 22 */
+		filename = m_malloc(len + 22);
+		snprintf(filename, len + 22, "%s/.ssh/authorized_keys",
+					ses.authstate.pw_dir);
 
-	authfile = fopen(filename, "r");
-
+		authfile = fopen(filename, "r");
+		if (!authfile) {
+			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
+		}
+	}
 #if DROPBEAR_SVR_MULTIUSER
 	if ((seteuid(origuid)) < 0 ||
 		(setegid(origgid)) < 0) {
@@ -485,7 +484,6 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		}
 
 		/* We continue to the next line otherwise */
-		
 	} while (1);
 
 out:
@@ -508,7 +506,7 @@ out:
  * g-w, o-w */
 static int checkpubkeyperms() {
 
-	char* filename = NULL; 
+	char* filename = NULL;
 	int ret = DROPBEAR_FAILURE;
 	unsigned int len;
 
@@ -547,7 +545,7 @@ static int checkpubkeyperms() {
 
 	/* file looks ok, return success */
 	ret = DROPBEAR_SUCCESS;
-	
+
 out:
 	m_free(filename);
 
