@@ -82,6 +82,11 @@ void recv_msg_userauth_banner() {
 		return;
 	}
 
+	if (cli_opts.quiet) {
+		TRACE(("not showing banner"))
+		return;
+	}
+
 	banner = buf_getstring(ses.payload, &bannerlen);
 	buf_eatstring(ses.payload); /* The language string */
 
