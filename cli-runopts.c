@@ -482,14 +482,6 @@ void cli_getopts(int argc, char ** argv) {
 	}
 #endif
 
-#if (DROPBEAR_CLI_PUBKEY_AUTH)
-	{
-		char *expand_path = expand_homedir_path(DROPBEAR_DEFAULT_CLI_AUTHKEY);
-		loadidentityfile(expand_path, 0);
-		m_free(expand_path);
-	}
-#endif
-
 	/* The hostname gets set up last, since
 	 * in multi-hop mode it will require knowledge
 	 * of other flags such as -i */
@@ -498,6 +490,17 @@ void cli_getopts(int argc, char ** argv) {
 #else
 	parse_hostname(host_arg);
 #endif
+
+	/* We don't want to include default id_dropbear as a
+	   -i argument for multihop, so handle it later. */
+#if (DROPBEAR_CLI_PUBKEY_AUTH)
+	{
+		char *expand_path = expand_homedir_path(DROPBEAR_DEFAULT_CLI_AUTHKEY);
+		loadidentityfile(expand_path, 0);
+		m_free(expand_path);
+	}
+#endif
+
 }
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
