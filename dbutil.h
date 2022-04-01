@@ -73,6 +73,8 @@ void m_close(int fd);
 void setnonblocking(int fd);
 void disallow_core(void);
 int m_str_to_uint(const char* str, unsigned int *val);
+/* The same as snprintf() but exits rather than returning negative */
+int m_snprintf(char *str, size_t size, const char *format, ...);
 
 /* Used to force mp_ints to be initialised */
 #define DEF_MP_INT(X) mp_int X = {0, 0, 0, NULL}

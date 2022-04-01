@@ -771,3 +771,16 @@ int fd_read_pending(int fd) {
 		return FD_ISSET(fd, &fds);
 	}
 }
+
+int m_snprintf(char *str, size_t size, const char *format, ...) {
+	va_list param;
+	int ret;
+
+	va_start(param, format);
+	ret = vsnprintf(str, size, format, param);
+	va_end(param);
+	if (ret < 0) {
+		dropbear_exit("snprintf failed");
+	}
+	return ret;
+}
