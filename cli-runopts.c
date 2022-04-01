@@ -419,7 +419,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	/* And now a few sanity checks and setup */
 
-#if DROPBEAR_CLI_PROXYCMD                                                                                                                                   
+#if DROPBEAR_CLI_PROXYCMD
 	if (cli_opts.proxycmd) {
 		/* To match the common path of m_freeing it */
 		cli_opts.proxycmd = m_strdup(cli_opts.proxycmd);
@@ -431,14 +431,10 @@ void cli_getopts(int argc, char ** argv) {
 	}
 
 	if (bind_arg) {
-		/* split [host][:port] */
-		char *port = strrchr(bind_arg, ':');
-		if (port) {
-			cli_opts.bind_port = m_strdup(port+1);
-			*port = '\0';
-		}
-		if (strlen(bind_arg) > 0) {
-			cli_opts.bind_address = m_strdup(bind_arg);
+		if (split_address_port(bind_arg,
+			&cli_opts.bind_address, &cli_opts.bind_port)
+				== DROPBEAR_FAILURE) {
+			dropbear_exit("Bad -b argument");
 		}
 	}
 

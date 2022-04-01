@@ -116,3 +116,58 @@ void parse_recv_window(const char* recv_window_arg) {
 	}
 
 }
+
+/* Splits addr:port. Handles IPv6 [2001:0011::4]:port style format.
+   Returns first/second parts as malloced strings, second will
+   be NULL if no separator is found.
+   :port  ->  (NULL, "port")
+   port  ->   (port, NULL)
+   addr:port  (addr, port)
+   addr: ->   (addr, "")
+   Returns DROPBEAR_SUCCESS/DROPBEAR_FAILURE */
+int split_address_port(const char* spec, char **first, char ** second) {
+	char *spec_copy = NULL, *addr = NULL, *colon = NULL;
+	int ret = DROPBEAR_FAILURE;
+
+	*first = NULL;
+	*second = NULL;
+	spec_copy = m_strdup(spec);
+	addr = spec_copy;
+
+	if (*addr == '[') {
+		addr++;
+		colon = strchr(addr, ']');
+		if (!colon) {
+			dropbear_log(LOG_WARNING, "Bad address '%s'", spec);
+			goto out;
+		}
+		*colon = '\0';
+		colon++;
+		if (*colon == '\0') {
+			/* No port part */
+			colon = NULL;
+		} else if (*colon != ':') {
+			dropbear_log(LOG_WARNING, "Bad address '%s'", spec);
+			goto out;
+		}
+	} else {
+		/* search for ':', that separates address and port */
+		colon = strrchr(addr, ':');
+	}
+
+	/* colon points to ':' now, or is NULL */
+	if (colon) {
+		/* Split the address/port */
+		*colon = '\0';
+		colon++;
+		*second = m_strdup(colon);
+	}
+	if (strlen(addr)) {
+		*first = m_strdup(addr);
+	}
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	m_free(spec_copy);
+	return ret;
+}

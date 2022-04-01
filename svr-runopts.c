@@ -452,56 +452,34 @@ void svr_getopts(int argc, char ** argv) {
 }
 
 static void addportandaddress(const char* spec) {
-	char *spec_copy = NULL, *myspec = NULL, *port = NULL, *address = NULL;
+	char *port = NULL, *address = NULL;
 
-	if (svr_opts.portcount < DROPBEAR_MAX_PORTS) {
-
-		/* We don't free it, it becomes part of the runopt state */
-		spec_copy = m_strdup(spec);
-		myspec = spec_copy;
-
-		if (myspec[0] == '[') {
-			myspec++;
-			port = strchr(myspec, ']');
-			if (!port) {
-				/* Unmatched [ -> exit */
-				dropbear_exit("Bad listen address");
-			}
-			port[0] = '\0';
-			port++;
-			if (port[0] != ':') {
-				/* Missing port -> exit */
-				dropbear_exit("Missing port");
-			}
-		} else {
-			/* search for ':', that separates address and port */
-			port = strrchr(myspec, ':');
-		}
-
-		if (!port) {
-			/* no ':' -> the whole string specifies just a port */
-			port = myspec;
-		} else {
-			/* Split the address/port */
-			port[0] = '\0'; 
-			port++;
-			address = myspec;
-		}
-
-		if (!address) {
-			/* no address given -> fill in the default address */
-			address = DROPBEAR_DEFADDRESS;
-		}
-
-		if (port[0] == '\0') {
-			/* empty port -> exit */
-			dropbear_exit("Bad port");
-		}
-		svr_opts.ports[svr_opts.portcount] = m_strdup(port);
-		svr_opts.addresses[svr_opts.portcount] = m_strdup(address);
-		svr_opts.portcount++;
-		m_free(spec_copy);
+	if (svr_opts.portcount >= DROPBEAR_MAX_PORTS) {
+		return;
 	}
+
+	if (split_address_port(spec, &address, &port) == DROPBEAR_FAILURE) {
+		dropbear_exit("Bad -p argument");
+	}
+
+	/* A bare port */
+	if (!port) {
+		port = address;
+		address = NULL;
+	}
+
+	if (!address) {
+		/* no address given -> fill in the default address */
+		address = m_strdup(DROPBEAR_DEFADDRESS);
+	}
+
+	if (port[0] == '\0') {
+		/* empty port -> exit */
+		dropbear_exit("Bad port");
+	}
+	svr_opts.ports[svr_opts.portcount] = port;
+	svr_opts.addresses[svr_opts.portcount] = address;
+	svr_opts.portcount++;
 }
 
 static void disablekey(int type) {

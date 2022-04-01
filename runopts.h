@@ -198,5 +198,6 @@ void parse_ciphers_macs(void);
 
 void print_version(void);
 void parse_recv_window(const char* recv_window_arg);
+int split_address_port(const char* spec, char **first, char ** second);
 
 #endif /* DROPBEAR_RUNOPTS_H_ */
