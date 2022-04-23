@@ -74,6 +74,11 @@ jobs:
             localoptions: |
               #define DEBUG_TRACE 5
 
+          # Check off-by-default options don't bitrot
+          - name: nondefault options
+            nondefault: 1
+            configure_flags: --enable-pam
+
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
           # - name: fuzzing with address sanitizer
@@ -115,7 +120,7 @@ jobs:
         if: ${{ matrix.apt != 'no' }}
         run: |
           sudo apt-get -y update
-          sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv $CC
+          sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv libpam0g-dev $CC
 
       - uses: actions/checkout@v2
 
@@ -130,6 +135,14 @@ jobs:
         run: |
           echo "$LOCALOPTIONS" > localoptions.h
           cat localoptions.h
+
+      - name: nondefault
+        if: ${{ matrix.nondefault }}
+        run: |
+          # Turn on anything that's off by default. Rough but seems sufficient
+          grep ' 0$' default_options.h | sed 's/0$/1/' > localoptions.h
+          # PAM clashes with password
+          echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
 
       - name: make
         run: make -j3
