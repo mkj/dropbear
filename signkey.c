@@ -587,7 +587,7 @@ void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 	buffer *sigblob = buf_new(MAX_PUBKEY_SIZE);
 	enum signkey_type keytype = signkey_type_from_signature(sigtype);
 
-#if DEBUG_TRACE
+#if DEBUG_TRACE > DROPBEAR_VERBOSE_LEVEL
 	{
 		const char* signame = signature_name_from_type(sigtype, NULL);
 		TRACE(("buf_put_sign type %d %s", sigtype, signame));
