@@ -140,7 +140,8 @@ jobs:
         if: ${{ matrix.nondefault }}
         run: |
           # Turn on anything that's off by default. Rough but seems sufficient
-          grep ' 0$' default_options.h | sed 's/0$/1/' > localoptions.h
+          # UNAUTH_CLOSE_DELAY causes testing problems with lingering sockets, skip it.
+          grep ' 0$' default_options.h | grep -v UNAUTH_CLOSE_DELAY | sed 's/0$/1/' > localoptions.h
           # PAM clashes with password
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
 
