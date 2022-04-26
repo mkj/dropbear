@@ -3204,7 +3204,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3212,7 +3212,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 
 { $as_echo "$as_me:${as_lineno-$LINENO}: Checking if compiler '$CC' supports -fno-strict-overflow" >&5
@@ -3232,7 +3233,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3240,7 +3241,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 
 # needed for various extensions. define early before autoconf tests
@@ -3296,7 +3298,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3304,7 +3306,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 
 		OLDLDFLAGS="$LDFLAGS"
@@ -3396,7 +3399,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3415,7 +3418,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3423,11 +3426,13 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDCFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 	# FORTIFY_SOURCE
 	{
 		OLDFLAGS="$CFLAGS"
@@ -3444,7 +3449,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3452,7 +3457,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 
 	# Spectre v2 mitigations
@@ -3471,7 +3477,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3479,7 +3485,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 	{
 		OLDFLAGS="$CFLAGS"
@@ -3496,7 +3503,7 @@ main ()
   return 0;
 }
 _ACEOF
-if ac_fn_c_try_compile "$LINENO"; then :
+if ac_fn_c_try_link "$LINENO"; then :
   { $as_echo "$as_me:${as_lineno-$LINENO}: Setting $TESTFLAGS" >&5
 $as_echo "$as_me: Setting $TESTFLAGS" >&6;}
 else
@@ -3504,7 +3511,8 @@ else
 $as_echo "$as_me: Not setting $TESTFLAGS" >&6;}; CFLAGS="$OLDFLAGS"
 
 fi
-rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
 }
 
 fi
