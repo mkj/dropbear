@@ -140,10 +140,11 @@ jobs:
         if: ${{ matrix.nondefault }}
         run: |
           # Turn on anything that's off by default. Rough but seems sufficient
-          # UNAUTH_CLOSE_DELAY causes testing problems with lingering sockets, skip it.
-          grep ' 0$' default_options.h | grep -v UNAUTH_CLOSE_DELAY | sed 's/0$/1/' > localoptions.h
+          grep ' 0$' default_options.h | sed 's/0$/1/' > localoptions.h
           # PAM clashes with password
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
+          # 1 second timeout is too short
+          sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
 
       - name: make
         run: make -j3
