@@ -81,6 +81,7 @@ static void printhelp(const char * progname) {
 					"-s		Disable password logins\n"
 					"-g		Disable password logins for root\n"
 					"-B		Allow blank password logins\n"
+					"-t		Enable two-factor authentication (both password and public key required)\n"
 #endif
 					"-T		Maximum authentication tries (default %d)\n"
 #if DROPBEAR_SVR_LOCALTCPFWD
@@ -158,6 +159,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.noauthpass = 0;
 	svr_opts.norootpass = 0;
 	svr_opts.allowblankpass = 0;
+	svr_opts.multiauthmethod = 0;
 	svr_opts.maxauthtries = MAX_AUTH_TRIES;
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
@@ -294,6 +296,9 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'B':
 					svr_opts.allowblankpass = 1;
+					break;
+				case 't':
+					svr_opts.multiauthmethod = 1;
 					break;
 #endif
 				case 'h':

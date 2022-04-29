@@ -64,6 +64,7 @@
 #include "ssh.h"
 #include "packet.h"
 #include "algo.h"
+#include "runopts.h"
 
 #if DROPBEAR_SVR_PUBKEY_AUTH
 
@@ -201,12 +202,22 @@ void svr_auth_pubkey(int valid_user) {
 	/* ... and finally verify the signature */
 	fp = sign_key_fingerprint(keyblob, keybloblen);
 	if (buf_verify(ses.payload, key, sigtype, signbuf) == DROPBEAR_SUCCESS) {
-		dropbear_log(LOG_NOTICE,
-				"Pubkey auth succeeded for '%s' with %s key %s from %s",
-				ses.authstate.pw_name,
-				signkey_name_from_type(keytype, NULL), fp,
-				svr_ses.addrstring);
-		send_msg_userauth_success();
+		if (svr_opts.multiauthmethod && (ses.authstate.authtypes & ~AUTH_TYPE_PUBKEY)) {
+			dropbear_log(LOG_NOTICE,
+					"Pubkey auth succeeded for '%s' with %s key %s from %s, extra auth required",
+					ses.authstate.pw_name,
+					signkey_name_from_type(keytype, NULL), fp,
+					svr_ses.addrstring);
+			ses.authstate.authtypes &= ~AUTH_TYPE_PUBKEY; /* pubkey auth ok, delete the method flag */
+			send_msg_userauth_failure(1, 0); /* Send partial success */
+		} else {
+			dropbear_log(LOG_NOTICE,
+					"Pubkey auth succeeded for '%s' with %s key %s from %s",
+					ses.authstate.pw_name,
+					signkey_name_from_type(keytype, NULL), fp,
+					svr_ses.addrstring);
+			send_msg_userauth_success();
+		}
 #if DROPBEAR_PLUGIN
                 if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
                     /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
