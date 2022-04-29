@@ -30,6 +30,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "auth.h"
+#include "runopts.h"
 
 #if DROPBEAR_SVR_PAM_AUTH
 
