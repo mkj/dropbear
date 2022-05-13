@@ -1,9 +1,9 @@
 # [Dropbear](https://matt.ucc.asn.au/dropbear/dropbear.html), a smallish SSH server and client.
 
-[INSTALL](INSTALL)as compilation instructions.
+[INSTALL](INSTALL) has compilation instructions.
 
-[MULTI](MULTI) has instructions on making a multi-purpose binary (ie a single binary
-which performs multiple tasks, to save disk space)
+[MULTI](MULTI) has instructions on making a multi-purpose binary (i.e., a single binary
+which performs multiple tasks to save disk space)
 
 [SMALL](SMALL) has some tips on creating small binaries.
 
@@ -19,10 +19,10 @@ the key entries in that file. They should be of the form:
 ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIEAwVa6M6cGVmUcLl2cFzkxEoJd06Ub4bVDsYrWvXhvUV+ZAM9uGuewZBDoAqNKJxoIn0Hyd0Nk/yU99UVv6NWV/5YSHtnf35LKds56j7cuzoQpFIdjNwdxAN0PCET/MG8qyskG/2IE2DPNIaJ3Wy+Ws4IZEgdJgPlTYUBWWtCWOGc= someone@hostname
 ```
 
-You must make sure that `~/.ssh`, and the key file, are only writable by the
+You must make sure that `~/.ssh` and the key file are only writable by the
 user. Beware of editors that split the key into multiple lines.
 
-Dropbear supports some options for `authorized_keys` entries, see the manpage.
+Dropbear supports some options for `authorized_keys` entries; see the manpage.
 
 ### Client public key auth:
 
@@ -38,7 +38,7 @@ dropbearconvert openssh dropbear ~/.ssh/id_rsa  ~/.ssh/id_rsa.db
 dbclient -i ~/.ssh/id_rsa.db <hostname>
 ```
 
-Dropbear does not support encrypted hostkeys though can connect to ssh-agent.
+Dropbear does not support encrypted hostkeys though it can connect to ssh-agent.
 
 If you want to get the public-key portion of a Dropbear private key, look at
 dropbearkey's `-y` option.
@@ -60,8 +60,8 @@ or alternatively convert OpenSSH keys to Dropbear:
 ./dropbearconvert openssh dropbear /etc/ssh/ssh_host_dsa_key dropbear_dss_host_key
 ```
 
-You can also get Dropbear to create keys when the first connection is made -
-this is preferable to generating keys when the system boots. Make sure 
+You can also get Dropbear to create keys when the first connection is made, 
+which is preferable to generating keys when the system boots. Make sure 
 `/etc/dropbear/` exists and then pass `-R` to the dropbear server.
 
 ## Miscellaneous
@@ -70,9 +70,9 @@ this is preferable to generating keys when the system boots. Make sure
 `pty`, and you cannot login as any user other than that running the daemon
 (obviously). Shadow passwords will also be unusable as non-root.
 - The Dropbear distribution includes a standalone version of OpenSSH's `scp`
-program. You can compile it with `make scp`, you may want to change the path
-of the ssh binary, specified by `_PATH_SSH_PROGRAM` in `options.h` . By default
-the progress meter isn't compiled in to save space, you can enable it by 
+program. You can compile it with `make scp`; you may want to change the path
+of the ssh binary, specified by `_PATH_SSH_PROGRAM` in `options.h`. By default,
+the progress meter isn't compiled to save space. You can enable it by 
 adding `SCPPROGRESS=1` to the make commandline.
 
 ## Contact
