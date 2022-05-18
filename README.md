@@ -1,5 +1,7 @@
 # [Dropbear](https://matt.ucc.asn.au/dropbear/dropbear.html), a smallish SSH server and client.
 
+[![Version](https://img.shields.io/badge/dynamic/json?color=blue&label=Version&query=%24%5B%27name%27%5D&url=https%3A%2F%2Fapi.github.com%2Frepos%2Fmkj%2Fdropbear%2Freleases%2Flatest)](https://github.com/mkj/dropbear/releases/latest)
+
 [INSTALL](INSTALL) has compilation instructions.
 
 [MULTI](MULTI) has instructions on making a multi-purpose binary (i.e., a single binary
