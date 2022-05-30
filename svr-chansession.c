@@ -1041,9 +1041,9 @@ static void execchild(const void *user_data) {
 		addnewvar("SSH_ORIGINAL_COMMAND", chansess->original_command);
 	}
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
-        if (ses.authstate.pubkey_info != NULL) {
-            addnewvar("SSH_PUBKEYINFO", ses.authstate.pubkey_info);
-        }
+	if (ses.authstate.pubkey_info != NULL) {
+		addnewvar("SSH_PUBKEYINFO", ses.authstate.pubkey_info);
+	}
 #endif
 
 	/* change directory */
