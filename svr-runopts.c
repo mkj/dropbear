@@ -138,6 +138,7 @@ void svr_getopts(int argc, char ** argv) {
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
 	char* maxauthtries_arg = NULL;
+	char* reexec_fd_arg = NULL;
 	char* keyfile = NULL;
 	char c;
 #if DROPBEAR_PLUGIN
@@ -175,6 +176,7 @@ void svr_getopts(int argc, char ** argv) {
         svr_opts.pubkey_plugin_options = NULL;
 #endif
 	svr_opts.pass_on_env = 0;
+	svr_opts.reexec_childpipe = -1;
 
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_DELAYED;
@@ -250,12 +252,12 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_DO_REEXEC && NON_INETD_MODE
 				/* For internal use by re-exec */
 				case '2':
-					svr_opts.reexec_child = 1;
+					next = &reexec_fd_arg;
 					break;
 #endif
 				case 'p':
-				  nextisport = 1;
-				  break;
+					nextisport = 1;
+					break;
 				case 'P':
 					next = &svr_opts.pidfile;
 					break;
@@ -424,6 +426,13 @@ void svr_getopts(int argc, char ** argv) {
 
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
+	}
+
+	if (reexec_fd_arg) {
+		if (m_str_to_uint(reexec_fd_arg, &svr_opts.reexec_childpipe) == DROPBEAR_FAILURE
+			|| svr_opts.reexec_childpipe < 0) {
+			dropbear_exit("Bad -2");
+		}
 	}
 
 #if INETD_MODE
