@@ -139,6 +139,10 @@ struct PubKeyOptions {
 	int no_pty_flag;
 	/* "command=" option. */
 	char * forced_command;
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	int no_touch_required_flag;
+	int verify_required_flag;
+#endif
 };
 #endif
 
