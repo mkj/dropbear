@@ -112,7 +112,7 @@ void svr_auth_password(int valid_user) {
 					"Password auth succeeded for '%s' from %s, extra auth required",
 					ses.authstate.pw_name,
 					svr_ses.addrstring);
-			ses.authstate.authtypes &= ~AUTH_TYPE_PASSWORD;
+			ses.authstate.authtypes &= ~AUTH_TYPE_PASSWORD; /* password auth ok, delete the method flag */
 			send_msg_userauth_failure(1, 0);  /* Send partial success */
 		} else {
 			/* successful authentication */
