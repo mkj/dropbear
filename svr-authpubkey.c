@@ -580,7 +580,7 @@ static int checkfileperm(char * filename) {
 	if (badperm) {
 		if (!ses.authstate.perm_warn) {
 			ses.authstate.perm_warn = 1;
-			dropbear_log(LOG_INFO, "%s must be owned by user or root, and not writable by others", filename);
+			dropbear_log(LOG_INFO, "%s must be owned by user or root, and not writable by group or others", filename);
 		}
 		TRACE(("leave checkfileperm: failure perms/owner"))
 		return DROPBEAR_FAILURE;
