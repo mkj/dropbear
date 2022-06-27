@@ -68,7 +68,6 @@
 #define MAX_TERM_LEN 200 /* max length of TERM name */
 
 #define MAX_HOST_LEN 254 /* max hostname len for tcp fwding */
-#define MAX_IP_LEN 15 /* strlen("255.255.255.255") == 15 */
 
 #define DROPBEAR_MAX_PORTS 10 /* max number of ports which can be specified,
 								 ipv4 and ipv6 don't count twice */
@@ -85,7 +84,7 @@
 /* success/failure defines */
 #define DROPBEAR_SUCCESS 0
 #define DROPBEAR_FAILURE -1
- 
+
 #define DROPBEAR_PASSWORD_ENV "DROPBEAR_PASSWORD"
 
 #define DROPBEAR_NGROUP_MAX 1024
