@@ -330,7 +330,7 @@ static void main_noinetd(int argc, char ** argv, const char* multipath) {
 				m_free(remote_host);
 				m_free(remote_port);
 
-#ifndef DEBUG_NOFORK
+#if !DEBUG_NOFORK
 				if (setsid() < 0) {
 					dropbear_exit("setsid: %s", strerror(errno));
 				}
