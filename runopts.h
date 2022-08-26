@@ -33,6 +33,7 @@
 
 typedef struct runopts {
 
+	int disable_ip_tos;
 #if DROPBEAR_SVR_REMOTETCPFWD || DROPBEAR_CLI_LOCALTCPFWD \
     || DROPBEAR_CLI_REMOTETCPFWD
 	int listen_fwd_all;

@@ -98,6 +98,7 @@ static void printhelp() {
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
 #endif
+					"-z    disable IP Type-Of-Service feature\n"
 					,DROPBEAR_VERSION, cli_opts.progname,
 #if DROPBEAR_CLI_PUBKEY_AUTH
 					DROPBEAR_DEFAULT_CLI_AUTHKEY,
@@ -324,6 +325,9 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'b':
 					next = &bind_arg;
+					break;
+				case 'z':
+					opts.disable_ip_tos = 1;
 					break;
 				default:
 					fprintf(stderr,

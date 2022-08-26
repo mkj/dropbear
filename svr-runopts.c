@@ -112,6 +112,7 @@ static void printhelp(const char * progname) {
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
 #endif
+					"-z		disable IP Type-Of-Service feature\n"
 					,DROPBEAR_VERSION, progname,
 #if DROPBEAR_DSS
 					DSS_PRIV_FILENAME,
@@ -201,6 +202,7 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_SVR_REMOTETCPFWD
 	opts.listen_fwd_all = 0;
 #endif
+	opts.disable_ip_tos = 0;
 
 	for (i = 1; i < (unsigned int)argc; i++) {
 		if (argv[i][0] != '-' || argv[i][1] == '\0')
@@ -323,6 +325,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'V':
 					print_version();
 					exit(EXIT_SUCCESS);
+					break;
+				case 'z':
+					opts.disable_ip_tos = 1;
 					break;
 				default:
 					fprintf(stderr, "Invalid option -%c\n", c);
