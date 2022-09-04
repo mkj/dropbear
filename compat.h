@@ -47,6 +47,21 @@ char *basename(const char* path);
 char *getusershell(void);
 void setusershell(void);
 void endusershell(void);
+
+#ifndef DROPBEAR_PATH_BSHELL
+#ifdef _PATH_BSHELL
+#define DROPBEAR_PATH_BSHELL _PATH_BSHELL
+#else
+#define DROPBEAR_PATH_BSHELL "/bin/sh"
+#endif
+#endif
+#ifndef DROPBEAR_PATH_CSHELL
+#ifdef _PATH_CSHELL
+#define DROPBEAR_PATH_CSHELL _PATH_CSHELL
+#else
+#define DROPBEAR_PATH_CSHELL "/bin/csh"
+#endif
+#endif
 #endif
 
 #ifndef DROPBEAR_PATH_DEVNULL
