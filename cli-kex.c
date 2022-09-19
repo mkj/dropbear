@@ -229,7 +229,7 @@ static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen
 		fclose(tty);
 	} else {
 		response = getc(stdin);
-		// flush stdin buffer
+		/* flush stdin buffer */
 		while ((getchar()) != '\n');
 	}
 
