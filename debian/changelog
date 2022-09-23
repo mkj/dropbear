@@ -173,6 +173,24 @@ dropbear (0.53-0.1) unstable; urgency=low
 
  -- Matt Johnston <matt@ucc.asn.au>  Thu, 24 Feb 2011 22:54:00 +0900
 
+dropbear (0.52-2) unstable; urgency=low
+
+  * Make key utils part of dropbear-server package (since it's
+  required anyway, single binary saves space), rename -common to
+  -keyutils
+  * Don't make clean between builds, just rm *.o since only
+  top-level files change
+
+ -- Matt Johnston <matt@ucc.asn.au>  Wed, 19 Nov 2008 21:54:00 +0900
+
+dropbear (0.52-1) unstable; urgency=low
+
+  * Maemo port, split into 5 packages
+  (dropbear, dropbear-server, dropbear-client, dropbear-common, dropbear-scp).
+  This avoids conflicts with openssh package.
+
+ -- Matt Johnston <matt@ucc.asn.au>  Wed, 19 Nov 2008 20:54:00 +0900
+
 dropbear (0.52-0.1) unstable; urgency=low
 
   * New upstream release.
