@@ -1,7 +1,7 @@
 Source: dropbear
-Section: net
+Section: user/network
 Priority: optional
-Maintainer: Gerrit Pape <pape@smarden.org>
+Maintainer: Matt Johnston <matt@ucc.asn.au>
 Build-Depends: libz-dev
 Standards-Version: 3.7.3.0
 
@@ -9,6 +9,9 @@ Package: dropbear
 Architecture: any
 Depends: ${shlibs:Depends}
 Suggests: openssh-client, runit
+Section: user/network
+Conflicts: dropbear-server, dropbear-client, dropbear-keyutils, dropbear-scp
+XB-Maemo-Display-Name: Dropbear SSH Client and Server
 Description: lightweight SSH2 server and client
  dropbear is a SSH 2 server and client designed to be small enough to
  be used in small memory environments, while still being functional and
@@ -17,4 +20,76 @@ Description: lightweight SSH2 server and client
  It implements most required features of the SSH 2 protocol, and other
  features such as X11 and authentication agent forwarding.
  .
+ This package provides Dropbear client and server as a single binary,
+ as well as key utilities and SCP.
+ .
  See http://matt.ucc.asn.au/dropbear/dropbear.html
+
+Package: dropbear-server
+Architecture: any
+Depends: ${shlibs:Depends}
+Section: user/network
+Conflicts: dropbear, dropbear-keyutils
+Provides: dropbear-keyutils
+Recommends: dropbear-scp
+XB-Maemo-Display-Name: Dropbear SSH Server
+Description: lightweight SSH2 server
+ dropbear is a SSH 2 server and client designed to be small enough to
+ be used in small memory environments, while still being functional and
+ secure enough for general use.
+ .
+ It implements most required features of the SSH 2 protocol, and other
+ features such as X11 and authentication agent forwarding.
+ .
+ This package provides only the Dropbear server.
+ .
+ See http://matt.ucc.asn.au/dropbear/dropbear.html
+
+Package: dropbear-client
+Architecture: any
+Conflicts: dropbear
+Section: user/network
+Depends: ${shlibs:Depends}
+Recommends: dropbear-scp
+Suggests: dropbear-keyutils
+XB-Maemo-Display-Name: Dropbear SSH Client
+Description: lightweight SSH2 client
+ dropbear is a SSH 2 server and client designed to be small enough to
+ be used in small memory environments, while still being functional and
+ secure enough for general use.
+ .
+ It implements most required features of the SSH 2 protocol, and other
+ features such as X11 and authentication agent forwarding.
+ .
+ This package provides only the Dropbear client.
+ .
+ See http://matt.ucc.asn.au/dropbear/dropbear.html
+
+Package: dropbear-keyutils
+Architecture: any
+Conflicts: dropbear, dropbear-server
+Section: user/network
+XB-Maemo-Display-Name: Dropbear SSH Key Utils
+Depends: ${shlibs:Depends}
+Description: lightweight SSH2, key management utilities
+ dropbear is a SSH 2 server and client designed to be small enough to
+ be used in small memory environments, while still being functional and
+ secure enough for general use.
+ .
+ This package provides dropbearkey and dropbearconvert programs,
+ for generating keys and converting to/from OpenSSH keys.
+ .
+ See http://matt.ucc.asn.au/dropbear/dropbear.html
+
+Package: dropbear-scp
+Architecture: any
+Section: user/network
+Conflicts: dropbear
+XB-Maemo-Display-Name: Dropbear SCP
+Depends: ${shlibs:Depends}
+Description: lightweight SSH2 scp
+ dropbear is a SSH 2 server and client designed to be small enough to
+ be used in small memory environments, while still being functional and
+ secure enough for general use.
+ .
+ This dropbear-scp package provides /usr/bin/scp.

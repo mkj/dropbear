@@ -202,5 +202,8 @@
 #define IS_DROPBEAR_CLIENT 1
 
 #else
-#error You must compiled with either DROPBEAR_CLIENT or DROPBEAR_SERVER selected
+/* Just building key utils? */
+#define IS_DROPBEAR_SERVER 0
+#define IS_DROPBEAR_CLIENT 0
+
 #endif
