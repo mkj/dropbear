@@ -145,6 +145,14 @@ same functionality with other means even if no-pty is set.
 Applies all the no- restrictions listed above.
 
 .TP
+.B permitopen=\fR"\fIhost:port\fR"
+Restrict local port forwarding so that connection is allowed only to the
+specified host and port. Multiple permitopen options separated by commas
+can be set in authorized_keys. Wildcard character ('*') may be used in
+port specification for matching any port. Hosts must be literal domain names or
+IP addresses.
+
+.TP
 .B command=\fR"\fIforced_command\fR"
 Disregard the command provided by the user and always run \fIforced_command\fR.
 The -c command line option overrides this.
