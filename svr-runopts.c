@@ -448,15 +448,15 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 
 #if DROPBEAR_PLUGIN
-        if (pubkey_plugin) {
-            char *args = strchr(pubkey_plugin, ',');
-            if (args) {
-                *args='\0';
-                ++args;
-            }
-            svr_opts.pubkey_plugin = pubkey_plugin;
-            svr_opts.pubkey_plugin_options = args;
-        }
+	if (pubkey_plugin) {
+		svr_opts.pubkey_plugin = m_strdup(pubkey_plugin);
+		char *args = strchr(svr_opts.pubkey_plugin, ',');
+		if (args) {
+			*args='\0';
+			++args;
+		}
+		svr_opts.pubkey_plugin_options = args;
+	}
 #endif
 }
 
