@@ -443,6 +443,10 @@ void svr_getopts(int argc, char ** argv) {
 	}
 #endif
 
+	if (svr_opts.multiauthmethod && svr_opts.noauthpass) {
+		dropbear_exit("-t and -s are incompatible");
+	}
+
 #if DROPBEAR_PLUGIN
         if (pubkey_plugin) {
             char *args = strchr(pubkey_plugin, ',');
