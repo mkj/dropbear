@@ -106,6 +106,7 @@ typedef struct svr_runopts {
 	int noauthpass;
 	int norootpass;
 	int allowblankpass;
+	int multiauthmethod;
 	unsigned int maxauthtries;
 
 #if DROPBEAR_SVR_REMOTETCPFWD
