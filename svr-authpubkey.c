@@ -182,6 +182,16 @@ void svr_auth_pubkey(int valid_user) {
 		goto out;
 	}
 
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	key->sk_flags_mask = SSH_SK_USER_PRESENCE_REQD;
+	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->no_touch_required_flag) {
+		key->sk_flags_mask &= ~SSH_SK_USER_PRESENCE_REQD;
+	}
+	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->verify_required_flag) {
+		key->sk_flags_mask |= SSH_SK_USER_VERIFICATION_REQD;
+	}
+#endif
+
 	/* create the data which has been signed - this a string containing
 	 * session_id, concatenated with the payload packet up to the signature */
 	assert(ses.payload_beginning <= ses.payload->pos);

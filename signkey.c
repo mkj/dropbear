@@ -688,7 +688,7 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 	if (keytype == DROPBEAR_SIGNKEY_SK_ECDSA_NISTP256) {
 		ecc_key **eck = (ecc_key**)signkey_key_ptr(key, keytype);
 		if (eck && *eck) {
-			return buf_sk_ecdsa_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+			return buf_sk_ecdsa_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen, key->sk_flags_mask);
 		}
 	}
 #endif
@@ -696,7 +696,7 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 	if (keytype == DROPBEAR_SIGNKEY_SK_ED25519) {
 		dropbear_ed25519_key **eck = (dropbear_ed25519_key**)signkey_key_ptr(key, keytype);
 		if (eck && *eck) {
-			return buf_sk_ed25519_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen);
+			return buf_sk_ed25519_verify(buf, *eck, data_buf, key->sk_app, key->sk_applen, key->sk_flags_mask);
 		}
 	}
 #endif

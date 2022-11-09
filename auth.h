@@ -147,6 +147,11 @@ struct PubKeyOptions {
 	char * forced_command;
 	/* "permitopen=" option */
 	m_list *permit_open_destinations;
+	
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+	int no_touch_required_flag;
+	int verify_required_flag;
+#endif
 };
 
 struct PermitTCPFwdEntry {

@@ -239,6 +239,7 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 			dropbear_log(LOG_WARNING, "Badly formatted command= authorized_keys option");
 			goto bad_option;
 		}
+
 		if (match_option(options_buf, "permitopen=\"") == DROPBEAR_SUCCESS) {
 			int valid_option = 0;
 			const unsigned char* permitopen_start = buf_getptr(options_buf, 0);
@@ -285,6 +286,21 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 				dropbear_log(LOG_WARNING, "Badly formatted permitopen= authorized_keys option");
 				goto bad_option;
 			}
+		}
+
+		if (match_option(options_buf, "no-touch-required") == DROPBEAR_SUCCESS) {
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+			dropbear_log(LOG_WARNING, "No user presence check required for U2F/FIDO key.");
+			ses.authstate.pubkey_options->no_touch_required_flag = 1;
+#endif
+			goto next_option;
+		}
+		if (match_option(options_buf, "verify-required") == DROPBEAR_SUCCESS) {
+#if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
+			dropbear_log(LOG_WARNING, "User verification required for U2F/FIDO key.");
+			ses.authstate.pubkey_options->verify_required_flag = 1;
+#endif
+			goto next_option;
 		}
 
 next_option:
