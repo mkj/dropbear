@@ -199,8 +199,6 @@ jobs:
       # Sanity check that the binary runs
       - name: genrsa
         run: ~/inst/bin/dropbearkey -t rsa -f testrsa
-      - name: gendss
-        run: ~/inst/bin/dropbearkey -t dss -f testdss
       - name: genecdsa256
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
       - name: genecdsa384
