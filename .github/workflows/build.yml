@@ -135,6 +135,7 @@ jobs:
       - name: localoptions
         run: |
           echo "$LOCALOPTIONS" > localoptions.h
+          echo "#define DROPBEAR_DSS 1" >> localoptions.h
           cat localoptions.h
 
       - name: nondefault
@@ -199,6 +200,8 @@ jobs:
       # Sanity check that the binary runs
       - name: genrsa
         run: ~/inst/bin/dropbearkey -t rsa -f testrsa
+      - name: gendss
+        run: ~/inst/bin/dropbearkey -t dss -f testdss
       - name: genecdsa256
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
       - name: genecdsa384
