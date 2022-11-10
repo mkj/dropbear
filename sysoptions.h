@@ -164,6 +164,15 @@
 #define DROPBEAR_RSA_SHA256 DROPBEAR_RSA
 #endif
 
+/* Miller-Rabin primality testing is sufficient for RSA but not DSS.
+ * It's a compile-time setting for libtommath, we can get a speedup
+ * for key generation if DSS is disabled.
+ * https://github.com/mkj/dropbear/issues/174#issuecomment-1267374858
+ */
+#ifndef DROPBEAR_DSS
+#define LTM_USE_ONLY_MR 1
+#endif
+
 /* hashes which will be linked and registered */
 #define DROPBEAR_SHA1 (DROPBEAR_RSA_SHA1 || DROPBEAR_DSS \
 				|| DROPBEAR_SHA1_HMAC || DROPBEAR_SHA1_96_HMAC \
