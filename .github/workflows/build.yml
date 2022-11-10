@@ -75,22 +75,6 @@ jobs:
             localoptions: |
               #define DEBUG_TRACE 5
 
-          # Test disabled-by-default options
-          - name: unusual options
-            localoptions: |
-              #define DO_HOST_LOOKUP 1
-              #define DROPBEAR_CLI_ASKPASS_HELPER 1
-              #define LOG_COMMANDS 1
-              #define DROPBEAR_X11FWD 1
-              #define DROPBEAR_CLI_IMMEDIATE_AUTH 1
-              #define DROPBEAR_ENABLE_CBC_MODE 1
-              #define DROPBEAR_ENABLE_GCM_MODE 1
-              #define DROPBEAR_SHA2_512_HMAC 1
-              #define DROPBEAR_DSS 1
-              #define DROPBEAR_SHA1_96_HMAC 1
-              #define DROPBEAR_DH_GROUP16 1
-              #define DROPBEAR_DH_GROUP1 1
-
           # Check off-by-default options don't bitrot
           - name: nondefault options
             nondefault: 1
