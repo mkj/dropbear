@@ -29,7 +29,7 @@ AC_DEFUN(DB_TRYADDCFLAGS,
 [{
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="$1"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 			[AC_MSG_NOTICE([Setting $TESTFLAGS])],
 			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDFLAGS" ]
@@ -84,13 +84,13 @@ if test "$hardenbuild" -eq 1; then
 
 		OLDLDFLAGS="$LDFLAGS"
 		TESTFLAGS="-Wl,-pie"
-		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		LDFLAGS="$TESTFLAGS $LDFLAGS"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 			[AC_MSG_NOTICE([Setting $TESTFLAGS])],
 			[
 				LDFLAGS="$OLDLDFLAGS"
 				TESTFLAGS="-pie"
-				LDFLAGS="$LDFLAGS $TESTFLAGS"
+				LDFLAGS="$TESTFLAGS $LDFLAGS"
 				AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 					[AC_MSG_NOTICE([Setting $TESTFLAGS])],
 					[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
@@ -100,7 +100,7 @@ if test "$hardenbuild" -eq 1; then
 		# readonly elf relocation sections (relro)
 		OLDLDFLAGS="$LDFLAGS"
 		TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
-		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		LDFLAGS="$TESTFLAGS $LDFLAGS"
 		AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 			[AC_MSG_NOTICE([Setting $TESTFLAGS])],
 			[AC_MSG_NOTICE([Not setting $TESTFLAGS]); LDFLAGS="$OLDLDFLAGS" ]
@@ -109,13 +109,13 @@ if test "$hardenbuild" -eq 1; then
 	# stack protector. -strong is good but only in gcc 4.9 or later
 	OLDCFLAGS="$CFLAGS"
 	TESTFLAGS="-fstack-protector-strong"
-	CFLAGS="$CFLAGS $TESTFLAGS"
+	CFLAGS="$TESTFLAGS $CFLAGS"
 	AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 	    [AC_MSG_NOTICE([Setting $TESTFLAGS])],
 	    [
 			CFLAGS="$OLDCFLAGS"
 			TESTFLAGS="-fstack-protector --param=ssp-buffer-size=4"
-			CFLAGS="$CFLAGS $TESTFLAGS"
+			CFLAGS="$TESTFLAGS $CFLAGS"
 			AC_LINK_IFELSE([AC_LANG_PROGRAM([])],
 			    [AC_MSG_NOTICE([Setting $TESTFLAGS])],
 			    [AC_MSG_NOTICE([Not setting $TESTFLAGS]); CFLAGS="$OLDCFLAGS" ]

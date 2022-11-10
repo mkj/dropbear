@@ -3996,7 +3996,7 @@ printf "%s\n" "$as_me: Checking if compiler '$CC' supports -Wno-pointer-sign" >&
 {
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-Wno-pointer-sign"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4026,7 +4026,7 @@ printf "%s\n" "$as_me: Checking if compiler '$CC' supports -fno-strict-overflow"
 {
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-fno-strict-overflow"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4056,7 +4056,7 @@ printf "%s\n" "$as_me: Checking if compiler '$CC' supports -Wundef" >&6;}
 {
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-Wundef"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4124,7 +4124,7 @@ printf "%s\n" "$as_me: Checking for available hardened build flags:" >&6;}
 		{
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-fPIE"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4151,7 +4151,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 
 		OLDLDFLAGS="$LDFLAGS"
 		TESTFLAGS="-Wl,-pie"
-		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		LDFLAGS="$TESTFLAGS $LDFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4171,7 +4171,7 @@ else $as_nop
 
 				LDFLAGS="$OLDLDFLAGS"
 				TESTFLAGS="-pie"
-				LDFLAGS="$LDFLAGS $TESTFLAGS"
+				LDFLAGS="$TESTFLAGS $LDFLAGS"
 				cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4202,7 +4202,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 		# readonly elf relocation sections (relro)
 		OLDLDFLAGS="$LDFLAGS"
 		TESTFLAGS="-Wl,-z,now -Wl,-z,relro"
-		LDFLAGS="$LDFLAGS $TESTFLAGS"
+		LDFLAGS="$TESTFLAGS $LDFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4229,7 +4229,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 	# stack protector. -strong is good but only in gcc 4.9 or later
 	OLDCFLAGS="$CFLAGS"
 	TESTFLAGS="-fstack-protector-strong"
-	CFLAGS="$CFLAGS $TESTFLAGS"
+	CFLAGS="$TESTFLAGS $CFLAGS"
 	cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4249,7 +4249,7 @@ else $as_nop
 
 			CFLAGS="$OLDCFLAGS"
 			TESTFLAGS="-fstack-protector --param=ssp-buffer-size=4"
-			CFLAGS="$CFLAGS $TESTFLAGS"
+			CFLAGS="$TESTFLAGS $CFLAGS"
 			cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4281,7 +4281,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 	{
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-D_FORTIFY_SOURCE=2"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4310,7 +4310,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 	{
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-mfunction-return=thunk"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
@@ -4337,7 +4337,7 @@ rm -f core conftest.err conftest.$ac_objext conftest.beam \
 	{
 		OLDFLAGS="$CFLAGS"
 		TESTFLAGS="-mindirect-branch=thunk"
-		CFLAGS="$CFLAGS $TESTFLAGS"
+		CFLAGS="$TESTFLAGS $CFLAGS"
 		cat confdefs.h - <<_ACEOF >conftest.$ac_ext
 /* end confdefs.h.  */
 
