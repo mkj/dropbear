@@ -111,7 +111,6 @@
 
 #define SHA1_HASH_SIZE 20
 #define SHA256_HASH_SIZE 32
-#define MD5_HASH_SIZE 16
 #define MAX_HASH_SIZE 64 /* sha512 */
 
 #if DROPBEAR_CHACHA20POLY1305
@@ -132,11 +131,6 @@
 /* sha2-512 is not necessary unless unforseen problems arise with sha2-256 */
 #ifndef DROPBEAR_SHA2_512_HMAC
 #define DROPBEAR_SHA2_512_HMAC 0
-#endif
-
-/* might be needed for compatibility with very old implementations */
-#ifndef DROPBEAR_MD5_HMAC
-#define DROPBEAR_MD5_HMAC 0
 #endif
 
 #define DROPBEAR_ECC ((DROPBEAR_ECDH) || (DROPBEAR_ECDSA))
@@ -184,7 +178,6 @@
 #define DROPBEAR_SHA512 ((DROPBEAR_SHA2_512_HMAC) || (DROPBEAR_ECC_521) \
 			|| (DROPBEAR_SHA384) || (DROPBEAR_DH_GROUP16) \
 			|| (DROPBEAR_ED25519))
-#define DROPBEAR_MD5 (DROPBEAR_MD5_HMAC)
 
 #define DROPBEAR_DH_GROUP14 ((DROPBEAR_DH_GROUP14_SHA256) || (DROPBEAR_DH_GROUP14_SHA1))
 
