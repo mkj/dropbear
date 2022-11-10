@@ -373,5 +373,14 @@
 #define DROPBEAR_MULTI 0
 #endif
 
+/* MacOSX10.15.sdk headers don't work with -Wundef */
+#ifdef __APPLE__
+
+#ifndef TARGET_OS_EMBEDDED
+#define TARGET_OS_EMBEDDED 0
+#endif
+
+#endif /* __APPLE__ */
+
 
 /* no include guard for this file */
