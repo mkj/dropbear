@@ -82,7 +82,7 @@
 /* Default contents of /etc/shells if system getusershell() doesn't exist.
  * Paths taken from getusershell(3) manpage. These can be customised
  * on other platforms. One the commandline for CFLAGS it would look like eg
-  -DCOMPAT_USER_SHELLS='"/bin/sh","/apps/bin/sh","/data/bin/zsh"
+  -DCOMPAT_USER_SHELLS='"/bin/sh","/apps/bin/sh","/data/bin/zsh"'
  */
 #ifndef COMPAT_USER_SHELLS
 #define COMPAT_USER_SHELLS "/bin/sh","/bin/csh"
