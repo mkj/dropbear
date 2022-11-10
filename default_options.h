@@ -131,6 +131,11 @@ IMPORTANT: Some options will require "make clean" after changes */
  *
  * See: RSA_PRIV_FILENAME and DSS_PRIV_FILENAME */
 #define DROPBEAR_RSA 1
+/* Newer SSH implementations use SHA256 for RSA signatures. SHA1
+ * support is required to communicate with some older implementations.
+ * It will be removed in future due to SHA1 insecurity, it can be
+ * disabled with DROPBEAR_RSA_SHA1 set to 0 */
+#define DROPBEAR_RSA_SHA1 1
 
 /* DSS may be necessary to connect to some systems but is not
  * recommended for new keys (1024 bits is small, and it uses SHA1).
