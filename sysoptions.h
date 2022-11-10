@@ -365,5 +365,13 @@
 #define DROPBEAR_MSAN 0
 #endif
 
+#ifndef DEBUG_DSS_VERIFY
+#define DEBUG_DSS_VERIFY 0
+#endif
+
+#ifndef DROPBEAR_MULTI
+#define DROPBEAR_MULTI 0
+#endif
+
 
 /* no include guard for this file */

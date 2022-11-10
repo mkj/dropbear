@@ -48,6 +48,9 @@ DB_TRYADDCFLAGS([-Wno-pointer-sign])
 AC_MSG_NOTICE([Checking if compiler '$CC' supports -fno-strict-overflow])
 DB_TRYADDCFLAGS([-fno-strict-overflow])
 
+AC_MSG_NOTICE([Checking if compiler '$CC' supports -Wundef])
+DB_TRYADDCFLAGS([-Wundef])
+
 # needed for various extensions. define early before autoconf tests
 AC_DEFINE([_GNU_SOURCE], [], [Use GNU extensions if glibc])
 

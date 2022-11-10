@@ -122,6 +122,7 @@ IMPORTANT: Some options will require "make clean" after changes */
    sha1 for compatibility */
 #define DROPBEAR_SHA1_HMAC 1
 #define DROPBEAR_SHA2_256_HMAC 1
+#define DROPBEAR_SHA2_512_HMAC 0
 #define DROPBEAR_SHA1_96_HMAC 0
 
 /* Hostkey/public key algorithms - at least one required, these are used
