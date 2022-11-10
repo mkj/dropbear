@@ -104,6 +104,7 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
+					"-z    disable QoS\n"
 #if DROPBEAR_PLUGIN
                                         "-A <authplugin>[,<options>]\n"
                                         "               Enable external public key auth through <authplugin>\n"
@@ -112,7 +113,6 @@ static void printhelp(const char * progname) {
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
 #endif
-					"-z		disable IP Type-Of-Service feature\n"
 					,DROPBEAR_VERSION, progname,
 #if DROPBEAR_DSS
 					DSS_PRIV_FILENAME,

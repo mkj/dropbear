@@ -101,6 +101,9 @@ of 0 disables keepalives. If no response is received for 3 consecutive keepalive
 .B \-I \fIidle_timeout
 Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
 .TP
+.B \-z
+By default Dropbear will send network traffic with the \fBAF21\fR setting for QoS, letting network devices give it higher priority. Some devices may have problems with that, \fI-z\fR can be used to disable it.
+.TP
 .B \-T \fImax_authentication_attempts
 Set the number of authentication attempts allowed per connection. If unspecified the default is 10 (MAX_AUTH_TRIES)
 .TP

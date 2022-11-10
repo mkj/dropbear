@@ -83,6 +83,7 @@ static void printhelp() {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 					"-I <idle_timeout>  (0 is never, default %d)\n"
+					"-z    disable QoS\n"
 #if DROPBEAR_CLI_NETCAT
 					"-B <endhost:endport> Netcat-alike forwarding\n"
 #endif				
@@ -98,7 +99,6 @@ static void printhelp() {
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
 #endif
-					"-z    disable IP Type-Of-Service feature\n"
 					,DROPBEAR_VERSION, cli_opts.progname,
 #if DROPBEAR_CLI_PUBKEY_AUTH
 					DROPBEAR_DEFAULT_CLI_AUTHKEY,
