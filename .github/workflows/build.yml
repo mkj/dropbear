@@ -50,8 +50,8 @@ jobs:
           - name: c89
             extracflags: -std=c89 -Wdeclaration-after-statement
 
-          - name: macos 10.15
-            os: macos-10.15
+          - name: macos 12
+            os: macos-12
             cc: clang
             # OS X says daemon() and utmp are deprecated.
             # OS X tests for undefined TARGET_OS_EMBEDDED in libc headers
