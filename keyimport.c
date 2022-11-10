@@ -909,6 +909,7 @@ static int openssh_write(const char *filename, sign_key *key,
 #if DROPBEAR_DSS
 	if (key->type == DROPBEAR_SIGNKEY_DSS) {
 		char zero[1];
+		struct mpint_pos numbers[9];
 		int nnumbers = -1, seqlen;
 		/*
 		 * Fetch the key blobs.
