@@ -382,4 +382,10 @@
 #define DROPBEAR_MULTI 0
 #endif
 
+/* Fuzzing expects all key types to be enabled */
+#ifdef DROPBEAR_DSS
+#undef DROPBEAR_DSS
+#endif
+#define DROPBEAR_DSS 1
+
 /* no include guard for this file */
