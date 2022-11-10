@@ -163,7 +163,7 @@
  * for key generation if DSS is disabled.
  * https://github.com/mkj/dropbear/issues/174#issuecomment-1267374858
  */
-#ifndef DROPBEAR_DSS
+#if !DROPBEAR_DSS
 #define LTM_USE_ONLY_MR 1
 #endif
 
