@@ -383,7 +383,7 @@
 #endif
 
 /* Fuzzing expects all key types to be enabled */
-#ifdef DROPBEAR_DSS
+#if defined(DROPBEAR_DSS)
 #undef DROPBEAR_DSS
 #endif
 #define DROPBEAR_DSS 1
