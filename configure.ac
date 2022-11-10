@@ -42,6 +42,16 @@ if test -z "$ORIGCFLAGS" && test "$GCC" = "yes"; then
 	CFLAGS="-Os -W -Wall"
 fi
 
+# LTM_CFLAGS is given to ./configure by the user, 
+# DROPBEAR_LTM_CFLAGS is substituted in the LTM Makefile.in
+DROPBEAR_LTM_CFLAGS="$LTM_CFLAGS"
+if test -z "$DROPBEAR_LTM_CFLAGS"; then
+	DROPBEAR_LTM_CFLAGS="-O3 -funroll-loops -fomit-frame-pointer"
+fi
+AC_MSG_NOTICE(Setting LTM_CFLAGS to $DROPBEAR_LTM_CFLAGS)
+AC_ARG_VAR(LTM_CFLAGS, CFLAGS for bundled libtommath. Default -O3 -funroll-loops -fomit-frame-pointer)
+AC_SUBST(DROPBEAR_LTM_CFLAGS)
+
 AC_MSG_NOTICE([Checking if compiler '$CC' supports -Wno-pointer-sign])
 DB_TRYADDCFLAGS([-Wno-pointer-sign])
 

@@ -672,6 +672,8 @@ build_vendor
 build_cpu
 build
 STATIC
+DROPBEAR_LTM_CFLAGS
+LTM_CFLAGS
 LD
 OBJEXT
 EXEEXT
@@ -754,6 +756,7 @@ CFLAGS
 LDFLAGS
 LIBS
 CPPFLAGS
+LTM_CFLAGS
 CXX
 CXXFLAGS
 CCC
@@ -1417,6 +1420,8 @@ Some influential environment variables:
   LIBS        libraries to pass to the linker, e.g. -l<library>
   CPPFLAGS    (Objective) C/C++ preprocessor flags, e.g. -I<include dir> if
               you have headers in a nonstandard directory <include dir>
+  LTM_CFLAGS  CFLAGS for bundled libtommath. Default -O3 -funroll-loops
+              -fomit-frame-pointer
   CXX         C++ compiler command
   CXXFLAGS    C++ compiler flags
   CPP         C preprocessor
@@ -3989,6 +3994,17 @@ if test -z "$ORIGCFLAGS" && test "$GCC" = "yes"; then
 printf "%s\n" "$as_me: No \$CFLAGS set... using \"-Os -W -Wall\" for GCC" >&6;}
 	CFLAGS="-Os -W -Wall"
 fi
+
+# LTM_CFLAGS is given to ./configure by the user,
+# DROPBEAR_LTM_CFLAGS is substituted in the LTM Makefile.in
+DROPBEAR_LTM_CFLAGS="$LTM_CFLAGS"
+if test -z "$DROPBEAR_LTM_CFLAGS"; then
+	DROPBEAR_LTM_CFLAGS="-O3 -funroll-loops -fomit-frame-pointer"
+fi
+{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Setting LTM_CFLAGS to $DROPBEAR_LTM_CFLAGS" >&5
+printf "%s\n" "$as_me: Setting LTM_CFLAGS to $DROPBEAR_LTM_CFLAGS" >&6;}
+
+
 
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: Checking if compiler '$CC' supports -Wno-pointer-sign" >&5
 printf "%s\n" "$as_me: Checking if compiler '$CC' supports -Wno-pointer-sign" >&6;}
