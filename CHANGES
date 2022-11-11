@@ -40,7 +40,7 @@ Features and Changes:
 - Improve permission error message
   Patch from k-kurematsu
 
-2022.82 regression fixes:
+Regression fixes from 2022.82:
 
 - Fix X11 build
 
@@ -155,10 +155,13 @@ Features and Changes:
   Patch from Raphaël Hertzog
   https://bugs.debian.org/cgi-bin/bugreport.cgi?bug=903403
 
-- Added client option "-o DisableTrivialAuth". This can be used to prevent
-  the server immediately accepting successful authentication (before any auth
-  request) which could cause UI confusion and security issues with agent
-  forwarding - it isn't clear which host is prompting to use a key.
+- Added client option "-o DisableTrivialAuth". It disallows a server immediately
+  giving successful authentication (without presenting any password/pubkey prompt).
+  This avoids a UI confusion issue where it may appear that the user is accepting
+  a SSH agent prompt from their local machine, but are actually accepting a prompt
+  sent immediately by the remote server. 
+  CVE-2021-36369 though the description there is a bit confused. It only applies
+  to Dropbear as a client.
   Thanks to Manfred Kaiser from Austrian MilCERT
 
 - Add -q client option to hide remote banner, from Hans Harder
