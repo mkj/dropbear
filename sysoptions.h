@@ -183,6 +183,13 @@
 
 #define DROPBEAR_NORMAL_DH ((DROPBEAR_DH_GROUP1) || (DROPBEAR_DH_GROUP14) || (DROPBEAR_DH_GROUP16))
 
+#ifndef DROPBEAR_SK_ECDSA
+#define DROPBEAR_SK_ECDSA DROPBEAR_SK_KEYS
+#endif
+#ifndef DROPBEAR_SK_ED25519
+#define DROPBEAR_SK_ED25519 DROPBEAR_SK_KEYS
+#endif
+
 /* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
 #define DROPBEAR_EXT_INFO ((DROPBEAR_RSA_SHA256) \
 		&& ((DROPBEAR_CLI_PUBKEY_AUTH) || (DROPBEAR_SVR_PUBKEY_AUTH)))

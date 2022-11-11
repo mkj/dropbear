@@ -15,6 +15,9 @@ Features and Changes:
 - Add option for requiring both password and pubkey (-t)
   Patch from Jackkal
 
+  - >> DROPBEAR_SK_KEYS config option now replaces separate DROPBEAR_SK_ECDSA 
+  and DROPBEAR_SK_ED25519 options.
+
 - Add 'permitopen' option for authorized_keys to restrict forwarded ports
   Patch from Tuomas Haikarainen
 

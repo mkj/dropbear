@@ -154,10 +154,11 @@ IMPORTANT: Some options will require "make clean" after changes */
  * See: ED25519_PRIV_FILENAME  */
 #define DROPBEAR_ED25519 1
 
-/* SK_ECDSA/SK_ED25519 allows u2f security keys for public key auth.
+/* Allow U2F security keys for public key auth, with
+ * sk-ecdsa-sha2-nistp256@openssh.com or sk-ssh-ed25519@openssh.com keys.
+ * The corresponding DROPBEAR_ECDSA or DROPBEAR_ED25519 also needs to be set.
  * This is currently server-only. */
-#define DROPBEAR_SK_ECDSA 1
-#define DROPBEAR_SK_ED25519 1
+#define DROPBEAR_SK_KEYS 1
 
 /* RSA must be >=1024 */
 #define DROPBEAR_DEFAULT_RSA_SIZE 2048
