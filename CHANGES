@@ -1,30 +1,28 @@
-2022.83 - 
+2022.83 - 14 November 2022
 
 Features and Changes:
   Note >> for compatibility/configuration changes
 
 - >> Disable DROPBEAR_DSS by default
-  It is only 1024 bit and uses SHA1, most distros disable it by default already.
-
-- >> Remove HMAC_MD5 entirely
+  It is only 1024 bit and uses sha1, most distros disable it by default already.
 
 - Added DROPBEAR_RSA_SHA1 option to allow disabling sha1 rsa signatures.
-  RSA with sha1 will be disabled in a future release (rsa keys will continue
+  >> RSA with sha1 will be disabled in a future release (rsa keys will continue
   to work OK, with sha256 signatures used instead).
 
 - Add option for requiring both password and pubkey (-t)
   Patch from Jackkal
 
-  - >> DROPBEAR_SK_KEYS config option now replaces separate DROPBEAR_SK_ECDSA 
+- Add 'no-touch-required' and 'verify-required' options for sk keys
+  Patch from Egor Duda
+
+  - >> DROPBEAR_SK_KEYS config option now replaces separate DROPBEAR_SK_ECDSA
   and DROPBEAR_SK_ED25519 options.
 
 - Add 'permitopen' option for authorized_keys to restrict forwarded ports
   Patch from Tuomas Haikarainen
 
-- Add 'no-touch-required' and 'verify-required' options for sk keys
-  Patch from Egor Duda
-
-- Added LTM_CFLAGS configure argument to set flags for building
+- >> Added LTM_CFLAGS configure argument to set flags for building
   bundled libtommath. This also restores the previous arguments used
   in 2020.81 (-O3 -funroll-loops). That gives a big speedup for RSA
   key generation, which regressed in 2022.82.
@@ -33,7 +31,8 @@ Features and Changes:
   Reported by David Bernard
 
 - Add '-z' flag to disable setting QoS traffic class. This may be necessary
-  to work with broken networks or network drivers.
+  to work with broken networks or network drivers, exposed after changes to use
+  AF21 in 2022.82
   https://github.com/mkj/dropbear/issues/193
   Reported by yuhongwei380, patch from Petr Štetiar
 
@@ -42,6 +41,8 @@ Features and Changes:
 
 - Improve permission error message
   Patch from k-kurematsu
+
+- >> Remove HMAC_MD5 entirely
 
 Regression fixes from 2022.82:
 
@@ -65,8 +66,8 @@ Regression fixes from 2022.82:
 
 Other fixes:
 
-- Fix long standing incorrect compression size check. Dropbear 
-  (client or server) would erroneously exit with 
+- Fix long standing incorrect compression size check. Dropbear
+  (client or server) would erroneously exit with
   "bad packet, oversized decompressed"
   when receiving a compressed packet of exactly the maximum size.
 
@@ -75,11 +76,11 @@ Other fixes:
   Reported and debugged by m5jt and David Bernard
 
 - Try keyboard-interactive auth before password, in dbclient.
-  This was unintentionally changed back in 2013  
+  This was unintentionally changed back in 2013
   https://github.com/mkj/dropbear/pull/190
   Patch from Michele Giacomoli
 
-- Flush the terminal when reading the fingerprint confirmation response
+- Drain the terminal when reading the fingerprint confirmation response
   https://github.com/mkj/dropbear/pull/191
   Patch from Michele Giacomoli
 
@@ -88,8 +89,8 @@ Other fixes:
   https://github.com/mkj/dropbear/pull/189
   Patch from Michele Giacomoli
 
-- Improve configure test for hardening options. 
-  Fixes building on AIX 
+- Improve configure test for hardening options.
+  Fixes building on AIX
   https://github.com/mkj/dropbear/issues/158
 
 - Fix debian/dropbear.init newline

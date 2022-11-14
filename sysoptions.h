@@ -1,10 +1,10 @@
 /*******************************************************************
- * You shouldn't edit this file unless you know you need to. 
+ * You shouldn't edit this file unless you know you need to.
  * This file is only included from options.h
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2022.82"
+#define DROPBEAR_VERSION "2022.83"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
