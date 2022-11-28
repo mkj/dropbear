@@ -79,12 +79,14 @@ enum signature_type {
 	DROPBEAR_SIGNATURE_SK_ED25519 = DROPBEAR_SIGNKEY_SK_ED25519,
 #endif
 #endif
+#if DROPBEAR_RSA
 #if DROPBEAR_RSA_SHA1
 	DROPBEAR_SIGNATURE_RSA_SHA1 = 100, /* ssh-rsa signature (sha1) */
 #endif
 #if DROPBEAR_RSA_SHA256
 	DROPBEAR_SIGNATURE_RSA_SHA256 = 101, /* rsa-sha2-256 signature. has a ssh-rsa key */
 #endif
+#endif /* DROPBEAR_RSA */
 	DROPBEAR_SIGNATURE_NONE = DROPBEAR_SIGNKEY_NONE,
 };
 

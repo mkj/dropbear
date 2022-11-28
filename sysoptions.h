@@ -137,7 +137,7 @@
 
 /* Debian doesn't define this in system headers */
 #if !defined(LTM_DESC) && (DROPBEAR_ECC)
-#define LTM_DESC 
+#define LTM_DESC
 #endif
 
 #define DROPBEAR_ECC_256 (DROPBEAR_ECC)
@@ -151,9 +151,6 @@
  * signing operations slightly slower. */
 #define DROPBEAR_RSA_BLINDING 1
 
-#ifndef DROPBEAR_RSA_SHA1
-#define DROPBEAR_RSA_SHA1 DROPBEAR_RSA
-#endif
 #ifndef DROPBEAR_RSA_SHA256
 #define DROPBEAR_RSA_SHA256 DROPBEAR_RSA
 #endif
