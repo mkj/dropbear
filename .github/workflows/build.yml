@@ -81,6 +81,8 @@ jobs:
             configure_flags: --enable-pam
 
           - name: most options disabled
+            # no -Werror
+            configure_flags:
             localoptions: |
               #define DROPBEAR_RSA 0
               #define INETD_MODE 0
