@@ -82,6 +82,7 @@ jobs:
 
           - name: most options disabled
             configure_flags: --disable-harden --disable-zlib --disable-openpty --disable-lastlog
+            sanitykey: no
             localoptions: |
               #define DROPBEAR_RSA 0
               #define INETD_MODE 0
@@ -234,16 +235,22 @@ jobs:
 
       # Sanity check that the binary runs
       - name: genrsa
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t rsa -f testrsa
       - name: gendss
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t dss -f testdss
       - name: genecdsa256
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
       - name: genecdsa384
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
       - name: genecdsa521
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
       - name: gened25519
+        if: ${{ matrix.sanitykey != 'no' }}
         run: ~/inst/bin/dropbearkey -t ed25519 -f tested25519
 
       - name: fuzz
