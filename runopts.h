@@ -39,8 +39,8 @@ typedef struct runopts {
 	int listen_fwd_all;
 #endif
 	unsigned int recv_window;
-	time_t keepalive_secs; /* Time between sending keepalives. 0 is off */
-	time_t idle_timeout_secs; /* Exit if no traffic is sent/received in this time */
+	long keepalive_secs; /* Time between sending keepalives. 0 is off */
+	long idle_timeout_secs; /* Exit if no traffic is sent/received in this time */
 	int usingsyslog;
 
 #ifndef DISABLE_ZLIB

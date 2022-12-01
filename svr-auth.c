@@ -389,7 +389,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		Beware of integer overflow if increasing these values */
 		const unsigned int mindelay = 250000000;
 		const unsigned int vardelay = 100000000;
-		unsigned int rand_delay;
+		suseconds_t rand_delay;
 		struct timespec delay;
 
 		gettime_wrapper(&delay);

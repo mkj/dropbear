@@ -139,8 +139,8 @@ struct logininfo {
 	/* struct timeval (sys/time.h) isn't always available, if it isn't we'll
 	 * use time_t's value as tv_sec and set tv_usec to 0
 	 */
-	unsigned int tv_sec;
-	unsigned int tv_usec;
+	time_t tv_sec;
+	suseconds_t tv_usec;
 	union login_netinfo hostaddr;       /* caller's host address(es) */
 }; /* struct logininfo */
 

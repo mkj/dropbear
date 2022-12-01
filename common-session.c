@@ -519,15 +519,24 @@ static void send_msg_keepalive() {
 	ses.last_packet_time_idle = old_time_idle;
 }
 
+/* Returns the difference in seconds, clamped to LONG_MAX */
+static long elapsed(time_t now, time_t prev) {
+	time_t del = now - prev;
+	if (del > LONG_MAX) {
+		return LONG_MAX;
+	}
+	return (long)del;
+}
+
 /* Check all timeouts which are required. Currently these are the time for
  * user authentication, and the automatic rekeying. */
 static void checktimeouts() {
 
 	time_t now;
 	now = monotonic_now();
-	
+
 	if (IS_DROPBEAR_SERVER && ses.connect_time != 0
-		&& now - ses.connect_time >= AUTH_TIMEOUT) {
+		&& elapsed(now, ses.connect_time) >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before auth");
 	}
 
@@ -537,45 +546,47 @@ static void checktimeouts() {
 	}
 
 	if (!ses.kexstate.sentkexinit
-			&& (now - ses.kexstate.lastkextime >= KEX_REKEY_TIMEOUT
+			&& (elapsed(now, ses.kexstate.lastkextime) >= KEX_REKEY_TIMEOUT
 			|| ses.kexstate.datarecv+ses.kexstate.datatrans >= KEX_REKEY_DATA)) {
 		TRACE(("rekeying after timeout or max data reached"))
 		send_msg_kexinit();
 	}
-	
+
 	if (opts.keepalive_secs > 0 && ses.authstate.authdone) {
 		/* Avoid sending keepalives prior to auth - those are
 		not valid pre-auth packet types */
 
 		/* Send keepalives if we've been idle */
-		if (now - ses.last_packet_time_any_sent >= opts.keepalive_secs) {
+		if (elapsed(now, ses.last_packet_time_any_sent) >= opts.keepalive_secs) {
 			send_msg_keepalive();
 		}
 
 		/* Also send an explicit keepalive message to trigger a response
 		if the remote end hasn't sent us anything */
-		if (now - ses.last_packet_time_keepalive_recv >= opts.keepalive_secs
-			&& now - ses.last_packet_time_keepalive_sent >= opts.keepalive_secs) {
+		if (elapsed(now, ses.last_packet_time_keepalive_recv) >= opts.keepalive_secs
+			&& elapsed(now, ses.last_packet_time_keepalive_sent) >= opts.keepalive_secs) {
 			send_msg_keepalive();
 		}
 
-		if (now - ses.last_packet_time_keepalive_recv 
+		if (elapsed(now, ses.last_packet_time_keepalive_recv)
 			>= opts.keepalive_secs * DEFAULT_KEEPALIVE_LIMIT) {
 			dropbear_exit("Keepalive timeout");
 		}
 	}
 
-	if (opts.idle_timeout_secs > 0 
-			&& now - ses.last_packet_time_idle >= opts.idle_timeout_secs) {
+	if (opts.idle_timeout_secs > 0
+			&& elapsed(now, ses.last_packet_time_idle) >= opts.idle_timeout_secs) {
 		dropbear_close("Idle timeout");
 	}
 }
 
-static void update_timeout(long limit, long now, long last_event, long * timeout) {
-	TRACE2(("update_timeout limit %ld, now %ld, last %ld, timeout %ld",
-		limit, now, last_event, *timeout))
+static void update_timeout(long limit, time_t now, time_t last_event, long * timeout) {
+	TRACE2(("update_timeout limit %ld, now %llu, last %llu, timeout %ld",
+		limit,
+		(unsigned long long)now,
+		(unsigned long long)last_event, *timeout))
 	if (last_event > 0 && limit > 0) {
-		*timeout = MIN(*timeout, last_event+limit-now);
+		*timeout = MIN(*timeout, elapsed(now, last_event) + limit);
 		TRACE2(("new timeout %ld", *timeout))
 	}
 }
@@ -584,7 +595,7 @@ static long select_timeout() {
 	/* determine the minimum timeout that might be required, so
 	as to avoid waking when unneccessary */
 	long timeout = KEX_REKEY_TIMEOUT;
-	long now = monotonic_now();
+	time_t now = monotonic_now();
 
 	if (!ses.kexstate.sentkexinit) {
 		update_timeout(KEX_REKEY_TIMEOUT, now, ses.kexstate.lastkextime, &timeout);
@@ -596,7 +607,7 @@ static long select_timeout() {
 	}
 
 	if (ses.authstate.authdone) {
-		update_timeout(opts.keepalive_secs, now, 
+		update_timeout(opts.keepalive_secs, now,
 			MAX(ses.last_packet_time_keepalive_recv, ses.last_packet_time_keepalive_sent),
 			&timeout);
 	}

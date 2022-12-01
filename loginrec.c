@@ -459,6 +459,7 @@ line_abbrevname(char *dst, const char *src, size_t dstsize)
 void
 set_utmp_time(struct logininfo *li, struct utmp *ut)
 {
+	/* struct utmp in glibc isn't y2038 safe yet */
 # ifdef HAVE_STRUCT_UTMP_UT_TV
 	ut->ut_tv.tv_sec = li->tv_sec;
 	ut->ut_tv.tv_usec = li->tv_usec;
@@ -1272,6 +1273,7 @@ lastlog_construct(struct logininfo *li, struct lastlog *last)
 	(void)line_stripname(last->ll_line, li->line, sizeof(last->ll_line));
 	strlcpy(last->ll_host, li->hostname,
 		MIN_SIZEOF(last->ll_host, li->hostname));
+	/* struct lastlog in glibc isn't y2038 safe yet */
 	last->ll_time = li->tv_sec;
 }
 

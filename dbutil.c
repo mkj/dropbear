@@ -724,7 +724,7 @@ void gettime_wrapper(struct timespec *now) {
 	/* Fallback for everything else - this will sometimes go backwards */
 	gettimeofday(&tv, NULL);
 	now->tv_sec = tv.tv_sec;
-	now->tv_nsec = 1000*tv.tv_usec;
+	now->tv_nsec = 1000*(long)tv.tv_usec;
 }
 
 /* second-resolution monotonic timestamp */
