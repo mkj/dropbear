@@ -329,7 +329,6 @@ static int newstreamlocal(struct Channel * channel) {
 	char* desthost = NULL;
 	char* orighost = NULL;
 	unsigned int origport;
-	// char portstring[NI_MAXSERV];
 	unsigned int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
