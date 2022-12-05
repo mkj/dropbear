@@ -245,7 +245,7 @@ struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
 
 #if DROPBEAR_FUZZ
 	if (fuzz.fuzzing) {
-		c->errstring = m_strdup("fuzzing connect_remote always fails");
+		c->errstring = m_strdup("fuzzing connect_streamlocal always fails");
 		return c;
 	}
 #endif
