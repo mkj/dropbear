@@ -274,7 +274,7 @@ struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
 	sunaddr->sun_family = AF_UNIX;
 	strlcpy(sunaddr->sun_path, localpath, sizeof(sunaddr->sun_path));
 
-	// Copy to target iter.
+	/* Copy to target iter */ 
 	c->res_iter = c->res;
 
 	return c;
