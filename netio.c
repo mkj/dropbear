@@ -225,6 +225,61 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	return c;
 }
 
+
+/* Connect to stream local socket. */
+struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
+	connect_callback cb, void* cb_data, enum dropbear_prio prio)
+{
+	struct dropbear_progress_connection *c = NULL;
+	struct sockaddr_un *sunaddr;
+
+	c = m_malloc(sizeof(*c));
+	c->remotehost = m_strdup(localpath);
+	c->remoteport = NULL;
+	c->sock = -1;
+	c->cb = cb;
+	c->cb_data = cb_data;
+	c->prio = prio;
+
+	list_append(&ses.conn_pending, c);
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		c->errstring = m_strdup("fuzzing connect_remote always fails");
+		return c;
+	}
+#endif
+
+	if (strlen(localpath) > sizeof(sunaddr->sun_path)) {
+		int len = 300;
+		c->errstring = (char*)m_malloc(len);
+		snprintf(c->errstring, len, "%.100s: %.100s", localpath, strerror(ENAMETOOLONG));
+		TRACE(("%.100s: %.100s", localpath, strerror(ENAMETOOLONG)));
+		return c;
+	}
+
+	/*
+	 * Fake up a struct addrinfo for AF_UNIX connections.
+	 * channel_connect_ctx_free() must check ai_family
+	 * and use free() not freeaddirinfo() for AF_UNIX.
+	 */
+	c->res = malloc(sizeof(*c->res) + sizeof(*sunaddr));
+	memset(c->res, 0, sizeof(*c->res) + sizeof(*sunaddr));
+	c->res->ai_addr = (struct sockaddr *)(c->res + 1);
+	c->res->ai_addrlen = sizeof(*sunaddr);
+	c->res->ai_family = AF_UNIX;
+	c->res->ai_socktype = SOCK_STREAM;
+	c->res->ai_protocol = PF_UNSPEC;
+	sunaddr = (struct sockaddr_un *)c->res->ai_addr;
+	sunaddr->sun_family = AF_UNIX;
+	strlcpy(sunaddr->sun_path, localpath, sizeof(sunaddr->sun_path));
+
+	// Copy to target iter.
+	c->res_iter = c->res;
+
+	return c;
+}
+
 void remove_connect_pending() {
 	while (ses.conn_pending.first) {
 		struct dropbear_progress_connection *c = ses.conn_pending.first->item;

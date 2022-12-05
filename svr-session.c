@@ -76,6 +76,9 @@ static const struct ChanType *svr_chantypes[] = {
 #if DROPBEAR_SVR_LOCALTCPFWD
 	&svr_chan_tcpdirect,
 #endif
+#if DROPBEAR_SVR_LOCALSTREAMFWD
+	&svr_chan_streamlocal,
+#endif
 	NULL /* Null termination is mandatory. */
 };
 

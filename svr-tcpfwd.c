@@ -56,6 +56,7 @@ void recv_msg_global_request_remotetcp() {
 static int svr_cancelremotetcp(void);
 static int svr_remotetcpreq(int *allocated_listen_port);
 static int newtcpdirect(struct Channel * channel);
+static int newstreamlocal(struct Channel * channel);
 
 #if DROPBEAR_SVR_REMOTETCPFWD
 static const struct ChanType svr_chan_tcpremote = {
@@ -308,3 +309,62 @@ out:
 }
 
 #endif /* DROPBEAR_SVR_LOCALTCPFWD */
+
+
+#if DROPBEAR_SVR_LOCALSTREAMFWD
+
+const struct ChanType svr_chan_streamlocal = {
+	"direct-streamlocal@openssh.com",
+	newstreamlocal, /* init */
+	NULL, /* checkclose */
+	NULL, /* reqhandler */
+	NULL, /* closehandler */
+	NULL /* cleanup */
+};
+
+/* Called upon creating a new stream local channel (ie we connect out to an
+ * address */
+static int newstreamlocal(struct Channel * channel) {
+
+	char* desthost = NULL;
+	char* orighost = NULL;
+	unsigned int origport;
+	// char portstring[NI_MAXSERV];
+	unsigned int len;
+	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
+
+	TRACE(("streamlocal channel %d", channel->index))
+
+	desthost = buf_getstring(ses.payload, &len);
+	if (len > MAX_HOST_LEN) {
+		TRACE(("leave streamlocal: desthost too long"))
+		goto out;
+	}
+
+	orighost = buf_getstring(ses.payload, &len);
+	if (len > MAX_HOST_LEN) {
+		TRACE(("leave streamlocal: orighost too long"))
+		goto out;
+	}
+
+	origport = buf_getint(ses.payload);
+
+	/* best be sure */
+	if (origport > 65535) {
+		TRACE(("leave streamlocal: port > 65535"))
+		goto out;
+	}
+
+	channel->conn_pending = connect_streamlocal(desthost, channel_connect_done,
+		channel, DROPBEAR_PRIO_NORMAL);
+
+	err = SSH_OPEN_IN_PROGRESS;
+
+out:
+	m_free(desthost);
+	m_free(orighost);
+	TRACE(("leave streamlocal: err %d", err))
+	return err;
+}
+
+#endif /* DROPBEAR_SVR_LOCALSTREAMFWD */
