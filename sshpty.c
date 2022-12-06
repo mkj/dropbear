@@ -389,9 +389,10 @@ pty_setowner(struct passwd *pw, const char *tty_name)
 						tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
 						strerror(errno));
 			} else {
-				dropbear_exit("chown(%.100s, %u, %u) failed: %.100s",
-				    tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
-				    strerror(errno));
+				dropbear_log(LOG_ERR,
+					"chown(%.100s, %u, %u) failed: %.100s",
+						tty_name, (unsigned int)pw->pw_uid, (unsigned int)gid,
+						strerror(errno));
 			}
 		}
 	}
