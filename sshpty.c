@@ -380,7 +380,9 @@ pty_setowner(struct passwd *pw, const char *tty_name)
 				tty_name, strerror(errno));
 	}
 
-	if (st.st_uid != pw->pw_uid || st.st_gid != gid) {
+	/* Allow either "tty" gid or user's own gid. On Linux with openpty()
+	 * this varies depending on the devpts mount options */
+	if (st.st_uid != pw->pw_uid || !(st.st_gid == gid || st.st_gid == pw->pw_gid)) {
 		if (chown(tty_name, pw->pw_uid, gid) < 0) {
 			if (errno == EROFS &&
 			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
