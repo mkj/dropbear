@@ -75,6 +75,10 @@ struct ChanSess {
 	char * agentfile;
 	char * agentdir;
 #endif
+
+	unsigned env_capacity;
+	unsigned env_size;
+	char **env;
 };
 
 struct ChildPid {
