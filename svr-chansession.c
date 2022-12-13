@@ -1054,7 +1054,7 @@ static void execchild(const void *user_data) {
 	if (chansess->env) {
 		char **p = chansess->env;
 		for (; *p; putenv(*p++)) {}
-￼	}
+	}
 
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
