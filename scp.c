@@ -326,7 +326,7 @@ main(int argc, char **argv)
 	addargs(&args, "%s", ssh_program);
 
 	fflag = tflag = 0;
-	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:q1246S:o:F:")) != -1)
+	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:q1246S:o:F:y")) != -1)
 		switch (ch) {
 		/* User-visible flags. */
 		case '1':
@@ -372,6 +372,9 @@ main(int argc, char **argv)
 			addargs(&args, "-q");
 			showprogress = 0;
 #endif
+			break;
+		case 'y':
+			addargs(&args, "-y");
 			break;
 
 		/* Server options. */
@@ -1144,7 +1147,7 @@ void
 usage(void)
 {
 	(void) fprintf(stderr,
-	    "usage: scp [-1246BCpqrv] [-c cipher] [-F ssh_config] [-i identity_file]\n"
+	    "usage: scp [-1246BCpqrvy] [-c cipher] [-F ssh_config] [-i identity_file]\n"
 	    "           [-l limit] [-P port] [-S program]\n"
 	    "           [[user@]host1:]file1 [...] [[user@]host2:]file2\n");
 	exit(1);
