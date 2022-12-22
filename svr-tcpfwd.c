@@ -326,42 +326,38 @@ const struct ChanType svr_chan_streamlocal = {
  * address */
 static int newstreamlocal(struct Channel * channel) {
 
-	char* desthost = NULL;
-	char* orighost = NULL;
-	unsigned int origport;
+	/*
+	https://cvsweb.openbsd.org/cgi-bin/cvsweb/src/usr.bin/ssh/PROTOCOL#rev1.30
+
+	byte		SSH_MSG_CHANNEL_OPEN
+	string		"direct-streamlocal@openssh.com"
+	uint32		sender channel
+	uint32		initial window size
+	uint32		maximum packet size
+	string		socket path
+	string		reserved
+	uint32		reserved
+	*/
+
+	char* destsocket = NULL;
 	unsigned int len;
 	int err = SSH_OPEN_ADMINISTRATIVELY_PROHIBITED;
 
 	TRACE(("streamlocal channel %d", channel->index))
 
-	desthost = buf_getstring(ses.payload, &len);
+	destsocket = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
-		TRACE(("leave streamlocal: desthost too long"))
+		TRACE(("leave streamlocal: destsocket too long"))
 		goto out;
 	}
 
-	orighost = buf_getstring(ses.payload, &len);
-	if (len > MAX_HOST_LEN) {
-		TRACE(("leave streamlocal: orighost too long"))
-		goto out;
-	}
-
-	origport = buf_getint(ses.payload);
-
-	/* best be sure */
-	if (origport > 65535) {
-		TRACE(("leave streamlocal: port > 65535"))
-		goto out;
-	}
-
-	channel->conn_pending = connect_streamlocal(desthost, channel_connect_done,
+	channel->conn_pending = connect_streamlocal(destsocket, channel_connect_done,
 		channel, DROPBEAR_PRIO_NORMAL);
 
 	err = SSH_OPEN_IN_PROGRESS;
 
 out:
-	m_free(desthost);
-	m_free(orighost);
+	m_free(destsocket);
 	TRACE(("leave streamlocal: err %d", err))
 	return err;
 }
