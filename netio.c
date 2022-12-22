@@ -28,7 +28,7 @@ struct dropbear_progress_connection {
 Does not close sockets */
 static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *iter) {
 	if (c->res) {
-		// Only call freeaddrinfo if connection is not AF_UNIX.
+		/* Only call freeaddrinfo if connection is not AF_UNIX. */
 		if (c->res->ai_family != AF_UNIX) {
 			freeaddrinfo(c->res);
 		} else {
@@ -78,7 +78,9 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			continue;
 		}
 
-		// According to the connect(2) manpage it should be testing EAGAIN rather than EINPROGRESS for unix sockets.
+		/* According to the connect(2) manpage it should be testing EAGAIN
+		 * rather than EINPROGRESS for unix sockets.
+		 */
 		retry_errno = r->ai_family == AF_UNIX ? EAGAIN : EINPROGRESS;
 
 		if (c->bind_address || c->bind_port) {
