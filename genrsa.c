@@ -34,7 +34,7 @@
 #if DROPBEAR_RSA
 
 static void getrsaprime(mp_int* prime, mp_int *primeminus, 
-		mp_int* rsa_e, unsigned int size_bytes);
+		const mp_int* rsa_e, unsigned int size_bytes);
 
 /* mostly taken from libtomcrypt's rsa key generation routine */
 dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
@@ -89,7 +89,7 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 
 /* return a prime suitable for p or q */
 static void getrsaprime(mp_int* prime, mp_int *primeminus, 
-		mp_int* rsa_e, unsigned int size_bytes) {
+		const mp_int* rsa_e, unsigned int size_bytes) {
 
 	unsigned char *buf;
 	int trials;

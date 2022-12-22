@@ -347,7 +347,7 @@ void genrandom(unsigned char* buf, unsigned int len) {
  * rand must be an initialised *mp_int for the result.
  * the result rand satisfies:  0 < rand < max 
  * */
-void gen_random_mpint(mp_int *max, mp_int *rand) {
+void gen_random_mpint(const mp_int *max, mp_int *rand) {
 
 	unsigned char *randbuf = NULL;
 	unsigned int len = 0;
