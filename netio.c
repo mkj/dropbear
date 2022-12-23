@@ -263,7 +263,7 @@ struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
 
 	if (strlen(localpath) >= sizeof(sunaddr->sun_path)) {
 		c->errstring = m_strdup("Stream path too long");
-		TRACE(("%s: %s", localpath, strerror(ENAMETOOLONG)));
+		TRACE(("localpath: %s is too long", localpath));
 		return c;
 	}
 
