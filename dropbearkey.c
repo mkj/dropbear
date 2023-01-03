@@ -139,6 +139,7 @@ static void check_signkey_bits(enum signkey_type type, int bits)
 				dropbear_exit("DSS keys have a fixed size of 1024 bits\n");
 				exit(EXIT_FAILURE);
 			}
+			break;
 #endif
 		default:
 			(void)0; /* quiet, compiler. ecdsa handles checks itself */
