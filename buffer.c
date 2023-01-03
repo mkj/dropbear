@@ -299,7 +299,7 @@ void buf_putbytes(buffer *buf, const unsigned char *bytes, unsigned int len) {
 
 /* for our purposes we only need positive (or 0) numbers, so will
  * fail if we get negative numbers */
-void buf_putmpint(buffer* buf, mp_int * mp) {
+void buf_putmpint(buffer* buf, const mp_int * mp) {
 	size_t written;
 	unsigned int len, pad = 0;
 	TRACE2(("enter buf_putmpint"))

@@ -93,7 +93,7 @@ void bytes_to_mp(mp_int *mp, const unsigned char* bytes, unsigned int len) {
 
 /* hash the ssh representation of the mp_int mp */
 void hash_process_mp(const struct ltc_hash_descriptor *hash_desc, 
-				hash_state *hs, mp_int *mp) {
+				hash_state *hs, const mp_int *mp) {
 	buffer * buf;
 
 	buf = buf_new(512 + 20); /* max buffer is a 4096 bit key, 

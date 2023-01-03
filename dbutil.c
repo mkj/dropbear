@@ -442,7 +442,7 @@ void printhex(const char * label, const unsigned char * buf, int len) {
 	}
 }
 
-void printmpint(const char *label, mp_int *mp) {
+void printmpint(const char *label, const mp_int *mp) {
 	buffer *buf = buf_new(1000);
 	buf_putmpint(buf, mp);
 	fprintf(stderr, "%d bits ", mp_count_bits(mp));

@@ -30,6 +30,6 @@
 void seedrandom(void);
 void genrandom(unsigned char* buf, unsigned int len);
 void addrandom(const unsigned char * buf, unsigned int len);
-void gen_random_mpint(mp_int *max, mp_int *rand);
+void gen_random_mpint(const mp_int *max, mp_int *rand);
 
 #endif /* DROPBEAR_RANDOM_H_ */
