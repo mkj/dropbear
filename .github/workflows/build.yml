@@ -34,11 +34,11 @@ jobs:
 
           - name: client only
             runcheck: 'no'
-            make_target: dbclient
+            make_target: PROGRAMS=dbclient
 
           - name: server only
             runcheck: 'no'
-            make_target: dropbear
+            make_target: PROGRAMS=dropbear
 
           - name: bundled libtom, bionic , no writev()
             # test can use an older distro with bundled libtommath
