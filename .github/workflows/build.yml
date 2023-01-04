@@ -32,6 +32,14 @@ jobs:
             multi: 1
             multiwrapper: 1
 
+          - name: client only
+            runcheck: 'no'
+            make_target: dbclient
+
+          - name: server only
+            runcheck: 'no'
+            make_target: dropbear
+
           - name: bundled libtom, bionic , no writev()
             # test can use an older distro with bundled libtommath
             os: ubuntu-18.04
@@ -143,6 +151,7 @@ jobs:
       LDFLAGS: ${{ matrix.ldflags }}
       EXTRACFLAGS: ${{ matrix.extracflags }}
       CONFIGURE_FLAGS: ${{ matrix.configure_flags || '--enable-werror' }}
+      MAKE_TARGET: ${{ matrix.make_target }}
       # for fuzzing
       CXX: clang++
       RANLIB: ${{ matrix.ranlib || 'ranlib' }}
@@ -185,7 +194,7 @@ jobs:
           sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
 
       - name: make
-        run: make -j3
+        run: make -j3 $MAKE_TARGET
 
       - name: multilink
         if: ${{ matrix.multilink }}
