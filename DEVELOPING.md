@@ -4,7 +4,13 @@
 
 See [INSTALL](INSTALL) for build instructions. 
 [SMALL](SMALL) has hints for building smaller binaries, also see comments
-in default_options.h.
+in [default_options.h](default_options.h).
+
+To be able to debug add `-g` compiler option to the `CFLAGS` environment
+variable. This will generate debug symbols.
+```
+export CFLAGS="$CFLAGS -g"
+```
 
 ## Debug printing
 
