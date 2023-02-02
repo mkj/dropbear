@@ -259,6 +259,14 @@ group1 in Dropbear server too */
  */
 #define DROPBEAR_DEFAULT_CLI_AUTHKEY "~/.ssh/id_dropbear"
 
+/* Default per client configuration file.
+*/
+#define DROPBEAR_DEFAULT_SSH_CONFIG "~/.ssh/dropbear_config"
+
+/* Do not enable the config feature yet.
+*/
+#define DROPBEAR_DEFAULT_USE_SSH_CONFIG 0
+
 /* Allow specifying the password for dbclient via the DROPBEAR_PASSWORD
  * environment variable. */
 #define DROPBEAR_USE_PASSWORD_ENV 1
