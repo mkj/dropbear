@@ -6,6 +6,7 @@
 *.bbg
 *.prof
 .*.swp
+/obj
 /autom4te.cache
 /config.log
 /config.status
@@ -27,3 +28,4 @@ tags
 .pytest*
 *.pyc
 /test/venv
+.vscode/
