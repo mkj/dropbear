@@ -149,6 +149,7 @@ typedef struct cli_runopts {
 
 	char *progname;
 	char *remotehost;
+	int remotehostfixed;
 	const char *remoteport;
 
 	char *own_user;
@@ -204,5 +205,9 @@ void parse_ciphers_macs(void);
 void print_version(void);
 void parse_recv_window(const char* recv_window_arg);
 int split_address_port(const char* spec, char **first, char ** second);
+
+#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+void read_config_file(char* filename, FILE* configFile, cli_runopts* options);
+#endif
 
 #endif /* DROPBEAR_RUNOPTS_H_ */

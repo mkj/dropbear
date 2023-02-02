@@ -38,7 +38,7 @@ static void parse_hostname(const char* orighostarg);
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
 static void fill_own_user(void);
 #if DROPBEAR_CLI_PUBKEY_AUTH
-static void loadidentityfile(const char* filename, int warnfail);
+void loadidentityfile(const char* filename, int warnfail);
 #endif
 #if DROPBEAR_CLI_ANYTCPFWD
 static void addforward(const char* str, m_list *fwdlist);
@@ -47,6 +47,10 @@ static void addforward(const char* str, m_list *fwdlist);
 static void add_netcat(const char *str);
 #endif
 static void add_extendedopt(const char *str);
+
+#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+void apply_config_settings(char* cli_host_arg);
+#endif
 
 static void printhelp() {
 
@@ -139,6 +143,7 @@ void cli_getopts(int argc, char ** argv) {
 	/* see printhelp() for options */
 	cli_opts.progname = argv[0];
 	cli_opts.remotehost = NULL;
+	cli_opts.remotehostfixed = 0;
 	cli_opts.remoteport = NULL;
 	cli_opts.username = NULL;
 	cli_opts.cmd = NULL;
@@ -388,6 +393,25 @@ void cli_getopts(int argc, char ** argv) {
 		}
 	}
 
+	if (host_arg == NULL) { /* missing hostname */
+		printhelp();
+		dropbear_exit("Remote host needs to provided.");
+	}
+	TRACE(("host is: %s", host_arg))
+
+#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+	apply_config_settings(host_arg);
+#endif
+
+	// Apply needed defaults if missing from command line or config file.
+	if (cli_opts.remoteport == NULL) {
+		cli_opts.remoteport = "22";
+	}
+
+	if (cli_opts.username == NULL) {
+		cli_opts.username = m_strdup(cli_opts.own_user);
+	}
+
 #if DROPBEAR_USER_ALGO_LIST
 	/* -c help doesn't need a hostname */
 	parse_ciphers_macs();
@@ -395,12 +419,6 @@ void cli_getopts(int argc, char ** argv) {
 
 	/* Done with options/flags; now handle the hostname (which may not
 	 * start with a hyphen) and optional command */
-
-	if (host_arg == NULL) { /* missing hostname */
-		printhelp();
-		exit(EXIT_FAILURE);
-	}
-	TRACE(("host is: %s", host_arg))
 
 	if (i < (unsigned int)argc) {
 		/* Build the command to send */
@@ -429,10 +447,6 @@ void cli_getopts(int argc, char ** argv) {
 		cli_opts.proxycmd = m_strdup(cli_opts.proxycmd);
 	}
 #endif
-
-	if (cli_opts.remoteport == NULL) {
-		cli_opts.remoteport = "22";
-	}
 
 	if (bind_arg) {
 		if (split_address_port(bind_arg,
@@ -504,7 +518,7 @@ void cli_getopts(int argc, char ** argv) {
 }
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
-static void loadidentityfile(const char* filename, int warnfail) {
+void loadidentityfile(const char* filename, int warnfail) {
 	sign_key *key;
 	enum signkey_type keytype;
 
@@ -634,9 +648,6 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 		/* Set up the proxycmd */
 		unsigned int cmd_len = 0;
 		char *passthrough_args = multihop_passthrough_args();
-		if (cli_opts.remoteport == NULL) {
-			cli_opts.remoteport = "22";
-		}
 		cmd_len = strlen(argv0) + strlen(remainder)
 			+ strlen(cli_opts.remotehost) + strlen(cli_opts.remoteport)
 			+ strlen(passthrough_args)
@@ -655,7 +666,7 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 	}
 	m_free(hostbuf);
 }
-#endif /* !DROPBEAR_CLI_MULTIHOP */
+#endif /* DROPBEAR_CLI_MULTIHOP */
 
 /* Parses a [user@]hostname[/port] argument. */
 static void parse_hostname(const char* orighostarg) {
@@ -663,34 +674,35 @@ static void parse_hostname(const char* orighostarg) {
 	char *port = NULL;
 
 	userhostarg = m_strdup(orighostarg);
-
-	cli_opts.remotehost = strchr(userhostarg, '@');
-	if (cli_opts.remotehost == NULL) {
+	
+	char* remotehost = strchr(userhostarg, '@');
+	if (remotehost == NULL) {
 		/* no username portion, the cli-auth.c code can figure the
 		 * local user's name */
-		cli_opts.remotehost = userhostarg;
+		remotehost = userhostarg;
 	} else {
-		cli_opts.remotehost[0] = '\0'; /* Split the user/host */
-		cli_opts.remotehost++;
+		remotehost[0] = '\0'; /* Split the user/host */
+		remotehost++;
 		cli_opts.username = userhostarg;
 	}
 
-	if (cli_opts.username == NULL) {
-		cli_opts.username = m_strdup(cli_opts.own_user);
-	}
-
-	port = strchr(cli_opts.remotehost, '^');
+	port = strchr(remotehost, '^');
 	if (!port)  {
 		/* legacy separator */
-		port = strchr(cli_opts.remotehost, '/');
+		port = strchr(remotehost, '/');
 	}
 	if (port) {
 		*port = '\0';
 		cli_opts.remoteport = port+1;
 	}
 
-	if (cli_opts.remotehost[0] == '\0') {
-		dropbear_exit("Bad hostname");
+	if (remotehost[0] == '\0') {
+		dropbear_exit("Bad hostname.");
+	}
+
+	if(!cli_opts.remotehostfixed)
+	{
+		cli_opts.remotehost = remotehost;
 	}
 }
 
@@ -927,3 +939,26 @@ static void add_extendedopt(const char* origstr) {
 
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
+
+#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+void apply_config_settings(char* cli_host_arg)
+{
+	char* isMultiHopHostTarget = strchr(cli_host_arg, ',');
+	if(!isMultiHopHostTarget)
+	{
+		char* configPath = expand_homedir_path(DROPBEAR_DEFAULT_SSH_CONFIG);
+		FILE* f;
+		if((f = fopen(configPath, "r")) == NULL)
+		{
+			DEBUG1(("Configuration file '%.200s' not found.", configPath));
+		}
+		else
+		{
+			parse_hostname(cli_host_arg); // Needed as key into the config
+			read_config_file(configPath, f, &cli_opts);
+			fclose(f);
+		}
+		free(configPath);
+	}
+}
+#endif

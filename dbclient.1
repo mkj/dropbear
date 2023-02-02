@@ -1,4 +1,4 @@
-.TH dbclient 1
+.TH dbclient 1 2023-02-01
 .SH NAME
 dbclient \- lightweight SSH client
 .SH SYNOPSIS
@@ -21,7 +21,6 @@ dbclient \- lightweight SSH client
 .B dbclient
 is the client part of Dropbear SSH
 .SH OPTIONS
-.TP
 .TP
 .B command
 A command to run on the remote host. This will normally be run by the remote host
@@ -222,6 +221,52 @@ SSH_ASKPASS should be set to the path of a program that will return a password
 on standard output. This program will only be used if either DISPLAY is set and
 standard input is not a TTY, or the environment variable SSH_ASKPASS_ALWAYS is
 set.
+
+.SH FILES
+.B ~/.ssh/dropbear_config
+
+This is the per user configuration file. A very limited subset of the keywords for
+ssh_config(5) is supported, and none of the advanced features. The file contains
+key value pairs on a single line separated with space or '='. Empty lines are ignored.
+Text starting with '#' is a comment, and also ignored.
+
+The file is not considered if multi-hop connection is used. Values on the command line
+override the respective values in the file.
+
+The recognized keywords are as follows. Keywords are case insensitive and values are
+case insensitive.
+
+.TP
+.B Host
+Defines the options that would be applied if this value matches the host specified
+on the command line. The next Host entry or EOF determine the list of applicable
+options.
+
+.TP
+.B HostName
+Specifies the actual host name to connect to. Can be DNS name or IP address.
+
+.TP
+.B Port
+Specifies the port number to use to connect to the remote host.
+
+.TP
+.B 
+User
+Specifies the user name to login in as.
+
+.TP
+.B
+IdentityFile
+Specifies the file with the private key used for public key authentication with the remote
+host. The file must be in the Dropbear format. See dropbearkey(1) to generate one. A '~/' at
+the start of the path will expanded to the executing user's home directory. A path that
+does not start with '/' will be treated relative to this configuration file's directory. Otherwise
+the path will be used as is.
+
+Because this file contains a secret it must have strict permissions to prevent abuse
+attempts - read/write for the executing user, and no access to anyone else.
+
 .SH NOTES
 If compiled with zlib support and if the server supports it, dbclient will
 always use compression.
