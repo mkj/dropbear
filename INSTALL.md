@@ -1,6 +1,6 @@
 ## Basic Dropbear Build Instructions
 
-Edit [localoptions.h](./src/localoptions.h) to set which features you want. Available options are described in default_options.h, these will be overridden by anything set in [localoptions.h](./src/localoptions.h) should be located in the build directory if you are building out of tree.
+Edit [localoptions.h](./localoptions.h) to set which features you want. Available options are described in default_options.h, these will be overridden by anything set in [localoptions.h](./localoptions.h) should be located in the build directory if you are building out of tree.
 Note that the file is not tracked ([*.gitignore*](.gitignore)-d) and you may need to create it.
 
 #### Configure for your system
@@ -53,7 +53,7 @@ Binaries can be stripped with `make strip`.
 
 Firstly, make sure you have at least uclibc 0.9.17, as `getusershell()` in prior versions is broken. Also note that you may get strange issues if your uClibc headers don't match the library you are running with, ie the headers might say that shadow password support exists, but the libraries don't have it.
 
-Compiling for uClibc should be the same as normal, just set CC to the magic uClibc toolchain compiler (ie `export CC=i386-uclibc-gcc` or whatever). You can use `make STATIC=1` to make statically linked binaries, and it is advisable to strip the binaries too. If you're looking to make a small binary, you should remove unneeded ciphers and algorithms, by editing [localoptions.h](./src/localoptions.h).
+Compiling for uClibc should be the same as normal, just set CC to the magic uClibc toolchain compiler (ie `export CC=i386-uclibc-gcc` or whatever). You can use `make STATIC=1` to make statically linked binaries, and it is advisable to strip the binaries too. If you're looking to make a small binary, you should remove unneeded ciphers and algorithms, by editing [localoptions.h](./localoptions.h).
 
 It is possible to compile zlib in, by copying zlib.h and zconf.h into a subdirectory (ie zlibincludes), and
 
