@@ -672,10 +672,11 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 static void parse_hostname(const char* orighostarg) {
 	char *userhostarg = NULL;
 	char *port = NULL;
+	char* remotehost = NULL;
 
 	userhostarg = m_strdup(orighostarg);
 
-	char* remotehost = strchr(userhostarg, '@');
+	remotehost = strchr(userhostarg, '@');
 	if (remotehost == NULL) {
 		/* no username portion, the cli-auth.c code can figure the
 		 * local user's name */
