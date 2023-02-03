@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2023 TJ Kolev
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,7 +47,7 @@ static struct {
 	CfgOption option;
 } ConfigOptions[] =
 {
-	// start of config section
+	/* Start of config section. */
 	{ "host", opHost },
 
 	{ "hostname", opHostName },
@@ -55,7 +55,7 @@ static struct {
 	{ "user", opLoginUser },
 	{ "identityfile", opIdentityFile },
 
-	// end loop condintion
+	/* End loop condintion. */
 	{ NULL, opInvalid },
 };
 
@@ -80,7 +80,7 @@ void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
 		char* commentStart = strchr(line, '#');
 		if(NULL != commentStart)
 		{
-			*commentStart = '\0'; // drop the comments
+			*commentStart = '\0'; /* Drop the comments. */
 		}
 
 		cfgKey = strtok_r(line, TOKEN_CHARS, &saveptr);
@@ -104,7 +104,7 @@ void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
 			dropbear_exit("Unhandled key %s at '%s':%d.", cfgKey, filename, linenum);
 		}
 
-		
+
 		cfgVal = strtok_r(NULL, TOKEN_CHARS, &saveptr);
 		if(NULL == cfgVal)
 		{
@@ -115,17 +115,18 @@ void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
 		{
 			if(opHost == cfgOpt)
 			{
-				// Hit the next host section. Done reading config.
+				/* Hit the next host section. Done reading config. */
 				break;
 			}
 			switch(cfgOpt)
 			{
 				case opHostName:
 				{
-					// The host name is the alias given on the command line.
-					// Set the actual remote host specified in the config.
+					/* The host name is the alias given on the command line.
+					 * Set the actual remote host specified in the config.
+					 */
 					options->remotehost = strdup(cfgVal);
-					options->remotehostfixed = 1; // Subsequent command line parsing should leave it alone.
+					options->remotehostfixed = 1; /* Subsequent command line parsing should leave it alone. */
 					break;
 				}
 
@@ -179,7 +180,7 @@ void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
 		{
 			if(opHost != cfgOpt || 0 != strcmp(cfgVal, options->remotehost))
 			{
-				// Not our host section
+				/* Not our host section. */
 				continue;
 			}
 			inHostSection = 1;
@@ -189,4 +190,4 @@ void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
 	free(line);
 }
 
-#endif // DROPBEAR_DEFAULT_USE_SSH_CONFIG
+#endif /* DROPBEAR_DEFAULT_USE_SSH_CONFIG */
