@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -90,7 +90,7 @@ static void printhelp() {
 					"-z    disable QoS\n"
 #if DROPBEAR_CLI_NETCAT
 					"-B <endhost:endport> Netcat-alike forwarding\n"
-#endif				
+#endif
 #if DROPBEAR_CLI_PROXYCMD
 					"-J <proxy_program> Use program pipe rather than TCP connection\n"
 #endif
@@ -108,7 +108,7 @@ static void printhelp() {
 					DROPBEAR_DEFAULT_CLI_AUTHKEY,
 #endif
 					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
-					
+
 }
 
 void cli_getopts(int argc, char ** argv) {
@@ -403,7 +403,7 @@ void cli_getopts(int argc, char ** argv) {
 	apply_config_settings(host_arg);
 #endif
 
-	// Apply needed defaults if missing from command line or config file.
+	/* Apply needed defaults if missing from command line or config file. */
 	if (cli_opts.remoteport == NULL) {
 		cli_opts.remoteport = "22";
 	}
@@ -620,8 +620,8 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 	 * for our multihop syntax, so we suture it back together.
 	 * This will break usernames that have both '@' and ',' in them,
 	 * though that should be fairly uncommon. */
-	if (cli_opts.username 
-			&& strchr(cli_opts.username, ',') 
+	if (cli_opts.username
+			&& strchr(cli_opts.username, ',')
 			&& strchr(cli_opts.username, '@')) {
 		unsigned int len = strlen(orighostarg) + strlen(cli_opts.username) + 2;
 		hostbuf = m_malloc(len);
@@ -674,7 +674,7 @@ static void parse_hostname(const char* orighostarg) {
 	char *port = NULL;
 
 	userhostarg = m_strdup(orighostarg);
-	
+
 	char* remotehost = strchr(userhostarg, '@');
 	if (remotehost == NULL) {
 		/* no username portion, the cli-auth.c code can figure the
@@ -709,9 +709,9 @@ static void parse_hostname(const char* orighostarg) {
 #if DROPBEAR_CLI_NETCAT
 static void add_netcat(const char* origstr) {
 	char *portstr = NULL;
-	
+
 	char * str = m_strdup(origstr);
-	
+
 	portstr = strchr(str, ':');
 	if (portstr == NULL) {
 		TRACE(("No netcat port"))
@@ -719,25 +719,25 @@ static void add_netcat(const char* origstr) {
 	}
 	*portstr = '\0';
 	portstr++;
-	
+
 	if (strchr(portstr, ':')) {
 		TRACE(("Multiple netcat colons"))
 		goto fail;
 	}
-	
+
 	if (m_str_to_uint(portstr, &cli_opts.netcat_port) == DROPBEAR_FAILURE) {
 		TRACE(("bad netcat port"))
 		goto fail;
 	}
-	
+
 	if (cli_opts.netcat_port > 65535) {
 		TRACE(("too large netcat port"))
 		goto fail;
 	}
-	
+
 	cli_opts.netcat_host = str;
 	return;
-	
+
 fail:
 	dropbear_exit("Bad netcat endpoint '%s'", origstr);
 }
@@ -745,7 +745,7 @@ fail:
 
 static void fill_own_user() {
 	uid_t uid;
-	struct passwd *pw = NULL; 
+	struct passwd *pw = NULL;
 
 	uid = getuid();
 
@@ -775,7 +775,7 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 	TRACE(("enter addforward"))
 
 	/* We need to split the original argument up. This var
-	   is never free()d. */ 
+	   is never free()d. */
 	str = m_strdup(origstr);
 
 	part1 = str;
@@ -835,7 +835,7 @@ static void addforward(const char* origstr, m_list *fwdlist) {
 		TRACE(("listenport > 65535"))
 		goto badport;
 	}
-		
+
 	if (newfwd->connectport > 65535) {
 		TRACE(("connectport > 65535"))
 		goto badport;
@@ -954,7 +954,7 @@ void apply_config_settings(char* cli_host_arg)
 		}
 		else
 		{
-			parse_hostname(cli_host_arg); // Needed as key into the config
+			parse_hostname(cli_host_arg); /* Needed as key into the config. */
 			read_config_file(configPath, f, &cli_opts);
 			fclose(f);
 		}
