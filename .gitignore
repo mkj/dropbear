@@ -27,5 +27,7 @@ Makefile
 tags
 .pytest*
 *.pyc
-/test/venv
+/test/venv/
+/test/init/
+/test/fakekey
 .vscode/
