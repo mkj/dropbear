@@ -31,6 +31,11 @@ or
 make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install
 ```
 
+To test the installation targeting a temporary forder set `DESTDIR`:
+```
+make install DESTDIR=/same/temp/location
+```
+
 You can leave items out of the `PROGRAMS` list to avoid compiling them. If you recompile after changing the `PROGRAMS` list, you **MUST** `make clean` before recompiling - bad things will happen otherwise.
 
 [DEVELOPING.md](DEVELOPING.md) has some notes on other developer topics, including debugging.
