@@ -23,7 +23,6 @@ def dropbear(request):
 	args = opt.dropbear.split() + [
 		"-p", LOCALADDR + ":" + opt.port, # bind locally only
 		"-r", opt.hostkey,
-#		"-p", opt.port,
 		"-F", "-E",
 		]
 	print("subprocess args: ", args)
