@@ -28,9 +28,9 @@ ifeq (@BUNDLED_LIBTOM@, 1)
 endif
 
 OPTION_HEADERS = default_options_guard.h $(srcdir)/sysoptions.h
-ifneq ($(wildcard $(srcdir)/localoptions.h),)
+ifneq ($(wildcard ./localoptions.h),)
 	CPPFLAGS+=-DLOCALOPTIONS_H_EXISTS
-	OPTION_HEADERS += $(srcdir)/localoptions.h
+	OPTION_HEADERS += ./localoptions.h
 endif
 
 OBJ_DIR=./obj
@@ -76,8 +76,8 @@ SCPOBJS = $(patsubst %,$(OBJ_DIR)/%,$(_SCPOBJS))
 
 ifeq (@DROPBEAR_FUZZ@, 1)
 	allobjs = $(COMMONOBJS) fuzz/fuzz-common.o  fuzz/fuzz-wrapfd.o $(CLISVROBJS) $(CLIOBJS) $(SVROBJS) @CRYPTLIB@
-	allobjs:=$(subst svr-main.o, ,$(allobjs))
-	allobjs:=$(subst cli-main.o, ,$(allobjs))
+	allobjs:=$(subst $(OBJ_DIR)/svr-main.o, ,$(allobjs))
+	allobjs:=$(subst $(OBJ_DIR)/cli-main.o, ,$(allobjs))
 
 	dropbearobjs=$(allobjs) svr-main.o
 	dbclientobjs=$(allobjs) cli-main.o
