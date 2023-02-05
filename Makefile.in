@@ -309,7 +309,7 @@ fuzzstandalone: fuzz/fuzz-harness.o fuzz-targets
 # provides a main in fuzz-harness.c
 fuzz-targets: $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
 
-$(FUZZ_TARGETS): $(FUZZ_OBJS) $(allobjs) $(LIBTOM_DEPS)
+$(FUZZ_TARGETS): $(LIBTOM_DEPS) $(allobjs) $(FUZZ_OBJS)
 	$(CXX) $(CXXFLAGS) fuzz/$@.o $(LDFLAGS) $(allobjs) -o $@$(EXEEXT) $(LIBTOM_LIBS) $(LIBS) $(FUZZLIB) @CRYPTLIB@
 
 # fuzzers that use the custom mutator - these expect a SSH network stream
