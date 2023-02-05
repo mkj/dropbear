@@ -47,10 +47,22 @@ Enabling/disabling algorithms is done in [localoptions.h](./localoptions.h), see
 
 #### Style
 
+In general please conform to the current style of the file you are editing.
+
 Source code is indented with tabs, width set to 4 (though width shouldn't matter much).
 Braces are on the same line as functions/loops/if - try to keep consistency with existing code.
 
 All `if` statements should have braces, no exceptions.
+
+Add a single space between flow control statements and their open parenthesis:
+```
+if (...
+for (...
+switch (...
+etc.
+```
+
+Use `snake_case` for variable and function names.
 
 Avoid using pointer arithmetic, instead the functions in [buffer.h](./src/buffer.h) should be used.
 

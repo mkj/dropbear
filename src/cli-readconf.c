@@ -25,7 +25,7 @@
 #include "dbutil.h"
 #include "runopts.h"
 
-#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+#if DROPBEAR_USE_SSH_CONFIG
 
 #define TOKEN_CHARS " =\t\n"
 
@@ -40,13 +40,13 @@ typedef enum {
 	opHostPort,
 	opLoginUser,
 	opIdentityFile,
-} CfgOption;
+} cfg_option;
 
 static struct {
 	const char *name;
-	CfgOption option;
-} ConfigOptions[] =
-{
+	cfg_option option;
+}
+config_options[] = {
 	/* Start of config section. */
 	{ "host", opHost },
 
@@ -59,135 +59,115 @@ static struct {
 	{ NULL, opInvalid },
 };
 
-void read_config_file(char* filename, FILE* configFile, cli_runopts* options)
-{
+void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 	DEBUG1(("Reading configuration data '%.200s'", filename));
 
 	char *line = NULL;
 	size_t linesize = 0;
 	int linenum = 0;
 
-	char* cfgKey;
-	char* cfgVal;
+	char* cfg_key;
+	char* cfg_val;
 	char* saveptr;
 
-	int inHostSection = 0;
-	while(-1 != getline(&line, &linesize, configFile))
-	{
+	int in_host_section = 0;
+	while (-1 != getline(&line, &linesize, config_file)) {
 		/* Update line number counter. */
 		linenum++;
 
 		char* commentStart = strchr(line, '#');
-		if(NULL != commentStart)
-		{
+		if (NULL != commentStart) {
 			*commentStart = '\0'; /* Drop the comments. */
 		}
 
-		cfgKey = strtok_r(line, TOKEN_CHARS, &saveptr);
-		if(NULL == cfgKey)
-		{
+		cfg_key = strtok_r(line, TOKEN_CHARS, &saveptr);
+		if (NULL == cfg_key) {
 			continue;
 		}
 
-		CfgOption cfgOpt = opInvalid;
-		for (int i = 0; ConfigOptions[i].name; i++)
-		{
-			if (0 == strcasecmp(cfgKey, ConfigOptions[i].name))
-			{
-				cfgOpt = ConfigOptions[i].option;
+		cfg_option cfg_opt = opInvalid;
+		for (int i = 0; config_options[i].name; i++) {
+			if (0 == strcasecmp(cfg_key, config_options[i].name)) {
+				cfg_opt = config_options[i].option;
 				break;
 			}
 		}
 
-		if(opInvalid == cfgOpt)
-		{
-			dropbear_exit("Unhandled key %s at '%s':%d.", cfgKey, filename, linenum);
+		if (opInvalid == cfg_opt) {
+			dropbear_exit("Unhandled key %s at '%s':%d.", cfg_key, filename, linenum);
 		}
 
 
-		cfgVal = strtok_r(NULL, TOKEN_CHARS, &saveptr);
-		if(NULL == cfgVal)
-		{
-			dropbear_exit("Missing value for key %s at '%s':%d.", cfgKey, filename, linenum);
+		cfg_val = strtok_r(NULL, TOKEN_CHARS, &saveptr);
+		if (NULL == cfg_val) {
+			dropbear_exit("Missing value for key %s at '%s':%d.", cfg_key, filename, linenum);
 		}
 
-		if(inHostSection)
-		{
-			if(opHost == cfgOpt)
-			{
+		if (in_host_section) {
+			if (opHost == cfg_opt) {
 				/* Hit the next host section. Done reading config. */
 				break;
 			}
-			switch(cfgOpt)
-			{
-				case opHostName:
-				{
+			switch (cfg_opt) {
+				case opHostName: {
 					/* The host name is the alias given on the command line.
 					 * Set the actual remote host specified in the config.
 					 */
-					options->remotehost = strdup(cfgVal);
+					options->remotehost = strdup(cfg_val);
 					options->remotehostfixed = 1; /* Subsequent command line parsing should leave it alone. */
 					break;
 				}
 
-				case opHostPort:
-				{
-					options->remoteport = strdup(cfgVal);
+				case opHostPort: {
+					options->remoteport = strdup(cfg_val);
 					break;
 				}
 
-				case opLoginUser:
-				{
-					options->username = strdup(cfgVal);
+				case opLoginUser: {
+					options->username = strdup(cfg_val);
 					break;
 				}
 
-				case opIdentityFile:
-				{
+				case opIdentityFile: {
 #if DROPBEAR_CLI_PUBKEY_AUTH
-					char* keyFilePath;
-					if(strncmp(cfgVal, "~/", 2) == 0)
-					{
-						keyFilePath = expand_homedir_path(cfgVal);
+					char* key_file_path;
+					if (strncmp(cfg_val, "~/", 2) == 0) {
+						key_file_path = expand_homedir_path(cfg_val);
 					}
-					else if(cfgVal[0] != '/')
-					{
-						char* configDir = dirname(filename);
-						int pathLen = strlen(configDir) + strlen(cfgVal) + 10;
-						char cbuff[pathLen];
-						snprintf(cbuff, pathLen, "%s/%s", configDir, cfgVal);
-						keyFilePath = strdup(cbuff);
+					else if (cfg_val[0] != '/') {
+						char* config_dir = dirname(filename);
+						int path_len = strlen(config_dir) + strlen(cfg_val) + 10;
+						char cbuff[path_len];
+						snprintf(cbuff, path_len, "%s/%s", config_dir, cfg_val);
+						key_file_path = strdup(cbuff);
 					}
-					else
-					{
-						keyFilePath = strdup(cfgVal);
+					else {
+						key_file_path = strdup(cfg_val);
 					}
-					loadidentityfile(keyFilePath, 1);
-					free(keyFilePath);
+					loadidentityfile(key_file_path, 1);
+					free(key_file_path);
 #else
-					dropbear_exit("This version of the code does not support identity file. %s at '%s':%d.", cfgKey, filename, linenum);
+					dropbear_exit("This version of the code does not support identity file. %s at '%s':%d.", cfg_key, filename, linenum);
 #endif
 					break;
 				}
 
-				default:
-				{
-					dropbear_exit("Unsupported configuration option %s at '%s':%d.", cfgKey, filename, linenum);
+				default: {
+					dropbear_exit("Unsupported configuration option %s at '%s':%d.", cfg_key, filename, linenum);
 				}
 			}
 		}
 		else
 		{
-			if(opHost != cfgOpt || 0 != strcmp(cfgVal, options->remotehost))
-			{
+			if (opHost != cfg_opt || 0 != strcmp(cfg_val, options->remotehost)) {
 				/* Not our host section. */
 				continue;
 			}
-			inHostSection = 1;
+			in_host_section = 1;
 		}
 	}
 
 	free(line);
 }
 
-#endif /* DROPBEAR_DEFAULT_USE_SSH_CONFIG */
+#endif /* DROPBEAR_USE_SSH_CONFIG */
