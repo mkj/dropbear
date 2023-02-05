@@ -48,7 +48,7 @@ static void add_netcat(const char *str);
 #endif
 static void add_extendedopt(const char *str);
 
-#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+#if DROPBEAR_USE_SSH_CONFIG
 void apply_config_settings(char* cli_host_arg);
 #endif
 
@@ -399,7 +399,7 @@ void cli_getopts(int argc, char ** argv) {
 	}
 	TRACE(("host is: %s", host_arg))
 
-#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
+#if DROPBEAR_USE_SSH_CONFIG
 	apply_config_settings(host_arg);
 #endif
 
@@ -701,8 +701,7 @@ static void parse_hostname(const char* orighostarg) {
 		dropbear_exit("Bad hostname.");
 	}
 
-	if(!cli_opts.remotehostfixed)
-	{
+	if (!cli_opts.remotehostfixed) {
 		cli_opts.remotehost = remotehost;
 	}
 }
@@ -941,25 +940,21 @@ static void add_extendedopt(const char* origstr) {
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
 
-#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
-void apply_config_settings(char* cli_host_arg)
-{
-	char* isMultiHopHostTarget = strchr(cli_host_arg, ',');
-	if(!isMultiHopHostTarget)
-	{
-		char* configPath = expand_homedir_path(DROPBEAR_DEFAULT_SSH_CONFIG);
+#if DROPBEAR_USE_SSH_CONFIG
+void apply_config_settings(char* cli_host_arg) {
+	char* is_multi_hop_host_target = strchr(cli_host_arg, ',');
+	if (!is_multi_hop_host_target) {
+		char* config_path = expand_homedir_path(DROPBEAR_DEFAULT_SSH_CONFIG);
 		FILE* f;
-		if((f = fopen(configPath, "r")) == NULL)
-		{
-			DEBUG1(("Configuration file '%.200s' not found.", configPath));
+		if ((f = fopen(config_path, "r")) == NULL) {
+			DEBUG1(("Configuration file '%.200s' not found.", config_path));
 		}
-		else
-		{
+		else {
 			parse_hostname(cli_host_arg); /* Needed as key into the config. */
-			read_config_file(configPath, f, &cli_opts);
+			read_config_file(config_path, f, &cli_opts);
 			fclose(f);
 		}
-		free(configPath);
+		free(config_path);
 	}
 }
 #endif

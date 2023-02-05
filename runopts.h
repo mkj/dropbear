@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -63,7 +63,7 @@ typedef struct runopts {
 
 extern runopts opts;
 
-int readhostkey(const char * filename, sign_key * hostkey, 
+int readhostkey(const char * filename, sign_key * hostkey,
 	enum signkey_type *type);
 void load_all_hostkeys(void);
 
@@ -97,7 +97,7 @@ typedef struct svr_runopts {
 	int norootlogin;
 
 #ifdef HAVE_GETGROUPLIST
-	/* restrict_group is the group name if group restriction was enabled, 
+	/* restrict_group is the group name if group restriction was enabled,
 	NULL otherwise */
 	char *restrict_group;
 	/* restrict_group_gid is only valid if restrict_group is set */
@@ -129,7 +129,7 @@ typedef struct svr_runopts {
 
 	char * forced_command;
 
-#if DROPBEAR_PLUGIN 
+#if DROPBEAR_PLUGIN
 	/* malloced */
 	char *pubkey_plugin;
 	/* points into pubkey_plugin */
@@ -178,7 +178,7 @@ typedef struct cli_runopts {
 #endif
 #if DROPBEAR_CLI_AGENTFWD
 	int agent_fwd;
-	int agent_keys_loaded; /* whether pubkeys has been populated with a 
+	int agent_keys_loaded; /* whether pubkeys has been populated with a
 							  list of keys held by the agent */
 	int agent_fd; /* The agent fd is only set during authentication. Forwarded
 	                 agent sessions have their own file descriptors */
@@ -206,8 +206,8 @@ void print_version(void);
 void parse_recv_window(const char* recv_window_arg);
 int split_address_port(const char* spec, char **first, char ** second);
 
-#if DROPBEAR_DEFAULT_USE_SSH_CONFIG
-void read_config_file(char* filename, FILE* configFile, cli_runopts* options);
+#if DROPBEAR_USE_SSH_CONFIG
+void read_config_file(char* filename, FILE* config_file, cli_runopts* options);
 #endif
 
 #endif /* DROPBEAR_RUNOPTS_H_ */
