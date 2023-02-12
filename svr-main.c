@@ -420,8 +420,12 @@ static void sigchld_handler(int UNUSED(unused)) {
 
 /* catch any segvs */
 static void sigsegv_handler(int UNUSED(unused)) {
-	fprintf(stderr, "Aiee, segfault! You should probably report "
-			"this as a bug to the developer\n");
+	int i;
+	const char *msg = "Aiee, segfault! You should probably report "
+			"this as a bug to the developer\n";
+	i = write(STDERR_FILENO, msg, strlen(msg));
+	/* ignore short writes */
+	(void)i;
 	_exit(EXIT_FAILURE);
 }
 
