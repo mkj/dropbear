@@ -104,6 +104,7 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
+					"-A env1=,env2  Environment variable names and prefixes to accept\n"
 					"-z    disable QoS\n"
 #if DROPBEAR_PLUGIN
                                         "-A <authplugin>[,<options>]\n"
@@ -166,6 +167,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.inetdmode = 0;
 	svr_opts.portcount = 0;
 	svr_opts.hostkey = NULL;
+	svr_opts.acceptenv = NULL;
 	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = expand_homedir_path(DROPBEAR_PIDFILE);
 #if DROPBEAR_SVR_LOCALTCPFWD
@@ -219,6 +221,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'd':
 				case 'r':
 					next = &keyfile;
+					break;
+				case 'A':
+					next = &svr_opts.acceptenv;
 					break;
 				case 'R':
 					svr_opts.delay_hostkey = 1;

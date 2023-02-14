@@ -136,6 +136,8 @@ typedef struct svr_runopts {
 	char *pubkey_plugin_options;
 #endif
 
+	char *acceptenv;  /* Comma-separated. */
+
 	int pass_on_env;
 
 } svr_runopts;
