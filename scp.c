@@ -337,6 +337,8 @@ main(int argc, char **argv)
 			addargs(&args, "-%c", ch);
 			break;
 		case 'o':
+			addargs(&args, "-%s", optarg);
+			break;
 		case 'c':
 		case 'i':
 		case 'F':
