@@ -27,3 +27,4 @@ tags
 .pytest*
 *.pyc
 /test/venv
+.vscode/
