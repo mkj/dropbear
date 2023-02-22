@@ -28,7 +28,12 @@ struct dropbear_progress_connection {
 Does not close sockets */
 static void remove_connect(struct dropbear_progress_connection *c, m_list_elem *iter) {
 	if (c->res) {
-		freeaddrinfo(c->res);
+		/* Only call freeaddrinfo if connection is not AF_UNIX. */
+		if (c->res->ai_family != AF_UNIX) {
+			freeaddrinfo(c->res);
+		} else {
+			m_free(c->res);
+		}
 	}
 	m_free(c->remotehost);
 	m_free(c->remoteport);
@@ -59,6 +64,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 	int err;
 	int res = 0;
 	int fastopen = 0;
+	int retry_errno = EINPROGRESS;
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
 	struct msghdr message;
 #endif
@@ -71,6 +77,11 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		if (c->sock < 0) {
 			continue;
 		}
+
+		/* According to the connect(2) manpage it should be testing EAGAIN
+		 * rather than EINPROGRESS for unix sockets.
+		 */
+		retry_errno = r->ai_family == AF_UNIX ? EAGAIN : EINPROGRESS;
 
 		if (c->bind_address || c->bind_port) {
 			/* bind to a source port/address */
@@ -116,7 +127,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		setnonblocking(c->sock);
 
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
-		fastopen = (c->writequeue != NULL);
+		fastopen = (c->writequeue != NULL && r->ai_family != AF_UNIX);
 
 		if (fastopen) {
 			memset(&message, 0x0, sizeof(message));
@@ -153,7 +164,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			res = connect(c->sock, r->ai_addr, r->ai_addrlen);
 		}
 
-		if (res < 0 && errno != EINPROGRESS) {
+		if (res < 0 && errno != retry_errno) {
 			/* failure */
 			m_free(c->errstring);
 			c->errstring = m_strdup(strerror(errno));
@@ -221,6 +232,58 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	if (bind_port) {
 		c->bind_port = m_strdup(bind_port);
 	}
+
+	return c;
+}
+
+
+/* Connect to stream local socket. */
+struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
+	connect_callback cb, void* cb_data, enum dropbear_prio prio)
+{
+	struct dropbear_progress_connection *c = NULL;
+	struct sockaddr_un *sunaddr;
+
+	c = m_malloc(sizeof(*c));
+	c->remotehost = m_strdup(localpath);
+	c->remoteport = NULL;
+	c->sock = -1;
+	c->cb = cb;
+	c->cb_data = cb_data;
+	c->prio = prio;
+
+	list_append(&ses.conn_pending, c);
+
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		c->errstring = m_strdup("fuzzing connect_streamlocal always fails");
+		return c;
+	}
+#endif
+
+	if (strlen(localpath) >= sizeof(sunaddr->sun_path)) {
+		c->errstring = m_strdup("Stream path too long");
+		TRACE(("localpath: %s is too long", localpath));
+		return c;
+	}
+
+	/*
+	 * Fake up a struct addrinfo for AF_UNIX connections.
+	 * remove_connect() must check ai_family
+	 * and use m_free() not freeaddirinfo() for AF_UNIX.
+	 */
+	c->res = m_malloc(sizeof(*c->res) + sizeof(*sunaddr));
+	c->res->ai_addr = (struct sockaddr *)(c->res + 1);
+	c->res->ai_addrlen = sizeof(*sunaddr);
+	c->res->ai_family = AF_UNIX;
+	c->res->ai_socktype = SOCK_STREAM;
+	c->res->ai_protocol = PF_UNSPEC;
+	sunaddr = (struct sockaddr_un *)c->res->ai_addr;
+	sunaddr->sun_family = AF_UNIX;
+	strlcpy(sunaddr->sun_path, localpath, sizeof(sunaddr->sun_path));
+
+	/* Copy to target iter */ 
+	c->res_iter = c->res;
 
 	return c;
 }

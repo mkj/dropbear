@@ -32,6 +32,11 @@ struct dropbear_progress_connection * connect_remote (const char* remotehost, co
 	connect_callback cb, void *cb_data, const char* bind_address, const char* bind_port,
 	enum dropbear_prio prio);
 
+/* Connect to local stream, always returns a progress connection, if it fails it will call the callback at a later point */
+struct dropbear_progress_connection * connect_streamlocal (const char* localpath,
+	connect_callback cb, void *cb_data,
+	enum dropbear_prio prio);
+
 /* Sets up for select() */
 void set_connect_fds(fd_set *writefd);
 /* Handles ready sockets after select() */
