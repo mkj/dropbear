@@ -7,7 +7,6 @@
 
 AC_PREREQ([2.59])
 AC_INIT
-AC_CONFIG_SRCDIR(buffer.c)
 
 # Record which revision is being built
 if test -s "`which hg`" && test -d "$srcdir/.hg"; then

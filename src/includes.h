@@ -132,8 +132,8 @@
 #endif
 
 #ifdef BUNDLED_LIBTOM
-#include "libtomcrypt/src/headers/tomcrypt.h"
-#include "libtommath/tommath.h"
+#include "../libtomcrypt/src/headers/tomcrypt.h"
+#include "../libtommath/tommath.h"
 #else
 #include <tomcrypt.h>
 #include <tommath.h>
