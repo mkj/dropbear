@@ -302,7 +302,7 @@ list-fuzz-targets:
 
 # fuzzers that don't use libfuzzer, just a standalone harness that feeds inputs
 fuzzstandalone: FUZZLIB=fuzz/fuzz-harness.o
-fuzzstandalone: fuzz/fuzz-harness.o fuzz-targets
+fuzzstandalone: fuzz-targets fuzz/fuzz-harness.o
 
 # Build all the fuzzers. Usually like
 #   make fuzz-targets FUZZLIB=-lFuzzer.a
@@ -343,3 +343,7 @@ fuzz-hostkeys:
 
 fuzz-clean:
 	-rm -f fuzz/*.o $(FUZZ_TARGETS) $(FUZZER_OPTIONS)
+
+# Mitigates race conditions by ensuring default_options_guard.h is built before
+# other dependency targets are run in parallel
+.NOTPARALLEL: default_options_guard.h
