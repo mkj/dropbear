@@ -19,7 +19,7 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 void getaddrstring(struct sockaddr_storage* addr, 
 		char **ret_host, char **ret_port, int host_lookup);
 int dropbear_listen(const char* address, const char* port,
-		int *socks, unsigned int sockcount, char **errstring, int *maxfd);
+		int *socks, unsigned int sockcount, char **errstring, int *maxfd, const char* interface);
 
 struct dropbear_progress_connection;
 

@@ -467,7 +467,7 @@ int get_sock_port(int sock) {
  * failure, if errstring wasn't NULL, it'll be a newly malloced error
  * string.*/
 int dropbear_listen(const char* address, const char* port,
-		int *socks, unsigned int sockcount, char **errstring, int *maxfd) {
+		int *socks, unsigned int sockcount, char **errstring, int *maxfd, const char* interface) {
 
 	struct addrinfo hints, *res = NULL, *res0 = NULL;
 	int err;
@@ -498,7 +498,11 @@ int dropbear_listen(const char* address, const char* port,
 		TRACE(("dropbear_listen: local loopback"))
 	} else {
 		if (address[0] == '\0') {
-			TRACE(("dropbear_listen: all interfaces"))
+			if (interface) {
+				TRACE(("dropbear_listen: %s", interface))
+			} else {
+				TRACE(("dropbear_listen: all interfaces"))
+			}
 			address = NULL;
 		}
 		hints.ai_flags = AI_PASSIVE;
@@ -554,6 +558,11 @@ int dropbear_listen(const char* address, const char* port,
 		linger.l_onoff = 1;
 		linger.l_linger = 5;
 		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
+
+		if(interface && setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface)) < 0) {
+			dropbear_log(LOG_WARNING, "Couldn't set SO_BINDTODEVICE");
+			TRACE(("Failed setsockopt with errno failure, %d %s", errno, strerror(errno)))
+		}
 
 #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
 		if (res->ai_family == AF_INET6) {

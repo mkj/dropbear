@@ -205,6 +205,7 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 	tcpinfo->listenport = port;
 	tcpinfo->chantype = &svr_chan_tcpremote;
 	tcpinfo->tcp_type = forwarded;
+	tcpinfo->interface = svr_opts.interface;
 
 	tcpinfo->request_listenaddr = request_addr;
 	if (!opts.listen_fwd_all || (strcmp(request_addr, "localhost") == 0) ) {
