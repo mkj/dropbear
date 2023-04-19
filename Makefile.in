@@ -23,7 +23,7 @@ LIBTOM_LIBS=@LIBTOM_LIBS@
 ifeq (@BUNDLED_LIBTOM@, 1)
 	LIBTOM_DEPS=$(STATIC_LTC) $(STATIC_LTM)
 	LIBTOM_CLEAN=ltc-clean ltm-clean
-	CPPFLAGS+=-I./libtomcrypt/src/headers/ -I./libtommath
+	CPPFLAGS+=-I$(srcdir)/../libtomcrypt/src/headers/
 	LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM)
 endif
 
@@ -165,6 +165,9 @@ $(OBJ_DIR):
 	mkdir -p $@
 
 $(OBJ_DIR)/%.o: $(srcdir)/%.c $(HEADERS) | $(OBJ_DIR)
+	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+
+fuzz/%.o: $(srcdir)/../fuzz/%.c $(HEADERS)
 	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
 
 default_options_guard.h: $(srcdir)/default_options.h
