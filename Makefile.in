@@ -79,8 +79,8 @@ ifeq (@DROPBEAR_FUZZ@, 1)
 	allobjs:=$(subst $(OBJ_DIR)/svr-main.o, ,$(allobjs))
 	allobjs:=$(subst $(OBJ_DIR)/cli-main.o, ,$(allobjs))
 
-	dropbearobjs=$(allobjs) svr-main.o
-	dbclientobjs=$(allobjs) cli-main.o
+	dropbearobjs=$(allobjs) $(OBJ_DIR)/svr-main.o
+	dbclientobjs=$(allobjs) $(OBJ_DIR)/cli-main.o
 	dropbearkeyobjs=$(allobjs) $(KEYOBJS)
 	dropbearconvertobjs=$(allobjs) $(CONVERTOBJS)
 	# CXX only set when fuzzing
