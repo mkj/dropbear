@@ -10,7 +10,8 @@ https://matt.ucc.asn.au/dropbear/dropbear.html
 
 A mirror of the Dropbear website and tarballs is available at https://dropbear.nl/mirror/.
 
-Please contact me if you have any questions/bugs found/features/ideas/comments etc :). There is also a mailing list at http://lists.ucc.gu.uwa.edu.au/mailman/listinfo/dropbear
+Please contact me if you have any questions/bugs found/features/ideas/comments etc
+There is also a mailing list https://lists.ucc.asn.au/mailman/listinfo/dropbear
 
 Matt Johnston
 matt@ucc.asn.au
