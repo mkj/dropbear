@@ -18,5 +18,5 @@ jobs:
           mkdir build
           cd build
           ../configure --enable-fuzz --enable-bundled-libtom
-          make -j3
+          make -d -j3
           make -j3 fuzzstandalone
