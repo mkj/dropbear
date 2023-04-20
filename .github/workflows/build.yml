@@ -42,7 +42,7 @@ jobs:
 
           - name: bundled libtom, bionic , no writev()
             # test can use an older distro with bundled libtommath
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             configure_flags: --enable-bundled-libtom --enable-werror
             # NOWRITEV is unrelated, test here to save a job
             nowritev: 1
