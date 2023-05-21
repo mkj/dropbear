@@ -168,7 +168,7 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv libpam0g-dev $CC
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: configure
         run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
