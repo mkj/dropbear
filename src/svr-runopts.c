@@ -98,6 +98,8 @@ static void printhelp(const char * progname) {
 					"		(default port is %s if none specified)\n"
 					"-P PidFile	Create pid file PidFile\n"
 					"		(default %s)\n"
+					"-l <interface>\n"
+					"		interface to bind on\n"
 #if INETD_MODE
 					"-i		Start for inetd\n"
 #endif
@@ -264,6 +266,9 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'P':
 					next = &svr_opts.pidfile;
+					break;
+				case 'l':
+					next = &svr_opts.interface;
 					break;
 #if DO_MOTD
 				/* motd is displayed by default, -m turns it off */
@@ -436,6 +441,10 @@ void svr_getopts(int argc, char ** argv) {
 
 	if (svr_opts.forced_command) {
 		dropbear_log(LOG_INFO, "Forced command set to '%s'", svr_opts.forced_command);
+	}
+
+	if (svr_opts.interface) {
+		dropbear_log(LOG_INFO, "Binding to interface '%s'", svr_opts.interface);
 	}
 
 	if (reexec_fd_arg) {
