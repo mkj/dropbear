@@ -555,10 +555,12 @@ int dropbear_listen(const char* address, const char* port,
 		/* set to reuse, quick timeout */
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*) &val, sizeof(val));
 
+#ifdef SO_BINDTODEVICE
 		if(interface && setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface)) < 0) {
 			dropbear_log(LOG_WARNING, "Couldn't set SO_BINDTODEVICE");
 			TRACE(("Failed setsockopt with errno failure, %d %s", errno, strerror(errno)))
 		}
+#endif
 
 #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
 		if (res->ai_family == AF_INET6) {

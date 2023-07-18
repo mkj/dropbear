@@ -98,8 +98,10 @@ static void printhelp(const char * progname) {
 					"		(default port is %s if none specified)\n"
 					"-P PidFile	Create pid file PidFile\n"
 					"		(default %s)\n"
+#ifdef SO_BINDTODEVICE
 					"-l <interface>\n"
 					"		interface to bind on\n"
+#endif
 #if INETD_MODE
 					"-i		Start for inetd\n"
 #endif
@@ -267,9 +269,11 @@ void svr_getopts(int argc, char ** argv) {
 				case 'P':
 					next = &svr_opts.pidfile;
 					break;
+#ifdef SO_BINDTODEVICE
 				case 'l':
 					next = &svr_opts.interface;
 					break;
+#endif
 #if DO_MOTD
 				/* motd is displayed by default, -m turns it off */
 				case 'm':
