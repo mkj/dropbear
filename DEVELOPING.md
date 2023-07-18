@@ -3,7 +3,7 @@
 #### Building
 
 See [INSTALL.md](INSTALL.md) for build instructions.
-[SMALL.md](SMALL.md) has hints for building smaller binaries, also see comments in [default_options.h](./default_options.h).
+[SMALL.md](SMALL.md) has hints for building smaller binaries, also see comments in [default_options.h](./src/default_options.h).
 
 To be able to debug add `-g` compiler option to the `CFLAGS` environment variable. This will generate debug symbols.
 ```
@@ -11,7 +11,7 @@ export CFLAGS="$CFLAGS -g"
 ```
 
 #### File dependencies
-The GitHub [test build script](./github/workflows/build.yml) requires the [default_options.h](./default_options.h) be at the top of the repository tree. The script uses the file to generate localoptions.h with various features enabled/disabled.
+The GitHub [test build script](./.github/workflows/build.yml) requires the [default_options.h](./src/default_options.h) be at the top of the repository tree. The script uses the file to generate localoptions.h with various features enabled/disabled.
 
 Following are generated files in the format \<target\>: \<generator\>(\<source\>)
 ```
@@ -35,7 +35,7 @@ Most cryptography requires a good random entropy source, both to generate secret
 
 Default algorithm lists are specified in [common-algo.c](./src/common-algo.c). They are in priority order, the client's first matching choice is used (see [rfc4253](https://www.rfc-editor.org/rfc/rfc4253.html)). Dropbear client has `-c` and `-m` arguments to choose which are enabled at runtime (doesn't work for server as of June 2020).
 
-Enabling/disabling algorithms is done in [localoptions.h](./localoptions.h), see [default_options.h](./default_options.h).
+Enabling/disabling algorithms is done in [localoptions.h](./localoptions.h), see [default_options.h](./src/default_options.h).
 
 #### Style
 
@@ -59,4 +59,4 @@ Dropbear server will run fine as a non-root user, allowing logins only for that 
 
 #### Connection setup
 
-Dropbear implements `first_kex_packet_follows` to reduce handshake latency (rfc 4253 7.1)[https://www.rfc-editor.org/rfc/rfc4253.html#section-7.1]. Some less common implementations don't handle that - it can be a cause of problems connecting. Note also that Dropbear may send several ssh packets within a single TCP packet - it's just a stream.
+Dropbear implements `first_kex_packet_follows` to reduce handshake latency [RFC 4253 7.1](https://www.rfc-editor.org/rfc/rfc4253.html#section-7.1). Some less common implementations don't handle that - it can be a cause of problems connecting. Note also that Dropbear may send several ssh packets within a single TCP packet - it's just a stream.

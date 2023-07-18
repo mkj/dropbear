@@ -472,7 +472,6 @@ int dropbear_listen(const char* address, const char* port,
 	struct addrinfo hints, *res = NULL, *res0 = NULL;
 	int err;
 	unsigned int nsock;
-	struct linger linger;
 	int val;
 	int sock;
 	uint16_t *allocated_lport_p = NULL;
@@ -555,9 +554,6 @@ int dropbear_listen(const char* address, const char* port,
 		val = 1;
 		/* set to reuse, quick timeout */
 		setsockopt(sock, SOL_SOCKET, SO_REUSEADDR, (void*) &val, sizeof(val));
-		linger.l_onoff = 1;
-		linger.l_linger = 5;
-		setsockopt(sock, SOL_SOCKET, SO_LINGER, (void*)&linger, sizeof(linger));
 
 		if(interface && setsockopt(sock, SOL_SOCKET, SO_BINDTODEVICE, interface, strlen(interface)) < 0) {
 			dropbear_log(LOG_WARNING, "Couldn't set SO_BINDTODEVICE");

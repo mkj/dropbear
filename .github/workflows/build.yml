@@ -42,7 +42,7 @@ jobs:
 
           - name: bundled libtom, bionic , no writev()
             # test can use an older distro with bundled libtommath
-            os: ubuntu-18.04
+            os: ubuntu-20.04
             configure_flags: --enable-bundled-libtom --enable-werror
             # NOWRITEV is unrelated, test here to save a job
             nowritev: 1
@@ -168,7 +168,7 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv libpam0g-dev $CC
 
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
 
       - name: configure
         run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
