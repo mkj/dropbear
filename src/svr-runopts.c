@@ -38,6 +38,7 @@ static void printhelp(const char * progname);
 static void addportandaddress(const char* spec);
 static void loadhostkey(const char *keyfile, int fatal_duplicate);
 static void addhostkey(const char *keyfile);
+static void load_banner();
 
 static void printhelp(const char * progname) {
 
@@ -382,23 +383,7 @@ void svr_getopts(int argc, char ** argv) {
 	}
 
 	if (svr_opts.bannerfile) {
-		struct stat buf;
-		if (stat(svr_opts.bannerfile, &buf) != 0) {
-			dropbear_exit("Error opening banner file '%s'",
-					svr_opts.bannerfile);
-		}
-		
-		if (buf.st_size > MAX_BANNER_SIZE) {
-			dropbear_exit("Banner file too large, max is %d bytes",
-					MAX_BANNER_SIZE);
-		}
-
-		svr_opts.banner = buf_new(buf.st_size);
-		if (buf_readfile(svr_opts.banner, svr_opts.bannerfile)!=DROPBEAR_SUCCESS) {
-			dropbear_exit("Error reading banner file '%s'",
-					svr_opts.bannerfile);
-		}
-		buf_setpos(svr_opts.banner, 0);
+		load_banner();
 	}
 
 #ifdef HAVE_GETGROUPLIST
@@ -714,4 +699,30 @@ void load_all_hostkeys() {
 	if (!any_keys) {
 		dropbear_exit("No hostkeys available. 'dropbear -R' may be useful or run dropbearkey.");
 	}
+}
+
+static void load_banner() {
+	struct stat buf;
+	if (stat(svr_opts.bannerfile, &buf) != 0) {
+		dropbear_log(LOG_WARNING, "Error opening banner file '%s'",
+				svr_opts.bannerfile);
+		return;
+	}
+
+	if (buf.st_size > MAX_BANNER_SIZE) {
+		dropbear_log(LOG_WARNING, "Banner file too large, max is %d bytes",
+				MAX_BANNER_SIZE);
+		return;
+	}
+
+	svr_opts.banner = buf_new(buf.st_size);
+	if (buf_readfile(svr_opts.banner, svr_opts.bannerfile) != DROPBEAR_SUCCESS) {
+		dropbear_log(LOG_WARNING, "Error reading banner file '%s'",
+				svr_opts.bannerfile);
+		buf_free(svr_opts.banner);
+		svr_opts.banner = NULL;
+		return;
+	}
+	buf_setpos(svr_opts.banner, 0);
+
 }
