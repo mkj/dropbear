@@ -276,8 +276,8 @@ thisclean:
 			$(OBJ_DIR)/*
 
 distclean: clean tidy
-	-rm -f config.h
-	-rm -f Makefile
+	-rm -f config.h config.status config.log
+	-rm -f Makefile test/Makefile
 	-rm -f default_options_guard.h
 
 tidy:
