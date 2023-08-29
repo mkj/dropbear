@@ -159,6 +159,7 @@ int main(int argc, char ** argv) {
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
 	char * typetext = NULL;
 	char * sizetext = NULL;
+	char * passphrase = NULL;
 	unsigned int bits = 0, genbits;
 	int printpub = 0;
 
@@ -194,11 +195,16 @@ int main(int argc, char ** argv) {
 					printhelp(argv[0]);
 					exit(EXIT_SUCCESS);
 					break;
-#if DEBUG_TRACE
 				case 'v':
+#if DEBUG_TRACE
 					debug_trace = DROPBEAR_VERBOSE_LEVEL;
-					break;
 #endif
+					break;
+				case 'q':
+					break;  /* quiet is default */
+				case 'N':
+					next = &passphrase;
+					break;
 				default:
 					fprintf(stderr, "Unknown argument %s\n", argv[i]);
 					printhelp(argv[0]);
@@ -264,6 +270,11 @@ int main(int argc, char ** argv) {
 		}
 		
 		check_signkey_bits(keytype, bits);;
+	}
+
+	if (passphrase && *passphrase != '\0') {
+		fprintf(stderr, "Only empty passphrase is supported\n");
+		exit(EXIT_FAILURE);
 	}
 
 	genbits = signkey_generate_get_bits(keytype, bits);
