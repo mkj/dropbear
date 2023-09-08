@@ -79,13 +79,13 @@ void recv_msg_global_request_remotetcp() {
 
 	TRACE(("enter recv_msg_global_request_remotetcp"))
 
+	reqname = buf_getstring(ses.payload, &namelen);
+	wantreply = buf_getbool(ses.payload);
+
 	if (svr_opts.noremotetcp || !svr_pubkey_allows_tcpfwd()) {
 		TRACE(("leave recv_msg_global_request_remotetcp: remote tcp forwarding disabled"))
 		goto out;
 	}
-
-	reqname = buf_getstring(ses.payload, &namelen);
-	wantreply = buf_getbool(ses.payload);
 
 	if (namelen > MAX_NAME_LEN) {
 		TRACE(("name len is wrong: %d", namelen))
