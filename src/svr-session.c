@@ -370,6 +370,9 @@ static void svr_algos_initialise(void) {
 			algo->usable = 0;
 		}
 #endif
+		if (strcmp(algo->name, SSH_STRICT_KEX_C) == 0) {
+			algo->usable = 0;
+		}
 	}
 }
 
