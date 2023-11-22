@@ -5388,7 +5388,7 @@ then :
 fi
 
 
-if test "t$found_crypt_func" = there; then
+if test "t$found_crypt_func" = here; then
 
 printf "%s\n" "#define HAVE_CRYPT 1" >>confdefs.h
 
