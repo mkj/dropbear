@@ -9988,7 +9988,7 @@ printf "%s\n" "$as_me: " >&6;}
 printf "%s\n" "$as_me: getpass() not available, dbclient will only have public-key authentication" >&6;}
 fi
 
-if test "t$found_crypt_func" != there; then
+if test "t$found_crypt_func" != here; then
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: " >&5
 printf "%s\n" "$as_me: " >&6;}
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: crypt() not available, dropbear server will not have password authentication" >&5
