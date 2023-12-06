@@ -165,10 +165,10 @@ $(OBJ_DIR):
 	mkdir -p $@
 
 $(OBJ_DIR)/%.o: $(srcdir)/%.c $(HEADERS) | $(OBJ_DIR)
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@ -c
 
 fuzz/%.o: $(srcdir)/../fuzz/%.c $(HEADERS)
-	$(CC) -c $(CFLAGS) $(CPPFLAGS) $< -o $@
+	$(CC) $(CFLAGS) $(CPPFLAGS) $< -o $@ -c
 
 default_options_guard.h: $(srcdir)/default_options.h
 	@echo Creating $@
