@@ -55,8 +55,9 @@ struct Channel {
 	int errfd; /* used like writefd or readfd, depending if it's client or server.
 				  Doesn't exactly belong here, but is cleaner here */
 	int bidir_fd; /* a boolean indicating that writefd/readfd are the same
-			file descriptor (bidirectional), such as a network socket or PTY.
-			That is handled differently when closing FDs */
+			file descriptor (bidirectional), such as a network sockets.
+			That is handled differently when closing FDs. Is only
+			applicable to sockets (which can be used with shutdown()) */
 	circbuffer *writebuf; /* data from the wire, for local consumption. Can be
 							 initially NULL */
 	circbuffer *extrabuf; /* extended-data for the program - used like writebuf

@@ -910,7 +910,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		channel->readfd = chansess->master;
 		/* don't need to set stderr here */
 		ses.maxfd = MAX(ses.maxfd, chansess->master);
-		channel->bidir_fd = 1;
+		channel->bidir_fd = 0;
 
 		setnonblocking(chansess->master);
 
