@@ -41,7 +41,8 @@ static int runprog(const char *multipath,
 		}
 #endif
 #ifdef DBMULTI_dropbearkey
-		if (strcmp(progname, "dropbearkey") == 0) {
+		if (strcmp(progname, "dropbearkey") == 0
+				|| strcmp(progname, "ssh-keygen") == 0) {
 			return dropbearkey_main(argc, argv);
 		}
 #endif
@@ -88,7 +89,7 @@ int main(int argc, char ** argv) {
 			"'dbclient' or 'ssh' - the Dropbear client\n"
 #endif
 #ifdef DBMULTI_dropbearkey
-			"'dropbearkey' - the key generator\n"
+			"'dropbearkey' or 'ssh-keygen' - the key generator\n"
 #endif
 #ifdef DBMULTI_dropbearconvert
 			"'dropbearconvert' - the key converter\n"
