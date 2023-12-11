@@ -71,10 +71,13 @@ void common_session_init(int sock_in, int sock_out) {
 #if !DROPBEAR_SVR_MULTIUSER
 	/* A sanity check to prevent an accidental configuration option
 	   leaving multiuser systems exposed */
-	errno = 0;
-	getuid();
-	if (errno != ENOSYS) {
-		dropbear_exit("Non-multiuser Dropbear requires a non-multiuser kernel");
+	{
+		int ret;
+		errno = 0;
+		ret = getgroups(0, NULL);
+		if (!(ret == -1 && errno == ENOSYS)) {
+			dropbear_exit("Non-multiuser Dropbear requires a non-multiuser kernel");
+		}
 	}
 #endif
 
