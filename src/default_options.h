@@ -48,9 +48,10 @@ IMPORTANT: Some options will require "make clean" after changes */
 
 /* Include verbose debug output, enabled with -v at runtime (repeat to increase).
  * define which level of debug output you compile in
- * TRACE1 - TRACE3 = approx 4 Kb (connection, remote identity, algos, auth type info)
- * TRACE4 = approx 17 Kb (detailed before connection)
- * TRACE5 = approx 8 Kb (detailed after connection) */
+ * Level 0 = disabled
+ * Level 1-3 = approx 4 Kb (connection, remote identity, algos, auth type info)
+ * Level 4 = approx 17 Kb (detailed before connection)
+ * Level 5 = approx 8 Kb (detailed after connection) */
 #define DEBUG_TRACE 0
 
 /* Set this if you want to use the DROPBEAR_SMALL_CODE option. This can save
