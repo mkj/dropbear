@@ -443,18 +443,6 @@ void svr_getopts(int argc, char ** argv) {
 		}
 	}
 
-#if INETD_MODE
-	if (svr_opts.inetdmode && (
-		opts.usingsyslog == 0
-#if DEBUG_TRACE
-		|| debug_trace
-#endif
-		)) {
-		/* log output goes to stderr which would get sent over the inetd network socket */
-		dropbear_exit("Dropbear inetd mode is incompatible with debug -v or non-syslog");
-	}
-#endif
-
 	if (svr_opts.multiauthmethod && svr_opts.noauthpass) {
 		dropbear_exit("-t and -s are incompatible");
 	}
