@@ -61,6 +61,18 @@
 #include "dbrandom.h"
 #include "gensignkey.h"
 
+#if DROPBEAR_ED25519
+#define DEFAULT_KEY_TYPE_NAME "ed25519"
+#elif DROPBEAR_RSA
+/* Different to the sigalgs list because negotiated hostkeys have fallbacks for compatibility,
+ * whereas a generated authkey doesn't, so RSA needs to be higher than ECDSA */
+#define DEFAULT_KEY_TYPE_NAME "rsa"
+#elif DROPBEAR_ECDSA
+#define DEFAULT_KEY_TYPE_NAME "ecdsa"
+#elif DROPBEAR_DSS
+#define DEFAULT_KEY_TYPE_NAME "dss"
+#endif
+
 static void printhelp(char * progname);
 
 
@@ -157,7 +169,7 @@ int main(int argc, char ** argv) {
 	char ** next = NULL;
 	char * filename = NULL;
 	enum signkey_type keytype = DROPBEAR_SIGNKEY_NONE;
-	char * typetext = NULL;
+	char * typetext = DEFAULT_KEY_TYPE_NAME;
 	char * sizetext = NULL;
 	char * passphrase = NULL;
 	unsigned int bits = 0, genbits;
@@ -223,13 +235,6 @@ int main(int argc, char ** argv) {
 	if (printpub) {
 		int ret = printpubfile(filename);
 		exit(ret);
-	}
-
-	/* check/parse args */
-	if (!typetext) {
-		fprintf(stderr, "Must specify key type\n");
-		printhelp(argv[0]);
-		exit(EXIT_FAILURE);
 	}
 
 #if DROPBEAR_RSA
