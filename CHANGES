@@ -9,6 +9,19 @@ Features and Changes:
 
 Fixes:
 
+- Add "Strict KEX" support. This mitigates a SSH protocol flaw which lets
+  a MITM attacker silently remove packets immediately after the
+  first key exchange. At present the flaw does not seem to reduce Dropbear's
+  security (the only packet affected would be a server-sig-algs extension,
+  which is used for compatibility not security).
+  For Dropbear, chacha20-poly1305 is the only affected cipher.
+  Both sides of the connection must support Strict KEX for it to be used.
+
+  The protocol flaw is tracked as CVE-2023-48795, details
+  at https://terrapin-attack.com . Thanks to the researchers Fabian Bäumer,
+  Marcus Brinkmann, and Jörg Schwenk. Thanks to OpenSSH for specifying
+  strict KEX mode.
+
 - Fix blocking while closing forwarded TCP sessions. Noticable
   when many connections are being forwarded. Reported and
   tested by GektorUA. Github #230
