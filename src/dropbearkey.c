@@ -64,8 +64,8 @@
 static void printhelp(char * progname);
 
 
-static void printpubkey(sign_key * key, int keytype);
-static int printpubfile(const char* filename);
+static void printpubkey(sign_key * key, int keytype, const char * comment);
+static int printpubfile(const char* filename, const char * comment);
 
 /* Print a help message */
 static void printhelp(char * progname) {
@@ -107,6 +107,7 @@ static void printhelp(char * progname) {
 					"           Ed25519 has a fixed size of 256 bits\n"
 #endif
 					"-y		Just print the publickey and fingerprint for the\n		private key in <filename>.\n"
+					"-C		Specify the key comment (email).\n"
 #if DEBUG_TRACE
 					"-v		verbose\n"
 #endif
@@ -160,6 +161,7 @@ int main(int argc, char ** argv) {
 	char * typetext = NULL;
 	char * sizetext = NULL;
 	char * passphrase = NULL;
+	char * comment = NULL;
 	unsigned int bits = 0, genbits;
 	int printpub = 0;
 
@@ -187,6 +189,9 @@ int main(int argc, char ** argv) {
 					break;
 				case 's':
 					next = &sizetext;
+					break;
+				case 'C':
+					next = &comment;
 					break;
 				case 'y':
 					printpub = 1;
@@ -221,7 +226,7 @@ int main(int argc, char ** argv) {
 	}
 
 	if (printpub) {
-		int ret = printpubfile(filename);
+		int ret = printpubfile(filename, NULL);
 		exit(ret);
 	}
 
@@ -284,13 +289,13 @@ int main(int argc, char ** argv) {
 		dropbear_exit("Failed to generate key.\n");
 	}
 
-	printpubfile(filename);
+	printpubfile(filename, comment);
 
 	return EXIT_SUCCESS;
 }
 #endif
 
-static int printpubfile(const char* filename) {
+static int printpubfile(const char* filename, const char* comment) {
 
 	buffer *buf = NULL;
 	sign_key *key = NULL;
@@ -316,7 +321,7 @@ static int printpubfile(const char* filename) {
 		goto out;
 	}
 
-	printpubkey(key, keytype);
+	printpubkey(key, keytype, comment);
 
 	err = DROPBEAR_SUCCESS;
 
@@ -330,7 +335,7 @@ out:
 	return err;
 }
 
-static void printpubkey(sign_key * key, int keytype) {
+static void printpubkey(sign_key * key, int keytype, const char * comment) {
 
 	buffer * buf = NULL;
 	unsigned char base64key[MAX_PUBKEY_SIZE*2];
@@ -358,20 +363,28 @@ static void printpubkey(sign_key * key, int keytype) {
 
 	typestring = signkey_name_from_type(keytype, NULL);
 
-	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
+	printf("Public key portion is:\n");
 
-	/* a user@host comment is informative */
-	username = "";
-	pw = getpwuid(getuid());
-	if (pw) {
-		username = pw->pw_name;
+	if (comment) {
+		printf("%s %s %s\n",
+				typestring, base64key, comment);
+	} else {
+		/* a user@host comment is informative */
+		username = "";
+		pw = getpwuid(getuid());
+		if (pw) {
+			username = pw->pw_name;
+		}
+
+		gethostname(hostname, sizeof(hostname));
+		hostname[sizeof(hostname) - 1] = '\0';
+
+		printf("%s %s %s@%s\n",
+				typestring, base64key, username, hostname);
 	}
 
-	gethostname(hostname, sizeof(hostname));
-	hostname[sizeof(hostname)-1] = '\0';
-
-	printf("Public key portion is:\n%s %s %s@%s\nFingerprint: %s\n",
-			typestring, base64key, username, hostname, fp);
+	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
+	printf("Fingerprint: %s\n", fp);
 
 	m_free(fp);
 	buf_free(buf);
