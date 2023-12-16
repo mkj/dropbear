@@ -63,9 +63,12 @@
 
 static void printhelp(char * progname);
 
-
-static void printpubkey(sign_key * key, int keytype, const char * comment);
-static int printpubfile(const char* filename, const char * comment);
+static void printpubkey(sign_key * key, int keytype, const char * comment, int create_pub_file, const char * filename);
+/* Print a public key and fingerprint to stdout.
+ * Used for "dropbearkey -y" command but also after generation of a new key.
+ * For the new key pair the create_pub_file will be TRUE and the pub key will be saved to a .pub file.
+*/
+static int printpubfile(const char* filename, const char * comment, int create_pub_file);
 
 /* Print a help message */
 static void printhelp(char * progname) {
@@ -226,7 +229,7 @@ int main(int argc, char ** argv) {
 	}
 
 	if (printpub) {
-		int ret = printpubfile(filename, NULL);
+		int ret = printpubfile(filename, NULL, 0);
 		exit(ret);
 	}
 
@@ -289,13 +292,13 @@ int main(int argc, char ** argv) {
 		dropbear_exit("Failed to generate key.\n");
 	}
 
-	printpubfile(filename, comment);
+	printpubfile(filename, comment, 1);
 
 	return EXIT_SUCCESS;
 }
 #endif
 
-static int printpubfile(const char* filename, const char* comment) {
+static int printpubfile(const char* filename, const char* comment, int create_pub_file) {
 
 	buffer *buf = NULL;
 	sign_key *key = NULL;
@@ -321,7 +324,7 @@ static int printpubfile(const char* filename, const char* comment) {
 		goto out;
 	}
 
-	printpubkey(key, keytype, comment);
+	printpubkey(key, keytype, comment, create_pub_file, filename);
 
 	err = DROPBEAR_SUCCESS;
 
@@ -335,7 +338,7 @@ out:
 	return err;
 }
 
-static void printpubkey(sign_key * key, int keytype, const char * comment) {
+static void printpubkey(sign_key * key, int keytype, const char * comment, int create_pub_file, const char * filename) {
 
 	buffer * buf = NULL;
 	unsigned char base64key[MAX_PUBKEY_SIZE*2];
@@ -347,6 +350,20 @@ static void printpubkey(sign_key * key, int keytype, const char * comment) {
 	struct passwd * pw = NULL;
 	char * username = NULL;
 	char hostname[100];
+	char * filename_pub = NULL;
+	int filename_pub_len = 0;
+	int pubkey_fd = -1;
+
+	if (create_pub_file) {
+		filename_pub_len = strlen(filename) + 5;
+		filename_pub = m_malloc(filename_pub_len);
+		snprintf(filename_pub, filename_pub_len, "%s.pub", filename);
+
+		pubkey_fd = open(filename_pub, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+		if (pubkey_fd < 0) {
+			dropbear_log(LOG_ERR, "Save public key to %s failed: %s", filename_pub, strerror(errno));
+		}
+	}
 
 	buf = buf_new(MAX_PUBKEY_SIZE);
 	buf_put_pub_key(buf, key, keytype);
@@ -368,6 +385,10 @@ static void printpubkey(sign_key * key, int keytype, const char * comment) {
 	if (comment) {
 		printf("%s %s %s\n",
 				typestring, base64key, comment);
+		if (pubkey_fd >= 0) {
+			dprintf(pubkey_fd, "%s %s %s\n",
+					typestring, base64key, comment);
+		}
 	} else {
 		/* a user@host comment is informative */
 		username = "";
@@ -381,6 +402,10 @@ static void printpubkey(sign_key * key, int keytype, const char * comment) {
 
 		printf("%s %s %s@%s\n",
 				typestring, base64key, username, hostname);
+		if (pubkey_fd >= 0) {
+			dprintf(pubkey_fd,"%s %s %s@%s\n",
+					typestring, base64key, username, hostname);
+		}
 	}
 
 	fp = sign_key_fingerprint(buf_getptr(buf, len), len);
@@ -388,4 +413,12 @@ static void printpubkey(sign_key * key, int keytype, const char * comment) {
 
 	m_free(fp);
 	buf_free(buf);
+
+	if (pubkey_fd >= 0) {
+		if (fsync(pubkey_fd) != 0) {
+			dropbear_log(LOG_ERR, "fsync of %s failed: %s", filename_pub, strerror(errno));
+		}
+		m_close(pubkey_fd);
+	}
+	m_free(filename_pub);
 }
