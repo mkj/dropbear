@@ -200,7 +200,7 @@ esac
 AC_CHECK_TOOL(AR, ar, :)
 AC_CHECK_TOOL(RANLIB, ranlib, :)
 AC_CHECK_TOOL(STRIP, strip, :)
-AC_CHECK_TOOL(INSTALL, install, :)
+AC_PROG_INSTALL
 
 dnl Can't use login() or logout() with uclibc
 AC_CHECK_DECL(__UCLIBC__,
