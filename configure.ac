@@ -888,7 +888,9 @@ fi
 # flags that should be set in Makefile but not for configure tests
 CFLAGS="$CFLAGS $LATE_CFLAGS"
 
-AC_CONFIG_HEADERS([config.h])
+AC_CONFIG_AUX_DIR([src])
+
+AC_CONFIG_HEADERS([config.h:src/config.h.in])
 AC_CONFIG_FILES(Makefile $LIBTOM_FILES test/Makefile)
 AC_OUTPUT
 

@@ -17,8 +17,8 @@ The script uses the file to generate `localoptions.h` with various features enab
 Following are generated files in the format `<target>: <generator>(<source>)`
 ```
 - configure: autoconf(configure.ac)
-- config.h.in: autoheader(configure.ac)
-- config.h: configure(config.h.in)
+- src/config.h.in: autoheader(configure.ac)
+- src/config.h: configure(src/config.h.in)
 - Makefile: configure(Makefile.in)
 - default_options_guard.h: make(default_options.h)
 ```

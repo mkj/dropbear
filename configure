@@ -2810,7 +2810,7 @@ as_fn_append ac_header_c_list " sys/socket.h sys_socket_h HAVE_SYS_SOCKET_H"
 ac_aux_files="config.guess config.sub"
 
 # Locations in which to look for auxiliary files.
-ac_aux_dir_candidates="${srcdir}${PATH_SEPARATOR}${srcdir}/..${PATH_SEPARATOR}${srcdir}/../.."
+ac_aux_dir_candidates="${srcdir}/src"
 
 # Search for a directory containing all of the required auxiliary files,
 # $ac_aux_files, from the $PATH-style list $ac_aux_dir_candidates.
@@ -8696,7 +8696,9 @@ fi
 # flags that should be set in Makefile but not for configure tests
 CFLAGS="$CFLAGS $LATE_CFLAGS"
 
-ac_config_headers="$ac_config_headers config.h"
+
+
+ac_config_headers="$ac_config_headers config.h:src/config.h.in"
 
 ac_config_files="$ac_config_files Makefile $LIBTOM_FILES test/Makefile"
 
@@ -9384,7 +9386,7 @@ cat >>$CONFIG_STATUS <<\_ACEOF || ac_write_fail=1
 for ac_config_target in $ac_config_targets
 do
   case $ac_config_target in
-    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h" ;;
+    "config.h") CONFIG_HEADERS="$CONFIG_HEADERS config.h:src/config.h.in" ;;
     "Makefile") CONFIG_FILES="$CONFIG_FILES Makefile" ;;
     "$LIBTOM_FILES") CONFIG_FILES="$CONFIG_FILES $LIBTOM_FILES" ;;
     "test/Makefile") CONFIG_FILES="$CONFIG_FILES test/Makefile" ;;
