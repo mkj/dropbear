@@ -11,15 +11,16 @@ Fixes:
 
 - Fix blocking while closing forwarded TCP sessions. Noticable
   when many connections are being forwarded. Reported and
-  tested by GektorUA
+  tested by GektorUA. Github #230
 
 - Don't offer RSA (then fail) if there is no RSA key. Regression in 2020.79
   Github #219
 
 - Allow inetd to run in non-syslog modes. Thanks to Laurent Bercot for the report
+  Github #218
 
 - Fix missing response to remote TCP requests when it is disabled.
-  Patch from Justin Chen
+  Patch from Justin Chen. Github #254
 
 - Fix building with DROPBEAR_RSA disabled
 
@@ -28,7 +29,7 @@ Fixes:
 - Make banner reading failure non-fatal
 
 - Allow user's own gid in PTY permissions, lets Dropbear work as non-root
-  even if /dev/pts isn't mounted with gid=5
+  even if /dev/pts isn't mounted with gid=5. Github #200 and #201
 
 - Fix DROPBEAR_SVR_MULTIUSER. This appears to have been broken since when it
   was added in 2019. If you're using this let me know (it might be removed
