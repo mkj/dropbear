@@ -34,7 +34,8 @@ ifneq ($(wildcard ./localoptions.h),)
 endif
 
 OBJ_DIR=./obj
-MAN_DIR=./manpages
+MAN_DIR=@srcdir@/manpages
+
 
 _COMMONOBJS=dbutil.o buffer.o dbhelpers.o \
 		dss.o bignum.o \
