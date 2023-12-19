@@ -897,6 +897,7 @@ static void add_extendedopt(const char* origstr) {
 			"\tUseSyslog\n"
 #endif
 			"\tPort\n"
+			"\tStrictHostKeyChecking\n"
 		);
 		exit(EXIT_SUCCESS);
 	}
@@ -922,6 +923,16 @@ static void add_extendedopt(const char* origstr) {
 
 	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
 		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
+		return;
+	}
+
+	if (match_extendedopt(&optstr, "StrictHostKeyChecking") == DROPBEAR_SUCCESS) {
+		if (strcmp(optstr, "accept-new") == 0) {
+			cli_opts.always_accept_key = 1;
+		} else {
+			cli_opts.no_hostkey_check = !parse_flag_value(optstr);
+			cli_opts.always_accept_key = cli_opts.no_hostkey_check;
+		}
 		return;
 	}
 
