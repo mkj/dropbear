@@ -154,6 +154,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.exit_on_fwd_failure = 0;
 #endif
 	cli_opts.disable_trivial_auth = 0;
+	cli_opts.password_authentication = 1;
 #if DROPBEAR_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -902,6 +903,7 @@ static void add_extendedopt(const char* origstr) {
 #if DROPBEAR_CLI_PUBKEY_AUTH
 			"\tIdentityFile\n"
 #endif
+			"\tPasswordAuthentication\n"
 			"\tPort\n"
 #if DROPBEAR_CLI_PROXYCMD
 			"\tProxyCommand\n"
@@ -949,6 +951,13 @@ static void add_extendedopt(const char* origstr) {
 #if DROPBEAR_CLI_PUBKEY_AUTH
 	if (match_extendedopt(&optstr, "IdentityFile") == DROPBEAR_SUCCESS) {
 		loadidentityfile(optstr, 1);
+		return;
+	}
+#endif
+
+#if DROPBEAR_CLI_PASSWORD_AUTH
+	if (match_extendedopt(&optstr, "PasswordAuthentication") == DROPBEAR_SUCCESS) {
+		cli_opts.password_authentication = parse_flag_value(optstr);
 		return;
 	}
 #endif
