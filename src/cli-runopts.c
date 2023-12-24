@@ -888,17 +888,23 @@ static void add_extendedopt(const char* origstr) {
 
 	if (strcmp(origstr, "help") == 0) {
 		dropbear_log(LOG_INFO, "Available options:\n"
+			"\tBindAddress\n"
+			"\tDisableTrivialAuth\n"
 #if DROPBEAR_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
-			"\tDisableTrivialAuth\n"
+			"\tPort\n"
+			"\tStrictHostKeyChecking\n"
 #ifndef DISABLE_SYSLOG
 			"\tUseSyslog\n"
 #endif
-			"\tPort\n"
-			"\tStrictHostKeyChecking\n"
 		);
 		exit(EXIT_SUCCESS);
+	}
+
+	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
+		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
+		return;
 	}
 
 #if DROPBEAR_CLI_ANYTCPFWD
@@ -908,20 +914,8 @@ static void add_extendedopt(const char* origstr) {
 	}
 #endif
 
-#ifndef DISABLE_SYSLOG
-	if (match_extendedopt(&optstr, "UseSyslog") == DROPBEAR_SUCCESS) {
-		opts.usingsyslog = parse_flag_value(optstr);
-		return;
-	}
-#endif
-
 	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
 		cli_opts.remoteport = optstr;
-		return;
-	}
-
-	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
-		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
 		return;
 	}
 
@@ -934,6 +928,13 @@ static void add_extendedopt(const char* origstr) {
 		}
 		return;
 	}
+
+#ifndef DISABLE_SYSLOG
+	if (match_extendedopt(&optstr, "UseSyslog") == DROPBEAR_SUCCESS) {
+		opts.usingsyslog = parse_flag_value(optstr);
+		return;
+	}
+#endif
 
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
