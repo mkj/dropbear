@@ -191,8 +191,10 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_PROXYCMD
 	char *proxycmd;
 #endif
+	const char *bind_arg;
 	char *bind_address;
 	char *bind_port;
+	const char *keepalive_arg;
 } cli_runopts;
 
 extern cli_runopts cli_opts;
