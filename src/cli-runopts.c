@@ -155,6 +155,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 	cli_opts.disable_trivial_auth = 0;
 	cli_opts.password_authentication = 1;
+	cli_opts.batch_mode = 0;
 #if DROPBEAR_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -889,6 +890,7 @@ static void add_extendedopt(const char* origstr) {
 
 	if (strcmp(origstr, "help") == 0) {
 		dropbear_log(LOG_INFO, "Available options:\n"
+			"\tBatchMode\n"
 			"\tBindAddress\n"
 			"\tDisableTrivialAuth\n"
 #if DROPBEAR_CLI_ANYTCPFWD
@@ -915,6 +917,11 @@ static void add_extendedopt(const char* origstr) {
 #endif
 		);
 		exit(EXIT_SUCCESS);
+	}
+
+	if (match_extendedopt(&optstr, "BatchMode") == DROPBEAR_SUCCESS) {
+		cli_opts.batch_mode = parse_flag_value(optstr);
+		return;
 	}
 
 	if (match_extendedopt(&optstr, "BindAddress") == DROPBEAR_SUCCESS) {
