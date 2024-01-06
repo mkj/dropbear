@@ -162,6 +162,12 @@ The following options have currently been implemented:
 
 .RS
 .TP
+.B BatchMode
+Disable interactive prompts e.g. password prompts and host key confirmation. The argument must be "yes" or "no" (the default).
+.TP
+.B BindAddress
+Specify address and port on the local machine as the source address of the connection.
+.TP
 .B DisableTrivialAuth
 Disallow a server immediately
 giving successful authentication (without presenting any password/pubkey prompt).
@@ -172,8 +178,31 @@ sent immediately by the remote server.
 .B ExitOnForwardFailure
 Specifies whether dbclient should terminate the connection if it cannot set up all requested local and remote port forwardings. The argument must be "yes" or "no" (the default).
 .TP
+.B ForwardAgent
+Forward the authentication agent to the remote machine. The argument must be "yes" or "no" (the default).
+.TP
+.B GatewayPorts
+Allow to remote host to connect to local forwarded ports. The argument must be "yes" or "no" (the default).
+.TP
+.B IdentityFile
+Specify an authentication identity file path.
+.TP
+.B PasswordAuthentication
+Allow to prompt a user for a password. If the DROPBEAR_PASSWORD env is specified then it still will be used. The argument must be "yes" (the default) or "no".
+.TP
 .B Port
 Specify a listening port, like the \fI-p\fR argument.
+.TP
+.B ProxyCommand
+Specify the proxy command to use to connect to the server.
+.TP
+.B ServerAliveInterval
+Sets a timeout interval in seconds between keep-alive messages through the encrypted channel. The default is 0 e.g. disabled.
+.TP
+.B StrictHostKeyChecking
+Use "yes" to refuse to connection to hosts whose host key has changed.
+Use "no" to skip the known hosts key checking.
+Use "accept-new" to add new host keys to the known_hosts and will refuse to connect if the host key has changed.
 .TP
 .B UseSyslog
 Send dbclient log messages to syslog in addition to stderr.
