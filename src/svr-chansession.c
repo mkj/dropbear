@@ -332,7 +332,8 @@ static void cleanupchansess(const struct Channel *channel) {
 		login_logout(li);
 		login_free_entry(li);
 
-		pty_release(chansess->tty);
+		if (svr_pubkey_allows_pty_setowner())
+			pty_release(chansess->tty);
 		m_free(chansess->tty);
 	}
 
@@ -614,7 +615,8 @@ static int sessionpty(struct ChanSess * chansess) {
 	pw = getpwnam(ses.authstate.pw_name);
 	if (!pw)
 		dropbear_exit("getpwnam failed after succeeding previously");
-	pty_setowner(pw, chansess->tty);
+	if (svr_pubkey_allows_pty_setowner())
+		pty_setowner(pw, chansess->tty);
 
 	/* Set up the rows/col counts */
 	sessionwinchange(chansess);

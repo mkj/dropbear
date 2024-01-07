@@ -89,6 +89,15 @@ int svr_pubkey_allows_pty() {
 	return 1;
 }
 
+/* Returns 1 if pubkey allows pty_setowner, 0 otherwise */
+int svr_pubkey_allows_pty_setowner() {
+	if (ses.authstate.pubkey_options
+		&& ses.authstate.pubkey_options->no_pty_setowner_flag) {
+		return 0;
+	}
+	return 1;
+}
+
 /* Returns 1 if pubkey allows local tcp fowarding to the provided destination,
  * 0 otherwise */
 int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
@@ -196,6 +205,11 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 			dropbear_log(LOG_WARNING, "X11 forwarding disabled.");
 			ses.authstate.pubkey_options->no_x11_forwarding_flag = 1;
 #endif
+			goto next_option;
+		}
+		if (match_option(options_buf, "no-pty-setowner") == DROPBEAR_SUCCESS) {
+			dropbear_log(LOG_WARNING, "Pty setowner disabled.");
+			ses.authstate.pubkey_options->no_pty_setowner_flag = 1;
 			goto next_option;
 		}
 		if (match_option(options_buf, "no-pty") == DROPBEAR_SUCCESS) {
