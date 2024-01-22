@@ -351,16 +351,27 @@ static void printpubkey(sign_key * key, int keytype, const char * comment, int c
 	char * username = NULL;
 	char hostname[100];
 	char * filename_pub = NULL;
-	int filename_pub_len = 0;
-	int pubkey_fd = -1;
+	FILE *pubkey_file = NULL;
 
 	if (create_pub_file) {
+		int pubkey_fd = -1;
+		int filename_pub_len = 0;
 		filename_pub_len = strlen(filename) + 5;
 		filename_pub = m_malloc(filename_pub_len);
 		snprintf(filename_pub, filename_pub_len, "%s.pub", filename);
 
+		/* open() to use O_EXCL, then use a FILE* for fprintf().
+		 * dprintf() is only posix2008 onwards */
 		pubkey_fd = open(filename_pub, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
-		if (pubkey_fd < 0) {
+		if (pubkey_fd >= 0) {
+			/* Convert the fd to a FILE*. The underlying FD is closed
+			 * by later fclose() */
+			pubkey_file = fdopen(pubkey_fd, "w");
+			if (!pubkey_file) {
+				m_close(pubkey_fd);
+			}
+		}
+		if (!pubkey_file) {
 			dropbear_log(LOG_ERR, "Save public key to %s failed: %s", filename_pub, strerror(errno));
 		}
 	}
@@ -385,8 +396,8 @@ static void printpubkey(sign_key * key, int keytype, const char * comment, int c
 	if (comment) {
 		printf("%s %s %s\n",
 				typestring, base64key, comment);
-		if (pubkey_fd >= 0) {
-			dprintf(pubkey_fd, "%s %s %s\n",
+		if (pubkey_file) {
+			fprintf(pubkey_file, "%s %s %s\n",
 					typestring, base64key, comment);
 		}
 	} else {
@@ -402,8 +413,8 @@ static void printpubkey(sign_key * key, int keytype, const char * comment, int c
 
 		printf("%s %s %s@%s\n",
 				typestring, base64key, username, hostname);
-		if (pubkey_fd >= 0) {
-			dprintf(pubkey_fd,"%s %s %s@%s\n",
+		if (pubkey_file) {
+			fprintf(pubkey_file, "%s %s %s@%s\n",
 					typestring, base64key, username, hostname);
 		}
 	}
@@ -414,11 +425,11 @@ static void printpubkey(sign_key * key, int keytype, const char * comment, int c
 	m_free(fp);
 	buf_free(buf);
 
-	if (pubkey_fd >= 0) {
-		if (fsync(pubkey_fd) != 0) {
+	if (pubkey_file) {
+		if (fsync(fileno(pubkey_file)) != 0) {
 			dropbear_log(LOG_ERR, "fsync of %s failed: %s", filename_pub, strerror(errno));
 		}
-		m_close(pubkey_fd);
+		fclose(pubkey_file);
 	}
 	m_free(filename_pub);
 }
