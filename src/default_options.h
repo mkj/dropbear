@@ -3,11 +3,13 @@
 /*
                      > > > Read This < < <
 
-default_options.h  documents compile-time options, and provides default values.
+default_options.h documents compile-time options, and provides default values.
 
 Local customisation should be added to localoptions.h which is
 used if it exists in the build directory. Options defined there will override
 any options in this file.
+
+Customisations will also be taken from src/distoptions.h if it exists.
 
 Options can also be defined with -DDROPBEAR_XXX=[0,1] in Makefile CFLAGS
 

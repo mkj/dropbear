@@ -27,10 +27,11 @@ ifeq (@BUNDLED_LIBTOM@, 1)
 	LIBTOM_LIBS=$(STATIC_LTC) $(STATIC_LTM)
 endif
 
-OPTION_HEADERS = default_options_guard.h $(srcdir)/sysoptions.h
 ifneq ($(wildcard ./localoptions.h),)
 	CPPFLAGS+=-DLOCALOPTIONS_H_EXISTS
-	OPTION_HEADERS += ./localoptions.h
+endif
+ifneq ($(wildcard $(srcdir)/distrooptions.h),)
+	CPPFLAGS+=-DDISTROOPTIONS_H_EXISTS
 endif
 
 OBJ_DIR=./obj
@@ -159,7 +160,7 @@ endif
 all: $(TARGETS)
 
 # for simplicity assume all source depends on all headers
-HEADERS=$(wildcard $(srcdir)/*.h *.h) $(OPTION_HEADERS)
+HEADERS=$(wildcard $(srcdir)/*.h *.h) default_options_guard.h
 
 $(OBJ_DIR):
 	mkdir -p $@
@@ -250,10 +251,10 @@ link%:
 	-rm -f $*$(EXEEXT)
 	-ln -s dropbearmulti$(EXEEXT) $*$(EXEEXT)
 
-$(STATIC_LTC): $(OPTION_HEADERS)
+$(STATIC_LTC): $(HEADERS)
 	$(MAKE) -C libtomcrypt
 
-$(STATIC_LTM): $(OPTION_HEADERS)
+$(STATIC_LTM): $(HEADERS)
 	$(MAKE) -C libtommath
 
 .PHONY : clean sizes thisclean distclean tidy ltc-clean ltm-clean lint check

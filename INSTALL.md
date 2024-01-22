@@ -1,11 +1,15 @@
 ## Basic Dropbear Build Instructions
 
-Edit [localoptions.h](./localoptions.h) to set which features you want.
-Available options are described in default_options.h.
-They will be overridden by anything set in [localoptions.h](./localoptions.h) should be located in the build directory if you are building out of tree.
-Note that the file is not tracked ([.gitignore](.gitignore)-d) and you may need to create it.
+### Build Options
 
-#### Configure for your system
+Custom build options can be configured in `localoptions.h` in the build directory. This is a local file, not checked in to git.
+
+Available options are described in [`src/default_options.h`](src/default_options.h)
+Options include available cryptographic algorithms, SSH features, and file paths.
+
+In addition, a `src/distrooptions.h` file will be used if it exists, for distributions to set configuration options.
+
+### Configure for your system
 ```
 ./configure
 ```
@@ -14,7 +18,7 @@ Or `--help` for other options.
 
 You'll need to first run `autoconf; autoheader` if you edit `configure.ac`.
 
-#### Compile:
+### Compile:
 
 ```
 make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
