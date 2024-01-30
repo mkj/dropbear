@@ -68,6 +68,11 @@
 #define MAX_BANNER_SIZE 2050 /* this is 25*80 chars, any more is foolish */
 #define MAX_BANNER_LINES 20 /* How many lines the client will display */
 
+/* Define maxsize for motd information (80 x 25) */
+#ifndef MOTD_MAXSIZE
+#define MOTD_MAXSIZE 2000
+#endif
+
 /* the number of NAME=VALUE pairs to malloc for environ, if we don't have
  * the clearenv() function */
 #define ENV_SIZE 100
