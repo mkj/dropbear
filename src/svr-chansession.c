@@ -875,9 +875,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			if (stat(hushpath, &sb) < 0) {
 				char *expand_path = NULL;
 				/* more than a screenful is stupid IMHO */
-				motdbuf = buf_new(80 * 25);
+				motdbuf = buf_new(MOTD_MAXSIZE);
 				expand_path = expand_homedir_path(MOTD_FILENAME);
 				if (buf_readfile(motdbuf, expand_path) == DROPBEAR_SUCCESS) {
+					/* incase it is full size, add LF at last position */
+					if (motdbuf->len == motdbuf->size) motdbuf->data[motdbuf->len - 1]=10;
 					buf_setpos(motdbuf, 0);
 					while (motdbuf->pos != motdbuf->len) {
 						len = motdbuf->len - motdbuf->pos;

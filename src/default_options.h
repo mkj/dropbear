@@ -223,6 +223,7 @@ group1 in Dropbear server too */
 /* Whether to print the message of the day (MOTD). */
 #define DO_MOTD 1
 #define MOTD_FILENAME "/etc/motd"
+#define MOTD_MAXSIZE 2000
 
 /* Authentication Types - at least one required.
    RFC Draft requires pubkey auth, and recommends password */
