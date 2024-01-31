@@ -1051,9 +1051,10 @@ bad:			run_err("%s: %s", np, strerror(errno));
 			wrerr = YES;
 			wrerrno = errno;
 		}
-		if (wrerr == NO && ftruncate(ofd, size) != 0) {
-			run_err("%s: truncate: %s", np, strerror(errno));
-			wrerr = DISPLAYED;
+		if (wrerr == NO && (!exists || S_ISREG(stb.st_mode)) &&
+			ftruncate(ofd, size) != 0) {
+				run_err("%s: truncate: %s", np, strerror(errno));
+				wrerr = DISPLAYED;
 		}
 		if (pflag) {
 			if (exists || omode != mode)
