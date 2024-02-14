@@ -170,6 +170,10 @@ typedef struct cli_runopts {
 	int exit_on_fwd_failure;
 #endif
 	int disable_trivial_auth;
+	/** Use a password authentication or a key auth only.
+	For a BatchMode it's always -o PasswordAuthentication=no */
+	int password_authentication;
+	int batch_mode;
 #if DROPBEAR_CLI_REMOTETCPFWD
 	m_list * remotefwds;
 #endif
@@ -191,8 +195,10 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_PROXYCMD
 	char *proxycmd;
 #endif
+	const char *bind_arg;
 	char *bind_address;
 	char *bind_port;
+	const char *keepalive_arg;
 } cli_runopts;
 
 extern cli_runopts cli_opts;
