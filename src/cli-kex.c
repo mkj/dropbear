@@ -352,7 +352,7 @@ static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) 
 		buf_incrpos(line, hostlen);
 		if (buf_getbyte(line) != ' ') {
 			/* there wasn't a space after the hostname, something dodgy */
-			TRACE(("missing space afte matching hostname"))
+			TRACE(("missing space after matching hostname"))
 			continue;
 		}
 
@@ -399,25 +399,23 @@ static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) 
 		goto out;
 	}
 
-	if (!cli_opts.always_accept_key) {
-		/* put the new entry in the file */
-		fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
-		buf_setpos(line, 0);
-		buf_setlen(line, 0);
-		buf_putbytes(line, (const unsigned char *) cli_opts.remotehost, hostlen);
-		buf_putbyte(line, ' ');
-		buf_putbytes(line, (const unsigned char *) algoname, algolen);
-		buf_putbyte(line, ' ');
-		len = line->size - line->pos;
-		/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
-		 * will die horribly in the case anyway */
-		base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
-		buf_incrwritepos(line, len);
-		buf_putbyte(line, '\n');
-		buf_setpos(line, 0);
-		fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
-		/* We ignore errors, since there's not much we can do about them */
-	}
+	/* put the new entry in the file */
+	fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
+	buf_setpos(line, 0);
+	buf_setlen(line, 0);
+	buf_putbytes(line, (const unsigned char *) cli_opts.remotehost, hostlen);
+	buf_putbyte(line, ' ');
+	buf_putbytes(line, (const unsigned char *) algoname, algolen);
+	buf_putbyte(line, ' ');
+	len = line->size - line->pos;
+	/* The only failure with base64 is buffer_overflow, but buf_getwriteptr
+	 * will die horribly in the case anyway */
+	base64_encode(keyblob, keybloblen, buf_getwriteptr(line, len), &len);
+	buf_incrwritepos(line, len);
+	buf_putbyte(line, '\n');
+	buf_setpos(line, 0);
+	fwrite(buf_getptr(line, line->len), line->len, 1, hostsfile);
+	/* We ignore errors, since there's not much we can do about them */
 
 out:
 	if (hostsfile != NULL) {
