@@ -326,7 +326,7 @@ main(int argc, char **argv)
 	addargs(&args, "%s", ssh_program);
 
 	fflag = tflag = 0;
-	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:q1246S:o:F:")) != -1)
+	while ((ch = getopt(argc, argv, "dfl:prtvBCc:i:P:qy1246S:o:F:")) != -1)
 		switch (ch) {
 		/* User-visible flags. */
 		case '1':
@@ -334,6 +334,7 @@ main(int argc, char **argv)
 		case '4':
 		case '6':
 		case 'C':
+		case 'y':
 			addargs(&args, "-%c", ch);
 			break;
 		case 'o':
