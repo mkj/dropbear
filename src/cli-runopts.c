@@ -657,7 +657,7 @@ static void parse_multihop_hostname(const char* orighostarg, const char* argv0) 
 }
 #endif /* !DROPBEAR_CLI_MULTIHOP */
 
-/* Parses a [user@]hostname[/port] argument. */
+/* Parses a [user@]hostname[:port] argument. */
 static void parse_hostname(const char* orighostarg) {
 	char *userhostarg = NULL;
 	char *port = NULL;
@@ -679,10 +679,14 @@ static void parse_hostname(const char* orighostarg) {
 		cli_opts.username = m_strdup(cli_opts.own_user);
 	}
 
-	port = strchr(cli_opts.remotehost, '^');
+	port = strchr(cli_opts.remotehost, ':');
 	if (!port)  {
-		/* legacy separator */
-		port = strchr(cli_opts.remotehost, '/');
+		/* legacy separator '^' */
+		port = strchr(cli_opts.remotehost, '^');
+		if (!port)  {
+			/* legacy separator '/' */
+			port = strchr(cli_opts.remotehost, '/');
+		}
 	}
 	if (port) {
 		*port = '\0';

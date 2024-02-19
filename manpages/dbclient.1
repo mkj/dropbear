@@ -15,7 +15,7 @@ dbclient \- lightweight SSH client
 
 .B dbclient
 [\fIargs\fR]
-[\fIuser1\fR]@\fIhost1\fR[^\fIport1\fR],[\fIuser2\fR]@\fIhost2\fR[^\fIport2\fR],...
+[\fIuser1\fR]@\fIhost1\fR[:\fIport1\fR],[\fIuser2\fR]@\fIhost2\fR[:\fIport2\fR],...
 
 .SH DESCRIPTION
 .B dbclient
@@ -32,7 +32,7 @@ host argument. If no command is specified an interactive terminal will be opened
 .B \-p \fIport
 Connect to 
 .I port
-on the remote host. Alternatively a port can be specified as hostname^port.
+on the remote host. Alternatively a port can be specified as hostname:port.
 Default is 22.
 .TP
 .B \-i \fIidfile
@@ -194,7 +194,7 @@ Dropbear will also allow multiple "hops" to be specified, separated by commas. I
 this case a connection will be made to the first host, then a TCP forwarded 
 connection will be made through that to the second host, and so on. Hosts other than
 the final destination will not see anything other than the encrypted SSH stream. 
-A port for a host can be specified with a caret (eg matt@martello^44 ).
+A port for a host can be specified with a caret (eg matt@martello:44 ).
 This syntax can also be used with scp or rsync (specifying dbclient as the 
 ssh/rsh command). A file can be "bounced" through multiple SSH hops, eg
 
@@ -205,7 +205,7 @@ in the example above, the same way as other -L TCP forwarded hosts are. Host key
 checked locally based on the given hostname.
 
 .SH ESCAPE CHARACTERS
-Typing a newline followed by the  key sequence \fI~.\fR (tilde, dot) will terminate a connection.
+Typing a newline followed by the key sequence \fI~.\fR (tilde, dot) will terminate a connection.
 The sequence \fI~^Z\fR (tilde, ctrl-z) will background the connection. This behaviour only
 applies when a PTY is used.
 
