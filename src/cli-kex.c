@@ -217,12 +217,16 @@ static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen
 		m_free(fp);
 		return;
 	}
-	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(%s fingerprint %s)\nDo you want to continue connecting? (y/n) ", 
+	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(%s fingerprint %s)\n",
 			cli_opts.remotehost, 
 			algoname,
 			fp);
 	m_free(fp);
+	if (cli_opts.batch_mode) {
+		dropbear_exit("Didn't validate host key");
+	}
 
+	fprintf(stderr, "Do you want to continue connecting? (y/n) ");
 	tty = fopen(_PATH_TTY, "r");
 	if (tty) {
 		response = getc(tty);
