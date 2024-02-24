@@ -226,8 +226,8 @@ static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen
 	if (cli_opts.batch_mode) {
 		dropbear_exit("Didn't validate host key");
 	}
-	fprintf(stderr, "Do you want to continue connecting? (y/n) ");
 
+	fprintf(stderr, "Do you want to continue connecting? (y/n) ");
 	tty = fopen(_PATH_TTY, "r");
 	if (tty) {
 		response = getc(tty);
