@@ -156,6 +156,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.exit_on_fwd_failure = 0;
 #endif
 	cli_opts.disable_trivial_auth = 0;
+	cli_opts.batch_mode = 0;
 #if DROPBEAR_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -530,53 +531,46 @@ static void loadidentityfile(const char* filename, int warnfail) {
 
 static char*
 multihop_passthrough_args() {
-	char *ret;
+	char *ret, args[256];
 	unsigned int len, total;
 	m_list_elem *iter;
 	/* Fill out -i, -y, -W options that make sense for all
-	 * the intermediate processes */
-	len = 30; /* space for "-q -y -y -W <size>\0" */
-#if DROPBEAR_CLI_PUBKEY_AUTH
-	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
-	{
-		sign_key * key = (sign_key*)iter->item;
-		len += 3 + strlen(key->filename);
-	}
-#endif /* DROPBEAR_CLI_PUBKEY_AUTH */
-	if (cli_opts.proxycmd) {
-		/* "-J 'cmd'" */
-		len += 6 + strlen(cli_opts.proxycmd);
-	}
-
-	ret = m_malloc(len);
+         * the intermediate processes */
 	total = 0;
+	len = 255;
 
 	if (cli_opts.quiet) {
-		total += m_snprintf(ret+total, len-total, "-q ");
+		total += m_snprintf(args+total, len-total, "-q ");
 	}
 
 	if (cli_opts.no_hostkey_check) {
-		total += m_snprintf(ret+total, len-total, "-y -y ");
+		total += m_snprintf(args+total, len-total, "-y -y ");
 	} else if (cli_opts.always_accept_key) {
-		total += m_snprintf(ret+total, len-total, "-y ");
+		total += m_snprintf(args+total, len-total, "-y ");
+	}
+
+	if (cli_opts.batch_mode) {
+		total += m_snprintf(args+total, len-total, "-o BatchMode=yes ");
 	}
 
 	if (cli_opts.proxycmd) {
-		total += m_snprintf(ret+total, len-total, "-J '%s' ", cli_opts.proxycmd);
+		total += m_snprintf(args+total, len-total, "-J '%s' ", cli_opts.proxycmd);
 	}
 
 	if (opts.recv_window != DEFAULT_RECV_WINDOW) {
-		total += m_snprintf(ret+total, len-total, "-W %u ", opts.recv_window);
+		total += m_snprintf(args+total, len-total, "-W %u ", opts.recv_window);
 	}
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
 		sign_key * key = (sign_key*)iter->item;
-		total += m_snprintf(ret+total, len-total, "-i %s ", key->filename);
+		total += m_snprintf(args+total, len-total, "-i %s ", key->filename);
 	}
 #endif /* DROPBEAR_CLI_PUBKEY_AUTH */
 
+	ret = m_malloc(total + 1);
+	strcpy(ret,args);
 	return ret;
 }
 
@@ -892,6 +886,7 @@ static void add_extendedopt(const char* origstr) {
 #if DROPBEAR_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
+			"\tBatchMode\n"
 			"\tDisableTrivialAuth\n"
 #ifndef DISABLE_SYSLOG
 			"\tUseSyslog\n"
@@ -914,6 +909,11 @@ static void add_extendedopt(const char* origstr) {
 		return;
 	}
 #endif
+
+	if (match_extendedopt(&optstr, "BatchMode") == DROPBEAR_SUCCESS) {
+		cli_opts.batch_mode = parse_flag_value(optstr);
+		return;
+	}
 
 	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
 		cli_opts.remoteport = optstr;

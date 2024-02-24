@@ -347,6 +347,9 @@ char* getpass_or_cancel(const char* prompt)
 		return password;
 	}
 #endif
+	if (cli_opts.batch_mode) {
+		dropbear_close("BatchMode active, no interactive session possible.");
+	}
 
 	password = getpass(prompt);
 

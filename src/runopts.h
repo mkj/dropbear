@@ -170,6 +170,8 @@ typedef struct cli_runopts {
 	int exit_on_fwd_failure;
 #endif
 	int disable_trivial_auth;
+	/* -o BatchMode=yes, suppress interactive questions */
+	int batch_mode;
 #if DROPBEAR_CLI_REMOTETCPFWD
 	m_list * remotefwds;
 #endif
