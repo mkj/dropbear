@@ -173,6 +173,7 @@ typedef struct cli_runopts {
 	/** Use a password authentication or a key auth only.
 	For a BatchMode it's always -o PasswordAuthentication=no */
 	int password_authentication;
+	/* -o BatchMode=yes, suppress interactive questions */
 	int batch_mode;
 #if DROPBEAR_CLI_REMOTETCPFWD
 	m_list * remotefwds;
