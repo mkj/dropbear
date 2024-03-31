@@ -66,6 +66,10 @@ void recv_msg_userauth_pk_ok() {
 
 	algotype = buf_getstring(ses.payload, &algolen);
 	sigtype = signature_type_from_name(algotype, algolen);
+	if (sigtype == DROPBEAR_SIGNATURE_NONE) {
+		/* Server replied with an algorithm that we didn't send */
+		dropbear_exit("Bad pk_ok");
+	}
 	keytype = signkey_type_from_signature(sigtype);
 	TRACE(("recv_msg_userauth_pk_ok: type %d", sigtype))
 	m_free(algotype);
