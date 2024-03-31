@@ -55,8 +55,8 @@ typedef struct runopts {
 #endif
 
 #if DROPBEAR_USER_ALGO_LIST
-	char *cipher_list;
-	char *mac_list;
+	const char *cipher_list;
+	const char *mac_list;
 #endif
 
 } runopts;
@@ -153,7 +153,7 @@ typedef struct cli_runopts {
 	const char *remoteport;
 
 	char *own_user;
-	char *username;
+	const char *username;
 
 	char *cmd;
 	int wantpty;
