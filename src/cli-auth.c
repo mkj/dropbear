@@ -239,14 +239,16 @@ void recv_msg_userauth_failure() {
 			}
 #endif
 #if DROPBEAR_CLI_INTERACT_AUTH
-			if (strncmp(AUTH_METHOD_INTERACT, tok,
-				AUTH_METHOD_INTERACT_LEN) == 0) {
+			if (!cli_opts.batch_mode
+				&& cli_opts.password_authentication
+				&& strncmp(AUTH_METHOD_INTERACT, tok, AUTH_METHOD_INTERACT_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_INTERACT;
 			}
 #endif
 #if DROPBEAR_CLI_PASSWORD_AUTH
-			if (!cli_opts.batch_mode && cli_opts.password_authentication && strncmp(AUTH_METHOD_PASSWORD, tok,
-				AUTH_METHOD_PASSWORD_LEN) == 0) {
+			if (!cli_opts.batch_mode
+				&& cli_opts.password_authentication
+				&& strncmp(AUTH_METHOD_PASSWORD, tok, AUTH_METHOD_PASSWORD_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 			}
 #endif
@@ -297,7 +299,7 @@ int cli_auth_try() {
 #endif
 
 #if DROPBEAR_CLI_INTERACT_AUTH
-	if (!finished && (ses.authstate.authtypes & AUTH_TYPE_INTERACT)) {
+	if (!finished && cli_opts.password_authentication && (ses.authstate.authtypes & AUTH_TYPE_INTERACT)) {
 		if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
 			fprintf(stderr, "Sorry, I won't let you use interactive auth unencrypted.\n");
 		} else {
