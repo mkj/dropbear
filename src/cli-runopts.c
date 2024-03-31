@@ -518,6 +518,7 @@ static void loadidentityfile(const char* filename, int warnfail) {
 			dropbear_log(LOG_WARNING, "Failed loading keyfile '%s'\n", id_key_path);
 		}
 		sign_key_free(key);
+		m_free(id_key_path);
 	} else {
 		key->type = keytype;
 		key->source = SIGNKEY_SOURCE_RAW_FILE;
