@@ -159,6 +159,7 @@ typedef struct cli_runopts {
 	int wantpty;
 	int always_accept_key;
 	int no_hostkey_check;
+	int ask_hostkey;
 	int no_cmd;
 	int quiet;
 	int backgrounded;

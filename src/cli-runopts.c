@@ -146,6 +146,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 	cli_opts.always_accept_key = 0;
+	cli_opts.ask_hostkey = 1;
 	cli_opts.no_hostkey_check = 0;
 	cli_opts.is_subsystem = 0;
 #if DROPBEAR_CLI_PUBKEY_AUTH
@@ -213,9 +214,12 @@ void cli_getopts(int argc, char ** argv) {
 		opt = OPT_OTHER;
 		for (j = 1; (c = argv[i][j]) != '\0' && !next && opt == OPT_OTHER; j++) {
 			switch (c) {
-				case 'y': /* always accept the remote hostkey */
+				case 'y':
+					/* once is always accept the remote hostkey,
+					 * the same as stricthostkeychecking=accept-new */
 					if (cli_opts.always_accept_key) {
-						/* twice means no checking at all */
+						/* twice means no checking at all
+						 * (stricthostkeychecking=no) */
 						cli_opts.no_hostkey_check = 1;
 					}
 					cli_opts.always_accept_key = 1;
@@ -1001,9 +1005,18 @@ static void add_extendedopt(const char* origstr) {
 	if (match_extendedopt(&optstr, "StrictHostKeyChecking") == DROPBEAR_SUCCESS) {
 		if (strcmp(optstr, "accept-new") == 0) {
 			cli_opts.always_accept_key = 1;
+		} else if (strcmp(optstr, "ask") == 0) {
+			/* the default */
 		} else {
-			cli_opts.no_hostkey_check = !parse_flag_value(optstr);
-			cli_opts.always_accept_key = cli_opts.no_hostkey_check;
+			int opt = parse_flag_value(optstr);
+			if (opt) {
+				/* "yes" means entry must already exist in
+				 * known_hosts for success. */
+				cli_opts.ask_hostkey = 0;
+			} else {
+				/* "no" means no check at all */
+				cli_opts.no_hostkey_check = 1;
+			}
 		}
 		return;
 	}

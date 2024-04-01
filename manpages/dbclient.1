@@ -200,9 +200,16 @@ Specify the proxy command to use to connect to the server.
 Sets a timeout interval in seconds between keep-alive messages through the encrypted channel. The default is 0 e.g. disabled.
 .TP
 .B StrictHostKeyChecking
-Use "yes" to refuse to connection to hosts whose host key has changed.
-Use "no" to skip the known hosts key checking.
-Use "accept-new" to add new host keys to the known_hosts and will refuse to connect if the host key has changed.
+Use "yes" to refuse connection to hosts where the host key is not already
+correct in known_hosts. Entries must be added to known_hosts manually.
+
+Use "no" to skip the known_hosts key checking.
+
+Use "accept-new" to add new host keys to the known_hosts and
+refuse to connect if the host key has changed.
+
+"ask" is the default.
+
 .TP
 .B UseSyslog
 Send dbclient log messages to syslog in addition to stderr.
