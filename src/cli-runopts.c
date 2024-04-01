@@ -531,15 +531,29 @@ static void loadidentityfile(const char* filename, int warnfail) {
 
 #if DROPBEAR_CLI_MULTIHOP
 
-static char*
-multihop_passthrough_args() {
-	char *ret, args[256];
+/* Fill out -i, -y, -W options that make sense for all
+ * the intermediate processes */
+static char* multihop_passthrough_args(void) {
+	char *args = NULL;
 	unsigned int len, total;
 	m_list_elem *iter;
-	/* Fill out -i, -y, -W options that make sense for all
-         * the intermediate processes */
+	/* Sufficient space for non-string args */
+	len = 100;
+
+	/* String arguments have arbitrary length, so determine space required */
+	if (cli_opts.proxycmd) {
+		len += strlen(cli_opts.proxycmd);
+	}
+	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
+	{
+		sign_key * key = (sign_key*)iter->item;
+		len += 4 + strlen(key->filename);
+	}
+
+	args = m_malloc(len);
 	total = 0;
-	len = 255;
+
+	/* Create new argument string */
 
 	if (cli_opts.quiet) {
 		total += m_snprintf(args+total, len-total, "-q ");
@@ -571,9 +585,7 @@ multihop_passthrough_args() {
 	}
 #endif /* DROPBEAR_CLI_PUBKEY_AUTH */
 
-	ret = m_malloc(total + 1);
-	strcpy(ret,args);
-	return ret;
+	return args;
 }
 
 /* Sets up 'onion-forwarding' connections. This will spawn
