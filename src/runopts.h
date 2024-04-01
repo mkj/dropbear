@@ -207,6 +207,10 @@ void print_version(void);
 void parse_recv_window(const char* recv_window_arg);
 int split_address_port(const char* spec, char **first, char ** second);
 
+#if DROPBEAR_CLI_PUBKEY_AUTH
+void loadidentityfile(const char* filename, int warnfail);
+#endif
+
 #if DROPBEAR_USE_SSH_CONFIG
 void read_config_file(char* filename, FILE* config_file, cli_runopts* options);
 #endif

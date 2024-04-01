@@ -109,6 +109,10 @@
 
 #define DROPBEAR_PASSWORD_ENV "DROPBEAR_PASSWORD"
 
+/* Default per client configuration file.
+*/
+#define DROPBEAR_DEFAULT_SSH_CONFIG "~/.ssh/dropbear_config"
+
 #define DROPBEAR_NGROUP_MAX 1024
 
 /* Required for pubkey auth */

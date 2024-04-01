@@ -259,11 +259,7 @@ group1 in Dropbear server too */
  */
 #define DROPBEAR_DEFAULT_CLI_AUTHKEY "~/.ssh/id_dropbear"
 
-/* Default per client configuration file.
-*/
-#define DROPBEAR_DEFAULT_SSH_CONFIG "~/.ssh/dropbear_config"
-
-/* Do not yet enable the per client configuration file feature.
+/* Per client configuration file
 */
 #define DROPBEAR_USE_SSH_CONFIG 0
 

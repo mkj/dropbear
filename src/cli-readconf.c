@@ -29,10 +29,6 @@
 
 #define TOKEN_CHARS " =\t\n"
 
-#if DROPBEAR_CLI_PUBKEY_AUTH
-extern void loadidentityfile(const char* filename, int warnfail);
-#endif
-
 typedef enum {
 	opInvalid = -1,
 	opHost,
@@ -42,7 +38,7 @@ typedef enum {
 	opIdentityFile,
 } cfg_option;
 
-static struct {
+static const struct {
 	const char *name;
 	cfg_option option;
 }
@@ -133,16 +129,13 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 					char* key_file_path;
 					if (strncmp(cfg_val, "~/", 2) == 0) {
 						key_file_path = expand_homedir_path(cfg_val);
-					}
-					else if (cfg_val[0] != '/') {
+					} else if (cfg_val[0] != '/') {
 						char* config_dir = dirname(filename);
 						int path_len = strlen(config_dir) + strlen(cfg_val) + 10;
-						char cbuff[path_len];
-						snprintf(cbuff, path_len, "%s/%s", config_dir, cfg_val);
-						key_file_path = strdup(cbuff);
-					}
-					else {
-						key_file_path = strdup(cfg_val);
+						key_file_path = m_malloc(path_len);
+						snprintf(key_file_path, path_len, "%s/%s", config_dir, cfg_val);
+					} else {
+						key_file_path = m_strdup(cfg_val);
 					}
 					loadidentityfile(key_file_path, 1);
 					free(key_file_path);

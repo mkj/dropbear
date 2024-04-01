@@ -37,9 +37,6 @@ static void printhelp(void);
 static void parse_hostname(const char* orighostarg);
 static void parse_multihop_hostname(const char* orighostarg, const char* argv0);
 static void fill_own_user(void);
-#if DROPBEAR_CLI_PUBKEY_AUTH
-void loadidentityfile(const char* filename, int warnfail);
-#endif
 #if DROPBEAR_CLI_ANYTCPFWD
 static void addforward(const char* str, m_list *fwdlist);
 #endif
