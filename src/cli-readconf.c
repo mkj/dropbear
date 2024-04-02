@@ -29,6 +29,8 @@
 
 #define TOKEN_CHARS " =\t\n"
 
+static const size_t MAX_CONF_LINE = 200;
+
 typedef enum {
 	opInvalid = -1,
 	opHost,
@@ -51,7 +53,7 @@ config_options[] = {
 	{ "user", opLoginUser },
 	{ "identityfile", opIdentityFile },
 
-	/* End loop condintion. */
+	/* End loop condition. */
 	{ NULL, opInvalid },
 };
 
@@ -59,17 +61,28 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 	DEBUG1(("Reading configuration data '%.200s'", filename));
 
 	char *line = NULL;
-	size_t linesize = 0;
 	int linenum = 0;
+	buffer *buf = NULL;
 
 	char* cfg_key;
 	char* cfg_val;
 	char* saveptr;
 
 	int in_host_section = 0;
-	while (-1 != getline(&line, &linesize, config_file)) {
+
+	buf = buf_new(MAX_CONF_LINE);
+	line = buf->data;
+	while (buf_getline(buf, config_file) == DROPBEAR_SUCCESS) {
 		/* Update line number counter. */
 		linenum++;
+
+		/* Add nul terminator */
+		if (buf->len == buf->size) {
+			dropbear_exit("Long line %d", linenum);
+		}
+		buf_setpos(buf, buf->len);
+		buf_putbyte(buf, '\0');
+		buf_setpos(buf, 0);
 
 		char* commentStart = strchr(line, '#');
 		if (NULL != commentStart) {
@@ -109,18 +122,18 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 					/* The host name is the alias given on the command line.
 					 * Set the actual remote host specified in the config.
 					 */
-					options->remotehost = strdup(cfg_val);
+					options->remotehost = m_strdup(cfg_val);
 					options->remotehostfixed = 1; /* Subsequent command line parsing should leave it alone. */
 					break;
 				}
 
 				case opHostPort: {
-					options->remoteport = strdup(cfg_val);
+					options->remoteport = m_strdup(cfg_val);
 					break;
 				}
 
 				case opLoginUser: {
-					options->username = strdup(cfg_val);
+					options->username = m_strdup(cfg_val);
 					break;
 				}
 
@@ -138,7 +151,7 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 						key_file_path = m_strdup(cfg_val);
 					}
 					loadidentityfile(key_file_path, 1);
-					free(key_file_path);
+					m_free(key_file_path);
 #else
 					dropbear_exit("This version of the code does not support identity file. %s at '%s':%d.", cfg_key, filename, linenum);
 #endif
@@ -159,8 +172,7 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 			in_host_section = 1;
 		}
 	}
-
-	free(line);
+	buf_free(buf);
 }
 
 #endif /* DROPBEAR_USE_SSH_CONFIG */
