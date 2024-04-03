@@ -58,7 +58,7 @@ Enable two-factor authentication. Both password login and public key authenticat
 required. Should not be used with the '-s' option.
 .TP
 .B \-j
-Disable local port forwarding.
+Disable local port forwarding. This includes unix stream forwards.
 .TP
 .B \-k
 Disable remote port forwarding.
@@ -136,7 +136,7 @@ Available restrictions are:
 
 .TP
 .B no-port-forwarding
-Don't allow port forwarding for this connection
+Don't allow port forwarding for this connection, including unix streams.
 
 .TP
 .B no-agent-forwarding

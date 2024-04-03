@@ -346,6 +346,11 @@ static int newstreamlocal(struct Channel * channel) {
 
 	TRACE(("streamlocal channel %d", channel->index))
 
+	if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()) {
+		TRACE(("leave newstreamlocal: local unix forwarding disabled"))
+		goto out;
+	}
+
 	destsocket = buf_getstring(ses.payload, &len);
 	if (len > MAX_HOST_LEN) {
 		TRACE(("leave streamlocal: destsocket too long"))
