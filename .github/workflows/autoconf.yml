@@ -16,7 +16,7 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install autoconf
 
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
 
       - name: run autoconf
         run: autoconf && autoheader
