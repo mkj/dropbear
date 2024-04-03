@@ -1040,19 +1040,6 @@ static void add_extendedopt(const char* origstr) {
 	}
 #endif
 
-<<<<<<< HEAD
-	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
-		cli_opts.remoteport = m_strdup(optstr);
-		return;
-	}
-
-	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
-		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
-		return;
-	}
-
-=======
->>>>>>> hostkeychecking
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
 
