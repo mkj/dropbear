@@ -2,15 +2,36 @@ Pending
 
 Features and Changes:
 
+- Support -o StrictHostKeyChecking, patch from Sergey Ponomarev
+
+- Support -o BatchMode, from Sergey Ponomarev and Hans Harder
+
+- Support various other -o options compatible with OpenSSH, from
+  Sergey Ponomarev. Includes -o PasswordAuthentication
+
+- Add dbclient config file support, ~/.ssh/dropbear_config
+  Thanks to tjkolev
+  Disabled by default, set #define DROPBEAR_USE_SSH_CONFIG 1
+
 - Add option to bind to interface, from Diederik De Coninck
 
 - Ignore unsupported arguments in dropbearkey, allow running
   binary as 'ssh-key'. From Sergey Ponomarev
 
-- Allow inetd to run in non-syslog modes. Thanks to Laurent Bercot for the report
+- Save a public key file on generation with dropbearkey.
+  -C can be used for a comment, and choose a default key
+  type (ed25519 first preference).
+  Thanks to Sergey Ponomarev
+
+- Allow inetd to run in non-syslog modes. Thanks to Laurent Bercot
+  for the report
 
 - Allow user's own gid in PTY permissions, lets Dropbear work as non-root
   even if /dev/pts isn't mounted with gid=5
+
+- src/distrooptions.h can now be used as another config file.
+  This can be used by distributions for customisations (separate
+  to the build directory's localoptions.h)
 
 Fixes:
 
@@ -38,6 +59,9 @@ Fixes:
   Patch from Justin Chen. Github #254
 
 - Fix building with DROPBEAR_RSA disabled
+
+- /proc/timer_list is no longer used for entropy, it was a bottleneck.
+  Thanks to Aleksei Plotnikov for the report.
 
 - Don't unconditionally enable DROPBEAR_DSS
 
