@@ -63,6 +63,8 @@ void recv_msg_global_request_remotetcp(void);
 
 extern const struct ChanType svr_chan_tcpdirect;
 
+extern const struct ChanType svr_chan_streamlocal;
+
 /* Client */
 void setup_localtcp(void);
 void setup_remotetcp(void);

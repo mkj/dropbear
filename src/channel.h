@@ -102,7 +102,7 @@ struct ChanType {
 	void (*cleanup)(const struct Channel*);
 };
 
-/* Callback for connect_remote. errstring may be NULL if result == DROPBEAR_SUCCESS */
+/* Callback for connect_remote/connect_streamlocal. errstring may be NULL if result == DROPBEAR_SUCCESS */
 void channel_connect_done(int result, int sock, void* user_data, const char* errstring);
 
 void chaninitialise(const struct ChanType *chantypes[]);
