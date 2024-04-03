@@ -18,7 +18,7 @@ jobs:
           mkdir build
           cd build
           ../configure --enable-fuzz --enable-bundled-libtom --prefix=$PWD/inst
-          make -d -j3
+          make -j3
           make -j3 fuzzstandalone
           make install
           test -x inst/bin/dbclient
