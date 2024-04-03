@@ -15,12 +15,12 @@ jobs:
 
       - name: extract output
         run: |
-          grep ^SHA256 log1.txt > sha256sum.txt
+          grep ^SHA256 log1.txt | tee sha256sum.txt
           sed 's/.*= *//' < sha256sum.txt > hash.txt
           mv `tail -n1 log1.txt` rel.tar.bz2
 
       - name: sha256sum
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: sha256sum
           path: |
@@ -28,7 +28,7 @@ jobs:
             hash.txt
 
       - name: tarball
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: tarball
           # only keep for debugging
