@@ -110,7 +110,7 @@ static void printhelp() {
 
 void cli_getopts(int argc, char ** argv) {
 	unsigned int i, j;
-	char ** next = NULL;
+	const char ** next = NULL;
 	enum {
 		OPT_EXTENDED_OPTIONS,
 #if DROPBEAR_CLI_PUBKEY_AUTH
@@ -130,11 +130,10 @@ void cli_getopts(int argc, char ** argv) {
 	} opt;
 	unsigned int cmdlen;
 
-	char* recv_window_arg = NULL;
-	char* keepalive_arg = NULL;
-	char* idle_timeout_arg = NULL;
-	char *host_arg = NULL;
-	char *bind_arg = NULL;
+	const char* recv_window_arg = NULL;
+	const char* idle_timeout_arg = NULL;
+	const char *host_arg = NULL;
+	const char *proxycmd_arg = NULL;
 	char c;
 
 	/* see printhelp() for options */
@@ -149,6 +148,7 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.backgrounded = 0;
 	cli_opts.wantpty = 9; /* 9 means "it hasn't been touched", gets set later */
 	cli_opts.always_accept_key = 0;
+	cli_opts.ask_hostkey = 1;
 	cli_opts.no_hostkey_check = 0;
 	cli_opts.is_subsystem = 0;
 #if DROPBEAR_CLI_PUBKEY_AUTH
@@ -158,6 +158,8 @@ void cli_getopts(int argc, char ** argv) {
 	cli_opts.exit_on_fwd_failure = 0;
 #endif
 	cli_opts.disable_trivial_auth = 0;
+	cli_opts.password_authentication = 1;
+	cli_opts.batch_mode = 0;
 #if DROPBEAR_CLI_LOCALTCPFWD
 	cli_opts.localfwds = list_new();
 	opts.listen_fwd_all = 0;
@@ -173,8 +175,10 @@ void cli_getopts(int argc, char ** argv) {
 #if DROPBEAR_CLI_PROXYCMD
 	cli_opts.proxycmd = NULL;
 #endif
+	cli_opts.bind_arg = NULL;
 	cli_opts.bind_address = NULL;
 	cli_opts.bind_port = NULL;
+	cli_opts.keepalive_arg = NULL;
 #ifndef DISABLE_ZLIB
 	opts.compress_mode = DROPBEAR_COMPRESS_ON;
 #endif
@@ -212,9 +216,12 @@ void cli_getopts(int argc, char ** argv) {
 		opt = OPT_OTHER;
 		for (j = 1; (c = argv[i][j]) != '\0' && !next && opt == OPT_OTHER; j++) {
 			switch (c) {
-				case 'y': /* always accept the remote hostkey */
+				case 'y':
+					/* once is always accept the remote hostkey,
+					 * the same as stricthostkeychecking=accept-new */
 					if (cli_opts.always_accept_key) {
-						/* twice means no checking at all */
+						/* twice means no checking at all
+						 * (stricthostkeychecking=no) */
 						cli_opts.no_hostkey_check = 1;
 					}
 					cli_opts.always_accept_key = 1;
@@ -223,7 +230,7 @@ void cli_getopts(int argc, char ** argv) {
 					cli_opts.quiet = 1;
 					break;
 				case 'p': /* remoteport */
-					next = (char**)&cli_opts.remoteport;
+					next = &cli_opts.remoteport;
 					break;
 #if DROPBEAR_CLI_PUBKEY_AUTH
 				case 'i': /* an identityfile */
@@ -268,7 +275,7 @@ void cli_getopts(int argc, char ** argv) {
 #endif
 #if DROPBEAR_CLI_PROXYCMD
 				case 'J':
-					next = &cli_opts.proxycmd;
+					next = &proxycmd_arg;
 					break;
 #endif
 				case 'l':
@@ -285,7 +292,7 @@ void cli_getopts(int argc, char ** argv) {
 					next = &recv_window_arg;
 					break;
 				case 'K':
-					next = &keepalive_arg;
+					next = &cli_opts.keepalive_arg;
 					break;
 				case 'I':
 					next = &idle_timeout_arg;
@@ -326,7 +333,7 @@ void cli_getopts(int argc, char ** argv) {
 					exit(EXIT_SUCCESS);
 					break;
 				case 'b':
-					next = &bind_arg;
+					next = &cli_opts.bind_arg;
 					break;
 				case 'z':
 					opts.disable_ip_tos = 1;
@@ -441,14 +448,14 @@ void cli_getopts(int argc, char ** argv) {
 	/* And now a few sanity checks and setup */
 
 #if DROPBEAR_CLI_PROXYCMD
-	if (cli_opts.proxycmd) {
+	if (proxycmd_arg) {
 		/* To match the common path of m_freeing it */
-		cli_opts.proxycmd = m_strdup(cli_opts.proxycmd);
+		cli_opts.proxycmd = m_strdup(proxycmd_arg);
 	}
 #endif
 
-	if (bind_arg) {
-		if (split_address_port(bind_arg,
+	if (cli_opts.bind_arg) {
+		if (split_address_port(cli_opts.bind_arg,
 			&cli_opts.bind_address, &cli_opts.bind_port)
 				== DROPBEAR_FAILURE) {
 			dropbear_exit("Bad -b argument");
@@ -473,10 +480,10 @@ void cli_getopts(int argc, char ** argv) {
 	if (recv_window_arg) {
 		parse_recv_window(recv_window_arg);
 	}
-	if (keepalive_arg) {
+	if (cli_opts.keepalive_arg) {
 		unsigned int val;
-		if (m_str_to_uint(keepalive_arg, &val) == DROPBEAR_FAILURE) {
-			dropbear_exit("Bad keepalive '%s'", keepalive_arg);
+		if (m_str_to_uint(cli_opts.keepalive_arg, &val) == DROPBEAR_FAILURE) {
+			dropbear_exit("Bad keepalive '%s'", cli_opts.keepalive_arg);
 		}
 		opts.keepalive_secs = val;
 	}
@@ -508,9 +515,7 @@ void cli_getopts(int argc, char ** argv) {
 	   -i argument for multihop, so handle it later. */
 #if (DROPBEAR_CLI_PUBKEY_AUTH)
 	{
-		char *expand_path = expand_homedir_path(DROPBEAR_DEFAULT_CLI_AUTHKEY);
-		loadidentityfile(expand_path, 0);
-		m_free(expand_path);
+		loadidentityfile(DROPBEAR_DEFAULT_CLI_AUTHKEY, 0);
 	}
 #endif
 
@@ -521,19 +526,21 @@ void loadidentityfile(const char* filename, int warnfail) {
 	sign_key *key;
 	enum signkey_type keytype;
 
-	TRACE(("loadidentityfile %s", filename))
+	char *id_key_path = expand_homedir_path(filename);
+	TRACE(("loadidentityfile %s", id_key_path))
 
 	key = new_sign_key();
 	keytype = DROPBEAR_SIGNKEY_ANY;
-	if ( readhostkey(filename, key, &keytype) != DROPBEAR_SUCCESS ) {
+	if ( readhostkey(id_key_path, key, &keytype) != DROPBEAR_SUCCESS ) {
 		if (warnfail) {
-			dropbear_log(LOG_WARNING, "Failed loading keyfile '%s'\n", filename);
+			dropbear_log(LOG_WARNING, "Failed loading keyfile '%s'\n", id_key_path);
 		}
 		sign_key_free(key);
+		m_free(id_key_path);
 	} else {
 		key->type = keytype;
 		key->source = SIGNKEY_SOURCE_RAW_FILE;
-		key->filename = m_strdup(filename);
+		key->filename = id_key_path;
 		list_append(cli_opts.privkeys, key);
 	}
 }
@@ -541,56 +548,61 @@ void loadidentityfile(const char* filename, int warnfail) {
 
 #if DROPBEAR_CLI_MULTIHOP
 
-static char*
-multihop_passthrough_args() {
-	char *ret;
+/* Fill out -i, -y, -W options that make sense for all
+ * the intermediate processes */
+static char* multihop_passthrough_args(void) {
+	char *args = NULL;
 	unsigned int len, total;
 	m_list_elem *iter;
-	/* Fill out -i, -y, -W options that make sense for all
-	 * the intermediate processes */
-	len = 30; /* space for "-q -y -y -W <size>\0" */
-#if DROPBEAR_CLI_PUBKEY_AUTH
+	/* Sufficient space for non-string args */
+	len = 100;
+
+	/* String arguments have arbitrary length, so determine space required */
+	if (cli_opts.proxycmd) {
+		len += strlen(cli_opts.proxycmd);
+	}
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
 		sign_key * key = (sign_key*)iter->item;
-		len += 3 + strlen(key->filename);
-	}
-#endif /* DROPBEAR_CLI_PUBKEY_AUTH */
-	if (cli_opts.proxycmd) {
-		/* "-J 'cmd'" */
-		len += 6 + strlen(cli_opts.proxycmd);
+		len += 4 + strlen(key->filename);
 	}
 
-	ret = m_malloc(len);
+	args = m_malloc(len);
 	total = 0;
 
+	/* Create new argument string */
+
 	if (cli_opts.quiet) {
-		total += m_snprintf(ret+total, len-total, "-q ");
+		total += m_snprintf(args+total, len-total, "-q ");
 	}
 
 	if (cli_opts.no_hostkey_check) {
-		total += m_snprintf(ret+total, len-total, "-y -y ");
+		total += m_snprintf(args+total, len-total, "-y -y ");
 	} else if (cli_opts.always_accept_key) {
-		total += m_snprintf(ret+total, len-total, "-y ");
+		total += m_snprintf(args+total, len-total, "-y ");
+	}
+
+	if (cli_opts.batch_mode) {
+		total += m_snprintf(args+total, len-total, "-o BatchMode=yes ");
 	}
 
 	if (cli_opts.proxycmd) {
-		total += m_snprintf(ret+total, len-total, "-J '%s' ", cli_opts.proxycmd);
+		total += m_snprintf(args+total, len-total, "-J '%s' ", cli_opts.proxycmd);
 	}
 
 	if (opts.recv_window != DEFAULT_RECV_WINDOW) {
-		total += m_snprintf(ret+total, len-total, "-W %u ", opts.recv_window);
+		total += m_snprintf(args+total, len-total, "-W %u ", opts.recv_window);
 	}
 
 #if DROPBEAR_CLI_PUBKEY_AUTH
 	for (iter = cli_opts.privkeys->first; iter; iter = iter->next)
 	{
 		sign_key * key = (sign_key*)iter->item;
-		total += m_snprintf(ret+total, len-total, "-i %s ", key->filename);
+		total += m_snprintf(args+total, len-total, "-i %s ", key->filename);
 	}
 #endif /* DROPBEAR_CLI_PUBKEY_AUTH */
 
-	return ret;
+	return args;
 }
 
 /* Sets up 'onion-forwarding' connections. This will spawn
@@ -901,16 +913,48 @@ static void add_extendedopt(const char* origstr) {
 
 	if (strcmp(origstr, "help") == 0) {
 		dropbear_log(LOG_INFO, "Available options:\n"
+			"\tBatchMode\n"
+			"\tBindAddress\n"
+			"\tDisableTrivialAuth\n"
 #if DROPBEAR_CLI_ANYTCPFWD
 			"\tExitOnForwardFailure\n"
 #endif
-			"\tDisableTrivialAuth\n"
+#if DROPBEAR_CLI_AGENTFWD
+			"\tForwardAgent\n"
+#endif
+#if DROPBEAR_CLI_LOCALTCPFWD
+			"\tGatewayPorts\n"
+#endif
+#if DROPBEAR_CLI_PUBKEY_AUTH
+			"\tIdentityFile\n"
+#endif
+			"\tPasswordAuthentication\n"
+			"\tPort\n"
+#if DROPBEAR_CLI_PROXYCMD
+			"\tProxyCommand\n"
+#endif
+			"\tServerAliveInterval\n"
+			"\tStrictHostKeyChecking\n"
 #ifndef DISABLE_SYSLOG
 			"\tUseSyslog\n"
 #endif
-			"\tPort\n"
 		);
 		exit(EXIT_SUCCESS);
+	}
+
+	if (match_extendedopt(&optstr, "BatchMode") == DROPBEAR_SUCCESS) {
+		cli_opts.batch_mode = parse_flag_value(optstr);
+		return;
+	}
+
+	if (match_extendedopt(&optstr, "BindAddress") == DROPBEAR_SUCCESS) {
+		cli_opts.bind_arg = optstr;
+		return;
+	}
+
+	if (match_extendedopt(&optstr, "DisableTrivialAuth") == DROPBEAR_SUCCESS) {
+		cli_opts.disable_trivial_auth = parse_flag_value(optstr);
+		return;
 	}
 
 #if DROPBEAR_CLI_ANYTCPFWD
@@ -920,6 +964,75 @@ static void add_extendedopt(const char* origstr) {
 	}
 #endif
 
+#if DROPBEAR_CLI_AGENTFWD
+	if (match_extendedopt(&optstr, "ForwardAgent") == DROPBEAR_SUCCESS) {
+		cli_opts.agent_fwd = parse_flag_value(optstr);
+		return;
+	}
+#endif
+
+#if DROPBEAR_CLI_LOCALTCPFWD
+	if (match_extendedopt(&optstr, "GatewayPorts") == DROPBEAR_SUCCESS) {
+		opts.listen_fwd_all = 1;
+		return;
+	}
+#endif
+
+#if DROPBEAR_CLI_PUBKEY_AUTH
+	if (match_extendedopt(&optstr, "IdentityFile") == DROPBEAR_SUCCESS) {
+		loadidentityfile(optstr, 1);
+		return;
+	}
+#endif
+
+#if DROPBEAR_CLI_PASSWORD_AUTH
+	if (match_extendedopt(&optstr, "PasswordAuthentication") == DROPBEAR_SUCCESS) {
+		cli_opts.password_authentication = parse_flag_value(optstr);
+		return;
+	}
+#endif
+
+	if (match_extendedopt(&optstr, "BatchMode") == DROPBEAR_SUCCESS) {
+		cli_opts.batch_mode = parse_flag_value(optstr);
+		return;
+	}
+
+	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
+		cli_opts.remoteport = optstr;
+		return;
+	}
+
+#if DROPBEAR_CLI_PROXYCMD
+	if (match_extendedopt(&optstr, "ProxyCommand") == DROPBEAR_SUCCESS) {
+		cli_opts.proxycmd = m_strdup(optstr);
+		return;
+	}
+#endif
+
+	if (match_extendedopt(&optstr, "ServerAliveInterval") == DROPBEAR_SUCCESS) {
+		cli_opts.keepalive_arg = optstr;
+		return;
+	}
+
+	if (match_extendedopt(&optstr, "StrictHostKeyChecking") == DROPBEAR_SUCCESS) {
+		if (strcmp(optstr, "accept-new") == 0) {
+			cli_opts.always_accept_key = 1;
+		} else if (strcmp(optstr, "ask") == 0) {
+			/* the default */
+		} else {
+			int opt = parse_flag_value(optstr);
+			if (opt) {
+				/* "yes" means entry must already exist in
+				 * known_hosts for success. */
+				cli_opts.ask_hostkey = 0;
+			} else {
+				/* "no" means no check at all */
+				cli_opts.no_hostkey_check = 1;
+			}
+		}
+		return;
+	}
+
 #ifndef DISABLE_SYSLOG
 	if (match_extendedopt(&optstr, "UseSyslog") == DROPBEAR_SUCCESS) {
 		opts.usingsyslog = parse_flag_value(optstr);
@@ -927,6 +1040,7 @@ static void add_extendedopt(const char* origstr) {
 	}
 #endif
 
+<<<<<<< HEAD
 	if (match_extendedopt(&optstr, "Port") == DROPBEAR_SUCCESS) {
 		cli_opts.remoteport = m_strdup(optstr);
 		return;
@@ -937,6 +1051,8 @@ static void add_extendedopt(const char* origstr) {
 		return;
 	}
 
+=======
+>>>>>>> hostkeychecking
 	dropbear_log(LOG_WARNING, "Ignoring unknown configuration option '%s'", origstr);
 }
 

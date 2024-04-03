@@ -161,6 +161,7 @@ void recv_msg_userauth_failure() {
 	unsigned int methlen = 0;
 	unsigned int partial = 0;
 	unsigned int i = 0;
+	int allow_pw_auth = 1;
 
 	TRACE(("<- MSG_USERAUTH_FAILURE"))
 	TRACE(("enter recv_msg_userauth_failure"))
@@ -174,6 +175,13 @@ void recv_msg_userauth_failure() {
 		/* Perhaps we should be more fatal? */
 		dropbear_exit("Unexpected userauth failure");
 	}
+
+	/* Password authentication is only allowed in batch mode
+	 * when a password can be provided non-interactively */
+	if (cli_opts.batch_mode && !getenv(DROPBEAR_PASSWORD_ENV)) {
+		allow_pw_auth = 0;
+	}
+	allow_pw_auth &= cli_opts.password_authentication;
 
 	/* When DROPBEAR_CLI_IMMEDIATE_AUTH is set there will be an initial response for 
 	the "none" auth request, and then a response to the immediate auth request. 
@@ -239,14 +247,14 @@ void recv_msg_userauth_failure() {
 			}
 #endif
 #if DROPBEAR_CLI_INTERACT_AUTH
-			if (strncmp(AUTH_METHOD_INTERACT, tok,
-				AUTH_METHOD_INTERACT_LEN) == 0) {
+			if (allow_pw_auth
+				&& strncmp(AUTH_METHOD_INTERACT, tok, AUTH_METHOD_INTERACT_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_INTERACT;
 			}
 #endif
 #if DROPBEAR_CLI_PASSWORD_AUTH
-			if (strncmp(AUTH_METHOD_PASSWORD, tok,
-				AUTH_METHOD_PASSWORD_LEN) == 0) {
+			if (allow_pw_auth
+				&& strncmp(AUTH_METHOD_PASSWORD, tok, AUTH_METHOD_PASSWORD_LEN) == 0) {
 				ses.authstate.authtypes |= AUTH_TYPE_PASSWORD;
 			}
 #endif
@@ -297,7 +305,7 @@ int cli_auth_try() {
 #endif
 
 #if DROPBEAR_CLI_INTERACT_AUTH
-	if (!finished && (ses.authstate.authtypes & AUTH_TYPE_INTERACT)) {
+	if (!finished && cli_opts.password_authentication && (ses.authstate.authtypes & AUTH_TYPE_INTERACT)) {
 		if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
 			fprintf(stderr, "Sorry, I won't let you use interactive auth unencrypted.\n");
 		} else {
@@ -311,7 +319,7 @@ int cli_auth_try() {
 #endif
 
 #if DROPBEAR_CLI_PASSWORD_AUTH
-	if (!finished && (ses.authstate.authtypes & AUTH_TYPE_PASSWORD)) {
+	if (!finished && cli_opts.password_authentication && (ses.authstate.authtypes & AUTH_TYPE_PASSWORD)) {
 		if (ses.keys->trans.algo_crypt->cipherdesc == NULL) {
 			fprintf(stderr, "Sorry, I won't let you use password auth unencrypted.\n");
 		} else {
@@ -347,8 +355,13 @@ char* getpass_or_cancel(const char* prompt)
 		return password;
 	}
 #endif
+	if (cli_opts.batch_mode) {
+		dropbear_close("BatchMode active, no interactive session possible.");
+	}
 
-	password = getpass(prompt);
+	if (!cli_opts.batch_mode) {
+		password = getpass(prompt);
+	}
 
 	/* 0x03 is a ctrl-c character in the buffer. */
 	if (password == NULL || strchr(password, '\3') != NULL) {

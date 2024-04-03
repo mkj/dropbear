@@ -209,6 +209,15 @@ static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen
 	int response = 'z';
 
 	fp = sign_key_fingerprint(keyblob, keybloblen);
+
+	if (!cli_opts.ask_hostkey) {
+		dropbear_log(LOG_INFO, "\nHost '%s' key unknown.\n(%s fingerprint %s)",
+				cli_opts.remotehost,
+				algoname,
+				fp);
+		dropbear_exit("Not accepted automatically");
+	}
+
 	if (cli_opts.always_accept_key) {
 		dropbear_log(LOG_INFO, "\nHost '%s' key accepted unconditionally.\n(%s fingerprint %s)\n",
 				cli_opts.remotehost,
@@ -217,12 +226,17 @@ static void ask_to_confirm(const unsigned char* keyblob, unsigned int keybloblen
 		m_free(fp);
 		return;
 	}
-	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(%s fingerprint %s)\nDo you want to continue connecting? (y/n) ", 
+
+	fprintf(stderr, "\nHost '%s' is not in the trusted hosts file.\n(%s fingerprint %s)\n",
 			cli_opts.remotehost, 
 			algoname,
 			fp);
 	m_free(fp);
+	if (cli_opts.batch_mode) {
+		dropbear_exit("Didn't validate host key");
+	}
 
+	fprintf(stderr, "Do you want to continue connecting? (y/n) ");
 	tty = fopen(_PATH_TTY, "r");
 	if (tty) {
 		response = getc(tty);
@@ -399,7 +413,7 @@ static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) 
 		goto out;
 	}
 
-	if (!cli_opts.always_accept_key) {
+	if (!cli_opts.no_hostkey_check) {
 		/* put the new entry in the file */
 		fseek(hostsfile, 0, SEEK_END); /* In case it wasn't opened append */
 		buf_setpos(line, 0);

@@ -55,8 +55,8 @@ typedef struct runopts {
 #endif
 
 #if DROPBEAR_USER_ALGO_LIST
-	char *cipher_list;
-	char *mac_list;
+	const char *cipher_list;
+	const char *mac_list;
 #endif
 
 } runopts;
@@ -156,12 +156,13 @@ typedef struct cli_runopts {
 	char *remoteport;
 
 	char *own_user;
-	char *username;
+	const char *username;
 
 	char *cmd;
 	int wantpty;
 	int always_accept_key;
 	int no_hostkey_check;
+	int ask_hostkey;
 	int no_cmd;
 	int quiet;
 	int backgrounded;
@@ -173,6 +174,11 @@ typedef struct cli_runopts {
 	int exit_on_fwd_failure;
 #endif
 	int disable_trivial_auth;
+	/** Use a password authentication or a key auth only.
+	For a BatchMode it's always -o PasswordAuthentication=no */
+	int password_authentication;
+	/* -o BatchMode=yes, suppress interactive questions */
+	int batch_mode;
 #if DROPBEAR_CLI_REMOTETCPFWD
 	m_list * remotefwds;
 #endif
@@ -194,8 +200,10 @@ typedef struct cli_runopts {
 #if DROPBEAR_CLI_PROXYCMD
 	char *proxycmd;
 #endif
+	const char *bind_arg;
 	char *bind_address;
 	char *bind_port;
+	const char *keepalive_arg;
 } cli_runopts;
 
 extern cli_runopts cli_opts;
