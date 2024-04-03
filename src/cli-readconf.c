@@ -122,17 +122,20 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 					/* The host name is the alias given on the command line.
 					 * Set the actual remote host specified in the config.
 					 */
+					m_free(options->remotehost);
 					options->remotehost = m_strdup(cfg_val);
 					options->remotehostfixed = 1; /* Subsequent command line parsing should leave it alone. */
 					break;
 				}
 
 				case opHostPort: {
+					m_free(options->remoteport);
 					options->remoteport = m_strdup(cfg_val);
 					break;
 				}
 
 				case opLoginUser: {
+					m_free(options->username);
 					options->username = m_strdup(cfg_val);
 					break;
 				}
