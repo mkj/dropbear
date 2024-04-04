@@ -573,9 +573,10 @@ void m_close(int fd) {
 		dropbear_exit("Error closing fd %d, %s", fd, strerror(errno));
 	}
 }
-	
+
 void setnonblocking(int fd) {
 
+	int fl = 0;
 	TRACE(("setnonblocking: %d", fd))
 
 #if DROPBEAR_FUZZ
@@ -583,16 +584,19 @@ void setnonblocking(int fd) {
 		return;
 	}
 #endif
+	fl = fcntl(fd, F_GETFL, 0);
+	if (fl == -1) {
+		/* F_GETFL shouldn't fail */
+		dropbear_exit("Couldn't set nonblocking");
+	}
 
-	if (fcntl(fd, F_SETFL, O_NONBLOCK) < 0) {
+	if (fcntl(fd, F_SETFL, fl | O_NONBLOCK) == -1) {
 		if (errno == ENODEV) {
 			/* Some devices (like /dev/null redirected in)
 			 * can't be set to non-blocking */
 			TRACE(("ignoring ENODEV for setnonblocking"))
 		} else {
-		{
 			dropbear_exit("Couldn't set nonblocking");
-		}
 		}
 	}
 	TRACE(("leave setnonblocking"))
