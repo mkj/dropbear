@@ -76,5 +76,5 @@ echo "$ARCHIVE"
 
 if [ $TESTREL -eq 0 ]; then
     echo Sign it with
-    echo gpg2 --detach-sign -a -u F29C6773 "$ARCHIVE"
+    echo gpg --detach-sign -a -u F29C6773 "$ARCHIVE"
 fi
