@@ -653,10 +653,16 @@ void fill_passwd(const char* username) {
 	{
 		char *passwd_crypt = pw->pw_passwd;
 #ifdef HAVE_SHADOW_H
-		/* get the shadow password if possible */
-		struct spwd *spasswd = getspnam(ses.authstate.pw_name);
-		if (spasswd && spasswd->sp_pwdp) {
-			passwd_crypt = spasswd->sp_pwdp;
+		/* "x" for the passwd crypt indicates shadow should be used */
+		if (pw->pw_passwd && strcmp(pw->pw_passwd, "x") == 0) {
+			/* get the shadow password */
+			struct spwd *spasswd = getspnam(ses.authstate.pw_name);
+			if (spasswd && spasswd->sp_pwdp) {
+				passwd_crypt = spasswd->sp_pwdp;
+			} else {
+				/* Fail if missing in /etc/shadow */
+				passwd_crypt = "!!";
+			}
 		}
 #endif
 		if (!passwd_crypt) {
