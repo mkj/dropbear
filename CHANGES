@@ -1,6 +1,14 @@
-Pending
+2024.84 - 4 April 2024
 
 Features and Changes:
+  Note >> for compatibility/configuration changes
+
+- >> Only use /etc/shadow when a user has :x: as the crypt in /etc/passwd.
+  This is the documented behaviour of passwd(5) so should be consistent with
+  other programs. Thanks to Paulo Cabral for the report.
+  Note that any users without x as the crypt will not be able
+  to log in with /etc/shadow, in cases were the existing configuration
+  differs.
 
 - Support -o StrictHostKeyChecking, patch from Sergey Ponomarev
 
@@ -12,6 +20,9 @@ Features and Changes:
 - Add dbclient config file support, ~/.ssh/dropbear_config
   Thanks to tjkolev
   Disabled by default, set #define DROPBEAR_USE_SSH_CONFIG 1
+
+- Add support for unix socket forwarding (destination) on
+  the server, thanks to WangYi for the implementation
 
 - Add option to bind to interface, from Diederik De Coninck
 
@@ -34,6 +45,9 @@ Features and Changes:
   to the build directory's localoptions.h)
 
 Fixes:
+
+- "dbclient host >> output" would previously overwrite "output", instead of
+  appending. Thanks for the report from eSotoIoT
 
 - Add "Strict KEX" support. This mitigates a SSH protocol flaw which lets
   a MITM attacker silently remove packets immediately after the
@@ -69,7 +83,7 @@ Fixes:
 
 - Fix DROPBEAR_SVR_MULTIUSER. This appears to have been broken since when it
   was added in 2019. If you're using this let me know (it might be removed
-  later otherwise). Thanks to davidatrsp
+  if I don't hear otherwise). Thanks to davidatrsp
 
 - Fix Y2038 issues
 
