@@ -46,7 +46,7 @@ static void add_netcat(const char *str);
 static void add_extendedopt(const char *str);
 
 #if DROPBEAR_USE_SSH_CONFIG
-void apply_config_settings(char* cli_host_arg);
+static void apply_config_settings(const char* cli_host_arg);
 #endif
 
 static void printhelp() {
@@ -1050,7 +1050,7 @@ static void add_extendedopt(const char* origstr) {
 }
 
 #if DROPBEAR_USE_SSH_CONFIG
-void apply_config_settings(char* cli_host_arg) {
+static void apply_config_settings(const char* cli_host_arg) {
 	char* is_multi_hop_host_target = strchr(cli_host_arg, ',');
 	if (!is_multi_hop_host_target) {
 		char* config_path = expand_homedir_path(DROPBEAR_DEFAULT_SSH_CONFIG);
