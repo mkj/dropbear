@@ -181,9 +181,7 @@ jobs:
 
       - name: localoptions
         run: |
-          echo "$LOCALOPTIONS" > localoptions.h
-          echo "#define DROPBEAR_DSS 1" >> localoptions.h
-          cat localoptions.h
+          echo "$LOCALOPTIONS" | tee localoptions.h
 
       - name: nondefault
         if: ${{ matrix.nondefault }}
