@@ -261,9 +261,6 @@ jobs:
       - name: genrsa
         if: ${{ matrix.runcheck != 'no' }}
         run: ~/inst/bin/dropbearkey -t rsa -f testrsa
-      - name: gendss
-        if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t dss -f testdss
       - name: genecdsa256
         if: ${{ matrix.runcheck != 'no' }}
         run: ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
