@@ -126,6 +126,20 @@ jobs:
               #define DROPBEAR_USE_PASSWORD_ENV 0
               #define DROPBEAR_SFTPSERVER 0
 
+          - name: other algo combos
+            # disables all sha1
+            localoptions: |
+            #define DROPBEAR_SHA1_HMAC 0
+            #define DROPBEAR_RSA_SHA1 0
+            #define DROPBEAR_DH_GROUP14_SHA1 0
+            #define DROPBEAR_ECDSA 0
+            #define DROPBEAR_ED25519 0
+            #define DROPBEAR_SK_KEYS 0
+            #define DROPBEAR_ENABLE_GCM_MODE 1
+            #define DROPBEAR_3DES 1
+            #define DROPBEAR_DH_GROUP16 1
+            #define DROPBEAR_SHA2_512_HMAC 1
+
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
           # - name: fuzzing with address sanitizer
