@@ -58,7 +58,7 @@ config_options[] = {
 };
 
 void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
-	DEBUG1(("Reading configuration data '%.200s'", filename));
+	DEBUG1(("Reading '%.200s'", filename));
 
 	char *line = NULL;
 	int linenum = 0;
@@ -78,7 +78,7 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 
 		/* Add nul terminator */
 		if (buf->len == buf->size) {
-			dropbear_exit("Long line %d", linenum);
+			dropbear_exit("Long line %s:%d", filename, linenum);
 		}
 		buf_setpos(buf, buf->len);
 		buf_putbyte(buf, '\0');
@@ -103,13 +103,13 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 		}
 
 		if (opInvalid == cfg_opt) {
-			dropbear_exit("Unhandled key %s at '%s':%d.", cfg_key, filename, linenum);
+			dropbear_exit("Unsupported option %s at %s:%d", cfg_key, filename, linenum);
 		}
 
 
 		cfg_val = strtok_r(NULL, TOKEN_CHARS, &saveptr);
 		if (NULL == cfg_val) {
-			dropbear_exit("Missing value for key %s at '%s':%d.", cfg_key, filename, linenum);
+			dropbear_exit("Missing value for %s at %s:%d", cfg_key, filename, linenum);
 		}
 
 		if (in_host_section) {
@@ -156,13 +156,9 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 					loadidentityfile(key_file_path, 1);
 					m_free(key_file_path);
 #else
-					dropbear_exit("This version of the code does not support identity file. %s at '%s':%d.", cfg_key, filename, linenum);
+					dropbear_exit("identityfile isn't supported in %s", filename);
 #endif
 					break;
-				}
-
-				default: {
-					dropbear_exit("Unsupported configuration option %s at '%s':%d.", cfg_key, filename, linenum);
 				}
 			}
 		}
