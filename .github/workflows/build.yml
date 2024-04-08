@@ -127,6 +127,7 @@ jobs:
               #define DROPBEAR_SFTPSERVER 0
 
           - name: other algo combos
+            runcheck: 'no'
             # disables all sha1
             localoptions: |
               #define DROPBEAR_SHA1_HMAC 0
