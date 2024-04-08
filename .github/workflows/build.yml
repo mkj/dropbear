@@ -139,6 +139,7 @@ jobs:
             #define DROPBEAR_3DES 1
             #define DROPBEAR_DH_GROUP16 1
             #define DROPBEAR_SHA2_512_HMAC 1
+            #define DROPBEAR_CLI_PUBKEY_AUTH 0
 
           # # Fuzzers run standalone. A bit superfluous with cifuzz, but
           # # good to run the whole corpus to keep it working.
