@@ -559,7 +559,9 @@ void loadidentityfile(const char* filename, int warnfail) {
 static char* multihop_passthrough_args(void) {
 	char *args = NULL;
 	unsigned int len, total;
+#if DROPBEAR_CLI_PUBKEY_AUTH
 	m_list_elem *iter;
+#endif
 	/* Sufficient space for non-string args */
 	len = 100;
 
