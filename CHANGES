@@ -1,3 +1,14 @@
+2024.85 - 25 April 2024
+
+  This release fixes build regressions in 2024.84
+
+- Fix build failure when SHA1 is disabled, thanks to Peter Krefting
+
+- Fix build failure when DROPBEAR_CLI_PUBKEY_AUTH disabled, thanks to
+  Sergey Ponomarev
+
+- Update debian/ directory with changed paths
+
 2024.84 - 4 April 2024
 
 Features and Changes:

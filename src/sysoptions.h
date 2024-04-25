@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2024.84"
+#define DROPBEAR_VERSION "2024.85"
 #endif
 
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
