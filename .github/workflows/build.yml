@@ -57,6 +57,9 @@ jobs:
           # early declarations so we specify it anyway.
           - name: c89
             extracflags: -std=c89 -Wdeclaration-after-statement
+            # enable all options
+            nondefault: 1
+            configure_flags: --enable-pam
 
           - name: macos 12
             os: macos-12
@@ -80,6 +83,8 @@ jobs:
 
           # Check that debug code doesn't bitrot
           - name: DEBUG_TRACE
+            nondefault: 1
+            configure_flags: --enable-pam
             localoptions: |
               #define DEBUG_TRACE 5
 
@@ -87,8 +92,6 @@ jobs:
           - name: nondefault options
             nondefault: 1
             configure_flags: --enable-pam
-            localoptions: |
-              #define DROPBEAR_USE_SSH_CONFIG 1
 
           - name: most options disabled
             configure_flags: --disable-harden --disable-zlib --disable-openpty --disable-lastlog
@@ -210,7 +213,9 @@ jobs:
           sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
 
       - name: make
-        run: make -j3 $MAKE_TARGET
+        run: |
+          cat localoptions.h
+          make -j3 $MAKE_TARGET
 
       - name: multilink
         if: ${{ matrix.multilink }}
