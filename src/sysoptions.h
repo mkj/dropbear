@@ -7,6 +7,9 @@
 #define DROPBEAR_VERSION "2024.85"
 #endif
 
+/* Use this string since some implementations might special-case it */
+#define DROPBEAR_KEEPALIVE_STRING "keepalive@openssh.com"
+
 #define LOCAL_IDENT "SSH-2.0-dropbear_" DROPBEAR_VERSION
 #define PROGNAME "dropbear"
 
@@ -364,9 +367,6 @@
 
 /* free memory before exiting */
 #define DROPBEAR_CLEANUP 1
-
-/* Use this string since some implementations might special-case it */
-#define DROPBEAR_KEEPALIVE_STRING "keepalive@openssh.com"
 
 /* Linux will attempt TCP fast open, falling back if not supported by the kernel.
  * Currently server is enabled but client is disabled by default until there
