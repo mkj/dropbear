@@ -61,8 +61,8 @@ jobs:
             nondefault: 1
             configure_flags: --enable-pam
 
-          - name: macos 12
-            os: macos-12
+          - name: macos 14
+            os: macos-14
             cc: clang
             # OS X says daemon() and utmp are deprecated.
             # OS X tests for undefined TARGET_OS_EMBEDDED in libc headers
@@ -73,12 +73,16 @@ jobs:
             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
             ranlib: ranlib -no_warning_for_no_symbols
 
-          - name: macos 11
-            os: macos-11
+          - name: macos 12
+            os: macos-12
             cc: clang
+            # OS X says daemon() and utmp are deprecated.
+            # OS X tests for undefined TARGET_OS_EMBEDDED in libc headers
             extracflags: -Wno-deprecated-declarations -Wno-undef
             runcheck: 'no'
             apt: 'no'
+            # fails with:
+            # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
             ranlib: ranlib -no_warning_for_no_symbols
 
           # Check that debug code doesn't bitrot
