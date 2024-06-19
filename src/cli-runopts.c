@@ -399,6 +399,11 @@ void cli_getopts(int argc, char ** argv) {
 		}
 	}
 
+#if DROPBEAR_USER_ALGO_LIST
+	/* -c help doesn't need a hostname */
+	parse_ciphers_macs();
+#endif
+
 	if (host_arg == NULL) { /* missing hostname */
 		printhelp();
 		dropbear_exit("Remote host needs to provided.");
@@ -423,11 +428,6 @@ void cli_getopts(int argc, char ** argv) {
 	} else if(!cli_opts.username) {
 		cli_opts.username = m_strdup(cli_opts.own_user);
 	}
-
-#if DROPBEAR_USER_ALGO_LIST
-	/* -c help doesn't need a hostname */
-	parse_ciphers_macs();
-#endif
 
 	/* Done with options/flags; now handle the hostname (which may not
 	 * start with a hyphen) and optional command */
