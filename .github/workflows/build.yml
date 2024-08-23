@@ -196,7 +196,9 @@ jobs:
       - uses: actions/checkout@v4
 
       - name: configure
-        run: ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
+        run: |
+          $(CC) --version
+          ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
 
       - name: nowritev
         if: ${{ matrix.nowritev }}
