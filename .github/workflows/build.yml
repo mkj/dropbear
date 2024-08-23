@@ -9,7 +9,7 @@ on:
       - master
 jobs:
   build:
-    runs-on: ${{ matrix.os || 'ubuntu-22.04' }}
+    runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
     strategy:
       matrix:
         # XXX uncomment the line below to work with act, see https://github.com/nektos/act/issues/996
