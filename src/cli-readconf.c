@@ -70,6 +70,7 @@ void read_config_file(char* filename, FILE* config_file, cli_runopts* options) {
 		char* commentStart = NULL;
 		cfg_option cfg_opt;
 		int found, i;
+		// size_t i;
 		/* Update line number counter. */
 		linenum++;
 

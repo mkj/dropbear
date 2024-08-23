@@ -197,7 +197,7 @@ jobs:
 
       - name: configure
         run: |
-          $(CC) --version || echo unknown $(CC) version
+          $CC --version || echo unknown $CC version
           ./configure $CONFIGURE_FLAGS CFLAGS="-O2 -Wall -Wno-pointer-sign $EXTRACFLAGS" --prefix="$HOME/inst" || (cat config.log; exit 1)
 
       - name: nowritev
