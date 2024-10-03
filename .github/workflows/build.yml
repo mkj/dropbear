@@ -261,7 +261,7 @@ jobs:
         # upload config.log if something has failed
       - name: config.log
         if: ${{ !env.ACT && (failure() || cancelled()) }}
-        uses: actions/upload-artifact@v2
+        uses: actions/upload-artifact@v4
         with:
           name: config.log
           path: config.log
