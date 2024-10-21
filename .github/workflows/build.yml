@@ -250,6 +250,8 @@ jobs:
           # remove old files so we can rerun in-place with "act -r" during test development
           rm -vf ~/.ssh/id_dropbear*
           ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
+          # Convert to openssh format so that asyncssh can find it in tests
+          ~/inst/bin/dropbearconvert dropbear openssh ~/.ssh/id_dropbear ~/.ssh/id_ecdsa
 
           # to test setting SSH_PUBKEYINFO, replace the trailing comment
           ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key2 | grep ^ecdsa | sed 's/[^ ]*$/key2 extra/' >> ~/.ssh/authorized_keys
