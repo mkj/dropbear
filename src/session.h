@@ -196,7 +196,8 @@ struct sshsession {
 							 can add it to the hash when generating keys */
 
 	/* Enables/disables compression */
-	algo_type *compress_algos;
+	algo_type *compress_algos_c2s;
+	algo_type *compress_algos_s2c;
 
 	/* Other side allows SSH_MSG_EXT_INFO. Currently only set for server */
 	int allow_ext_info;

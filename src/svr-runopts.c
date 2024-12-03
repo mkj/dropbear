@@ -187,7 +187,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.reexec_childpipe = -1;
 
 #ifndef DISABLE_ZLIB
-	opts.compress_mode = DROPBEAR_COMPRESS_DELAYED;
+	opts.allow_compress = 1;
 #endif 
 
 	/* not yet

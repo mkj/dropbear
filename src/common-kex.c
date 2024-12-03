@@ -81,10 +81,10 @@ void send_msg_kexinit() {
 
 
 	/* compression_algorithms_client_to_server */
-	buf_put_algolist(ses.writepayload, ses.compress_algos);
+	buf_put_algolist(ses.writepayload, ses.compress_algos_c2s);
 
 	/* compression_algorithms_server_to_client */
-	buf_put_algolist(ses.writepayload, ses.compress_algos);
+	buf_put_algolist(ses.writepayload, ses.compress_algos_s2c);
 
 	/* languages_client_to_server */
 	buf_putstring(ses.writepayload, "", 0);
@@ -205,27 +205,34 @@ void recv_msg_newkeys() {
 	TRACE(("leave recv_msg_newkeys"))
 }
 
+static void kex_setup_compress(void) {
+#ifdef DISABLE_ZLIB
+	ses.compress_algos_c2s = ssh_nocompress;
+	ses.compress_algos_s2c = ssh_nocompress;
+#else
+
+	if (!opts.allow_compress) {
+		ses.compress_algos_c2s = ssh_nocompress;
+		ses.compress_algos_s2c = ssh_nocompress;
+		return;
+	}
+
+	if (IS_DROPBEAR_CLIENT) {
+		/* TODO: should c2s in dbclient be disabled?
+		 * Current Dropbear server disables it. Disabling it also
+		 * lets DROPBEAR_CLI_IMMEDIATE_AUTH work (see comment there) */
+		ses.compress_algos_c2s = ssh_compress;
+		ses.compress_algos_s2c = ssh_compress;
+	} else {
+		ses.compress_algos_c2s = ssh_nocompress;
+		ses.compress_algos_s2c = ssh_compress;
+	}
+#endif
+}
 
 /* Set up the kex for the first time */
 void kexfirstinitialise() {
-#ifdef DISABLE_ZLIB
-	ses.compress_algos = ssh_nocompress;
-#else
-	switch (opts.compress_mode)
-	{
-		case DROPBEAR_COMPRESS_DELAYED:
-			ses.compress_algos = ssh_delaycompress;
-			break;
-
-		case DROPBEAR_COMPRESS_ON:
-			ses.compress_algos = ssh_compress;
-			break;
-
-		case DROPBEAR_COMPRESS_OFF:
-			ses.compress_algos = ssh_nocompress;
-			break;
-	}
-#endif
+	kex_setup_compress();
 	kexinitialise();
 }
 
@@ -948,7 +955,7 @@ static void read_kex_algos() {
 	DEBUG2(("hmac s2c is %s", s2c_hash_algo ? s2c_hash_algo->name : "<implicit>"))
 
 	/* compression_algorithms_client_to_server */
-	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
+	c2s_comp_algo = buf_match_algo(ses.payload, ses.compress_algos_c2s, 0, NULL);
 	if (c2s_comp_algo == NULL) {
 		erralgo = "comp c->s";
 		goto error;
@@ -956,7 +963,7 @@ static void read_kex_algos() {
 	DEBUG2(("comp c2s is %s", c2s_comp_algo->name))
 
 	/* compression_algorithms_server_to_client */
-	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos, 0, NULL);
+	s2c_comp_algo = buf_match_algo(ses.payload, ses.compress_algos_s2c, 0, NULL);
 	if (s2c_comp_algo == NULL) {
 		erralgo = "comp s->c";
 		goto error;
