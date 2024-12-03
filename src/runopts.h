@@ -122,6 +122,8 @@ typedef struct svr_runopts {
 	buffer * banner;
 	char * pidfile;
 
+	char * authorized_keys_dir;
+
 	char * forced_command;
 	char* interface;
 
