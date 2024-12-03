@@ -260,6 +260,11 @@ jobs:
           chmod 700 ~ ~/.ssh ~/.ssh/authorized_keys
           ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
 
+      - name: binary size
+        run:
+          - size dropbear | tee -a sizes.txt
+          - size dbclient | tee -a sizes.txt
+
         # upload config.log if something has failed
       - name: config.log
         if: ${{ !env.ACT && (failure() || cancelled()) }}
@@ -267,6 +272,12 @@ jobs:
         with:
           name: config.log
           path: config.log
+
+      - name: upload sizes
+        uses: actions/upload-artifact@v4
+        with:
+          name: sizes.txt
+          path: sizes.txt
 
       - name: check
         if: ${{ matrix.runcheck != 'no' }}
