@@ -456,6 +456,10 @@ void svr_getopts(int argc, char ** argv) {
 		dropbear_exit("-t and -s are incompatible");
 	}
 
+	if (strlen(svr_opts.authorized_keys_dir) == 0) {
+		dropbear_exit("Bad -D");
+	}
+
 #if DROPBEAR_PLUGIN
 	if (pubkey_plugin) {
 		svr_opts.pubkey_plugin = m_strdup(pubkey_plugin);
