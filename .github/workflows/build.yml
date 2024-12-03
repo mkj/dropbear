@@ -23,6 +23,7 @@ jobs:
         # MULTI and NOWRITEV are passed as integers to the build
         include:
           - name: plain linux
+            upload_sizes: 1
 
           - name: multi binary
             multi: 1
@@ -261,9 +262,7 @@ jobs:
           ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
 
       - name: binary size
-        run:
-          - size dropbear | tee -a sizes.txt
-          - size dbclient | tee -a sizes.txt
+        run: size dropbear dbclient | tee -a sizes.txt
 
         # upload config.log if something has failed
       - name: config.log
@@ -274,6 +273,7 @@ jobs:
           path: config.log
 
       - name: upload sizes
+        if: ${{ matrix.upload_sizes }}
         uses: actions/upload-artifact@v4
         with:
           name: sizes.txt
