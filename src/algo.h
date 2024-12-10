@@ -113,6 +113,7 @@ struct dropbear_kex {
 #if DROPBEAR_ECDH
 	const struct dropbear_ecc_curve *ecc_curve;
 #else
+	/* NULL for non-ecc curves */
 	const void* dummy;
 #endif
 
