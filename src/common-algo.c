@@ -129,29 +129,29 @@ algo_type sshciphers[] = {
 #endif
 
 #if DROPBEAR_ENABLE_GCM_MODE
-#if DROPBEAR_AES128
-	{"aes128-gcm@openssh.com", 0, &dropbear_aes128, 1, &dropbear_mode_gcm},
-#endif
 #if DROPBEAR_AES256
 	{"aes256-gcm@openssh.com", 0, &dropbear_aes256, 1, &dropbear_mode_gcm},
+#endif
+#if DROPBEAR_AES128
+	{"aes128-gcm@openssh.com", 0, &dropbear_aes128, 1, &dropbear_mode_gcm},
 #endif
 #endif /* DROPBEAR_ENABLE_GCM_MODE */
 
 #if DROPBEAR_ENABLE_CTR_MODE
-#if DROPBEAR_AES128
-	{"aes128-ctr", 0, &dropbear_aes128, 1, &dropbear_mode_ctr},
-#endif
 #if DROPBEAR_AES256
 	{"aes256-ctr", 0, &dropbear_aes256, 1, &dropbear_mode_ctr},
+#endif
+#if DROPBEAR_AES128
+	{"aes128-ctr", 0, &dropbear_aes128, 1, &dropbear_mode_ctr},
 #endif
 #endif /* DROPBEAR_ENABLE_CTR_MODE */
 
 #if DROPBEAR_ENABLE_CBC_MODE
-#if DROPBEAR_AES128
-	{"aes128-cbc", 0, &dropbear_aes128, 1, &dropbear_mode_cbc},
-#endif
 #if DROPBEAR_AES256
 	{"aes256-cbc", 0, &dropbear_aes256, 1, &dropbear_mode_cbc},
+#endif
+#if DROPBEAR_AES128
+	{"aes128-cbc", 0, &dropbear_aes128, 1, &dropbear_mode_cbc},
 #endif
 #endif /* DROPBEAR_ENABLE_CBC_MODE */
 

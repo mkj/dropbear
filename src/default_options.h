@@ -94,7 +94,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_USER_ALGO_LIST 1
 
 /* Encryption - at least one required.
- * AES128 should be enabled, some very old implementations might only
+ * AES should be enabled, some very old implementations might only
  * support 3DES.
  * Including both AES keysize variants (128 and 256) will result in
  * a minimal size increase */
