@@ -208,6 +208,10 @@
 #define DROPBEAR_SK_ED25519 ((DROPBEAR_SK_KEYS) && (DROPBEAR_ED25519))
 #endif
 
+/* XXX: Not actually used */
+#define DROPBEAR_PQHYBRID 1
+#define DROPBEAR_CURVE25519_DEP (DROPBEAR_CURVE25519 || DROPBEAR_PQHYBRID)
+
 /* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
 #define DROPBEAR_EXT_INFO ((DROPBEAR_RSA_SHA256) \
 		&& ((DROPBEAR_CLI_PUBKEY_AUTH) || (DROPBEAR_SVR_PUBKEY_AUTH)))

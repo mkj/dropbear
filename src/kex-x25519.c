@@ -8,7 +8,8 @@
 #include "curve25519.h"
 #include "kex.h"
 
-#if DROPBEAR_CURVE25519
+/* PQ hybrids also use curve25519 internally */
+#if DROPBEAR_CURVE25519_DEP
 
 struct kex_curve25519_param *gen_kexcurve25519_param() {
     /* Per http://cr.yp.to/ecdh.html */
@@ -26,13 +27,10 @@ void free_kexcurve25519_param(struct kex_curve25519_param *param) {
     m_free(param);
 }
 
-void kexcurve25519_comb_key(const struct kex_curve25519_param *param, const buffer *buf_pub_them,
-    sign_key *hostkey) {
-    unsigned char out[CURVE25519_LEN];
-    const unsigned char* Q_C = NULL;
-    const unsigned char* Q_S = NULL;
+/* out must be CURVE25519_LEN */
+void kexcurve25519_derive(const struct kex_curve25519_param *param, const buffer *buf_pub_them,
+    unsigned char *out) {
     char zeroes[CURVE25519_LEN] = {0};
-
     if (buf_pub_them->len != CURVE25519_LEN)
     {
         dropbear_exit("Bad curve25519");
@@ -43,6 +41,20 @@ void kexcurve25519_comb_key(const struct kex_curve25519_param *param, const buff
     if (constant_time_memcmp(zeroes, out, CURVE25519_LEN) == 0) {
         dropbear_exit("Bad curve25519");
     }
+}
+
+#endif /* DROPBEAR_CURVE25519_DEP */
+
+#if DROPBEAR_CURVE25519
+
+/* Only required for x25519 directly */
+void kexcurve25519_comb_key(const struct kex_curve25519_param *param, const buffer *buf_pub_them,
+    sign_key *hostkey) {
+    unsigned char out[CURVE25519_LEN];
+    const unsigned char* Q_C = NULL;
+    const unsigned char* Q_S = NULL;
+
+    kexcurve25519_derive(param, buf_pub_them, out);
 
     m_mp_alloc_init_multi(&ses.dh_K, NULL);
     bytes_to_mp(ses.dh_K, out, CURVE25519_LEN);

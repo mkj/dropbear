@@ -353,6 +353,9 @@ void session_cleanup() {
 		mp_clear(ses.dh_K);
 	}
 	m_free(ses.dh_K);
+	if (ses.dh_K_bytes) {
+		buf_burn_free(ses.dh_K_bytes);
+	}
 
 	m_burn(ses.keys, sizeof(struct key_context));
 	m_free(ses.keys);

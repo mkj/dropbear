@@ -26,7 +26,7 @@
 #include "dbrandom.h"
 #include "curve25519.h"
 
-#if DROPBEAR_CURVE25519 || DROPBEAR_ED25519
+#if DROPBEAR_CURVE25519_DEP || DROPBEAR_ED25519
 
 /* Modified TweetNaCl version 20140427, a self-contained public-domain C library.
  * https://tweetnacl.cr.yp.to/ */
@@ -40,10 +40,10 @@ typedef unsigned long long u64;
 typedef long long i64;
 typedef i64 gf[16];
 
-#if DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519_DEP
 static const gf
   _121665 = {0xDB41,1};
-#endif /* DROPBEAR_CURVE25519 */
+#endif /* DROPBEAR_CURVE25519_DEP */
 #if DROPBEAR_ED25519
 static const gf
   gf0,
@@ -207,7 +207,7 @@ sv pow2523(gf o,const gf i)
 }
 #endif /* DROPBEAR_ED25519 && DROPBEAR_SIGNKEY_VERIFY */
 
-#if DROPBEAR_CURVE25519
+#if DROPBEAR_CURVE25519_DEP
 void dropbear_curve25519_scalarmult(u8 *q,const u8 *n,const u8 *p)
 {
   u8 z[32];
@@ -257,7 +257,7 @@ void dropbear_curve25519_scalarmult(u8 *q,const u8 *n,const u8 *p)
   M(x+16,x+16,x+32);
   pack25519(q,x+16);
 }
-#endif /* DROPBEAR_CURVE25519 */
+#endif /* DROPBEAR_CURVE25519_DEP */
 
 #if DROPBEAR_ED25519
 static int crypto_hash(u8 *out,const u8 *m,u64 n)
@@ -494,4 +494,4 @@ int dropbear_ed25519_verify(const u8 *m,u32 mlen,const u8 *s,u32 slen,const u8 *
 
 #endif /* DROPBEAR_ED25519 */
 
-#endif /* DROPBEAR_CURVE25519 || DROPBEAR_ED25519 */
+#endif /* DROPBEAR_CURVE25519_DEP || DROPBEAR_ED25519 */

@@ -70,7 +70,10 @@ void recv_msg_kexdh_init() {
 #if DROPBEAR_CURVE25519
 		case DROPBEAR_KEX_CURVE25519:
 #endif
-#if DROPBEAR_ECDH || DROPBEAR_CURVE25519
+#if DROPBEAR_PQHYBRID
+		case DROPBEAR_KEX_PQHYBRID:
+#endif
+#if DROPBEAR_ECDH || DROPBEAR_CURVE25519 || DROPBEAR_PQHYBRID
 			ecdh_qs = buf_getstringbuf(ses.payload);
 			break;
 #endif
@@ -242,6 +245,17 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *ecdh_qs) {
 
 			buf_putstring(ses.writepayload, param->pub, CURVE25519_LEN);
 			free_kexcurve25519_param(param);
+			}
+			break;
+#endif
+#if DROPBEAR_PQHYBRID
+		case DROPBEAR_KEX_PQHYBRID:
+			{
+			struct kex_pqhybrid_param *param = gen_kexpqhybrid_param();
+			kexpqhybrid_comb_key(param, ecdh_qs, svr_opts.hostkey);
+
+			buf_putbufstring(ses.writepayload, param->concat_public);
+			free_kexpqhybrid_param(param);
 			}
 			break;
 #endif
