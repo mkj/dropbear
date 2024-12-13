@@ -313,9 +313,16 @@ static void gen_new_keys() {
 	/* the dh_K and hash are the start of all hashes, we make use of that */
 
 	hash_desc->init(&hs);
-	hash_process_mp(hash_desc, &hs, ses.dh_K);
-	mp_clear(ses.dh_K);
-	m_free(ses.dh_K);
+	if (ses.dh_K) {
+		hash_process_mp(hash_desc, &hs, ses.dh_K);
+		mp_clear(ses.dh_K);
+		m_free(ses.dh_K);
+	}
+	if (ses.dh_K_bytes) {
+	    hash_desc->process(&hs, ses.dh_K_bytes->data, ses.dh_K_bytes->len);
+		buf_burn_free(ses.dh_K_bytes);
+		ses.dh_K_bytes = NULL;
+	}
 	hash_desc->process(&hs, ses.hash->data, ses.hash->len);
 	buf_burn_free(ses.hash);
 	ses.hash = NULL;

@@ -189,7 +189,11 @@ struct sshsession {
 	struct key_context *newkeys;
 	buffer *session_id; /* this is the hash from the first kex */
 	/* The below are used temporarily during kex, are freed after use */
+	/* Either dh_K or dh_K_bytes is set, depending on kex type */
 	mp_int * dh_K; /* SSH_MSG_KEXDH_REPLY and sending SSH_MSH_NEWKEYS */
+	/* dh_K_bytes holds a SSH string, including length prefix */
+	buffer * dh_K_bytes; /* SSH_MSG_KEXDH_REPLY and sending SSH_MSH_NEWKEYS */
+
 	buffer *hash; /* the session hash */
 	buffer* kexhashbuf; /* session hash buffer calculated from various packets*/
 	buffer* transkexinit; /* the kexinit packet we send should be kept so we
@@ -295,6 +299,7 @@ struct clientsession {
 	struct kex_dh_param *dh_param;
 	struct kex_ecdh_param *ecdh_param;
 	struct kex_curve25519_param *curve25519_param;
+	struct kex_pqhybrid_param *pqhybrid_param;
 
 	cli_kex_state kex_state; /* Used for progressing KEX */
 	cli_state state; /* Used to progress auth/channelsession etc */

@@ -61,6 +61,12 @@ static void cli_kex_free_param(void) {
 		cli_ses.curve25519_param = NULL;
 	}
 #endif
+#if DROPBEAR_PQHYBRID
+	if (cli_ses.pqhybrid_param) {
+		free_kexpqhybrid_param(cli_ses.pqhybrid_param);
+		cli_ses.pqhybrid_param = NULL;
+	}
+#endif
 }
 
 void send_msg_kexdh_init() {
@@ -94,6 +100,12 @@ void send_msg_kexdh_init() {
 		case DROPBEAR_KEX_CURVE25519:
 			cli_ses.curve25519_param = gen_kexcurve25519_param();
 			buf_putstring(ses.writepayload, cli_ses.curve25519_param->pub, CURVE25519_LEN);
+			break;
+#endif
+#if DROPBEAR_PQHYBRID
+		case DROPBEAR_KEX_PQHYBRID:
+			cli_ses.pqhybrid_param = gen_kexpqhybrid_param();
+			buf_putbufstring(ses.writepayload, cli_ses.pqhybrid_param->concat_public);
 			break;
 #endif
 	}
@@ -167,6 +179,15 @@ void recv_msg_kexdh_reply() {
 			{
 			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
 			kexcurve25519_comb_key(cli_ses.curve25519_param, ecdh_qs, hostkey);
+			buf_free(ecdh_qs);
+			}
+			break;
+#endif
+#if DROPBEAR_PQHYBRID
+		case DROPBEAR_KEX_PQHYBRID:
+			{
+			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
+			kexpqhybrid_comb_key(cli_ses.pqhybrid_param, ecdh_qs, hostkey);
 			buf_free(ecdh_qs);
 			}
 			break;
