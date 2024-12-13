@@ -208,8 +208,7 @@
 #define DROPBEAR_SK_ED25519 ((DROPBEAR_SK_KEYS) && (DROPBEAR_ED25519))
 #endif
 
-/* XXX: Not actually used */
-#define DROPBEAR_PQHYBRID 1
+#define DROPBEAR_PQHYBRID DROPBEAR_SNTRUP761
 #define DROPBEAR_CURVE25519_DEP (DROPBEAR_CURVE25519 || DROPBEAR_PQHYBRID)
 
 /* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
@@ -245,16 +244,39 @@
 #define MAX_STRING_LEN (MAX(MAX_CMD_LEN, 2400)) /* Sun SSH needs 2400 for algos,
                                                    MAX_CMD_LEN is usually longer */
 
-/* For a 4096 bit DSS key, empirically determined */
-#define MAX_PUBKEY_SIZE 1700
-/* For a 4096 bit DSS key, empirically determined */
+
+/* Key type sizes are ordered large to small, all are
+ determined empirically, and rounded up */
+#if DROPBEAR_RSA
+/* 4096 bit RSA key */
+#define MAX_PUBKEY_SIZE 600
 #define MAX_PRIVKEY_SIZE 1700
+#elif DROPBEAR_DSS
+#define MAX_PUBKEY_SIZE 500
+#define MAX_PRIVKEY_SIZE 500
+#else
+/* 521 bit ecdsa key */
+#define MAX_PUBKEY_SIZE 200
+#define MAX_PRIVKEY_SIZE 200
+#endif
+
+/* For kex hash buffer, worst case size for Q_C || Q_S || K */
+#if DROPBEAR_SNTRUP761
+/* 2337 */
+#define MAX_KEX_PARTS (2*4 + 1158 + 1039 + 32*2 + 68)
+#elif DROPBEAR_DH_GROUP16
+/* 4096 bit group */
+#define MAX_KEX_PARTS (3 * 520)
+#else
+/* Sufficent for 2048 bit group14, or ecdsa521 */
+#define MAX_KEX_PARTS 1000
+#endif
 
 #define MAX_HOSTKEYS 4
 
 /* The maximum size of the bignum portion of the kexhash buffer */
-/* Sect. 8 of the transport rfc 4253, K_S + e + f + K */
-#define KEXHASHBUF_MAX_INTS (1700 + 130 + 130 + 130)
+/* K_S + Q_C + Q_S + K */
+#define KEXHASHBUF_MAX_INTS (MAX_PUBKEY_SIZE + MAX_KEX_PARTS)
 
 #define DROPBEAR_MAX_SOCKS 2 /* IPv4, IPv6 are all we'll get for now. Revisit
 								in a few years time.... */

@@ -33,6 +33,7 @@
 #include "gcm.h"
 #include "chachapoly.h"
 #include "ssh.h"
+#include "sntrup761.h"
 
 /* This file (algo.c) organises the ciphers which can be used, and is used to
  * decide which ciphers/hashes/compression/signing to use during key exchange*/
@@ -266,12 +267,35 @@ static const struct dropbear_kex kex_ecdh_nistp521 = {DROPBEAR_KEX_ECDH, NULL, 0
 #endif /* DROPBEAR_ECDH */
 
 #if DROPBEAR_CURVE25519
-/* Referred to directly */
 static const struct dropbear_kex kex_curve25519 = {DROPBEAR_KEX_CURVE25519, NULL, 0, NULL, &sha256_desc };
 #endif
 
+
+#if DROPBEAR_SNTRUP761
+static const struct dropbear_kem_desc sntrup761_desc = {
+	.public_len = crypto_kem_sntrup761_PUBLICKEYBYTES,
+	.secret_len = crypto_kem_sntrup761_SECRETKEYBYTES,
+	.ciphertext_len = crypto_kem_sntrup761_CIPHERTEXTBYTES,
+	.output_len = crypto_kem_sntrup761_BYTES,
+	.kem_gen = crypto_kem_sntrup761_keypair,
+	.kem_enc = crypto_kem_sntrup761_enc,
+	.kem_dec = crypto_kem_sntrup761_dec,
+};
+static const struct dropbear_kex kex_sntrup761 = {DROPBEAR_KEX_PQHYBRID, NULL, 0, &sntrup761_desc, &sha512_desc };
+#endif
+
+/* For sntrup761 */
+volatile int16_t crypto_int16_optblocker = 0;
+volatile int32_t crypto_int32_optblocker = 0;
+volatile int64_t crypto_int64_optblocker = 0;
+
+
 /* data == NULL for non-kex algorithm identifiers */
 algo_type sshkex[] = {
+#if DROPBEAR_SNTRUP761
+	{"sntrup761x25519-sha512", 0, &kex_sntrup761, 1, NULL},
+	{"sntrup761x25519-sha512@openssh.com", 0, &kex_sntrup761, 1, NULL},
+#endif
 #if DROPBEAR_CURVE25519
 	{"curve25519-sha256", 0, &kex_curve25519, 1, NULL},
 	{"curve25519-sha256@libssh.org", 0, &kex_curve25519, 1, NULL},
