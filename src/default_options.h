@@ -185,6 +185,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * group1 - 1024 bit, sha1
  * curve25519 - elliptic curve DH
  * ecdh - NIST elliptic curve DH (256, 384, 521)
+ * sntrup761 - post-quantum hybrid with x25519.
  *
  * group1 is too small for security though is necessary if you need
      compatibility with some implementations such as Dropbear versions < 0.53
@@ -194,6 +195,10 @@ IMPORTANT: Some options will require "make clean" after changes */
  * curve25519 increases binary size by ~2,5kB on x86-64
  * including either ECDH or ECDSA increases binary size by ~30kB on x86-64
 
+ * sntrup761 is recommended to avoid possible decryption
+ * by future quantum computers.
+ * It is fast, but adds ~9kB code size (32-bit armv7)
+
  * Small systems should generally include either curve25519 or ecdh for performance.
  * curve25519 is less widely supported but is faster
  */
@@ -201,6 +206,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
 #define DROPBEAR_CURVE25519 1
+#define DROPBEAR_SNTRUP761 1
 #define DROPBEAR_ECDH 1
 #define DROPBEAR_DH_GROUP1 0
 

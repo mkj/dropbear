@@ -61,6 +61,9 @@ jobs:
             # enable all options
             nondefault: 1
             configure_flags: --enable-pam
+            # sntrup761.c is not c89 compliant
+            localoptions: |
+              #define DROPBEAR_SNTRUP761 0
 
           - name: macos 14
             os: macos-14
@@ -134,7 +137,7 @@ jobs:
               #define DROPBEAR_USE_PASSWORD_ENV 0
               #define DROPBEAR_SFTPSERVER 0
 
-          - name: other algo combos
+          - name: no sha1
             runcheck: 'no'
             # disables all sha1
             localoptions: |
@@ -217,7 +220,7 @@ jobs:
         if: ${{ matrix.nondefault }}
         run: |
           # Turn on anything that's off by default. Rough but seems sufficient
-          grep ' 0$' src/default_options.h | sed 's/0$/1/' > localoptions.h
+          grep ' 0$' src/default_options.h | sed 's/0$/1/' >> localoptions.h
           # PAM clashes with password
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
           # 1 second timeout is too short
