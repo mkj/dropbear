@@ -332,6 +332,12 @@ void session_cleanup() {
 		}
 		m_free(ses.keys->recv.zstream);
 	}
+	if (ses.keys->trans.zstream != NULL) {
+		if (deflateEnd(ses.keys->trans.zstream) == Z_STREAM_ERROR) {
+			dropbear_exit("Crypto error");
+		}
+		m_free(ses.keys->trans.zstream);
+	}
 #endif
 
 	m_free(ses.remoteident);
