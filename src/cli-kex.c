@@ -186,9 +186,9 @@ void recv_msg_kexdh_reply() {
 #if DROPBEAR_PQHYBRID
 		case DROPBEAR_KEX_PQHYBRID:
 			{
-			buffer *ecdh_qs = buf_getstringbuf(ses.payload);
-			kexpqhybrid_comb_key(cli_ses.pqhybrid_param, ecdh_qs, hostkey);
-			buf_free(ecdh_qs);
+			buffer *q_s = buf_getstringbuf(ses.payload);
+			kexpqhybrid_comb_key(cli_ses.pqhybrid_param, q_s, hostkey);
+			buf_free(q_s);
 			}
 			break;
 #endif
