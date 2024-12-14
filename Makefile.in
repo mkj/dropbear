@@ -297,7 +297,8 @@ check: lint
 # list of fuzz targets
 FUZZ_TARGETS=fuzzer-preauth fuzzer-pubkey fuzzer-verify fuzzer-preauth_nomaths \
 	fuzzer-kexdh fuzzer-kexecdh fuzzer-kexcurve25519 fuzzer-client fuzzer-client_nomaths \
-	fuzzer-postauth_nomaths fuzzer-cliconf
+	fuzzer-postauth_nomaths fuzzer-cliconf \
+	fuzzer-kexsntrup-srv fuzzer-kexsntrup-cli
 
 FUZZER_OPTIONS = $(addsuffix .options, $(FUZZ_TARGETS))
 FUZZ_OBJS = $(addprefix fuzz/,$(addsuffix .o,$(FUZZ_TARGETS))) \
