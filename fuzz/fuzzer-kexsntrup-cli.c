@@ -25,7 +25,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 
 	if (setjmp(fuzz.jmp) == 0) {
 		/* Arbitrary key to write into a buffer */
-		sign_key *hostkey = cli_opts.privkeys->first;
+		sign_key *hostkey = cli_opts.privkeys->first->item;
 		ses.newkeys = keep_newkeys;
 
 		struct kex_pqhybrid_param *param = gen_kexpqhybrid_param();
