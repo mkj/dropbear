@@ -124,7 +124,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 
 /* Message integrity. sha2-256 is recommended as a default,
    sha1 for compatibility */
-#define DROPBEAR_SHA1_HMAC 1
+#define DROPBEAR_SHA1_HMAC 0
 #define DROPBEAR_SHA2_256_HMAC 1
 #define DROPBEAR_SHA2_512_HMAC 0
 #define DROPBEAR_SHA1_96_HMAC 0
@@ -137,9 +137,8 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_RSA 1
 /* Newer SSH implementations use SHA256 for RSA signatures. SHA1
  * support is required to communicate with some older implementations.
- * It will be removed in future due to SHA1 insecurity, it can be
- * disabled with DROPBEAR_RSA_SHA1 set to 0 */
-#define DROPBEAR_RSA_SHA1 1
+ * It is disabled by default. */
+#define DROPBEAR_RSA_SHA1 0
 
 /* DSS may be necessary to connect to some systems but is not
  * recommended for new keys (1024 bits is small, and it uses SHA1).
@@ -202,7 +201,7 @@ IMPORTANT: Some options will require "make clean" after changes */
  * Small systems should generally include either curve25519 or ecdh for performance.
  * curve25519 is less widely supported but is faster
  */
-#define DROPBEAR_DH_GROUP14_SHA1 1
+#define DROPBEAR_DH_GROUP14_SHA1 0
 #define DROPBEAR_DH_GROUP14_SHA256 1
 #define DROPBEAR_DH_GROUP16 0
 #define DROPBEAR_CURVE25519 1
