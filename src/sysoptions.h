@@ -436,6 +436,11 @@
 #endif
 #define DROPBEAR_DSS 1
 
+#if defined(DROPBEAR_RSA_SHA1)
+#undef DROPBEAR_RSA_SHA1
+#endif
+#define DROPBEAR_RSA_SHA1 1
+
 #if defined(DROPBEAR_USE_SSH_CONFIG)
 #undef DROPBEAR_USE_SSH_CONFIG
 #endif
