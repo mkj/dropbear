@@ -220,7 +220,7 @@
 #define DROPBEAR_SK_ED25519 ((DROPBEAR_SK_KEYS) && (DROPBEAR_ED25519))
 #endif
 
-#define DROPBEAR_PQHYBRID DROPBEAR_SNTRUP761
+#define DROPBEAR_PQHYBRID (DROPBEAR_SNTRUP761 || DROPBEAR_MLKEM768)
 #define DROPBEAR_CURVE25519_DEP (DROPBEAR_CURVE25519 || DROPBEAR_PQHYBRID)
 
 /* Dropbear only uses server-sig-algs, only needed if we have rsa-sha256 pubkey auth */
@@ -273,7 +273,9 @@
 #endif
 
 /* For kex hash buffer, worst case size for Q_C || Q_S || K */
-#if DROPBEAR_SNTRUP761
+#if DROPBEAR_MLKEM768
+#define MAX_KEX_PARTS (2*4 + 1184 + 1088 + 32*2 + 68)
+#elif DROPBEAR_SNTRUP761
 /* 2337 */
 #define MAX_KEX_PARTS (2*4 + 1158 + 1039 + 32*2 + 68)
 #elif DROPBEAR_DH_GROUP16
