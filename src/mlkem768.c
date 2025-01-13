@@ -66,7 +66,7 @@ int
 crypto_kem_mlkem768_enc(unsigned char *c, unsigned char *k,
 const unsigned char *pk)
 {
-	u_char rnd[LIBCRUX_ML_KEM_ENC_PRNG_LEN];
+	unsigned char rnd[LIBCRUX_ML_KEM_ENC_PRNG_LEN];
 	struct libcrux_mlkem768_enc_result enc;
 	struct libcrux_mlkem768_pk mlkem_pub;
 
