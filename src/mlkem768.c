@@ -41,7 +41,7 @@
 
 #include "kex.h"
 
-#ifdef DROPBEAR_MLKEM768
+#if DROPBEAR_MLKEM768
 
 #include "libcrux_mlkem768_sha3.h"
 #include "mlkem768.h"
@@ -51,7 +51,7 @@
 int
 crypto_kem_mlkem768_keypair(unsigned char *pk, unsigned char *sk)
 {
-	u_char rnd[LIBCRUX_ML_KEM_KEY_PAIR_PRNG_LEN];
+	unsigned char rnd[LIBCRUX_ML_KEM_KEY_PAIR_PRNG_LEN];
 	struct libcrux_mlkem768_keypair keypair;
 
 	genrandom(rnd, sizeof(rnd));
