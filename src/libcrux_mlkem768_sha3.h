@@ -214,9 +214,10 @@ static inline uint8_t core_num__u8_6__wrapping_sub(uint8_t x, uint8_t y) {
 #endif
 
 #pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wpragmas"
+#pragma GCC diagnostic ignored "-Wunknown-warning-option"
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-#pragma GCC diagnostic ignored "-Wpragmas"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
 #pragma GCC diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
 /* from libcrux/libcrux-ml-kem/cg/libcrux_core.h */
