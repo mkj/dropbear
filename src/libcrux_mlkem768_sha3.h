@@ -217,7 +217,7 @@ static inline uint8_t core_num__u8_6__wrapping_sub(uint8_t x, uint8_t y) {
 #pragma GCC diagnostic ignored "-Wunused-parameter"
 #pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
 #pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
-
+#pragma GCC diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
 /* from libcrux/libcrux-ml-kem/cg/libcrux_core.h */
 /*
  * SPDX-FileCopyrightText: 2024 Cryspen Sarl <info@cryspen.com>
