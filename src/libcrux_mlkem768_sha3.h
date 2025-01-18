@@ -213,6 +213,10 @@ static inline uint8_t core_num__u8_6__wrapping_sub(uint8_t x, uint8_t y) {
 }
 #endif
 
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
+
 /* from libcrux/libcrux-ml-kem/cg/libcrux_core.h */
 /*
  * SPDX-FileCopyrightText: 2024 Cryspen Sarl <info@cryspen.com>
@@ -12336,3 +12340,5 @@ typedef int16_t
 #define LIBCRUX_ML_KEM_ENC_PRNG_LEN 32
 
 #endif
+
+#pragma GCC diagnostic pop
