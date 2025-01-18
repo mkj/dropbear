@@ -64,6 +64,7 @@ jobs:
             # sntrup761.c is not c89 compliant
             localoptions: |
               #define DROPBEAR_SNTRUP761 0
+              #define DROPBEAR_MLKEM768 0
 
           - name: macos 14
             os: macos-14
