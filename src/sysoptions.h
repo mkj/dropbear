@@ -165,6 +165,18 @@
 #define DROPBEAR_ECC_384 (DROPBEAR_ECC)
 #define DROPBEAR_ECC_521 (DROPBEAR_ECC)
 
+/* Only include necessary ECC curves building libtomcrypt */
+#define LTC_NO_CURVES
+#if DROPBEAR_ECC_256
+#define LTC_ECC256
+#endif
+#if DROPBEAR_ECC_384
+#define LTC_ECC384
+#endif
+#if DROPBEAR_ECC_521
+#define LTC_ECC521
+#endif
+
 #define DROPBEAR_LTC_PRNG (DROPBEAR_ECC)
 
 /* RSA can be vulnerable to timing attacks which use the time required for
