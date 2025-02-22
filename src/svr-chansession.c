@@ -1035,6 +1035,10 @@ static void execchild(const void *user_data) {
 	if (chansess->client_string) {
 		addnewvar("SSH_CLIENT", chansess->client_string);
 	}
+
+	if (ses.authstate.org_username != NULL) {
+		addnewvar("SSH_ORGUSER", ses.authstate.org_username);
+	}
 	
 	if (chansess->original_command) {
 		addnewvar("SSH_ORIGINAL_COMMAND", chansess->original_command);
