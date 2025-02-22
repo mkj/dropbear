@@ -43,9 +43,8 @@
 
 #if DROPBEAR_MLKEM768
 
-
-
 #include "dbutil.h"
+#include "compat.h"
 
 #pragma GCC diagnostic push
 #pragma GCC diagnostic ignored "-Wunused-parameter"
