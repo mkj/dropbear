@@ -13,7 +13,7 @@ static void setup() {
 	fuzz_cli_setup();
 
 	keep_newkeys = (struct key_context*)m_malloc(sizeof(struct key_context));
-	keep_newkeys->algo_kex = fuzz_get_algo(sshkex, "mlkem761x25519-sha256");
+	keep_newkeys->algo_kex = fuzz_get_algo(sshkex, "mlkem768x25519-sha256");
 }
 
 int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
