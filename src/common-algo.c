@@ -305,12 +305,12 @@ volatile int64_t crypto_int64_optblocker = 0;
 
 /* data == NULL for non-kex algorithm identifiers */
 algo_type sshkex[] = {
-#if DROPBEAR_MLKEM768
-	{"mlkem768x25519-sha256", 0, &kex_mlkem768, 1, NULL},
-#endif
 #if DROPBEAR_SNTRUP761
 	{"sntrup761x25519-sha512", 0, &kex_sntrup761, 1, NULL},
 	{"sntrup761x25519-sha512@openssh.com", 0, &kex_sntrup761, 1, NULL},
+#endif
+#if DROPBEAR_MLKEM768
+	{"mlkem768x25519-sha256", 0, &kex_mlkem768, 1, NULL},
 #endif
 #if DROPBEAR_CURVE25519
 	{"curve25519-sha256", 0, &kex_curve25519, 1, NULL},
