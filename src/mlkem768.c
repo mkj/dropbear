@@ -61,11 +61,15 @@ crypto_kem_mlkem768_keypair(unsigned char *pk, unsigned char *sk)
 	unsigned char rnd[LIBCRUX_ML_KEM_KEY_PAIR_PRNG_LEN];
 	struct libcrux_mlkem768_keypair keypair;
 
+	static_assert(sizeof(keypair.sk.value) == crypto_kem_mlkem768_SECRETKEYBYTES, "len");
+	static_assert(sizeof(keypair.pk.value) == crypto_kem_mlkem768_PUBLICKEYBYTES, "len");
+
 	genrandom(rnd, sizeof(rnd));
 	keypair = libcrux_ml_kem_mlkem768_portable_generate_key_pair(rnd);
 	memcpy(pk, keypair.pk.value, crypto_kem_mlkem768_PUBLICKEYBYTES);
 	memcpy(sk, keypair.sk.value, crypto_kem_mlkem768_SECRETKEYBYTES);
-	/* success */
+	m_burn(rnd, sizeof(rnd));
+	m_burn(&keypair, sizeof(keypair));
 	return 0;
 }
 
@@ -77,12 +81,19 @@ const unsigned char *pk)
 	struct libcrux_mlkem768_enc_result enc;
 	struct libcrux_mlkem768_pk mlkem_pub;
 
+	static_assert(sizeof(mlkem_pub.value) == crypto_kem_mlkem768_PUBLICKEYBYTES, "len");
+	static_assert(sizeof(enc.fst.value) == crypto_kem_mlkem768_CIPHERTEXTBYTES, "len");
+	static_assert(sizeof(enc.snd) == crypto_kem_mlkem768_BYTES, "len");
+
 	memcpy(mlkem_pub.value, pk, crypto_kem_mlkem768_PUBLICKEYBYTES);
 	/* generate and encrypt KEM key with client key */
 	genrandom(rnd, sizeof(rnd));
 	enc = libcrux_ml_kem_mlkem768_portable_encapsulate(&mlkem_pub, rnd);
 	memcpy(c, enc.fst.value, sizeof(enc.fst.value));
 	memcpy(k, enc.snd, sizeof(enc.snd));
+
+	m_burn(rnd, sizeof(rnd));
+	m_burn(&enc, sizeof(enc));
 	return 0;
 }
 
@@ -93,10 +104,15 @@ const unsigned char *sk)
 	struct libcrux_mlkem768_sk mlkem_priv;
 	struct libcrux_mlkem768_ciphertext mlkem_ciphertext;
 
-	memcpy(mlkem_priv.value, &k,sizeof(k));
-	memcpy(mlkem_ciphertext.value, &c, sizeof(c));
+	static_assert(sizeof(mlkem_priv.value) == crypto_kem_mlkem768_SECRETKEYBYTES, "len");
+	static_assert(sizeof(mlkem_ciphertext.value) == crypto_kem_mlkem768_CIPHERTEXTBYTES, "len");
+
+	memcpy(mlkem_priv.value, sk, crypto_kem_mlkem768_SECRETKEYBYTES);
+	memcpy(mlkem_ciphertext.value, c, crypto_kem_mlkem768_CIPHERTEXTBYTES);
 	libcrux_ml_kem_mlkem768_portable_decapsulate(&mlkem_priv,
-	    &mlkem_ciphertext, sk);
+	    &mlkem_ciphertext, k);
+	m_burn(&mlkem_priv, sizeof(mlkem_priv));
+	m_burn(&mlkem_ciphertext, sizeof(mlkem_ciphertext));
 	return 0;
 }
 
