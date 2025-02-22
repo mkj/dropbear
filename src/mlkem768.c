@@ -43,9 +43,16 @@
 
 #if DROPBEAR_MLKEM768
 
-#include "libcrux_mlkem768_sha3.h"
-#include "mlkem768.h"
+
+
 #include "dbutil.h"
+
+#pragma GCC diagnostic push
+#pragma GCC diagnostic ignored "-Wunused-parameter"
+#include "libcrux_mlkem768_sha3.h"
+#pragma GCC diagnostic pop
+
+#include "mlkem768.h"
 #include "dbrandom.h"
 
 int

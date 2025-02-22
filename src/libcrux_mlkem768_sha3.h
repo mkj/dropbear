@@ -1,4 +1,4 @@
-/*  $OpenBSD: libcrux_mlkem768_sha3.h,v 1.2 2024/10/27 02:06:01 djm Exp $ */
+/*  $OpenBSD$ */
 
 /* Extracted from libcrux revision 84c5d87b3092c59294345aa269ceefe0eb97cc35 */
 
@@ -26,15 +26,13 @@
  * SOFTWARE.
  */
 
-#if DROPBEAR_MLKEM768
-
 #if !defined(__GNUC__) || (__GNUC__ < 2)
 # define __attribute__(x)
 #endif
 #define KRML_MUSTINLINE inline
 #define KRML_NOINLINE __attribute__((noinline, unused))
 #define KRML_HOST_EPRINTF(...)
-#define KRML_HOST_EXIT(x) exit(-1)
+#define KRML_HOST_EXIT(x) dropbear_exit("mlkem")
 
 /* from libcrux/libcrux-ml-kem/cg/eurydice_glue.h */
 /*
@@ -213,13 +211,6 @@ static inline uint8_t core_num__u8_6__wrapping_sub(uint8_t x, uint8_t y) {
 }
 #endif
 
-#pragma GCC diagnostic push
-#pragma GCC diagnostic ignored "-Wpragmas"
-#pragma GCC diagnostic ignored "-Wunknown-warning-option"
-#pragma GCC diagnostic ignored "-Wunused-parameter"
-#pragma GCC diagnostic ignored "-Wdiscarded-qualifiers"
-#pragma GCC diagnostic ignored "-Wdeclaration-after-statement"
-#pragma GCC diagnostic ignored "-Wincompatible-pointer-types-discards-qualifiers"
 /* from libcrux/libcrux-ml-kem/cg/libcrux_core.h */
 /*
  * SPDX-FileCopyrightText: 2024 Cryspen Sarl <info@cryspen.com>
@@ -11034,7 +11025,7 @@ libcrux_ml_kem_ind_cca_instantiations_portable_decapsulate_2e(
 */
 static inline void libcrux_ml_kem_mlkem768_portable_decapsulate(
     libcrux_ml_kem_types_MlKemPrivateKey_55 *private_key,
-    libcrux_ml_kem_mlkem768_MlKem768Ciphertext *ciphertext, const uint8_t ret[32U]) {
+    libcrux_ml_kem_mlkem768_MlKem768Ciphertext *ciphertext, uint8_t ret[32U]) {
   libcrux_ml_kem_ind_cca_instantiations_portable_decapsulate_2e(
       private_key, ciphertext, ret);
 }
@@ -12341,7 +12332,3 @@ typedef int16_t
 /* defines for PRNG inputs */
 #define LIBCRUX_ML_KEM_KEY_PAIR_PRNG_LEN 64
 #define LIBCRUX_ML_KEM_ENC_PRNG_LEN 32
-
-#endif
-
-#pragma GCC diagnostic pop
