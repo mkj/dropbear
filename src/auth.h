@@ -129,6 +129,7 @@ struct AuthState {
 	char *pw_shell;
 	char *pw_name;
 	char *pw_passwd;
+	char *org_username;		/* save org userid given and set this in envvar SSH_ORGUSER */
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	struct PubKeyOptions* pubkey_options;
 	char *pubkey_info;
