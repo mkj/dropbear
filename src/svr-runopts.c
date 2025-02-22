@@ -47,6 +47,7 @@ static void printhelp(const char * progname) {
 					"-b bannerfile	Display the contents of bannerfile"
 					" before user login\n"
 					"		(default: none)\n"
+					"-H directory	Default hostkeys directory: %s\n"
 					"-r keyfile      Specify hostkeys (repeatable)\n"
 					"		defaults: \n"
 #if DROPBEAR_DSS
@@ -87,6 +88,7 @@ static void printhelp(const char * progname) {
 					"-B		Allow blank password logins\n"
 					"-t		Enable two-factor authentication (both password and public key required)\n"
 #endif
+					"-U userid	Force any logins to this userid\n"
 					"-T		Maximum authentication tries (default %d)\n"
 #if DROPBEAR_SVR_LOCALANYFWD
 					"-j		Disable local port forwarding\n"
@@ -122,6 +124,7 @@ static void printhelp(const char * progname) {
 					"-v    verbose (repeat for more verbose)\n"
 #endif
 					,DROPBEAR_VERSION, progname,
+					svr_opts.hostdir,
 #if DROPBEAR_DSS
 					DSS_PRIV_FILENAME,
 #endif
@@ -193,6 +196,19 @@ void svr_getopts(int argc, char ** argv) {
 #ifndef DISABLE_ZLIB
 	opts.allow_compress = 1;
 #endif 
+
+	svr_opts.hostdir = m_strdup("/etc/dropbear");	/* default directory for host keys */
+	svr_opts.forceuser = NULL;			/* no force user if we are root */
+	if ( geteuid() != 0 ) {				/* we are a nonroot user */
+		struct passwd *pw;
+		pw = getpwuid( geteuid() );
+		if (pw) {
+		        int len=strlen(pw->pw_dir)+6;	/* use default directory <userhomedir>/.ssh */
+                        svr_opts.hostdir=m_malloc(len);
+			snprintf(svr_opts.hostdir,len,"%s/.ssh",pw->pw_dir);
+			svr_opts.forceuser=m_strdup(pw->pw_name);
+		}
+	}
 
 	/* not yet
 	opts.ipv4 = 1;
@@ -324,6 +340,12 @@ void svr_getopts(int argc, char ** argv) {
 					svr_opts.multiauthmethod = 1;
 					break;
 #endif
+				case 'H':
+					next = &svr_opts.hostdir;
+					break;
+				case 'U':
+					next = &svr_opts.forceuser;
+					break;
 				case 'h':
 					printhelp(argv[0]);
 					exit(EXIT_SUCCESS);
