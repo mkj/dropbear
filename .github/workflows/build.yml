@@ -4,6 +4,7 @@
 name: BuildTest
 on:
   pull_request:
+  workflow_dispatch:
   push:
     branches:
       - master
