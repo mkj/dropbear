@@ -65,7 +65,7 @@ _CLISVROBJS=common-session.o packet.o common-algo.o common-kex.o \
 		tcp-accept.o listener.o process-packet.o dh_groups.o \
 		common-runopts.o circbuffer.o list.o netio.o chachapoly.o gcm.o \
 		kex-x25519.o kex-dh.o kex-ecdh.o kex-pqhybrid.o \
-		sntrup761.o
+		sntrup761.o mlkem768.o
 CLISVROBJS = $(patsubst %,$(OBJ_DIR)/%,$(_CLISVROBJS))
 
 _KEYOBJS=dropbearkey.o
