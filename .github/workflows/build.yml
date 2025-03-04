@@ -40,9 +40,9 @@ jobs:
             runcheck: 'no'
             make_target: PROGRAMS=dropbear
 
-          - name: bundled libtom, bionic , no writev()
+          - name: bundled libtom, 22.04, no writev()
             # test can use an older distro with bundled libtommath
-            os: ubuntu-20.04
+            os: ubuntu-22.04
             configure_flags: --enable-bundled-libtom --enable-werror
             # NOWRITEV is unrelated, test here to save a job
             nowritev: 1
