@@ -188,21 +188,18 @@ IMPORTANT: Some options will require "make clean" after changes */
  * mlkem768 - post-quantum hybrid with x25519.
  *
  * group1 is too small for security though is necessary if you need
-     compatibility with some implementations such as Dropbear versions < 0.53
+ *   compatibility with some implementations such as Dropbear versions < 0.53
  * group14 is supported by most implementations.
  * group16 provides a greater strength level but is slower and increases binary size
  * curve25519 and ecdh algorithms are faster than non-elliptic curve methods
  * curve25519 increases binary size by ~2,5kB on x86-64
  * including either ECDH or ECDSA increases binary size by ~30kB on x86-64
-
- * sntrup761 is recommended to avoid possible decryption
- * by future quantum computers.
- * It is fast, but adds ~9kB code size (32-bit armv7)
-
- * mlkem768 is also recommended to avoid possible decryption
- * by future quantum computers.
- * Small systems should generally include either curve25519 or ecdh for performance.
- * curve25519 is less widely supported but is faster
+ *
+ * sntrup761 and mlkem768 are recommended to avoid possible decryption
+ * by future quantum computers. On systems with sufficient space both
+ * are recommended. sntrup761 is the most widely supported at time of writing,
+ * recommended when space is limited. Both are fast.
+ * sntrup uses ~9kB code size, mlkem uses ~34kB code size (32-bit armv7).
  */
 #define DROPBEAR_DH_GROUP14_SHA1 0
 #define DROPBEAR_DH_GROUP14_SHA256 1
