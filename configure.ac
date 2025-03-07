@@ -553,7 +553,14 @@ AC_CHECK_FUNCS(htole64)
 AC_CHECK_DECL(htole64,
 	[
 	AC_DEFINE(HAVE_DECL_HTOLE64,1,htole64 is a macro)
-	],,)
+	],,[
+	#ifdef HAVE_ENDIAN_H
+		#include <endian.h>
+	#endif
+	#ifdef HAVE_SYS_ENDIAN_H
+		#include <sys/endian.h>
+	#endif
+	])
 
 # POSIX monotonic time
 AC_CHECK_FUNCS(clock_gettime)
