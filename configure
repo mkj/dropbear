@@ -7620,7 +7620,15 @@ then :
 
 fi
 
-ac_fn_check_decl "$LINENO" "htole64" "ac_cv_have_decl_htole64" "$ac_includes_default" "$ac_c_undeclared_builtin_options" "CFLAGS"
+ac_fn_check_decl "$LINENO" "htole64" "ac_cv_have_decl_htole64" "
+	#ifdef HAVE_ENDIAN_H
+		#include <endian.h>
+	#endif
+	#ifdef HAVE_SYS_ENDIAN_H
+		#include <sys/endian.h>
+	#endif
+
+" "$ac_c_undeclared_builtin_options" "CFLAGS"
 if test "x$ac_cv_have_decl_htole64" = xyes
 then :
 
