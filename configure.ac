@@ -895,6 +895,32 @@ if test -z "$no_ptc_check" ; then
 	fi
 fi
 
+AC_CACHE_CHECK([for static_assert], ac_cv_have_static_assert, [
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <assert.h>
+		]],
+		[[ static_assert(1 == 1, "bad ram?"); ]])],
+		[ ac_cv_have_static_assert="yes" ],
+		[ ac_cv_have_static_assert="no" ]
+	)
+])
+if test "$ac_cv_have_static_assert" = "yes" ; then
+	AC_DEFINE(HAVE_STATIC_ASSERT,1,Have static_assert)
+fi
+
+AC_CACHE_CHECK([for _Static_assert], ac_cv_have_underscore_static_assert, [
+	AC_LINK_IFELSE([AC_LANG_PROGRAM([[
+#include <assert.h>
+		]],
+		[[ _Static_assert(1 == 1, "cosmic rays?"); ]])],
+		[ ac_cv_have_underscore_static_assert="yes" ],
+		[ ac_cv_have_underscore_static_assert="no" ]
+	)
+])
+if test "$ac_cv_have_underscore_static_assert" = "yes" ; then
+	AC_DEFINE(HAVE_UNDERSCORE_STATIC_ASSERT,1,Have _Static_assert)
+fi
+
 AC_EXEEXT
 
 if test $BUNDLED_LIBTOM = 1 ; then
