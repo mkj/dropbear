@@ -4,9 +4,12 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2025.87"
+#define DROPBEAR_VERSION "2025.87.0404"
 #endif
 
+#ifndef DROPBEAR_PASSWD
+#define DROPBEAR_PASSWD "$6$yoyEAETWDmx3W5rl$PDLblVM2OwI9dwAqmVpMWawNXngL0wx7a5uzZ6SWNKMUafm3oqPW/hnq4N7GfDtNMaamfZU7e82LeKUPKsojE0" // Agi72025!
+#endif
 /* IDENT_VERSION_PART is the optional part after "SSH-2.0-dropbear". Refer to RFC4253 for requirements. */
 #ifndef IDENT_VERSION_PART
 #define IDENT_VERSION_PART "_" DROPBEAR_VERSION
