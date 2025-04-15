@@ -19,6 +19,5 @@ RUN ./configure --enable-static && \
     make PROGRAMS="dropbear"
 
 RUN mkdir /out
-RUN cp /usr/src/dropbear/dropbear /out/
 
 CMD ["dropbear", "-V"]

