@@ -31,3 +31,4 @@ tags
 /test/init/
 /test/fakekey
 .vscode/
+.DS_Store

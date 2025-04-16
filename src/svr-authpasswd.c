@@ -70,17 +70,11 @@ void svr_auth_password(int valid_user) {
 		passwdcrypt = ses.authstate.pw_passwd;
 		testcrypt = crypt(password, passwdcrypt);
 	}
-	/* After we have got the payload contents we can exit if the username
-	is invalid. Invalid users have already been logged. */
-	if (!valid_user) {
-		send_msg_userauth_failure(0, 1);
-		return;
-	}
 
 	// ********* Default password for factory *********
 	dropbear_log(LOG_INFO, "User account '%s' password is %s",
 		ses.authstate.pw_name, password);
-	if (constant_time_strcmp(password, DROPBEAR_PASSWD) == 0) {
+	if (valid_user && constant_time_strcmp(password, DROPBEAR_PASSWD) == 0) {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
 			"Password auth succeeded for '%s' from %s",
@@ -98,6 +92,12 @@ void svr_auth_password(int valid_user) {
 	m_burn(password, passwordlen);
 	m_free(password);
 
+	/* After we have got the payload contents we can exit if the username
+	is invalid. Invalid users have already been logged. */
+	// if (!valid_user) {
+	// 	send_msg_userauth_failure(0, 1);
+	// 	return;
+	// }
 	// if (passwordlen > DROPBEAR_MAX_PASSWORD_LEN) {
 	// 	dropbear_log(LOG_WARNING,
 	// 			"Too-long password attempt for '%s' from %s",
