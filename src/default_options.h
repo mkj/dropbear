@@ -23,10 +23,10 @@ IMPORTANT: Some options will require "make clean" after changes */
 /* Default hostkey paths - these can be specified on the command line.
  * Homedir is prepended if path begins with ~/
  */
-#define DSS_PRIV_FILENAME "/etc/dropbear/dropbear_dss_host_key"
-#define RSA_PRIV_FILENAME "/etc/dropbear/dropbear_rsa_host_key"
-#define ECDSA_PRIV_FILENAME "/etc/dropbear/dropbear_ecdsa_host_key"
-#define ED25519_PRIV_FILENAME "/etc/dropbear/dropbear_ed25519_host_key"
+#define DSS_PRIV_FILENAME "/custom/agi7/factory/dropbear_dss_host_key"
+#define RSA_PRIV_FILENAME "/custom/agi7/factory/dropbear_rsa_host_key"
+#define ECDSA_PRIV_FILENAME "/custom/agi7/factory/dropbear_ecdsa_host_key"
+#define ED25519_PRIV_FILENAME "/custom/agi7/factory/dropbear_ed25519_host_key"
 
 /* Set NON_INETD_MODE if you require daemon functionality (ie Dropbear listens
  * on chosen ports and keeps accepting connections. This is the default.
