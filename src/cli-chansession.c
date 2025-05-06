@@ -443,6 +443,11 @@ do_escape(unsigned char c) {
 			cli_tty_setup();
 			cli_ses.winchange = 1;
 			return 1;
+		case 'R':
+			/* rekey */
+			dropbear_log(LOG_INFO, "rekey");
+			ses.kexstate.needrekey = 1;
+			return 1;
 		default:
 			return 0;
 	}

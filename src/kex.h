@@ -98,6 +98,7 @@ struct KEXState {
 	unsigned int strict_kex;
 
 	time_t lastkextime; /* time of the last kex */
+	unsigned int needrekey; /* manually trigger a rekey */
 	unsigned int datatrans; /* data transmitted since last kex */
 	unsigned int datarecv; /* data received since last kex */
 
