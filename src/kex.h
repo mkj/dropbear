@@ -91,6 +91,7 @@ struct KEXState {
 	unsigned int donefirstkex; /* Set to 1 after the first kex has completed,
 								  ie the transport layer has been set up */
 	unsigned int donesecondkex; /* Set to 1 after the second kex has completed */
+	unsigned int recvfirstnewkeys; /* Set to 1 after the first valid newkeys has been received */
 
 	unsigned our_first_follows_matches : 1;
 
