@@ -74,7 +74,7 @@
 static char * authorized_keys_filepath(void);
 static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen);
-static int checkpubkeyperms(void);
+static int checkpubkeyperms(unsigned int depth);
 static void send_msg_userauth_pk_ok(const char* sigalgo, unsigned int sigalgolen,
 		const unsigned char* keyblob, unsigned int keybloblen);
 static int checkfileperm(char * filename);
@@ -477,7 +477,7 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 	}
 #endif
 	/* check file permissions, also whether file exists */
-	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
+	if (checkpubkeyperms(svr_opts.authorized_keys_dir_check_depth) == DROPBEAR_FAILURE) {
 		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
 	} else {
 		/* we don't need to check pw and pw_dir for validity, since
@@ -540,9 +540,10 @@ out:
  * root or the user, and are g-w, o-w.
  * When this path is inside the user's home dir it checks up to and including
  * the home dir, otherwise it checks every path component. */
-static int checkpubkeyperms() {
+ static int checkpubkeyperms(unsigned int depth) {
 	char *path = authorized_keys_filepath(), *sep = NULL;
 	int ret = DROPBEAR_SUCCESS;
+	unsigned int level = 0;
 
 	TRACE(("enter checkpubkeyperms"))
 
@@ -557,7 +558,16 @@ static int checkpubkeyperms() {
 			TRACE(("checkpubkeyperms: bad perm on %s", path))
 			ret = DROPBEAR_FAILURE;
 		}
+
+		level++;
+
+		/* Stop if we reached $HOME or / */
 		if (strcmp(path, ses.authstate.pw_dir) == 0 || strcmp(path, "/") == 0) {
+			break;
+		}
+
+		/* Stop if depth limit reached and we haven't hit $HOME or / yet */
+		if (depth > 0 && level >= depth) {
 			break;
 		}
 	}

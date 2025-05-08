@@ -63,6 +63,8 @@ static void printhelp(const char * progname) {
 #endif
 #if DROPBEAR_SVR_PUBKEY_AUTH
 					"-D		Directory containing authorized_keys file\n"
+					"-h	Permissions and ownership check depth on\n"
+					"		directory containing authorized_keys file\n"	
 #endif
 #if DROPBEAR_DELAY_HOSTKEY
 					"-R		Create hostkeys as required\n" 
@@ -177,6 +179,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = expand_homedir_path(DROPBEAR_PIDFILE);
 	svr_opts.authorized_keys_dir = "~/.ssh";
+	svr_opts.authorized_keys_dir_check_depth = 0;
 #if DROPBEAR_SVR_LOCALANYFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -232,6 +235,9 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_SVR_PUBKEY_AUTH
 				case 'D':
 					next = &svr_opts.authorized_keys_dir;
+					break;
+				case 'h':
+					next = &svr_opts.authorized_keys_dir_check_depth;
 					break;
 #endif
 				case 'R':
