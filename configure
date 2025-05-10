@@ -2980,7 +2980,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 # Record which revision is being built
-if test -s "`which hg`" && test -d "$srcdir/.hg"; then
+if test -s "`command -v hg`" && test -d "$srcdir/.hg"; then
 	hgrev=`hg id -i -R "$srcdir"`
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: Source directory Mercurial base revision $hgrev" >&5
 printf "%s\n" "$as_me: Source directory Mercurial base revision $hgrev" >&6;}
