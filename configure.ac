@@ -9,7 +9,7 @@ AC_PREREQ([2.59])
 AC_INIT
 
 # Record which revision is being built
-if test -s "`which hg`" && test -d "$srcdir/.hg"; then
+if test -s "`command -v hg`" && test -d "$srcdir/.hg"; then
 	hgrev=`hg id -i -R "$srcdir"`
 	AC_MSG_NOTICE([Source directory Mercurial base revision $hgrev])
 fi
