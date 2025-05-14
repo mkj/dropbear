@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -69,9 +69,9 @@
 
 #define MAX_FMT 100
 
-static void generic_dropbear_exit(int exitcode, const char* format, 
+static void generic_dropbear_exit(int exitcode, const char* format,
 		va_list param) ATTRIB_NORETURN;
-static void generic_dropbear_log(int priority, const char* format, 
+static void generic_dropbear_log(int priority, const char* format,
 		va_list param);
 
 void (*_dropbear_exit)(int exitcode, const char* format, va_list param) ATTRIB_NORETURN
@@ -111,7 +111,7 @@ void dropbear_exit(const char* format, ...) {
 	va_end(param);
 }
 
-static void generic_dropbear_exit(int exitcode, const char* format, 
+static void generic_dropbear_exit(int exitcode, const char* format,
 		va_list param) {
 
 	char fmtbuf[300];
@@ -133,7 +133,7 @@ void fail_assert(const char* expr, const char* file, int line) {
 	dropbear_exit("Failed assertion (%s:%d): `%s'", file, line, expr);
 }
 
-static void generic_dropbear_log(int UNUSED(priority), const char* format, 
+static void generic_dropbear_log(int UNUSED(priority), const char* format,
 		va_list param) {
 
 	char printbuf[1024];
@@ -155,7 +155,7 @@ void dropbear_log(int priority, const char* format, ...) {
 }
 
 
-#if DEBUG_TRACE 
+#if DEBUG_TRACE
 
 static double debug_start_time = -1;
 
@@ -707,7 +707,7 @@ void gettime_wrapper(struct timespec *now) {
 	static int linux_monotonic_failed = 0;
 	if (!linux_monotonic_failed) {
 		/* CLOCK_MONOTONIC isn't in some headers */
-		int clock_source_monotonic = 1; 
+		int clock_source_monotonic = 1;
 		if (syscall(SYS_clock_gettime, clock_source_monotonic, now) == 0) {
 			return;
 		} else {

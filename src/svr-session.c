@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -175,7 +175,7 @@ void svr_session(int sock, int childpipe) {
 	svr_chansessinitialise();
 	svr_algos_initialise();
 
-	get_socket_address(ses.sock_in, NULL, NULL, 
+	get_socket_address(ses.sock_in, NULL, NULL,
 			&svr_ses.remotehost, NULL, 1);
 
 	/* set up messages etc */
@@ -245,11 +245,11 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	} else if (ses.authstate.authdone) {
 		/* user has authenticated */
 		snprintf(fullmsg, sizeof(fullmsg),
-				"Exit (%s)%s: %s", 
+				"Exit (%s)%s: %s",
 				ses.authstate.pw_name, fromaddr, exitmsg);
 	} else if (ses.authstate.pw_name) {
 		/* we have a potential user */
-		snprintf(fullmsg, sizeof(fullmsg), 
+		snprintf(fullmsg, sizeof(fullmsg),
 				"Exit before auth%s: (user '%s', %u fails): %s",
 				fromaddr, ses.authstate.pw_name, ses.authstate.failcount, exitmsg);
 		add_delay = 1;
@@ -305,7 +305,7 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 		m_free(svr_opts.ports[i]);
 	}
 
-    
+
 	exit(exitcode);
 
 }
@@ -337,7 +337,7 @@ void svr_dropbear_log(int priority, const char* format, va_list param) {
 		timesec = time(NULL);
 		local_tm = localtime(&timesec);
 		if (local_tm == NULL
-			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S", 
+			|| strftime(datestr, sizeof(datestr), "%b %d %H:%M:%S",
 						local_tm) == 0)
 		{
 			/* upon failure, just print the epoch-seconds time. */

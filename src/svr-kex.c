@@ -1,20 +1,20 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -185,7 +185,7 @@ out:
 /* Generate our side of the diffie-hellman key exchange value (dh_f), and
  * calculate the session key using the diffie-hellman algorithm. Following
  * that, the session hash is calculated, and signed with RSA or DSS. The
- * result is sent to the client. 
+ * result is sent to the client.
  *
  * See the transport RFC4253 section 8 for details
  * or RFC5656 section 4 for elliptic curve variant. */
@@ -262,7 +262,7 @@ static void send_msg_kexdh_reply(mp_int *dh_e, buffer *q_c) {
 	}
 
 	/* calc the signature */
-	buf_put_sign(ses.writepayload, svr_opts.hostkey, 
+	buf_put_sign(ses.writepayload, svr_opts.hostkey,
 			ses.newkeys->algo_signature, ses.hash);
 
 	/* the SSH_MSG_KEXDH_REPLY is done */

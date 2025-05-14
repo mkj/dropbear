@@ -347,7 +347,7 @@ login_write (struct logininfo *li)
 int
 login_utmp_only(struct logininfo *li)
 {
-	li->type = LTYPE_LOGIN; 
+	li->type = LTYPE_LOGIN;
 	login_set_current_time(li);
 # ifdef USE_UTMP
 	utmp_write_entry(li);

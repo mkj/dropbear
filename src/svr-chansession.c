@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -278,7 +278,7 @@ static int newchansess(struct Channel *channel) {
 
 }
 
-static struct logininfo* 
+static struct logininfo*
 chansess_login_alloc(const struct ChanSess *chansess) {
 	struct logininfo * li;
 	li = login_alloc_entry(chansess->pid, ses.authstate.username,
@@ -454,7 +454,7 @@ static int sessionsignal(const struct ChanSess *chansess) {
 	if (kill(chansess->pid, sig) < 0) {
 		TRACE(("sessionsignal: kill() errored"))
 		return DROPBEAR_FAILURE;
-	} 
+	}
 
 	return DROPBEAR_SUCCESS;
 }
@@ -498,7 +498,7 @@ static void get_termmodes(const struct ChanSess *chansess) {
 	}
 
 	len = buf_getint(ses.payload);
-	TRACE(("term mode str %d p->l %d p->p %d", 
+	TRACE(("term mode str %d p->l %d p->p %d",
 				len, ses.payload->len , ses.payload->pos));
 	if (len != ses.payload->len - ses.payload->pos) {
 		dropbear_exit("Bad term mode string");
@@ -634,7 +634,7 @@ static void make_connection_string(struct ChanSess *chansess) {
 	chansess->connection_string = m_malloc(len);
 	snprintf(chansess->connection_string, len, "%s %s %s %s", remote_ip, remote_port, local_ip, local_port);
 
-	/* deprecated but bash only loads .bashrc if SSH_CLIENT is set */ 
+	/* deprecated but bash only loads .bashrc if SSH_CLIENT is set */
 	/* "remoteip remoteport localport" */
 	len = strlen(remote_ip) + 20;
 	chansess->client_string = m_malloc(len);
@@ -686,7 +686,7 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 				m_free(chansess->cmd);
 				chansess->cmd = m_strdup(expand_path);
 				m_free(expand_path);
-			} else 
+			} else
 #endif
 			{
 				m_free(chansess->cmd);
@@ -713,15 +713,15 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 
 #if LOG_COMMANDS
 	if (chansess->cmd) {
-		dropbear_log(LOG_INFO, "User %s executing '%s'", 
+		dropbear_log(LOG_INFO, "User %s executing '%s'",
 						ses.authstate.pw_name, chansess->cmd);
 	} else {
-		dropbear_log(LOG_INFO, "User %s executing login shell", 
+		dropbear_log(LOG_INFO, "User %s executing login shell",
 						ses.authstate.pw_name);
 	}
 #endif
 
-	/* uClinux will vfork(), so there'll be a race as 
+	/* uClinux will vfork(), so there'll be a race as
 	connection_string is freed below. */
 #if !DROPBEAR_VFORK
 	make_connection_string(chansess);
@@ -758,7 +758,7 @@ static int noptycommand(struct Channel *channel, struct ChanSess *chansess) {
 	int ret;
 
 	TRACE(("enter noptycommand"))
-	ret = spawn_command(execchild, chansess, 
+	ret = spawn_command(execchild, chansess,
 			&channel->writefd, &channel->readfd, &channel->errfd,
 			&chansess->pid);
 
@@ -864,7 +864,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 			/* don't show the motd if ~/.hushlogin exists */
 
 			/* 12 == strlen("/.hushlogin\0") */
-			len = strlen(ses.authstate.pw_dir) + 12; 
+			len = strlen(ses.authstate.pw_dir) + 12;
 
 			hushpath = m_malloc(len);
 			snprintf(hushpath, len, "%s/.hushlogin", ses.authstate.pw_dir);
@@ -880,7 +880,7 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 					buf_setpos(motdbuf, 0);
 					while (motdbuf->pos != motdbuf->len) {
 						len = motdbuf->len - motdbuf->pos;
-						len = write(STDOUT_FILENO, 
+						len = write(STDOUT_FILENO,
 								buf_getptr(motdbuf, len), len);
 						buf_incrpos(motdbuf, len);
 					}
@@ -985,7 +985,7 @@ static void execchild(const void *user_data) {
 	if (getuid() == 0) {
 
 		if ((setgid(ses.authstate.pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw_name, 
+			(initgroups(ses.authstate.pw_name,
 						ses.authstate.pw_gid) < 0)) {
 			dropbear_exit("Error changing user group");
 		}

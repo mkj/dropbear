@@ -5,6 +5,6 @@ perl ./parsenames.pl OBJECTS "$a"
 export a=`find . -type f | grep [.]/src | grep [.]h | sed -e 'se\./ee' | xargs`
 perl ./parsenames.pl HEADERS "$a"
 
-# $Source: /cvs/libtom/libtomcrypt/genlist.sh,v $   
-# $Revision: 1.4 $   
-# $Date: 2005/07/17 23:15:12 $ 
+# $Source: /cvs/libtom/libtomcrypt/genlist.sh,v $
+# $Revision: 1.4 $
+# $Date: 2005/07/17 23:15:12 $

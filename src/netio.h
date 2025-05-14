@@ -16,7 +16,7 @@ void set_sock_priority(int sock, enum dropbear_prio prio);
 int get_sock_port(int sock);
 void get_socket_address(int fd, char **local_host, char **local_port,
 		char **remote_host, char **remote_port, int host_lookup);
-void getaddrstring(struct sockaddr_storage* addr, 
+void getaddrstring(struct sockaddr_storage* addr,
 		char **ret_host, char **ret_port, int host_lookup);
 int dropbear_listen(const char* address, const char* port,
 		int *socks, unsigned int sockcount, char **errstring, int *maxfd, const char* interface);

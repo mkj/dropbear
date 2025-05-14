@@ -97,7 +97,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				int len = 100 + strlen(gai_strerror(err));
 				m_free(c->errstring);
 				c->errstring = (char*)m_malloc(len);
-				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s", 
+				snprintf(c->errstring, len, "Error resolving bind address '%s' (port %s). %s",
 						c->bind_address, c->bind_port, gai_strerror(err));
 				TRACE(("Error resolving bind: %s", gai_strerror(err)))
 				close(c->sock);
@@ -113,7 +113,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				int len = 300;
 				m_free(c->errstring);
 				c->errstring = m_malloc(len);
-				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s", 
+				snprintf(c->errstring, len, "Error binding local address '%s' (port %s). %s",
 						c->bind_address, c->bind_port, strerror(keep_errno));
 				close(c->sock);
 				c->sock = -1;
@@ -145,7 +145,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 				if (errno != EINPROGRESS) {
 					m_free(c->errstring);
 					c->errstring = m_strdup(strerror(errno));
-					/* Not entirely sure which kind of errors are normal - 2.6.32 seems to 
+					/* Not entirely sure which kind of errors are normal - 2.6.32 seems to
 					return EPIPE for any (nonblocking?) sendmsg(). just fall back */
 					TRACE(("sendmsg tcp_fastopen failed, falling back. %s", strerror(errno)));
 					/* No kernel MSG_FASTOPEN support. Fall back below */
@@ -219,7 +219,7 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 		int len;
 		len = 100 + strlen(gai_strerror(err));
 		c->errstring = (char*)m_malloc(len);
-		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s", 
+		snprintf(c->errstring, len, "Error resolving '%s' port '%s'. %s",
 				remotehost, remoteport, gai_strerror(err));
 		TRACE(("Error resolving: %s", gai_strerror(err)))
 	} else {
@@ -282,7 +282,7 @@ struct dropbear_progress_connection *connect_streamlocal(const char* localpath,
 	sunaddr->sun_family = AF_UNIX;
 	strlcpy(sunaddr->sun_path, localpath, sizeof(sunaddr->sun_path));
 
-	/* Copy to target iter */ 
+	/* Copy to target iter */
 	c->res_iter = c->res;
 
 	return c;
@@ -352,7 +352,7 @@ void handle_connect_fds(const fd_set *writefd) {
 			remove_connect(c, iter);
 			TRACE(("leave handle_connect_fds - success"))
 			/* Must return here - remove_connect() invalidates iter */
-			return; 
+			return;
 		}
 	}
 }
@@ -371,8 +371,8 @@ void packet_queue_to_iovec(const struct Queue *queue, struct iovec *iov, unsigne
 	#if (defined(__CYGWIN__) || defined(__GNU__)) && !defined(UIO_MAXIOV)
 		#define IOV_MAX 1024
 	#elif defined(__sgi)
-		#define IOV_MAX 512 
-	#else 
+		#define IOV_MAX 512
+	#else
 		#define IOV_MAX UIO_MAXIOV
 	#endif
 #endif
@@ -523,7 +523,7 @@ int get_sock_port(int sock) {
 	return atoi(strport);
 }
 
-/* Listen on address:port. 
+/* Listen on address:port.
  * Special cases are address of "" listening on everything,
  * and address of NULL listening on localhost only.
  * Returns the number of sockets bound on success, or -1 on failure. On
@@ -628,7 +628,7 @@ int dropbear_listen(const char* address, const char* port,
 #if defined(IPPROTO_IPV6) && defined(IPV6_V6ONLY)
 		if (res->ai_family == AF_INET6) {
 			int on = 1;
-			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY, 
+			if (setsockopt(sock, IPPROTO_IPV6, IPV6_V6ONLY,
 						&on, sizeof(on)) == -1) {
 				dropbear_log(LOG_WARNING, "Couldn't set IPV6_V6ONLY");
 			}
@@ -709,7 +709,7 @@ void get_socket_address(int fd, char **local_host, char **local_port,
 
 /* Return a string representation of the socket address passed. The return
  * value is allocated with malloc() */
-void getaddrstring(struct sockaddr_storage* addr, 
+void getaddrstring(struct sockaddr_storage* addr,
 			char **ret_host, char **ret_port,
 			int host_lookup) {
 
@@ -743,7 +743,7 @@ void getaddrstring(struct sockaddr_storage* addr,
 #endif
 #endif
 
-	ret = getnameinfo((struct sockaddr*)addr, len, host, sizeof(host)-1, 
+	ret = getnameinfo((struct sockaddr*)addr, len, host, sizeof(host)-1,
 			serv, sizeof(serv)-1, flags);
 
 	if (ret != 0) {

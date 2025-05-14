@@ -11,7 +11,7 @@
 struct kex_ecdh_param *gen_kexecdh_param() {
     struct kex_ecdh_param *param = m_malloc(sizeof(*param));
     const struct dropbear_ecc_curve *curve = ses.newkeys->algo_kex->details;
-    if (ecc_make_key_ex(NULL, dropbear_ltc_prng, 
+    if (ecc_make_key_ex(NULL, dropbear_ltc_prng,
         &param->key, curve->dp) != CRYPT_OK) {
         dropbear_exit("ECC error");
     }
@@ -45,7 +45,7 @@ void kexecdh_comb_key(struct kex_ecdh_param *param, buffer *pub_them,
     } else {
         Q_C = Q_them;
         Q_S = &param->key;
-    } 
+    }
 
     /* K_S, the host key */
     buf_put_pub_key(ses.kexhashbuf, hostkey, ses.newkeys->algo_hostkey);

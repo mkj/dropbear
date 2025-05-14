@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,8 +47,8 @@ void cli_auth_getmethods() {
 
 #if DROPBEAR_CLI_IMMEDIATE_AUTH
 	/* We can't haven't two auth requests in-flight with delayed zlib mode
-	since if the first one succeeds then the remote side will 
-	expect the second one to be compressed. 
+	since if the first one succeeds then the remote side will
+	expect the second one to be compressed.
 	Race described at
 	http://www.chiark.greenend.org.uk/~sgtatham/putty/wishlist/zlib-openssh.html
 	*/
@@ -183,8 +183,8 @@ void recv_msg_userauth_failure() {
 	}
 	allow_pw_auth &= cli_opts.password_authentication;
 
-	/* When DROPBEAR_CLI_IMMEDIATE_AUTH is set there will be an initial response for 
-	the "none" auth request, and then a response to the immediate auth request. 
+	/* When DROPBEAR_CLI_IMMEDIATE_AUTH is set there will be an initial response for
+	the "none" auth request, and then a response to the immediate auth request.
 	We need to be careful handling them. */
 	if (cli_ses.ignore_next_auth_response) {
 		cli_ses.state = USERAUTH_REQ_SENT;
@@ -193,7 +193,7 @@ void recv_msg_userauth_failure() {
 		return;
 	} else  {
 #if DROPBEAR_CLI_PUBKEY_AUTH
-		/* If it was a pubkey auth request, we should cross that key 
+		/* If it was a pubkey auth request, we should cross that key
 		 * off the list. */
 		if (cli_ses.lastauthtype == AUTH_TYPE_PUBKEY) {
 			cli_pubkeyfail();
@@ -277,7 +277,7 @@ void recv_msg_userauth_success() {
 	if (cli_opts.disable_trivial_auth && cli_ses.is_trivial_auth) {
 		dropbear_exit("trivial authentication not allowed");
 	}
-	/* Note: in delayed-zlib mode, setting authdone here 
+	/* Note: in delayed-zlib mode, setting authdone here
 	 * will enable compression in the transport layer */
 	ses.authstate.authdone = 1;
 	cli_ses.state = USERAUTH_SUCCESS_RCVD;

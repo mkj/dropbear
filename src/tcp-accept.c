@@ -1,19 +1,19 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -61,7 +61,7 @@ static void tcp_acceptor(const struct Listener *listener, int sock) {
 	}
 
 	if (getnameinfo((struct sockaddr*)&sa, len, ipstring, sizeof(ipstring),
-				portstring, sizeof(portstring), 
+				portstring, sizeof(portstring),
 				NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
 		m_close(fd);
 		return;
@@ -116,7 +116,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo, struct Listener **ret_listener) {
 	/* first we try to bind, so don't need to do so much cleanup on failure */
 	snprintf(portstring, sizeof(portstring), "%u", tcpinfo->listenport);
 
-	nsocks = dropbear_listen(tcpinfo->listenaddr, portstring, socks, 
+	nsocks = dropbear_listen(tcpinfo->listenaddr, portstring, socks,
 			DROPBEAR_MAX_SOCKS, &errstring, &ses.maxfd, tcpinfo->interface);
 	if (nsocks < 0) {
 		dropbear_log(LOG_INFO, "TCP forward failed: %s", errstring);
@@ -127,7 +127,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo, struct Listener **ret_listener) {
 	m_free(errstring);
 	
 	/* new_listener will close the socks if it fails */
-	listener = new_listener(socks, nsocks, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
+	listener = new_listener(socks, nsocks, CHANNEL_ID_TCPFORWARDED, tcpinfo,
 			tcp_acceptor, cleanup_tcp);
 
 	if (listener == NULL) {

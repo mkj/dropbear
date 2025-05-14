@@ -37,7 +37,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 	m_malloc_set_epoch(1);
 
 	if (setjmp(fuzz.jmp) == 0) {
-		/* Based on recv_msg_kexdh_init()/send_msg_kexdh_reply() 
+		/* Based on recv_msg_kexdh_init()/send_msg_kexdh_reply()
 		with DROPBEAR_KEX_CURVE25519 */
 		ses.newkeys = keep_newkeys;
 

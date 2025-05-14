@@ -14,7 +14,7 @@
 size_t LLVMFuzzerMutate(uint8_t *Data, size_t Size, size_t MaxSize);
 
 static const char* FIXED_VERSION = "SSH-2.0-dbfuzz\r\n";
-static const char* FIXED_IGNORE_MSG = 
+static const char* FIXED_IGNORE_MSG =
         "\x00\x00\x00\x10\x06\x02\x00\x00\x00\x00\x11\x22\x33\x44\x55\x66";
 static const unsigned int FIXED_IGNORE_MSG_LEN = 16;
 #define MAX_FUZZ_PACKETS 500
@@ -214,7 +214,7 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
                 /* small chance of drop */
                 /* Drop it */
                 //printf("%d drop\n", i);
-            } else { 
+            } else {
                 /* Odds of modification are proportional to packet position.
                 First packet has 20% chance, last has 100% chance */
                 int optC = nrand48(randstate) % 1000;
@@ -232,7 +232,7 @@ size_t LLVMFuzzerCustomMutator(uint8_t *Data, size_t Size,
                     /* Copy as-is */
                     out_packetB = packets[i];
                     // printf("%d as-is len %u\n", i, out_packetB->len);
-                } 
+                }
             }
         }
 

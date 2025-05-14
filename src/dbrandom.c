@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -163,7 +163,7 @@ void fuzz_seed(const unsigned char* dat, unsigned int len) {
 
 
 #ifdef HAVE_GETRANDOM
-/* Reads entropy seed with getrandom(). 
+/* Reads entropy seed with getrandom().
  * May block if the kernel isn't ready.
  * Return DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 static int process_getrandom(hash_state *hs) {
@@ -248,24 +248,24 @@ void seedrandom() {
 
 	if (!urandom_seeded) {
 #if DROPBEAR_USE_PRNGD
-		if (process_file(&hs, DROPBEAR_PRNGD_SOCKET, INIT_SEED_SIZE, 1) 
+		if (process_file(&hs, DROPBEAR_PRNGD_SOCKET, INIT_SEED_SIZE, 1)
 				!= DROPBEAR_SUCCESS) {
-			dropbear_exit("Failure reading random device %s", 
+			dropbear_exit("Failure reading random device %s",
 					DROPBEAR_PRNGD_SOCKET);
 			urandom_seeded = 1;
 		}
 #else
 		/* non-blocking random source (probably /dev/urandom) */
-		if (process_file(&hs, DROPBEAR_URANDOM_DEV, INIT_SEED_SIZE, 0) 
+		if (process_file(&hs, DROPBEAR_URANDOM_DEV, INIT_SEED_SIZE, 0)
 				!= DROPBEAR_SUCCESS) {
-			dropbear_exit("Failure reading random device %s", 
+			dropbear_exit("Failure reading random device %s",
 					DROPBEAR_URANDOM_DEV);
 			urandom_seeded = 1;
 		}
 #endif
 	} /* urandom_seeded */
 
-	/* A few other sources to fall back on. 
+	/* A few other sources to fall back on.
 	 * Add more here for other platforms */
 #ifdef __linux__
 	/* Might help on systems with wireless */
@@ -287,7 +287,7 @@ void seedrandom() {
 	pid = getpid();
 	sha256_process(&hs, (void*)&pid, sizeof(pid));
 
-	/* gettimeofday() doesn't completely fill out struct timeval on 
+	/* gettimeofday() doesn't completely fill out struct timeval on
 	   OS X (10.8.3), avoid valgrind warnings by clearing it first */
 	memset(&tv, 0x0, sizeof(tv));
 	gettimeofday(&tv, NULL);
@@ -339,10 +339,10 @@ void genrandom(unsigned char* buf, unsigned int len) {
 	m_burn(hash, sizeof(hash));
 }
 
-/* Generates a random mp_int. 
+/* Generates a random mp_int.
  * max is a *mp_int specifying an upper bound.
  * rand must be an initialised *mp_int for the result.
- * the result rand satisfies:  0 < rand < max 
+ * the result rand satisfies:  0 < rand < max
  * */
 void gen_random_mpint(const mp_int *max, mp_int *rand) {
 

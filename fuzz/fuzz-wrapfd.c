@@ -192,7 +192,7 @@ int wrapfd_write(int fd, const void* in, size_t count) {
 	return nrand48(rand_state) % (count+1);
 }
 
-int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds, 
+int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
 	fd_set *exceptfds, struct timeval *timeout) {
 	int i, nset, sel;
 	int ret = 0;

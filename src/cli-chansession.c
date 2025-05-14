@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -144,7 +144,7 @@ void cli_tty_cleanup() {
 	if (tcsetattr(STDIN_FILENO, TCSADRAIN, &cli_ses.saved_tio) == -1) {
 		dropbear_log(LOG_WARNING, "Failed restoring TTY");
 	} else {
-		cli_ses.tty_raw_mode = 0; 
+		cli_ses.tty_raw_mode = 0;
 	}
 
 	TRACE(("leave cli_tty_cleanup"))
@@ -395,7 +395,7 @@ void cli_send_netcat_request() {
 	TRACE(("enter cli_send_netcat_request"))
 	cli_opts.wantpty = 0;
 
-	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_netcat) 
+	if (send_msg_channel_open_init(STDIN_FILENO, &cli_chan_netcat)
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
 	}
@@ -417,7 +417,7 @@ void cli_send_chansess_request() {
 
 	TRACE(("enter cli_send_chansess_request"))
 
-	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess) 
+	if (send_msg_channel_open_init(STDIN_FILENO, &clichansess)
 			== DROPBEAR_FAILURE) {
 		dropbear_exit("Couldn't open initial channel");
 	}
@@ -458,7 +458,7 @@ void cli_escape_handler(const struct Channel* UNUSED(channel), const unsigned ch
 	char c;
 	int skip_char = 0;
 
-	/* only handle escape characters if they are read one at a time. simplifies 
+	/* only handle escape characters if they are read one at a time. simplifies
 	   the code and avoids nasty people putting ~. at the start of a line to paste  */
 	if (*len != 1) {
 		cli_ses.last_char = 0x0;

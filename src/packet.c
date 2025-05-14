@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -39,7 +39,7 @@
 
 static int read_packet_init(void);
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
-		buffer * clear_buf, unsigned int clear_len, 
+		buffer * clear_buf, unsigned int clear_len,
 		unsigned char *output_mac);
 static int checkmac(void);
 
@@ -122,7 +122,7 @@ void write_packet() {
 		} else {
 			dropbear_exit("Error writing: %s", strerror(errno));
 		}
-	} 
+	}
 
 	if (written == 0) {
 		ses.remoteclosed();
@@ -209,7 +209,7 @@ void read_packet() {
 
 /* Function used to read the initial portion of a packet, and determine the
  * length. Only called during the first BLOCKSIZE of a packet. */
-/* Returns DROPBEAR_SUCCESS if the length is determined, 
+/* Returns DROPBEAR_SUCCESS if the length is determined,
  * DROPBEAR_FAILURE otherwise */
 static int read_packet_init() {
 
@@ -266,7 +266,7 @@ static int read_packet_init() {
 	} else
 #endif
 	{
-		if (ses.keys->recv.crypt_mode->decrypt(buf_getptr(ses.readbuf, blocksize), 
+		if (ses.keys->recv.crypt_mode->decrypt(buf_getptr(ses.readbuf, blocksize),
 					buf_getwriteptr(ses.readbuf, blocksize),
 					blocksize,
 					&ses.keys->recv.cipher_state) != CRYPT_OK) {
@@ -332,7 +332,7 @@ void decrypt_packet() {
 		/* decrypt it in-place */
 		len = ses.readbuf->len - macsize - ses.readbuf->pos;
 		if (ses.keys->recv.crypt_mode->decrypt(
-					buf_getptr(ses.readbuf, len), 
+					buf_getptr(ses.readbuf, len),
 					buf_getwriteptr(ses.readbuf, len),
 					len,
 					&ses.keys->recv.cipher_state) != CRYPT_OK) {
@@ -371,7 +371,7 @@ void decrypt_packet() {
 		buf_setpos(ses.payload, 0);
 		ses.payload_beginning = 0;
 		buf_free(ses.readbuf);
-	} else 
+	} else
 #endif
 	{
 		ses.payload = ses.readbuf;
@@ -520,7 +520,7 @@ void encrypt_packet() {
 
 	unsigned char padlen;
 	unsigned char blocksize, mac_size;
-	buffer * writebuf; /* the packet which will go on the wire. This is 
+	buffer * writebuf; /* the packet which will go on the wire. This is
 	                      encrypted in-place. */
 	unsigned char packet_type;
 	unsigned int len, encrypt_buf_size;
@@ -538,7 +538,7 @@ void encrypt_packet() {
 	
 	if ((!ses.dataallowed && !packet_is_okay_kex(packet_type))) {
 		/* During key exchange only particular packets are allowed.
-			Since this packet_type isn't OK we just enqueue it to send 
+			Since this packet_type isn't OK we just enqueue it to send
 			after the KEX, see maybe_flush_reply_queue */
 		enqueue_reply_packet();
 		return;
@@ -548,9 +548,9 @@ void encrypt_packet() {
 	mac_size = ses.keys->trans.algo_mac->hashsize;
 
 	/* Encrypted packet len is payload+5. We need to then make sure
-	 * there is enough space for padding or MIN_PACKET_LEN. 
+	 * there is enough space for padding or MIN_PACKET_LEN.
 	 * Add extra 3 since we need at least 4 bytes of padding */
-	encrypt_buf_size = (ses.writepayload->len+4+1) 
+	encrypt_buf_size = (ses.writepayload->len+4+1)
 		+ MAX(MIN_PACKET_LEN, blocksize) + 3
 	/* add space for the MAC at the end */
 				+ mac_size
@@ -660,7 +660,7 @@ void encrypt_packet() {
 	now = monotonic_now();
 	ses.last_packet_time_any_sent = now;
 	/* idle timeout shouldn't be affected by responses to keepalives.
-	send_msg_keepalive() itself also does tricks with 
+	send_msg_keepalive() itself also does tricks with
 	ses.last_packet_idle_time - read that if modifying this code */
 	if (packet_type != SSH_MSG_REQUEST_FAILURE
 		&& packet_type != SSH_MSG_UNIMPLEMENTED
@@ -683,7 +683,7 @@ void writebuf_enqueue(buffer * writebuf) {
 /* Create the packet mac, and append H(seqno|clearbuf) to the output */
 /* output_mac must have ses.keys->trans.algo_mac->hashsize bytes. */
 static void make_mac(unsigned int seqno, const struct key_context_directional * key_state,
-		buffer * clear_buf, unsigned int clear_len, 
+		buffer * clear_buf, unsigned int clear_len,
 		unsigned char *output_mac) {
 	unsigned char seqbuf[4];
 	unsigned long bufsize;
@@ -691,7 +691,7 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 
 	if (key_state->algo_mac->hashsize > 0) {
 		/* calculate the mac */
-		if (hmac_init(&hmac, 
+		if (hmac_init(&hmac,
 					key_state->hash_index,
 					key_state->mackey,
 					key_state->algo_mac->keysize) != CRYPT_OK) {
@@ -706,7 +706,7 @@ static void make_mac(unsigned int seqno, const struct key_context_directional * 
 	
 		/* the actual contents */
 		buf_setpos(clear_buf, 0);
-		if (hmac_process(&hmac, 
+		if (hmac_process(&hmac,
 					buf_getptr(clear_buf, clear_len),
 					clear_len) != CRYPT_OK) {
 			dropbear_exit("HMAC error");
@@ -734,7 +734,7 @@ static void buf_compress(buffer * dest, buffer * src, unsigned int len) {
 	dropbear_assert(dest->size - dest->pos >= len+ZLIB_COMPRESS_EXPANSION);
 
 	ses.keys->trans.zstream->avail_in = endpos - src->pos;
-	ses.keys->trans.zstream->next_in = 
+	ses.keys->trans.zstream->next_in =
 		buf_getptr(src, ses.keys->trans.zstream->avail_in);
 
 	ses.keys->trans.zstream->avail_out = dest->size - dest->pos;

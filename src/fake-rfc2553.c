@@ -3,7 +3,7 @@
 /*
  * Copyright (C) 2000-2003 Damien Miller.  All rights reserved.
  * Copyright (C) 1999 WIDE Project.  All rights reserved.
- * 
+ *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
  * are met:
@@ -15,7 +15,7 @@
  * 3. Neither the name of the project nor the names of its contributors
  *    may be used to endorse or promote products derived from this software
  *    without specific prior written permission.
- * 
+ *
  * THIS SOFTWARE IS PROVIDED BY THE PROJECT AND CONTRIBUTORS ``AS IS'' AND
  * ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE
@@ -46,7 +46,7 @@
 #include <arpa/inet.h>
 
 #ifndef HAVE_GETNAMEINFO
-int getnameinfo(const struct sockaddr *sa, size_t salen, char *host, 
+int getnameinfo(const struct sockaddr *sa, size_t salen, char *host,
                 size_t hostlen, char *serv, size_t servlen, int flags)
 {
 	struct sockaddr_in *sin = (struct sockaddr_in *)sa;
@@ -69,7 +69,7 @@ int getnameinfo(const struct sockaddr *sa, size_t salen, char *host,
 			else
 				return (0);
 		} else {
-			hp = gethostbyaddr((char *)&sin->sin_addr, 
+			hp = gethostbyaddr((char *)&sin->sin_addr,
 			    sizeof(struct in_addr), AF_INET);
 			if (hp == NULL)
 				return (EAI_NODATA);
@@ -104,7 +104,7 @@ gai_strerror(int err)
 	default:
 		return ("unknown/invalid error.");
 	}
-}    
+}
 #endif /* !HAVE_GAI_STRERROR */
 
 #ifndef HAVE_FREEADDRINFO
@@ -154,7 +154,7 @@ addrinfo *malloc_ai(int port, u_long addr, const struct addrinfo *hints)
 }
 
 int
-getaddrinfo(const char *hostname, const char *servname, 
+getaddrinfo(const char *hostname, const char *servname,
     const struct addrinfo *hints, struct addrinfo **res)
 {
 	struct hostent *hp;
@@ -185,21 +185,21 @@ getaddrinfo(const char *hostname, const char *servname,
 		if (hostname && inet_aton(hostname, &in) != 0)
 			addr = in.s_addr;
 		*res = malloc_ai(port, addr, hints);
-		if (*res == NULL) 
+		if (*res == NULL)
 			return (EAI_MEMORY);
 		return (0);
 	}
 		
 	if (!hostname) {
 		*res = malloc_ai(port, htonl(0x7f000001), hints);
-		if (*res == NULL) 
+		if (*res == NULL)
 			return (EAI_MEMORY);
 		return (0);
 	}
 	
 	if (inet_aton(hostname, &in)) {
 		*res = malloc_ai(port, in.s_addr, hints);
-		if (*res == NULL) 
+		if (*res == NULL)
 			return (EAI_MEMORY);
 		return (0);
 	}

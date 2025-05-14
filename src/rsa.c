@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@
 #include "dbrandom.h"
 #include "signkey.h"
 
-#if DROPBEAR_RSA 
+#if DROPBEAR_RSA
 
 #if !(DROPBEAR_RSA_SHA1 || DROPBEAR_RSA_SHA256)
 #error Somehow RSA was enabled with neither DROPBEAR_RSA_SHA1 nor DROPBEAR_RSA_SHA256
@@ -196,7 +196,7 @@ void buf_put_rsa_priv_key(buffer* buf, const dropbear_rsa_key *key) {
 #if DROPBEAR_SIGNKEY_VERIFY
 /* Verify a signature in buf, made on data by the key given.
  * Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
-int buf_rsa_verify(buffer * buf, const dropbear_rsa_key *key, 
+int buf_rsa_verify(buffer * buf, const dropbear_rsa_key *key,
 		enum signature_type sigtype, const buffer *data_buf) {
 	unsigned int slen;
 	DEF_MP_INT(rsa_s);
@@ -252,7 +252,7 @@ out:
 
 /* Sign the data presented with key, writing the signature contents
  * to the buffer */
-void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key, 
+void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key,
 		enum signature_type sigtype, const buffer *data_buf) {
 	const char *name = NULL;
 	unsigned int nsize, ssize, namelen = 0;
@@ -350,11 +350,11 @@ void buf_put_rsa_sign(buffer* buf, const dropbear_rsa_key *key,
 	TRACE(("leave buf_put_rsa_sign"))
 }
 
-/* Creates the message value as expected by PKCS, 
+/* Creates the message value as expected by PKCS,
    see rfc8017 section 9.2 */
 static void rsa_pad_em(const dropbear_rsa_key * key,
 	const buffer *data_buf, mp_int * rsa_em, enum signature_type sigtype) {
-    /* EM = 0x00 || 0x01 || PS || 0x00 || T 
+    /* EM = 0x00 || 0x01 || PS || 0x00 || T
 	   PS is padding of 0xff to make EM the size of key->n
 
 	   T is the DER encoding of the hash alg (sha1 or sha256)

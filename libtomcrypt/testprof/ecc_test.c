@@ -68,7 +68,7 @@ int ecc_test_shamir(void)
 
           /* compute rA * G = A */
           DO(ltc_mp.ecc_ptmul(rA, G, A, modulus, 1));
-       
+
           /* compute rB * G = B */
           DO(ltc_mp.ecc_ptmul(rB, G, B, modulus, 1));
 
@@ -222,11 +222,11 @@ int ecc_tests (void)
      DO(ecc_verify_hash (buf[1], x, buf[0], 16, &stat, &pubKey));
      buf[0][0] ^= 1;
      DO(ecc_verify_hash (buf[1], x, buf[0], 16, &stat2, &privKey));
-     if (!(stat == 1 && stat2 == 0)) { 
+     if (!(stat == 1 && stat2 == 0)) {
         fprintf(stderr, "ecc_verify_hash failed %d, %d, ", stat, stat2);
         return 1;
      }
-     ecc_free (&usera); 
+     ecc_free (&usera);
      ecc_free (&pubKey);
      ecc_free (&privKey);
   }

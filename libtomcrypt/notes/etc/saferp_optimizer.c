@@ -16,7 +16,7 @@
     b2[4] = b[14]; b2[5] = b[7]; b2[6] = b[6]; b2[7] = b[13];      \
     b2[8] = b[0]; b2[9] = b[9]; b2[10] = b[8]; b2[11] = b[1];      \
     b2[12] = b[2]; b2[13] = b[11]; b2[14] = b[10]; b2[15] = b[3]; memcpy(b, b2, sizeof(b));
-    
+
 #define ROUND(b, i)                                                                        \
     b[0]  = (safer_ebox[(b[0] ^ skey->saferp.K[i][0]) & 255] + skey->saferp.K[i+1][0]) & 255;    \
     b[1]  = safer_lbox[(b[1] + skey->saferp.K[i][1]) & 255] ^ skey->saferp.K[i+1][1];            \
@@ -33,12 +33,12 @@
     b[12] = (safer_ebox[(b[12] ^ skey->saferp.K[i][12]) & 255] + skey->saferp.K[i+1][12]) & 255; \
     b[13] = safer_lbox[(b[13] + skey->saferp.K[i][13]) & 255] ^ skey->saferp.K[i+1][13];         \
     b[14] = safer_lbox[(b[14] + skey->saferp.K[i][14]) & 255] ^ skey->saferp.K[i+1][14];         \
-    b[15] = (safer_ebox[(b[15] ^ skey->saferp.K[i][15]) & 255] + skey->saferp.K[i+1][15]) & 255;        
+    b[15] = (safer_ebox[(b[15] ^ skey->saferp.K[i][15]) & 255] + skey->saferp.K[i+1][15]) & 255;
 
 int main(void)
 {
    int b[16], b2[16], x, y, z;
-   
+
 /* -- ENCRYPT ---  */
    for (x = 0; x < 16; x++) b[x] = x;
    /* emit encrypt preabmle  */
@@ -55,7 +55,7 @@ printf(
 "   /* do eight rounds */\n"
 "   for (x = 0; x < 16; x++) {\n"
 "       b[x] = pt[x];\n"
-"   }\n");   
+"   }\n");
 
    /* do 8 rounds of ROUND; LT; */
    for (x = 0; x < 8; x++) {
@@ -64,7 +64,7 @@ printf(
 printf("b[%d] = (safer_%cbox[(b[%d] %c skey->saferp.K[%d][%d]) & 255] %c skey->saferp.K[%d][%d]) & 255;\n",
           b[y], "elle"[y&3], b[y], "^++^"[y&3],      x*2, y, "+^^+"[y&3], x*2+1, y);
        }
-       
+
        /* LT */
        for (y = 0; y < 4; y++) {
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[0], b[0], b[1], b[0], b[1]);
@@ -77,10 +77,10 @@ printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[12], 
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[14], b[14], b[15], b[15], b[14]);
       if (y < 3) {
          SHUF;
-      }         
-      }   
+      }
+      }
   }
-  
+
 printf(
 "   if (skey->saferp.rounds <= 8) {\n");
 /* finish */
@@ -88,14 +88,14 @@ printf(
    printf(
 "      ct[%d] = (b[%d] %c skey->saferp.K[skey->saferp.rounds*2][%d]) & 255;\n",
        x, b[x], "^++^"[x&3], x);
-   }   
+   }
    printf("      return;\n   }\n");
-  
+
   /* 192-bit keys */
-printf(  
+printf(
 "   /* 192-bit key? */\n"
 "   if (skey->saferp.rounds > 8) {\n");
-  
+
    /* do 4 rounds of ROUND; LT; */
    for (x = 8; x < 12; x++) {
        /* ROUND(..., x*2) */
@@ -103,7 +103,7 @@ printf(
 printf("b[%d] = (safer_%cbox[(b[%d] %c skey->saferp.K[%d][%d]) & 255] %c skey->saferp.K[%d][%d]) & 255;\n",
           b[y], "elle"[y&3], b[y], "^++^"[y&3],      x*2, y, "+^^+"[y&3], x*2+1, y);
        }
-       
+
        /* LT */
        for (y = 0; y < 4; y++) {
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[0], b[0], b[1], b[0], b[1]);
@@ -116,11 +116,11 @@ printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[12], 
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[14], b[14], b[15], b[15], b[14]);
       if (y < 3) {
          SHUF;
-      }         
-      }   
+      }
+      }
   }
 printf("}\n");
-  
+
 printf(
 "   if (skey->saferp.rounds <= 12) {\n");
 /* finish */
@@ -128,14 +128,14 @@ printf(
    printf(
 "      ct[%d] = (b[%d] %c skey->saferp.K[skey->saferp.rounds*2][%d]) & 255;\n",
        x, b[x], "^++^"[x&3], x);
-   }   
+   }
    printf("      return;\n   }\n");
 
   /* 256-bit keys */
-printf(  
+printf(
 "   /* 256-bit key? */\n"
 "   if (skey->saferp.rounds > 12) {\n");
-  
+
    /* do 4 rounds of ROUND; LT; */
    for (x = 12; x < 16; x++) {
        /* ROUND(..., x*2) */
@@ -143,7 +143,7 @@ printf(
 printf("b[%d] = (safer_%cbox[(b[%d] %c skey->saferp.K[%d][%d]) & 255] %c skey->saferp.K[%d][%d]) & 255;\n",
           b[y], "elle"[y&3], b[y], "^++^"[y&3],      x*2, y, "+^^+"[y&3], x*2+1, y);
        }
-       
+
        /* LT */
        for (y = 0; y < 4; y++) {
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[0], b[0], b[1], b[0], b[1]);
@@ -156,15 +156,15 @@ printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[12], 
 printf("   b[%d]  = (b[%d] + (b[%d] = (b[%d] + b[%d]) & 255)) & 255;\n", b[14], b[14], b[15], b[15], b[14]);
       if (y < 3) {
          SHUF;
-      }         
-      }   
+      }
+      }
   }
 /* finish */
    for (x = 0; x < 16; x++) {
    printf(
 "      ct[%d] = (b[%d] %c skey->saferp.K[skey->saferp.rounds*2][%d]) & 255;\n",
        x, b[x], "^++^"[x&3], x);
-   }   
+   }
    printf("   return;\n");
 printf("   }\n}\n\n");
 

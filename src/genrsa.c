@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -33,7 +33,7 @@
 
 #if DROPBEAR_RSA
 
-static void getrsaprime(mp_int* prime, mp_int *primeminus, 
+static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		const mp_int* rsa_e, unsigned int size_bytes);
 
 /* mostly taken from libtomcrypt's rsa key generation routine */
@@ -88,7 +88,7 @@ dropbear_rsa_key * gen_rsa_priv_key(unsigned int size) {
 }	
 
 /* return a prime suitable for p or q */
-static void getrsaprime(mp_int* prime, mp_int *primeminus, 
+static void getrsaprime(mp_int* prime, mp_int *primeminus,
 		const mp_int* rsa_e, unsigned int size_bytes) {
 
 	unsigned char *buf;

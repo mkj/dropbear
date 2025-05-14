@@ -142,7 +142,7 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 
 	seedrandom();
 
-	buf = buf_new(MAX_PRIVKEY_SIZE); 
+	buf = buf_new(MAX_PRIVKEY_SIZE);
 
 	buf_put_priv_key(buf, key, keytype);
 	sign_key_free(key);
@@ -158,7 +158,7 @@ int signkey_generate(enum signkey_type keytype, int bits, const char* filename, 
 	}
 
 	if (link(fn_temp, filename) < 0) {
-		/* If generating keys on connection (skipexist) it's OK to get EEXIST 
+		/* If generating keys on connection (skipexist) it's OK to get EEXIST
 		- we probably just lost a race with another connection to generate the key */
 		if (!(skip_exist && errno == EEXIST)) {
 			if (errno == EPERM || errno == EACCES || errno == ENOSYS) {

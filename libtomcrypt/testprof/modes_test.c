@@ -15,23 +15,23 @@ int modes_test(void)
    symmetric_OFB ofb;
 #endif
    unsigned long l;
-   
+
    /* make a random pt, key and iv */
    yarrow_read(pt,  64, &yarrow_prng);
    yarrow_read(key, 16, &yarrow_prng);
    yarrow_read(iv,  16, &yarrow_prng);
-   
+
    /* get idx of AES handy */
    cipher_idx = find_cipher("aes");
    if (cipher_idx == -1) {
       fprintf(stderr, "test requires AES");
       return 1;
    }
-   
+
 #ifdef LTC_F8_MODE
    DO(f8_test_mode());
-#endif   
-   
+#endif
+
 #ifdef LTC_LRW_MODE
    DO(lrw_test());
 #endif
@@ -47,7 +47,7 @@ int modes_test(void)
       return 1;
    }
    DO(cbc_encrypt(pt, ct, 64, &cbc));
-   
+
    /* decode the block */
    DO(cbc_setiv(iv2, l, &cbc));
    zeromem(tmp, sizeof(tmp));
@@ -70,7 +70,7 @@ int modes_test(void)
       return 1;
    }
    DO(cfb_encrypt(pt, ct, 64, &cfb));
-   
+
    /* decode the block */
    DO(cfb_setiv(iv, l, &cfb));
    zeromem(tmp, sizeof(tmp));
@@ -80,7 +80,7 @@ int modes_test(void)
       return 1;
    }
 #endif
-   
+
 #ifdef LTC_OFB_MODE
    /* test OFB mode */
    /* encode the block */
@@ -92,7 +92,7 @@ int modes_test(void)
       return 1;
    }
    DO(ofb_encrypt(pt, ct, 64, &ofb));
-   
+
    /* decode the block */
    DO(ofb_setiv(iv2, l, &ofb));
    zeromem(tmp, sizeof(tmp));
@@ -103,14 +103,14 @@ int modes_test(void)
    }
 #endif
 
-#ifdef LTC_CTR_MODE   
+#ifdef LTC_CTR_MODE
    DO(ctr_test());
 #endif
 
 #ifdef LTC_XTS_MODE
    DO(xts_test());
 #endif
-         
+
    return 0;
 }
 

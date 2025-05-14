@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2004 Martin Carlsson
  * Portions (c) 2004 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -46,10 +46,10 @@ struct UserDataS {
 };
 
 /* PAM conversation function - for now we only handle one message */
-int 
-pamConvFunc(int num_msg, 
+int
+pamConvFunc(int num_msg,
 		const struct pam_message **msg,
-		struct pam_response **respp, 
+		struct pam_response **respp,
 		void *appdata_ptr) {
 
 	int rc = PAM_SUCCESS;
@@ -78,10 +78,10 @@ pamConvFunc(int num_msg,
 		compare_message[i] = tolower(compare_message[i]);
 	}
 
-	/* If the string ends with ": ", remove the space. 
+	/* If the string ends with ": ", remove the space.
 	   ie "login: " vs "login:" */
-	if (msg_len > 2 
-			&& compare_message[msg_len-2] == ':' 
+	if (msg_len > 2
+			&& compare_message[msg_len-2] == ':'
 			&& compare_message[msg_len-1] == ' ') {
 		compare_message[msg_len-1] = '\0';
 	}
@@ -117,7 +117,7 @@ pamConvFunc(int num_msg,
 		case PAM_PROMPT_ECHO_ON:
 
 			if (!(
-				(strcmp(compare_message, "login:" ) == 0) 
+				(strcmp(compare_message, "login:" ) == 0)
 				|| (strcmp(compare_message, "please enter username:") == 0)
 				|| (strcmp(compare_message, "username:") == 0)
 				)) {
@@ -162,7 +162,7 @@ pamConvFunc(int num_msg,
 		default:
 			TRACE(("Unknown message type"))
 			rc = PAM_CONV_ERR;
-			break;      
+			break;
 	}
 
 	m_free(compare_message);
@@ -184,7 +184,7 @@ void svr_auth_pam(int valid_user) {
 	struct UserDataS userData = {NULL, NULL};
 	struct pam_conv pamConv = {
 		pamConvFunc,
-		&userData /* submitted to pamvConvFunc as appdata_ptr */ 
+		&userData /* submitted to pamvConvFunc as appdata_ptr */
 	};
 	const char* printable_user = NULL;
 
@@ -225,7 +225,7 @@ void svr_auth_pam(int valid_user) {
 
 	/* Init pam */
 	if ((rc = pam_start("sshd", NULL, &pamConv, &pamHandlep)) != PAM_SUCCESS) {
-		dropbear_log(LOG_WARNING, "pam_start() failed, rc=%d, %s", 
+		dropbear_log(LOG_WARNING, "pam_start() failed, rc=%d, %s",
 				rc, pam_strerror(pamHandlep, rc));
 		goto cleanup;
 	}
@@ -251,7 +251,7 @@ void svr_auth_pam(int valid_user) {
 	/* (void) pam_set_item(pamHandlep, PAM_FAIL_DELAY, (void*) pamDelayFunc); */
 
 	if ((rc = pam_authenticate(pamHandlep, 0)) != PAM_SUCCESS) {
-		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s", 
+		dropbear_log(LOG_WARNING, "pam_authenticate() failed, rc=%d, %s",
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"Bad PAM password attempt for '%s' from %s",
@@ -262,7 +262,7 @@ void svr_auth_pam(int valid_user) {
 	}
 
 	if ((rc = pam_acct_mgmt(pamHandlep, 0)) != PAM_SUCCESS) {
-		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s", 
+		dropbear_log(LOG_WARNING, "pam_acct_mgmt() failed, rc=%d, %s",
 				rc, pam_strerror(pamHandlep, rc));
 		dropbear_log(LOG_WARNING,
 				"Bad PAM password attempt for '%s' from %s",

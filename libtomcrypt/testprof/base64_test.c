@@ -4,7 +4,7 @@ int base64_test(void)
 {
    unsigned char in[64], out[256], tmp[64];
    unsigned long x, l1, l2;
-   
+
    for  (x = 0; x < 64; x++) {
        yarrow_read(in, x, &yarrow_prng);
        l1 = sizeof(out);

@@ -19,7 +19,7 @@ int wrapfd_new_dummy(void);
 // called via #defines for read/write/select
 int wrapfd_read(int fd, void *out, size_t count);
 int wrapfd_write(int fd, const void* in, size_t count);
-int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds, 
+int wrapfd_select(int nfds, fd_set *readfds, fd_set *writefds,
     fd_set *exceptfds, struct timeval *timeout);
 int wrapfd_close(int fd);
 int fuzz_kill(pid_t pid, int sig);

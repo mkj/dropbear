@@ -1,6 +1,6 @@
 Base64 vectors.  These are the base64 encodings of the strings 00,01,02...NN-1
 
- 0: 
+ 0:
  1: AA==
  2: AAE=
  3: AAEC

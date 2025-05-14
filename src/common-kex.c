@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002-2004 Matt Johnston
  * Portions Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -43,7 +43,7 @@ static void gen_new_zstream_trans(void);
 #endif
 static void read_kex_algos(void);
 /* helper function for gen_new_keys */
-static void hashkeys(unsigned char *out, unsigned int outlen, 
+static void hashkeys(unsigned char *out, unsigned int outlen,
 		const hash_state * hs, const unsigned char X);
 
 
@@ -94,7 +94,7 @@ void send_msg_kexinit() {
 	/* reserved unit32 */
 	buf_putint(ses.writepayload, 0);
 
-	/* set up transmitted kex packet buffer for hashing. 
+	/* set up transmitted kex packet buffer for hashing.
 	 * This is freed after the end of the kex */
 	ses.transkexinit = buf_newcopy(ses.writepayload);
 
@@ -264,7 +264,7 @@ static void kexinitialise() {
  * out must have at least min(hash_size, outlen) bytes allocated.
  *
  * See Section 7.2 of rfc4253 (ssh transport) for details */
-static void hashkeys(unsigned char *out, unsigned int outlen, 
+static void hashkeys(unsigned char *out, unsigned int outlen,
 		const hash_state * hs, const unsigned char X) {
 
 	const struct ltc_hash_descriptor *hash_desc = ses.newkeys->algo_kex->hash_desc;
@@ -277,8 +277,8 @@ static void hashkeys(unsigned char *out, unsigned int outlen,
 	hash_desc->process(&hs2, ses.session_id->data, ses.session_id->len);
 	hash_desc->done(&hs2, tmpout);
 	memcpy(out, tmpout, MIN(hash_desc->hashsize, outlen));
-	for (offset = hash_desc->hashsize; 
-			offset < outlen; 
+	for (offset = hash_desc->hashsize;
+			offset < outlen;
 			offset += hash_desc->hashsize)
 	{
 		/* need to extend */
@@ -357,9 +357,9 @@ static void gen_new_keys() {
 				dropbear_exit("Crypto error");
 			}
 		}
-		if (ses.newkeys->recv.crypt_mode->start(recv_cipher, 
-				recv_IV, recv_key, 
-				ses.newkeys->recv.algo_crypt->keysize, 0, 
+		if (ses.newkeys->recv.crypt_mode->start(recv_cipher,
+				recv_IV, recv_key,
+				ses.newkeys->recv.algo_crypt->keysize, 0,
 				&ses.newkeys->recv.cipher_state) != CRYPT_OK) {
 			dropbear_exit("Crypto error");
 		}
@@ -373,22 +373,22 @@ static void gen_new_keys() {
 				dropbear_exit("Crypto error");
 			}
 		}
-		if (ses.newkeys->trans.crypt_mode->start(trans_cipher, 
-				trans_IV, trans_key, 
-				ses.newkeys->trans.algo_crypt->keysize, 0, 
+		if (ses.newkeys->trans.crypt_mode->start(trans_cipher,
+				trans_IV, trans_key,
+				ses.newkeys->trans.algo_crypt->keysize, 0,
 				&ses.newkeys->trans.cipher_state) != CRYPT_OK) {
 			dropbear_exit("Crypto error");
 		}
 	}
 
 	if (ses.newkeys->trans.algo_mac->hash_desc != NULL) {
-		hashkeys(ses.newkeys->trans.mackey, 
+		hashkeys(ses.newkeys->trans.mackey,
 				ses.newkeys->trans.algo_mac->keysize, &hs, mactransletter);
 		ses.newkeys->trans.hash_index = find_hash(ses.newkeys->trans.algo_mac->hash_desc->name);
 	}
 
 	if (ses.newkeys->recv.algo_mac->hash_desc != NULL) {
-		hashkeys(ses.newkeys->recv.mackey, 
+		hashkeys(ses.newkeys->recv.mackey,
 				ses.newkeys->recv.algo_mac->keysize, &hs, macrecvletter);
 		ses.newkeys->recv.hash_index = find_hash(ses.newkeys->recv.algo_mac->hash_desc->name);
 	}
@@ -464,7 +464,7 @@ static void gen_new_zstream_trans() {
 		ses.newkeys->trans.zstream->zfree = dropbear_zfree;
 	
 		if (deflateInit2(ses.newkeys->trans.zstream, Z_DEFAULT_COMPRESSION,
-					Z_DEFLATED, DROPBEAR_ZLIB_WINDOW_BITS, 
+					Z_DEFLATED, DROPBEAR_ZLIB_WINDOW_BITS,
 					DROPBEAR_ZLIB_MEM_LEVEL, Z_DEFAULT_STRATEGY)
 				!= Z_OK) {
 			dropbear_exit("zlib error");
@@ -552,7 +552,7 @@ void recv_msg_kexinit() {
 
 		/* I_C, the payload of the client's SSH_MSG_KEXINIT */
 		buf_setpos(ses.payload, ses.payload_beginning);
-		buf_putstring(ses.kexhashbuf, 
+		buf_putstring(ses.kexhashbuf,
 			(const char*)buf_getptr(ses.payload, ses.payload->len-ses.payload->pos),
 			ses.payload->len-ses.payload->pos);
 
@@ -763,20 +763,20 @@ static void read_kex_algos() {
 
 	/* Handle the asymmetry */
 	if (IS_DROPBEAR_CLIENT) {
-		ses.newkeys->recv.algo_crypt = 
+		ses.newkeys->recv.algo_crypt =
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
-		ses.newkeys->trans.algo_crypt = 
+		ses.newkeys->trans.algo_crypt =
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
-		ses.newkeys->recv.crypt_mode = 
+		ses.newkeys->recv.crypt_mode =
 			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
 		ses.newkeys->trans.crypt_mode =
 			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
-		ses.newkeys->recv.algo_mac = 
+		ses.newkeys->recv.algo_mac =
 #if DROPBEAR_AEAD_MODE
 			s2c_hash_algo == NULL ? ses.newkeys->recv.crypt_mode->aead_mac :
 #endif
 			(struct dropbear_hash*)s2c_hash_algo->data;
-		ses.newkeys->trans.algo_mac = 
+		ses.newkeys->trans.algo_mac =
 #if DROPBEAR_AEAD_MODE
 			c2s_hash_algo == NULL ? ses.newkeys->trans.crypt_mode->aead_mac :
 #endif
@@ -785,20 +785,20 @@ static void read_kex_algos() {
 		ses.newkeys->trans.algo_comp = c2s_comp_algo->val;
 	} else {
 		/* SERVER */
-		ses.newkeys->recv.algo_crypt = 
+		ses.newkeys->recv.algo_crypt =
 			(struct dropbear_cipher*)c2s_cipher_algo->data;
-		ses.newkeys->trans.algo_crypt = 
+		ses.newkeys->trans.algo_crypt =
 			(struct dropbear_cipher*)s2c_cipher_algo->data;
 		ses.newkeys->recv.crypt_mode =
 			(struct dropbear_cipher_mode*)c2s_cipher_algo->mode;
 		ses.newkeys->trans.crypt_mode =
 			(struct dropbear_cipher_mode*)s2c_cipher_algo->mode;
-		ses.newkeys->recv.algo_mac = 
+		ses.newkeys->recv.algo_mac =
 #if DROPBEAR_AEAD_MODE
 			c2s_hash_algo == NULL ? ses.newkeys->recv.crypt_mode->aead_mac :
 #endif
 			(struct dropbear_hash*)c2s_hash_algo->data;
-		ses.newkeys->trans.algo_mac = 
+		ses.newkeys->trans.algo_mac =
 #if DROPBEAR_AEAD_MODE
 			s2c_hash_algo == NULL ? ses.newkeys->trans.crypt_mode->aead_mac :
 #endif

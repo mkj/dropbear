@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@
  * See FIPS186 or the Handbook of Applied Cryptography for details of the
  * algorithm */
 
-#if DROPBEAR_DSS 
+#if DROPBEAR_DSS
 
 /* Load a dss key from a buffer, initialising the values.
  * The key will have the same format as buf_put_dss_key.
@@ -160,7 +160,7 @@ void buf_put_dss_priv_key(buffer* buf, const dropbear_dss_key *key) {
 }
 
 #if DROPBEAR_SIGNKEY_VERIFY
-/* Verify a DSS signature (in buf) made on data by the key given. 
+/* Verify a DSS signature (in buf) made on data by the key given.
  * returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
 int buf_dss_verify(buffer* buf, const dropbear_dss_key *key, const buffer *data_buf) {
 	unsigned char msghash[SHA1_HASH_SIZE];

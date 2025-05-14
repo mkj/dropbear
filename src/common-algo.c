@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -47,8 +47,8 @@ static int void_cipher(const unsigned char* in, unsigned char* out,
 	return CRYPT_OK;
 }
 
-static int void_start(int UNUSED(cipher), const unsigned char* UNUSED(IV), 
-			const unsigned char* UNUSED(key), 
+static int void_start(int UNUSED(cipher), const unsigned char* UNUSED(IV),
+			const unsigned char* UNUSED(key),
 			int UNUSED(keylen), int UNUSED(num_rounds), void* UNUSED(cipher_state)) {
 	return CRYPT_OK;
 }
@@ -59,21 +59,21 @@ static int void_start(int UNUSED(cipher), const unsigned char* UNUSED(IV),
 /* Remember to add new ciphers/hashes to regciphers/reghashes too */
 
 #if DROPBEAR_AES256
-static const struct dropbear_cipher dropbear_aes256 = 
+static const struct dropbear_cipher dropbear_aes256 =
 	{&aes_desc, 32, 16};
 #endif
 #if DROPBEAR_AES128
-static const struct dropbear_cipher dropbear_aes128 = 
+static const struct dropbear_cipher dropbear_aes128 =
 	{&aes_desc, 16, 16};
 #endif
 #if DROPBEAR_3DES
-static const struct dropbear_cipher dropbear_3des = 
+static const struct dropbear_cipher dropbear_3des =
 	{&des3_desc, 24, 8};
 #endif
 
 /* used to indicate no encryption, as defined in rfc2410 */
 const struct dropbear_cipher dropbear_nocipher =
-	{NULL, 16, 8}; 
+	{NULL, 16, 8};
 
 /* A few void* s are required to silence warnings
  * about the symmetric_CBC vs symmetric_CTR cipher_state pointer */
@@ -87,9 +87,9 @@ const struct dropbear_cipher_mode dropbear_mode_none =
 
 #if DROPBEAR_ENABLE_CTR_MODE
 /* a wrapper to make ctr_start and cbc_start look the same */
-static int dropbear_big_endian_ctr_start(int cipher, 
-		const unsigned char *IV, 
-		const unsigned char *key, int keylen, 
+static int dropbear_big_endian_ctr_start(int cipher,
+		const unsigned char *IV,
+		const unsigned char *key, int keylen,
 		int num_rounds, symmetric_CTR *ctr) {
 	return ctr_start(cipher, IV, key, keylen, num_rounds, CTR_COUNTER_BIG_ENDIAN, ctr);
 }
@@ -101,15 +101,15 @@ const struct dropbear_cipher_mode dropbear_mode_ctr =
    {&hash_desc, keysize, hashsize} */
 
 #if DROPBEAR_SHA1_HMAC
-static const struct dropbear_hash dropbear_sha1 = 
+static const struct dropbear_hash dropbear_sha1 =
 	{&sha1_desc, 20, 20};
 #endif
 #if DROPBEAR_SHA1_96_HMAC
-static const struct dropbear_hash dropbear_sha1_96 = 
+static const struct dropbear_hash dropbear_sha1_96 =
 	{&sha1_desc, 20, 12};
 #endif
 #if DROPBEAR_SHA2_256_HMAC
-static const struct dropbear_hash dropbear_sha2_256 = 
+static const struct dropbear_hash dropbear_sha2_256 =
 	{&sha256_desc, 32, 32};
 #endif
 #if DROPBEAR_SHA2_512_HMAC
@@ -365,7 +365,7 @@ void buf_put_algolist_all(buffer * buf, const algo_type localalgos[], int useall
 
 	startpos = buf->pos;
 	/* Placeholder for length */
-	buf_putint(buf, 0); 
+	buf_putint(buf, 0);
 	for (i = 0; localalgos[i].name != NULL; i++) {
 		if (localalgos[i].usable || useall) {
 			if (donefirst) {
@@ -580,7 +580,7 @@ check_algo(const char* algo_name, algo_type *algos)
  * options. Any that are not acceptable are removed in-place. Returns the
  * number of valid algorithms. */
 int
-check_user_algos(const char* user_algo_list, algo_type * algos, 
+check_user_algos(const char* user_algo_list, algo_type * algos,
 		const char *algo_desc)
 {
 	algo_type new_algos[MAX_PROPOSED_ALGO+1];

@@ -4,10 +4,10 @@
 #
 # Be aware that ICC isn't quite as stable as GCC and several optimization switches
 # seem to break the code (that GCC and MSVC compile just fine).  In particular
-# "-ip" and "-x*" seem to break the code (ROL/ROR macro problems).  As the makefile 
+# "-ip" and "-x*" seem to break the code (ROL/ROR macro problems).  As the makefile
 # is shipped the code will build and execute properly.
 #
-# Also note that ICC often makes code that is slower than GCC.  This is probably due to 
+# Also note that ICC often makes code that is slower than GCC.  This is probably due to
 # a mix of not being able to use "-ip" and just having fewer optimization algos than GCC.
 #
 # Tom St Denis
@@ -38,7 +38,7 @@ default:library
 # -ax?	specifies make code specifically for ? but compatible with IA-32
 # -x?	   specifies compile solely for ? [not specifically IA-32 compatible]
 #
-# where ? is 
+# where ? is
 #	K - PIII
 #	W - first P4 [Williamette]
 #	N - P4 Northwood
@@ -51,7 +51,7 @@ CFLAGS += -O2 -xP -ip
 endif
 
 ifndef IGNORE_SPEED
-CFLAGS += -O3 -xP -ip 
+CFLAGS += -O3 -xP -ip
 endif
 
 # want to see stuff?
@@ -203,7 +203,7 @@ src/pk/pkcs1/pkcs_1_v1_5_encode.o src/pk/rsa/rsa_decrypt_key.o src/pk/rsa/rsa_en
 src/pk/rsa/rsa_export.o src/pk/rsa/rsa_exptmod.o src/pk/rsa/rsa_free.o src/pk/rsa/rsa_import.o \
 src/pk/rsa/rsa_make_key.o src/pk/rsa/rsa_sign_hash.o src/pk/rsa/rsa_verify_hash.o src/prngs/fortuna.o \
 src/prngs/rc4.o src/prngs/rng_get_bytes.o src/prngs/rng_make_prng.o src/prngs/sober128.o \
-src/prngs/sprng.o src/prngs/yarrow.o 
+src/prngs/sprng.o src/prngs/yarrow.o
 
 HEADERS=src/headers/tomcrypt_cfg.h src/headers/tomcrypt_mac.h src/headers/tomcrypt_macros.h \
 src/headers/tomcrypt_custom.h src/headers/tomcrypt_argchk.h src/headers/tomcrypt_cipher.h \
@@ -226,7 +226,7 @@ else
 GROUP=wheel
 endif
 
-#ciphers come in two flavours... enc+dec and enc 
+#ciphers come in two flavours... enc+dec and enc
 aes_enc.o: aes.c aes_tab.c
 	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c aes.c -o aes_enc.o
 
@@ -237,7 +237,7 @@ TVS=demos/tv_gen.o
 TIMINGS=demos/timing.o
 TESTS=demos/test.o
 
-#ciphers come in two flavours... enc+dec and enc 
+#ciphers come in two flavours... enc+dec and enc
 src/ciphers/aes/aes_enc.o: src/ciphers/aes/aes.c src/ciphers/aes/aes_tab.c
 	$(CC) $(CFLAGS) -DENCRYPT_ONLY -c src/ciphers/aes/aes.c -o src/ciphers/aes/aes_enc.o
 
@@ -278,7 +278,7 @@ timing: library $(TIMINGS) testprof/$(LIBTEST)
 
 test: library $(TESTS) testprof/$(LIBTEST)
 	$(CC) $(TESTS) testprof/$(LIBTEST) $(LIBNAME) $(EXTRALIBS) -o $(TEST)
-  
+
 #This rule installs the library and the header files. This must be run
 #as root in order to have a high enough permission to write to the correct
 #directories and to set the owner and group to root.
@@ -289,7 +289,7 @@ install: library
 	install -g $(GROUP) -o $(USER) $(LIBTEST) $(DESTDIR)$(LIBPATH)
 	install -g $(GROUP) -o $(USER) $(HEADERS) $(DESTDIR)$(INCPATH)
 
-# $Source: /cvs/libtom/libtomcrypt/makefile.icc,v $   
-# $Revision: 1.76 $   
-# $Date: 2007/02/16 16:36:25 $ 
+# $Source: /cvs/libtom/libtomcrypt/makefile.icc,v $
+# $Revision: 1.76 $
+# $Date: 2007/02/16 16:36:25 $
 
