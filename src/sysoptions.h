@@ -297,7 +297,7 @@
 
 #define DROPBEAR_MAX_CLI_PASS 1024
 
-#define DROPBEAR_MAX_CLI_INTERACT_PROMPTS 80 /* The number of prompts we'll 
+#define DROPBEAR_MAX_CLI_INTERACT_PROMPTS 80 /* The number of prompts we'll
 												accept for keyb-interactive
 												auth */
 
@@ -322,7 +322,7 @@
 
 #define ENABLE_CONNECT_UNIX ((DROPBEAR_CLI_AGENTFWD) || (DROPBEAR_USE_PRNGD))
 
-/* if we're using authorized_keys or known_hosts */ 
+/* if we're using authorized_keys or known_hosts */
 #define DROPBEAR_KEY_LINES ((DROPBEAR_CLIENT) || (DROPBEAR_SVR_PUBKEY_AUTH))
 
 /* Changing this is inadvisable, it appears to have problems
@@ -431,7 +431,7 @@
 #    define DROPBEAR_MSAN 1
 #  endif
 #endif
-#ifndef DROPBEAR_MSAN 
+#ifndef DROPBEAR_MSAN
 #define DROPBEAR_MSAN 0
 #endif
 

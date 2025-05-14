@@ -5,11 +5,11 @@
  * Modifications copyright 2003-2022 Matt Johnston
  *
  * PuTTY is copyright 1997-2003 Simon Tatham.
- * 
+ *
  * Portions copyright Robert de Bath, Joris van Rantwijk, Delian
  * Delchev, Andreas Schultz, Jeroen Massar, Wez Furlong, Nicolas Barry,
  * Justin Bradford, and CORE SDI S.A.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person
  * obtaining a copy of this software and associated documentation files
  * (the "Software"), to deal in the Software without restriction,
@@ -17,10 +17,10 @@
  * publish, distribute, sublicense, and/or sell copies of the Software,
  * and to permit persons to whom the Software is furnished to do so,
  * subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be
  * included in all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
  * EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
  * MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
@@ -229,9 +229,9 @@ static void base64_encode_fp(FILE * fp, const unsigned char *data,
 }
 /*
  * Read an ASN.1/BER identifier and length pair.
- * 
+ *
  * Flags are a combination of the #defines listed below.
- * 
+ *
  * Returns -1 if unsuccessful; otherwise returns the number of
  * bytes used out of the source data.
  */
@@ -683,7 +683,7 @@ ossh_error:
 	if (key->type == OSSH_DSA) {
 		buf_putstring(blobbuf, "ssh-dss", 7);
 		retkey->type = DROPBEAR_SIGNKEY_DSS;
-	} 
+	}
 #endif
 #if DROPBEAR_RSA
 	if (key->type == OSSH_RSA) {
@@ -793,25 +793,25 @@ ossh_error:
 
 		if (0) {}
 #if DROPBEAR_ECC_256
-		else if (len == sizeof(OID_SEC256R1_BLOB) 
+		else if (len == sizeof(OID_SEC256R1_BLOB)
 			&& memcmp(p, OID_SEC256R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP256;
 			curve = &ecc_curve_nistp256;
-		} 
+		}
 #endif
 #if DROPBEAR_ECC_384
 		else if (len == sizeof(OID_SEC384R1_BLOB)
 			&& memcmp(p, OID_SEC384R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP384;
 			curve = &ecc_curve_nistp384;
-		} 
+		}
 #endif
 #if DROPBEAR_ECC_521
 		else if (len == sizeof(OID_SEC521R1_BLOB)
 			&& memcmp(p, OID_SEC521R1_BLOB, len) == 0) {
 			retkey->type = DROPBEAR_SIGNKEY_ECDSA_NISTP521;
 			curve = &ecc_curve_nistp521;
-		} 
+		}
 #endif
 		else {
 			errmsg = "Unknown ECC key type";
@@ -1068,7 +1068,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	 * 08 08 08 08 08 08 08 (assuming a 64-bit block cipher); a
 	 * plaintext one byte less than a multiple of the block size
 	 * will be padded with just 01.
-	 * 
+	 *
 	 * This enables the OpenSSL key decryption function to strip
 	 * off the padding algorithmically and return the unpadded
 	 * plaintext to the next layer: it looks at the final byte, and

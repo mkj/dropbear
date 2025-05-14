@@ -23,7 +23,7 @@ if test ! -e /etc/dropbear/dropbear_dss_host_key; then
     dropbearkey -t dss -f /etc/dropbear/dropbear_dss_host_key
   fi
 fi
-if test ! -s /etc/default/dropbear; then 
+if test ! -s /etc/default/dropbear; then
   # check whether OpenSSH seems to be installed.
   if test -x /usr/sbin/sshd; then
     cat <<EOT

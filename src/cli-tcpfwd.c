@@ -1,19 +1,19 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -45,8 +45,8 @@ const struct ChanType cli_chan_tcpremote = {
 #endif
 
 #if DROPBEAR_CLI_LOCALTCPFWD
-static int cli_localtcp(const char* listenaddr, 
-		unsigned int listenport, 
+static int cli_localtcp(const char* listenaddr,
+		unsigned int listenport,
 		const char* remoteaddr,
 		unsigned int remoteport);
 static const struct ChanType cli_chan_tcplocal = {
@@ -102,8 +102,8 @@ void setup_localtcp() {
 
 }
 
-static int cli_localtcp(const char* listenaddr, 
-		unsigned int listenport, 
+static int cli_localtcp(const char* listenaddr,
+		unsigned int listenport,
 		const char* remoteaddr,
 		unsigned int remoteport) {
 
@@ -182,7 +182,7 @@ void cli_recv_msg_request_success() {
 				int allocport = buf_getint(ses.payload);
 				if (allocport > 0) {
 					fwd->listenport = allocport;
-					dropbear_log(LOG_INFO, "Allocated port %d for remote forward to %s:%d", 
+					dropbear_log(LOG_INFO, "Allocated port %d for remote forward to %s:%d",
 							allocport, fwd->connectaddr, fwd->connectport);
 				}
 			}
@@ -252,7 +252,7 @@ static int newtcpforwarded(struct Channel * channel) {
 
 	if (!iter)
 	{
-		/* ... otherwise try to generically match the only forwarded port 
+		/* ... otherwise try to generically match the only forwarded port
 		without address (also handles ::1 vs 127.0.0.1 vs localhost case).
 		rfc4254 is vague about the definition of "address that was connected" */
 		for (iter = cli_opts.remotefwds->first; iter; iter = iter->next) {
@@ -267,7 +267,7 @@ static int newtcpforwarded(struct Channel * channel) {
 	if (iter == NULL || fwd == NULL) {
 		/* We didn't request forwarding on that port */
 		cleantext(origaddr);
-		dropbear_log(LOG_INFO, "Server sent unrequested forward from \"%s:%d\"", 
+		dropbear_log(LOG_INFO, "Server sent unrequested forward from \"%s:%d\"",
                 origaddr, origport);
 		goto out;
 	}

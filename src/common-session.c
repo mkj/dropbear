@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -111,7 +111,7 @@ void common_session_init(int sock_in, int sock_out) {
 	initqueue(&ses.writequeue);
 
 	ses.requirenext = SSH_MSG_KEXINIT;
-	ses.dataallowed = 1; /* we can send data until we actually 
+	ses.dataallowed = 1; /* we can send data until we actually
 							send the SSH_MSG_KEXINIT */
 	ses.ignorenext = 0;
 	ses.lastpacket = 0;
@@ -177,7 +177,7 @@ void session_loop(void(*loophandler)(void)) {
 		/* We get woken up when signal handlers write to this pipe.
 		   SIGCHLD in svr-chansession is the only one currently. */
 #if DROPBEAR_FUZZ
-		if (!fuzz.fuzzing) 
+		if (!fuzz.fuzzing)
 #endif
 		{
 		FD_SET(ses.signal_pipe[0], &readfd);
@@ -190,13 +190,13 @@ void session_loop(void(*loophandler)(void)) {
 		set_connect_fds(&writefd);
 
 		/* We delay reading from the input socket during initial setup until
-		after we have written out our initial KEXINIT packet (empty writequeue). 
+		after we have written out our initial KEXINIT packet (empty writequeue).
 		This means our initial packet can be in-flight while we're doing a blocking
 		read for the remote ident.
 		We also avoid reading from the socket if the writequeue is full, that avoids
 		replies backing up */
-		if (ses.sock_in != -1 
-			&& (ses.remoteident || isempty(&ses.writequeue)) 
+		if (ses.sock_in != -1
+			&& (ses.remoteident || isempty(&ses.writequeue))
 			&& writequeue_has_space) {
 			FD_SET(ses.sock_in, &readfd);
 		}
@@ -220,7 +220,7 @@ void session_loop(void(*loophandler)(void)) {
 		if (val <= 0) {
 			/* If we were interrupted or the select timed out, we still
 			 * want to iterate over channels etc for reading, to handle
-			 * server processes exiting etc. 
+			 * server processes exiting etc.
 			 * We don't want to read/write FDs. */
 			DROPBEAR_FD_ZERO(&writefd);
 			DROPBEAR_FD_ZERO(&readfd);
@@ -516,9 +516,9 @@ static void send_msg_keepalive() {
 		start_send_channel_request(chan, DROPBEAR_KEEPALIVE_STRING);
 	} else {
 		TRACE(("keepalive global request"))
-		/* Some peers will reply with SSH_MSG_REQUEST_FAILURE, 
+		/* Some peers will reply with SSH_MSG_REQUEST_FAILURE,
 		some will reply with SSH_MSG_UNIMPLEMENTED, some will exit. */
-		buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST); 
+		buf_putbyte(ses.writepayload, SSH_MSG_GLOBAL_REQUEST);
 		buf_putstring(ses.writepayload, DROPBEAR_KEEPALIVE_STRING,
 			strlen(DROPBEAR_KEEPALIVE_STRING));
 	}

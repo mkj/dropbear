@@ -1,28 +1,28 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2008 Frederic Moulins
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
  * AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
  * LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
  * OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
- * SOFTWARE. 
+ * SOFTWARE.
  *
- * This file incorporates work covered by the following copyright and  
+ * This file incorporates work covered by the following copyright and
  * permission notice:
  *
  * 	Author: Tatu Ylonen <ylo@cs.hut.fi>
@@ -35,7 +35,7 @@
  * 	called by a name other than "ssh" or "Secure Shell".
  *
  * This copyright and permission notice applies to the code parsing public keys
- * options string which can also be found in OpenSSH auth-options.c file 
+ * options string which can also be found in OpenSSH auth-options.c file
  * (auth_parse_options).
  *
  */
@@ -53,7 +53,7 @@
 /* Returns 1 if pubkey allows agent forwarding,
  * 0 otherwise */
 int svr_pubkey_allows_agentfwd() {
-	if (ses.authstate.pubkey_options 
+	if (ses.authstate.pubkey_options
 		&& ses.authstate.pubkey_options->no_agent_forwarding_flag) {
 		return 0;
 	}
@@ -63,7 +63,7 @@ int svr_pubkey_allows_agentfwd() {
 /* Returns 1 if pubkey allows tcp forwarding,
  * 0 otherwise */
 int svr_pubkey_allows_tcpfwd() {
-	if (ses.authstate.pubkey_options 
+	if (ses.authstate.pubkey_options
 		&& ses.authstate.pubkey_options->no_port_forwarding_flag) {
 		return 0;
 	}
@@ -73,7 +73,7 @@ int svr_pubkey_allows_tcpfwd() {
 /* Returns 1 if pubkey allows x11 forwarding,
  * 0 otherwise */
 int svr_pubkey_allows_x11fwd() {
-	if (ses.authstate.pubkey_options 
+	if (ses.authstate.pubkey_options
 		&& ses.authstate.pubkey_options->no_x11_forwarding_flag) {
 		return 0;
 	}
@@ -82,7 +82,7 @@ int svr_pubkey_allows_x11fwd() {
 
 /* Returns 1 if pubkey allows pty, 0 otherwise */
 int svr_pubkey_allows_pty() {
-	if (ses.authstate.pubkey_options 
+	if (ses.authstate.pubkey_options
 		&& ses.authstate.pubkey_options->no_pty_flag) {
 		return 0;
 	}
@@ -112,7 +112,7 @@ int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
 	return 1;
 }
 
-/* Set chansession command to the one forced 
+/* Set chansession command to the one forced
  * by any 'command' public key option. */
 void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
 	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->forced_command) {
@@ -308,7 +308,7 @@ next_option:
 		 * Skip the comma, and move to the next option
 		 * (or break out if there are no more).
 		 */
-		if (options_buf->pos < options_buf->len 
+		if (options_buf->pos < options_buf->len
 				&& buf_getbyte(options_buf) != ',') {
 			goto bad_option;
 		}

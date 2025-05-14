@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -37,7 +37,7 @@ void m_mp_init(mp_int *mp) {
 
 /* simplified duplication of bn_mp_multi's mp_init_multi, but die fatally
  * on error */
-void m_mp_init_multi(mp_int *mp, ...) 
+void m_mp_init_multi(mp_int *mp, ...)
 {
 	mp_int* cur_arg = mp;
 	va_list args;
@@ -52,7 +52,7 @@ void m_mp_init_multi(mp_int *mp, ...)
 	va_end(args);
 }
 
-void m_mp_alloc_init_multi(mp_int **mp, ...) 
+void m_mp_alloc_init_multi(mp_int **mp, ...)
 {
 	mp_int** cur_arg = mp;
 	va_list args;
@@ -68,7 +68,7 @@ void m_mp_alloc_init_multi(mp_int **mp, ...)
 	va_end(args);
 }
 
-void m_mp_free_multi(mp_int **mp, ...) 
+void m_mp_free_multi(mp_int **mp, ...)
 {
 	mp_int** cur_arg = mp;
 	va_list args;
@@ -92,11 +92,11 @@ void bytes_to_mp(mp_int *mp, const unsigned char* bytes, unsigned int len) {
 }
 
 /* hash the ssh representation of the mp_int mp */
-void hash_process_mp(const struct ltc_hash_descriptor *hash_desc, 
+void hash_process_mp(const struct ltc_hash_descriptor *hash_desc,
 				hash_state *hs, const mp_int *mp) {
 	buffer * buf;
 
-	buf = buf_new(512 + 20); /* max buffer is a 4096 bit key, 
+	buf = buf_new(512 + 20); /* max buffer is a 4096 bit key,
 								plus header + some leeway*/
 	buf_putmpint(buf, mp);
 	hash_desc->process(hs, buf->data, buf->len);

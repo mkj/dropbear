@@ -45,8 +45,8 @@ void fuzz_common_setup(void) {
 #endif
     if (getenv("DROPBEAR_KEEP_STDERR")) {
         fprintf(stderr, "Dropbear fuzzer: DROPBEAR_KEEP_STDERR, not disabling stderr output\n");
-    } 
-    else 
+    }
+    else
     {
         fprintf(stderr, "Dropbear fuzzer: Disabling stderr output\n");
         fuzz.fake_stderr = fopen("/dev/null", "w");
@@ -88,12 +88,12 @@ static void fuzz_dropbear_log(int UNUSED(priority), const char* UNUSED(format), 
 
 void fuzz_svr_setup(void) {
     fuzz_common_setup();
-    
+
     _dropbear_exit = svr_dropbear_exit;
 
-    char *argv[] = { 
+    char *argv[] = {
 		"dropbear",
-        "-E", 
+        "-E",
     };
 
     int argc = sizeof(argv) / sizeof(*argv);
@@ -111,11 +111,11 @@ void fuzz_svr_hook_preloop() {
 
 void fuzz_cli_setup(void) {
     fuzz_common_setup();
-    
+
 	_dropbear_exit = cli_dropbear_exit;
 	_dropbear_log = cli_dropbear_log;
 
-    char *argv[] = { 
+    char *argv[] = {
 		"dbclient",
 		"-y",
         "localhost",
@@ -130,7 +130,7 @@ void fuzz_cli_setup(void) {
     setenv(DROPBEAR_PASSWORD_ENV, "password", 1);
 }
 
-#include "fuzz-hostkeys.c"   
+#include "fuzz-hostkeys.c"
 
 static void load_fixed_client_key(void) {
 
@@ -247,7 +247,7 @@ int fuzz_spawn_command(int *ret_writefd, int *ret_readfd, int *ret_errfd, pid_t 
 /* Fake dropbear_listen, always returns failure for now.
 TODO make it sometimes return success with wrapfd_new_dummy() sockets.
 Making the listeners fake a new incoming connection will be harder. */
-/* Listen on address:port. 
+/* Listen on address:port.
  * Special cases are address of "" listening on everything,
  * and address of NULL listening on localhost only.
  * Returns the number of sockets bound on success, or -1 on failure. On

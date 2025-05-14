@@ -1,20 +1,20 @@
 /*
  * Dropbear SSH
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * Copyright (c) 2004 by Mihnea Stoenescu
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -137,7 +137,7 @@ static void cli_buf_put_sign(buffer* buf, sign_key *key, enum signature_type sig
 		agent_buf_sign(sigblob, key, data_buf, sigtype);
 		buf_putbufstring(buf, sigblob);
 		buf_free(sigblob);
-	} else 
+	} else
 #endif /* DROPBEAR_CLI_AGENTFWD */
 	{
 		buf_put_sign(buf, key, sigtype, data_buf);
@@ -208,7 +208,7 @@ int cli_auth_pubkey() {
 #if DROPBEAR_RSA
 			if (key->type == DROPBEAR_SIGNKEY_RSA) {
 #if DROPBEAR_RSA_SHA256
-				if (buf_has_algo(cli_ses.server_sig_algs, SSH_SIGNATURE_RSA_SHA256) 
+				if (buf_has_algo(cli_ses.server_sig_algs, SSH_SIGNATURE_RSA_SHA256)
 						== DROPBEAR_SUCCESS) {
 					sigtype = DROPBEAR_SIGNATURE_RSA_SHA256;
 					TRACE(("server-sig-algs allows rsa sha256"))
@@ -240,10 +240,10 @@ int cli_auth_pubkey() {
 			/* No match, skip this key */
 			TRACE(("server-sig-algs no match keytype %d, skipping", key->type))
 			key = list_remove(cli_opts.privkeys->first);
-			sign_key_free(key); 
+			sign_key_free(key);
 			continue;
 		} else {
-			/* Server didn't provide a server-sig-algs list, we'll 
+			/* Server didn't provide a server-sig-algs list, we'll
 			   assume all except rsa-sha256 are OK. */
 #if DROPBEAR_RSA
 			if (key->type == DROPBEAR_SIGNKEY_RSA) {
@@ -255,7 +255,7 @@ int cli_auth_pubkey() {
 				/* only support rsa-sha256, skip this key */
 				TRACE(("no server-sig-algs, skipping rsa sha256"))
 				key = list_remove(cli_opts.privkeys->first);
-				sign_key_free(key); 
+				sign_key_free(key);
 				continue;
 #endif
 			} /* key->type == DROPBEAR_SIGNKEY_RSA */

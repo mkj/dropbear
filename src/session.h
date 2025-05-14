@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -107,7 +107,7 @@ struct key_context {
 	enum signkey_type algo_hostkey; /* server key type */
 	enum signature_type algo_signature; /* server signature type */
 
-	int allow_compress; /* whether compression has started (useful in 
+	int allow_compress; /* whether compression has started (useful in
 							zlib@openssh.com delayed compression case) */
 };
 
@@ -145,7 +145,7 @@ struct sshsession {
 	struct Queue writequeue; /* A queue of encrypted packets to send */
 	unsigned int writequeue_len; /* Number of bytes pending to send in writequeue */
 	buffer *readbuf; /* From the wire, decrypted in-place */
-	buffer *payload; /* Post-decompression, the actual SSH packet. 
+	buffer *payload; /* Post-decompression, the actual SSH packet.
 						May have extra data at the beginning, will be
 						passed to packet processing functions positioned past
 						that, see payload_beginning */
@@ -159,7 +159,7 @@ struct sshsession {
 	unsigned dataallowed : 1; /* whether we can send data packets or we are in
 								 the middle of a KEX or something */
 
-	unsigned char requirenext; /* byte indicating what packets we require next, 
+	unsigned char requirenext; /* byte indicating what packets we require next,
 									 or 0x00 for any.  */
 
 	unsigned char ignorenext; /* whether to ignore the next packet,
@@ -325,7 +325,7 @@ struct clientsession {
 #if DROPBEAR_CLI_INTERACT_AUTH
 	int auth_interact_failed; /* flag whether interactive auth can still
 								 be used */
-	int interact_request_received; /* flag whether we've received an 
+	int interact_request_received; /* flag whether we've received an
 									  info request from the server for
 									  interactive auth.*/
 #endif

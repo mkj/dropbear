@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -117,7 +117,7 @@ enum signkey_type signkey_type_from_name(const char* name, unsigned int namelen)
 	return DROPBEAR_SIGNKEY_NONE;
 }
 
-/* Special case for rsa-sha2-256. This could be generalised if more 
+/* Special case for rsa-sha2-256. This could be generalised if more
    signature names are added that aren't 1-1 with public key names */
 const char* signature_name_from_type(enum signature_type type, unsigned int *namelen) {
 #if DROPBEAR_RSA
@@ -145,13 +145,13 @@ const char* signature_name_from_type(enum signature_type type, unsigned int *nam
 enum signature_type signature_type_from_name(const char* name, unsigned int namelen) {
 #if DROPBEAR_RSA
 #if DROPBEAR_RSA_SHA256
-	if (namelen == strlen(SSH_SIGNATURE_RSA_SHA256) 
+	if (namelen == strlen(SSH_SIGNATURE_RSA_SHA256)
 		&& memcmp(name, SSH_SIGNATURE_RSA_SHA256, namelen) == 0) {
 		return DROPBEAR_SIGNATURE_RSA_SHA256;
 	}
 #endif
 #if DROPBEAR_RSA_SHA1
-	if (namelen == strlen(SSH_SIGNKEY_RSA) 
+	if (namelen == strlen(SSH_SIGNKEY_RSA)
 		&& memcmp(name, SSH_SIGNKEY_RSA, namelen) == 0) {
 		return DROPBEAR_SIGNATURE_RSA_SHA1;
 	}
@@ -592,7 +592,7 @@ char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloble
 	return sign_key_sha256_fingerprint(keyblob, keybloblen);
 }
 
-void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype, 
+void buf_put_sign(buffer* buf, sign_key *key, enum signature_type sigtype,
 	const buffer *data_buf) {
 	buffer *sigblob = buf_new(MAX_PUBKEY_SIZE);
 	enum signkey_type keytype = signkey_type_from_signature(sigtype);
@@ -723,8 +723,8 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
  * base64 data, and contains no trailing data */
 /* If fingerprint is non-NULL, it will be set to a malloc()ed fingerprint
    of the key if it is successfully decoded */
-int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
-					const unsigned char* algoname, unsigned int algolen, 
+int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
+					const unsigned char* algoname, unsigned int algolen,
 					const buffer * line, char ** fingerprint) {
 
 	buffer * decodekey = NULL;
@@ -769,7 +769,7 @@ int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
 	filealgolen = buf_getint(decodekey);
 	filealgo = buf_getptr(decodekey, filealgolen);
 	if (filealgolen != algolen || memcmp(filealgo, algoname, algolen) != 0) {
-		TRACE(("checkpubkey: algo match failed")) 
+		TRACE(("checkpubkey: algo match failed"))
 		goto out;
 	}
 

@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -36,12 +36,12 @@
 struct PluginInstance;
 struct PluginSession;
 
-/* API VERSION INFORMATION - 
+/* API VERSION INFORMATION -
  * Dropbear will:
  * - Reject any plugin with a major version mismatch
  * - Load and print a warning if the plugin's minor version is HIGHER than
  *   dropbear's minor version (assumes properties are added at the end of
- *   PluginInstance or PluginSession). This is a case of plugin newer than dropbear. 
+ *   PluginInstance or PluginSession). This is a case of plugin newer than dropbear.
  * - Reject if the plugin minor version is SMALLER than dropbear one (case
  *   of plugin older than dropbear).
  * - Load (with no warnings) if version match.
@@ -57,7 +57,7 @@ struct PluginSession;
  * returned in the api_version to match the version it understands and reject
  * any plugin for which API major version does not match.
  *
- * If the version MINOR is different, dropbear will allow the plugin to run 
+ * If the version MINOR is different, dropbear will allow the plugin to run
  * only if: plugin_MINOR > dropbear_MINOR
  *
  * If plugin_MINOR < dropbear_MINOR or if the MAJOR version is different
@@ -68,7 +68,7 @@ struct PluginSession;
  * Returns NULL in case of failure, otherwise a void * of the instance that need
  * to be passed to all the subsequent call to the plugin
  */
-typedef struct PluginInstance *(* PubkeyExtPlugin_newFn)(int verbose, 
+typedef struct PluginInstance *(* PubkeyExtPlugin_newFn)(int verbose,
         const char *options,
         const char *addrstring);
 #define DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW               "plugin_new"
@@ -76,7 +76,7 @@ typedef struct PluginInstance *(* PubkeyExtPlugin_newFn)(int verbose,
 
 /* Validate a client through public key authentication
  *
- * If session has not been already created, creates it and store it 
+ * If session has not been already created, creates it and store it
  * in *sessionInOut.
  * If session is a non-NULL, it will reuse it.
  *
@@ -85,9 +85,9 @@ typedef struct PluginInstance *(* PubkeyExtPlugin_newFn)(int verbose,
  */
 typedef int (* PubkeyExtPlugin_checkPubKeyFn)(struct PluginInstance *PluginInstance,
         struct PluginSession **sessionInOut,
-        const char* algo, 
+        const char* algo,
         unsigned int algolen,
-        const unsigned char* keyblob, 
+        const unsigned char* keyblob,
         unsigned int keybloblen,
         const char *username);
 
@@ -109,7 +109,7 @@ typedef void (* PubkeyExtPlugin_deleteFn)(struct PluginInstance *PluginInstance)
  *
  * A plug-in can extend it to add its own properties
  *
- * The instance is created from the call to the plugin_new() function of the 
+ * The instance is created from the call to the plugin_new() function of the
  * shared library.
  * The delete_plugin function should delete the object.
  */
@@ -125,7 +125,7 @@ struct PluginInstance {
 /*****************************************************************************
  * SESSION
  ****************************************************************************/
-/* Returns the options from the session. 
+/* Returns the options from the session.
  * The returned buffer will be destroyed when the session is deleted.
  * Option buffer string NULL-terminated
  */
@@ -133,7 +133,7 @@ typedef char * (* PubkeyExtPlugin_getOptionsFn)(struct PluginSession *session);
 
 
 /* An SSH Session. Created during pre-auth and reused during the authentication.
- * The plug-in should delete this object (or any object extending it) from 
+ * The plug-in should delete this object (or any object extending it) from
  * the delete_session() function.
  *
  * Extend it to cache user and authentication information that can be

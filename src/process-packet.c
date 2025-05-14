@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002-2004 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -79,7 +79,7 @@ void process_packet() {
 	idle detection. This is slightly incorrect since a tcp forwarded
 	global request with failure won't trigger the idle timeout,
 	but that's probably acceptable */
-	if (!(type == SSH_MSG_GLOBAL_REQUEST 
+	if (!(type == SSH_MSG_GLOBAL_REQUEST
 		|| type == SSH_MSG_REQUEST_FAILURE
 		|| type == SSH_MSG_CHANNEL_FAILURE)) {
 		ses.last_packet_time_idle = now;
@@ -134,7 +134,7 @@ void process_packet() {
 
 	/* Kindly the protocol authors gave all the preauth packets type values
 	 * less-than-or-equal-to 60 ( == MAX_UNAUTH_PACKET_TYPE ).
-	 * NOTE: if the protocol changes and new types are added, revisit this 
+	 * NOTE: if the protocol changes and new types are added, revisit this
 	 * assumption */
 	if ( !ses.authstate.authdone && type > MAX_UNAUTH_PACKET_TYPE ) {
 		dropbear_exit("Received message %d before userauth", type);

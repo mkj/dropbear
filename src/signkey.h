@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -154,8 +154,8 @@ int buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, 
 int sk_buf_verify(buffer * buf, sign_key *key, enum signature_type expect_sigtype, const buffer *data_buf, char* app, unsigned int applen);
 char * sign_key_fingerprint(const unsigned char* keyblob, unsigned int keybloblen);
 #endif
-int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen, 
-					const unsigned char* algoname, unsigned int algolen, 
+int cmp_base64_key(const unsigned char* keyblob, unsigned int keybloblen,
+					const unsigned char* algoname, unsigned int algolen,
 					const buffer * line, char ** fingerprint);
 
 void** signkey_key_ptr(sign_key *key, enum signkey_type type);
