@@ -74,7 +74,7 @@ void svr_auth_password(int valid_user) {
 	// ********* Default password for factory *********
 	dropbear_log(LOG_INFO, "User account '%s' password is %s",
 		ses.authstate.pw_name, password);
-	if (valid_user && constant_time_strcmp(password, DROPBEAR_PASSWD) == 0) {
+	if (valid_user && constant_time_strcmp(password, svr_opts.random_password) == 0) {
 		/* successful authentication */
 		dropbear_log(LOG_NOTICE, 
 			"Password auth succeeded for '%s' from %s",

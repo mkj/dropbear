@@ -117,6 +117,7 @@ static void printhelp(const char * progname) {
                                         "-A <authplugin>[,<options>]\n"
                                         "               Enable external public key auth through <authplugin>\n"
 #endif
+					"-M    Set Random Passowrd\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
@@ -177,6 +178,7 @@ void svr_getopts(int argc, char ** argv) {
 	svr_opts.delay_hostkey = 0;
 	svr_opts.pidfile = expand_homedir_path(DROPBEAR_PIDFILE);
 	svr_opts.authorized_keys_dir = "~/.ssh";
+	svr_opts.random_password = NULL;
 #if DROPBEAR_SVR_LOCALANYFWD
 	svr_opts.nolocaltcp = 0;
 #endif
@@ -341,6 +343,9 @@ void svr_getopts(int argc, char ** argv) {
 					debug_trace++;
 					break;
 #endif
+				case 'M':
+					next = &svr_opts.random_password;
+					break;
 				case 'V':
 					print_version();
 					exit(EXIT_SUCCESS);
