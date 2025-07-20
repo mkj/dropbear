@@ -148,6 +148,14 @@ AC_ARG_ENABLE(werror,
 # large file support is useful for scp
 AC_SYS_LARGEFILE
 
+# Default mv
+# We can edit mv's path, it's usefull on systems where the gnu
+# coreutils are not the default implementation. For example on Illumos and
+# Solaris, the default mv does not have the -v option (verbose). But on Solaris
+# and most Illumos distros, the gnu coreutils are shipped under /usr/gnu, where
+# we can find mv under the bin/ directory.
+AC_SUBST(MV,["mv"])
+
 # Host specific options
 # this isn't a definitive list of hosts, they are just added as required
 AC_CANONICAL_HOST
@@ -173,6 +181,7 @@ case "$host" in
 	fi
 	AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
 	AC_CHECK_LIB(nsl, yp_match, LIBS="$LIBS -lnsl")
+	AC_SUBST(MV,["/usr/gnu/bin/mv"])
 	;;
 
 *-*-aix*)
