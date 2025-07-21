@@ -4598,10 +4598,10 @@ fi
 fi
 
 # Default mv
-# This way we can edit mv's path, it's usefull on systems where the gnu
+# We can edit mv's path, it's usefull on systems where the gnu
 # coreutils are not the default implementation. For example on Illumos and
 # Solaris, the default mv does not have the -v option (verbose). But on Solaris
-# and most Illumos distros, the gnu coreutiles are shipped under /usr/gnu, where
+# and most Illumos distros, the gnu coreutils are shipped under /usr/gnu, where
 # we can find mv under the bin/ directory.
 MV="mv"
 
@@ -4808,6 +4808,9 @@ if test "x$ac_cv_lib_nsl_yp_match" = xyes
 then :
   LIBS="$LIBS -lnsl"
 fi
+
+
+printf "%s\n" "#define SOLARIS 1" >>confdefs.h
 
 	MV="/usr/gnu/bin/mv"
 

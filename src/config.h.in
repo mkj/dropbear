@@ -435,6 +435,9 @@
 /* Define to the type of arg 5 for 'select'. */
 #undef SELECT_TYPE_ARG5
 
+/* Using Solaris */
+#undef SOLARIS
+
 /* Define to 1 if all of the C89 standard headers exist (not just the ones
    required in a freestanding environment). This macro is provided for
    backward compatibility; new code need not use it. */
