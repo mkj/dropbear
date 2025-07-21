@@ -4695,7 +4695,7 @@ case "$host" in
 
 *-*-solaris*)
 	CFLAGS="$CFLAGS -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib -lssp"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for obsolete utmp and wtmp in solaris2.x" >&5
 printf %s "checking for obsolete utmp and wtmp in solaris2.x... " >&6; }
 	sol2ver=`echo "$host"| sed -e 's/.*[0-9]\.//'`
