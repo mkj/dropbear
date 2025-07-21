@@ -169,7 +169,6 @@ case "$host" in
 *-*-solaris*)
 	CFLAGS="$CFLAGS -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
-	conf_lastlog_location="/var/adm/lastlog"
 	AC_MSG_CHECKING(for obsolete utmp and wtmp in solaris2.x)
 	sol2ver=`echo "$host"| sed -e 's/.*[[0-9]]\.//'`
 	if test "$sol2ver" -ge 8; then
