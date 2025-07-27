@@ -5,6 +5,63 @@
 #include "debug.h"
 #include "runopts.h"
 
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+void
+dropbear_freeaddrinfo(struct addrinfo *ai)
+{
+	struct addrinfo *next;
+
+	/* For AF_VSOCK, we allocated it ourselves, so free it here as we
+	 * cannot be sure that the stock freeaddrinfo free's it in the same
+	 * way as we allocated it.
+	 */
+	if (ai && ai->ai_family != AF_VSOCK)
+		return freeaddrinfo(ai);
+
+	for(; ai != NULL;) {
+		next = ai->ai_next;
+		free(ai);
+		ai = next;
+	}
+}
+
+int dropbear_getaddrinfo(const char *hostname, const char *servname,
+	const struct addrinfo *hints, struct addrinfo **res)
+{
+	const char *vsock = strstr(hostname, "%vsock");
+	if (vsock && (hints->ai_family == AF_UNSPEC || hints->ai_family == AF_VSOCK)) {
+		struct addrinfo *vsock_res;
+		struct sockaddr_vm *vsockaddr;
+
+		vsock_res = calloc(1, sizeof(struct addrinfo) + sizeof(*vsockaddr));
+		vsockaddr = (void *)(vsock_res + 1);
+		vsock_res->ai_family = AF_VSOCK;
+		vsock_res->ai_socktype = hints->ai_socktype;
+		vsock_res->ai_addr = (struct sockaddr *)vsockaddr;
+		vsock_res->ai_addrlen = sizeof(*vsockaddr);
+		vsockaddr->svm_family = AF_VSOCK;
+		if (vsock != hostname)
+			vsockaddr->svm_cid = atoi(hostname);
+		else
+			vsockaddr->svm_cid = VMADDR_CID_ANY;
+		vsockaddr->svm_port = atoi(servname);
+
+		if (res)
+			*res = vsock_res;
+		else
+			dropbear_freeaddrinfo(vsock_res);
+
+		return 0;
+	}
+
+	return getaddrinfo(hostname, servname, hints, res);
+}
+#else
+#define dropbear_freeaddrinfo freeaddrinfo
+#define dropbear_getaddrinfo getaddrinfo
+#endif
+
+
 struct dropbear_progress_connection {
 	struct addrinfo *res;
 	struct addrinfo *res_iter;
@@ -92,7 +149,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 			hints.ai_family = r->ai_family;
 			hints.ai_flags = AI_PASSIVE;
 
-			err = getaddrinfo(c->bind_address, c->bind_port, &hints, &bindaddr);
+			err = dropbear_getaddrinfo(c->bind_address, c->bind_port, &hints, &bindaddr);
 			if (err) {
 				int len = 100 + strlen(gai_strerror(err));
 				m_free(c->errstring);
@@ -127,7 +184,8 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 		setnonblocking(c->sock);
 
 #if DROPBEAR_CLIENT_TCP_FAST_OPEN
-		fastopen = (c->writequeue != NULL && r->ai_family != AF_UNIX);
+		fastopen = (c->writequeue != NULL &&
+			    (r->ai_family == AF_INET || r->ai_family == AF_INET6);
 
 		if (fastopen) {
 			memset(&message, 0x0, sizeof(message));
@@ -214,7 +272,7 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	hints.ai_socktype = SOCK_STREAM;
 	hints.ai_family = AF_UNSPEC;
 
-	err = getaddrinfo(remotehost, remoteport, &hints, &c->res);
+	err = dropbear_getaddrinfo(remotehost, remoteport, &hints, &c->res);
 	if (err) {
 		int len;
 		len = 100 + strlen(gai_strerror(err));
@@ -507,6 +565,11 @@ int get_sock_port(int sock) {
 		return 0;
 	}
 
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+	if (from.ss_family == AF_VSOCK)
+		return ((struct sockaddr_vm *)&from)->svm_port;
+#endif
+
 	/* Work around Linux IPv6 weirdness */
 	if (from.ss_family == AF_INET6)
 		fromlen = sizeof(struct sockaddr_in6);
@@ -537,7 +600,6 @@ int dropbear_listen(const char* address, const char* port,
 	unsigned int nsock;
 	int val;
 	int sock;
-	uint16_t *allocated_lport_p = NULL;
 	int allocated_lport = 0;
 	
 	TRACE(("enter dropbear_listen"))
@@ -569,7 +631,8 @@ int dropbear_listen(const char* address, const char* port,
 		}
 		hints.ai_flags = AI_PASSIVE;
 	}
-	err = getaddrinfo(address, port, &hints, &res0);
+
+	err = dropbear_getaddrinfo(address, port, &hints, &res0);
 
 	if (err) {
 		if (errstring != NULL && *errstring == NULL) {
@@ -579,7 +642,7 @@ int dropbear_listen(const char* address, const char* port,
 			snprintf(*errstring, len, "Error resolving: %s", gai_strerror(err));
 		}
 		if (res0) {
-			freeaddrinfo(res0);
+			dropbear_freeaddrinfo(res0);
 			res0 = NULL;
 		}
 		TRACE(("leave dropbear_listen: failed resolving"))
@@ -597,11 +660,17 @@ int dropbear_listen(const char* address, const char* port,
 			res = res->ai_next) {
 		if (allocated_lport > 0) {
 			if (AF_INET == res->ai_family) {
-				allocated_lport_p = &((struct sockaddr_in *)res->ai_addr)->sin_port;
+				((struct sockaddr_in *)res->ai_addr)->sin_port =
+					htons(allocated_lport);
 			} else if (AF_INET6 == res->ai_family) {
-				allocated_lport_p = &((struct sockaddr_in6 *)res->ai_addr)->sin6_port;
+				((struct sockaddr_in6 *)res->ai_addr)->sin6_port =
+					htons(allocated_lport);
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+			} else if (AF_VSOCK == res->ai_family) {
+				((struct sockaddr_vm *)res->ai_addr)->svm_port =
+					allocated_lport;
+#endif
 			}
-			*allocated_lport_p = htons(allocated_lport);
 		}
 
 		/* Get a socket */
@@ -659,7 +728,7 @@ int dropbear_listen(const char* address, const char* port,
 	}
 
 	if (res0) {
-		freeaddrinfo(res0);
+		dropbear_freeaddrinfo(res0);
 		res0 = NULL;
 	}
 
@@ -722,7 +791,22 @@ void getaddrstring(struct sockaddr_storage* addr,
 #if !DO_HOST_LOOKUP
 	host_lookup = 0;
 #endif
-	
+
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+	if (addr->ss_family == AF_VSOCK) {
+		struct sockaddr_vm *vsockaddr = (void *)addr;
+
+		snprintf(host, NI_MAXHOST, "%u%%vsock", vsockaddr->svm_cid);
+		if (ret_host)
+			*ret_host = m_strdup(host);
+		snprintf(serv, NI_MAXSERV, "%u", vsockaddr->svm_port);
+		if (ret_port)
+			*ret_port = m_strdup(serv);
+
+		return;
+	}
+#endif
+
 	if (host_lookup) {
 		flags = NI_NUMERICSERV;
 	}
