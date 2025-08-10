@@ -243,9 +243,6 @@
 #define RECV_MAX_PACKET_LEN (MAX(35000, ((RECV_MAX_PAYLOAD_LEN)+100)))
 
 /* for channel code */
-#define TRANS_MAX_WINDOW 500000000 /* 500MB is sufficient, stopping overflow */
-#define TRANS_MAX_WIN_INCR 500000000 /* overflow prevention */
-
 #define RECV_WINDOWEXTEND (opts.recv_window / 3) /* We send a "window extend" every
 								RECV_WINDOWEXTEND bytes */
 #define MAX_RECV_WINDOW (10*1024*1024) /* 10 MB should be enough */
