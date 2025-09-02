@@ -16,9 +16,7 @@
 #define ATTRIB_SENTINEL
 #endif
 
-#if defined(SOLARIS)
 #define __STDC_WANT_LIB_EXT1__ 1
-#endif
 
 void m_burn(void* data, unsigned int len);
 

@@ -4792,9 +4792,6 @@ then :
   LIBS="$LIBS -lnsl"
 fi
 
-
-printf "%s\n" "#define SOLARIS 1" >>confdefs.h
-
 	MV="/usr/gnu/bin/mv"
 
 	;;

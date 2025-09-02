@@ -180,7 +180,6 @@ case "$host" in
 	fi
 	AC_CHECK_LIB(socket, socket, LIBS="$LIBS -lsocket")
 	AC_CHECK_LIB(nsl, yp_match, LIBS="$LIBS -lnsl")
-	AC_DEFINE(SOLARIS,1,Using Solaris)
 	AC_SUBST(MV,["/usr/gnu/bin/mv"])
 	;;
 
