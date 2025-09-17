@@ -200,6 +200,11 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 		}
 	}
 
+	if (!svr_pubkey_allows_remote_tcpfwd(request_addr, port)) {
+		TRACE(("remote tcp forwarding not permitted from requested source"));
+		goto out;
+	}
+
 	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
 	tcpinfo->sendaddr = NULL;
 	tcpinfo->sendport = 0;

@@ -89,7 +89,7 @@ int svr_pubkey_allows_pty() {
 	return 1;
 }
 
-/* Returns 1 if pubkey allows local tcp fowarding to the provided destination,
+/* Returns 1 if pubkey allows local tcp forwarding to the provided destination,
  * 0 otherwise */
 int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
 	if (ses.authstate.pubkey_options
@@ -112,7 +112,28 @@ int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
 	return 1;
 }
 
-/* Set chansession command to the one forced 
+/* Returns 1 if pubkey allows remote tcp forwarding from the provided source,
+ * 0 otherwise */
+int svr_pubkey_allows_remote_tcpfwd(const char *host, unsigned int port) {
+	if (ses.authstate.pubkey_options
+		&& ses.authstate.pubkey_options->permit_listen_sources) {
+		m_list_elem *iter = ses.authstate.pubkey_options->permit_listen_sources->first;
+		while (iter) {
+			struct PermitTCPFwdEntry *entry = (struct PermitTCPFwdEntry*)iter->item;
+			if (strcmp(entry->host, host) == 0 && entry->port == port) {
+				return 1;
+			}
+
+			iter = iter->next;
+		}
+
+		return 0;
+	}
+
+	return 1;
+}
+
+/* Set chansession command to the one forced
  * by any 'command' public key option. */
 void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
 	if (ses.authstate.pubkey_options && ses.authstate.pubkey_options->forced_command) {
@@ -146,6 +167,16 @@ void svr_pubkey_options_cleanup() {
 				iter = ses.authstate.pubkey_options->permit_open_destinations->first;
 			}
 			m_free(ses.authstate.pubkey_options->permit_open_destinations);
+		}
+		if (ses.authstate.pubkey_options->permit_listen_sources) {
+			m_list_elem *iter = ses.authstate.pubkey_options->permit_listen_sources->first;
+			while (iter) {
+				struct PermitTCPFwdEntry *entry = (struct PermitTCPFwdEntry*)list_remove(iter);
+				m_free(entry->host);
+				m_free(entry);
+				iter = ses.authstate.pubkey_options->permit_listen_sources->first;
+			}
+			m_free(ses.authstate.pubkey_options->permit_listen_sources);
 		}
 		m_free(ses.authstate.pubkey_options);
 	}
@@ -284,6 +315,50 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 				goto next_option;
 			} else {
 				dropbear_log(LOG_WARNING, "Badly formatted permitopen= authorized_keys option");
+				goto bad_option;
+			}
+		}
+
+		if (match_option(options_buf, "permitlisten=\"") == DROPBEAR_SUCCESS) {
+			int valid_option = 0;
+			const unsigned char* permitlisten_start = buf_getptr(options_buf, 0);
+
+			if (!ses.authstate.pubkey_options->permit_listen_sources) {
+				ses.authstate.pubkey_options->permit_listen_sources = list_new();
+			}
+
+			while (options_buf->pos < options_buf->len) {
+				const char c = buf_getbyte(options_buf);
+				if (c == '"') {
+					char *spec = NULL;
+					char *portstring = NULL;
+					const int permitlisten_len = buf_getptr(options_buf, 0) - permitlisten_start;
+					struct PermitTCPFwdEntry *entry =
+							(struct PermitTCPFwdEntry*)m_malloc(sizeof(struct PermitTCPFwdEntry));
+
+					list_append(ses.authstate.pubkey_options->permit_listen_sources, entry);
+					spec = m_malloc(permitlisten_len);
+					memcpy(spec, permitlisten_start, permitlisten_len - 1);
+					spec[permitlisten_len - 1] = '\0';
+					if ((split_address_port(spec, &entry->host, &portstring) == DROPBEAR_SUCCESS)
+						&& entry->host && portstring) {
+						if (m_str_to_uint(portstring, &entry->port) == DROPBEAR_SUCCESS) {
+							valid_option = 1;
+							TRACE(("remote port forwarding allowed from host '%s' and port '%u'",
+									entry->host, entry->port));
+						}
+					}
+
+					m_free(spec);
+					m_free(portstring);
+					break;
+				}
+			}
+
+			if (valid_option) {
+				goto next_option;
+			} else {
+				dropbear_log(LOG_WARNING, "Badly formatted permitlisten= authorized_keys option");
 				goto bad_option;
 			}
 		}

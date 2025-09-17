@@ -47,6 +47,7 @@ int svr_pubkey_allows_tcpfwd(void);
 int svr_pubkey_allows_x11fwd(void);
 int svr_pubkey_allows_pty(void);
 int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port);
+int svr_pubkey_allows_remote_tcpfwd(const char *host, unsigned int port);
 void svr_pubkey_set_forced_command(struct ChanSess *chansess);
 void svr_pubkey_options_cleanup(void);
 int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filename);
@@ -57,6 +58,8 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 #define svr_pubkey_allows_x11fwd() 1
 #define svr_pubkey_allows_pty() 1
 static inline int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port)
+	{ (void)host; (void)port; return 1; }
+static inline int svr_pubkey_allows_remote_tcpfwd(const char *host, unsigned int port)
 	{ (void)host; (void)port; return 1; }
 
 static inline void svr_pubkey_set_forced_command(struct ChanSess *chansess) { }
@@ -147,7 +150,9 @@ struct PubKeyOptions {
 	char * forced_command;
 	/* "permitopen=" option */
 	m_list *permit_open_destinations;
-	
+	/* "permitlisten=" option */
+	m_list *permit_listen_sources;
+
 #if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
 	int no_touch_required_flag;
 	int verify_required_flag;
