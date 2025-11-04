@@ -389,9 +389,9 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 
 		/* Desired total delay 300ms +-50ms (in nanoseconds).
 		Beware of integer overflow if increasing these values */
-		const int mindelay = 250000000;
-		const unsigned int vardelay = 100000000;
-		suseconds_t rand_delay;
+		const uint32_t mindelay = 250000000;
+		const uint32_t vardelay = 100000000;
+		uint32_t rand_delay;
 		struct timespec delay;
 
 		gettime_wrapper(&delay);
@@ -407,7 +407,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		genrandom((unsigned char*)&rand_delay, sizeof(rand_delay));
 		rand_delay = mindelay + (rand_delay % vardelay);
 
-		if (delay.tv_sec == 0 && delay.tv_nsec <= mindelay) {
+		if (delay.tv_sec == 0 && delay.tv_nsec <= rand_delay) {
 			/* Compensate for elapsed time */
 			delay.tv_nsec = rand_delay - delay.tv_nsec;
 		} else {
