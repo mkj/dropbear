@@ -74,6 +74,7 @@ IMPORTANT: Some options will require "make clean" after changes */
 #define DROPBEAR_SVR_LOCALTCPFWD 1
 #define DROPBEAR_SVR_REMOTETCPFWD 1
 #define DROPBEAR_SVR_LOCALSTREAMFWD 1
+#define DROPBEAR_SVR_REMOTESTREAMFWD 1
 
 /* Enable Authentication Agent Forwarding */
 #define DROPBEAR_SVR_AGENTFWD 1

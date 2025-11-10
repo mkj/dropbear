@@ -123,6 +123,7 @@ jobs:
               #define DROPBEAR_CLI_REMOTETCPFWD 0
               #define DROPBEAR_SVR_LOCALTCPFWD 0
               #define DROPBEAR_SVR_REMOTETCPFWD 0
+              #define DROPBEAR_SVR_REMOTESTREAMFWD 0
               #define DROPBEAR_SVR_AGENTFWD 0
               #define DROPBEAR_CLI_AGENTFWD 0
               #define DROPBEAR_CLI_PROXYCMD 0

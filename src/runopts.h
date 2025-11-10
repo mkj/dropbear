@@ -113,6 +113,9 @@ typedef struct svr_runopts {
 #if DROPBEAR_SVR_LOCALANYFWD
 	int nolocaltcp;
 #endif
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+	int streamlocalbindunlink;
+#endif
 
 	sign_key *hostkey;
 
