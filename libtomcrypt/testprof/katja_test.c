@@ -18,7 +18,7 @@ int katja_test(void)
    }
 
 for (size = 1024; size <= 2048; size += 256) {
-  
+
    /* make 10 random key */
    for (cnt = 0; cnt < 10; cnt++) {
       DO(katja_make_key(&yarrow_prng, prng_idx, size/8, &key));
@@ -65,7 +65,7 @@ for (cnt = 0; cnt < len; ) {
 
       len  = sizeof(out);
       len2 = kat_msgsize;
-   
+
       DO(katja_encrypt_key(in, kat_msgsize, out, &len, NULL, 0, &yarrow_prng, prng_idx, hash_idx, &key));
       /* change a byte */
       out[8] ^= 1;
@@ -86,7 +86,7 @@ for (cnt = 0; cnt < len; ) {
       if (len2 != kat_msgsize || memcmp(tmp, in, kat_msgsize)) {
          unsigned long x;
          fprintf(stderr, "\nkatja_decrypt_key mismatch, len %lu (second decrypt)\n", len2);
-         fprintf(stderr, "Original contents: \n"); 
+         fprintf(stderr, "Original contents: \n");
          for (x = 0; x < kat_msgsize; ) {
              fprintf(stderr, "%02x ", in[x]);
              if (!(++x % 16)) {
@@ -94,13 +94,13 @@ for (cnt = 0; cnt < len; ) {
              }
          }
          fprintf(stderr, "\n");
-         fprintf(stderr, "Output contents: \n"); 
+         fprintf(stderr, "Output contents: \n");
          for (x = 0; x < kat_msgsize; ) {
              fprintf(stderr, "%02x ", out[x]);
              if (!(++x % 16)) {
                 fprintf(stderr, "\n");
              }
-         }     
+         }
          fprintf(stderr, "\n");
          return 1;
       }
@@ -142,8 +142,8 @@ for (cnt = 0; cnt < len; ) {
 
 /* export key and import as both private and public */
    len2 = sizeof(tmp);
-   DO(katja_export(tmp, &len2, PK_PRIVATE, &key)); 
-   DO(katja_import(tmp, len2, &privKey)); 
+   DO(katja_export(tmp, &len2, PK_PRIVATE, &key));
+   DO(katja_import(tmp, len2, &privKey));
    len2 = sizeof(tmp);
    DO(katja_export(tmp, &len2, PK_PUBLIC, &key));
    DO(katja_import(tmp, len2, &pubKey));
@@ -153,7 +153,7 @@ for (cnt = 0; cnt < len; ) {
    /* change a byte */
    in[0] ^= 1;
    DO(katja_verify_hash(out, len, in, 20, hash_idx, 0, &stat2, &key));
-   
+
    if (!(stat == 1 && stat2 == 0)) {
       fprintf(stderr, "katja_verify_hash (unsalted, origKey) failed, %d, %d", stat, stat2);
       katja_free(&key);
@@ -169,7 +169,7 @@ for (cnt = 0; cnt < len; ) {
    /* change a byte */
    in[0] ^= 1;
    DO(katja_verify_hash(out, len, in, 20, hash_idx, 0, &stat2, &privKey));
-   
+
    if (!(stat == 1 && stat2 == 0)) {
       fprintf(stderr, "katja_verify_hash (unsalted, privKey) failed, %d, %d", stat, stat2);
       katja_free(&key);
@@ -185,7 +185,7 @@ for (cnt = 0; cnt < len; ) {
    /* change a byte */
    in[0] ^= 1;
    DO(katja_verify_hash(out, len, in, 20, hash_idx, 0, &stat2, &pubKey));
-   
+
    if (!(stat == 1 && stat2 == 0)) {
       fprintf(stderr, "katja_verify_hash (unsalted, pubkey) failed, %d, %d", stat, stat2);
       katja_free(&key);
@@ -201,7 +201,7 @@ for (cnt = 0; cnt < len; ) {
    /* change a byte */
    in[0] ^= 1;
    DO(katja_verify_hash(out, len, in, 20, hash_idx, 8, &stat2, &pubKey));
-   
+
    if (!(stat == 1 && stat2 == 0)) {
       fprintf(stderr, "katja_verify_hash (salted) failed, %d, %d", stat, stat2);
       katja_free(&key);
@@ -215,7 +215,7 @@ for (cnt = 0; cnt < len; ) {
    katja_free(&pubKey);
    katja_free(&privKey);
 }
-   
+
    /* free the key and return */
    return 0;
 }

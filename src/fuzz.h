@@ -20,7 +20,7 @@ void fuzz_cli_setup(void);
 // in non-fuzzing mode.
 void fuzz_early_setup(void) __attribute__((constructor));
 
-// must be called once per fuzz iteration. 
+// must be called once per fuzz iteration.
 // returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE
 int fuzz_set_input(const uint8_t *Data, size_t Size);
 
@@ -91,7 +91,7 @@ extern struct dropbear_fuzz_options fuzz;
 #ifndef FUZZ_NO_REPLACE_STDERR
 
 /* This is a bodge but seems to work.
- glibc stdio.h has the comment 
+ glibc stdio.h has the comment
  "C89/C99 say they're macros.  Make them happy." */
 /* OS X has it as a macro */
 #ifdef stderr

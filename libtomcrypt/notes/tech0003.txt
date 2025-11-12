@@ -9,12 +9,12 @@ For the most part the library can get by with around 20KB of stack and about 32K
 public key functions.  If all you plan on using are the hashes and ciphers than only about 1KB of stack is required
 and no heap.
 
-To save space all of the symmetric key scheduled keys are stored in a union called "symmetric_key".  This means the 
+To save space all of the symmetric key scheduled keys are stored in a union called "symmetric_key".  This means the
 size of a symmetric_key is the size of the largest scheduled key.  By removing the ciphers you don't use from
 the build you can minimize the size of this structure.  For instance, by removing both Twofish and Blowfish the
 size reduces to 768 bytes from the 4,256 bytes it would have been (on a 32-bit platform).  Or if you remove
-Blowfish and use Twofish with TWOFISH_SMALL defined its still 768 bytes.  Even at its largest the structure is only 
-4KB which is normally not a problem for any platform.  
+Blowfish and use Twofish with TWOFISH_SMALL defined its still 768 bytes.  Even at its largest the structure is only
+4KB which is normally not a problem for any platform.
 
 
 Cipher Name | Size of scheduled key (bytes) |
@@ -43,7 +43,7 @@ Memory used per cipher on a 32-bit platform.
 
 Noekeon is a fairly fast cipher and uses very little memory.  Ideally in low-ram platforms all other ciphers should be
 left undefined and Noekeon should remain.  While Noekeon is generally considered a secure block cipher (it is insecure
-as a hash) CAST5 is perhaps a "runner-up" choice.  CAST5 has been around longer (it is also known as CAST-128) and is 
+as a hash) CAST5 is perhaps a "runner-up" choice.  CAST5 has been around longer (it is also known as CAST-128) and is
 fairly fast as well.
 
 You can easily accomplish this via the "config.pl" script. Simply answer "n" to all of the ciphers except the one you want

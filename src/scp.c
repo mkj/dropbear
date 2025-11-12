@@ -1,4 +1,4 @@
-/* Dropbear Note: This file is based on OpenSSH 4.3p2. Avoid unnecessary 
+/* Dropbear Note: This file is based on OpenSSH 4.3p2. Avoid unnecessary
    changes to simplify future updates */
 
 /*

@@ -74,7 +74,7 @@ struct dropbear_ecc_curve* curve_for_dp(const ltc_ecc_set_type *dp) {
 
 ecc_key * new_ecc_key(void) {
 	ecc_key *key = m_malloc(sizeof(*key));
-	m_mp_alloc_init_multi((mp_int**)&key->pubkey.x, (mp_int**)&key->pubkey.y, 
+	m_mp_alloc_init_multi((mp_int**)&key->pubkey.x, (mp_int**)&key->pubkey.y,
 		(mp_int**)&key->pubkey.z, (mp_int**)&key->k, NULL);
 	return key;
 }
@@ -236,10 +236,10 @@ mp_int * dropbear_ecc_shared_secret(ecc_key *public_key, const ecc_key *private_
 	prime = m_malloc(sizeof(*prime));
 	m_mp_init(prime);
 
-	if (mp_read_radix(prime, (char *)private_key->dp->prime, 16) != CRYPT_OK) { 
+	if (mp_read_radix(prime, (char *)private_key->dp->prime, 16) != CRYPT_OK) {
 		goto out;
 	}
-	if (ltc_mp.ecc_ptmul(private_key->k, &public_key->pubkey, result, prime, 1) != CRYPT_OK) { 
+	if (ltc_mp.ecc_ptmul(private_key->k, &public_key->pubkey, result, prime, 1) != CRYPT_OK) {
 		goto out;
 	}
 

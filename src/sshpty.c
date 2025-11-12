@@ -2,7 +2,7 @@
  * Dropbear - a SSH2 server
  *
  * Copied from OpenSSH-3.5p1 source, modified by Matt Johnston 2003
- * 
+ *
  * Author: Tatu Ylonen <ylo@cs.hut.fi>
  * Copyright (c) 1995 Tatu Ylonen <ylo@cs.hut.fi>, Espoo, Finland
  *                    All rights reserved
@@ -55,7 +55,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 
 	i = openpty(ptyfd, ttyfd, NULL, NULL, NULL);
 	if (i < 0) {
-		dropbear_log(LOG_WARNING, 
+		dropbear_log(LOG_WARNING,
 				"pty_allocate: openpty: %.100s", strerror(errno));
 		return 0;
 	}

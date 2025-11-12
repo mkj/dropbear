@@ -1,7 +1,7 @@
-/** 
+/**
    @file sober128tab.c
    SOBER-128 Tables
-*/   
+*/
 /* $ID$ */
 /* @(#)TuringMultab.h   1.3 (QUALCOMM) 02/09/03 */
 /* Multiplication table for Turing using 0xD02B4367 */
@@ -82,7 +82,7 @@ static const ulong32 Multab[256] = {
  * "On the Design of 8*32 S-boxes". Unpublished report, by the
  * Information Systems Research Centre,
  * Queensland University of Technology, 1999.
- * 
+ *
  * The most significant 8 bits are the Skipjack "F table", which can be
  * found at http://csrc.nist.gov/CryptoToolkit/skipjack/skipjack.pdf .
  * In this optimised table, though, the intent is to XOR the word from

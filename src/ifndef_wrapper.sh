@@ -4,4 +4,4 @@
 
 sed 's/^\( *#define \([^ ][^ ]*\) .*\)/#ifndef \2\
 \1\
-#endif/' 
+#endif/'

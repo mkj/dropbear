@@ -15,16 +15,16 @@ int dsa_test(void)
    /* verify it */
    DO(dsa_verify_key(&key, &stat1));
    if (stat1 == 0) { fprintf(stderr, "dsa_verify_key "); return 1; }
-   
+
    /* encrypt a message */
    for (x = 0; x < 16; x++) { msg[x] = x; }
    x = sizeof(out);
    DO(dsa_encrypt_key(msg, 16, out, &x, &yarrow_prng, find_prng("yarrow"), find_hash("sha1"), &key));
-   
+
    /* decrypt */
    y = sizeof(out2);
    DO(dsa_decrypt_key(out, x, out2, &y, &key));
-   
+
    if (y != 16 || memcmp(out2, msg, 16)) {
       fprintf(stderr, "dsa_decrypt failed, y == %lu\n", y);
       return 1;

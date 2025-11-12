@@ -45,7 +45,7 @@ int LLVMFuzzerTestOneInput(const uint8_t *Data, size_t Size) {
 			}
 			if (buf_verify(fuzz.input, key, sigtype, verifydata) == DROPBEAR_SUCCESS) {
 				/* The fuzzer is capable of generating keys with a signature to match.
-				We don't want false positives if the key is bogus, since a client/server 
+				We don't want false positives if the key is bogus, since a client/server
 				wouldn't be trusting a bogus key anyway */
 				int boguskey = 0;
 

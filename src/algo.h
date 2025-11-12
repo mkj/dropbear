@@ -1,19 +1,19 @@
 /*
  * Dropbear - a SSH2 server
- * 
+ *
  * Copyright (c) 2002,2003 Matt Johnston
  * All rights reserved.
- * 
+ *
  * Permission is hereby granted, free of charge, to any person obtaining a copy
  * of this software and associated documentation files (the "Software"), to deal
  * in the Software without restriction, including without limitation the rights
  * to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
  * copies of the Software, and to permit persons to whom the Software is
  * furnished to do so, subject to the following conditions:
- * 
+ *
  * The above copyright notice and this permission notice shall be included in
  * all copies or substantial portions of the Software.
- * 
+ *
  * THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
  * IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
  * FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -65,12 +65,12 @@ struct dropbear_cipher {
 };
 
 struct dropbear_cipher_mode {
-	int (*start)(int cipher, const unsigned char *IV, 
-			const unsigned char *key, 
+	int (*start)(int cipher, const unsigned char *IV,
+			const unsigned char *key,
 			int keylen, int num_rounds, void *cipher_state);
-	int (*encrypt)(const unsigned char *pt, unsigned char *ct, 
+	int (*encrypt)(const unsigned char *pt, unsigned char *ct,
 			unsigned long len, void *cipher_state);
-	int (*decrypt)(const unsigned char *ct, unsigned char *pt, 
+	int (*decrypt)(const unsigned char *ct, unsigned char *pt,
 			unsigned long len, void *cipher_state);
 	int (*aead_crypt)(unsigned int seq,
 			const unsigned char *in, unsigned char *out,
@@ -142,7 +142,7 @@ algo_type * buf_match_algo(buffer* buf, algo_type localalgos[],
 		int kexguess2, int *goodguess);
 
 #if DROPBEAR_USER_ALGO_LIST
-int check_user_algos(const char* user_algo_list, algo_type * algos, 
+int check_user_algos(const char* user_algo_list, algo_type * algos,
 		const char *algo_desc);
 char * algolist_string(const algo_type algos[]);
 #endif
