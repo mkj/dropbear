@@ -286,6 +286,9 @@ static int newtcpdirect(struct Channel * channel) {
 	origport = buf_getint(ses.payload);
 
 	/* best be sure */
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+	if (strstr(orighost, "%vsock") != NULL) {} else
+#endif
 	if (origport > 65535 || destport > 65535) {
 		TRACE(("leave newtcpdirect: port > 65535"))
 		goto out;
