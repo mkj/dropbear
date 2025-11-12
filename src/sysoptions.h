@@ -266,7 +266,7 @@
 #else
 /* 521 bit ecdsa key */
 #define MAX_PUBKEY_SIZE 200
-#define MAX_PRIVKEY_SIZE 200
+#define MAX_PRIVKEY_SIZE 250
 #endif
 
 /* For kex hash buffer, worst case size for Q_C || Q_S || K */
