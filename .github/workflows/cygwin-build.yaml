@@ -1,0 +1,31 @@
+name: Cygwin Build
+on:
+  workflow_dispatch:
+jobs:
+  build:
+    runs-on: windows-latest
+    env:
+      SHELLOPTS: igncr
+    defaults:
+      run:
+        shell: C:/tools/cygwin/bin/bash.exe --login '{0}'
+    steps:
+      - uses: egor-tensin/setup-cygwin@v4
+        with:
+          install-dir: C:/tools/cygwin
+          packages: gcc-core gcc-g++ autoconf automake libtool pkg-config make zlib-devel libcrypt-devel libtommath-devel cygwin-devel
+      - run: git config --global core.autocrlf false
+      - run: git config --system core.eol lf
+      - uses: actions/checkout@v2
+      - run: cd $GITHUB_WORKSPACE; autoreconf --verbose --force
+      - run: cd $GITHUB_WORKSPACE; ./configure
+      - run: cd $GITHUB_WORKSPACE; make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+      - uses: actions/upload-artifact@v2
+        with:
+          name: dropbear
+          path: |
+            ${{ github.workspace }}/dropbear.exe
+            ${{ github.workspace }}/dbclient.exe
+            ${{ github.workspace }}/dropbearkey.exe
+            ${{ github.workspace }}/dropbearconvert.exe
+            ${{ github.workspace }}/scp.exe
