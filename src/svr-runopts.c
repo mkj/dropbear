@@ -323,6 +323,10 @@ void svr_getopts(int argc, char ** argv) {
 				case 't':
 					svr_opts.multiauthmethod = 1;
 					break;
+#else
+				case 's':
+				case 'g':
+					break;
 #endif
 				case 'h':
 					printhelp(argv[0]);
