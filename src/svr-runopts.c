@@ -117,7 +117,7 @@ static void printhelp(const char * progname) {
                                         "-A <authplugin>[,<options>]\n"
                                         "               Enable external public key auth through <authplugin>\n"
 #endif
-					"-M    Set Random Passowrd\n"
+					"-M    Set Random Password\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
 					"-v    verbose (repeat for more verbose)\n"
