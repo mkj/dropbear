@@ -10,14 +10,11 @@ RUN apt-get update && \
         bzip2 \
         && rm -rf /var/lib/apt/lists/*
 
+WORKDIR /app
+
+ADD . /app
+
 ENV DROPBEAR_VERSION=2024.86
-RUN mkdir /usr/src/dropbear
-WORKDIR /usr/src/dropbear
-ADD . /usr/src/dropbear
 
-RUN ./configure --enable-static && \
-    make PROGRAMS="dropbear"
-
-RUN mkdir /out
-
-CMD ["dropbear", "-V"]
+RUN ./configure --enable-static
+RUN make -j8 PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1

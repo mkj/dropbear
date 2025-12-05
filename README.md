@@ -82,3 +82,11 @@ The Dropbear distribution includes a standalone version of OpenSSH's `scp` progr
 You can compile it with `make scp`.
 You may want to change the path of the ssh binary, specified by `_PATH_SSH_PROGRAM` in `options.h`.
 By default the progress meter isn't compiled in to save space, you can enable it by adding `SCPPROGRESS=1` to the `make` commandline.
+
+
+## Local build
+Get the binary at `./build`
+### arm 
+1. `sh build arm`
+### arm64
+1. `sh build arm64`
