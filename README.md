@@ -87,6 +87,6 @@ By default the progress meter isn't compiled in to save space, you can enable it
 ## Local build
 Get the binary at `./build`
 ### arm 
-1. `sh build arm`
+1. `sh build.sh arm`
 ### arm64
-1. `sh build arm64`
+1. `sh build.sh arm64`
