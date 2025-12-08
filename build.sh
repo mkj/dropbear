@@ -9,17 +9,17 @@ fi
 
 platform=""
 dockername=""
-dockerfile=""
+docker_build_arch=""
 distdir=""
 if [ "$arch" = "arm64" ]; then
   platform="linux/arm64/v8"
   dockername="arm64v8-dropbear"
-  dockerfile="Dockerfile-arm64"
+  docker_build_arch="arm64v8"
   distdir="build/arm64"
 elif [ "$arch" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
-  dockerfile="Dockerfile-arm"
+  docker_build_arch="arm32v7"
   distdir="build/arm"
 else
   echo "Unsupported architecture: $arch"
@@ -29,14 +29,14 @@ fi
 echo "Building for architecture: $arch"
 echo "Using platform: $platform"
 echo "Using docker image name: $dockername"
-echo "Using dockerfile: $dockerfile"
+echo "Using docker build architecture: $docker_build_arch"
 echo "Using distribution directory: $distdir"
 
-mkdir -p $(pwd)/$distdir/bin
-mkdir -p $(pwd)/$distdir/lib
-mkdir -p $(pwd)/$distdir/include
+mkdir -p "$distdir/bin"
+mkdir -p "$distdir/lib"
+mkdir -p "$distdir/include"
 
-docker build --platform=$platform -t $dockername -f $dockerfile .  
+docker build --platform=$platform -t $dockername  --build-arg build_arch=$docker_build_arch .  
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 
