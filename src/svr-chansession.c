@@ -326,7 +326,11 @@ static void cleanupchansess(const struct Channel *channel) {
 	if (chansess->tty) {
 		/* write the utmp/wtmp login record */
 		li = chansess_login_alloc(chansess);
+
+		svr_raise_gid_utmp();
 		login_logout(li);
+		svr_restore_gid();
+
 		login_free_entry(li);
 
 		pty_release(chansess->tty);
@@ -847,7 +851,11 @@ static int ptycommand(struct Channel *channel, struct ChanSess *chansess) {
 		 * terminal used for stdout with the dup2 above, otherwise
 		 * the wtmp login will not be recorded */
 		li = chansess_login_alloc(chansess);
+
+		svr_raise_gid_utmp();
 		login_login(li);
+		svr_restore_gid();
+
 		login_free_entry(li);
 
 		/* Can now dup2 stderr. Messages from login_login() have gone

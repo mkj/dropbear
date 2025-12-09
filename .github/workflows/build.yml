@@ -78,6 +78,9 @@ jobs:
             # fails with:
             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
             ranlib: ranlib -no_warning_for_no_symbols
+            # macos doesn't have setresgid
+            localoptions: |
+              #define DROPBEAR_SVR_DROP_PRIVS 0
 
           - name: macos 15
             os: macos-15
@@ -90,6 +93,9 @@ jobs:
             # fails with:
             # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
             ranlib: ranlib -no_warning_for_no_symbols
+            # macos doesn't have setresgid
+            localoptions: |
+              #define DROPBEAR_SVR_DROP_PRIVS 0
 
           # Check that debug code doesn't bitrot
           - name: DEBUG_TRACE

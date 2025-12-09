@@ -539,6 +539,7 @@ AC_CHECK_FUNCS(utmpname)
 AC_CHECK_FUNCS(endutxent getutxent getutxid getutxline pututxline )
 AC_CHECK_FUNCS(setutxent utmpxname)
 AC_CHECK_FUNCS(logout updwtmp logwtmp)
+AC_CHECK_FUNCS(setresgid)
 
 # Might be a macro. Might be sys/endian.h on BSDs
 AC_CHECK_HEADERS([endian.h])

@@ -41,6 +41,8 @@ void svr_auth_password(int valid_user);
 void svr_auth_pubkey(int valid_user);
 void svr_auth_pam(int valid_user);
 void svr_switch_user(void);
+void svr_raise_gid_utmp(void);
+void svr_restore_gid(void);
 
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 int svr_pubkey_allows_agentfwd(void);

@@ -458,13 +458,14 @@ void send_msg_userauth_success() {
 	 * delayed-zlib mode */
 	ses.authstate.authdone = 1;
 
-#if DROPBEAR_DROP_PRIVS
+#if DROPBEAR_SVR_DROP_PRIVS
+	/* Drop privileges as soon as authentication has happened. */
 	svr_switch_user();
 #endif
 	ses.connect_time = 0;
 
 
-#if DROPBEAR_DROP_PRIVS
+#if DROPBEAR_SVR_DROP_PRIVS
 	/* If running as the user, we can rely on the OS
 	 * to limit allowed ports */
 	ses.allowprivport = 1;
@@ -483,6 +484,20 @@ void send_msg_userauth_success() {
 
 }
 
+#if DROPBEAR_SVR_DROP_PRIVS
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+static int utmp_gid(gid_t *ret_gid) {
+	struct group *utmp_gr = getgrnam("utmp");
+	if (!utmp_gr) {
+		TRACE(("No utmp group"));
+		return DROPBEAR_FAILURE;
+	}
+
+	*ret_gid = utmp_gr->gr_gid;
+	return DROPBEAR_SUCCESS;
+}
+#endif
+
 /* Switch to the ses.authstate user.
  * Fails if not running as root and the user differs.
  *
@@ -500,6 +515,25 @@ void svr_switch_user(void) {
 						ses.authstate.pw_gid) < 0)) {
 			dropbear_exit("Error changing user group");
 		}
+
+#if DROPBEAR_SVR_DROP_PRIVS
+		/* Retain utmp saved group so that wtmp/utmp can be written */
+		int ret = utmp_gid(&svr_ses.utmp_gid);
+		if (ret == DROPBEAR_SUCCESS) {
+			/* Set saved gid to utmp so that it can be
+			 * restored for login_logout() etc. This saved
+			 * group is cleared by the OS on execve() */
+			int rc = setresgid(-1, -1, svr_ses.utmp_gid);
+			if (rc == 0) {
+				svr_ses.have_utmp_gid = 1;
+			} else {
+				/* Will not attempt to switch to utmp gid.
+				 * login() etc may fail. */
+				TRACE(("utmp setresgid failed"));
+			}
+		}
+#endif
+
 		if (setuid(ses.authstate.pw_uid) < 0) {
 			dropbear_exit("Error changing user");
 		}
@@ -517,3 +551,26 @@ void svr_switch_user(void) {
 	}
 }
 
+void svr_raise_gid_utmp(void) {
+#if DROPBEAR_SVR_DROP_PRIVS
+	if (!svr_ses.have_utmp_gid) {
+		return;
+	}
+
+	if (setegid(svr_ses.utmp_gid) != 0) {
+		dropbear_log(LOG_WARNING, "failed setegid");
+	}
+#endif
+}
+
+void svr_restore_gid(void) {
+#if DROPBEAR_SVR_DROP_PRIVS
+	if (!svr_ses.have_utmp_gid) {
+		return;
+	}
+
+	if (setegid(getgid()) != 0) {
+		dropbear_log(LOG_WARNING, "failed setegid");
+	}
+#endif
+}

@@ -355,6 +355,10 @@
 	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
 #endif
 
+#if DROPBEAR_SVR_DROP_PRIVS && !defined(HAVE_SETRESGID)
+	#error "DROPBEAR_SVR_DROP_PRIVS requires setresgid()."
+#endif
+
 /* Source for randomness. This must be able to provide hundreds of bytes per SSH
  * connection without blocking. */
 #ifndef DROPBEAR_URANDOM_DEV

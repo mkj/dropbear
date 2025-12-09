@@ -7590,6 +7590,13 @@ then :
 
 fi
 
+ac_fn_c_check_func "$LINENO" "setresgid" "ac_cv_func_setresgid"
+if test "x$ac_cv_func_setresgid" = xyes
+then :
+  printf "%s\n" "#define HAVE_SETRESGID 1" >>confdefs.h
+
+fi
+
 
 # Might be a macro. Might be sys/endian.h on BSDs
 ac_fn_c_check_header_compile "$LINENO" "endian.h" "ac_cv_header_endian_h" "$ac_includes_default"
