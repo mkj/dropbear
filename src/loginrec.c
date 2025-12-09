@@ -193,32 +193,24 @@ int wtmpx_get_entry(struct logininfo *li);
  *
  * Call with a pointer to a struct logininfo initialised with
  * login_init_entry() or login_alloc_entry()
- *
- * Returns:
- *  >0 if successful
- *  0  on failure (will use OpenSSH's logging facilities for diagnostics)
  */
-int
+void
 login_login (struct logininfo *li)
 {
 	li->type = LTYPE_LOGIN;
-	return login_write(li);
+	login_write(li);
 }
 
 
 /* login_logout(struct logininfo *)     - Record a logout
  *
  * Call as with login_login()
- *
- * Returns:
- *  >0 if successful
- *  0  on failure (will use OpenSSH's logging facilities for diagnostics)
  */
-int
+void
 login_logout(struct logininfo *li)
 {
 	li->type = LTYPE_LOGOUT;
-	return login_write(li);
+	login_write(li);
 }
 
 
@@ -309,7 +301,7 @@ login_set_current_time(struct logininfo *li)
  ** login_write: Call low-level recording functions based on autoconf
  ** results
  **/
-int
+void
 login_write (struct logininfo *li)
 {
 #ifndef HAVE_CYGWIN
@@ -340,7 +332,6 @@ login_write (struct logininfo *li)
 #ifdef USE_WTMPX
 	wtmpx_write_entry(li);
 #endif
-	return 0;
 }
 
 #ifdef LOGIN_NEEDS_UTMPX
