@@ -515,6 +515,17 @@ static void disablekey(enum signature_type type) {
 	}
 }
 
+void disable_sig_except(enum signature_type allow_type) {
+	int i;
+	TRACE(("Disabling other sigs except %d", allow_type));
+	for (i = 0; sigalgs[i].name != NULL; i++) {
+		enum signature_type sig_type = sigalgs[i].val;
+		if (sig_type != allow_type) {
+			sigalgs[i].usable = 0;
+		}
+	}
+}
+
 static void loadhostkey_helper(const char *name, void** src, void** dst, int fatal_duplicate) {
 	if (*dst) {
 		if (fatal_duplicate) {
