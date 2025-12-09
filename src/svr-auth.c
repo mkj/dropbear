@@ -457,12 +457,22 @@ void send_msg_userauth_success() {
 	/* authdone must be set after encrypt_packet() for 
 	 * delayed-zlib mode */
 	ses.authstate.authdone = 1;
+
+#if DROPBEAR_DROP_PRIVS
+	svr_switch_user();
+#endif
 	ses.connect_time = 0;
 
 
+#if DROPBEAR_DROP_PRIVS
+	/* If running as the user, we can rely on the OS
+	 * to limit allowed ports */
+	ses.allowprivport = 1;
+#else
 	if (ses.authstate.pw_uid == 0) {
 		ses.allowprivport = 1;
 	}
+#endif
 
 	/* Remove from the list of pre-auth sockets. Should be m_close(), since if
 	 * we fail, we might end up leaking connection slots, and disallow new
@@ -472,3 +482,38 @@ void send_msg_userauth_success() {
 	TRACE(("leave send_msg_userauth_success"))
 
 }
+
+/* Switch to the ses.authstate user.
+ * Fails if not running as root and the user differs.
+ *
+ * This may be called either after authentication, or 
+ * after shell/command fork if DROPBEAR_SVR_DROP_PRIVS is unset.
+ */
+void svr_switch_user(void) {
+	assert(ses.authstate.authdone);
+
+	/* We can only change uid/gid as root ... */
+	if (getuid() == 0) {
+
+		if ((setgid(ses.authstate.pw_gid) < 0) ||
+			(initgroups(ses.authstate.pw_name, 
+						ses.authstate.pw_gid) < 0)) {
+			dropbear_exit("Error changing user group");
+		}
+		if (setuid(ses.authstate.pw_uid) < 0) {
+			dropbear_exit("Error changing user");
+		}
+	} else {
+		/* ... but if the daemon is the same uid as the requested uid, we don't
+		 * need to */
+
+		/* XXX - there is a minor issue here, in that if there are multiple
+		 * usernames with the same uid, but differing groups, then the
+		 * differing groups won't be set (as with initgroups()). The solution
+		 * is for the sysadmin not to give out the UID twice */
+		if (getuid() != ses.authstate.pw_uid) {
+			dropbear_exit("Couldn't	change user as non-root");
+		}
+	}
+}
+

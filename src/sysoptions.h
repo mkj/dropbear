@@ -440,6 +440,9 @@
 #define DROPBEAR_MULTI 0
 #endif
 
+#if !DROPBEAR_SVR_MULTIUSER && DROPBEAR_SVR_DROP_PRIVS
+#error DROPBEAR_SVR_DROP_PRIVS needs DROPBEAR_SVR_MULTIUSER
+#endif
 /* Fuzzing expects all key types to be enabled */
 #if DROPBEAR_FUZZ
 #if defined(DROPBEAR_DSS)

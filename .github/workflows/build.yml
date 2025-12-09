@@ -227,6 +227,8 @@ jobs:
           echo "#define DROPBEAR_SVR_PASSWORD_AUTH 0" >> localoptions.h
           # 1 second timeout is too short
           sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
+          # DROPBEAR_SVR_DROP_PRIVS is on by default, turn it off
+          echo "#define DROPBEAR_SVR_DROP_PRIVS 0" >> localoptions.h
 
       - name: make
         run: |

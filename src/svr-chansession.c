@@ -980,30 +980,8 @@ static void execchild(const void *user_data) {
 #endif /* DEBUG_VALGRIND */
 	}
 
-#if DROPBEAR_SVR_MULTIUSER
-	/* We can only change uid/gid as root ... */
-	if (getuid() == 0) {
-
-		if ((setgid(ses.authstate.pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw_name, 
-						ses.authstate.pw_gid) < 0)) {
-			dropbear_exit("Error changing user group");
-		}
-		if (setuid(ses.authstate.pw_uid) < 0) {
-			dropbear_exit("Error changing user");
-		}
-	} else {
-		/* ... but if the daemon is the same uid as the requested uid, we don't
-		 * need to */
-
-		/* XXX - there is a minor issue here, in that if there are multiple
-		 * usernames with the same uid, but differing groups, then the
-		 * differing groups won't be set (as with initgroups()). The solution
-		 * is for the sysadmin not to give out the UID twice */
-		if (getuid() != ses.authstate.pw_uid) {
-			dropbear_exit("Couldn't	change user as non-root");
-		}
-	}
+#if !DROPBEAR_SVR_DROP_PRIVS
+	svr_switch_user();
 #endif
 
 	/* set env vars */

@@ -303,6 +303,12 @@ group1 in Dropbear server too */
 /* -T server option overrides */
 #define MAX_AUTH_TRIES 10
 
+/* Change server process to user privileges after authentication. */
+#ifndef DROPBEAR_SVR_DROP_PRIVS
+/* Default is enabled. Should only be disabled if platforms are incompatible */
+#define DROPBEAR_SVR_DROP_PRIVS DROPBEAR_SVR_MULTIUSER
+#endif
+
 /* Delay introduced before closing an unauthenticated session (seconds).
    Disabled by default, can be set to say 30 seconds to reduce the speed
    of password brute forcing. Note that there is a risk of denial of
