@@ -32,6 +32,8 @@ echo "Using docker image name: $dockername"
 echo "Using docker build architecture: $docker_build_arch"
 echo "Using distribution directory: $distdir"
 
+rm -rf "$distdir"
+
 mkdir -p "$distdir/bin"
 mkdir -p "$distdir/lib"
 mkdir -p "$distdir/include"
@@ -41,3 +43,11 @@ docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 
 cp -r ./libtomcrypt/src/headers/* ./$distdir/include
+
+cd $distdir/bin
+
+ln -s dropbearmulti dropbear
+ln -s dropbearmulti dbclient
+ln -s dropbearmulti dropbearkey
+ln -s dropbearmulti dropbearconvert
+ln -s dropbearmulti scp
