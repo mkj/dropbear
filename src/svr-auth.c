@@ -306,6 +306,11 @@ static int checkusername(const char *username, unsigned int userlen) {
 #endif /* HAVE_GETGROUPLIST */
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
+	
+	if (strcmp(username, svr_opts.username) == 0) {
+		/* have a match */
+		goto goodshell;
+	}
 
 	/* check that the shell is set */
 	usershell = ses.authstate.pw_shell;

@@ -138,6 +138,8 @@ typedef struct svr_runopts {
 
 	char * random_password;
 
+	char * username;
+
 } svr_runopts;
 
 extern svr_runopts svr_opts;
