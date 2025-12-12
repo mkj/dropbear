@@ -464,14 +464,12 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 	int ret = DROPBEAR_FAILURE;
 	buffer * line = NULL;
 	int line_num;
-#if !DROPBEAR_SVR_DROP_PRIVS
 	uid_t origuid;
 	gid_t origgid;
-#endif
 
 	TRACE(("enter checkpubkey"))
 
-#if !DROPBEAR_SVR_DROP_PRIVS
+#if DROPBEAR_SVR_MULTIUSER
 	/* access the file as the authenticating user. */
 	origuid = getuid();
 	origgid = getgid();
@@ -492,7 +490,7 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
 		}
 	}
-#if !DROPBEAR_SVR_DROP_PRIVS
+#if DROPBEAR_SVR_MULTIUSER
 	if ((seteuid(origuid)) < 0 ||
 		(setegid(origgid)) < 0) {
 		dropbear_exit("Failed to revert euid");
