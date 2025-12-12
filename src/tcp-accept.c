@@ -60,6 +60,13 @@ static void tcp_acceptor(const struct Listener *listener, int sock) {
 		return;
 	}
 
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+	if (sa.ss_family == AF_VSOCK) {
+		struct sockaddr_vm *vsockaddr = (void *)&sa;
+		snprintf(ipstring, NI_MAXHOST - 1, "%u%%vsock", vsockaddr->svm_cid);
+		snprintf(portstring, NI_MAXSERV - 1, "%u", vsockaddr->svm_port);
+	} else
+#endif
 	if (getnameinfo((struct sockaddr*)&sa, len, ipstring, sizeof(ipstring),
 				portstring, sizeof(portstring), 
 				NI_NUMERICHOST | NI_NUMERICSERV) != 0) {
