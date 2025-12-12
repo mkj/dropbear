@@ -253,6 +253,9 @@ void svr_getopts(int argc, char ** argv) {
 				case 'j':
 					svr_opts.nolocaltcp = 1;
 					break;
+#else
+				case 'j':
+					break;
 #endif
 #if DROPBEAR_SVR_REMOTETCPFWD
 				case 'k':
@@ -260,6 +263,9 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'a':
 					opts.listen_fwd_all = 1;
+					break;
+#else
+				case 'k':
 					break;
 #endif
 #if INETD_MODE
@@ -288,6 +294,9 @@ void svr_getopts(int argc, char ** argv) {
 				/* motd is displayed by default, -m turns it off */
 				case 'm':
 					svr_opts.domotd = 0;
+					break;
+#else
+				case 'm':
 					break;
 #endif
 				case 'w':
