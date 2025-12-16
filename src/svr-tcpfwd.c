@@ -56,7 +56,9 @@ void recv_msg_global_request_remotetcp() {
 static int svr_cancelremotetcp(void);
 static int svr_remotetcpreq(int *allocated_listen_port);
 static int newtcpdirect(struct Channel * channel);
+#if DROPBEAR_SVR_LOCALSTREAMFWD
 static int newstreamlocal(struct Channel * channel);
+#endif
 
 #if DROPBEAR_SVR_REMOTETCPFWD
 static const struct ChanType svr_chan_tcpremote = {
