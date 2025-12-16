@@ -81,6 +81,7 @@ jobs:
             # macos doesn't have setresgid
             localoptions: |
               #define DROPBEAR_SVR_DROP_PRIVS 0
+              #define DROPBEAR_SVR_LOCALSTREAMFWD 0
 
           - name: macos 15
             os: macos-15
@@ -96,6 +97,7 @@ jobs:
             # macos doesn't have setresgid
             localoptions: |
               #define DROPBEAR_SVR_DROP_PRIVS 0
+              #define DROPBEAR_SVR_LOCALSTREAMFWD 0
 
           # Check that debug code doesn't bitrot
           - name: DEBUG_TRACE
@@ -235,6 +237,7 @@ jobs:
           sed -i "s/DEFAULT_IDLE_TIMEOUT 1/DEFAULT_IDLE_TIMEOUT 99/" localoptions.h
           # DROPBEAR_SVR_DROP_PRIVS is on by default, turn it off
           echo "#define DROPBEAR_SVR_DROP_PRIVS 0" >> localoptions.h
+          echo "#define DROPBEAR_SVR_LOCALSTREAMFWD 0" >> localoptions.h
 
       - name: make
         run: |
