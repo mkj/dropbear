@@ -13,7 +13,7 @@
   "dropbear -c command".
 
   In previous affected releases running with "dropbear -j" (will also disable
-  TCP fowarding) or building with localoptions.h/distrooptions.h
+  TCP forwarding) or building with localoptions.h/distrooptions.h
   "#define DROPBEAR_SVR_LOCALSTREAMFWD 0" is a mitigation.
 
 - Security: Include scp fix for CVE-2019-6111. This allowed
