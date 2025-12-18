@@ -1,6 +1,6 @@
 ARG build_arch=arm64v8  
 
-FROM ${build_arch}/gcc
+FROM ${build_arch}/gcc:11-bullseye
 
 RUN apt-get update && \
     apt-get install -y \
