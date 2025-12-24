@@ -9,17 +9,17 @@ fi
 
 platform=""
 dockername=""
-docker_build_arch=""
+docker_baseImg=""
 distdir=""
 if [ "$arch" = "arm64" ]; then
   platform="linux/arm64/v8"
   dockername="arm64v8-dropbear"
-  docker_build_arch="arm64v8"
+  docker_baseImg="arm64v8/gcc:15.2-trixie"
   distdir="build/arm64"
 elif [ "$arch" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
-  docker_build_arch="arm32v7"
+  docker_baseImg="arm32v7/gcc:11-bullseye"
   distdir="build/arm"
 else
   echo "Unsupported architecture: $arch"
@@ -38,7 +38,7 @@ mkdir -p "$distdir/bin"
 mkdir -p "$distdir/lib"
 mkdir -p "$distdir/include"
 
-docker build --platform=$platform -t $dockername  --build-arg build_arch=$docker_build_arch .  
+docker build --platform=$platform -t $dockername  --build-arg baseImg=$docker_baseImg .
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 

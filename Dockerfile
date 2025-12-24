@@ -1,6 +1,6 @@
-ARG build_arch=arm64v8  
+ARG baseImg=arm64v8/gcc:15.2-trixie
 
-FROM ${build_arch}/gcc:11-bullseye
+FROM ${baseImg}
 
 RUN apt-get update && \
     apt-get install -y \
