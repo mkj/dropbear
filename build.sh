@@ -12,17 +12,14 @@ dockername=""
 docker_baseImg=""
 distdir=""
 if [ "$hardware" = "arm64" ]; then
+  # supported arm64-jetson arm64-spark
   platform="linux/arm64/v8"
-  dockername="arm64v8-dropbear"
-  docker_baseImg="arm64v8/ubuntu:24.04"
-elif [ "$hardware" = "arm64-axiscam" ]; then
-  platform="linux/arm64/v8"
-  dockername="arm64v8-axiscam-dropbear"
-  docker_baseImg="arm64v8/gcc:15.2-trixie"
-elif [ "$hardware" = "arm64-ainvr" ]; then
-  platform="linux/arm64/v8"
-  dockername="arm64v8-ainvr-dropbear"
+  dockername="arm64v8-jetson-dropbear"
   docker_baseImg="arm64v8/ubuntu:22.04"
+elif [ "$hardware" = "arm64-axis" ]; then
+  platform="linux/arm64/v8"
+  dockername="arm64v8-axis-dropbear"
+  docker_baseImg="arm64v8/gcc:15.2-trixie"
 elif [ "$hardware" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
@@ -46,8 +43,13 @@ mkdir -p "$distdir/bin"
 mkdir -p "$distdir/lib"
 mkdir -p "$distdir/include"
 
+echo "docker build --platform=$platform -t $dockername  --build-arg baseImg=$docker_baseImg ."
 docker build --platform=$platform -t $dockername  --build-arg baseImg=$docker_baseImg .
+
+echo "docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/"
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
+
+echo "docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/"
 docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 
 cp -r ./libtomcrypt/src/headers/* ./$distdir/include

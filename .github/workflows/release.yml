@@ -26,27 +26,27 @@ jobs:
         run: |
           sh build.sh arm
 
-      - name: Build arm64-ainvr binaries
+      - name: Build arm64 binaries
         run: |
-          sh build.sh arm64-ainvr
+          sh build.sh arm64
 
-      - name: Build arm64-axiscam binaries
+      - name: Build arm64-axis binaries
         run: |
-          sh build.sh arm64-axiscam
+          sh build.sh arm64-axis
 
       - name: Archives
         id: archives
         run: |
           tar -czvf ${{ env.RELEASE_VERSION }}-linux-arm.tar.gz ./build/arm
-          tar -czvf ${{ env.RELEASE_VERSION }}-linux-arm64-ainvr.tar.gz ./build/arm64-ainvr
-          tar -czvf ${{ env.RELEASE_VERSION }}-linux-arm64-axiscam.tar.gz ./build/arm64-axiscam
+          tar -czvf ${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz ./build/arm64
+          tar -czvf ${{ env.RELEASE_VERSION }}-linux-arm64-axis.tar.gz ./build/arm64-axis
           
       - name: Checksum
         run: |
           sha256sum ${{ env.RELEASE_VERSION }}-linux-arm.tar.gz > ${{ env.RELEASE_VERSION }}_arm_checksums.txt
-          sha256sum ${{ env.RELEASE_VERSION }}-linux-arm64-ainvr.tar.gz > ${{ env.RELEASE_VERSION }}_arm64_ainvr_checksums.txt
-          sha256sum ${{ env.RELEASE_VERSION }}-linux-arm64-axiscam.tar.gz > ${{ env.RELEASE_VERSION }}_arm64_axiscam_checksums.txt
-      
+          sha256sum ${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz > ${{ env.RELEASE_VERSION }}_arm64_checksums.txt
+          sha256sum ${{ env.RELEASE_VERSION }}-linux-arm64-axis.tar.gz > ${{ env.RELEASE_VERSION }}_arm64_axis_checksums.txt
+
       - name: Release
         uses: softprops/action-gh-release@v2
         id: create_release
@@ -56,8 +56,8 @@ jobs:
           files: |
             ${{ env.RELEASE_VERSION }}-linux-arm.tar.gz
             ${{ env.RELEASE_VERSION }}_arm_checksums.txt
-            ${{ env.RELEASE_VERSION }}-linux-arm64-ainvr.tar.gz
-            ${{ env.RELEASE_VERSION }}_arm64_ainvr_checksums.txt
+            ${{ env.RELEASE_VERSION }}-linux-arm64-jetson.tar.gz
+            ${{ env.RELEASE_VERSION }}_arm64_jetson_checksums.txt
             ${{ env.RELEASE_VERSION }}-linux-arm64-axiscam.tar.gz
             ${{ env.RELEASE_VERSION }}_arm64_axiscam_checksums.txt
 
