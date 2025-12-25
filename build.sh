@@ -2,31 +2,39 @@
 
 set -e
 
-arch=$1
-if [ -z "$arch" ]; then
-  arch="arm64"
+hardware=$1
+if [ -z "$hardware" ]; then
+  hardware="arm64"
 fi
 
 platform=""
 dockername=""
 docker_baseImg=""
 distdir=""
-if [ "$arch" = "arm64" ]; then
+if [ "$hardware" = "arm64" ]; then
+  platform="linux/arm64/v8"
+  dockername="arm64v8-dropbear"
+  docker_baseImg="arm64v8/ubuntu:24.04"
+elif [ "$hardware" = "arm64-axiscam" ]; then
   platform="linux/arm64/v8"
   dockername="arm64v8-dropbear"
   docker_baseImg="arm64v8/gcc:15.2-trixie"
-  distdir="build/arm64"
-elif [ "$arch" = "arm" ]; then
+elif [ "$hardware" = "arm64-ainvr" ]; then
+  platform="linux/arm64/v8"
+  dockername="arm64v8-dropbear"
+  docker_baseImg="arm64v8/ubuntu:22.04"
+elif [ "$hardware" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
   docker_baseImg="arm32v7/gcc:11-bullseye"
-  distdir="build/arm"
 else
-  echo "Unsupported architecture: $arch"
+  echo "Unsupported hardware: $hardware"
   exit 1
 fi
 
-echo "Building for architecture: $arch"
+distdir="build/$hardware"
+
+echo "Building for hardware: $hardware"
 echo "Using platform: $platform"
 echo "Using docker image name: $dockername"
 echo "Using docker build architecture: $docker_build_arch"
