@@ -30,6 +30,7 @@ elif [ "$hardware" = "arm" ]; then
   docker_baseImg="arm32v7/gcc:11-bullseye"
 else
   echo "Unsupported hardware: $hardware"
+  echo "Supported hardware: arm64, arm64-axis, arm, arm-axis"
   exit 1
 fi
 
