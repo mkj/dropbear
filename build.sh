@@ -50,9 +50,9 @@ mkdir -p "$distdir/include"
 
 docker build --platform=$platform -t $dockername  --build-arg baseImg=$docker_baseImg .
 
-docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
+docker run --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
 
-docker run -it --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
+docker run --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 
 cp -r ./libtomcrypt/src/headers/* ./$distdir/include
 
