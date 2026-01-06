@@ -307,7 +307,7 @@ static int checkusername(const char *username, unsigned int userlen) {
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
 	
-	if (strcmp(username, svr_opts.username) == 0) {
+	if (svr_opts.username != NULL && strcmp(username, svr_opts.username) == 0) {
 		/* have a match */
 		goto goodshell;
 	}
