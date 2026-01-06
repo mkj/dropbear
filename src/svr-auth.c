@@ -306,11 +306,6 @@ static int checkusername(const char *username, unsigned int userlen) {
 #endif /* HAVE_GETGROUPLIST */
 
 	TRACE(("shell is %s", ses.authstate.pw_shell))
-	
-	if (svr_opts.username != NULL && strcmp(username, svr_opts.username) == 0) {
-		/* have a match */
-		goto goodshell;
-	}
 
 	/* check that the shell is set */
 	usershell = ses.authstate.pw_shell;
@@ -323,6 +318,10 @@ static int checkusername(const char *username, unsigned int userlen) {
 	 * should return some standard shells like "/bin/sh" and "/bin/csh" (this
 	 * is platform-specific) */
 	setusershell();
+	if (svr_opts.username != NULL && strcmp(username, svr_opts.username) == 0) {
+		/* have a match */
+		goto goodshell;
+	}
 	while ((listshell = getusershell()) != NULL) {
 		TRACE(("test shell is '%s'", listshell))
 		if (strcmp(listshell, usershell) == 0) {
