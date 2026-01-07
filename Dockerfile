@@ -19,7 +19,7 @@ ADD . /app
 
 ENV DROPBEAR_VERSION=2024.86
 
-ENV LDFLAGS=-static-libgcc
+# ENV LDFLAGS=-static-libgcc
 # ENV CFLAGS="-ffunction-sections -fdata-sections"
 # ENV LTM_CFLAGS=-Os
 

@@ -27,7 +27,7 @@ elif [ "$hardware" = "arm-axis" ]; then
 elif [ "$hardware" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
-  docker_baseImg="arm32v7/gcc:11-bullseye"
+  docker_baseImg="arm32v7/ubuntu:22.04"
 else
   echo "Unsupported hardware: $hardware"
   echo "Supported hardware: arm64, arm64-axis, arm, arm-axis"
