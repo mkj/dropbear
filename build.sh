@@ -51,6 +51,7 @@ mkdir -p "$distdir/include"
 docker build --platform=$platform -t $dockername  --build-arg baseImg=$docker_baseImg .
 
 docker run --rm -v $(pwd)/build:/app/build $dockername cp ./dropbearmulti ./$distdir/bin/
+docker run --rm -v $(pwd)/build:/app/build $dockername cp ./openssh-portable/sftp-server ./$distdir/bin/
 
 docker run --rm -v $(pwd)/build:/app/build $dockername cp ./libtomcrypt/libtomcrypt.a ./$distdir/lib/
 

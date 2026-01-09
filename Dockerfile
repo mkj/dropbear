@@ -11,7 +11,37 @@ RUN apt-get update && \
     libssl-dev \
     zlib1g-dev \
     bzip2 \
+    autoconf \
+    automake \
+    libtool \
     && rm -rf /var/lib/apt/lists/*
+
+WORKDIR /app
+
+RUN git clone https://github.com/openssh/openssh-portable --depth=1
+WORKDIR /app/openssh-portable
+
+RUN autoreconf && \
+    ./configure \
+    --disable-server \
+    --disable-strip \
+    --disable-pkcs11 \
+    --disable-security-key \
+    --without-openssl \
+    --without-zlib-version-check \
+    --without-openssl-header-check \
+    --with-sandbox=no \
+    --with-pam=no \
+    --with-selinux=no \
+    --with-kerberos5=no \
+    --with-libedit=no \
+    --with-ldns=no \
+    CC="gcc -static" \
+    CFLAGS="-Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti" \
+    LDFLAGS="-static -Wl,--gc-sections -Wl,--strip-all" \
+    LIBS="-static -lz -lcrypto -lssl"
+    
+RUN make -j8
 
 WORKDIR /app
 
