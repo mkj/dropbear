@@ -137,15 +137,22 @@ Print the version
 .TP
 Authorized Keys
 
-~/.ssh/authorized_keys can be set up to allow remote login with a RSA,
-ECDSA, Ed25519 or DSS
-key. Each line is of the form
+~/.ssh/authorized_keys can be set up to allow remote login with a
+Ed25519, RSA, or ECDSA key.
+The authorized_keys file and its containing ~/.ssh directory must only be
+writable by the user, otherwise Dropbear will not allow a login using public
+key authentication.
+
+
+Each line is of the form
 .TP
 [restrictions] ssh-rsa AAAAB3NzaC1yc2EAAAABIwAAAIgAsp... [comment]
 
 and can be extracted from a Dropbear private host key with "dropbearkey -y". This is the same format as used by OpenSSH, though the restrictions are a subset (keys with unknown restrictions are ignored).
 Restrictions are comma separated, with double quotes around spaces in arguments.
 Available restrictions are:
+
+.RS
 
 .TP
 .B no-port-forwarding
@@ -187,6 +194,10 @@ When using
 it is often desirable to also use
 .B restrict
 option to avoid other SSH features that may allow additional access.
+
+
+
+.RE
 
 .TP
 Host Key Files
