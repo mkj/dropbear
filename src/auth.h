@@ -127,6 +127,9 @@ struct AuthState {
 	struct timespec auth_starttime; /* Server only, time of receiving current 
 									SSH_MSG_USERAUTH_REQUEST */
 
+	 /* Count of public keys attempted, limited by MAX_PUBKEY_QUERIES */
+	unsigned int serv_pubkey_query_count;
+
 	/* These are only used for the server */
 	uid_t pw_uid;
 	gid_t pw_gid;

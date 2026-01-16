@@ -303,6 +303,24 @@ group1 in Dropbear server too */
 /* -T server option overrides */
 #define MAX_AUTH_TRIES 10
 
+/* Maximum number of public key queries per session.
+ * Public key queries
+ * aren't a risk for brute forcing authentication, but can be a
+ * user enumeration/privacy concern if an attacker attempts
+ * to iterate known public keys such as those published by github.
+ *
+ * This limit has a trade-off. Having a smaller limit reduces the
+ * number of legitimate public keys that can be presented
+ * by a client/ssh agent.
+ * Assuming a 100ms session establishment time,
+ * MAX_UNAUTH_CLIENTS * MAX_PUBKEY_QUERIES / 0.1 = 750 queries/sec.
+ * That is still a a risk against a single host,
+ * but this limit may deter internet-wide scanning.
+ *
+ * If -T argument or MAX_AUTH_TRIES is larger that will be used instead.
+*/
+#define MAX_PUBKEY_QUERIES 15
+
 /* Change server process to user privileges after authentication. */
 #ifndef DROPBEAR_SVR_DROP_PRIVS
 /* Default is enabled. Should only be disabled if platforms are incompatible */
