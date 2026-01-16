@@ -427,7 +427,7 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 		ses.authstate.failcount++;
 	}
 
-	if (ses.authstate.failcount >= svr_opts.maxauthtries) {
+	if (ses.authstate.failcount > svr_opts.maxauthtries) {
 		char * userstr;
 		/* XXX - send disconnect ? */
 		TRACE(("Max auth tries reached, exiting"))

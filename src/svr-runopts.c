@@ -426,8 +426,7 @@ void svr_getopts(int argc, char ** argv) {
 
 	if (maxauthtries_arg) {
 		unsigned int val = 0;
-		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE 
-			|| val == 0) {
+		if (m_str_to_uint(maxauthtries_arg, &val) == DROPBEAR_FAILURE) {
 			dropbear_exit("Bad maxauthtries '%s'", maxauthtries_arg);
 		}
 		svr_opts.maxauthtries = val;
