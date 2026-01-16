@@ -127,44 +127,44 @@ void svr_auth_pubkey(int valid_user) {
 	keyalgo = signkey_name_from_type(keytype, &keyalgolen);
 
 #if DROPBEAR_PLUGIN
-        if (svr_ses.plugin_instance != NULL) {
-            char *options_buf;
-            if (svr_ses.plugin_instance->checkpubkey(
-                        svr_ses.plugin_instance,
-                        &ses.plugin_session,
-                        keyalgo,
-                        keyalgolen,
-                        keyblob,
-                        keybloblen,
-                        ses.authstate.username) == DROPBEAR_SUCCESS) {
-                /* Success */
-                auth_failure = 0;
+    if (svr_ses.plugin_instance != NULL) {
+        char *options_buf;
+        if (svr_ses.plugin_instance->checkpubkey(
+                    svr_ses.plugin_instance,
+                    &ses.plugin_session,
+                    keyalgo,
+                    keyalgolen,
+                    keyblob,
+                    keybloblen,
+                    ses.authstate.username) == DROPBEAR_SUCCESS) {
+            /* Success */
+            auth_failure = 0;
 
-                /* Options provided? */
-                options_buf = ses.plugin_session->get_options(ses.plugin_session);
-                if (options_buf) {
-                    struct buf temp_buf = {
-                        .data = (unsigned char *)options_buf,
-                        .len = strlen(options_buf),
-                        .pos = 0,
-                        .size = 0
-                    };
-                    int ret = svr_add_pubkey_options(&temp_buf, 0, "N/A");
-                    if (ret == DROPBEAR_FAILURE) {
-                        /* Fail immediately as the plugin provided wrong options */
-                        send_msg_userauth_failure(0, 0);
-                        goto out;
-                    }
+            /* Options provided? */
+            options_buf = ses.plugin_session->get_options(ses.plugin_session);
+            if (options_buf) {
+                struct buf temp_buf = {
+                    .data = (unsigned char *)options_buf,
+                    .len = strlen(options_buf),
+                    .pos = 0,
+                    .size = 0
+                };
+                int ret = svr_add_pubkey_options(&temp_buf, 0, "N/A");
+                if (ret == DROPBEAR_FAILURE) {
+                    /* Fail immediately as the plugin provided wrong options */
+                    send_msg_userauth_failure(0, 0);
+                    goto out;
                 }
             }
         }
+    }
 #endif
 	/* check if the key is valid */
-        if (auth_failure) {
-            auth_failure = checkpubkey(keyalgo, keyalgolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
-        }
+	if (auth_failure) {
+	    auth_failure = checkpubkey(keyalgo, keyalgolen, keyblob, keybloblen) == DROPBEAR_FAILURE;
+	}
 
-        if (auth_failure) {
+	if (auth_failure) {
 		send_msg_userauth_failure(0, 0);
 		goto out;
 	}
@@ -234,10 +234,10 @@ void svr_auth_pubkey(int valid_user) {
 			send_msg_userauth_success();
 		}
 #if DROPBEAR_PLUGIN
-                if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
-                    /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
-                    svr_ses.plugin_instance->auth_success(ses.plugin_session);
-                }
+		if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
+		    /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
+		    svr_ses.plugin_instance->auth_success(ses.plugin_session);
+		}
 #endif
 	} else {
 		dropbear_log(LOG_WARNING,
@@ -396,7 +396,7 @@ static int checkpubkey_line(buffer* line, int line_num, const char* filename,
 	if (infolen > 0) {
 		info_str = m_malloc(infolen + 1);
 		buf_setpos(line, infopos);
-        strncpy(info_str, buf_getptr(line, infolen), infolen);
+	strncpy(info_str, buf_getptr(line, infolen), infolen);
 	}
 
 	/* truncate to base64 data length */
