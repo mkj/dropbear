@@ -6444,6 +6444,14 @@ then :
 
 fi
 
+ac_fn_c_check_header_compile "$LINENO" "linux/vm_sockets.h" "ac_cv_header_linux_vm_sockets_h" "#include <sys/socket.h>
+"
+if test "x$ac_cv_header_linux_vm_sockets_h" = xyes
+then :
+  printf "%s\n" "#define HAVE_LINUX_VM_SOCKETS_H 1" >>confdefs.h
+
+fi
+
 
 # Checks for typedefs, structures, and compiler characteristics.
 { printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for an ANSI C-conforming const" >&5
