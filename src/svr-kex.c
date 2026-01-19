@@ -154,7 +154,14 @@ static void svr_ensure_hostkey() {
 			dropbear_assert(0);
 	}
 
-	expand_fn = expand_homedir_path(fn);
+	/* if svr_opts.hostdir is set and fn does not point to absolute path or homedir */
+	if (svr_opts.hostdir && fn[0] != '/' && strncmp(fn,"~/",2) != 0) {
+		int len = strlen(fn) + strlen(svr_opts.hostdir) + 2;
+		expand_fn = m_malloc(len);
+		snprintf(expand_fn, len, "%s/%s", svr_opts.hostdir, fn);
+	} else {
+	 	expand_fn = expand_homedir_path(fn);
+	}
 
 	ret = readhostkey(expand_fn, svr_opts.hostkey, &type);
 	if (ret == DROPBEAR_SUCCESS) {
