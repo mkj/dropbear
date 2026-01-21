@@ -472,7 +472,12 @@ void cli_getopts(int argc, char ** argv) {
 	 * there's a command, but we do otherwise */
 	if (cli_opts.wantpty == 9) {
 		if (cli_opts.cmd == NULL) {
-			cli_opts.wantpty = 1;
+			if (isatty(STDIN_FILENO)) {
+				cli_opts.wantpty = 1;
+			} else {
+				TRACE(("Not a TTY"));
+				cli_opts.wantpty = 0;
+			}
 		} else {
 			cli_opts.wantpty = 0;
 		}
