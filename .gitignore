@@ -32,3 +32,4 @@ tags
 /test/fakekey
 .vscode/
 .DS_Store
+build/
