@@ -90,7 +90,7 @@ int main(int argc, char ** argv) {
 	{
 		progress = connect_remote(cli_opts.remotehost, cli_opts.remoteport,
 			cli_connected, &ses, cli_opts.bind_address, cli_opts.bind_port,
-			DROPBEAR_PRIO_LOWDELAY);
+			cli_opts.connect_timeout, DROPBEAR_PRIO_LOWDELAY);
 		sock_in = sock_out = -1;
 	}
 

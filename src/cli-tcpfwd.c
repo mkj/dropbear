@@ -274,7 +274,7 @@ static int newtcpforwarded(struct Channel * channel) {
 
 	snprintf(portstring, sizeof(portstring), "%u", fwd->connectport);
 	channel->conn_pending = connect_remote(fwd->connectaddr, portstring, channel_connect_done,
-		channel, NULL, NULL, DROPBEAR_PRIO_NORMAL);
+		channel, NULL, NULL, 0, DROPBEAR_PRIO_NORMAL);
 
 	err = SSH_OPEN_IN_PROGRESS;
 

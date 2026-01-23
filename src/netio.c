@@ -22,6 +22,8 @@ struct dropbear_progress_connection {
 	char* errstring;
 	char *bind_address, *bind_port;
 	enum dropbear_prio prio;
+	time_t connect_start;
+	int timeout;
 };
 
 /* Deallocate a progress connection. Removes from the pending list if iter!=NULL.
@@ -187,7 +189,7 @@ static void connect_try_next(struct dropbear_progress_connection *c) {
 /* Connect via TCP to a host. */
 struct dropbear_progress_connection *connect_remote(const char* remotehost, const char* remoteport,
 	connect_callback cb, void* cb_data,
-	const char* bind_address, const char* bind_port, enum dropbear_prio prio)
+	const char* bind_address, const char* bind_port, int timeout, enum dropbear_prio prio)
 {
 	struct dropbear_progress_connection *c = NULL;
 	int err;
@@ -200,6 +202,8 @@ struct dropbear_progress_connection *connect_remote(const char* remotehost, cons
 	c->cb = cb;
 	c->cb_data = cb_data;
 	c->prio = prio;
+	c->connect_start = monotonic_now();
+	c->timeout = timeout;
 
 	list_append(&ses.conn_pending, c);
 
@@ -302,6 +306,14 @@ void set_connect_fds(fd_set *writefd) {
 	while (iter) {
 		m_list_elem *next_iter = iter->next;
 		struct dropbear_progress_connection *c = iter->item;
+
+		if (c->timeout > 0 && monotonic_now() - c->connect_start > c->timeout) {
+			c->cb(DROPBEAR_FAILURE, -1, c->cb_data, "Connection timed out");
+			remove_connect(c, iter);
+			iter = next_iter;
+			continue;
+		}
+
 		/* Set one going */
 		while (c->res_iter && c->sock < 0) {
 			connect_try_next(c);
@@ -353,6 +365,22 @@ void handle_connect_fds(const fd_set *writefd) {
 			TRACE(("leave handle_connect_fds - success"))
 			/* Must return here - remove_connect() invalidates iter */
 			return; 
+		}
+	}
+}
+
+void update_connect_timeout(time_t now, long *timeout) {
+	m_list_elem *iter;
+	struct dropbear_progress_connection *c;
+
+	for (iter = ses.conn_pending.first; iter; iter = iter->next) {
+		c = (struct dropbear_progress_connection*)iter->item;
+		if (c->timeout > 0) {
+			long remaining = c->timeout - (now - c->connect_start);
+			if (remaining < 0) {
+				remaining = 0;
+			}
+			*timeout = MIN(*timeout, remaining);
 		}
 	}
 }

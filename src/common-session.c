@@ -627,6 +627,8 @@ static long select_timeout() {
 	update_timeout(opts.idle_timeout_secs, now, ses.last_packet_time_idle,
 		&timeout);
 
+	update_connect_timeout(now, &timeout);
+
 	/* clamp negative timeouts to zero - event has already triggered */
 	return MAX(timeout, 0);
 }
