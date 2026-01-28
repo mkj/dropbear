@@ -55,6 +55,10 @@ void recv_msg_global_request_remotetcp() {
 
 static int svr_cancelremotetcp(void);
 static int svr_remotetcpreq(int *allocated_listen_port);
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+static int svr_cancelremotestreamlocal(void);
+static int svr_remotestreamlocalreq(void);
+#endif
 static int newtcpdirect(struct Channel * channel);
 #if DROPBEAR_SVR_LOCALSTREAMFWD
 static int newstreamlocal(struct Channel * channel);
@@ -69,6 +73,17 @@ static const struct ChanType svr_chan_tcpremote = {
 	NULL,
 	NULL
 };
+
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+static const struct ChanType svr_chan_streamlocalremote = {
+	"forwarded-streamlocal@openssh.com",
+	NULL,
+	NULL,
+	NULL,
+	NULL,
+	NULL
+};
+#endif
 
 /* At the moment this is completely used for tcp code (with the name reflecting
  * that). If new request types are added, this should be replaced with code
@@ -108,6 +123,12 @@ void recv_msg_global_request_remotetcp() {
 		}
 	} else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
 		ret = svr_cancelremotetcp();
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+	} else if (strcmp("streamlocal-forward@openssh.com", reqname) == 0) {
+		ret = svr_remotestreamlocalreq();
+	} else if (strcmp("cancel-streamlocal-forward@openssh.com", reqname) == 0) {
+		ret = svr_cancelremotestreamlocal();
+#endif
 	} else {
 		TRACE(("reqname isn't tcpip-forward: '%s'", reqname))
 	}
@@ -238,6 +259,255 @@ out:
 
 	return ret;
 }
+
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+static int matchstreamlocal(const void* typedata1, const void* typedata2) {
+
+	const struct TCPListener *info1 = (struct TCPListener*)typedata1;
+	const struct TCPListener *info2 = (struct TCPListener*)typedata2;
+
+	if (info1->socket_path == NULL || info2->socket_path == NULL) {
+		return 0;
+	}
+
+	return (info1->chantype == info2->chantype)
+			&& (strcmp(info1->socket_path, info2->socket_path) == 0);
+}
+
+static int svr_cancelremotestreamlocal() {
+
+	int ret = DROPBEAR_FAILURE;
+	char * socket_path = NULL;
+	unsigned int pathlen;
+	struct Listener * listener = NULL;
+	struct TCPListener tcpinfo;
+
+	TRACE(("enter cancelremotestreamlocal"))
+
+	socket_path = buf_getstring(ses.payload, &pathlen);
+	if (pathlen > MAX_HOST_LEN) {
+		TRACE(("path len too long: %d", pathlen))
+		goto out;
+	}
+
+	tcpinfo.socket_path = socket_path;
+	tcpinfo.chantype = &svr_chan_streamlocalremote;
+	listener = get_listener(CHANNEL_ID_STREAMLOCALFORWARDED, &tcpinfo, matchstreamlocal);
+	if (listener) {
+		remove_listener( listener );
+		ret = DROPBEAR_SUCCESS;
+	}
+
+out:
+	m_free(socket_path);
+	TRACE(("leave cancelremotestreamlocal"))
+	return ret;
+}
+
+static void cleanup_streamlocal(const struct Listener *listener) {
+
+	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
+
+	if (tcpinfo && tcpinfo->socket_path) {
+		unlink(tcpinfo->socket_path);
+		m_free(tcpinfo->socket_path);
+	}
+	m_free(tcpinfo->request_listenaddr);
+	m_free(tcpinfo);
+}
+
+static void streamlocal_acceptor(const struct Listener *listener, int sock) {
+
+	int fd;
+	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
+
+	fd = accept(sock, NULL, NULL);
+	if (fd < 0) {
+		return;
+	}
+
+	if (send_msg_channel_open_init(fd, tcpinfo->chantype) == DROPBEAR_SUCCESS) {
+		/* "forwarded-streamlocal@openssh.com" */
+		/* socket path that was connected to */
+		buf_putstring(ses.writepayload, tcpinfo->request_listenaddr,
+				strlen(tcpinfo->request_listenaddr));
+		/* reserved field */
+		buf_putstring(ses.writepayload, "", 0);
+
+		encrypt_packet();
+
+	} else {
+		/* XXX debug? */
+		close(fd);
+	}
+}
+
+int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listener) {
+
+	int sock;
+	struct Listener *listener;
+	struct sockaddr_un addr;
+	mode_t old_umask;
+#if DROPBEAR_SVR_MULTIUSER
+	uid_t uid = 0;
+	gid_t gid = 0;
+#endif
+
+	TRACE(("enter listen_streamlocal"))
+
+	if (tcpinfo->socket_path == NULL) {
+		TRACE(("leave listen_streamlocal: no socket path"))
+		return DROPBEAR_FAILURE;
+	}
+
+	if (strlen(tcpinfo->socket_path) >= sizeof(addr.sun_path)) {
+		dropbear_log(LOG_INFO, "Streamlocal forward failed: socket path too long");
+		TRACE(("leave listen_streamlocal: path too long"))
+		return DROPBEAR_FAILURE;
+	}
+
+	sock = socket(PF_UNIX, SOCK_STREAM, 0);
+	if (sock < 0) {
+		dropbear_log(LOG_INFO, "Streamlocal forward failed: socket() failed");
+		TRACE(("leave listen_streamlocal: socket() failed"))
+		return DROPBEAR_FAILURE;
+	}
+
+	memset((void*)&addr, 0, sizeof(addr));
+	addr.sun_family = AF_UNIX;
+	strlcpy(addr.sun_path, tcpinfo->socket_path, sizeof(addr.sun_path));
+
+#if DROPBEAR_SVR_MULTIUSER
+	/* Save current privileges and drop to authenticated user */
+	uid = getuid();
+	gid = getgid();
+	if ((setegid(ses.authstate.pw_gid)) < 0) {
+		dropbear_log(LOG_WARNING, "Streamlocal forward failed: Failed to set egid");
+		close(sock);
+		TRACE(("leave listen_streamlocal: failed to set egid"))
+		return DROPBEAR_FAILURE;
+	}
+	if ((seteuid(ses.authstate.pw_uid)) < 0) {
+		dropbear_log(LOG_WARNING, "Streamlocal forward failed: Failed to set euid");
+		if (setegid(gid) < 0) {
+			dropbear_exit("Failed to revert egid");
+		}
+		close(sock);
+		TRACE(("leave listen_streamlocal: failed to set euid"))
+		return DROPBEAR_FAILURE;
+	}
+#endif
+
+	/* Unlink existing socket if it exists */
+	if (svr_opts.streamlocalbindunlink) {
+		unlink(tcpinfo->socket_path);
+	}
+
+	/* Set umask to allow proper permissions on the socket */
+	old_umask = umask(0177);
+
+	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
+		dropbear_log(LOG_INFO, "Streamlocal forward failed: bind() failed: %s", strerror(errno));
+		close(sock);
+		umask(old_umask);
+#if DROPBEAR_SVR_MULTIUSER
+		if ((seteuid(uid)) < 0 ||
+			(setegid(gid)) < 0) {
+			dropbear_exit("Failed to revert euid");
+		}
+#endif
+		TRACE(("leave listen_streamlocal: bind() failed"))
+		return DROPBEAR_FAILURE;
+	}
+
+	umask(old_umask);
+
+#if DROPBEAR_SVR_MULTIUSER
+	/* Restore privileges after binding */
+	if ((seteuid(uid)) < 0 ||
+		(setegid(gid)) < 0) {
+		unlink(tcpinfo->socket_path);
+		close(sock);
+		dropbear_exit("Failed to revert euid");
+	}
+#endif
+
+	if (listen(sock, DROPBEAR_LISTEN_BACKLOG) < 0) {
+		dropbear_log(LOG_INFO, "Streamlocal forward failed: listen() failed: %s", strerror(errno));
+		unlink(tcpinfo->socket_path);
+		close(sock);
+		TRACE(("leave listen_streamlocal: listen() failed"))
+		return DROPBEAR_FAILURE;
+	}
+
+	setnonblocking(sock);
+
+	listener = new_listener(&sock, 1, CHANNEL_ID_STREAMLOCALFORWARDED, tcpinfo,
+			streamlocal_acceptor, cleanup_streamlocal);
+
+	if (listener == NULL) {
+		unlink(tcpinfo->socket_path);
+		close(sock);
+		TRACE(("leave listen_streamlocal: listener failed"))
+		return DROPBEAR_FAILURE;
+	}
+
+	if (ret_listener) {
+		*ret_listener = listener;
+	}
+
+	TRACE(("leave listen_streamlocal: success"))
+	return DROPBEAR_SUCCESS;
+}
+
+static int svr_remotestreamlocalreq() {
+
+	int ret = DROPBEAR_FAILURE;
+	char * request_path = NULL;
+	unsigned int pathlen;
+	struct TCPListener *tcpinfo = NULL;
+	struct Listener *listener = NULL;
+
+	TRACE(("enter remotestreamlocalreq"))
+
+	if (svr_opts.noremotetcp || !svr_pubkey_allows_tcpfwd()) {
+		TRACE(("leave remotestreamlocalreq: remote forwarding disabled"))
+		goto out;
+	}
+
+	request_path = buf_getstring(ses.payload, &pathlen);
+	if (pathlen > MAX_HOST_LEN) {
+		TRACE(("path len too long: %d", pathlen))
+		goto out;
+	}
+
+	tcpinfo = (struct TCPListener*)m_malloc(sizeof(struct TCPListener));
+	memset(tcpinfo, 0, sizeof(struct TCPListener));
+	tcpinfo->sendaddr = NULL;
+	tcpinfo->sendport = 0;
+	tcpinfo->listenaddr = NULL;
+	tcpinfo->listenport = 0;
+	tcpinfo->chantype = &svr_chan_streamlocalremote;
+	tcpinfo->tcp_type = forwarded;
+	tcpinfo->interface = NULL;
+	tcpinfo->socket_path = m_strdup(request_path);
+	tcpinfo->request_listenaddr = request_path;
+
+	ret = listen_streamlocal(tcpinfo, &listener);
+
+out:
+	if (ret == DROPBEAR_FAILURE) {
+		/* we only free it if a listener wasn't created, since the listener
+		 * has to remember it if it's to be cancelled */
+		m_free(request_path);
+		m_free(tcpinfo->socket_path);
+		m_free(tcpinfo);
+	}
+
+	TRACE(("leave remotestreamlocalreq"))
+	return ret;
+}
+#endif /* DROPBEAR_SVR_REMOTESTREAMFWD */
 
 #endif /* DROPBEAR_SVR_REMOTETCPFWD */
 
