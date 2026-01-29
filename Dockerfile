@@ -1,28 +1,39 @@
-ARG baseImg=arm64v8/gcc:15.2-trixie
+ARG baseImg=arm64v8/alpine:3.20
 
 FROM ${baseImg}
 
-RUN apt-get update && \
-    apt-get install -y \
-    build-essential \
-    make \
+RUN apk add --no-cache \
+    bash \
+    build-base \
     git \
     wget \
-    libssl-dev \
-    zlib1g-dev \
-    bzip2 \
     autoconf \
     automake \
     libtool \
-    && rm -rf /var/lib/apt/lists/*
+    pkgconf \
+    coreutils \
+    bzip2 \
+    linux-headers \
+    openssl-dev \
+    openssl-libs-static \
+    zlib-dev \
+    zlib-static \
+    perl \
+    m4
 
 WORKDIR /app
+
+ENV TARGET=aarch64-alpine-linux-musl \
+    CC="gcc -static" \
+    CFLAGS="-Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti" \
+    LDFLAGS="-static -Wl,--gc-sections -Wl,--strip-all"
 
 RUN git clone https://github.com/openssh/openssh-portable --depth=1
 WORKDIR /app/openssh-portable
 
 RUN autoreconf && \
     ./configure \
+    --host=${TARGET} \
     --disable-server \
     --disable-strip \
     --disable-pkcs11 \
@@ -36,12 +47,12 @@ RUN autoreconf && \
     --with-kerberos5=no \
     --with-libedit=no \
     --with-ldns=no \
-    CC="gcc -static" \
-    CFLAGS="-Os -ffunction-sections -fdata-sections -fno-exceptions -fno-rtti" \
-    LDFLAGS="-static -Wl,--gc-sections -Wl,--strip-all" \
+    CC="${CC}" \
+    CFLAGS="${CFLAGS}" \
+    LDFLAGS="${LDFLAGS}" \
     LIBS="-static -lz -lcrypto -lssl"
     
-RUN make -j8
+RUN make -j"$(nproc)"
 
 WORKDIR /app
 
@@ -53,5 +64,5 @@ ENV DROPBEAR_VERSION=2024.86
 # ENV CFLAGS="-ffunction-sections -fdata-sections"
 # ENV LTM_CFLAGS=-Os
 
-RUN ./configure --enable-static 
-RUN make -j8 PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1
+RUN ./configure --host=${TARGET} --enable-static CC="${CC}" CFLAGS="${CFLAGS}" LDFLAGS="${LDFLAGS}"
+RUN make -j"$(nproc)" PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" MULTI=1

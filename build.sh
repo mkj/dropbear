@@ -12,25 +12,17 @@ dockername=""
 docker_baseImg=""
 distdir=""
 if [ "$hardware" = "arm64" ]; then
-  # supported arm64-jetson arm64-spark
+  # supported arm64-jetson arm64-spark arm64-axis
   platform="linux/arm64/v8"
-  dockername="arm64v8-jetson-dropbear"
-  docker_baseImg="arm64v8/ubuntu:22.04"
-elif [ "$hardware" = "arm64-axis" ]; then
-  platform="linux/arm64/v8"
-  dockername="arm64v8-axis-dropbear"
-  docker_baseImg="arm64v8/gcc:15.2-trixie"
-elif [ "$hardware" = "arm-axis" ]; then
-  platform="linux/arm/v7"
-  dockername="arm32v7-axis-dropbear"
-  docker_baseImg="arm32v7/ubuntu:24.04"
+  dockername="arm64v8-dropbear"
+  docker_baseImg="arm64v8/alpine:3.20"
 elif [ "$hardware" = "arm" ]; then
   platform="linux/arm/v7"
   dockername="arm32v7-dropbear"
-  docker_baseImg="arm32v7/ubuntu:22.04"
+  docker_baseImg="arm32v7/alpine:3.20"
 else
   echo "Unsupported hardware: $hardware"
-  echo "Supported hardware: arm64, arm64-axis, arm, arm-axis"
+  echo "Supported hardware: arm64, arm"
   exit 1
 fi
 

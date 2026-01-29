@@ -26,17 +26,9 @@ jobs:
         run: |
           sh build.sh arm
 
-      - name: Build arm-axis binaries
-        run: |
-          sh build.sh arm-axis
-
       - name: Build arm64 binaries
         run: |
           sh build.sh arm64
-
-      - name: Build arm64-axis binaries
-        run: |
-          sh build.sh arm64-axis
 
       - name: Archives & Checksum
         id: archives
@@ -54,10 +46,6 @@ jobs:
             ${{ env.RELEASE_VERSION }}-linux-arm_checksums.txt
             ${{ env.RELEASE_VERSION }}-linux-arm64.tar.gz
             ${{ env.RELEASE_VERSION }}-linux-arm64_checksums.txt
-            ${{ env.RELEASE_VERSION }}-linux-arm-axis.tar.gz
-            ${{ env.RELEASE_VERSION }}-linux-arm-axis_checksums.txt
-            ${{ env.RELEASE_VERSION }}-linux-arm64-axis.tar.gz
-            ${{ env.RELEASE_VERSION }}-linux-arm64-axis_checksums.txt
 
       - name: Notify Slack
         uses: rtCamp/action-slack-notify@v2
