@@ -180,6 +180,10 @@ typedef u_int32_t uint32_t;
 #include <linux/pkt_sched.h>
 #endif
 
+#ifdef HAVE_LINUX_VM_SOCKETS_H
+#include <linux/vm_sockets.h>
+#endif
+
 #if DROPBEAR_PLUGIN
 #include <dlfcn.h>
 #endif

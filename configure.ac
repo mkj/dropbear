@@ -393,6 +393,7 @@ AC_CHECK_HEADERS([netinet/in.h netinet/tcp.h \
 	utmpx.h lastlog.h paths.h util.h netdb.h security/pam_appl.h \
 	pam/pam_appl.h netinet/in_systm.h sys/uio.h linux/pkt_sched.h \
 	sys/random.h sys/prctl.h])
+AC_CHECK_HEADERS([linux/vm_sockets.h], , , [#include <sys/socket.h>])
 
 # Checks for typedefs, structures, and compiler characteristics.
 AC_C_CONST
