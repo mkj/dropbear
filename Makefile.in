@@ -282,6 +282,7 @@ distclean: clean tidy
 	-rm -f config.h config.status config.log
 	-rm -f Makefile test/Makefile
 	-rm -f default_options_guard.h
+	-rm -f libtomcrypt/Makefile libtommath/Makefile
 
 tidy:
 	-rm -f *~ *.gcov */*~
