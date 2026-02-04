@@ -46,6 +46,8 @@ struct TCPListener {
 
 	const struct ChanType *chantype;
 	enum {direct, forwarded} tcp_type;
+	/* For Unix socket forwarding, this is the socket path */
+	char *socket_path;
 };
 
 /* A forwarding entry */
@@ -74,8 +76,14 @@ void cli_recv_msg_request_failure(void);
 
 /* Common */
 int listen_tcpfwd(struct TCPListener* tcpinfo, struct Listener **ret_listener);
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listener);
+#endif
 
 /* A random identifier */
 #define CHANNEL_ID_TCPFORWARDED 0x43612c67
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+#define CHANNEL_ID_STREAMLOCALFORWARDED 0x53747265
+#endif
 
 #endif

@@ -96,6 +96,9 @@ static void printhelp(const char * progname) {
 					"-a		Allow connections to forwarded ports from any host\n"
 					"-c command	Force executed command\n"
 #endif
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+					"-S		Unlink existing local file when client-side socket is forwarded\n"
+#endif
 					"-p [address:]port\n"
 					"		Listen on specified tcp port (and optionally address),\n"
 					"		up to %d can be specified\n"
@@ -183,6 +186,9 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_SVR_REMOTETCPFWD
 	svr_opts.noremotetcp = 0;
 #endif
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+	svr_opts.streamlocalbindunlink = 0;
+#endif
 #if DROPBEAR_PLUGIN
         svr_opts.pubkey_plugin = NULL;
         svr_opts.pubkey_plugin_options = NULL;
@@ -266,6 +272,11 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #else
 				case 'k':
+					break;
+#endif
+#if DROPBEAR_SVR_REMOTESTREAMFWD
+				case 'S':
+					svr_opts.streamlocalbindunlink = 1;
 					break;
 #endif
 #if INETD_MODE
