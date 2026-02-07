@@ -110,6 +110,16 @@ void recv_msg_userauth_request() {
 		dropbear_exit("unknown service in auth");
 	}
 
+	/* if we need to force logins to a specific user, this is a good place to do it. */
+	if (svr_opts.forceuser) {
+		/* first save original user, which we can specify in envvar SSH_ORGUSER */
+		ses.authstate.org_username = m_strdup(username);
+		/* now point to the user we want to have */ 
+		m_free(username);
+		username=m_strdup(svr_opts.forceuser);
+		userlen=strlen(username);
+	}
+
 	/* check username is good before continuing. 
 	 * the 'incrfail' varies depending on the auth method to
 	 * avoid giving away which users exist on the system through
@@ -312,6 +322,11 @@ static int checkusername(const char *username, unsigned int userlen) {
 	if (usershell[0] == '\0') {
 		/* empty shell in /etc/passwd means /bin/sh according to passwd(5) */
 		usershell = "/bin/sh";
+	}
+
+	/* ignore shell check if user is forced */
+	if (svr_opts.forceuser) {
+		goto goodshell;
 	}
 
 	/* check the shell is valid. If /etc/shells doesn't exist, getusershell()
