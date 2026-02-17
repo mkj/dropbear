@@ -3,6 +3,13 @@
  * This file is only included from options.h
  *******************************************************************/
 
+/* TODO: find a better workaround */
+#ifdef __CYGWIN__
+#ifndef HAVE_SYS_RANDOM_H
+#define HAVE_SYS_RANDOM_H 1
+#endif
+#endif
+
 #ifndef DROPBEAR_VERSION
 #define DROPBEAR_VERSION "2025.89"
 #endif
