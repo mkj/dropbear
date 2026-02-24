@@ -462,6 +462,21 @@ static int unpackneg(gf r[4],const u8 p[32])
   return 0;
 }
 
+/* Return 0 if S < L, -1 otherwise.
+ * Only used during verify so timing side-channel is OK */
+static int s_lt_l(const u8 *s) {
+  int i;
+  for (i = 31; i >= 0; i--) {
+    if (s[i] < L[i]) {
+      return 0;
+    }
+    if (s[i] > L[i]) {
+      return -1;
+    }
+  }
+  return -1;
+}
+
 int dropbear_ed25519_verify(const u8 *m,u32 mlen,const u8 *s,u32 slen,const u8 *pk)
 {
   hash_state hs;
@@ -480,6 +495,10 @@ int dropbear_ed25519_verify(const u8 *m,u32 mlen,const u8 *s,u32 slen,const u8 *
 
   reduce(h);
   scalarmult(p,q,h);
+
+  if (s_lt_l(s + 32) == -1) {
+    return -1;
+  }
 
   scalarbase(q,s + 32);
   add(p,q);
