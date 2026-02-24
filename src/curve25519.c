@@ -426,6 +426,22 @@ void dropbear_ed25519_sign(const u8 *m,u32 mlen,u8 *s,u32 *slen,const u8 *sk, co
 }
 
 #if DROPBEAR_SIGNKEY_VERIFY
+
+/* Return 0 if S < L, -1 otherwise.
+ * Only used during verify so timing side-channel is OK */
+static int s_lt_l(const u8 *s) {
+  int i;
+  for (i = 31; i >= 0; i--) {
+    if (s[i] < L[i]) {
+      return 0;
+    }
+    if (s[i] > L[i]) {
+      return -1;
+    }
+  }
+  return -1;
+}
+
 static int unpackneg(gf r[4],const u8 p[32])
 {
   gf t, chk, num, den, den2, den4, den6;
@@ -469,6 +485,10 @@ int dropbear_ed25519_verify(const u8 *m,u32 mlen,const u8 *s,u32 slen,const u8 *
   gf p[4],q[4];
 
   if (slen < 64) return -1;
+
+  if (s_lt_l(s + 32) == -1) {
+    return -1;
+  }
 
   if (unpackneg(q,pk)) return -1;
 
