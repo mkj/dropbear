@@ -592,6 +592,11 @@ static void checktimeouts() {
 			&& elapsed(now, ses.last_packet_time_idle) >= opts.idle_timeout_secs) {
 		dropbear_close("Idle timeout");
 	}
+
+	if (opts.max_duration_secs > 0
+			&& elapsed(now, ses.connect_time) >= opts.max_duration_secs) {
+		dropbear_close("Max duration reached");
+	}
 }
 
 static void update_timeout(long limit, time_t now, time_t last_event, long * timeout) {
@@ -630,6 +635,9 @@ static long select_timeout() {
 	}
 
 	update_timeout(opts.idle_timeout_secs, now, ses.last_packet_time_idle,
+		&timeout);
+
+	update_timeout(opts.max_duration_secs, now, ses.connect_time,
 		&timeout);
 
 	/* clamp negative timeouts to zero - event has already triggered */
