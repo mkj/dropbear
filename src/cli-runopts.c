@@ -84,6 +84,7 @@ static void printhelp() {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d)\n"
 					"-I <idle_timeout>  (0 is never, default %d)\n"
+					"-M <max_duration>  (0 is off, default %d, in seconds)\n"
 					"-z    disable QoS\n"
 #if DROPBEAR_CLI_NETCAT
 					"-B <endhost:endport> Netcat-alike forwarding\n"
@@ -104,7 +105,8 @@ static void printhelp() {
 #if DROPBEAR_CLI_PUBKEY_AUTH
 					DROPBEAR_DEFAULT_CLI_AUTHKEY,
 #endif
-					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT,
+					DEFAULT_MAX_DURATION);
 
 }
 
@@ -132,6 +134,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	const char* recv_window_arg = NULL;
 	const char* idle_timeout_arg = NULL;
+	const char* max_duration_arg = NULL;
 	const char *host_arg = NULL;
 	const char *proxycmd_arg = NULL;
 	const char *remoteport_arg = NULL;
@@ -198,6 +201,7 @@ void cli_getopts(int argc, char ** argv) {
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	opts.keepalive_secs = DEFAULT_KEEPALIVE;
 	opts.idle_timeout_secs = DEFAULT_IDLE_TIMEOUT;
+	opts.max_duration_secs = DEFAULT_MAX_DURATION;
 
 	fill_own_user();
 
@@ -298,6 +302,9 @@ void cli_getopts(int argc, char ** argv) {
 					break;
 				case 'I':
 					next = &idle_timeout_arg;
+					break;
+				case 'M':
+					next = &max_duration_arg;
 					break;
 #if DROPBEAR_CLI_AGENTFWD
 				case 'A':
@@ -505,6 +512,14 @@ void cli_getopts(int argc, char ** argv) {
 			dropbear_exit("Bad idle_timeout '%s'", idle_timeout_arg);
 		}
 		opts.idle_timeout_secs = val;
+	}
+
+	if (max_duration_arg) {
+		unsigned int val;
+		if (m_str_to_uint(max_duration_arg, &val) == DROPBEAR_FAILURE) {
+			dropbear_exit("Bad max_duration '%s'", max_duration_arg);
+		}
+		opts.max_duration_secs = val;
 	}
 
 #if DROPBEAR_CLI_NETCAT
