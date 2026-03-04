@@ -389,6 +389,10 @@ for runtime configuration please mail the Dropbear list */
 be overridden at runtime with -I. 0 disables idle timeouts */
 #define DEFAULT_IDLE_TIMEOUT 0
 
+/* Disconnect after MAX_DURATION seconds. This can be overridden at
+runtime with -M. 0 disables this feature. */
+#define DEFAULT_MAX_DURATION 0
+
 /* The default path. This will often get replaced by the shell */
 #define DEFAULT_PATH "/usr/bin:/bin"
 #define DEFAULT_ROOT_PATH "/usr/sbin:/usr/bin:/sbin:/bin"

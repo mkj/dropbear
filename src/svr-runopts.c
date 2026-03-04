@@ -112,6 +112,7 @@ static void printhelp(const char * progname) {
 					"-W <receive_window_buffer> (default %d, larger may be faster, max 10MB)\n"
 					"-K <keepalive>  (0 is never, default %d, in seconds)\n"
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
+					"-M <max_duration>  (0 is off, default %d, in seconds)\n"
 					"-z    disable QoS\n"
 #if DROPBEAR_PLUGIN
                                         "-A <authplugin>[,<options>]\n"
@@ -136,7 +137,8 @@ static void printhelp(const char * progname) {
 #endif
 					MAX_AUTH_TRIES,
 					DROPBEAR_MAX_PORTS, DROPBEAR_DEFPORT, DROPBEAR_PIDFILE,
-					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT);
+					DEFAULT_RECV_WINDOW, DEFAULT_KEEPALIVE, DEFAULT_IDLE_TIMEOUT,
+					DEFAULT_MAX_DURATION);
 }
 
 void svr_getopts(int argc, char ** argv) {
@@ -147,6 +149,7 @@ void svr_getopts(int argc, char ** argv) {
 	char* recv_window_arg = NULL;
 	char* keepalive_arg = NULL;
 	char* idle_timeout_arg = NULL;
+	char* max_duration_arg = NULL;
 	char* maxauthtries_arg = NULL;
 	char* reexec_fd_arg = NULL;
 	char* keyfile = NULL;
@@ -207,7 +210,8 @@ void svr_getopts(int argc, char ** argv) {
 	opts.recv_window = DEFAULT_RECV_WINDOW;
 	opts.keepalive_secs = DEFAULT_KEEPALIVE;
 	opts.idle_timeout_secs = DEFAULT_IDLE_TIMEOUT;
-	
+	opts.max_duration_secs = DEFAULT_MAX_DURATION;
+
 #if DROPBEAR_SVR_REMOTETCPFWD
 	opts.listen_fwd_all = 0;
 #endif
@@ -315,6 +319,9 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 				case 'I':
 					next = &idle_timeout_arg;
+					break;
+				case 'M':
+					next = &max_duration_arg;
 					break;
 				case 'T':
 					next = &maxauthtries_arg;
@@ -447,6 +454,14 @@ void svr_getopts(int argc, char ** argv) {
 			dropbear_exit("Bad idle_timeout '%s'", idle_timeout_arg);
 		}
 		opts.idle_timeout_secs = val;
+	}
+
+	if (max_duration_arg) {
+		unsigned int val;
+		if (m_str_to_uint(max_duration_arg, &val) == DROPBEAR_FAILURE) {
+			dropbear_exit("Bad max_duration '%s'", max_duration_arg);
+		}
+		opts.max_duration_secs = val;
 	}
 
 	if (svr_opts.forced_command) {
