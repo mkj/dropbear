@@ -547,7 +547,7 @@ static void checktimeouts() {
 	time_t now;
 	now = monotonic_now();
 
-	if (IS_DROPBEAR_SERVER && ses.connect_time != 0
+	if (IS_DROPBEAR_SERVER && ses.authstate.authdone != 1
 		&& elapsed(now, ses.connect_time) >= AUTH_TIMEOUT) {
 			dropbear_close("Timeout before auth");
 	}

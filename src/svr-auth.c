@@ -461,11 +461,7 @@ void send_msg_userauth_success() {
 #if DROPBEAR_SVR_DROP_PRIVS
 	/* Drop privileges as soon as authentication has happened. */
 	svr_switch_user();
-#endif
-	ses.connect_time = 0;
 
-
-#if DROPBEAR_SVR_DROP_PRIVS
 	/* If running as the user, we can rely on the OS
 	 * to limit allowed ports */
 	ses.allowprivport = 1;
