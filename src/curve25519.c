@@ -54,7 +54,9 @@ static const gf
 #if DROPBEAR_SIGNKEY_VERIFY
 static const gf
   D = {0x78a3, 0x1359, 0x4dca, 0x75eb, 0xd8ab, 0x4141, 0x0a4d, 0x0070, 0xe898, 0x7779, 0x4079, 0x8cc7, 0xfe73, 0x2b6f, 0x6cee, 0x5203},
-  I = {0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83};
+  I = {0xa0b0, 0x4a0e, 0x1b27, 0xc4ee, 0xe478, 0xad2f, 0x1806, 0x2f43, 0xd7a7, 0x3dfb, 0x0099, 0x2b4d, 0xdf0b, 0x4fc1, 0x2480, 0x2b83},
+  /* p = 2^255 - 19 */
+  field_prime = {0xffed, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0xffff, 0x7fff};
 #endif /* DROPBEAR_SIGNKEY_VERIFY */
 #endif /* DROPBEAR_ED25519 */
 
@@ -442,11 +444,33 @@ static int s_lt_l(const u8 *s) {
   return -1;
 }
 
+/* Return 0 if y < p, -1 otherwise.
+ * field prime p = 2^255 - 19
+ * Only used during verify so timing side-channel is OK */
+static int y_lt_p(const gf y) {
+  int i;
+  for (i = 15; i >= 0; i--) {
+    if (y[i] < field_prime[i]) {
+      return 0;
+    }
+    if (y[i] > field_prime[i]) {
+      return -1;
+    }
+  }
+  return -1;
+}
+
 static int unpackneg(gf r[4],const u8 p[32])
 {
   gf t, chk, num, den, den2, den4, den6;
   set25519(r[2],gf1);
   unpack25519(r[1],p);
+
+  /* Check that pubkey y < 2^255 - 19 */
+  if (y_lt_p(r[1])) {
+    return -1;
+  }
+
   S(num,r[1]);
   M(den,num,D);
   Z(num,num,r[2]);
