@@ -99,11 +99,9 @@ void recv_msg_userauth_request() {
 	methodname = buf_getstring(ses.payload, &methodlen);
 
 	/* only handle 'ssh-connection' currently */
-	if (servicelen != SSH_SERVICE_CONNECTION_LEN
+	if (!(servicelen == SSH_SERVICE_CONNECTION_LEN
 			&& (strncmp(servicename, SSH_SERVICE_CONNECTION,
-					SSH_SERVICE_CONNECTION_LEN) != 0)) {
-		
-		/* TODO - disconnect here */
+					SSH_SERVICE_CONNECTION_LEN) == 0))) {
 		m_free(username);
 		m_free(servicename);
 		m_free(methodname);
