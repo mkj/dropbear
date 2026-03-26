@@ -44,6 +44,7 @@ void svr_switch_user(void);
 void svr_raise_gid_utmp(void);
 void svr_restore_gid(void);
 
+struct PubKeyOptions;
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 int svr_pubkey_allows_agentfwd(void);
 int svr_pubkey_allows_tcpfwd(void);
@@ -52,8 +53,9 @@ int svr_pubkey_allows_pty(void);
 int svr_pubkey_has_forced_command(void);
 int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port);
 void svr_pubkey_set_forced_command(struct ChanSess *chansess);
-void svr_pubkey_options_cleanup(void);
-int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filename);
+void svr_pubkey_options_cleanup(struct PubKeyOptions *pubkey_options);
+struct PubKeyOptions*
+svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename);
 #else
 /* no option : success */
 #define svr_pubkey_allows_agentfwd() 1
@@ -64,9 +66,14 @@ int svr_add_pubkey_options(buffer *options_buf, int line_num, const char* filena
 static inline int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port)
 	{ (void)host; (void)port; return 1; }
 
-static inline void svr_pubkey_set_forced_command(struct ChanSess *chansess) { }
-static inline void svr_pubkey_options_cleanup(void) { }
-#define svr_add_pubkey_options(x,y,z) DROPBEAR_SUCCESS
+static inline void svr_pubkey_set_forced_command(struct ChanSess *chansess) {
+	(void)chansess;
+}
+static inline void svr_pubkey_options_cleanup(struct PubKeyOptions *pubkey_options) {
+	(void)pubkey_options;
+}
+struct PubKeyOptions*
+svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename);
 #endif
 
 /* Client functions */
@@ -137,14 +144,10 @@ struct AuthState {
 	char *pw_shell;
 	char *pw_name;
 	char *pw_passwd;
-#if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 	struct PubKeyOptions* pubkey_options;
-	char *pubkey_info;
-#endif
 };
 
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
-struct PubKeyOptions;
 struct PubKeyOptions {
 	/* Flags */
 	int no_port_forwarding_flag;
@@ -160,6 +163,13 @@ struct PubKeyOptions {
 	int no_touch_required_flag;
 	int verify_required_flag;
 #endif
+
+	/* String from the end of authorized_keys entry, for SSH_PUBKEYINFO
+	   environment variable. May be omitted (NULL) if
+	   options contain non-shell-safe characters.
+	   This is not involved in pubkey option restrictions, but is
+	   parsed and kept similarly so is stored here. */
+	char * info_env;
 };
 
 struct PermitTCPFwdEntry {

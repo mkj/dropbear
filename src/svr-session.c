@@ -84,8 +84,8 @@ static const struct ChanType *svr_chantypes[] = {
 
 static void
 svr_session_cleanup(void) {
-	/* free potential public key options */
-	svr_pubkey_options_cleanup();
+	svr_pubkey_options_cleanup(ses.authstate.pubkey_options);
+	ses.authstate.pubkey_options = NULL;
 
 	m_free(svr_ses.addrstring);
 	m_free(svr_ses.remotehost);

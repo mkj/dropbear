@@ -347,6 +347,10 @@
 	#error "You must define DROPBEAR_SVR_PUBKEY_AUTH in order to use plugins"
 #endif
 
+#if (DROPBEAR_PLUGIN && !DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT)
+	#error "DROPBEAR_PLUGIN requires DROPBEAR_SVR_PUBKEY_OPTIONS"
+#endif
+
 #if !(DROPBEAR_AES128 || DROPBEAR_3DES || DROPBEAR_AES256 || DROPBEAR_CHACHA20POLY1305)
 	#error "At least one encryption algorithm must be enabled. AES128 is recommended."
 #endif
