@@ -95,7 +95,7 @@ struct Listener* new_listener(const int socks[], unsigned int nsocks,
 		if (ses.listensize > MAX_LISTENERS) {
 			TRACE(("leave newlistener: too many already"))
 			for (j = 0; j < nsocks; j++) {
-				close(socks[i]);
+				close(socks[j]);
 			}
 			return NULL;
 		}
