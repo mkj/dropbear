@@ -128,6 +128,9 @@ typedef struct svr_runopts {
 	char * forced_command;
 	char* interface;
 
+	char *hostdir;
+	char *forceuser;
+
 #if DROPBEAR_PLUGIN
 	/* malloced */
 	char *pubkey_plugin;
