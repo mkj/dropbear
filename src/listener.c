@@ -136,9 +136,9 @@ struct Listener * get_listener(enum ListenerType type, const void* typedata,
 		int (*match)(const void*, const void*)) {
 
 	unsigned int i;
-	struct Listener* listener;
 
-	for (i = 0, listener = ses.listeners[i]; i < ses.listensize; i++) {
+	for (i = 0; i < ses.listensize; i++) {
+		struct Listener* listener = ses.listeners[i];
 		if (listener && listener->type == type
 				&& match(typedata, listener->typedata)) {
 			return listener;

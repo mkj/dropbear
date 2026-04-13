@@ -132,14 +132,13 @@ static int matchtcp(const void* typedata1, const void* typedata2) {
 	const struct TCPListener *info2 = (struct TCPListener*)typedata2;
 
 	return (info1->listenport == info2->listenport)
-			&& (info1->chantype == info2->chantype)
-			&& (strcmp(info1->listenaddr, info2->listenaddr) == 0);
+			&& (strcmp(info1->request_listenaddr, info2->request_listenaddr) == 0);
 }
 
 static int svr_cancelremotetcp() {
 
 	int ret = DROPBEAR_FAILURE;
-	char * bindaddr = NULL;
+	char * request_addr = NULL;
 	unsigned int addrlen;
 	unsigned int port;
 	struct Listener * listener = NULL;
@@ -147,7 +146,7 @@ static int svr_cancelremotetcp() {
 
 	TRACE(("enter cancelremotetcp"))
 
-	bindaddr = buf_getstring(ses.payload, &addrlen);
+	request_addr = buf_getstring(ses.payload, &addrlen);
 	if (addrlen > MAX_HOST_LEN) {
 		TRACE(("addr len too long: %d", addrlen))
 		goto out;
@@ -155,18 +154,17 @@ static int svr_cancelremotetcp() {
 
 	port = buf_getint(ses.payload);
 
-	tcpinfo.sendaddr = NULL;
-	tcpinfo.sendport = 0;
-	tcpinfo.listenaddr = bindaddr;
+	memset(&tcpinfo, 0x0, sizeof(tcpinfo));
+	tcpinfo.request_listenaddr = request_addr;
 	tcpinfo.listenport = port;
 	listener = get_listener(LISTENER_TYPE_TCPFORWARDED, &tcpinfo, matchtcp);
 	if (listener) {
-		remove_listener( listener );
+		remove_listener(listener);
 		ret = DROPBEAR_SUCCESS;
 	}
 
 out:
-	m_free(bindaddr);
+	m_free(request_addr);
 	TRACE(("leave cancelremotetcp"))
 	return ret;
 }
