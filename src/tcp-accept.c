@@ -127,7 +127,7 @@ int listen_tcpfwd(struct TCPListener* tcpinfo, struct Listener **ret_listener) {
 	m_free(errstring);
 	
 	/* new_listener will close the socks if it fails */
-	listener = new_listener(socks, nsocks, CHANNEL_ID_TCPFORWARDED, tcpinfo, 
+	listener = new_listener(socks, nsocks, LISTENER_TYPE_TCPFORWARDED, tcpinfo,
 			tcp_acceptor, cleanup_tcp);
 
 	if (listener == NULL) {

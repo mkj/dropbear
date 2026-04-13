@@ -80,8 +80,9 @@ int svr_agentreq(struct ChanSess * chansess) {
 	setnonblocking(fd);
 
 	/* pass if off to listener */
-	chansess->agentlistener = new_listener( &fd, 1, 0, chansess, 
-								agentaccept, NULL);
+	chansess->agentlistener = new_listener( &fd, 1,
+		LISTENER_TYPE_DEFAULT, chansess,
+		agentaccept, NULL);
 
 	if (chansess->agentlistener == NULL) {
 		goto fail;

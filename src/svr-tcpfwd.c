@@ -159,7 +159,7 @@ static int svr_cancelremotetcp() {
 	tcpinfo.sendport = 0;
 	tcpinfo.listenaddr = bindaddr;
 	tcpinfo.listenport = port;
-	listener = get_listener(CHANNEL_ID_TCPFORWARDED, &tcpinfo, matchtcp);
+	listener = get_listener(LISTENER_TYPE_TCPFORWARDED, &tcpinfo, matchtcp);
 	if (listener) {
 		remove_listener( listener );
 		ret = DROPBEAR_SUCCESS;
