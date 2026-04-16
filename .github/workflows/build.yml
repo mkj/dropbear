@@ -211,7 +211,7 @@ jobs:
           sudo apt-get -y update
           sudo apt-get -y install zlib1g-dev libtomcrypt-dev libtommath-dev mercurial python3-venv libpam0g-dev $CC
 
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: configure
         run: |
@@ -288,14 +288,14 @@ jobs:
         # upload config.log if something has failed
       - name: config.log
         if: ${{ !env.ACT && (failure() || cancelled()) }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: config.log
           path: config.log
 
       - name: upload sizes
         if: ${{ matrix.upload_sizes }}
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: sizes.txt
           path: sizes.txt
