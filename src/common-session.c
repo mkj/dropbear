@@ -600,7 +600,7 @@ static void update_timeout(long limit, time_t now, time_t last_event, long * tim
 		(unsigned long long)now,
 		(unsigned long long)last_event, *timeout))
 	if (last_event > 0 && limit > 0) {
-		*timeout = MIN(*timeout, elapsed(now, last_event) + limit);
+		*timeout = MIN(*timeout, MAX(0, limit - elapsed(now, last_event)));
 		TRACE2(("new timeout %ld", *timeout))
 	}
 }
