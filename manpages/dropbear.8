@@ -185,10 +185,11 @@ IP addresses.
 
 .TP
 .B permitlisten=\fR"\fIhost:port\fR"
-Restrict remote port forwarding so that connection is allowed only from the
-specified host and port. Multiple permitlisten options separated by commas
+Restrict remote port forwarding listeners to the given address.
+Multiple permitlisten options separated by commas
 can be set in authorized_keys. Hosts must be literal domain names or
-IP addresses or special addresses like 0.0.0.0. Port can be 0 to allow the
+IP addresses or special addresses like 0.0.0.0.
+Port can be 0 to allow the
 listen port to be dynamically allocated on the server.
 
 .TP

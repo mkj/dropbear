@@ -162,7 +162,7 @@ struct PubKeyOptions {
 	/* "permitopen=" option */
 	m_list *permit_open_destinations;
 	/* "permitlisten=" option */
-	m_list *permit_listen_sources;
+	m_list *permit_listens;
 
 #if DROPBEAR_SK_ECDSA || DROPBEAR_SK_ED25519
 	int no_touch_required_flag;
@@ -178,6 +178,7 @@ struct PubKeyOptions {
 };
 
 struct PermitTCPFwdEntry {
+	/* host may be NULL for permitlisten entries */
 	char *host;
 	unsigned int port;
 };
