@@ -122,8 +122,8 @@ int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
  * 0 otherwise */
 int svr_pubkey_allows_remote_tcpfwd(const char *host, unsigned int port) {
 	if (ses.authstate.pubkey_options
-		&& ses.authstate.pubkey_options->permit_listen_sources) {
-		m_list_elem *iter = ses.authstate.pubkey_options->permit_listen_sources->first;
+		&& ses.authstate.pubkey_options->permit_listens) {
+		m_list_elem *iter = ses.authstate.pubkey_options->permit_listens->first;
 		while (iter) {
 			struct PermitTCPFwdEntry *entry = (struct PermitTCPFwdEntry*)iter->item;
 			if (strcmp(entry->host, host) == 0 && entry->port == port) {
@@ -172,15 +172,15 @@ void svr_pubkey_options_cleanup(struct PubKeyOptions *pubkey_options) {
 			}
 			m_free(pubkey_options->permit_open_destinations);
 		}
-		if (pubkey_options->permit_listen_sources) {
-			m_list_elem *iter = pubkey_options->permit_listen_sources->first;
+		if (pubkey_options->permit_listens) {
+			m_list_elem *iter = pubkey_options->permit_listens->first;
 			while (iter) {
 				struct PermitTCPFwdEntry *entry = (struct PermitTCPFwdEntry*)list_remove(iter);
 				m_free(entry->host);
 				m_free(entry);
-				iter = pubkey_options->permit_listen_sources->first;
+				iter = pubkey_options->permit_listens->first;
 			}
-			m_free(pubkey_options->permit_listen_sources);
+			m_free(pubkey_options->permit_listens);
 		}
 		m_free(pubkey_options->info_env);
 		m_free(pubkey_options);
@@ -332,8 +332,8 @@ svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename
 			int valid_option = 0;
 			const unsigned char* permitlisten_start = buf_getptr(options_buf, 0);
 
-			if (!pubkey_options->permit_listen_sources) {
-				pubkey_options->permit_listen_sources = list_new();
+			if (!pubkey_options->permit_listens) {
+				pubkey_options->permit_listens = list_new();
 			}
 
 			while (options_buf->pos < options_buf->len) {
@@ -345,7 +345,7 @@ svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename
 					struct PermitTCPFwdEntry *entry =
 							(struct PermitTCPFwdEntry*)m_malloc(sizeof(struct PermitTCPFwdEntry));
 
-					list_append(pubkey_options->permit_listen_sources, entry);
+					list_append(pubkey_options->permit_listens, entry);
 					spec = m_malloc(permitlisten_len);
 					memcpy(spec, permitlisten_start, permitlisten_len - 1);
 					spec[permitlisten_len - 1] = '\0';

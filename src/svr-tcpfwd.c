@@ -201,7 +201,7 @@ static int svr_remotetcpreq(int *allocated_listen_port) {
 	}
 
 	if (!svr_pubkey_allows_remote_tcpfwd(request_addr, port)) {
-		TRACE(("remote tcp forwarding not permitted from requested source"));
+		TRACE(("remote tcp forwarding listen address not permitted"));
 		goto out;
 	}
 
