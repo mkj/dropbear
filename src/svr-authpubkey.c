@@ -503,10 +503,18 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 	if (checkpubkeyperms() == DROPBEAR_FAILURE) {
 		TRACE(("bad authorized_keys permissions, or file doesn't exist"))
 	} else {
+		int fd;
 		/* we don't need to check pw and pw_dir for validity, since
 		 * its been done in checkpubkeyperms. */
 		filename = authorized_keys_filepath();
-		authfile = fopen(filename, "r");
+		fd = open(filename, O_RDONLY | O_NONBLOCK);
+		if (fd >= 0) {
+			authfile = fdopen(fd, "r");
+			if (!authfile) {
+				/* fdopen could fail with ENOMEM */
+				m_close(fd);
+			}
+		}
 		if (!authfile) {
 			TRACE(("checkpubkey: failed opening %s: %s", filename, strerror(errno)))
 		}
