@@ -184,11 +184,10 @@ port specification for matching any port. Hosts must be literal domain names or
 IP addresses.
 
 .TP
-.B permitlisten=\fR"\fIhost:port\fR"
-Restrict remote port forwarding listeners to the given address.
-Multiple permitlisten options separated by commas
-can be set in authorized_keys. Hosts must be literal domain names or
-IP addresses or special addresses like 0.0.0.0.
+.B permitlisten=\fR"\fIport\fR"
+Restrict remote port forwarding listeners to the given port.
+Multiple permitlisten="port" options separated by commas
+can be set in authorized_keys.
 Port can be 0 to allow the
 listen port to be dynamically allocated on the server.
 

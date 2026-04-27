@@ -121,12 +121,15 @@ int svr_pubkey_allows_local_tcpfwd(const char *host, unsigned int port) {
 /* Returns 1 if pubkey allows remote tcp forwarding from the provided source,
  * 0 otherwise */
 int svr_pubkey_allows_remote_tcpfwd(const char *host, unsigned int port) {
+	/* no host restrictions */
+	(void)host;
+
 	if (ses.authstate.pubkey_options
 		&& ses.authstate.pubkey_options->permit_listens) {
 		m_list_elem *iter = ses.authstate.pubkey_options->permit_listens->first;
 		while (iter) {
 			struct PermitTCPFwdEntry *entry = (struct PermitTCPFwdEntry*)iter->item;
-			if (strcmp(entry->host, host) == 0 && entry->port == port) {
+			if (entry->port == port) {
 				return 1;
 			}
 
@@ -340,26 +343,28 @@ svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename
 				const char c = buf_getbyte(options_buf);
 				if (c == '"') {
 					char *spec = NULL;
-					char *portstring = NULL;
 					const int permitlisten_len = buf_getptr(options_buf, 0) - permitlisten_start;
 					struct PermitTCPFwdEntry *entry =
 							(struct PermitTCPFwdEntry*)m_malloc(sizeof(struct PermitTCPFwdEntry));
 
 					list_append(pubkey_options->permit_listens, entry);
+					/* permitlisten_len includes trailing '"' */
 					spec = m_malloc(permitlisten_len);
 					memcpy(spec, permitlisten_start, permitlisten_len - 1);
 					spec[permitlisten_len - 1] = '\0';
-					if ((split_address_port(spec, &entry->host, &portstring) == DROPBEAR_SUCCESS)
-						&& entry->host && portstring) {
-						if (m_str_to_uint(portstring, &entry->port) == DROPBEAR_SUCCESS) {
-							valid_option = 1;
-							TRACE(("remote port forwarding allowed from host '%s' and port '%u'",
-									entry->host, entry->port));
-						}
+
+					/* Only a plain port accepted.
+					 * OpenSSH supports [host:]port, but that isn't implemented.
+					 * port="*" isn't supported either, since it only is useful
+					 * with a host: part. */
+
+					if (m_str_to_uint(spec, &entry->port) == DROPBEAR_SUCCESS) {
+						valid_option = 1;
+						TRACE(("remote forwarding allows listening on port %u",
+								entry->port));
 					}
 
 					m_free(spec);
-					m_free(portstring);
 					break;
 				}
 			}
