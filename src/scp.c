@@ -200,7 +200,8 @@ do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 	 * Reserve two descriptors so that the real pipes won't get
 	 * descriptors 0 and 1 because that will screw up dup2 below.
 	 */
-	pipe(reserved);
+	if (pipe(reserved) < 0)
+		fatal("pipe: %s", strerror(errno));
 
 	/* Create a socket pair for communicating with ssh. */
 	if (pipe(pin) < 0)
@@ -942,14 +943,14 @@ next:			if (fd != -1) {
 				amt = stb.st_size - i;
 			if (!haderr) {
 				result = atomicio(read, fd, bp->buf, amt);
-				if (result != amt)
+				if (result != (size_t)amt)
 					haderr = errno;
 			}
 			if (haderr)
 				(void) atomicio(vwrite, remout, bp->buf, amt);
 			else {
 				result = atomicio(vwrite, remout, bp->buf, amt);
-				if (result != amt)
+				if (result != (size_t)amt)
 					haderr = errno;
 				statbytes += result;
 			}
@@ -1523,6 +1524,7 @@ allocbuf(BUF *bp, int fd, int blksize)
 	if (size == 0)
 		size = blksize;
 #else /* HAVE_STRUCT_STAT_ST_BLKSIZE */
+	(void)fd;
 	size = blksize;
 #endif /* HAVE_STRUCT_STAT_ST_BLKSIZE */
 	if (bp->cnt >= size)
@@ -1539,8 +1541,10 @@ allocbuf(BUF *bp, int fd, int blksize)
 void
 lostconn(int signo)
 {
-	if (!iamremote)
-		write(STDERR_FILENO, "lost connection\n", 16);
+	if (!iamremote) {
+		int unused = write(STDERR_FILENO, "lost connection\n", 16);
+		(void)unused;
+	}
 	if (signo)
 		_exit(1);
 	else
