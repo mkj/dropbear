@@ -583,6 +583,15 @@ tolocal(int argc, char **argv)
 			if (*suser == '\0')
 				suser = NULL;
 		}
+
+		char *dest = *(argv + argc - 1);
+		if (!(access(dest, F_OK) == 0 && errno == ENOENT)) {
+			/* paths sent from the server in recursive mode aren't adequately
+			 * checked that they match the requested files, so disallow this */
+			fprintf(stderr, "-r destination \"%s\" must not already exist\n", dest);
+			exit(1);
+		}
+
 		host = cleanhostname(host);
 		len = strlen(src) + CMDNEEDS + 20;
 		bp = xmalloc(len);
