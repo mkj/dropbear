@@ -6,8 +6,6 @@ on:
   pull_request:
   workflow_dispatch:
   push:
-    branches:
-      - master
 jobs:
   build:
     runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
