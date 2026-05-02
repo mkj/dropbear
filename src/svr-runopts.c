@@ -94,8 +94,8 @@ static void printhelp(const char * progname) {
 #if DROPBEAR_SVR_REMOTETCPFWD
 					"-k		Disable remote port/stream forwarding\n"
 					"-a		Allow connections to forwarded ports from any host\n"
-					"-c command	Force executed command\n"
 #endif
+					"-c command	Force executed command\n"
 					"-p [address:]port\n"
 					"		Listen on specified tcp port (and optionally address),\n"
 					"		up to %d can be specified\n"
