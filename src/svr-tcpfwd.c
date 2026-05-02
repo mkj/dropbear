@@ -396,9 +396,7 @@ int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listen
 	strlcpy(addr.sun_path, tcpinfo->socket_path, sizeof(addr.sun_path));
 
 	/* Unlink existing socket if it exists */
-	if (svr_opts.streamlocalbindunlink) {
-		unlink_streamsocket(tcpinfo->socket_path);
-	}
+	unlink_streamsocket(tcpinfo->socket_path);
 
 	/* Set umask to allow proper permissions on the socket */
 	old_umask = umask(0177);
