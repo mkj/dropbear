@@ -107,8 +107,8 @@ typedef struct svr_runopts {
 	int multiauthmethod;
 	unsigned int maxauthtries;
 
-#if DROPBEAR_SVR_REMOTETCPFWD
-	int noremotetcp;
+#if DROPBEAR_SVR_REMOTEANYFWD
+	int noremotefwd;
 #endif
 #if DROPBEAR_SVR_LOCALANYFWD
 	int nolocaltcp;

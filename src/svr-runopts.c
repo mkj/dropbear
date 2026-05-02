@@ -91,8 +91,10 @@ static void printhelp(const char * progname) {
 #if DROPBEAR_SVR_LOCALANYFWD
 					"-j		Disable local port/stream forwarding\n"
 #endif
-#if DROPBEAR_SVR_REMOTETCPFWD
+#if DROPBEAR_SVR_REMOTEANYFWD
 					"-k		Disable remote port/stream forwarding\n"
+#endif
+#if DROPBEAR_SVR_REMOTETCPFWD
 					"-a		Allow connections to forwarded ports from any host\n"
 #endif
 					"-c command	Force executed command\n"
@@ -183,8 +185,8 @@ void svr_getopts(int argc, char ** argv) {
 #if DROPBEAR_SVR_LOCALANYFWD
 	svr_opts.nolocaltcp = 0;
 #endif
-#if DROPBEAR_SVR_REMOTETCPFWD
-	svr_opts.noremotetcp = 0;
+#if DROPBEAR_SVR_REMOTEANYFWD
+	svr_opts.noremotefwd = 0;
 #endif
 #if DROPBEAR_PLUGIN
         svr_opts.pubkey_plugin = NULL;
@@ -259,17 +261,21 @@ void svr_getopts(int argc, char ** argv) {
 					break;
 #else
 				case 'j':
+					/* Ignore the flag */
 					break;
 #endif
-#if DROPBEAR_SVR_REMOTETCPFWD
+#if DROPBEAR_SVR_REMOTEANYFWD
 				case 'k':
-					svr_opts.noremotetcp = 1;
-					break;
-				case 'a':
-					opts.listen_fwd_all = 1;
+					svr_opts.noremotefwd = 1;
 					break;
 #else
 				case 'k':
+					/* Ignore the flag */
+					break;
+#endif
+#if DROPBEAR_SVR_REMOTETCPFWD
+				case 'a':
+					opts.listen_fwd_all = 1;
 					break;
 #endif
 #if INETD_MODE
