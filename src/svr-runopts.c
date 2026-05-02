@@ -89,10 +89,10 @@ static void printhelp(const char * progname) {
 #endif
 					"-T		Maximum authentication tries (default %d)\n"
 #if DROPBEAR_SVR_LOCALANYFWD
-					"-j		Disable local port forwarding\n"
+					"-j		Disable local port/stream forwarding\n"
 #endif
 #if DROPBEAR_SVR_REMOTETCPFWD
-					"-k		Disable remote port forwarding\n"
+					"-k		Disable remote port/stream forwarding\n"
 					"-a		Allow connections to forwarded ports from any host\n"
 					"-c command	Force executed command\n"
 #endif

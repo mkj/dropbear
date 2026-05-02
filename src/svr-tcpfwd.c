@@ -266,8 +266,8 @@ out:
 #if DROPBEAR_SVR_REMOTESTREAMFWD
 static int matchstreamlocal(const void* typedata1, const void* typedata2) {
 
-	const struct TCPListener *info1 = (struct TCPListener*)typedata1;
-	const struct TCPListener *info2 = (struct TCPListener*)typedata2;
+	const struct TCPListener *info1 = (const struct TCPListener*)typedata1;
+	const struct TCPListener *info2 = (const struct TCPListener*)typedata2;
 
 	if (info1->socket_path == NULL || info2->socket_path == NULL) {
 		return 0;
@@ -292,6 +292,10 @@ static int svr_cancelremotestreamlocal() {
 		TRACE(("path len too long: %d", pathlen))
 		goto out;
 	}
+	if (strlen(socket_path) != pathlen) {
+		TRACE(("path has nul byte"));
+		goto out;
+	}
 
 	tcpinfo.socket_path = socket_path;
 	tcpinfo.chantype = &svr_chan_streamlocalremote;
@@ -307,12 +311,20 @@ out:
 	return ret;
 }
 
+static void unlink_streamsocket(const char* path) {
+	if (unlink(path) < 0 && errno != ENOENT) {
+		/* Not fatal */
+		DEBUG1(("Failed removing unix socket %s: %s",
+			path, strerror(errno)));
+	}
+}
+
 static void cleanup_streamlocal(const struct Listener *listener) {
 
 	struct TCPListener *tcpinfo = (struct TCPListener*)(listener->typedata);
 
 	if (tcpinfo && tcpinfo->socket_path) {
-		unlink(tcpinfo->socket_path);
+		unlink_streamsocket(tcpinfo->socket_path);
 		m_free(tcpinfo->socket_path);
 	}
 	m_free(tcpinfo->request_listenaddr);
@@ -347,14 +359,10 @@ static void streamlocal_acceptor(const struct Listener *listener, int sock) {
 
 int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listener) {
 
-	int sock;
-	struct Listener *listener;
+	int sock, rc, saved_errno;
+	struct Listener *listener = NULL;
 	struct sockaddr_un addr;
 	mode_t old_umask;
-#if DROPBEAR_SVR_MULTIUSER
-	uid_t uid = 0;
-	gid_t gid = 0;
-#endif
 
 	TRACE(("enter listen_streamlocal"))
 
@@ -369,6 +377,13 @@ int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listen
 		return DROPBEAR_FAILURE;
 	}
 
+#if DROPBEAR_FUZZ
+	if (fuzz.fuzzing) {
+		// fuzzing streamlocal is unimplemented
+		return DROPBEAR_FAILURE;
+	}
+#endif
+
 	sock = socket(PF_UNIX, SOCK_STREAM, 0);
 	if (sock < 0) {
 		dropbear_log(LOG_INFO, "Streamlocal forward failed: socket() failed");
@@ -376,69 +391,33 @@ int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listen
 		return DROPBEAR_FAILURE;
 	}
 
-	memset((void*)&addr, 0, sizeof(addr));
+	memset(&addr, 0, sizeof(addr));
 	addr.sun_family = AF_UNIX;
 	strlcpy(addr.sun_path, tcpinfo->socket_path, sizeof(addr.sun_path));
 
-#if DROPBEAR_SVR_MULTIUSER
-	/* Save current privileges and drop to authenticated user */
-	uid = getuid();
-	gid = getgid();
-	if ((setegid(ses.authstate.pw_gid)) < 0) {
-		dropbear_log(LOG_WARNING, "Streamlocal forward failed: Failed to set egid");
-		close(sock);
-		TRACE(("leave listen_streamlocal: failed to set egid"))
-		return DROPBEAR_FAILURE;
-	}
-	if ((seteuid(ses.authstate.pw_uid)) < 0) {
-		dropbear_log(LOG_WARNING, "Streamlocal forward failed: Failed to set euid");
-		if (setegid(gid) < 0) {
-			dropbear_exit("Failed to revert egid");
-		}
-		close(sock);
-		TRACE(("leave listen_streamlocal: failed to set euid"))
-		return DROPBEAR_FAILURE;
-	}
-#endif
-
 	/* Unlink existing socket if it exists */
 	if (svr_opts.streamlocalbindunlink) {
-		unlink(tcpinfo->socket_path);
+		unlink_streamsocket(tcpinfo->socket_path);
 	}
 
 	/* Set umask to allow proper permissions on the socket */
 	old_umask = umask(0177);
+	rc = bind(sock, (struct sockaddr*)&addr, sizeof(addr));
+	saved_errno = errno;
+	umask(old_umask);
 
-	if (bind(sock, (struct sockaddr*)&addr, sizeof(addr)) < 0) {
-		dropbear_log(LOG_INFO, "Streamlocal forward failed: bind() failed: %s", strerror(errno));
-		close(sock);
-		umask(old_umask);
-#if DROPBEAR_SVR_MULTIUSER
-		if ((seteuid(uid)) < 0 ||
-			(setegid(gid)) < 0) {
-			dropbear_exit("Failed to revert euid");
-		}
-#endif
+	if (rc < 0) {
+		dropbear_log(LOG_INFO, "Streamlocal forward failed: bind() failed: %s", strerror(saved_errno));
+		m_close(sock);
 		TRACE(("leave listen_streamlocal: bind() failed"))
 		return DROPBEAR_FAILURE;
 	}
 
-	umask(old_umask);
-
-#if DROPBEAR_SVR_MULTIUSER
-	/* Restore privileges after binding */
-	if ((seteuid(uid)) < 0 ||
-		(setegid(gid)) < 0) {
-		unlink(tcpinfo->socket_path);
-		close(sock);
-		dropbear_exit("Failed to revert euid");
-	}
-#endif
 
 	if (listen(sock, DROPBEAR_LISTEN_BACKLOG) < 0) {
 		dropbear_log(LOG_INFO, "Streamlocal forward failed: listen() failed: %s", strerror(errno));
-		unlink(tcpinfo->socket_path);
-		close(sock);
+		unlink_streamsocket(tcpinfo->socket_path);
+		m_close(sock);
 		TRACE(("leave listen_streamlocal: listen() failed"))
 		return DROPBEAR_FAILURE;
 	}
@@ -449,8 +428,8 @@ int listen_streamlocal(struct TCPListener* tcpinfo, struct Listener **ret_listen
 			streamlocal_acceptor, cleanup_streamlocal);
 
 	if (listener == NULL) {
-		unlink(tcpinfo->socket_path);
-		close(sock);
+		unlink_streamsocket(tcpinfo->socket_path);
+		m_close(sock);
 		TRACE(("leave listen_streamlocal: listener failed"))
 		return DROPBEAR_FAILURE;
 	}
@@ -473,6 +452,15 @@ static int svr_remotestreamlocalreq() {
 
 	TRACE(("enter remotestreamlocalreq"))
 
+	if (svr_opts.forced_command || svr_pubkey_has_forced_command()) {
+		/* Creating a unix socket in the right place could probably subvert
+		 * a forcedcommand, so don't allow that.
+		 * This could be relaxed if an authorized_keys "permitlisten"
+		 * equivalent were added for streamlocal */
+		TRACE(("leave newstreamlocal: no unix forwarding for forced command"))
+		goto out;
+	}
+
 	if (svr_opts.noremotetcp || !svr_pubkey_allows_tcpfwd()) {
 		TRACE(("leave remotestreamlocalreq: remote forwarding disabled"))
 		goto out;
@@ -481,6 +469,10 @@ static int svr_remotestreamlocalreq() {
 	request_path = buf_getstring(ses.payload, &pathlen);
 	if (pathlen > MAX_HOST_LEN) {
 		TRACE(("path len too long: %d", pathlen))
+		goto out;
+	}
+	if (strlen(request_path) != pathlen) {
+		TRACE(("path has nul byte"));
 		goto out;
 	}
 
