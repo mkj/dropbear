@@ -1106,8 +1106,10 @@ sink(int argc, char **argv, const char *src)
 
 	setimes = targisdir = 0;
 	mask = umask(0);
-	if (!pflag)
+	if (!pflag) {
+		mask |= 07000;
 		(void) umask(mask);
+	}
 	if (argc != 1) {
 		run_err("ambiguous target");
 		exit(1);
