@@ -105,6 +105,11 @@ of 0 disables keepalives. If no response is received for 3 consecutive keepalive
 .B \-I \fIidle_timeout
 Disconnect the session if no traffic is transmitted or received for \fIidle_timeout\fR seconds.
 .TP
+.B \-M
+Set maximum session duration in seconds. All sessions will close after this time.
+If a compile-time setting was set (default is none), then setting \fI-M 0\fR will disable
+the session duration timeout.
+.TP
 .B \-z
 By default Dropbear will send network traffic with the \fBAF21\fR setting for QoS, letting network devices give it higher priority. Some devices may have problems with that, \fI-z\fR can be used to disable it.
 .TP
