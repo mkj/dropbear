@@ -64,16 +64,10 @@ void svr_recv_msg_global_request(void) {
     if (0) {}
 #if DROPBEAR_SVR_REMOTETCPFWD
     else if (strcmp("tcpip-forward", reqname) == 0) {
-        int allocated_listen_port = 0;
-        ret = svr_remotetcpreq(&allocated_listen_port);
-        /* client expects-port-number-to-make-use-of-server-allocated-ports */
-        if (DROPBEAR_SUCCESS == ret) {
-            CHECKCLEARTOWRITE();
-            buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
-            buf_putint(ses.writepayload, allocated_listen_port);
-            encrypt_packet();
-            wantreply = 0; /* avoid out: below sending another reply */
-        }
+        ret = svr_remotetcpreq(wantreply);
+        /* svr_remotetcpreq sends its on reply if needed,
+         * don't send another in out: below */
+        wantreply = 0;
     } else if (strcmp("cancel-tcpip-forward", reqname) == 0) {
         ret = svr_cancelremotetcp();
     }

@@ -64,7 +64,8 @@ out:
     return ret;
 }
 
-int svr_remotetcpreq(int *allocated_listen_port) {
+/* Will send its own reply if needed. */
+int svr_remotetcpreq(int wantreply) {
 
     int ret = DROPBEAR_FAILURE;
     char * request_addr = NULL;
@@ -121,10 +122,24 @@ int svr_remotetcpreq(int *allocated_listen_port) {
     ret = listen_tcpfwd(tcpinfo, &listener);
     if (DROPBEAR_SUCCESS == ret) {
         tcpinfo->listenport = get_sock_port(listener->socks[0]);
-        *allocated_listen_port = tcpinfo->listenport;
     }
 
 out:
+    /* Send a reply if needed */
+    if (wantreply) {
+        CHECKCLEARTOWRITE();
+        if (ret == DROPBEAR_SUCCESS) {
+            buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_SUCCESS);
+            if (port == 0) {
+                /* port is only included if allocated */
+                buf_putint(ses.writepayload, tcpinfo->listenport);
+            }
+        } else {
+            buf_putbyte(ses.writepayload, SSH_MSG_REQUEST_FAILURE);
+        }
+        encrypt_packet();
+    }
+
     if (ret == DROPBEAR_FAILURE) {
         /* we only free it if a listener wasn't created, since the listener
          * has to remember it if it's to be cancelled */

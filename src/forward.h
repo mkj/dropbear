@@ -74,7 +74,7 @@ extern const struct ChanType svr_chan_streamlocal;
 #endif
 
 #if DROPBEAR_SVR_REMOTETCPFWD
-int svr_remotetcpreq(int *allocated_listen_port);
+int svr_remotetcpreq(int wantreply);
 int svr_cancelremotetcp(void);
 #endif
 
