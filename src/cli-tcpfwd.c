@@ -24,7 +24,7 @@
 
 #include "includes.h"
 #include "dbutil.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "channel.h"
 #include "runopts.h"
 #include "session.h"

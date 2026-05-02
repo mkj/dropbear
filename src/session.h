@@ -34,7 +34,7 @@
 #include "queue.h"
 #include "listener.h"
 #include "packet.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"

@@ -28,7 +28,7 @@
 #include "buffer.h"
 #include "dbutil.h"
 #include "algo.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "list.h"
 
 cli_runopts cli_opts; /* GLOBAL */

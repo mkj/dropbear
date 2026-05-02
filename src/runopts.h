@@ -29,7 +29,7 @@
 #include "signkey.h"
 #include "buffer.h"
 #include "auth.h"
-#include "tcpfwd.h"
+#include "forward.h"
 
 typedef struct runopts {
 

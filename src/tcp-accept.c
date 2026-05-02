@@ -24,7 +24,7 @@
 
 #include "includes.h"
 #include "ssh.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "dbutil.h"
 #include "session.h"
 #include "buffer.h"

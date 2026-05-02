@@ -25,7 +25,7 @@
 
 #include "includes.h"
 #include "ssh.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "dbutil.h"
 #include "session.h"
 #include "buffer.h"
@@ -35,7 +35,7 @@
 #include "auth.h"
 #include "netio.h"
 
-#if !DROPBEAR_SVR_REMOTETCPFWD
+#if !(DROPBEAR_SVR_REMOTETCPFWD || DROPBEAR_SVR_REMOTESTREAMFWD)
 
 /* This is better than SSH_MSG_UNIMPLEMENTED */
 void recv_msg_global_request_remotetcp() {

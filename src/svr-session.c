@@ -35,7 +35,7 @@
 #include "channel.h"
 #include "chansession.h"
 #include "atomicio.h"
-#include "tcpfwd.h"
+#include "forward.h"
 #include "service.h"
 #include "auth.h"
 #include "runopts.h"
