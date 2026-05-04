@@ -615,7 +615,12 @@ append(char *cp, char ***ap, size_t *np)
 {
 	char **tmp;
 
-	if ((tmp = reallocarray(*ap, *np + 1, sizeof(*tmp))) == NULL)
+	if (*np + 1 > (SIZE_MAX / sizeof(*tmp))) {
+		/* overflow */
+		return -1;
+	}
+
+	if ((tmp = realloc(*ap, (*np + 1) * sizeof(*tmp))) == NULL)
 		return -1;
 	tmp[(*np)] = cp;
 	(*np)++;
