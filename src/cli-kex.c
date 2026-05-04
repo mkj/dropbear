@@ -368,11 +368,15 @@ static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) 
 
 		/* Compare hostnames */
 		if (strncmp(cli_opts.remotehost, (const char *) buf_getptr(line, hostlen),
-					hostlen) != 0) {
+					hostlen) == 0) {
+			/* We have matched the full cli hostname */
+			buf_incrpos(line, hostlen);
+		} else if (buf_getbyte(line) == '*') {
+			/* We have matched a * wildcard */
+		} else {
 			continue;
 		}
 
-		buf_incrpos(line, hostlen);
 		if (buf_getbyte(line) != ' ') {
 			/* there wasn't a space after the hostname, something dodgy */
 			TRACE(("missing space afte matching hostname"))
@@ -400,16 +404,6 @@ static void checkhostkey(const unsigned char* keyblob, unsigned int keybloblen) 
 			goto out;
 		}
 
-		/* The keys didn't match. eep. Note that we're "leaking"
-		   the fingerprint strings here, but we're exiting anyway */
-		dropbear_exit("\n\n%s host key mismatch for %s !\n"
-					"Fingerprint is %s\n"
-					"Expected %s\n"
-					"If you know that the host key is correct you can\nremove the bad entry from ~/.ssh/known_hosts", 
-					algoname,
-					cli_opts.remotehost,
-					sign_key_fingerprint(keyblob, keybloblen),
-					fingerprint ? fingerprint : "UNKNOWN");
 	} while (1); /* keep going 'til something happens */
 
 	/* Key doesn't exist yet */
