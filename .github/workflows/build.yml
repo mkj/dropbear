@@ -243,7 +243,6 @@ jobs:
         run: |
           cat localoptions.h
           make -j3 $MAKE_TARGET
-          make scp
 
       - name: multilink
         if: ${{ matrix.multilink }}
