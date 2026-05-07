@@ -672,6 +672,7 @@ build_os
 build_vendor
 build_cpu
 build
+MV
 STATIC
 DROPBEAR_LTM_CFLAGS
 LTM_CFLAGS
@@ -4598,6 +4599,15 @@ rm -rf conftest*
 fi
 
 
+# Default mv
+# We can edit mv's path, it's usefull on systems where the gnu
+# coreutils are not the default implementation. For example on Illumos and
+# Solaris, the default mv does not have the -v option (verbose). But on Solaris
+# and most Illumos distros, the gnu coreutils are shipped under /usr/gnu, where
+# we can find mv under the bin/ directory.
+MV="mv"
+
+
 # Host specific options
 # this isn't a definitive list of hosts, they are just added as required
 
@@ -4685,8 +4695,7 @@ case "$host" in
 
 *-*-solaris*)
 	CFLAGS="$CFLAGS -I/usr/local/include"
-	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
-	conf_lastlog_location="/var/adm/lastlog"
+	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib -lssp"
 	{ printf "%s\n" "$as_me:${as_lineno-$LINENO}: checking for obsolete utmp and wtmp in solaris2.x" >&5
 printf %s "checking for obsolete utmp and wtmp in solaris2.x... " >&6; }
 	sol2ver=`echo "$host"| sed -e 's/.*[0-9]\.//'`
@@ -4782,6 +4791,8 @@ if test "x$ac_cv_lib_nsl_yp_match" = xyes
 then :
   LIBS="$LIBS -lnsl"
 fi
+
+	MV="/usr/gnu/bin/mv"
 
 	;;
 
