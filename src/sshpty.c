@@ -357,8 +357,16 @@ pty_setowner(struct passwd *pw, const char *tty_name)
 {
 	struct group *grp;
 	gid_t gid;
+	gid_t nogroup_gid;
 	mode_t mode;
 	struct stat st;
+
+	/* get nogroup's gid */
+	grp = getgrnam("nogroup");
+	if (grp)
+		nogroup_gid = grp->gr_gid;
+	else
+		nogroup_gid = -1;
 
 	/* Determine the group to make the owner of the tty. */
 	grp = getgrnam("tty");
@@ -382,7 +390,8 @@ pty_setowner(struct passwd *pw, const char *tty_name)
 
 	/* Allow either "tty" gid or user's own gid. On Linux with openpty()
 	 * this varies depending on the devpts mount options */
-	if (st.st_uid != pw->pw_uid || !(st.st_gid == gid || st.st_gid == pw->pw_gid)) {
+	if (st.st_uid != pw->pw_uid ||
+			!(st.st_gid == gid || st.st_gid == nogroup_gid || st.st_gid == pw->pw_gid)) {
 		if (chown(tty_name, pw->pw_uid, gid) < 0) {
 			if (errno == EROFS &&
 			    (st.st_uid == pw->pw_uid || st.st_uid == 0)) {
