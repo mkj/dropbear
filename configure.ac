@@ -942,12 +942,13 @@ fi
 
 if test "x$ac_cv_func_getpass" != xyes; then
 AC_MSG_NOTICE()
-AC_MSG_NOTICE([getpass() not available, dbclient will only have public-key authentication])
+AC_MSG_WARN([getpass() not available, dbclient will only have public-key authentication])
 fi
 
 if test "t$found_crypt_func" != there; then
 AC_MSG_NOTICE()
-AC_MSG_NOTICE([crypt() not available, dropbear server will not have password authentication])
+AC_MSG_WARN([crypt() is not available, dropbear server will not have password authentication])
+AC_MSG_NOTICE([Some platforms require libcrypt-dev package or similar])
 fi
 
 AC_MSG_NOTICE()
