@@ -173,9 +173,9 @@ void svr_auth_pubkey(int valid_user) {
 		 * Start counting failures (incrfail) only when it's reaching
 		 * the limit.
 		 */
-		unsigned int free_query_limit = 0;
-			MAX(0, (int)svr_opts.maxauthtries - MAX_PUBKEY_QUERIES);
-		int incrfail = ses.authstate.serv_pubkey_query_count > free_query_limit;
+		unsigned int free_query_limit =
+			MAX(0, MAX_PUBKEY_QUERIES - (int)svr_opts.maxauthtries);
+		int incrfail = ses.authstate.serv_pubkey_query_count >= free_query_limit;
 		send_msg_userauth_failure(0, incrfail);
 		ses.authstate.serv_pubkey_query_count++;
 		goto out;
