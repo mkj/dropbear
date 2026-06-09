@@ -106,12 +106,21 @@ int fd_read_pending(int fd);
 #define DROPBEAR_FD_ZERO(fds) FD_ZERO(fds)
 #endif
 
-/* dropbearmulti entry points */
+/* dropbearmulti entry points.
+ *
+ * These declarations are only used by the combined "dropbearmulti" binary.
+ * Guard them behind DROPBEAR_MULTI so that builds which compile the
+ * individual programs as separate objects can rename each program's main()
+ * to its own entry point (e.g. via -Dmain=<prog>_main) without clashing with
+ * the 3-argument dropbear_main() declared here.
+ */
+#if DROPBEAR_MULTI
 int dropbear_main(int argc, char ** argv, const char * multipath);
 int cli_main(int argc, char ** argv);
 int dropbearkey_main(int argc, char ** argv);
 int dropbearconvert_main(int argc, char ** argv);
 int scp_main(int argc, char ** argv);
+#endif
 
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
