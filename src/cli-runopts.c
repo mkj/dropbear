@@ -423,7 +423,7 @@ void cli_getopts(int argc, char ** argv) {
 
 	if (host_arg == NULL) { /* missing hostname */
 		printhelp();
-		dropbear_exit("Remote host needs to provided.");
+		dropbear_exit("Remote host needs to be provided.");
 	}
 	TRACE(("host is: %s", host_arg))
 
