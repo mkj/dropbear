@@ -145,9 +145,6 @@ AC_ARG_ENABLE(werror,
 		fi
 	], [])
 
-# large file support is useful for scp
-AC_SYS_LARGEFILE
-
 # Host specific options
 # this isn't a definitive list of hosts, they are just added as required
 AC_CANONICAL_HOST

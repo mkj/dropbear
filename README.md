@@ -76,9 +76,3 @@ Make sure `/etc/dropbear/` exists and then pass `-R` to the dropbear server.
 ----
 If the server is run as non-root, you most likely won't be able to allocate a pty, and you cannot login as any user other than that running the daemon (obviously).
 Shadow passwords will also be unusable as non-root.
-
-----
-The Dropbear distribution includes a standalone version of OpenSSH's `scp` program.
-You can compile it with `make scp`.
-You may want to change the path of the ssh binary, specified by `_PATH_SSH_PROGRAM` in `options.h`.
-By default the progress meter isn't compiled in to save space, you can enable it by adding `SCPPROGRESS=1` to the `make` commandline.
