@@ -493,6 +493,9 @@ void svr_getopts(int argc, char ** argv) {
 	if (svr_opts.multiauthmethod && svr_opts.noauthpass) {
 		dropbear_exit("-t and -s are incompatible");
 	}
+	if (svr_opts.multiauthmethod && svr_opts.allowblankpass) {
+		dropbear_exit("-t and -B are incompatible");
+	}
 
 	if (strlen(svr_opts.authorized_keys_dir) == 0) {
 		dropbear_exit("Bad -D");
