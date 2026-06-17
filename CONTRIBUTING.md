@@ -17,7 +17,7 @@ Pay attention to describing the change, and also formatting such
 as line wrapping.
 
 "Fixup" commits shouldn't be pushed to PRs - instead squash
-them into the appropriate commit. "git log" should show a nice 
+them into the appropriate commit. `git log` should show a nice 
 history, not a bunch of "Update for review feedback" commits.
 
-DEVELOPING.md has some more notes on style.
+[DEVELOPING.md](DEVELOPING.md) has some more notes on style.
