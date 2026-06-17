@@ -344,8 +344,9 @@ AC_ARG_ENABLE(shadow,
 	]
 )
 
+# Plugin support will be removed soon. Open a github issue if you're using it.
 AC_ARG_ENABLE(plugin,
-	[AS_HELP_STRING([--enable-plugin], [Enable support for External Public Key Authentication plug-in])],
+	[AS_HELP_STRING([--enable-plugin-deprecated], [Enable support for External Public Key Authentication plug-in])],
 	[
 		AC_DEFINE(DROPBEAR_PLUGIN, 1, External Public Key Authentication)
 		AC_MSG_NOTICE(Enabling support for External Public Key Authentication)

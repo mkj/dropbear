@@ -1391,7 +1391,8 @@ Optional Features:
   --disable-openpty       Don't use openpty, use alternative method
   --disable-syslog        Don't include syslog support
   --disable-shadow        Don't use shadow passwords (if available)
-  --enable-plugin         Enable support for External Public Key
+  --enable-plugin-deprecated
+                          Enable support for External Public Key
                           Authentication plug-in
   --enable-fuzz           Build fuzzing. Not recommended for deployment.
   --enable-bundled-libtom Force using bundled libtomcrypt/libtommath even if a
@@ -5836,6 +5837,7 @@ printf "%s\n" "$as_me: Using shadow passwords if available" >&6;}
 fi
 
 
+# Plugin support will be removed soon. Open a github issue if you're using it.
 # Check whether --enable-plugin was given.
 if test ${enable_plugin+y}
 then :
