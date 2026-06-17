@@ -1066,7 +1066,7 @@ static void add_extendedopt(const char* origstr) {
 
 #if DROPBEAR_CLI_LOCALTCPFWD
 	if (match_extendedopt(&optstr, "GatewayPorts") == DROPBEAR_SUCCESS) {
-		opts.listen_fwd_all = 1;
+		opts.listen_fwd_all = parse_flag_value(optstr);
 		return;
 	}
 #endif
