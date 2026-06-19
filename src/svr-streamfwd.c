@@ -250,7 +250,9 @@ out:
         /* we only free it if a listener wasn't created, since the listener
          * has to remember it if it's to be cancelled */
         m_free(request_path);
-        m_free(tcpinfo->socket_path);
+        if (tcpinfo) {
+            m_free(tcpinfo->socket_path);
+        }
         m_free(tcpinfo);
     }
 
