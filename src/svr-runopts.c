@@ -38,7 +38,7 @@ static void printhelp(const char * progname);
 static void addportandaddress(const char* spec);
 static void loadhostkey(const char *keyfile, int fatal_duplicate);
 static void addhostkey(const char *keyfile);
-static void load_banner();
+static void load_banner(void);
 
 static void printhelp(const char * progname) {
 
@@ -766,7 +766,7 @@ void load_all_hostkeys() {
 	}
 }
 
-static void load_banner() {
+static void load_banner(void) {
 	struct stat buf;
 	if (stat(svr_opts.bannerfile, &buf) != 0) {
 		dropbear_log(LOG_WARNING, "Error opening banner file '%s'",

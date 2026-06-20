@@ -117,7 +117,7 @@ void send_msg_kexinit() {
 
 }
 
-static void switch_keys() {
+static void switch_keys(void) {
 	TRACE2(("enter switch_keys"))
 	if (!(ses.kexstate.sentkexinit && ses.kexstate.recvkexinit)) {
 		dropbear_exit("Unexpected newkeys message");
