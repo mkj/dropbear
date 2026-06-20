@@ -161,9 +161,15 @@
 #define LTM_DESC
 #endif
 
+#ifndef DROPBEAR_ECC_256
 #define DROPBEAR_ECC_256 (DROPBEAR_ECC)
+#endif
+#ifndef DROPBEAR_ECC_384
 #define DROPBEAR_ECC_384 (DROPBEAR_ECC)
+#endif
+#ifndef DROPBEAR_ECC_521
 #define DROPBEAR_ECC_521 (DROPBEAR_ECC)
+#endif
 
 /* Only include necessary ECC curves building libtomcrypt */
 #define LTC_NO_CURVES
