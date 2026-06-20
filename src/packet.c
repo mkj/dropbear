@@ -475,7 +475,7 @@ static int packet_is_okay_kex(unsigned char type) {
 	return 1;
 }
 
-static void enqueue_reply_packet() {
+static void enqueue_reply_packet(void) {
 	struct packetlist * new_item = NULL;
 	new_item = m_malloc(sizeof(struct packetlist));
 	new_item->next = NULL;

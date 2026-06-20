@@ -503,7 +503,7 @@ void ignore_recv_response() {
 	TRACE(("Ignored msg_request_response"))
 }
 
-static void send_msg_keepalive() {
+static void send_msg_keepalive(void) {
 	time_t old_time_idle = ses.last_packet_time_idle;
 	struct Channel *chan = get_any_ready_channel();
 
