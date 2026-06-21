@@ -114,7 +114,7 @@ void recv_msg_kexdh_init() {
 
 #if DROPBEAR_DELAY_HOSTKEY
 
-static void svr_ensure_hostkey() {
+static void svr_ensure_hostkey(void) {
 
 	const char* fn = NULL;
 	char *expand_fn = NULL;
