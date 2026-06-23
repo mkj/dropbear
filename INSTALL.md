@@ -21,7 +21,7 @@ You'll need to first run `autoconf; autoheader` if you edit `configure.ac`.
 ### Compile:
 
 ```
-make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp"
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert"
 ```
 
 Optionally install, or copy the binaries another way:
@@ -34,7 +34,7 @@ make install
 or
 
 ```
-make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert scp" install
+make PROGRAMS="dropbear dbclient dropbearkey dropbearconvert" install
 ```
 
 To test the installation targeting a temporary forder set `DESTDIR`:

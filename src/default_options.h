@@ -358,10 +358,6 @@ group1 in Dropbear server too */
 #define DROPBEAR_SFTPSERVER 1
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 
-/* This is used by the scp binary when used as a client binary. If you're
- * not using the Dropbear client, you'll need to change it */
-#define DROPBEAR_PATH_SSH_PROGRAM "/usr/bin/dbclient"
-
 /* Whether to log commands executed by a client. This only logs the
  * (single) command sent to the server, not what a user did in a
  * shell/sftp session etc. */
