@@ -184,7 +184,9 @@ typedef u_int32_t uint32_t;
 #include <dlfcn.h>
 #endif
 
+#ifndef environ
 extern char** environ;
+#endif
 
 #include "fake-rfc2553.h"
 
