@@ -507,6 +507,10 @@ void svr_getopts(int argc, char ** argv) {
 
 #if DROPBEAR_PLUGIN
 	if (pubkey_plugin) {
+		if (svr_opts.multiauthmethod) {
+			dropbear_exit("-t and plugins are incompatible");
+		}
+
 		svr_opts.pubkey_plugin = m_strdup(pubkey_plugin);
 		char *args = strchr(svr_opts.pubkey_plugin, ',');
 		if (args) {
