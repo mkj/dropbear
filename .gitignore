@@ -18,8 +18,6 @@
 /fuzzcorpus
 /fuzzer-*
 /fuzzer-*.options
-/scp
-/scp-progress
 config.h
 default_options_guard.h
 localoptions.h

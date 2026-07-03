@@ -2,11 +2,10 @@
 # @configure_input@
 
 # invocation:
-# make PROGRAMS="dropbear dbclient scp" MULTI=1 SCPPROGRESS=1
+# make PROGRAMS="dropbear dbclient" MULTI=1
 #
 # to make a multiple-program binary "dropbearmulti".
-# This example will include dropbear, scp, dropbearkey, dropbearconvert, and
-# dbclient functionality, and includes the progress-bar functionality in scp.
+# This example will include dropbear, dropbearkey, dropbearconvert, dbclient
 
 ifndef PROGRAMS
 	PROGRAMS=dropbear dbclient dropbearkey dropbearconvert
@@ -74,9 +73,6 @@ KEYOBJS = $(patsubst %,$(OBJ_DIR)/%,$(_KEYOBJS))
 _CONVERTOBJS=dropbearconvert.o keyimport.o signkey_ossh.o
 CONVERTOBJS = $(patsubst %,$(OBJ_DIR)/%,$(_CONVERTOBJS))
 
-_SCPOBJS=scp.o progressmeter.o atomicio.o scpmisc.o compat.o
-SCPOBJS = $(patsubst %,$(OBJ_DIR)/%,$(_SCPOBJS))
-
 ifeq (@DROPBEAR_FUZZ@, 1)
 	allobjs = $(COMMONOBJS) fuzz/fuzz-common.o  fuzz/fuzz-wrapfd.o $(CLISVROBJS) $(CLIOBJS) $(SVROBJS) @CRYPTLIB@
 	allobjs:=$(subst $(OBJ_DIR)/svr-main.o, ,$(allobjs))
@@ -94,7 +90,6 @@ else
 	dbclientobjs=$(COMMONOBJS) $(CLISVROBJS) $(CLIOBJS)
 	dropbearkeyobjs=$(COMMONOBJS) $(KEYOBJS)
 	dropbearconvertobjs=$(COMMONOBJS) $(CONVERTOBJS)
-	scpobjs=$(SCPOBJS)
 endif
 
 ifeq (@DROPBEAR_PLUGIN@, 1)
@@ -152,11 +147,6 @@ ifeq ($(MULTI), 1)
 	TARGETS=dropbearmulti$(EXEEXT)
 else
 	TARGETS=$(PROGRAMS)
-endif
-
-# for the scp progress meter. The -D doesn't affect anything else.
-ifeq ($(SCPPROGRESS), 1)
-	CPPFLAGS+=-DPROGRESS_METER
 endif
 
 all: $(TARGETS)
@@ -230,10 +220,6 @@ dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 dropbearkey dropbearconvert: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)
 
-# scp doesn't use the libs so is special.
-scp: $(SCPOBJS)  $(HEADERS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $(SCPOBJS)
-
 
 # multi-binary compilation.
 MULTIOBJS=
@@ -274,7 +260,7 @@ clean: $(LIBTOM_CLEAN) $(FUZZ_CLEAN) thisclean
 
 thisclean:
 	-rm -f dropbear$(EXEEXT) dbclient$(EXEEXT) dropbearkey$(EXEEXT) \
-			dropbearconvert$(EXEEXT) scp$(EXEEXT) scp-progress$(EXEEXT) \
+			dropbearconvert$(EXEEXT) \
 			dropbearmulti$(EXEEXT) *.o *.da *.bb *.bbg *.prof \
 			$(OBJ_DIR)/*
 
