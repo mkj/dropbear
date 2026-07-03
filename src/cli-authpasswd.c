@@ -28,6 +28,7 @@
 #include "session.h"
 #include "ssh.h"
 #include "runopts.h"
+#include "atomicio.h"
 
 #if DROPBEAR_CLI_PASSWORD_AUTH
 
@@ -48,8 +49,9 @@ static int want_askpass()
 static char *gui_getpass(const char *prompt) {
 
 	pid_t pid;
-	int p[2], maxlen, len, status;
+	int p[2], status;
 	static char buf[DROPBEAR_MAX_CLI_PASS + 1];
+	size_t len;
 	char* helper = NULL;
 
 	TRACE(("enter gui_getpass"))
@@ -87,17 +89,7 @@ static char *gui_getpass(const char *prompt) {
 	}
 
 	close(p[1]);
-	maxlen = sizeof(buf);
-	while (maxlen > 0) {
-		len = read(p[0], buf + sizeof(buf) - maxlen, maxlen);
-		if (len > 0) {
-			maxlen -= len;
-		} else {
-			if (errno != EINTR)
-				break;
-		}
-	}
-
+	len = atomicio(read, p[0], buf, sizeof(buf)-1);
 	close(p[0]);
 
 	while (waitpid(pid, &status, 0) < 0 && errno == EINTR)
@@ -105,7 +97,6 @@ static char *gui_getpass(const char *prompt) {
 	if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
 		return(NULL);
 
-	len = sizeof(buf) - maxlen;
 	buf[len] = '\0';
 	if (len > 0 && buf[len - 1] == '\n')
 		buf[len - 1] = '\0';
