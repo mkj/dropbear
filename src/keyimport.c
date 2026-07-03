@@ -834,7 +834,7 @@ ossh_error:
 		p += ret;
 		/* id==3 for bit string */
 		if (ret < 0 || id != 3 || len < 0 ||
-			key->keyblob+key->keyblob_len-p < len) {
+			key->keyblob+key->keyblob_len-p < len || len == 0) {
 			errmsg = "ASN.1 decoding failure";
 			goto error;
 		}
