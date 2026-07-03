@@ -259,6 +259,10 @@
 #define MAX_STRING_LEN (MAX(MAX_CMD_LEN, 2400)) /* Sun SSH needs 2400 for algos,
                                                    MAX_CMD_LEN is usually longer */
 
+/* Count of packets ot enqueue deferring while a KEX is in progress.
+ * We wouldn't expect to be anywhere near one-per-channel in normal
+ * operation, but all replies are small so this is a reasonable upper bound */
+#define MAX_DEFER_REPLY_QUEUE MAX_CHANNELS
 
 /* Key type sizes are ordered large to small, all are
  determined empirically, and rounded up */

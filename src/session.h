@@ -206,6 +206,7 @@ struct sshsession {
 	/* a list of queued replies that should be sent after a KEX has
 	   concluded (ie, while dataallowed was unset)*/
 	struct packetlist *reply_queue_head, *reply_queue_tail;
+	size_t reply_queue_len;
 
 	void(*remoteclosed)(void); /* A callback to handle closure of the
 									  remote connection */

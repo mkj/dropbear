@@ -117,6 +117,7 @@ void common_session_init(int sock_in, int sock_out) {
 	ses.lastpacket = 0;
 	ses.reply_queue_head = NULL;
 	ses.reply_queue_tail = NULL;
+	ses.reply_queue_len = 0;
 
 	/* set all the algos to none */
 	ses.keys = (struct key_context*)m_malloc(sizeof(struct key_context));
