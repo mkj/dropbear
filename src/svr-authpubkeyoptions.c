@@ -310,7 +310,8 @@ svr_parse_pubkey_options(buffer *options_buf, int line_num, const char* filename
 							valid_option = 1;
 							entry->port = PUBKEY_OPTIONS_ANY_PORT;
 							TRACE(("local port forwarding allowed to host '%s'", entry->host));
-						} else if (m_str_to_uint(portstring, &entry->port) == DROPBEAR_SUCCESS) {
+						} else if (m_str_to_uint(portstring, &entry->port) == DROPBEAR_SUCCESS
+							&& entry->port <= 65535) {
 							valid_option = 1;
 							TRACE(("local port forwarding allowed to host '%s' and port '%u'",
 									entry->host, entry->port));
