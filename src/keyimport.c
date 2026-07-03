@@ -402,10 +402,8 @@ static struct openssh_key *load_openssh_key(const char *filename)
 		errmsg = "Unable to open key file";
 		goto error;
 	}
-	if (!fgets(buffer, sizeof(buffer), fp) ||
-		0 != strncmp(buffer, "-----BEGIN ", 11) ||
-		0 != strcmp(buffer+strlen(buffer)-17, "PRIVATE KEY-----\n")) {
-		errmsg = "File does not begin with OpenSSH key header";
+	if (!fgets(buffer, sizeof(buffer), fp)) {
+		errmsg = "Short input";
 		goto error;
 	}
 	if (!strcmp(buffer, "-----BEGIN RSA PRIVATE KEY-----\n"))
@@ -428,9 +426,9 @@ static struct openssh_key *load_openssh_key(const char *filename)
 			errmsg = "Unexpected end of file";
 			goto error;
 		}
-		if (0 == strncmp(buffer, "-----END ", 9) &&
-			0 == strcmp(buffer+strlen(buffer)-17, "PRIVATE KEY-----\n"))
+		if (0 == strncmp(buffer, "-----END ", 9)) {
 			break;					   /* done */
+		}
 		if ((p = strchr(buffer, ':')) != NULL) {
 			if (headers_done) {
 				errmsg = "Header found in body of key data";
