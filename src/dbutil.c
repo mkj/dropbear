@@ -769,7 +769,7 @@ int fd_read_pending(int fd) {
 	struct timeval timeout;
 
 	DROPBEAR_FD_ZERO(&fds);
-	FD_SET(fd, &fds);
+	dropbear_fd_set(fd, &fds);
 	while (1) {
 		timeout.tv_sec = 0;
 		timeout.tv_usec = 0;
@@ -781,6 +781,17 @@ int fd_read_pending(int fd) {
 		}
 		return FD_ISSET(fd, &fds);
 	}
+}
+
+/* FD_SET() wrapper with an overflow check */
+void dropbear_fd_set(int fd, fd_set *set) {
+	if (fd < 0) {
+		return;
+	}
+	if (fd >= FD_SETSIZE) {
+		dropbear_exit("fd limit %d", fd);
+	}
+	FD_SET(fd, set);
 }
 
 int m_snprintf(char *str, size_t size, const char *format, ...) {

@@ -181,7 +181,7 @@ void session_loop(void(*loophandler)(void)) {
 		if (!fuzz.fuzzing) 
 #endif
 		{
-		FD_SET(ses.signal_pipe[0], &readfd);
+		dropbear_fd_set(ses.signal_pipe[0], &readfd);
 		}
 
 		/* set up for channels which can be read/written */
@@ -199,13 +199,13 @@ void session_loop(void(*loophandler)(void)) {
 		if (ses.sock_in != -1 
 			&& (ses.remoteident || isempty(&ses.writequeue)) 
 			&& writequeue_has_space) {
-			FD_SET(ses.sock_in, &readfd);
+			dropbear_fd_set(ses.sock_in, &readfd);
 		}
 
 		/* Ordering is important, this test must occur after any other function
 		might have queued packets (such as connection handlers) */
 		if (ses.sock_out != -1 && !isempty(&ses.writequeue)) {
-			FD_SET(ses.sock_out, &writefd);
+			dropbear_fd_set(ses.sock_out, &writefd);
 		}
 
 		val = select(ses.maxfd+1, &readfd, &writefd, NULL, &timeout);
@@ -443,7 +443,7 @@ static int ident_readln(int fd, char* buf, int count) {
 	/* leave space to null-terminate */
 	while (pos < count-1) {
 
-		FD_SET(fd, &fds);
+		dropbear_fd_set(fd, &fds);
 
 		timeout.tv_sec = 1;
 		timeout.tv_usec = 0;

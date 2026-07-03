@@ -46,7 +46,7 @@ void set_listener_fds(fd_set * readfds) {
 		listener = ses.listeners[i];
 		if (listener != NULL) {
 			for (j = 0; j < listener->nsocks; j++) {
-				FD_SET(listener->socks[j], readfds);
+				dropbear_fd_set(listener->socks[j], readfds);
 			}
 		}
 	}

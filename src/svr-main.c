@@ -162,7 +162,7 @@ static void main_noinetd(int argc, char ** argv, const char* multipath) {
 	}
 
 	for (i = 0; i < listensockcount; i++) {
-		FD_SET(listensocks[i], &fds);
+		dropbear_fd_set(listensocks[i], &fds);
 	}
 
 #if DROPBEAR_DO_REEXEC
@@ -211,13 +211,13 @@ static void main_noinetd(int argc, char ** argv, const char* multipath) {
 
 		/* listening sockets */
 		for (i = 0; i < listensockcount; i++) {
-			FD_SET(listensocks[i], &fds);
+			dropbear_fd_set(listensocks[i], &fds);
 		}
 
 		/* pre-authentication clients */
 		for (i = 0; i < MAX_UNAUTH_CLIENTS; i++) {
 			if (childpipes[i] >= 0) {
-				FD_SET(childpipes[i], &fds);
+				dropbear_fd_set(childpipes[i], &fds);
 				maxsock = MAX(maxsock, childpipes[i]);
 			}
 		}

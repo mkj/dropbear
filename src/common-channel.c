@@ -560,22 +560,22 @@ void setchannelfds(fd_set *readfds, fd_set *writefds, int allow_reads) {
 		   && ((ses.dataallowed && allow_reads) || channel->read_mangler)) {
 
 			if (channel->readfd >= 0) {
-				FD_SET(channel->readfd, readfds);
+				dropbear_fd_set(channel->readfd, readfds);
 			}
 			
 			if (ERRFD_IS_READ(channel) && channel->errfd >= 0) {
-					FD_SET(channel->errfd, readfds);
+					dropbear_fd_set(channel->errfd, readfds);
 			}
 		}
 
 		/* Stuff from the wire */
 		if (channel->writefd >= 0 && cbuf_getused(channel->writebuf) > 0) {
-				FD_SET(channel->writefd, writefds);
+				dropbear_fd_set(channel->writefd, writefds);
 		}
 
 		if (ERRFD_IS_WRITE(channel) && channel->errfd >= 0 
 				&& cbuf_getused(channel->extrabuf) > 0) {
-				FD_SET(channel->errfd, writefds);
+				dropbear_fd_set(channel->errfd, writefds);
 		}
 
 	} /* foreach channel */

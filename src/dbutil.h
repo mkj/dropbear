@@ -98,6 +98,7 @@ char * expand_homedir_path_home(const char *inpath, const char *homedir);
 void fsync_parent_dir(const char* fn);
 
 int fd_read_pending(int fd);
+void dropbear_fd_set(int fd, fd_set *set);
 
 #if DROPBEAR_MSAN
 /* FD_ZERO seems to leave some memory uninitialized. clear it to avoid false positives */
