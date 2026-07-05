@@ -568,7 +568,8 @@ int buf_writefile(buffer * buf, const char * filename, int skip_exist) {
 	int ret = DROPBEAR_FAILURE;
 	int fd = -1;
 
-	fd = open(filename, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	fd = open(filename, O_RDWR | O_CREAT | O_EXCL | O_NOFOLLOW,
+		S_IRUSR | S_IWUSR);
 	if (fd < 0) {
 		/* If generating keys on connection (skip_exist) it's OK to get EEXIST
 		- we probably just lost a race with another connection to generate the key */
