@@ -563,6 +563,53 @@ int buf_getline(buffer * line, FILE * authfile) {
 	return DROPBEAR_SUCCESS;
 }	
 
+/* Returns DROPBEAR_SUCCESS or DROPBEAR_FAILURE */
+int buf_writefile(buffer * buf, const char * filename, int skip_exist) {
+	int ret = DROPBEAR_FAILURE;
+	int fd = -1;
+
+	fd = open(filename, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+	if (fd < 0) {
+		/* If generating keys on connection (skip_exist) it's OK to get EEXIST
+		- we probably just lost a race with another connection to generate the key */
+		if (skip_exist && errno == EEXIST) {
+			ret = DROPBEAR_SUCCESS;
+		} else {
+			dropbear_log(LOG_ERR, "Couldn't create new file %s: %s",
+				filename, strerror(errno));
+		}
+
+		goto out;
+	}
+
+	/* write the file now */
+	while (buf->pos != buf->len) {
+		int len = write(fd, buf_getptr(buf, buf->len - buf->pos),
+				buf->len - buf->pos);
+		if (len == -1 && errno == EINTR) {
+			continue;
+		}
+		if (len <= 0) {
+			dropbear_log(LOG_ERR, "Failed writing file %s: %s",
+				filename, strerror(errno));
+			goto out;
+		}
+		buf_incrpos(buf, len);
+	}
+
+	ret = DROPBEAR_SUCCESS;
+
+out:
+	if (fd >= 0) {
+		if (fsync(fd) != 0) {
+			dropbear_log(LOG_ERR, "fsync of %s failed: %s", filename, strerror(errno));
+		}
+		m_close(fd);
+	}
+	return ret;
+}
+
+
 /* make sure that the socket closes */
 void m_close(int fd) {
 	int val;

@@ -69,6 +69,7 @@ int connect_unix(const char* addr);
 #endif
 int buf_readfile(buffer* buf, const char* filename);
 int buf_getline(buffer * line, FILE * authfile);
+int buf_writefile(buffer * buf, const char * filename, int skip_exist);
 
 void m_close(int fd);
 void setnonblocking(int fd);
