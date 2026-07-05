@@ -536,25 +536,25 @@ static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,
 	TRACE(("checkpubkey: opened authorized_keys OK"))
 
 	line = buf_new(MAX_AUTHKEYS_LINE);
-	line_num = 0;
 
 	/* iterate through the lines */
-	do {
+	for (line_num = 1; line_num <= MAX_AUTHKEYS_LINE_COUNT; line_num++) {
 		if (buf_getline(line, authfile) == DROPBEAR_FAILURE) {
 			/* EOF reached */
 			TRACE(("checkpubkey: authorized_keys EOF reached"))
 			break;
 		}
-		line_num++;
 
 		ret = checkpubkey_line(line, line_num, filename, keyalgo, keyalgolen,
 			keyblob, keybloblen, ret_options);
 		if (ret == DROPBEAR_SUCCESS) {
 			break;
 		}
+	}
 
-		/* We continue to the next line otherwise */
-	} while (1);
+	if (line_num > MAX_AUTHKEYS_LINE_COUNT) {
+		TRACE(("authorized_keys line limit"))
+	}
 
 out:
 	if (authfile) {
