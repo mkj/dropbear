@@ -394,28 +394,6 @@ static void cli_remoteclosed() {
 	dropbear_exit("Remote closed the connection");
 }
 
-/* Operates in-place turning dirty (untrusted potentially containing control
- * characters) text into clean text. 
- * Note: this is safe only with ascii - other charsets could have problems. */
-void cleantext(char* dirtytext) {
-
-	unsigned int i, j;
-	char c;
-
-	j = 0;
-	for (i = 0; dirtytext[i] != '\0'; i++) {
-
-		c = dirtytext[i];
-		/* We can ignore '\r's */
-		if ( (c >= ' ' && c <= '~') || c == '\n' || c == '\t') {
-			dirtytext[j] = c;
-			j++;
-		}
-	}
-	/* Null terminate */
-	dirtytext[j] = '\0';
-}
-
 static void recv_msg_global_request_cli(void) {
 	unsigned int wantreply = 0;
 

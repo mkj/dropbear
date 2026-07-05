@@ -66,7 +66,6 @@ void cli_session(int sock_in, int sock_out, struct dropbear_progress_connection 
 void cli_connected(int result, int sock, void* userdata, const char *errstring);
 void cli_dropbear_exit(int exitcode, const char* format, va_list param) ATTRIB_NORETURN;
 void cli_dropbear_log(int priority, const char* format, va_list param);
-void cleantext(char* dirtytext);
 void kill_proxy_command(void);
 
 /* crypto parameters that are stored individually for transmit and receive */

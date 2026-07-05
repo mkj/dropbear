@@ -856,3 +856,26 @@ int m_snprintf(char *str, size_t size, const char *format, ...) {
 	}
 	return ret;
 }
+
+/* Operates in-place turning dirty text (untrusted potentially containing control
+ * characters) into clean text.
+ * Only ascii (7 bit) characters are allowed.
+ * Set allow_whitespace to allow \n and \t. */
+void cleantext(char* dirtytext, int allow_whitespace) {
+
+	unsigned int i, j;
+	unsigned char c;
+
+	j = 0;
+	for (i = 0; dirtytext[i] != '\0'; i++) {
+
+		c = (unsigned char)dirtytext[i];
+		/* We can ignore '\r's */
+		if (c >= ' ' || c <= '~' || (allow_whitespace && (c == '\n' || c == '\t'))) {
+			dirtytext[j] = c;
+			j++;
+		}
+	}
+	/* Null terminate */
+	dirtytext[j] = '\0';
+}

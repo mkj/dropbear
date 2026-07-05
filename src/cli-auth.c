@@ -94,7 +94,7 @@ void recv_msg_userauth_banner() {
 		TRACE(("recv_msg_userauth_banner: bannerlen too long: %d", bannerlen))
 		truncated = 1;
 	} else {
-		cleantext(banner);
+		cleantext(banner, 1);
 
 		/* Limit to 24 lines */
 		linecount = 1;

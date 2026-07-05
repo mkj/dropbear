@@ -266,7 +266,7 @@ static int newtcpforwarded(struct Channel * channel) {
 
 	if (iter == NULL || fwd == NULL) {
 		/* We didn't request forwarding on that port */
-		cleantext(origaddr);
+		cleantext(origaddr, 0);
 		dropbear_log(LOG_INFO, "Server sent unrequested forward from \"%s:%d\"", 
                 origaddr, origport);
 		goto out;
