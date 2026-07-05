@@ -163,36 +163,17 @@ error:
 static int dropbear_write(const char*filename, sign_key * key) {
 
 	buffer * buf;
-	FILE*fp;
-	int len;
 	int ret;
 
 	buf = buf_new(MAX_PRIVKEY_SIZE);
 	buf_put_priv_key(buf, key, key->type);
-
-	fp = fopen(filename, "w");
-	if (!fp) {
-		ret = 0;
-		goto out;
-	}
-
 	buf_setpos(buf, 0);
-	do {
-		len = fwrite(buf_getptr(buf, buf->len - buf->pos),
-				1, buf->len - buf->pos, fp);
-		buf_incrpos(buf, len);
-	} while (len > 0 && buf->len != buf->pos);
-
-	fclose(fp);
-
-	if (buf->pos != buf->len) {
-		ret = 0;
-	} else {
-		ret = 1;
-	}
-out:
+	ret = buf_writefile(buf, filename, 0);
 	buf_free(buf);
-	return ret;
+	if (ret == DROPBEAR_SUCCESS) {
+		return 1;
+	}
+	return 0;
 }
 
 
