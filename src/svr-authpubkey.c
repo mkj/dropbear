@@ -68,8 +68,12 @@
 
 #if DROPBEAR_SVR_PUBKEY_AUTH
 
-#define MIN_AUTHKEYS_LINE 10 /* "ssh-rsa AB" - short but doesn't matter */
-#define MAX_AUTHKEYS_LINE 4200 /* max length of a line in authkeys */
+/* "ssh-rsa AB" - short but doesn't matter */
+#define MIN_AUTHKEYS_LINE 10
+/* Max length of a valid key line in authkeys. A 16384 bit RSA key (ridiculous) is
+ * 2786 bytes.
+ * An addition limit DROPBEAR_MAX_LINE_LENGTH (10000) will stop file parsing entirely */
+#define MAX_AUTHKEYS_LINE 3000
 
 static char * authorized_keys_filepath(void);
 static int checkpubkey(const char* keyalgo, unsigned int keyalgolen,

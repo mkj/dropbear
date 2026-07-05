@@ -520,46 +520,48 @@ out:
 	return ret;
 }
 
-/* get a line from the file into buffer in the style expected for an
+/* Get a line from the file into buffer in the style expected for an
  * authkeys file.
- * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF.*/
-/* Only used for ~/.ssh/known_hosts and ~/.ssh/authorized_keys */
-#if DROPBEAR_CLIENT || DROPBEAR_SVR_PUBKEY_AUTH
+ * Will return DROPBEAR_SUCCESS if data is read, or DROPBEAR_FAILURE on EOF/error.*/
+/* Returns failure if lines are longer than DROPBEAR_MAX_LINE_LENGTH.
+ * A line that doesn't fit in the buffer returns DROPBEAR_SUCCESS with an empty buffer */
 int buf_getline(buffer * line, FILE * authfile) {
 
 	int c = EOF;
+	unsigned int pos;
+	int truncated = 0;
 
-	buf_setpos(line, 0);
 	buf_setlen(line, 0);
 
-	while (line->pos < line->size) {
-
+	for (pos = 0; pos < DROPBEAR_MAX_LINE_LENGTH; pos++) {
 		c = fgetc(authfile); /*getc() is weird with some uClibc systems*/
 		if (c == EOF || c == '\n' || c == '\r') {
-			goto out;
+			break;
 		}
 
-		buf_putbyte(line, (unsigned char)c);
+		if (!truncated && line->len < line->size) {
+			buf_putbyte(line, (unsigned char)c);
+		} else {
+			/* buffer is full, read to EOL and return an empty buffer */
+			truncated = 1;
+			buf_setlen(line, 0);
+		}
 	}
 
-	TRACE(("leave getauthline: line too long"))
-	/* We return success, but the line length will be zeroed - ie we just
-	 * ignore that line */
-	buf_setlen(line, 0);
-
-out:
-
-
-	/* if we didn't read anything before EOF or error, exit */
-	if (c == EOF && line->pos == 0) {
+	if (pos >= DROPBEAR_MAX_LINE_LENGTH) {
+		/* Didn't reach end of line, the caller shouldn't continue since
+		 * it will still be mid-line */
 		return DROPBEAR_FAILURE;
-	} else {
-		buf_setpos(line, 0);
-		return DROPBEAR_SUCCESS;
 	}
 
+	if (c == EOF && line->pos == 0) {
+		/* Reached EOF, no buffer data */
+		return DROPBEAR_FAILURE;
+	}
+
+	buf_setpos(line, 0);
+	return DROPBEAR_SUCCESS;
 }	
-#endif
 
 /* make sure that the socket closes */
 void m_close(int fd) {
