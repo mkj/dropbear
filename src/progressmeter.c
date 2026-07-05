@@ -55,7 +55,7 @@ static void update_progress_meter(int);
 
 static time_t start;		/* start progress */
 static time_t last_update;	/* last progress update */
-static char *file;		/* name of the file being transferred */
+static char *file;		/* name of the file being transferred, malloced */
 static off_t end_pos;		/* ending position of transfer */
 static off_t cur_pos;		/* transfer position as of last refresh */
 static volatile off_t *counter;	/* progress counter */
@@ -236,11 +236,39 @@ update_progress_meter(int ignore)
 	errno = save_errno;
 }
 
+/* Operates in-place turning dirty text (untrusted potentially containing control
+ * characters) into clean text.
+ * Only ascii (7 bit) characters are allowed.
+ * Set allow_whitespace to allow \n and \t. */
+static void cleantext(char* dirtytext, int allow_whitespace) {
+
+	unsigned int i, j;
+	unsigned char c;
+
+	j = 0;
+	for (i = 0; dirtytext[i] != '\0'; i++) {
+
+		c = (unsigned char)dirtytext[i];
+		/* We can ignore '\r's */
+		if (c >= ' ' || c <= '~' || (allow_whitespace && (c == '\n' || c == '\t'))) {
+			dirtytext[j] = c;
+			j++;
+		}
+	}
+	/* Null terminate */
+	dirtytext[j] = '\0';
+}
+
 void
 start_progress_meter(char *f, off_t filesize, off_t *ctr)
 {
 	start = last_update = time(NULL);
-	file = f;
+	if (file) {
+		xfree(file);
+		file = NULL;
+	}
+	file = xstrdup(f);
+	cleantext(file, 0);
 	end_pos = filesize;
 	cur_pos = 0;
 	counter = ctr;
