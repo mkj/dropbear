@@ -883,7 +883,7 @@ static int openssh_write(const char *filename, sign_key *key,
 	int pos = 0, len = 0, i;
 	char *header = NULL, *footer = NULL;
 	int ret = 0;
-	FILE *fp;
+	FILE *fp = NULL;
 
 #if DROPBEAR_DSS
 	if (key->type == DROPBEAR_SIGNKEY_DSS) {
@@ -1075,10 +1075,15 @@ static int openssh_write(const char *filename, sign_key *key,
 	if (strlen(filename) == 1 && filename[0] == '-') {
 		fp = stdout;
 	} else {
-		fp = fopen(filename, "wb");	  /* ensure Unix line endings */
+		fp = NULL;
+		int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW,
+			S_IRUSR | S_IWUSR);
+		if (fd >= 0) {
+			fp = fdopen(fd, "wb"); /* ensure Unix line endings */
+		}
 	}
 	if (!fp) {
-		fprintf(stderr, "Failed opening output file\n");
+		fprintf(stderr, "Failed opening output file: %s\n", strerror(errno));
 		goto error;
 	}
 	fputs(header, fp);
