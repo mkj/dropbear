@@ -367,7 +367,7 @@ static void printpubkey(sign_key * key, int keytype, const char * comment, int c
 
 		/* open() to use O_EXCL, then use a FILE* for fprintf().
 		 * dprintf() is only posix2008 onwards */
-		pubkey_fd = open(filename_pub, O_RDWR | O_CREAT | O_EXCL, S_IRUSR | S_IWUSR);
+		pubkey_fd = open(filename_pub, O_RDWR | O_CREAT | O_NOFOLLOW | O_EXCL,S_IRUSR | S_IWUSR);
 		if (pubkey_fd >= 0) {
 			/* Convert the fd to a FILE*. The underlying FD is closed
 			 * by later fclose() */
