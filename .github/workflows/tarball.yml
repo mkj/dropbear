@@ -2,7 +2,7 @@ name: tarball sha256sum
 on:
   push:
     branches:
-      - master
+      - main
 jobs:
   tarball:
     runs-on: 'ubuntu-22.04'
