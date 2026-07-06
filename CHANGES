@@ -1,3 +1,82 @@
+2026.92 - 6 July 2026
+
+Note >> for compatibility/configuration changes
+
+- >> server auth plugins have been deprecated, the configure option
+  has been renamed to --enable-plugin-deprecated.
+  Planned to be removed in future.
+
+- >> Two factor auth "-t" has been deprecated, it now requires
+  a configuration option DEPRECATED_TWO_FACTOR.
+  Planned to be removed in future.
+
+- Security: server: Don't allow -B (accept blank password) with
+  -t (two factor auth). If run with -t and -B a user configured with a
+  blank password would be allowed to log in without pubkey auth.
+  https://github.com/mkj/dropbear/commit/23ec78285639edf068d86bb96f91cba755039740
+  Reported by nvidia
+
+- Security: server: Fix parsing of long authorized_keys lines.
+  The remainder of a long line would be handled as the start of a new line.
+  In the case where external programs add semi-trusted public keys to
+  authorized_keys, a crafted key might bypass restrictions such as "command=".
+  https://github.com/mkj/dropbear/commit/8d8e1930b866eb44135ae393a793cbeb03b6b9d6
+  Reported by nvidia
+
+- >> authorized_keys is now limited to 300 lines.
+
+- server: Prevent unbounded memory use that could be triggered by an
+  authenticated peer. This would require waiting for the server to
+  trigger a rekey, so after 8 hours or transferring 1GB data.
+  Noticed while implementing Sunset SSH, also reported by nvidia
+
+- >> all programs and scp: Disallow following symlinks when writing output
+  files. This could prevent symlink attacks. Writing keys to an untrusted
+  directory is not recommended regardless.
+
+- server: "-o gatewayports=no" was treated as yes.
+
+- server: Disallow -t multifactor with plugins.
+  Plugin interactions with -t are not well tested, plugins may
+  not correctly handle multiple successful authentications.
+  Reported by nvidia
+
+- server: ensure that authorized_keys "permitopen" values are valid
+  ports. 0xffffffff (or signed equivalent) would be accepted as "any port".
+
+- server: fix null pointer segfault when rejecting a stream forward.
+  Found by oss-fuzz
+
+- dropbearconvert: Fix out of bounds read. dropbearconvert would exit
+  normally with an error, does not seem exploitable.
+  Reported by Yiyi Wang, Tsinghua University
+
+- dbclient: Fixed a 1 byte out of bounds write in ssh-askpass handling
+  (not compiled by default)
+
+- server: Increase pubkey query count. The limit added in
+  Dropbear 2026.90 was intended to be 15, but it was only 10.
+  Reported by Rui Salvaterra
+
+- scp: escape terminal control codes from filenames printed by
+  progress (SCPPROGRESS=1, disabled by default).
+  Additional fix from Basavaraj S Maneppagol @basavaraj-sm05
+
+- Fix sntrup/mlkem build on old platforms using debian/ directory
+  packaging. Note that this isn't well maintained, it is better
+  to use upstream Debian packaging if possible.
+
+- Fix compile warning on 32 bit platforms in sntrup
+
+- Suggest libcrypt-dev for crypt() in configure script if it's missing.
+
+- Increase MAX_HOSTKEYS to 6, suggested by Darren Tucker.
+
+- Allow DROPBEAR_ECC_256/384/521 to be specified in localoptions.h
+  Patch from Felipe Moura
+
+- Fix typo in missing hostname message, from Robin Neatherway
+
 2026.91 - 10 May 2026
 
 - scp: Fix disallowing -r with existing target directory. The logic
