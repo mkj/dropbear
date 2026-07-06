@@ -250,7 +250,7 @@ static void cleantext(char* dirtytext, int allow_whitespace) {
 
 		c = (unsigned char)dirtytext[i];
 		/* We can ignore '\r's */
-		if (c >= ' ' || c <= '~' || (allow_whitespace && (c == '\n' || c == '\t'))) {
+		if ((c >= ' ' && c <= '~') || (allow_whitespace && (c == '\n' || c == '\t'))) {
 			dirtytext[j] = c;
 			j++;
 		}
