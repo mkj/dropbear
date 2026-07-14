@@ -416,7 +416,7 @@ static struct openssh_key *load_openssh_key(const char *filename)
 				goto error;
 			}
 			*p++ = '\0';
-			while (*p && isspace((unsigned char)*p)) p++;
+			while (*p && ascii_isspace(*p)) p++;
 			if (!strcmp(buffer, "Proc-Type")) {
 				if (p[0] != '4' || p[1] != ',') {
 					errmsg = "Proc-Type is not 4 (only 4 is supported)";

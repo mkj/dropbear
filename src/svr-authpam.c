@@ -75,7 +75,7 @@ pamConvFunc(int num_msg,
 	/* Make the string lowercase. */
 	msg_len = strlen(compare_message);
 	for (i = 0; i < msg_len; i++) {
-		compare_message[i] = tolower(compare_message[i]);
+		compare_message[i] = ascii_tolower(compare_message[i]);
 	}
 
 	/* If the string ends with ": ", remove the space. 
