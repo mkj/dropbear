@@ -1211,7 +1211,7 @@ sink(int argc, char **argv, const char *src)
 		if (*cp++ != ' ')
 			SCREWUP("mode not delimited");
 
-		for (size = 0; isdigit(*cp);)
+		for (size = 0; ascii_isdigit(*cp);)
 			size = size * 10 + (*cp++ - '0');
 		if (*cp++ != ' ')
 			SCREWUP("size not delimited");
@@ -1498,7 +1498,7 @@ okname(char *cp0)
 		c = (int)*cp;
 		if (c & 0200)
 			goto bad;
-		if (!isalpha(c) && !isdigit(c)) {
+		if (!ascii_isalpha(c) && !ascii_isdigit(c)) {
 			switch (c) {
 			case '\'':
 			case '"':

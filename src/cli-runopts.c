@@ -944,7 +944,7 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 	int optlen = strlen(optname);
 	const char *str = *strptr;
 
-	while (isspace(*str)) {
+	while (ascii_isspace(*str)) {
 		++str;
 	}
 
@@ -954,7 +954,7 @@ static int match_extendedopt(const char** strptr, const char *optname) {
 
 	str += optlen;
 
-	while (isspace(*str) || (!seen_eq && *str == '=')) {
+	while (ascii_isspace(*str) || (!seen_eq && *str == '=')) {
 		if (*str == '=') {
 			seen_eq = 1;
 		}
