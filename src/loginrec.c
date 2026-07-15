@@ -421,8 +421,8 @@ line_abbrevname(char *dst, const char *src, size_t dstsize)
 	len = strlen(src);
 
 	if (len > 0) {
-		if (((int)len - dstsize) > 0)
-			src +=  ((int)len - dstsize);
+		if (((int)len - (int)dstsize) > 0)
+			src +=  ((int)len - (int)dstsize);
 
 		/* note: _don't_ change this to strlcpy */
 		strncpy(dst, src, (size_t)dstsize);
