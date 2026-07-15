@@ -1,3 +1,10 @@
+This is a git export of the early Dropbear CVS repository in 2004, for
+historical reference.
+
+https://cvs.ucc.asn.au/cgi-bin/viewvc.cgi/anoncvs/projects/dropbear/
+
+===
+
 This is Dropbear, a smallish SSH 2 server.
 
 INSTALL has compilation instructions.
