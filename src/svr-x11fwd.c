@@ -133,13 +133,12 @@ fail:
 
 /* accepts a new X11 socket */
 /* returns DROPBEAR_FAILURE or DROPBEAR_SUCCESS */
-static void x11accept(const struct Listener* listener, int sock) {
+static void x11accept(const struct Listener* UNUSED(listener), int sock) {
 
 	int fd;
 	struct sockaddr_in addr;
 	socklen_t len;
 	int ret;
-	struct ChanSess * chansess = (struct ChanSess *)(listener->typedata);
 
 	len = sizeof(addr);
 
