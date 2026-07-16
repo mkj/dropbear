@@ -148,7 +148,6 @@
 #endif
 
 #include "compat.h"
-#include "dbctype.h"
 
 #ifndef HAVE_U_INT8_T
 typedef unsigned char u_int8_t;

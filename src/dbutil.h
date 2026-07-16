@@ -119,4 +119,12 @@ int scp_main(int argc, char ** argv);
 #define ARRAY_SIZE(x) (sizeof(x)/sizeof(x[0]))
 
 
+/* Sensible ctype alternatives */
+int ascii_isdigit(char c);
+int ascii_isalpha(char c);
+int ascii_isalnum(char c);
+int ascii_isspace(char c);
+int ascii_isprint(char c);
+char ascii_tolower(char c);
+
 #endif /* DROPBEAR_DBUTIL_H_ */
