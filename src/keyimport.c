@@ -1075,9 +1075,9 @@ static int openssh_write(const char *filename, sign_key *key,
 	if (strlen(filename) == 1 && filename[0] == '-') {
 		fp = stdout;
 	} else {
-		fp = NULL;
 		int fd = open(filename, O_WRONLY | O_CREAT | O_EXCL | O_NOFOLLOW,
 			S_IRUSR | S_IWUSR);
+		fp = NULL;
 		if (fd >= 0) {
 			fp = fdopen(fd, "wb"); /* ensure Unix line endings */
 		}
