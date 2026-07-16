@@ -8,7 +8,8 @@ Note >> for compatibility/configuration changes
 
 - >> Two factor auth "-t" has been deprecated, it now requires
   a configuration option DEPRECATED_TWO_FACTOR.
-  Planned to be removed in future.
+  [Updated 16 July: This is no longer planned to be removed, future releases
+  will ignore DEPRECATED_TWO_FACTOR and always enable it, like previously]
 
 - Security: server: Don't allow -B (accept blank password) with
   -t (two factor auth). If run with -t and -B a user configured with a
