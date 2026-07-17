@@ -563,6 +563,11 @@ static sign_key *openssh_read(const char *filename, const char * UNUSED(passphra
 
 		/* limit length of public key blob */
 		len = buf_getint(blobbuf);
+		if (len > blobbuf->len - blobbuf->pos) {
+			errmsg = "Error parsing OpenSSH key";
+			goto ossh_error;
+		}
+		buf_setlen(blobbuf, blobbuf->pos + len);
 
 		type = DROPBEAR_SIGNKEY_ANY;
 		if (buf_get_pub_key(blobbuf, retkey, &type)
