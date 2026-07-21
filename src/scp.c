@@ -81,6 +81,7 @@
 #include "compat.h"
 #include "scpmisc.h"
 #include "progressmeter.h"
+#include "dbutil.h"
 
 void bwlimit(int);
 
