@@ -12,7 +12,7 @@ Note >> for compatibility/configuration changes
   https://github.com/mkj/dropbear/commit/882f83806d5e133037cd28e954a878984ef7b9c4
 
 - >> "permitlisten" authorized_keys lines will now be ignored if
-  the port is invalid (>65536). From Basavaraj S Maneppagol.
+  the port is invalid (>65535). From Basavaraj S Maneppagol.
 
 - >> In 2026.92, the configure option --enable-plugin-deprecated
   wasn't correctly renamed. This is now implemented.
