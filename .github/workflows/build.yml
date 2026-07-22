@@ -23,6 +23,7 @@ jobs:
         include:
           - name: plain linux
             upload_sizes: 1
+            make_target: all scp SCPPROGRESS=1
 
           - name: multi binary
             multi: 1
@@ -51,6 +52,7 @@ jobs:
 
           - name: linux clang
             cc: clang
+            make_target: all scp
 
           # Some platforms only have old compilers, we try to keep
           # compatibilty. For some reason -std=c89 doesn't enforce
