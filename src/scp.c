@@ -1027,7 +1027,10 @@ rsource(char *name, struct stat *statp)
 			run_err("%s/%s: name too long", name, dp->d_name);
 			continue;
 		}
-		(void) snprintf(path, sizeof path, "%s/%s", name, dp->d_name);
+		if (snprintf(path, sizeof path, "%s/%s", name, dp->d_name) >= (int)(sizeof path)) {
+			// Unreachable, checked above. This avoids -Wformat-truncation.
+			abort();
+		}
 		vect[0] = path;
 		source(1, vect);
 	}
