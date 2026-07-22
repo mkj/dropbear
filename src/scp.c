@@ -943,6 +943,8 @@ next:			if (fd != -1) {
 #ifdef PROGRESS_METER
 		if (showprogress)
 			start_progress_meter(curfile, stb.st_size, &statbytes);
+#else
+        (void)statbytes;
 #endif
 		/* Keep writing after an error so that we stay sync'd up. */
 		for (haderr = i = 0; i < stb.st_size; i += bp->cnt) {
@@ -1300,6 +1302,8 @@ bad:			run_err("%s: %s", np, strerror(errno));
 #ifdef PROGRESS_METER
 		if (showprogress)
 			start_progress_meter(curfile, size, &statbytes);
+#else
+        (void)statbytes;
 #endif
 		for (count = i = 0; i < size; i += 4096) {
 			amt = 4096;
