@@ -4,7 +4,7 @@
  *******************************************************************/
 
 #ifndef DROPBEAR_VERSION
-#define DROPBEAR_VERSION "2026.93"
+#define DROPBEAR_VERSION "2026.94"
 #endif
 
 /* IDENT_VERSION_PART is the optional part after "SSH-2.0-dropbear". Refer to RFC4253 for requirements. */
