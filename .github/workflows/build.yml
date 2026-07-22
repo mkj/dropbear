@@ -100,7 +100,7 @@ jobs:
           # Check that debug code doesn't bitrot
           - name: DEBUG_TRACE
             nondefault: 1
-            configure_flags: --enable-pam
+            configure_flags: --enable-pam --enable-werror
             localoptions: |
               #define DEBUG_TRACE 5
 
