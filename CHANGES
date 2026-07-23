@@ -1,10 +1,13 @@
 2026.94 - 23 July 2026
 
+Note >> for compatibility/configuration changes
+
 - Fix scp build failure regression from 2026.93
   The new ascii_isdigit() etc wasn't linked.
 
-- Print square brackets around ipv6 addresses with ports, eg
+- >> Print square brackets around ipv6 addresses with ports, eg
   [2a00:f10:400:2:1c00:bcff:fe00:1c6]:22
+  This may affect log parsers such as fail2ban.
   Patch from Seo Suchan
 
 - Support longer paths in scp.
