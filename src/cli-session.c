@@ -376,8 +376,6 @@ static void cli_finished() {
 	TRACE(("cli_finished()"))
 
 	session_cleanup();
-	fprintf(stderr, "Connection to %s@%s:%s closed.\n", cli_opts.username,
-			cli_opts.remotehost, cli_opts.remoteport);
 	exit(cli_ses.retval);
 }
 
