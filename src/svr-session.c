@@ -121,7 +121,12 @@ void svr_session(int sock, int childpipe) {
 	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
 	len = strlen(host) + strlen(port) + 2;
 	svr_ses.addrstring = m_malloc(len);
-	snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
+	/* bracket is needed if it's IPv6 address */
+	if (strchr(host, ':') != NULL) {
+		snprintf(svr_ses.addrstring, len, "[%s]:%s", host, port);
+	} else {
+		snprintf(svr_ses.addrstring, len, "%s:%s", host, port);
+	}
 	m_free(host);
 	m_free(port);
 
