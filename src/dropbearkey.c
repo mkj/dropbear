@@ -193,6 +193,9 @@ int main(int argc, char ** argv) {
 			next = NULL;
 			continue;
 		}
+		if (strcmp(argv[i], "--") == 0) {
+			break;
+		}
 
 		if (argv[i][0] == '-') {
 			switch (argv[i][1]) {

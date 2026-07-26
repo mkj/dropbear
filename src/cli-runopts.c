@@ -219,6 +219,11 @@ void cli_getopts(int argc, char ** argv) {
 			commands are consumed below */
 			break;
 		}
+		if (strcmp(argv[i], "--") == 0)
+		{
+			i++;
+			break;
+		}
 
 		/* Begins with '-' */
 		opt = OPT_OTHER;

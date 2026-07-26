@@ -224,6 +224,8 @@ void svr_getopts(int argc, char ** argv) {
 	for (i = 1; i < (unsigned int)argc; i++) {
 		if (argv[i][0] != '-' || argv[i][1] == '\0')
 			dropbear_exit("Invalid argument: %s", argv[i]);
+		if (strcmp(argv[i], "--") == 0)
+			break;
 
 		for (j = 1; (c = argv[i][j]) != '\0' && !next && !nextisport; j++) {
 			switch (c) {
