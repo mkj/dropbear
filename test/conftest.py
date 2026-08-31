@@ -8,6 +8,9 @@ def pytest_addoption(parser):
     parser.addoption("--remote", type=str, help="remote host")
     parser.addoption("--user", type=str, help="optional username")
     parser.addoption("--ssh-keygen", type=str, default="ssh-keygen")
+    parser.addoption("--rsakey", type=str,
+        help="path to an RSA private key authorized on the server, "
+             "used by the ssh-rsa (SHA-1) regression test")
 
 def pytest_configure(config):
     opt = config.option

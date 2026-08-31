@@ -143,6 +143,7 @@ const char* signature_name_from_type(enum signature_type type, unsigned int *nam
 
 /* Returns DROPBEAR_SIGNATURE_NONE if none match */
 enum signature_type signature_type_from_name(const char* name, unsigned int namelen) {
+	enum signkey_type keytype = signkey_type_from_name(name, namelen);
 #if DROPBEAR_RSA
 #if DROPBEAR_RSA_SHA256
 	if (namelen == strlen(SSH_SIGNATURE_RSA_SHA256) 
@@ -150,14 +151,16 @@ enum signature_type signature_type_from_name(const char* name, unsigned int name
 		return DROPBEAR_SIGNATURE_RSA_SHA256;
 	}
 #endif
+	/* keytype == DROPBEAR_SIGNKEY_RSA iff name is "ssh-rsa" (SHA1 sig algo) */
+	if (keytype == DROPBEAR_SIGNKEY_RSA) {
 #if DROPBEAR_RSA_SHA1
-	if (namelen == strlen(SSH_SIGNKEY_RSA) 
-		&& memcmp(name, SSH_SIGNKEY_RSA, namelen) == 0) {
 		return DROPBEAR_SIGNATURE_RSA_SHA1;
-	}
+#else
+		return DROPBEAR_SIGNATURE_NONE;
 #endif
+	}
 #endif /* DROPBEAR_RSA */
-	return (enum signature_type)signkey_type_from_name(name, namelen);
+	return (enum signature_type)keytype;
 }
 
 /* Returns the signature type from a key type. Must not be called
