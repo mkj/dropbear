@@ -32,7 +32,7 @@ jobs:
             os: windows-latest
             runcheck: 'no'
             apt: 'no'
-            shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
+            shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
             configure_flags: --disable-werror --enable-bundled-libtom
             chere_invoking: 1
 
