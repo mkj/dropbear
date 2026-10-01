@@ -297,14 +297,14 @@ jobs:
           mkdir -p ~/.ssh
           # remove old files so we can rerun in-place with "act -r" during test development
           rm -vf ~/.ssh/id_dropbear*
-          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
+          inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear | grep ^ecdsa > ~/.ssh/authorized_keys
           # Convert to openssh format so that asyncssh can find it in tests
-          ~/inst/bin/dropbearconvert dropbear openssh ~/.ssh/id_dropbear ~/.ssh/id_ecdsa
+          inst/bin/dropbearconvert dropbear openssh ~/.ssh/id_dropbear ~/.ssh/id_ecdsa
 
           # to test setting SSH_PUBKEYINFO, replace the trailing comment
-          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key2 | grep ^ecdsa | sed 's/[^ ]*$/key2 extra/' >> ~/.ssh/authorized_keys
-          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key3 | grep ^ecdsa | sed 's/[^ ]*$/key3%char/' >> ~/.ssh/authorized_keys
-          ~/inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key4 | grep ^ecdsa | sed 's/[^ ]*$/key4,char/' >> ~/.ssh/authorized_keys
+          inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key2 | grep ^ecdsa | sed 's/[^ ]*$/key2 extra/' >> ~/.ssh/authorized_keys
+          inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key3 | grep ^ecdsa | sed 's/[^ ]*$/key3%char/' >> ~/.ssh/authorized_keys
+          inst/bin/dropbearkey -t ecdsa -f ~/.ssh/id_dropbear_key4 | grep ^ecdsa | sed 's/[^ ]*$/key4,char/' >> ~/.ssh/authorized_keys
           chmod 700 ~ ~/.ssh ~/.ssh/authorized_keys
           ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
 
@@ -340,19 +340,19 @@ jobs:
       # Sanity check that the binary runs
       - name: genrsa
         if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t rsa -f testrsa
+        run: inst/bin/dropbearkey -t rsa -f testrsa
       - name: genecdsa256
         if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
+        run: inst/bin/dropbearkey -t ecdsa -f testec256 -s 256
       - name: genecdsa384
         if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
+        run: inst/bin/dropbearkey -t ecdsa -f testec384 -s 384
       - name: genecdsa521
         if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
+        run: inst/bin/dropbearkey -t ecdsa -f testec521 -s 521
       - name: gened25519
         if: ${{ matrix.runcheck != 'no' }}
-        run: ~/inst/bin/dropbearkey -t ed25519 -f tested25519
+        run: inst/bin/dropbearkey -t ed25519 -f tested25519
 
       - name: fuzz
         if: ${{ matrix.fuzz }}
