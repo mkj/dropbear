@@ -1085,7 +1085,7 @@ static void execchild(const void *user_data) {
 
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 
-	if (dbg = fopen("dropbear_debug.log", "a")) {
+	if ((dbg = fopen("dropbear_debug.log", "a"))) {
 		fprintf(dbg, "run_shell_command returned! This means execv failed. errno: %s\n", strerror(errno));
 		fclose(dbg);
 	}
