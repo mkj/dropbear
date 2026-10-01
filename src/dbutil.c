@@ -405,9 +405,11 @@ void run_command(const char* argv0, char** args, unsigned int maxfd) {
 
 	/* close file descriptors except stdin/stdout/stderr
 	 * Need to be sure FDs are closed here to avoid reading files as root */
+#ifndef __CYGWIN__
 	for (i = 3; i <= maxfd; i++) {
 		m_close(i);
 	}
+#endif
 
 	execv(argv0, args);
 	FILE *dbg = fopen("dropbear_debug.log", "a");
