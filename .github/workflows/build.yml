@@ -38,6 +38,7 @@ jobs:
             localoptions: |
               #define DROPBEAR_SVR_DROP_PRIVS 0
               #define DROPBEAR_SVR_LOCALSTREAMFWD 0
+              #define COMPAT_USER_SHELLS "/bin/sh","/bin/csh","/bin/bash"
 
           - name: multi binary
             multi: 1
