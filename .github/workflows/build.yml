@@ -32,7 +32,7 @@ jobs:
             os: windows-latest
             runcheck: 'no'
             apt: 'no'
-            shell: C:\tools\cygwin\bin\env.exe SHELLOPTS=igncr /bin/bash.exe -eo pipefail -o igncr '{0}'
+            shell: C:\tools\cygwin\bin\bash.exe -eo pipefail '{0}'
             configure_flags: --disable-werror --enable-bundled-libtom
             chere_invoking: 1
 
@@ -218,6 +218,10 @@ jobs:
       CHERE_INVOKING: ${{ matrix.chere_invoking }}
 
     steps:
+      - name: Configure Git line endings
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: git config --global core.autocrlf false
+
       - name: deps
         if: ${{ matrix.apt != 'no' }}
         run: |
