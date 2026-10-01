@@ -34,6 +34,7 @@ jobs:
             apt: 'no'
             shell: C:\tools\cygwin\bin\bash.exe --login --norc -eo pipefail -o igncr '{0}'
             configure_flags: --disable-werror --enable-bundled-libtom
+            chere_invoking: 1
 
           - name: multi binary
             multi: 1
@@ -214,6 +215,7 @@ jobs:
       # some pytests depend on special setup from this file. see authorized_keys below.
       DBTEST_IN_ACTION: true
       LOCALOPTIONS: ${{ matrix.localoptions }}
+      CHERE_INVOKING: ${{ matrix.chere_invoking }}
 
     steps:
       - name: deps
