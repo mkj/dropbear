@@ -33,7 +33,7 @@ jobs:
             runcheck: 'no'
             apt: 'no'
             shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
-            configure_flags: --disable-werror --enable-bundled-libtom ac_cv_func_getusershell=no --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx
+            configure_flags: --disable-werror --enable-bundled-libtom ac_cv_func_getusershell=no --disable-lastlog --disable-utmp --disable-utmpx --disable-wtmp --disable-wtmpx --disable-loginfunc
             chere_invoking: 1
             localoptions: |
               #define DROPBEAR_SVR_DROP_PRIVS 0

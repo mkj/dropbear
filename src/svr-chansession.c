@@ -1002,10 +1002,18 @@ static void execchild(const void *user_data) {
 	svr_switch_user();
 #endif
 
+#if !DROPBEAR_SVR_MULTIUSER && defined(__CYGWIN__)
+	/* In single-user portable Cygwin, the virtual pw_dir (/home/user) doesn't exist.
+	 * We use the process HOME (which compat_init set to USERPROFILE). */
+	const char *shell_home = getenv("HOME") ? getenv("HOME") : ses.authstate.pw_dir;
+#else
+	const char *shell_home = ses.authstate.pw_dir;
+#endif
+
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
 	addnewvar("LOGNAME", ses.authstate.pw_name);
-	addnewvar("HOME", ses.authstate.pw_dir);
+	addnewvar("HOME", shell_home);
 	addnewvar("SHELL", get_user_shell());
 	if (getuid() == 0) {
 		addnewvar("PATH", DEFAULT_ROOT_PATH);
@@ -1043,12 +1051,12 @@ static void execchild(const void *user_data) {
 #endif
 
 	/* change directory */
-	if (chdir(ses.authstate.pw_dir) < 0) {
+	if (chdir(shell_home) < 0) {
 		int e = errno;
 		if (chdir("/") < 0) {
 			dropbear_exit("chdir(\"/\") failed");
 		}
-		fprintf(stderr, "Failed chdir '%s': %s\n", ses.authstate.pw_dir, strerror(e));
+		fprintf(stderr, "Failed chdir '%s': %s\n", shell_home, strerror(e));
 	}
 
 
