@@ -247,6 +247,7 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 void
 pty_release(const char *tty_name)
 {
+#if DROPBEAR_SVR_MULTIUSER
 	if (chown(tty_name, (uid_t) 0, (gid_t) 0) < 0
 			&& (errno != ENOENT)) {
 		dropbear_log(LOG_ERR,
@@ -257,6 +258,9 @@ pty_release(const char *tty_name)
 		dropbear_log(LOG_ERR,
 			"chmod %.100s 0666 failed: %.100s", tty_name, strerror(errno));
 	}
+#else
+	(void)tty_name; /* suppress unused warning */
+#endif
 }
 
 /* Makes the tty the processes controlling tty and sets it to sane modes. */
