@@ -37,6 +37,7 @@ jobs:
             chere_invoking: 1
             localoptions: |
               #define DROPBEAR_SVR_DROP_PRIVS 0
+              #define DROPBEAR_SVR_LOCALSTREAMFWD 0
 
           - name: multi binary
             multi: 1
