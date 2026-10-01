@@ -327,8 +327,8 @@ static int checkusername(const char *username, unsigned int userlen) {
 	endusershell();
 	TRACE(("no matching shell"))
 	ses.authstate.checkusername_failed = 1;
-	dropbear_log(LOG_WARNING, "User '%s' has invalid shell, rejected",
-				ses.authstate.pw_name);
+	dropbear_log(LOG_WARNING, "User '%s' has invalid shell '%s', rejected",
+				ses.authstate.pw_name, usershell);
 	return DROPBEAR_FAILURE;
 	
 goodshell:
