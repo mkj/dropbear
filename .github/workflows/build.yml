@@ -35,6 +35,8 @@ jobs:
             shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
             configure_flags: --disable-werror --enable-bundled-libtom
             chere_invoking: 1
+            localoptions: |
+              #define DROPBEAR_SVR_DROP_PRIVS 0
 
           - name: multi binary
             multi: 1
