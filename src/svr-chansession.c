@@ -1003,9 +1003,13 @@ static void execchild(const void *user_data) {
 #endif
 
 #if !DROPBEAR_SVR_MULTIUSER && defined(__CYGWIN__)
-	/* In single-user portable Cygwin, the virtual pw_dir (/home/user) doesn't exist.
-	 * We use the process HOME (which compat_init set to USERPROFILE). */
-	const char *shell_home = getenv("HOME") ? getenv("HOME") : ses.authstate.pw_dir;
+	const char *shell_home = ses.authstate.pw_dir;
+	struct stat st;
+	/* If the directory doesn't physically exist (e.g., fake Cygwin /home path during public key auth),
+	 * safely fall back to the Dropbear process HOME environment variable. */
+	if (stat(shell_home, &st) != 0 && getenv("HOME")) {
+		shell_home = getenv("HOME");
+	}
 #else
 	const char *shell_home = ses.authstate.pw_dir;
 #endif

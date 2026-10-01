@@ -34,6 +34,7 @@
 #ifdef __CYGWIN__
 #include <windows.h>
 #include <sys/cygwin.h>
+#include <userenv.h>
 #endif
 
 #if DROPBEAR_SVR_PASSWORD_AUTH
@@ -77,6 +78,19 @@ void svr_auth_password(int valid_user) {
 		{
 			HANDLE token = cygwin_logon_user(getpwnam(ses.authstate.pw_name), password);
 			if (token != INVALID_HANDLE_VALUE) {
+				DWORD path_len = 0;
+				GetUserProfileDirectoryA(token, NULL, &path_len);
+				if (path_len > 0) {
+					char *win_path = m_malloc(path_len);
+					if (GetUserProfileDirectoryA(token, win_path, &path_len)) {
+						if (ses.authstate.pw_dir) {
+							m_free(ses.authstate.pw_dir);
+						}
+						ses.authstate.pw_dir = win_path;
+					} else {
+						m_free(win_path);
+					}
+				}
 				CloseHandle(token);
 				testcrypt = passwdcrypt; /* authentication succeeded */
 			} else {
