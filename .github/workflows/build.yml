@@ -220,6 +220,7 @@ jobs:
     steps:
       - name: Configure Git line endings
         if: ${{ matrix.os == 'windows-latest' }}
+        shell: bash
         run: git config --global core.autocrlf false
 
       - name: deps
