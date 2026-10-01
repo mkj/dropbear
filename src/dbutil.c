@@ -410,7 +410,11 @@ void run_command(const char* argv0, char** args, unsigned int maxfd) {
 	}
 
 	execv(argv0, args);
-	dropbear_log(LOG_ERR, "execv('%s') failed: %s", argv0, strerror(errno));
+	FILE *dbg = fopen("dropbear_debug.log", "a");
+	if (dbg) {
+		fprintf(dbg, "execv('%s') failed! errno: %d (%s)\n", argv0, errno, strerror(errno));
+		fclose(dbg);
+	}
 }
 
 #if DEBUG_TRACE
