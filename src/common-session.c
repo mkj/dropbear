@@ -47,11 +47,7 @@ struct sshsession ses; /* GLOBAL */
 void common_session_init(int sock_in, int sock_out) {
 	time_t now;
 
-#ifdef __CYGWIN__
-	if (!getenv("HOME") && getenv("USERPROFILE")) {
-		setenv("HOME", getenv("USERPROFILE"), 0);
-	}
-#endif
+	compat_init();
 
 #if DEBUG_TRACE
 	debug_start_net();

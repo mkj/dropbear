@@ -82,6 +82,16 @@
 
 #include "includes.h"
 
+/* Platform-specific initialization for compatibility workarounds.
+ * Called once at startup from common_session_init(). */
+void compat_init(void) {
+#ifdef __CYGWIN__
+	if (!getenv("HOME") && getenv("USERPROFILE")) {
+		setenv("HOME", getenv("USERPROFILE"), 0);
+	}
+#endif
+}
+
 #ifndef HAVE_GETUSERSHELL
 static char **curshell, **shells, *strings;
 static char **initshells();

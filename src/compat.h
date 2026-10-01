@@ -27,6 +27,9 @@
 
 #include "includes.h"
 
+/* Platform-specific initialization, called once at startup */
+void compat_init(void);
+
 #ifndef HAVE_STRLCPY
 size_t strlcpy(char *dst, const char *src, size_t size);
 #endif
