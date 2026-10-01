@@ -4684,6 +4684,10 @@ case "$host" in
 	no_ptmx_check=1
 	;;
 
+*-cygwin*)
+	LIBS="$LIBS -luserenv"
+	;;
+
 *-*-solaris*)
 	CFLAGS="$CFLAGS -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
