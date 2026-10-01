@@ -1002,7 +1002,9 @@ static void execchild(const void *user_data) {
 	svr_switch_user();
 #endif
 
-#if !DROPBEAR_SVR_MULTIUSER && defined(__CYGWIN__)
+	/* FIXME: Cygwin builds lack true DROPBEAR_SVR_MULTIUSER support.
+	 * We must fallback to the server process HOME variable for single-user keys. */
+#ifdef __CYGWIN__
 	const char *shell_home = ses.authstate.pw_dir;
 	struct stat st;
 	/* If the directory doesn't physically exist (e.g., fake Cygwin /home path during public key auth),
