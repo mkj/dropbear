@@ -31,6 +31,11 @@
 #include "auth.h"
 #include "runopts.h"
 
+#ifdef __CYGWIN__
+#include <windows.h>
+#include <sys/cygwin.h>
+#endif
+
 #if DROPBEAR_SVR_PASSWORD_AUTH
 
 /* not constant time when strings are differing lengths. 
@@ -68,7 +73,19 @@ void svr_auth_password(int valid_user) {
 	if (valid_user && passwordlen <= DROPBEAR_MAX_PASSWORD_LEN) {
 		/* the first bytes of passwdcrypt are the salt */
 		passwdcrypt = ses.authstate.pw_passwd;
+#ifdef __CYGWIN__
+		{
+			HANDLE token = cygwin_logon_user(getpwnam(ses.authstate.pw_name), password);
+			if (token != INVALID_HANDLE_VALUE) {
+				CloseHandle(token);
+				testcrypt = passwdcrypt; /* authentication succeeded */
+			} else {
+				testcrypt = ""; /* authentication failed, don't trigger the locked check */
+			}
+		}
+#else
 		testcrypt = crypt(password, passwdcrypt);
+#endif
 	}
 	m_burn(password, passwordlen);
 	m_free(password);
