@@ -86,8 +86,14 @@
  * Called once at startup from common_session_init(). */
 void compat_init(void) {
 #ifdef __CYGWIN__
-	if (!getenv("HOME") && getenv("USERPROFILE")) {
-		setenv("HOME", getenv("USERPROFILE"), 0);
+	char *home = getenv("HOME");
+	struct stat st;
+	
+	/* Cygwin automatically synthesizes HOME=/home/user even if the directory
+	 * doesn't exist. In standalone portable deployments, this breaks ~/.ssh.
+	 * If HOME doesn't physically exist, override it with the Windows profile. */
+	if ((!home || stat(home, &st) != 0) && getenv("USERPROFILE")) {
+		setenv("HOME", getenv("USERPROFILE"), 1);
 	}
 #endif
 }
