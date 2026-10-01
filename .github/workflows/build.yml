@@ -301,6 +301,12 @@ jobs:
       - name: binary size
         run: size dropbear dbclient | tee -a sizes.txt
 
+      - name: upload binaries
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: dropbear-binaries-${{ matrix.name }}
+          path: ~/inst/
         # upload config.log if something has failed
       - name: config.log
         if: ${{ !env.ACT && (failure() || cancelled()) }}
