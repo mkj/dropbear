@@ -654,7 +654,21 @@ const char* get_user_shell() {
 		shell = "/bin/sh";
 	}
 #ifdef __CYGWIN__
-	shell = "/bin/bash"; /* Always available in base Cygwin installs */
+	/* On portable Cygwin without a full POSIX base, /bin/sh or /bin/bash might 
+	 * not actually exist on the filesystem. Modern Cygwin (3.1.0+) seamlessly 
+	 * translates PTYs to Windows ConPTY, meaning native Windows console apps 
+	 * like cmd.exe and PowerShell work flawlessly over SSH! */
+	struct stat st;
+	if (stat(shell, &st) != 0) {
+		/* Provided shell is missing. Try inherited SHELL */
+		if (getenv("SHELL")) {
+			shell = getenv("SHELL");
+		} 
+		/* Try Windows native Command Prompt */
+		else if (getenv("COMSPEC")) {
+			shell = getenv("COMSPEC");
+		}
+	}
 #endif
 	return shell;
 }
