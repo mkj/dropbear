@@ -410,6 +410,7 @@ void run_command(const char* argv0, char** args, unsigned int maxfd) {
 	}
 
 	execv(argv0, args);
+	dropbear_log(LOG_ERR, "execv('%s') failed: %s", argv0, strerror(errno));
 }
 
 #if DEBUG_TRACE
