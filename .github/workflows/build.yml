@@ -32,10 +32,9 @@ jobs:
             os: windows-latest
             runcheck: 'no'
             apt: 'no'
-            shell: C:\tools\cygwin\bin\bash.exe -eo pipefail -o igncr '{0}'
+            shell: C:\tools\cygwin\bin\env.exe SHELLOPTS=igncr /bin/bash.exe -eo pipefail -o igncr '{0}'
             configure_flags: --disable-werror --enable-bundled-libtom
             chere_invoking: 1
-            shellopts: igncr
 
           - name: multi binary
             multi: 1
@@ -217,7 +216,6 @@ jobs:
       DBTEST_IN_ACTION: true
       LOCALOPTIONS: ${{ matrix.localoptions }}
       CHERE_INVOKING: ${{ matrix.chere_invoking }}
-      SHELLOPTS: ${{ matrix.shellopts }}
 
     steps:
       - name: deps
