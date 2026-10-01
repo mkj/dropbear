@@ -4686,6 +4686,15 @@ case "$host" in
 
 *-cygwin*)
 	LIBS="$LIBS -luserenv"
+	ac_cv_func_getusershell=no
+	enable_lastlog=no
+	enable_utmp=no
+	enable_utmpx=no
+	enable_wtmp=no
+	enable_wtmpx=no
+	enable_loginfunc=no
+	enable_bundled_libtom=yes
+	CFLAGS="$CFLAGS -DDROPBEAR_SVR_DROP_PRIVS=0 -DDROPBEAR_SVR_LOCALSTREAMFWD=0 -DCOMPAT_USER_SHELLS='\"/bin/sh\",\"/bin/csh\",\"/bin/bash\"'"
 	;;
 
 *-*-solaris*)
