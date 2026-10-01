@@ -301,6 +301,7 @@ jobs:
           ls -ld ~ ~/.ssh ~/.ssh/authorized_keys
 
       - name: binary size
+        if: ${{ matrix.upload_sizes }}
         run: size dropbear dbclient | tee -a sizes.txt
 
       - name: upload binaries
