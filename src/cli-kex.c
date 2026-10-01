@@ -270,11 +270,6 @@ static FILE* open_known_hosts_file(int * readonly)
 	char * homedir = NULL;
 	
 	homedir = getenv("HOME");
-#ifdef __CYGWIN__
-	if (!homedir) {
-		homedir = getenv("USERPROFILE");
-	}
-#endif
 
 	if (!homedir) {
 		struct passwd * pw = NULL;

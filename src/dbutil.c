@@ -710,11 +710,6 @@ char * expand_homedir_path_home(const char *inpath, const char *homedir) {
 char * expand_homedir_path(const char *inpath) {
 	struct passwd *pw = NULL;
 	char *homedir = getenv("HOME");
-#ifdef __CYGWIN__
-	if (!homedir) {
-		homedir = getenv("USERPROFILE");
-	}
-#endif
 
 	if (!homedir) {
 		pw = getpwuid(getuid());
