@@ -221,7 +221,7 @@ jobs:
       CHERE_INVOKING: ${{ matrix.chere_invoking }}
 
     steps:
-      - name: Configure Git line endings
+      - name: git line endings
         if: ${{ matrix.os == 'windows-latest' }}
         shell: bash
         run: git config --global core.autocrlf false
@@ -311,6 +311,11 @@ jobs:
       - name: binary size
         if: ${{ matrix.upload_sizes }}
         run: size dropbear dbclient | tee -a sizes.txt
+      - name: bundle cygwin
+        if: ${{ matrix.os == 'windows-latest' }}
+        run: |
+          ldd inst/sbin/dropbear.exe | grep '/usr/bin' | awk '{print $3}' | xargs -I {} cp {} inst/sbin/
+          ldd inst/bin/dbclient.exe | grep '/usr/bin' | awk '{print $3}' | xargs -I {} cp {} inst/bin/
 
       - name: upload binaries
         if: ${{ !env.ACT }}
