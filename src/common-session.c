@@ -672,10 +672,15 @@ const char* get_user_shell() {
 			}
 			
 			/* Try Windows native Command Prompt if SHELL failed */
+			if (!env_comspec) env_comspec = getenv("ComSpec");
+			
 			if (env_comspec && stat(env_comspec, &st) == 0) {
 				shell = env_comspec;
-			} else if (env_comspec) {
-				dropbear_log(LOG_WARNING, "Environment COMSPEC='%s' is set but the executable was not found.", env_comspec);
+			} else {
+				if (env_comspec) {
+					dropbear_log(LOG_WARNING, "Environment ComSpec='%s' is set but the executable was not found.", env_comspec);
+				}
+				shell = "cmd.exe";
 			}
 		}
 	}
