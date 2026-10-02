@@ -1009,51 +1009,6 @@ static void execchild(const void *user_data) {
 #endif
 
 #ifdef __CYGWIN__
-	const char *shell_home = ses.authstate.pw_dir;
-	struct stat st;
-	/* If the directory doesn't physically exist (e.g., fake Cygwin /home path),
-	 * attempt to fetch the actual Windows user profile using the impersonation token. */
-	if (stat(shell_home, &st) != 0) {
-		HANDLE token;
-		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, TRUE, &token) || 
-		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
-			DWORD path_len = 0;
-			GetUserProfileDirectoryA(token, NULL, &path_len);
-			if (path_len > 0) {
-				char *win_path = m_malloc(path_len);
-				if (GetUserProfileDirectoryA(token, win_path, &path_len)) {
-					if (ses.authstate.pw_dir) {
-						m_free(ses.authstate.pw_dir);
-					}
-					ses.authstate.pw_dir = win_path;
-					shell_home = ses.authstate.pw_dir;
-				} else {
-					m_free(win_path);
-				}
-			}
-			CloseHandle(token);
-		}
-	}
-
-	/* If it still doesn't exist,
-	 * safely fall back to the Dropbear process HOME environment variable.
-	 * If the shell is a native Windows shell (ends in .exe), fallback to the native Windows USERPROFILE. */
-	if (stat(shell_home, &st) != 0) {
-		const char *tmp_shell = get_user_shell();
-		size_t shell_len = tmp_shell ? strlen(tmp_shell) : 0;
-		int is_exe = (shell_len > 4 && strcasecmp(tmp_shell + shell_len - 4, ".exe") == 0);
-		
-		if (getenv("HOME") && stat(getenv("HOME"), &st) == 0) {
-			shell_home = getenv("HOME");
-		} else if (is_exe && getenv("USERPROFILE")) {
-			shell_home = getenv("USERPROFILE");
-		}
-	}
-#else
-	const char *shell_home = ses.authstate.pw_dir;
-#endif
-
-#ifdef __CYGWIN__
 	{
 		int loaded_env = 0;
 		HANDLE token;
@@ -1099,6 +1054,20 @@ static void execchild(const void *user_data) {
 			}
 		}
 	}
+
+	const char *shell_home = ses.authstate.pw_dir;
+	struct stat st;
+	
+	/* If the Cygwin POSIX directory doesn't physically exist (e.g., fake Cygwin /home path),
+	 * safely fall back to the native Windows USERPROFILE we just loaded from CreateEnvironmentBlock. */
+	if (stat(shell_home, &st) != 0 && getenv("USERPROFILE")) {
+		const char *up = getenv("USERPROFILE");
+		if (stat(up, &st) == 0) {
+			shell_home = up;
+		}
+	}
+#else
+	const char *shell_home = ses.authstate.pw_dir;
 #endif
 
 	/* set env vars */

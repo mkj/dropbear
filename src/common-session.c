@@ -672,8 +672,10 @@ const char* get_user_shell() {
 			}
 			
 			/* Try Windows native Command Prompt if SHELL failed. */
-			if (env_comspec) {
+			if (env_comspec && stat(env_comspec, &st) == 0) {
 				shell = env_comspec;
+			} else {
+				shell = "C:\\Windows\\system32\\cmd.exe";
 			}
 		}
 	}
