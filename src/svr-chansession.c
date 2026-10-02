@@ -1073,14 +1073,25 @@ static void execchild(const void *user_data) {
 				}
 				DestroyEnvironmentBlock(env_block);
 				loaded_env = 1;
+			} else {
+				dropbear_log(LOG_WARNING, "CreateEnvironmentBlock failed with error %lu", GetLastError());
 			}
 			CloseHandle(token);
+		} else {
+			dropbear_log(LOG_WARNING, "OpenToken failed with error %lu", GetLastError());
 		}
 		
 		/* Failsafe: If CreateEnvironmentBlock failed (e.g. lack of privileges), 
-		 * securely fetch the native server PATH so utilities like scp can be found. */
-		if (!loaded_env && getenv("PATH")) {
-			addnewvar("PATH", getenv("PATH"));
+		 * securely construct the native server PATH so utilities like scp can be found. */
+		if (!loaded_env) {
+			char windir[MAX_PATH];
+			if (GetSystemWindowsDirectoryA(windir, MAX_PATH) > 0) {
+				char newpath[1024];
+				snprintf(newpath, sizeof(newpath), "%s\\system32;%s;%s\\System32\\Wbem;%s\\System32\\WindowsPowerShell\\v1.0\\;%s\\System32\\OpenSSH\\", windir, windir, windir, windir, windir);
+				addnewvar("PATH", newpath);
+			} else {
+				addnewvar("PATH", DEFAULT_PATH);
+			}
 		}
 	}
 #endif

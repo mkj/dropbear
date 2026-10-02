@@ -400,8 +400,13 @@ runtime with -M. 0 disables this feature. */
 #define DEFAULT_MAX_DURATION 0
 
 /* The default path. This will often get replaced by the shell */
+#ifdef __CYGWIN__
+#define DEFAULT_PATH "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\"
+#define DEFAULT_ROOT_PATH "C:\\Windows\\system32;C:\\Windows;C:\\Windows\\System32\\Wbem;C:\\Windows\\System32\\WindowsPowerShell\\v1.0\\;C:\\Windows\\System32\\OpenSSH\\"
+#else
 #define DEFAULT_PATH "/usr/bin:/bin"
 #define DEFAULT_ROOT_PATH "/usr/sbin:/usr/bin:/sbin:/bin"
+#endif
 
 /* Features pending deletion. These will be removed in a future release
    since they don't seem to be used much. Open a github issue if you
