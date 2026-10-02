@@ -384,7 +384,13 @@ void run_shell_command(const char* cmd, unsigned int maxfd, char* usershell) {
 	}
 
 	if (cmd != NULL) {
-		argv[1] = "-c";
+		if (strcasecmp(baseshell, "cmd.exe") == 0) {
+			argv[1] = "/c";
+		} else if (strcasecmp(baseshell, "powershell.exe") == 0) {
+			argv[1] = "-Command";
+		} else {
+			argv[1] = "-c";
+		}
 		argv[2] = (char*)cmd;
 		argv[3] = NULL;
 	} else {
