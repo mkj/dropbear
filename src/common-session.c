@@ -36,6 +36,10 @@
 #include "runopts.h"
 #include "netio.h"
 
+#ifdef __CYGWIN__
+#include <windows.h>
+#endif
+
 static void checktimeouts(void);
 static long select_timeout(void);
 static int ident_readln(int fd, char* buf, int count);
@@ -671,16 +675,25 @@ const char* get_user_shell() {
 				dropbear_log(LOG_WARNING, "Environment SHELL='%s' is set but the executable was not found. Falling back.", env_shell);
 			}
 			
-			/* Try Windows native Command Prompt if SHELL failed */
+			/* Try Windows native Command Prompt if SHELL failed. */
 			if (!env_comspec) env_comspec = getenv("ComSpec");
-			
-			dropbear_log(LOG_WARNING, "DEBUG: COMSPEC='%s', ComSpec='%s', comspec='%s'", getenv("COMSPEC"), getenv("ComSpec"), getenv("comspec"));
 			
 			if (env_comspec) {
 				shell = env_comspec;
 			} else {
-				dropbear_log(LOG_WARNING, "Environment ComSpec is missing. Falling back to secure absolute path.");
-				shell = "C:\\Windows\\System32\\cmd.exe";
+				/* Standard Windows variables like COMSPEC are completely wiped out 
+				 * or evaluate to NULL during the SSH session. */
+				dropbear_log(LOG_WARNING, "Environment ComSpec is missing. Dynamically resolving system cmd.exe.");
+				char sysdir[MAX_PATH];
+				if (GetSystemDirectoryA(sysdir, MAX_PATH)) {
+					char *cmd_path = m_malloc(MAX_PATH + 10);
+					snprintf(cmd_path, MAX_PATH + 10, "%s\\cmd.exe", sysdir);
+					shell = cmd_path;
+				} else {
+					/* Absolute worst-case scenario, assume C:\Windows */
+					dropbear_log(LOG_WARNING, "GetSystemDirectoryA failed. Assuming C:\\Windows\\System32\\cmd.exe.");
+					shell = "C:\\Windows\\System32\\cmd.exe";
+				}
 			}
 		}
 	}

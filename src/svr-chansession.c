@@ -1008,9 +1008,13 @@ static void execchild(const void *user_data) {
 	const char *shell_home = ses.authstate.pw_dir;
 	struct stat st;
 	/* If the directory doesn't physically exist (e.g., fake Cygwin /home path during public key auth),
-	 * safely fall back to the Dropbear process HOME environment variable. */
-	if (stat(shell_home, &st) != 0 && getenv("HOME")) {
-		shell_home = getenv("HOME");
+	 * safely fall back to the Dropbear process HOME environment variable, or native Windows USERPROFILE. */
+	if (stat(shell_home, &st) != 0) {
+		if (getenv("HOME") && stat(getenv("HOME"), &st) == 0) {
+			shell_home = getenv("HOME");
+		} else if (getenv("USERPROFILE")) {
+			shell_home = getenv("USERPROFILE");
+		}
 	}
 #else
 	const char *shell_home = ses.authstate.pw_dir;
