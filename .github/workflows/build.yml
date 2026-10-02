@@ -307,12 +307,12 @@ jobs:
           ldd inst/sbin/dropbear.exe | grep '/usr/bin' | awk '{print $3}' | xargs -I {} cp {} inst/sbin/
           ldd inst/bin/dbclient.exe | grep '/usr/bin' | awk '{print $3}' | xargs -I {} cp {} inst/bin/
 
-      # - name: upload binaries
-      #   if: ${{ !env.ACT }}
-      #   uses: actions/upload-artifact@v7
-      #   with:
-      #     name: dropbear-binaries-${{ matrix.name }}
-      #     path: inst/
+      - name: upload binaries
+        if: ${{ !env.ACT }}
+        uses: actions/upload-artifact@v7
+        with:
+          name: dropbear-binaries-${{ matrix.name }}
+          path: inst/
 
         # upload config.log if something has failed
       - name: config.log
