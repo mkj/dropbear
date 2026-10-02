@@ -335,9 +335,9 @@ char *cygwin_getenv(const char *name) {
 	if (val) return val;
 	
 	/* Securely fallback to the Windows PEB. */
-	static char env_buf[MAX_PATH];
+	char env_buf[MAX_PATH];
 	if (GetEnvironmentVariableA(name, env_buf, MAX_PATH) > 0) {
-		return env_buf;
+		return m_strdup(env_buf);
 	}
 	return NULL;
 }
