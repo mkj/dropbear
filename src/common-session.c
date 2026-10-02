@@ -674,8 +674,13 @@ const char* get_user_shell() {
 			/* Try Windows native Command Prompt if SHELL failed */
 			if (!env_comspec) env_comspec = getenv("ComSpec");
 			
+			dropbear_log(LOG_WARNING, "DEBUG: COMSPEC='%s', ComSpec='%s', comspec='%s'", getenv("COMSPEC"), getenv("ComSpec"), getenv("comspec"));
+			
 			if (env_comspec) {
 				shell = env_comspec;
+			} else {
+				dropbear_log(LOG_WARNING, "Environment ComSpec is missing. Falling back to secure absolute path.");
+				shell = "C:\\Windows\\System32\\cmd.exe";
 			}
 		}
 	}
