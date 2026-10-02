@@ -1057,41 +1057,43 @@ static void execchild(const void *user_data) {
 	{
 		int loaded_env = 0;
 		HANDLE token;
+		/* CreateEnvironmentBlock requires both TOKEN_QUERY and TOKEN_DUPLICATE */
 		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY | TOKEN_DUPLICATE, TRUE, &token) || 
 		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_DUPLICATE, &token)) {
 			LPVOID env_block = NULL;
-			if (CreateEnvironmentBlockA(&env_block, token, FALSE)) {
-				char *env_ptr = (char *)env_block;
-				int var_count = 0;
+			if (CreateEnvironmentBlock(&env_block, token, FALSE)) {
+				WCHAR *env_ptr = (WCHAR *)env_block;
 				while (*env_ptr) {
-					char *eq = strchr(env_ptr, '=');
-					if (eq && eq != env_ptr) {
-						*eq = '\0';
-						addnewvar(env_ptr, eq + 1);
-						*eq = '=';
-						var_count++;
+					char *utf8_str = win32_wchar_to_utf8(env_ptr);
+					if (utf8_str) {
+						char *eq = strchr(utf8_str, '=');
+						if (eq && eq != utf8_str) {
+							*eq = '\0';
+							addnewvar(utf8_str, eq + 1);
+							*eq = '=';
+						}
+						m_free(utf8_str);
 					}
-					env_ptr += strlen(env_ptr) + 1;
+					env_ptr += wcslen(env_ptr) + 1;
 				}
-				dropbear_log(LOG_INFO, "CreateEnvironmentBlockA loaded %d variables", var_count);
 				DestroyEnvironmentBlock(env_block);
 				loaded_env = 1;
-			} else {
-				dropbear_log(LOG_WARNING, "CreateEnvironmentBlock failed with error %lu", GetLastError());
 			}
 			CloseHandle(token);
-		} else {
-			dropbear_log(LOG_WARNING, "OpenToken failed with error %lu", GetLastError());
 		}
 		
 		/* Failsafe: If CreateEnvironmentBlock failed (e.g. lack of privileges), 
 		 * securely construct the native server PATH so utilities like scp can be found. */
 		if (!loaded_env) {
-			char windir[MAX_PATH];
-			if (GetSystemWindowsDirectoryA(windir, MAX_PATH) > 0) {
-				char newpath[1024];
-				snprintf(newpath, sizeof(newpath), "%s\\system32;%s;%s\\System32\\Wbem;%s\\System32\\WindowsPowerShell\\v1.0\\;%s\\System32\\OpenSSH\\", windir, windir, windir, windir, windir);
-				addnewvar("PATH", newpath);
+			WCHAR windir[MAX_PATH];
+			if (GetSystemWindowsDirectoryW(windir, MAX_PATH) > 0) {
+				char *utf8_windir = win32_wchar_to_utf8(windir);
+				if (utf8_windir) {
+					char newpath[1024];
+					snprintf(newpath, sizeof(newpath), "%s\\system32;%s;%s\\System32\\Wbem;%s\\System32\\WindowsPowerShell\\v1.0\\;%s\\System32\\OpenSSH\\", utf8_windir, utf8_windir, utf8_windir, utf8_windir, utf8_windir);
+					addnewvar("PATH", newpath);
+					m_free(utf8_windir);
+				}
 			} else {
 				addnewvar("PATH", DEFAULT_PATH);
 			}
@@ -1161,7 +1163,6 @@ static void execchild(const void *user_data) {
 #endif
 
 	usershell = m_strdup(get_user_shell());
-	
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 
 	/* only reached on error */

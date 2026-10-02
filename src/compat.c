@@ -82,6 +82,11 @@
 
 #include "includes.h"
 
+#ifdef __CYGWIN__
+#include <windows.h>
+#undef getenv
+#endif
+
 /* Platform-specific initialization for compatibility workarounds.
  * Called once at startup from common_session_init(). */
 void compat_init(void) {
@@ -328,23 +333,47 @@ uint32_t le32toh(uint32_t inp) {
 #endif /* HAVE_HTOLE64 */
 
 #ifdef __CYGWIN__
-#include <windows.h>
-#undef getenv
+
+WCHAR *win32_utf8_to_wchar(const char *str) {
+	if (!str) return NULL;
+	int len = MultiByteToWideChar(CP_UTF8, 0, str, -1, NULL, 0);
+	if (len <= 0) return NULL;
+	WCHAR *wstr = m_malloc(len * sizeof(WCHAR));
+	MultiByteToWideChar(CP_UTF8, 0, str, -1, wstr, len);
+	return wstr;
+}
+
+char *win32_wchar_to_utf8(const WCHAR *wstr) {
+	if (!wstr) return NULL;
+	int len = WideCharToMultiByte(CP_UTF8, 0, wstr, -1, NULL, 0, NULL, NULL);
+	if (len <= 0) return NULL;
+	char *utf8_str = m_malloc(len);
+	WideCharToMultiByte(CP_UTF8, 0, wstr, -1, utf8_str, len, NULL, NULL);
+	return utf8_str;
+}
+
 char *cygwin_getenv(const char *name) {
 	char *val = getenv(name);
 	if (val) return val;
 	
+	WCHAR *wname = win32_utf8_to_wchar(name);
+	if (!wname) return NULL;
+
 	/* Securely fallback to the Windows PEB.
 	 * Dynamically allocate the exact required size to handle variables like PATH
 	 * which frequently exceed MAX_PATH (260 characters). */
-	DWORD req_size = GetEnvironmentVariableA(name, NULL, 0);
+	DWORD req_size = GetEnvironmentVariableW(wname, NULL, 0);
 	if (req_size > 0) {
-		char *env_buf = m_malloc(req_size);
-		if (GetEnvironmentVariableA(name, env_buf, req_size) > 0) {
-			return env_buf;
+		WCHAR *env_buf = m_malloc(req_size * sizeof(WCHAR));
+		if (GetEnvironmentVariableW(wname, env_buf, req_size) > 0) {
+			char *utf8_val = win32_wchar_to_utf8(env_buf);
+			m_free(env_buf);
+			m_free(wname);
+			return utf8_val;
 		}
 		m_free(env_buf);
 	}
+	m_free(wname);
 	return NULL;
 }
 #endif

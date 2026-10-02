@@ -68,6 +68,10 @@ uint32_t le32toh(uint32_t inp);
 #ifdef __CYGWIN__
 char *cygwin_getenv(const char *name);
 #define getenv cygwin_getenv
+
+#include <wchar.h>
+wchar_t *win32_utf8_to_wchar(const char *str);
+char *win32_wchar_to_utf8(const wchar_t *wstr);
 #endif
 
 #endif /* DROPBEAR_COMPAT_H_ */
