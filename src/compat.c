@@ -326,3 +326,19 @@ uint32_t le32toh(uint32_t inp) {
 }
 
 #endif /* HAVE_HTOLE64 */
+
+#ifdef __CYGWIN__
+#include <windows.h>
+#undef getenv
+char *cygwin_getenv(const char *name) {
+	char *val = getenv(name);
+	if (val) return val;
+	
+	/* Securely fallback to the Windows PEB. */
+	static char env_buf[MAX_PATH];
+	if (GetEnvironmentVariableA(name, env_buf, MAX_PATH) > 0) {
+		return env_buf;
+	}
+	return NULL;
+}
+#endif

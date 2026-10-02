@@ -38,10 +38,6 @@
 #include "runopts.h"
 #include "auth.h"
 
-#ifdef __CYGWIN__
-#include <windows.h>
-#endif
-
 /* Handles sessions (either shells or programs) requested by the client */
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
@@ -1021,11 +1017,8 @@ static void execchild(const void *user_data) {
 		
 		if (getenv("HOME") && stat(getenv("HOME"), &st) == 0) {
 			shell_home = getenv("HOME");
-		} else if (is_exe) {
-			char uprof[MAX_PATH];
-			if (GetEnvironmentVariableA("USERPROFILE", uprof, MAX_PATH) > 0) {
-				shell_home = m_strdup(uprof);
-			}
+		} else if (is_exe && getenv("USERPROFILE")) {
+			shell_home = getenv("USERPROFILE");
 		}
 	}
 #else
@@ -1037,11 +1030,19 @@ static void execchild(const void *user_data) {
 	addnewvar("LOGNAME", ses.authstate.pw_name);
 	addnewvar("HOME", shell_home);
 	addnewvar("SHELL", get_user_shell());
+#ifdef __CYGWIN__
+	if (getenv("PATH")) {
+		addnewvar("PATH", getenv("PATH"));
+	} else {
+		addnewvar("PATH", DEFAULT_PATH);
+	}
+#else
 	if (getuid() == 0) {
 		addnewvar("PATH", DEFAULT_ROOT_PATH);
 	} else {
 		addnewvar("PATH", DEFAULT_PATH);
 	}
+#endif
 	if (cp != NULL) {
 		addnewvar("LANG", cp);
 		m_free(cp);

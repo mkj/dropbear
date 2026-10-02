@@ -36,10 +36,6 @@
 #include "runopts.h"
 #include "netio.h"
 
-#ifdef __CYGWIN__
-#include <windows.h>
-#endif
-
 static void checktimeouts(void);
 static long select_timeout(void);
 static int ident_readln(int fd, char* buf, int count);
@@ -676,22 +672,8 @@ const char* get_user_shell() {
 			}
 			
 			/* Try Windows native Command Prompt if SHELL failed. */
-			if (!env_comspec) env_comspec = getenv("ComSpec");
-			
 			if (env_comspec) {
 				shell = env_comspec;
-			} else {
-				/* Standard Windows variables like COMSPEC are completely wiped out 
-				 * or evaluate to NULL during the SSH session in POSIX environments.
-				 * We can securely fetch the true ComSpec path using the Win32 API. */
-				char win_comspec[MAX_PATH];
-				if (GetEnvironmentVariableA("ComSpec", win_comspec, MAX_PATH) > 0) {
-					shell = m_strdup(win_comspec);
-				} else {
-					/* Absolute worst-case scenario */
-					dropbear_log(LOG_WARNING, "Win32 GetEnvironmentVariableA failed. Assuming C:\\Windows\\System32\\cmd.exe.");
-					shell = "C:\\Windows\\System32\\cmd.exe";
-				}
 			}
 		}
 	}

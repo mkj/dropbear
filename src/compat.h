@@ -65,4 +65,9 @@ uint32_t le32toh(uint32_t inp);
 
 #endif /* HAVE_HTOLE64 */
 
+#ifdef __CYGWIN__
+char *cygwin_getenv(const char *name);
+#define getenv cygwin_getenv
+#endif
+
 #endif /* DROPBEAR_COMPAT_H_ */
