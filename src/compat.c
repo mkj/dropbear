@@ -334,10 +334,16 @@ char *cygwin_getenv(const char *name) {
 	char *val = getenv(name);
 	if (val) return val;
 	
-	/* Securely fallback to the Windows PEB. */
-	char env_buf[MAX_PATH];
-	if (GetEnvironmentVariableA(name, env_buf, MAX_PATH) > 0) {
-		return m_strdup(env_buf);
+	/* Securely fallback to the Windows PEB.
+	 * Dynamically allocate the exact required size to handle variables like PATH
+	 * which frequently exceed MAX_PATH (260 characters). */
+	DWORD req_size = GetEnvironmentVariableA(name, NULL, 0);
+	if (req_size > 0) {
+		char *env_buf = m_malloc(req_size);
+		if (GetEnvironmentVariableA(name, env_buf, req_size) > 0) {
+			return env_buf;
+		}
+		m_free(env_buf);
 	}
 	return NULL;
 }
