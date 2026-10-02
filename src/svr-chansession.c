@@ -1053,18 +1053,36 @@ static void execchild(const void *user_data) {
 	const char *shell_home = ses.authstate.pw_dir;
 #endif
 
+#ifdef __CYGWIN__
+	{
+		HANDLE token;
+		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, TRUE, &token) || 
+		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+			LPVOID env_block = NULL;
+			if (CreateEnvironmentBlock(&env_block, token, FALSE)) {
+				char *env_ptr = (char *)env_block;
+				while (*env_ptr) {
+					char *eq = strchr(env_ptr, '=');
+					if (eq && eq != env_ptr) {
+						*eq = '\0';
+						addnewvar(env_ptr, eq + 1);
+						*eq = '=';
+					}
+					env_ptr += strlen(env_ptr) + 1;
+				}
+				DestroyEnvironmentBlock(env_block);
+			}
+			CloseHandle(token);
+		}
+	}
+#endif
+
 	/* set env vars */
 	addnewvar("USER", ses.authstate.pw_name);
 	addnewvar("LOGNAME", ses.authstate.pw_name);
 	addnewvar("HOME", shell_home);
 	addnewvar("SHELL", get_user_shell());
-#ifdef __CYGWIN__
-	if (getenv("PATH")) {
-		addnewvar("PATH", getenv("PATH"));
-	} else {
-		addnewvar("PATH", DEFAULT_PATH);
-	}
-#else
+#ifndef __CYGWIN__
 	if (getuid() == 0) {
 		addnewvar("PATH", DEFAULT_ROOT_PATH);
 	} else {
