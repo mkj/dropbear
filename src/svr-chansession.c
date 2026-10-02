@@ -38,6 +38,10 @@
 #include "runopts.h"
 #include "auth.h"
 
+#ifdef __CYGWIN__
+#include <windows.h>
+#endif
+
 /* Handles sessions (either shells or programs) requested by the client */
 
 static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
@@ -1012,8 +1016,11 @@ static void execchild(const void *user_data) {
 	if (stat(shell_home, &st) != 0) {
 		if (getenv("HOME") && stat(getenv("HOME"), &st) == 0) {
 			shell_home = getenv("HOME");
-		} else if (getenv("USERPROFILE")) {
-			shell_home = getenv("USERPROFILE");
+		} else {
+			char uprof[MAX_PATH];
+			if (GetEnvironmentVariableA("USERPROFILE", uprof, MAX_PATH) > 0) {
+				shell_home = m_strdup(uprof);
+			}
 		}
 	}
 #else

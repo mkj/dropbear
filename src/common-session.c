@@ -682,16 +682,14 @@ const char* get_user_shell() {
 				shell = env_comspec;
 			} else {
 				/* Standard Windows variables like COMSPEC are completely wiped out 
-				 * or evaluate to NULL during the SSH session. */
-				dropbear_log(LOG_WARNING, "Environment ComSpec is missing. Dynamically resolving system cmd.exe.");
-				char sysdir[MAX_PATH];
-				if (GetSystemDirectoryA(sysdir, MAX_PATH)) {
-					char *cmd_path = m_malloc(MAX_PATH + 10);
-					snprintf(cmd_path, MAX_PATH + 10, "%s\\cmd.exe", sysdir);
-					shell = cmd_path;
+				 * or evaluate to NULL during the SSH session in POSIX environments.
+				 * We can securely fetch the true ComSpec path using the Win32 API. */
+				char win_comspec[MAX_PATH];
+				if (GetEnvironmentVariableA("ComSpec", win_comspec, MAX_PATH) > 0) {
+					shell = m_strdup(win_comspec);
 				} else {
-					/* Absolute worst-case scenario, assume C:\Windows */
-					dropbear_log(LOG_WARNING, "GetSystemDirectoryA failed. Assuming C:\\Windows\\System32\\cmd.exe.");
+					/* Absolute worst-case scenario */
+					dropbear_log(LOG_WARNING, "Win32 GetEnvironmentVariableA failed. Assuming C:\\Windows\\System32\\cmd.exe.");
 					shell = "C:\\Windows\\System32\\cmd.exe";
 				}
 			}
