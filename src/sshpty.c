@@ -247,8 +247,6 @@ pty_allocate(int *ptyfd, int *ttyfd, char *namebuf, int namebuflen)
 void
 pty_release(const char *tty_name)
 {
-	/* FIXME: Cygwin builds lack true DROPBEAR_SVR_MULTIUSER support.
-	 * They cannot safely chown/chmod pseudo-terminals without SeRestorePrivilege. */
 #ifndef __CYGWIN__
 	if (chown(tty_name, (uid_t) 0, (gid_t) 0) < 0
 			&& (errno != ENOENT)) {
@@ -361,8 +359,6 @@ pty_change_window_size(int ptyfd, int row, int col,
 void
 pty_setowner(struct passwd *pw, const char *tty_name)
 {
-	/* FIXME: Cygwin builds lack true DROPBEAR_SVR_MULTIUSER support.
-	 * They cannot safely chown/chmod pseudo-terminals without SeRestorePrivilege. */
 #ifndef __CYGWIN__
 	struct group *grp;
 	gid_t gid;

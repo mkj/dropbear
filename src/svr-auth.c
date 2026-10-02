@@ -271,7 +271,11 @@ static int checkusername(const char *username, unsigned int userlen) {
 
 	/* check if we are running as non-root, and login user is different from the server */
 	uid = geteuid();
+#ifdef __CYGWIN__
+	if (!(DROPBEAR_SVR_MULTIUSER) && uid != ses.authstate.pw_uid) {
+#else
 	if (!(DROPBEAR_SVR_MULTIUSER && uid == 0) && uid != ses.authstate.pw_uid) {
+#endif
 		TRACE(("running as nonroot, only server uid is allowed"))
 		dropbear_log(LOG_WARNING,
 				"Login attempt with wrong user %s from %s",
@@ -502,7 +506,11 @@ void svr_switch_user(void) {
 	assert(ses.authstate.authdone);
 
 	/* We can only change uid/gid as root ... */
+#ifdef __CYGWIN__
+	if (getuid() != ses.authstate.pw_uid) {
+#else
 	if (getuid() == 0) {
+#endif
 
 		if ((setgid(ses.authstate.pw_gid) < 0) ||
 			(initgroups(ses.authstate.pw_name, 
