@@ -1060,17 +1060,20 @@ static void execchild(const void *user_data) {
 		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY | TOKEN_DUPLICATE, TRUE, &token) || 
 		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_DUPLICATE, &token)) {
 			LPVOID env_block = NULL;
-			if (CreateEnvironmentBlock(&env_block, token, FALSE)) {
+			if (CreateEnvironmentBlockA(&env_block, token, FALSE)) {
 				char *env_ptr = (char *)env_block;
+				int var_count = 0;
 				while (*env_ptr) {
 					char *eq = strchr(env_ptr, '=');
 					if (eq && eq != env_ptr) {
 						*eq = '\0';
 						addnewvar(env_ptr, eq + 1);
 						*eq = '=';
+						var_count++;
 					}
 					env_ptr += strlen(env_ptr) + 1;
 				}
+				dropbear_log(LOG_INFO, "CreateEnvironmentBlockA loaded %d variables", var_count);
 				DestroyEnvironmentBlock(env_block);
 				loaded_env = 1;
 			} else {
