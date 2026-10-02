@@ -87,9 +87,7 @@ void svr_auth_password(int valid_user) {
 							m_free(ses.authstate.pw_dir);
 						}
 						ses.authstate.pw_dir = win_path;
-						dropbear_log(LOG_INFO, "Windows profile dir loaded: %s", win_path);
 					} else {
-						dropbear_log(LOG_WARNING, "GetUserProfileDirectoryA failed with error %lu, keeping default pw_dir", GetLastError());
 						m_free(win_path);
 					}
 				}

@@ -1094,18 +1094,7 @@ static void execchild(const void *user_data) {
 
 	usershell = m_strdup(get_user_shell());
 	
-	FILE *dbg = fopen("dropbear_debug.log", "a");
-	if (dbg) {
-		fprintf(dbg, "About to execute shell: %s with home: %s\n", usershell, shell_home);
-		fclose(dbg);
-	}
-
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
-
-	if ((dbg = fopen("dropbear_debug.log", "a"))) {
-		fprintf(dbg, "run_shell_command returned! This means execv failed. errno: %s\n", strerror(errno));
-		fclose(dbg);
-	}
 
 	/* only reached on error */
 	dropbear_exit("Child failed");
