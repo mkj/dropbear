@@ -660,13 +660,23 @@ const char* get_user_shell() {
 	 * like cmd.exe and PowerShell work flawlessly over SSH! */
 	struct stat st;
 	if (stat(shell, &st) != 0) {
-		/* Provided shell is missing. Try inherited SHELL */
-		if (getenv("SHELL")) {
-			shell = getenv("SHELL");
-		} 
-		/* Try Windows native Command Prompt */
-		else if (getenv("COMSPEC")) {
-			shell = getenv("COMSPEC");
+		const char *env_shell = getenv("SHELL");
+		const char *env_comspec = getenv("COMSPEC");
+		
+		/* Try inherited SHELL */
+		if (env_shell && stat(env_shell, &st) == 0) {
+			shell = env_shell;
+		} else {
+			if (env_shell) {
+				dropbear_log(LOG_WARNING, "Environment SHELL='%s' is set but the executable was not found. Falling back.", env_shell);
+			}
+			
+			/* Try Windows native Command Prompt if SHELL failed */
+			if (env_comspec && stat(env_comspec, &st) == 0) {
+				shell = env_comspec;
+			} else if (env_comspec) {
+				dropbear_log(LOG_WARNING, "Environment COMSPEC='%s' is set but the executable was not found.", env_comspec);
+			}
 		}
 	}
 #endif
