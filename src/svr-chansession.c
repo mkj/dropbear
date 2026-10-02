@@ -1055,9 +1055,10 @@ static void execchild(const void *user_data) {
 
 #ifdef __CYGWIN__
 	{
+		int loaded_env = 0;
 		HANDLE token;
-		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY, TRUE, &token) || 
-		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY, &token)) {
+		if (OpenThreadToken(GetCurrentThread(), TOKEN_QUERY | TOKEN_DUPLICATE, TRUE, &token) || 
+		    OpenProcessToken(GetCurrentProcess(), TOKEN_QUERY | TOKEN_DUPLICATE, &token)) {
 			LPVOID env_block = NULL;
 			if (CreateEnvironmentBlock(&env_block, token, FALSE)) {
 				char *env_ptr = (char *)env_block;
@@ -1071,8 +1072,15 @@ static void execchild(const void *user_data) {
 					env_ptr += strlen(env_ptr) + 1;
 				}
 				DestroyEnvironmentBlock(env_block);
+				loaded_env = 1;
 			}
 			CloseHandle(token);
+		}
+		
+		/* Failsafe: If CreateEnvironmentBlock failed (e.g. lack of privileges), 
+		 * securely fetch the native server PATH so utilities like scp can be found. */
+		if (!loaded_env && getenv("PATH")) {
+			addnewvar("PATH", getenv("PATH"));
 		}
 	}
 #endif
