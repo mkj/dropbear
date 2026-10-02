@@ -1012,11 +1012,16 @@ static void execchild(const void *user_data) {
 	const char *shell_home = ses.authstate.pw_dir;
 	struct stat st;
 	/* If the directory doesn't physically exist (e.g., fake Cygwin /home path during public key auth),
-	 * safely fall back to the Dropbear process HOME environment variable, or native Windows USERPROFILE. */
+	 * safely fall back to the Dropbear process HOME environment variable.
+	 * If the shell is a native Windows shell (ends in .exe), fallback to the native Windows USERPROFILE. */
 	if (stat(shell_home, &st) != 0) {
+		const char *tmp_shell = get_user_shell();
+		size_t shell_len = tmp_shell ? strlen(tmp_shell) : 0;
+		int is_exe = (shell_len > 4 && strcasecmp(tmp_shell + shell_len - 4, ".exe") == 0);
+		
 		if (getenv("HOME") && stat(getenv("HOME"), &st) == 0) {
 			shell_home = getenv("HOME");
-		} else {
+		} else if (is_exe) {
 			char uprof[MAX_PATH];
 			if (GetEnvironmentVariableA("USERPROFILE", uprof, MAX_PATH) > 0) {
 				shell_home = m_strdup(uprof);
