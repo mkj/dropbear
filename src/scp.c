@@ -105,6 +105,29 @@ char *ssh_program = DROPBEAR_PATH_SSH_PROGRAM;
 /* This is used to store the pid of ssh_program */
 pid_t do_cmd_pid = -1;
 
+/* Operates in-place turning dirty text (untrusted potentially containing control
+ * characters) into clean text.
+ * Only ascii (7 bit) characters are allowed.
+ * Set allow_whitespace to allow \n and \t. */
+static void cleantext(char* dirtytext, int allow_whitespace) {
+
+	unsigned int i, j;
+	unsigned char c;
+
+	j = 0;
+	for (i = 0; dirtytext[i] != '\0'; i++) {
+
+		c = (unsigned char)dirtytext[i];
+		/* We can ignore '\r's */
+		if ((c >= ' ' && c <= '~') || (allow_whitespace && (c == '\n' || c == '\t'))) {
+			dirtytext[j] = c;
+			j++;
+		}
+	}
+	/* Null terminate */
+	dirtytext[j] = '\0';
+}
+
 static void
 killchild(int signo)
 {
@@ -121,19 +144,12 @@ killchild(int signo)
 static int
 do_local_cmd(arglist *a)
 {
-	u_int i;
 	int status;
 	pid_t pid;
 
 	if (a->num == 0)
 		fatal("do_local_cmd: no arguments");
 
-	if (verbose_mode) {
-		fprintf(stderr, "Executing:");
-		for (i = 0; i < a->num; i++)
-			fprintf(stderr, " %s", a->list[i]);
-		fprintf(stderr, "\n");
-	}
 #if DROPBEAR_VFORK
 	pid = vfork();
 #else
@@ -189,12 +205,6 @@ int
 do_cmd(char *host, char *remuser, char *cmd, int *fdin, int *fdout)
 {
 	int pin[2], pout[2], reserved[2];
-
-	if (verbose_mode)
-		fprintf(stderr,
-		    "Executing: program %s host %s, user %s, command %s\n",
-		    ssh_program, host,
-		    remuser ? remuser : "(unspecified)", cmd);
 
 	/*
 	 * Reserve two descriptors so that the real pipes won't get
@@ -1013,8 +1023,6 @@ rsource(char *name, struct stat *statp)
 	}
 	(void) snprintf(path, sizeof path, "D%04o %d %.1024s\n",
 	    (u_int) (statp->st_mode & FILEMODEMASK), 0, last);
-	if (verbose_mode)
-		fprintf(stderr, "Entering directory: %s", path);
 	(void) atomicio(vwrite, remout, path, strlen(path));
 	if (response() < 0) {
 		closedir(dirp);
@@ -1155,8 +1163,6 @@ sink(int argc, char **argv, const char *src)
 			*cp++ = ch;
 		} while (cp < &buf[sizeof(buf) - 1] && ch != '\n');
 		*cp = 0;
-		if (verbose_mode)
-			fprintf(stderr, "Sink: %s", buf);
 
 		if (buf[0] == '\01' || buf[0] == '\02') {
 			if (iamremote == 0)
@@ -1222,7 +1228,7 @@ sink(int argc, char **argv, const char *src)
 			SCREWUP("size not delimited");
 		if (*cp == '\0' || strchr(cp, '/') != NULL ||
 		    strcmp(cp, ".") == 0 || strcmp(cp, "..") == 0) {
-			run_err("error: unexpected filename: %s", cp);
+			run_err("error: unexpected filename", cp);
 			exit(1);
 		}
 		if (npatterns > 0) {
@@ -1460,23 +1466,27 @@ run_err(const char *fmt,...)
 {
 	static FILE *fp = NULL;
 	va_list ap;
+	char buf[1000];
+	size_t pos = 0;
 
 	++errs;
 	if (fp == NULL && !(fp = fdopen(remout, "w")))
 		return;
-	(void) fprintf(fp, "%c", 0x01);
-	(void) fprintf(fp, "scp: ");
+	pos += snprintf(&buf[pos], sizeof(buf)-pos, "%c", 0x01);
+	pos += snprintf(&buf[pos], sizeof(buf)-pos, "scp: ");
 	va_start(ap, fmt);
-	(void) vfprintf(fp, fmt, ap);
+	pos += vsnprintf(&buf[pos], sizeof(buf)-pos, fmt, ap);
 	va_end(ap);
-	(void) fprintf(fp, "\n");
+	cleantext(buf, 1);
+	fprintf(fp, "%s\n", buf);
 	(void) fflush(fp);
 
 	if (!iamremote) {
 		va_start(ap, fmt);
-		vfprintf(stderr, fmt, ap);
+		vsnprintf(buf, sizeof(buf), fmt, ap);
+		cleantext(buf, 1);
 		va_end(ap);
-		fprintf(stderr, "\n");
+		fprintf(stderr, "%s\n", buf);
 	}
 }
 
@@ -1520,7 +1530,7 @@ okname(char *cp0)
 	} while (*++cp);
 	return (1);
 
-bad:	fprintf(stderr, "%s: invalid user name\n", cp0);
+bad:	fprintf(stderr, "invalid user name\n");
 	return (0);
 }
 
