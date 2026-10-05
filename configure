@@ -4684,6 +4684,11 @@ case "$host" in
 	no_ptmx_check=1
 	;;
 
+*-*-darwin*)
+	# macos doesn't have setresgid
+	CFLAGS="$CFLAGS -DDROPBEAR_SVR_DROP_PRIVS=0 -DDROPBEAR_SVR_LOCALSTREAMFWD=0"
+	;;
+
 *-*-solaris*)
 	CFLAGS="$CFLAGS -I/usr/local/include"
 	LDFLAGS="$LDFLAGS -L/usr/local/lib -R/usr/local/lib"
