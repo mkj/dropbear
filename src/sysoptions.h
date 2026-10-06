@@ -370,6 +370,17 @@
 	#error "At least one hostkey or public-key algorithm must be enabled; RSA is recommended."
 #endif
 
+#if defined(__APPLE__) && DROPBEAR_SVR_DROP_PRIVS
+/* macOS does not support setresgid and therefore cannot drop privileges.
+ * This also requires disabling stream forwarding when multiuser is enabled. */
+#undef DROPBEAR_SVR_DROP_PRIVS
+#define DROPBEAR_SVR_DROP_PRIVS 0
+#undef DROPBEAR_SVR_LOCALSTREAMFWD
+#define DROPBEAR_SVR_LOCALSTREAMFWD 0
+#undef DROPBEAR_SVR_REMOTESTREAMFWD
+#define DROPBEAR_SVR_REMOTESTREAMFWD 0
+#endif
+
 #if DROPBEAR_SVR_DROP_PRIVS && !defined(HAVE_SETRESGID)
 	#error "DROPBEAR_SVR_DROP_PRIVS requires setresgid()."
 #endif
@@ -468,7 +479,7 @@
 #endif
 
 #if !(DROPBEAR_SVR_DROP_PRIVS || !DROPBEAR_SVR_MULTIUSER) \
-   && (DROPBEAR_SVR_LOCALSTREAMFWD || DROPBEAR_SVR_LOCALSTREAMFWD)
+   && (DROPBEAR_SVR_LOCALSTREAMFWD || DROPBEAR_SVR_REMOTESTREAMFWD)
 #error stream forwarding requires DROPBEAR_SVR_DROP_PRIVS or !DROPBEAR_SVR_MULTIUSER
 #endif
 
