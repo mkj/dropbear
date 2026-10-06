@@ -232,6 +232,7 @@ jobs:
           # DROPBEAR_SVR_DROP_PRIVS is on by default, turn it off
           echo "#define DROPBEAR_SVR_DROP_PRIVS 0" >> localoptions.h
           echo "#define DROPBEAR_SVR_LOCALSTREAMFWD 0" >> localoptions.h
+          echo "#define DROPBEAR_SVR_REMOTESTREAMFWD 0" >> localoptions.h
 
       - name: make
         run: |
