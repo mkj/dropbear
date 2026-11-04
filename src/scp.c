@@ -1165,9 +1165,11 @@ sink(int argc, char **argv, const char *src)
 		*cp = 0;
 
 		if (buf[0] == '\01' || buf[0] == '\02') {
-			if (iamremote == 0)
+			if (iamremote == 0) {
+				cleantext(buf + 1, 1);
 				(void) atomicio(vwrite, STDERR_FILENO,
 				    buf + 1, strlen(buf + 1));
+			}
 			if (buf[0] == '\02')
 				exit(1);
 			++errs;
@@ -1440,9 +1442,12 @@ response(void)
 				lostconn(0);
 			*cp++ = ch;
 		} while (cp < &rbuf[sizeof(rbuf) - 1] && ch != '\n');
+		*cp = '\0';
 
-		if (!iamremote)
-			(void) atomicio(vwrite, STDERR_FILENO, rbuf, cp - rbuf);
+		if (!iamremote) {
+			cleantext(rbuf, 1);
+			(void) atomicio(vwrite, STDERR_FILENO, rbuf, strlen(rbuf));
+		}
 		++errs;
 		if (resp == 1)
 			return (-1);
