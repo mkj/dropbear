@@ -117,6 +117,8 @@ int x11req(struct ChanSess * chansess) {
 	chansess->x11listener = new_listener( &fd, 1, LISTENER_TYPE_DEFAULT,
 		chansess, x11accept, NULL);
 	if (chansess->x11listener == NULL) {
+		/* new_listener will close the socket if it fails */
+		fd = -1;
 		goto fail;
 	}
 

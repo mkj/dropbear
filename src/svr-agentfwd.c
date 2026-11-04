@@ -93,6 +93,8 @@ int svr_agentreq(struct ChanSess * chansess) {
 		agentaccept, NULL);
 
 	if (chansess->agentlistener == NULL) {
+		/* new_listener will close the socket if it fails */
+		fd = -1;
 		goto fail;
 	}
 
