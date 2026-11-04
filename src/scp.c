@@ -1467,25 +1467,19 @@ run_err(const char *fmt,...)
 	static FILE *fp = NULL;
 	va_list ap;
 	char buf[1000];
-	size_t pos = 0;
 
 	++errs;
 	if (fp == NULL && !(fp = fdopen(remout, "w")))
 		return;
-	pos += snprintf(&buf[pos], sizeof(buf)-pos, "%c", 0x01);
-	pos += snprintf(&buf[pos], sizeof(buf)-pos, "scp: ");
 	va_start(ap, fmt);
-	pos += vsnprintf(&buf[pos], sizeof(buf)-pos, fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 	cleantext(buf, 1);
-	fprintf(fp, "%s\n", buf);
+	/* 0x01 marks a non-fatal error, so must be added after cleantext() */
+	fprintf(fp, "%cscp: %s\n", 0x01, buf);
 	(void) fflush(fp);
 
 	if (!iamremote) {
-		va_start(ap, fmt);
-		vsnprintf(buf, sizeof(buf), fmt, ap);
-		cleantext(buf, 1);
-		va_end(ap);
 		fprintf(stderr, "%s\n", buf);
 	}
 }
