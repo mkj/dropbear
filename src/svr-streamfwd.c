@@ -56,7 +56,7 @@ int svr_cancelremotestreamlocal() {
 
     tcpinfo.socket_path = socket_path;
     tcpinfo.chantype = &svr_chan_streamlocalremote;
-    listener = get_listener(CHANNEL_ID_STREAMLOCALFORWARDED, &tcpinfo, matchstreamlocal);
+    listener = get_listener(LISTENER_TYPE_STREAMFORWARDED, &tcpinfo, matchstreamlocal);
     if (listener) {
         remove_listener( listener );
         ret = DROPBEAR_SUCCESS;

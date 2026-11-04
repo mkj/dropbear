@@ -93,7 +93,6 @@ void cli_recv_msg_request_failure(void);
 int listen_tcpfwd(struct FwdListener* tcpinfo, struct Listener **ret_listener);
 #if DROPBEAR_SVR_REMOTESTREAMFWD
 int listen_streamlocal(struct FwdListener* tcpinfo, struct Listener **ret_listener);
-#define CHANNEL_ID_STREAMLOCALFORWARDED 0x53747265
 #endif
 
 #endif
