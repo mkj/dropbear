@@ -89,9 +89,9 @@ void svr_auth_password(int valid_user) {
 		return;
 	}
 
-	if (testcrypt == NULL) {
-		/* crypt() with an invalid salt like "!!" */
-		dropbear_log(LOG_WARNING, "User account '%s' is locked",
+	/* check for accounts without password, or crypt() errored out */
+	if (testcrypt == NULL || strnlen(passwdcrypt, 4) < 4 ) {
+		dropbear_log(LOG_WARNING, "User account '%s' does not accept password",
 				ses.authstate.pw_name);
 		send_msg_userauth_failure(0, 1);
 		return;
