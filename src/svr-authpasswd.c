@@ -89,17 +89,17 @@ void svr_auth_password(int valid_user) {
 		return;
 	}
 
-	/* check for accounts without password, or crypt() errored out */
-	if (testcrypt == NULL || strnlen(passwdcrypt, 4) < 4 ) {
-		dropbear_log(LOG_WARNING, "User account '%s' does not accept password",
+	/* check for empty password */
+	if (passwdcrypt[0] == '\0') {
+		dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
 				ses.authstate.pw_name);
 		send_msg_userauth_failure(0, 1);
 		return;
 	}
 
-	/* check for empty password */
-	if (passwdcrypt[0] == '\0') {
-		dropbear_log(LOG_WARNING, "User '%s' has blank password, rejected",
+	/* check for accounts without password, or crypt() errored out */
+	if (testcrypt == NULL || strnlen(passwdcrypt, 4) < 4 ) {
+		dropbear_log(LOG_WARNING, "User account '%s' does not accept password",
 				ses.authstate.pw_name);
 		send_msg_userauth_failure(0, 1);
 		return;
