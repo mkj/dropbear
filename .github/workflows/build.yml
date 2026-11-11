@@ -8,7 +8,7 @@ on:
   push:
 jobs:
   build:
-    runs-on: ${{ matrix.os || 'ubuntu-24.04' }}
+    runs-on: ${{ matrix.os || 'ubuntu-latest' }}
     strategy:
       matrix:
         # XXX uncomment the line below to work with act, see https://github.com/nektos/act/issues/996
@@ -67,25 +67,8 @@ jobs:
               #define DROPBEAR_SNTRUP761 0
               #define DROPBEAR_MLKEM768 0
 
-          - name: macos 14
-            os: macos-14
-            cc: clang
-            # OS X says daemon() and utmp are deprecated.
-            # OS X tests for undefined TARGET_OS_EMBEDDED in libc headers
-            extracflags: -Wno-deprecated-declarations -Wno-undef
-            runcheck: 'no'
-            apt: 'no'
-            # fails with:
-            # .../ranlib: file: libtomcrypt.a(cbc_setiv.o) has no symbols
-            ranlib: ranlib -no_warning_for_no_symbols
-            # macos doesn't have setresgid
-            localoptions: |
-              #define DROPBEAR_SVR_DROP_PRIVS 0
-              #define DROPBEAR_SVR_LOCALSTREAMFWD 0
-              #define DROPBEAR_SVR_REMOTESTREAMFWD 0
-
-          - name: macos 15
-            os: macos-15
+          - name: macos latest
+            os: macos-latest
             cc: clang
             # OS X says daemon() and utmp are deprecated.
             # OS X tests for undefined TARGET_OS_EMBEDDED in libc headers
