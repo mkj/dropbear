@@ -408,6 +408,4 @@ runtime with -M. 0 disables this feature. */
    want to keep them.
  */
 
-/* Plugins are set with configure --enable-plugin-deprecated */
-
 #endif /* DROPBEAR_DEFAULT_OPTIONS_H_ */

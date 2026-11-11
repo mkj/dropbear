@@ -57,9 +57,6 @@
 /* Fuzzing */
 #undef DROPBEAR_FUZZ
 
-/* External Public Key Authentication */
-#undef DROPBEAR_PLUGIN
-
 /* Define to 1 if you have the `basename' function. */
 #undef HAVE_BASENAME
 

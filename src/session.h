@@ -38,9 +38,6 @@
 #include "chansession.h"
 #include "dbutil.h"
 #include "netio.h"
-#if DROPBEAR_PLUGIN
-#include "pubkeyapi.h"
-#endif
 #include "gcm.h"
 #include "chachapoly.h"
 
@@ -237,10 +234,6 @@ struct sshsession {
 	volatile int exitflag;
 	/* set once the ses structure (and cli_ses/svr_ses) have been populated to their initial state */
 	int init_done;
-
-#if DROPBEAR_PLUGIN
-        struct PluginSession * plugin_session;
-#endif
 };
 
 struct serversession {
@@ -264,14 +257,6 @@ struct serversession {
 
 #if DROPBEAR_VFORK
 	pid_t server_pid;
-#endif
-
-#if DROPBEAR_PLUGIN
-	/* The shared library handle */
-	void *plugin_handle;
-
-	/* The instance created by the plugin_new function */
-	struct PluginInstance *plugin_instance;
 #endif
 
 #if DROPBEAR_SVR_DROP_PRIVS

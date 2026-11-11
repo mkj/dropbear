@@ -151,10 +151,6 @@ void common_session_init(int sock_in, int sock_out) {
 
 	ses.allowprivport = 0;
 
-#if DROPBEAR_PLUGIN
-        ses.plugin_session = NULL;
-#endif
-
 	TRACE(("leave session_init"))
 }
 

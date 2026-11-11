@@ -129,13 +129,6 @@ typedef struct svr_runopts {
 	char * forced_command;
 	char* interface;
 
-#if DROPBEAR_PLUGIN
-	/* malloced */
-	char *pubkey_plugin;
-	/* points into pubkey_plugin */
-	char *pubkey_plugin_options;
-#endif
-
 	int pass_on_env;
 
 } svr_runopts;

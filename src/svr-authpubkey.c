@@ -132,39 +132,6 @@ void svr_auth_pubkey(int valid_user) {
 	keytype = signkey_type_from_signature(sigtype);
 	keyalgo = signkey_name_from_type(keytype, &keyalgolen);
 
-#if DROPBEAR_PLUGIN
-    if (svr_ses.plugin_instance != NULL) {
-        char *options_buf;
-        if (svr_ses.plugin_instance->checkpubkey(
-                    svr_ses.plugin_instance,
-                    &ses.plugin_session,
-                    keyalgo,
-                    keyalgolen,
-                    keyblob,
-                    keybloblen,
-                    ses.authstate.username) == DROPBEAR_SUCCESS) {
-            /* Success */
-            auth_failure = 0;
-
-            /* Options provided? */
-            options_buf = ses.plugin_session->get_options(ses.plugin_session);
-            if (options_buf) {
-                struct buf temp_buf = {
-                    .data = (unsigned char *)options_buf,
-                    .len = strlen(options_buf),
-                    .pos = 0,
-                    .size = 0
-                };
-                pubkey_options = svr_parse_pubkey_options(&temp_buf, 0, "plugin");
-                if (pubkey_options == NULL) {
-                    /* Fail immediately as the plugin provided wrong options */
-                    send_msg_userauth_failure(0, 0);
-                    goto out;
-                }
-            }
-        }
-    }
-#endif
 	/* check if the key is valid */
 	if (auth_failure) {
 		int status = checkpubkey(keyalgo, keyalgolen, keyblob, keybloblen, &pubkey_options);
@@ -253,12 +220,6 @@ void svr_auth_pubkey(int valid_user) {
 					svr_ses.addrstring);
 			send_msg_userauth_success();
 		}
-#if DROPBEAR_PLUGIN
-		if ((ses.plugin_session != NULL) && (svr_ses.plugin_instance->auth_success != NULL)) {
-		    /* Was authenticated through the external plugin. tell plugin that signature verification was ok */
-		    svr_ses.plugin_instance->auth_success(ses.plugin_session);
-		}
-#endif
 	} else {
 		dropbear_log(LOG_WARNING,
 				"Pubkey auth bad signature for '%s' with key %s from %s",

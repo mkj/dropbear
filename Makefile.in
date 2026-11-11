@@ -97,15 +97,6 @@ else
 	scpobjs=$(SCPOBJS)
 endif
 
-ifeq (@DROPBEAR_PLUGIN@, 1)
-	# rdynamic makes all the global symbols of dropbear available to all the loaded shared libraries
-	# this allow a plugin to reuse existing crypto/utilities like base64_decode/base64_encode without
-	# the need to rewrite them.
-	PLUGIN_LIBS=-ldl -rdynamic
-else
-	PLUGIN_LIBS=
-endif
-
 prefix=@prefix@
 exec_prefix=@exec_prefix@
 datarootdir = @datarootdir@
@@ -222,7 +213,7 @@ dropbearkey: $(dropbearkeyobjs)
 dropbearconvert: $(dropbearconvertobjs)
 
 dropbear: $(HEADERS) $(LIBTOM_DEPS) Makefile
-	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@ $(PLUGIN_LIBS)
+	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS) @CRYPTLIB@
 
 dbclient: $(HEADERS) $(LIBTOM_DEPS) Makefile
 	$(CC) $(LDFLAGS) -o $@$(EXEEXT) $($@objs) $(LIBTOM_LIBS) $(LIBS)

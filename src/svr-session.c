@@ -91,18 +91,6 @@ svr_session_cleanup(void) {
 	m_free(svr_ses.remotehost);
 	m_free(svr_ses.childpids);
 	svr_ses.childpidsize = 0;
-
-#if DROPBEAR_PLUGIN
-        if (svr_ses.plugin_handle != NULL) {
-            if (svr_ses.plugin_instance) {
-                svr_ses.plugin_instance->delete_plugin(svr_ses.plugin_instance);
-                svr_ses.plugin_instance = NULL;
-            }
-
-            dlclose(svr_ses.plugin_handle);
-            svr_ses.plugin_handle = NULL;
-        }
-#endif
 }
 
 void svr_session(int sock, int childpipe) {
@@ -129,51 +117,6 @@ void svr_session(int sock, int childpipe) {
 	}
 	m_free(host);
 	m_free(port);
-
-#if DROPBEAR_PLUGIN
-        /* Initializes the PLUGIN Plugin */
-        svr_ses.plugin_handle = NULL;
-        svr_ses.plugin_instance = NULL;
-        if (svr_opts.pubkey_plugin) {
-#if DEBUG_TRACE
-            const int verbose = debug_trace;
-#else
-            const int verbose = 0;
-#endif
-            PubkeyExtPlugin_newFn  pluginConstructor;
-
-            /* RTLD_NOW: fails if not all the symbols are resolved now. Better fail now than at run-time */
-            svr_ses.plugin_handle = dlopen(svr_opts.pubkey_plugin, RTLD_NOW);
-            if (svr_ses.plugin_handle == NULL) {
-                dropbear_exit("failed to load external pubkey plugin '%s': %s", svr_opts.pubkey_plugin, dlerror());
-            }
-            pluginConstructor = (PubkeyExtPlugin_newFn)dlsym(svr_ses.plugin_handle, DROPBEAR_PUBKEY_PLUGIN_FNNAME_NEW);
-            if (!pluginConstructor) {
-                dropbear_exit("plugin constructor method not found in external pubkey plugin");
-            }
-
-            /* Create an instance of the plugin */
-            svr_ses.plugin_instance = pluginConstructor(verbose, svr_opts.pubkey_plugin_options, svr_ses.addrstring);
-            if (svr_ses.plugin_instance == NULL) {
-                dropbear_exit("external plugin initialization failed");
-            }
-            /* Check if the plugin is compatible */
-            if ( (svr_ses.plugin_instance->api_version[0] != DROPBEAR_PLUGIN_VERSION_MAJOR) ||
-                 (svr_ses.plugin_instance->api_version[1] < DROPBEAR_PLUGIN_VERSION_MINOR) ) {
-                dropbear_exit("plugin version check failed: "
-                              "Dropbear=%d.%d, plugin=%d.%d",
-                        DROPBEAR_PLUGIN_VERSION_MAJOR, DROPBEAR_PLUGIN_VERSION_MINOR,
-                        svr_ses.plugin_instance->api_version[0], svr_ses.plugin_instance->api_version[1]);
-            }
-            if (svr_ses.plugin_instance->api_version[1] > DROPBEAR_PLUGIN_VERSION_MINOR) {
-                dropbear_log(LOG_WARNING, "plugin API newer than dropbear API: "
-                              "Dropbear=%d.%d, plugin=%d.%d",
-                        DROPBEAR_PLUGIN_VERSION_MAJOR, DROPBEAR_PLUGIN_VERSION_MINOR,
-                        svr_ses.plugin_instance->api_version[0], svr_ses.plugin_instance->api_version[1]);
-            }
-            dropbear_log(LOG_INFO, "successfully loaded and initialized pubkey plugin '%s'", svr_opts.pubkey_plugin);
-        }
-#endif
 
 	svr_authinitialise();
 	chaninitialise(svr_chantypes);
@@ -223,15 +166,6 @@ void svr_dropbear_exit(int exitcode, const char* format, va_list param) {
 	char fromaddr[60];
 	int i;
 	int add_delay = 0;
-
-#if DROPBEAR_PLUGIN
-	if ((ses.plugin_session != NULL)) {
-		svr_ses.plugin_instance->delete_session(ses.plugin_session);
-	}
-	ses.plugin_session = NULL;
-	svr_opts.pubkey_plugin_options = NULL;
-	m_free(svr_opts.pubkey_plugin);
-#endif
 
 	/* Render the formatted exit message */
 	vsnprintf(exitmsg, sizeof(exitmsg), format, param);

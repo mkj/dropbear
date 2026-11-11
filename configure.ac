@@ -344,29 +344,6 @@ AC_ARG_ENABLE(shadow,
 	]
 )
 
-# Plugin support will be removed soon. Open a github issue if you're using it.
-AC_ARG_ENABLE(plugin-deprecated,
-	[AS_HELP_STRING([--enable-plugin-deprecated], [Enable support for External Public Key Authentication plug-in])],
-	[
-		if test "x$enableval" = "xyes"; then
-			AC_DEFINE(DROPBEAR_PLUGIN, 1, External Public Key Authentication)
-			AC_MSG_NOTICE(Enabling support for External Public Key Authentication)
-			DROPBEAR_PLUGIN=1
-		else
-			AC_DEFINE(DROPBEAR_PLUGIN, 0, External Public Key Authentication)
-			AC_MSG_NOTICE(Disabling support for External Public Key Authentication)
-			DROPBEAR_PLUGIN=0
-		fi
-	],
-	[
-		AC_DEFINE(DROPBEAR_PLUGIN, 0, External Public Key Authentication)
-		AC_MSG_NOTICE(Disabling support for External Public Key Authentication)
-		DROPBEAR_PLUGIN=0
-	]
-
-)
-AC_SUBST(DROPBEAR_PLUGIN)
-
 AC_ARG_ENABLE(fuzz,
 	[AS_HELP_STRING([--enable-fuzz], [Build fuzzing. Not recommended for deployment.])],
 	[

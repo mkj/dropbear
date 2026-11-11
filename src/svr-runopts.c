@@ -116,10 +116,6 @@ static void printhelp(const char * progname) {
 					"-I <idle_timeout>  (0 is never, default %d, in seconds)\n"
 					"-M <max_duration>  (0 is off, default %d, in seconds)\n"
 					"-z    disable QoS\n"
-#if DROPBEAR_PLUGIN
-                                        "-A <authplugin>[,<options>]\n"
-                                        "               Enable external public key auth through <authplugin>\n"
-#endif
 					"-Q    <algo>   Print supported algorithms, or -Q help\n"
 					"-V    Version\n"
 #if DEBUG_TRACE
@@ -158,10 +154,6 @@ void svr_getopts(int argc, char ** argv) {
 	char* keyfile = NULL;
 	char *algo_print_arg = NULL;
 	char c;
-#if DROPBEAR_PLUGIN
-        char* pubkey_plugin = NULL;
-#endif
-
 
 	/* see printhelp() for options */
 	svr_opts.bannerfile = NULL;
@@ -189,10 +181,6 @@ void svr_getopts(int argc, char ** argv) {
 #endif
 #if DROPBEAR_SVR_REMOTEANYFWD
 	svr_opts.noremotefwd = 0;
-#endif
-#if DROPBEAR_PLUGIN
-        svr_opts.pubkey_plugin = NULL;
-        svr_opts.pubkey_plugin_options = NULL;
 #endif
 	svr_opts.pass_on_env = 0;
 	svr_opts.reexec_childpipe = -1;
@@ -364,11 +352,6 @@ void svr_getopts(int argc, char ** argv) {
 				case 'u':
 					/* backwards compatibility with old urandom option */
 					break;
-#if DROPBEAR_PLUGIN
-                                case 'A':
-                                        next = &pubkey_plugin;
-                                        break;
-#endif
 #if DEBUG_TRACE
 				case 'v':
 					debug_trace++;
@@ -503,21 +486,6 @@ void svr_getopts(int argc, char ** argv) {
 		dropbear_exit("Bad -D");
 	}
 
-#if DROPBEAR_PLUGIN
-	if (pubkey_plugin) {
-		if (svr_opts.multiauthmethod) {
-			dropbear_exit("-t and plugins are incompatible");
-		}
-
-		svr_opts.pubkey_plugin = m_strdup(pubkey_plugin);
-		char *args = strchr(svr_opts.pubkey_plugin, ',');
-		if (args) {
-			*args='\0';
-			++args;
-		}
-		svr_opts.pubkey_plugin_options = args;
-	}
-#endif
 	if (algo_print_arg) {
 		print_algos(algo_print_arg);
 		/* No return */

@@ -180,10 +180,6 @@ typedef u_int32_t uint32_t;
 #include <linux/pkt_sched.h>
 #endif
 
-#if DROPBEAR_PLUGIN
-#include <dlfcn.h>
-#endif
-
 #ifndef environ
 extern char** environ;
 #endif
