@@ -161,6 +161,9 @@ void svr_auth_pubkey(int valid_user) {
                     send_msg_userauth_failure(0, 0);
                     goto out;
                 }
+            } else {
+                /* Empty options, the same as an authorized_keys line without any */
+                pubkey_options = svr_parse_pubkey_options(NULL, 0, "plugin");
             }
         }
     }

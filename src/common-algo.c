@@ -610,8 +610,8 @@ check_user_algos(const char* user_algo_list, algo_type * algos,
 			} else {
 				dropbear_log(LOG_WARNING, "This Dropbear program does not support '%s' %s algorithm", start, algo_desc);
 			}
-			c++;
-			start = c;
+			/* c is incremented by the loop */
+			start = c + 1;
 		}
 		if (oc == '\0') {
 			break;

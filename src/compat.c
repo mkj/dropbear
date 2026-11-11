@@ -253,7 +253,8 @@ static char **initshells() {
 		(void)fclose(fp);
 		return (char **) okshells;
 	}
-	shells = calloc((unsigned)statb.st_size / 3, sizeof (char *));
+	/* Shortest entry is "/\n", plus a NULL terminator */
+	shells = calloc((unsigned)statb.st_size / 2 + 2, sizeof (char *));
 	if (shells == NULL) {
 		(void)fclose(fp);
 		free(strings);

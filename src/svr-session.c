@@ -119,7 +119,8 @@ void svr_session(int sock, int childpipe) {
 
 	/* for logging the remote address */
 	get_socket_address(ses.sock_in, NULL, NULL, &host, &port, 0);
-	len = strlen(host) + strlen(port) + 2;
+	/* "[" "]" ":" and null terminator */
+	len = strlen(host) + strlen(port) + 4;
 	svr_ses.addrstring = m_malloc(len);
 	/* bracket is needed if it's IPv6 address */
 	if (strchr(host, ':') != NULL) {

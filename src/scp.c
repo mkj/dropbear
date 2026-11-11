@@ -1165,9 +1165,11 @@ sink(int argc, char **argv, const char *src)
 		*cp = 0;
 
 		if (buf[0] == '\01' || buf[0] == '\02') {
-			if (iamremote == 0)
+			if (iamremote == 0) {
+				cleantext(buf + 1, 1);
 				(void) atomicio(vwrite, STDERR_FILENO,
 				    buf + 1, strlen(buf + 1));
+			}
 			if (buf[0] == '\02')
 				exit(1);
 			++errs;
@@ -1440,9 +1442,12 @@ response(void)
 				lostconn(0);
 			*cp++ = ch;
 		} while (cp < &rbuf[sizeof(rbuf) - 1] && ch != '\n');
+		*cp = '\0';
 
-		if (!iamremote)
-			(void) atomicio(vwrite, STDERR_FILENO, rbuf, cp - rbuf);
+		if (!iamremote) {
+			cleantext(rbuf, 1);
+			(void) atomicio(vwrite, STDERR_FILENO, rbuf, strlen(rbuf));
+		}
 		++errs;
 		if (resp == 1)
 			return (-1);
@@ -1467,25 +1472,19 @@ run_err(const char *fmt,...)
 	static FILE *fp = NULL;
 	va_list ap;
 	char buf[1000];
-	size_t pos = 0;
 
 	++errs;
 	if (fp == NULL && !(fp = fdopen(remout, "w")))
 		return;
-	pos += snprintf(&buf[pos], sizeof(buf)-pos, "%c", 0x01);
-	pos += snprintf(&buf[pos], sizeof(buf)-pos, "scp: ");
 	va_start(ap, fmt);
-	pos += vsnprintf(&buf[pos], sizeof(buf)-pos, fmt, ap);
+	vsnprintf(buf, sizeof(buf), fmt, ap);
 	va_end(ap);
 	cleantext(buf, 1);
-	fprintf(fp, "%s\n", buf);
+	/* 0x01 marks a non-fatal error, so must be added after cleantext() */
+	fprintf(fp, "%cscp: %s\n", 0x01, buf);
 	(void) fflush(fp);
 
 	if (!iamremote) {
-		va_start(ap, fmt);
-		vsnprintf(buf, sizeof(buf), fmt, ap);
-		cleantext(buf, 1);
-		va_end(ap);
 		fprintf(stderr, "%s\n", buf);
 	}
 }

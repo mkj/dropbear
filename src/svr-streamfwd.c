@@ -56,7 +56,7 @@ int svr_cancelremotestreamlocal() {
 
     tcpinfo.socket_path = socket_path;
     tcpinfo.chantype = &svr_chan_streamlocalremote;
-    listener = get_listener(CHANNEL_ID_STREAMLOCALFORWARDED, &tcpinfo, matchstreamlocal);
+    listener = get_listener(LISTENER_TYPE_STREAMFORWARDED, &tcpinfo, matchstreamlocal);
     if (listener) {
         remove_listener( listener );
         ret = DROPBEAR_SUCCESS;
@@ -179,12 +179,12 @@ int listen_streamlocal(struct FwdListener* tcpinfo, struct Listener **ret_listen
 
     setnonblocking(sock);
 
+    /* new_listener will close the socket if it fails */
     listener = new_listener(&sock, 1, LISTENER_TYPE_STREAMFORWARDED, tcpinfo,
             streamlocal_acceptor, cleanup_streamlocal);
 
     if (listener == NULL) {
         unlink_streamsocket(tcpinfo->socket_path);
-        m_close(sock);
         TRACE(("leave listen_streamlocal: listener failed"))
         return DROPBEAR_FAILURE;
     }

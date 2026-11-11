@@ -605,6 +605,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	if (termlen > MAX_TERM_LEN) {
 		/* TODO send disconnect ? */
 		TRACE(("leave sessionpty: term len too long"))
+		m_free(chansess->term);
 		return DROPBEAR_FAILURE;
 	}
 
@@ -614,6 +615,7 @@ static int sessionpty(struct ChanSess * chansess) {
 	}
 	if (pty_allocate(&chansess->master, &chansess->slave, namebuf, 64) == 0) {
 		TRACE(("leave sessionpty: failed to allocate pty"))
+		m_free(chansess->term);
 		return DROPBEAR_FAILURE;
 	}
 	
