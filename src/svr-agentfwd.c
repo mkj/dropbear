@@ -52,7 +52,7 @@ static void agentaccept(const struct Listener * listener, int sock);
 int svr_agentreq(struct ChanSess * chansess) {
 	int fd = -1;
 
-	if (!svr_pubkey_allows_agentfwd()) {
+	if (!svr_pubkey_allows_agentfwd() || svr_sftp_chroot_user()) {
 		return DROPBEAR_FAILURE;
 	}
 

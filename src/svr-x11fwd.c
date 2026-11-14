@@ -67,7 +67,7 @@ int x11req(struct ChanSess * chansess) {
 	int fd = -1;
 	int x11singleconn;
 
-	if (!svr_pubkey_allows_x11fwd()) {
+	if (!svr_pubkey_allows_x11fwd() || svr_sftp_chroot_user()) {
 		return DROPBEAR_FAILURE;
 	}
 

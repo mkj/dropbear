@@ -41,6 +41,9 @@ void svr_auth_password(int valid_user);
 void svr_auth_pubkey(int valid_user);
 void svr_auth_pam(int valid_user);
 void svr_switch_user(void);
+#if DROPBEAR_SFTP_CHROOT
+void svr_sftp_chroot(void);
+#endif
 void svr_raise_gid_utmp(void);
 void svr_restore_gid(void);
 
@@ -148,7 +151,17 @@ struct AuthState {
 	char *pw_name;
 	char *pw_passwd;
 	struct PubKeyOptions* pubkey_options;
+#if DROPBEAR_SFTP_CHROOT
+	unsigned int sftp_chroot; /* Server only, set if user is chrooted to home for sftp */
+#endif
 };
+
+/* True if the user is chrooted for sftp and may not use anything else */
+#if DROPBEAR_SFTP_CHROOT
+#define svr_sftp_chroot_user() (ses.authstate.sftp_chroot)
+#else
+#define svr_sftp_chroot_user() 0
+#endif
 
 #if DROPBEAR_SVR_PUBKEY_OPTIONS_BUILT
 struct PubKeyOptions {

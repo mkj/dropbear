@@ -600,6 +600,10 @@ static int sessionpty(struct ChanSess * chansess) {
 		TRACE(("leave sessionpty : pty forbidden by public key option"))
 		return DROPBEAR_FAILURE;
 	}
+	if (svr_sftp_chroot_user()) {
+		TRACE(("leave sessionpty : pty forbidden for sftp chroot user"))
+		return DROPBEAR_FAILURE;
+	}
 
 	chansess->term = buf_getstring(ses.payload, &termlen);
 	if (termlen > MAX_TERM_LEN) {
@@ -681,6 +685,12 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		return DROPBEAR_FAILURE;
 	}
 
+	/* chrooted sftp-only users get nothing but the sftp subsystem */
+	if (svr_sftp_chroot_user() && !(iscmd && issubsys)) {
+		TRACE(("leave sessioncommand, only sftp subsystem allowed for chroot user"))
+		return DROPBEAR_FAILURE;
+	}
+
 	if (iscmd) {
 		/* "exec" */
 		if (chansess->cmd == NULL) {
@@ -724,6 +734,14 @@ static int sessioncommand(struct Channel *channel, struct ChanSess *chansess,
 		svr_pubkey_set_forced_command(chansess);
 	}
 
+#if DROPBEAR_SFTP_CHROOT
+	if (ses.authstate.sftp_chroot) {
+		/* chrooted users only ever run the sftp server, whatever the
+		 * forced command says */
+		m_free(chansess->cmd);
+		chansess->cmd = m_strdup(DROPBEAR_SFTP_CHROOT_SERVER);
+	}
+#endif
 
 #if LOG_COMMANDS
 	if (chansess->cmd) {
@@ -978,8 +996,12 @@ static void execchild(const void *user_data) {
 	sign_key_free(svr_opts.hostkey);
 	svr_opts.hostkey = NULL;
 
-	/* overwrite the prng state */
-	seedrandom();
+	/* overwrite the prng state. Not possible inside an sftp chroot
+	 * without getrandom(), there is no /dev/urandom, and the sftp
+	 * server doesn't use the prng. */
+	if (!svr_sftp_chroot_user()) {
+		seedrandom();
+	}
 #endif
 
 	/* clear environment if -e was not set */
@@ -1061,6 +1083,16 @@ static void execchild(const void *user_data) {
 	svr_agentset(chansess);
 #endif
 
+#if DROPBEAR_SFTP_CHROOT
+	if (ses.authstate.sftp_chroot) {
+		/* no shell inside the chroot, exec the sftp server directly */
+		char *argv[2];
+		argv[0] = DROPBEAR_SFTP_CHROOT_SERVER;
+		argv[1] = NULL;
+		run_command(DROPBEAR_SFTP_CHROOT_SERVER, argv, ses.maxfd);
+		dropbear_exit("Child failed");
+	}
+#endif
 	usershell = m_strdup(get_user_shell());
 	run_shell_command(chansess->cmd, ses.maxfd, usershell);
 

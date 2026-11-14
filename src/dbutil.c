@@ -86,7 +86,7 @@ int debug_trace = 0;
 #ifndef DISABLE_SYSLOG
 void startsyslog(const char *ident) {
 
-	openlog(ident, LOG_PID, LOG_AUTHPRIV);
+	openlog(ident, LOG_PID | LOG_NDELAY, LOG_AUTHPRIV);
 
 }
 #endif /* DISABLE_SYSLOG */

@@ -76,6 +76,11 @@ int svr_remotetcpreq(int wantreply) {
 
     TRACE(("enter remotetcpreq"))
 
+    if (svr_sftp_chroot_user()) {
+        TRACE(("leave remotetcpreq: no forwarding for sftp chroot user"))
+        goto out;
+    }
+
     request_addr = buf_getstring(ses.payload, &addrlen);
     if (addrlen > MAX_HOST_LEN) {
         TRACE(("addr len too long: %d", addrlen))
@@ -172,7 +177,8 @@ static int newtcpdirect(struct Channel * channel) {
 
     TRACE(("newtcpdirect channel %d", channel->index))
 
-    if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()) {
+    if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()
+        || svr_sftp_chroot_user()) {
         TRACE(("leave newtcpdirect: local tcp forwarding disabled"))
         goto out;
     }

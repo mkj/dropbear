@@ -358,6 +358,17 @@ group1 in Dropbear server too */
 #define DROPBEAR_SFTPSERVER 1
 #define SFTPSERVER_PATH "/usr/libexec/sftp-server"
 
+/* Members of DROPBEAR_SFTP_CHROOT_GROUP are chroot()ed to their home
+ * directory after authentication and may only use the sftp subsystem,
+ * executed as DROPBEAR_SFTP_CHROOT_SERVER inside the chroot: a statically
+ * linked binary, or "internal-sftp" with the built-in sftp server
+ * (DROPBEAR_SFTP_INTERNAL). Equivalent to OpenSSH ChrootDirectory %h with
+ * ForceCommand internal-sftp.
+ * The home directory must be owned by root and not group/world writable. */
+#define DROPBEAR_SFTP_CHROOT 0
+#define DROPBEAR_SFTP_CHROOT_GROUP "sftponly"
+#define DROPBEAR_SFTP_CHROOT_SERVER SFTPSERVER_PATH
+
 /* This is used by the scp binary when used as a client binary. If you're
  * not using the Dropbear client, you'll need to change it */
 #define DROPBEAR_PATH_SSH_PROGRAM "/usr/bin/dbclient"

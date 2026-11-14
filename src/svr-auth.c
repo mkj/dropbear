@@ -442,6 +442,63 @@ void send_msg_userauth_failure(int partial, int incrfail) {
 	TRACE(("leave send_msg_userauth_failure"))
 }
 
+#if DROPBEAR_SFTP_CHROOT
+/* If the user is a member of DROPBEAR_SFTP_CHROOT_GROUP, chroot() into the
+ * home directory while still root. The home directory must be owned by root
+ * and not writable by group/other, like OpenSSH ChrootDirectory.
+ * Must be called before svr_switch_user(). */
+void svr_sftp_chroot(void) {
+	struct group *gr = NULL;
+	struct stat st;
+	char **mem = NULL;
+	int member = 0;
+
+	gr = getgrnam(DROPBEAR_SFTP_CHROOT_GROUP);
+	if (!gr) {
+		return;
+	}
+	if (ses.authstate.pw_gid == gr->gr_gid) {
+		member = 1;
+	} else {
+		for (mem = gr->gr_mem; mem && *mem; mem++) {
+			if (strcmp(*mem, ses.authstate.pw_name) == 0) {
+				member = 1;
+				break;
+			}
+		}
+	}
+	if (!member) {
+		return;
+	}
+
+	if (getuid() != 0) {
+		dropbear_exit("sftp chroot for %s requires root", ses.authstate.pw_name);
+	}
+	if (stat(ses.authstate.pw_dir, &st) < 0 || !S_ISDIR(st.st_mode)) {
+		dropbear_exit("sftp chroot: bad home '%s'", ses.authstate.pw_dir);
+	}
+	if (st.st_uid != 0 || (st.st_mode & (S_IWGRP|S_IWOTH))) {
+		dropbear_exit("sftp chroot: '%s' must be owned by root and not group/world writable",
+				ses.authstate.pw_dir);
+	}
+	/* Supplementary groups have to be looked up before the chroot, there
+	 * is no /etc/group inside. The timezone is loaded for the same reason,
+	 * so that the session child can still print local times. */
+	if (initgroups(ses.authstate.pw_name, ses.authstate.pw_gid) < 0) {
+		dropbear_exit("Error changing user group");
+	}
+	tzset();
+
+	if (chdir(ses.authstate.pw_dir) < 0 || chroot(ses.authstate.pw_dir) < 0 || chdir("/") < 0) {
+		dropbear_exit("sftp chroot to '%s' failed: %s", ses.authstate.pw_dir, strerror(errno));
+	}
+	dropbear_log(LOG_INFO, "User %s chrooted to '%s'", ses.authstate.pw_name, ses.authstate.pw_dir);
+	m_free(ses.authstate.pw_dir);
+	ses.authstate.pw_dir = m_strdup("/");
+	ses.authstate.sftp_chroot = 1;
+}
+#endif
+
 /* Send a success message to the user, and set the "authdone" flag */
 void send_msg_userauth_success() {
 
@@ -455,6 +512,10 @@ void send_msg_userauth_success() {
 	/* authdone must be set after encrypt_packet() for 
 	 * delayed-zlib mode */
 	ses.authstate.authdone = 1;
+
+#if DROPBEAR_SFTP_CHROOT
+	svr_sftp_chroot();
+#endif
 
 #if DROPBEAR_SVR_DROP_PRIVS
 	/* Drop privileges as soon as authentication has happened. */
@@ -504,9 +565,14 @@ void svr_switch_user(void) {
 	/* We can only change uid/gid as root ... */
 	if (getuid() == 0) {
 
-		if ((setgid(ses.authstate.pw_gid) < 0) ||
-			(initgroups(ses.authstate.pw_name, 
-						ses.authstate.pw_gid) < 0)) {
+		if (setgid(ses.authstate.pw_gid) < 0) {
+			dropbear_exit("Error changing user group");
+		}
+		/* An sftp chroot user had groups set by svr_sftp_chroot(),
+		 * initgroups() would find no /etc/group inside the chroot */
+		if (!svr_sftp_chroot_user()
+			&& initgroups(ses.authstate.pw_name, 
+						ses.authstate.pw_gid) < 0) {
 			dropbear_exit("Error changing user group");
 		}
 

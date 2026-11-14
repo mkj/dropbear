@@ -464,6 +464,10 @@
 #error stream forwarding requires DROPBEAR_SVR_DROP_PRIVS or !DROPBEAR_SVR_MULTIUSER
 #endif
 
+#if DROPBEAR_SFTP_CHROOT && !DROPBEAR_SFTPSERVER
+#error DROPBEAR_SFTP_CHROOT needs DROPBEAR_SFTPSERVER
+#endif
+
 /* Fuzzing expects all key types to be enabled */
 #if DROPBEAR_FUZZ
 #if defined(DROPBEAR_DSS)

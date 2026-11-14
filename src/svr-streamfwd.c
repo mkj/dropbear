@@ -216,7 +216,8 @@ int svr_remotestreamlocalreq() {
         goto out;
     }
 
-    if (svr_opts.noremotefwd || !svr_pubkey_allows_tcpfwd()) {
+    if (svr_opts.noremotefwd || !svr_pubkey_allows_tcpfwd()
+        || svr_sftp_chroot_user()) {
         TRACE(("leave remotestreamlocalreq: remote forwarding disabled"))
         goto out;
     }
@@ -291,7 +292,8 @@ static int newstreamlocal(struct Channel * channel) {
         goto out;
     }
 
-    if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()) {
+    if (svr_opts.nolocaltcp || !svr_pubkey_allows_tcpfwd()
+        || svr_sftp_chroot_user()) {
         TRACE(("leave newstreamlocal: local unix forwarding disabled"))
         goto out;
     }
